@@ -669,7 +669,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Users/getUniqueOpenemisId/Student';
+        var url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.openemis_no);

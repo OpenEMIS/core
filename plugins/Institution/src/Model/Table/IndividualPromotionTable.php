@@ -71,7 +71,7 @@ class IndividualPromotionTable extends ControllerActionTable
             return $this->controller->redirect(['action' => 'Students', 'index']);
 
         } else {
-            $params = $this->getUrlParams([$this->alias(), 'add'], $hash);
+            $params = $this->getUrlParams([$this->controller->name, $this->alias(), 'add'], $hash);
             $extra['params'] = $params; // student_id and user_id in extra
             $extra['redirect'] = [ // url to redirect to StudentUser view
                 'plugin' => 'Institution',
@@ -544,6 +544,7 @@ class IndividualPromotionTable extends ControllerActionTable
         $studentObj['end_date'] = $toPeriodData->end_date;
         $studentObj['end_year']= $toPeriodData->end_year;
         $studentObj['institution_id'] = $entity->institution_id;
+        $studentObj['previous_institution_student_id'] = $id;
 
         if ($toAcademicPeriodId == $fromAcademicPeriodId) {
             // if student is promoted/demoted in the middle of the academic period
