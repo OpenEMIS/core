@@ -142,11 +142,8 @@ class InstitutionsTable extends AppTable
 
     public function onExcelGetIsAcademic(Event $event, Entity $entity) 
     {
-        if ($entity->is_academic) {
-            return __($this->getSelectOptions('general.yesno')[1]);
-        } else {
-            return __($this->getSelectOptions('general.yesno')[0]);
-        }
+        $generalYesNo = $this->getSelectOptions('general.yesno');
+        return __($generalYesNo[$entity->is_academic]);
     }
 
 	public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request) {
