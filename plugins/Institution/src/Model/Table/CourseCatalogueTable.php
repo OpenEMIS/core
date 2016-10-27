@@ -11,7 +11,7 @@ use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
-class StaffTrainingCoursesTable extends ControllerActionTable
+class CourseCatalogueTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -69,7 +69,7 @@ class StaffTrainingCoursesTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
 
-        $this->toggle('add', false);
+
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
@@ -77,11 +77,11 @@ class StaffTrainingCoursesTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'StaffTrainingResults'];
-        $this->controller->set('contentHeader', __('Staff Training Courses'));
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->toggle('add', false);
         $this->fields=[];
         $this->field('code');
         $this->field('name');
@@ -170,7 +170,7 @@ class StaffTrainingCoursesTable extends ControllerActionTable
             'data-toggle' => 'tooltip',
             'data-placement' => 'bottom',
             'escape' => false,
-            'title' => 'Add'
+            'title' => 'Apply'
         ];
 
         $url = [
@@ -186,7 +186,7 @@ class StaffTrainingCoursesTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $buttons['add'] = [
-            'label' => '<i class="fa kd-add"></i>'.__('Add'),
+            'label' => '<i class="fa kd-add"></i>'.__('Apply'),
             'attr' => $buttons['view']['attr']
         ];
 

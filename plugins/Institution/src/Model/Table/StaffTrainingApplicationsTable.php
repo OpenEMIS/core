@@ -104,8 +104,9 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
 
         if (isset($extra['toolbarButtons']['add']['url'])) {
-            $extra['toolbarButtons']['add']['url']['action'] = 'StaffTrainingCourses';
+            $extra['toolbarButtons']['add']['url']['action'] = 'CourseCatalogue';
             $extra['toolbarButtons']['add']['url'][0] = 'index';
+            $extra['toolbarButtons']['add']['attr']['title'] = 'Apply';
         }
     }
 
