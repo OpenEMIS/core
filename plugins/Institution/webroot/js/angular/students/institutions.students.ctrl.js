@@ -28,6 +28,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.completeDisabled = false;
     StudentController.institutionId = null;
 
+    // 0 - Non-mandatory, 1 - Mandatory, 2 - Excluded
+    StudentController.StudentContacts = 2;
+    StudentController.StudentIdentities = 2;
+    StudentController.StudentNationalities = 2;
+    StudentController.StudentSpecialNeeds = 2;
+
+
     // filter variables
     StudentController.internalFilterOpenemisNo;
     StudentController.internalFilterFirstName;
@@ -77,6 +84,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         InstitutionsStudentsSvc.getAcademicPeriods()
         .then(function(periods) {
+            var promises = [];
             var selectedPeriod = [];
             angular.forEach(periods, function(value) {
                 if (value.current == 1) {
@@ -96,14 +104,22 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 $scope.endDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date);
                 StudentController.onChangeAcademicPeriod();
             }
+            promises.push(InstitutionsStudentsSvc.getAddNewStudentConfig());
+            promises.push(InstitutionsStudentsSvc.getDefaultIdentityType());
 
-            return InstitutionsStudentsSvc.getDefaultIdentityType();
+            return $q.all(promises);
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
             UtilsSvc.isAppendLoader(false);
         })
-        .then(function(defaultIdentityType) {
+        .then(function(promisesObj) {
+            var promises = [];
+            var addNewStudentConfig = promisesObj[0];
+            for(i=0; i<addNewStudentConfig.length; i++) {
+                var code = addNewStudentConfig[i].code
+            }
+            var defaultIdentityType = promisesObj[1];
             if (defaultIdentityType.length > 0) {
                 StudentController.defaultIdentityTypeName = defaultIdentityType[0].name;
             }
