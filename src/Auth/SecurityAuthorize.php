@@ -18,26 +18,36 @@ class SecurityAuthorize extends BaseAuthorize {
 			$roles = [];
 			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
 	    	if ($event->result) {
-	    		$roles = $event->result;	
+	    		$roles = $event->result;
 	    	}
 
-			if ($AccessControl->isIgnored($controller->name, $action) || $user['super_admin'] == true) {
+	    	$event = $controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
+	    	if ($event->result == true) {
+	    		$authorized = true;
+	    	}
+
+	    	if ($authorized || $user['super_admin'] == true) {
 				$authorized = true;
 			} else if ($action == 'ComponentAction') { // actions from ControllerActionComponent
 				$model = $controller->ControllerAction->model();
 				$action = $model->action;
 
-				if ($AccessControl->isIgnored($model->registryAlias(), $action)) {
-					$authorized = true;
+				if (array_key_exists($model->alias, $controller->ControllerAction->models)) {
+					$authorized = $AccessControl->check([$controller->name, $model->alias, $action], $roles);
 				} else {
-					if (array_key_exists($model->alias, $controller->ControllerAction->models)) {
-						$authorized = $AccessControl->check([$controller->name, $model->alias, $action], $roles);
-					} else {
-						$authorized = $AccessControl->check([$controller->name, $action], $roles);
-					}
+					$authorized = $AccessControl->check([$controller->name, $action], $roles);
 				}
 			} else { // normal actions from Controller
-				$authorized = $AccessControl->check([$controller->name, $action], $roles);
+				$isCAv4 = ctype_upper(substr($action, 0, 1));
+				if ($isCAv4) {
+					$pass = $request->pass;
+					$model = $action;
+					$action = isset($pass[0]) ? $pass[0] : 'index';
+
+					$authorized = $AccessControl->check([$controller->name, $model, $action], $roles);
+				} else {
+					$authorized = $AccessControl->check([$controller->name, $action], $roles);
+				}
 			}
 
 			if (!$authorized) {

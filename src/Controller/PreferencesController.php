@@ -25,6 +25,18 @@ class PreferencesController extends AppController {
 		];
 	}
 
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        return true;
+    }
+
     // CAv4
     public function Nationalities()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
     public function Languages()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserLanguages']); }
