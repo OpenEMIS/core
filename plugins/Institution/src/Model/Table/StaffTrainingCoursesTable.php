@@ -147,6 +147,8 @@ class StaffTrainingCoursesTable extends ControllerActionTable
                 ->matching('TargetPopulations')
                 ->where(['TargetPopulations.id' => $positionTitle]);
         }
+
+        $query->order($this->aliasField('code'));
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
