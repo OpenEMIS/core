@@ -48,6 +48,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         if (isset($extra['redirect']['query'])) {
             unset($extra['redirect']['query']);
         }
+
         if ($query) {
             $courseId = $query['course_id'];
 
@@ -85,10 +86,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $application = [];
         $application['staff_id'] = $staffId;
         $application['training_course_id'] = $courseId;
-        $application['status_id'] = 70;
-        $application['assignee_id'] = 0;
+        $application['status_id'] = 0;
         $application['institution_id'] = $institutionId;
-
         $entity = $this->newEntity($application);
 
         if ($this->save($entity)) {
