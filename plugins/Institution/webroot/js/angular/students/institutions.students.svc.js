@@ -52,7 +52,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
-        ConfigItems: 'Configuration.ConfigItems'
+        ConfigItems: 'Configuration.ConfigItems',
+        Nationalities: 'FieldOption.Nationalities',
+        ContactTypes: 'User.ContactTypes',
+        SpecialNeeds: 'FieldOption.SpecialNeedTypes'
     };
 
     var externalModels = {
