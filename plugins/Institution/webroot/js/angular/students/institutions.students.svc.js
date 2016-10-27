@@ -38,7 +38,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateReverse: formatDateReverse
+        formatDateReverse: formatDateReverse,
+        getAddNewStudentConfig: getAddNewStudentConfig
     };
 
     var models = {
@@ -680,5 +681,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             deferred.reject(error);
         });
         return deferred.promise;
+    }
+
+    function getAddNewStudentConfig() {
+        return ConfigItems
+            .select()
+            .where({type: 'Add New Student'})
+            .ajax({defer: true});
     }
 };
