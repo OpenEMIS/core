@@ -19,11 +19,13 @@ DELETE FROM `workflow_actions` WHERE `workflow_actions`.`workflow_step_id` IN (
 -- delete workflow_steps
 DELETE FROM `workflow_steps` WHERE `workflow_id` = @workflowId;
 
--- DELETE FROM `workflow_statuses_steps` WHERE `workflow_status_id` IN (
---   SELECT `id` FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId
--- );
+-- delete workflow_statuses_steps
+DELETE FROM `workflow_statuses_steps` WHERE `workflow_status_id` IN (
+  SELECT `id` FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId
+);
 
--- DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId;
+-- delete workflow_statuses
+DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3449';
