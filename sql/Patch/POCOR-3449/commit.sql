@@ -87,3 +87,17 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 ('9c773e6a-9c00-11e6-98d5-525400b263eb', @pendingApprovalId, @pendingApprovalStatusId),
 ('a5ddc9ec-9c00-11e6-98d5-525400b263eb', @approvedId, @approvedStatusId),
 ('b0b1b8c1-9c00-11e6-98d5-525400b263eb', @rejectedId, @rejectedStatusId);
+
+-- add security_functions
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(3037, 'Applications', 'Institutions', 'Institutions', 'Staff - Training', '3000', 'StaffTrainingApplications.index|StaffTrainingApplications.view', null, 'StaffTrainingApplications.add|StaffTrainingCourses.index|StaffTrainingCourses.view', 'StaffTrainingApplications.remove', null, 3037, 1, 1, NOW());
+
+-- update staff training security_functions
+UPDATE `security_functions`
+SET `controller` = 'Institutions', `_view` = 'StaffTrainingNeeds.index|StaffTrainingNeeds.view', `_edit` = 'StaffTrainingNeeds.edit', `_add` = 'StaffTrainingNeeds.add', `_delete` = 'StaffTrainingNeeds.remove'
+WHERE `name` = 'Needs' AND `category` = 'Staff - Training';
+
+UPDATE `security_functions`
+SET `controller` = 'Institutions', `_view` = 'StaffTrainingResults.index|StaffTrainingResults.view'
+WHERE `name` = 'Results' AND `category` = 'Staff - Training';
+

@@ -27,5 +27,17 @@ DELETE FROM `workflow_statuses_steps` WHERE `workflow_status_id` IN (
 -- delete workflow_statuses
 DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId;
 
+-- delete security_functions
+DELETE FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Applications';
+
+-- revert staff training security_functions
+UPDATE `security_functions`
+SET `controller` = 'Staff', `_view` = 'TrainingNeeds.index|TrainingNeeds.view', `_edit` = 'TrainingNeeds.edit', `_add` = 'TrainingNeeds.add', `_delete` = 'TrainingNeeds.remove'
+WHERE `name` = 'Needs' AND `category` = 'Staff - Training';
+
+UPDATE `security_functions`
+SET `controller` = 'Staff', `_view` = 'TrainingResults.index|TrainingResults.view'
+WHERE `name` = 'Results' AND `category` = 'Staff - Training';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3449';
