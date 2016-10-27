@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Network\Session;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
+use Cake\Routing\Router;
 
 class WorkflowBehavior extends Behavior {
 	// Workflow Steps - category
@@ -42,7 +43,7 @@ class WorkflowBehavior extends Behavior {
  			'method' => 'onAssignBack'
  		]
  	];
- 	
+
 
 	private $controller;
 	private $model = null;
@@ -226,7 +227,7 @@ class WorkflowBehavior extends Behavior {
 			->first();
 
 		$workflowModelEntity = $entity->_matchingData['WorkflowModels'];
-		// only trigger update assignee shell where the workflow step belongs to 
+		// only trigger update assignee shell where the workflow step belongs to
 		if ($workflowModelEntity->model == $model->registryAlias()) {
 			$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId);
 		}
@@ -840,6 +841,7 @@ class WorkflowBehavior extends Behavior {
 		$model = $this->_table;
 		$step = $this->getWorkflowStep($entity);
 
+		$assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
 		if (!is_null($step)) {
 			$workflow = $step->_matchingData['Workflows'];
 
@@ -932,7 +934,8 @@ class WorkflowBehavior extends Behavior {
 				$alias.'.assignee_id' => [
 					'label' => __('Assignee'),
 					'type' => 'select',
-					'class'=> 'workflowtransition-assignee-id'
+					'class'=> 'workflowtransition-assignee-id',
+					'assignee-url' => $assigneeUrl
 				],
 				$alias.'.comment' => [
 					'label' => __('Comment'),
@@ -959,7 +962,7 @@ class WorkflowBehavior extends Behavior {
 				'id' => 'workflowTransition',
 				'title' => __('Add Comment'),
 				'content' => $content,
-				'contentFields' => $contentFields, 
+				'contentFields' => $contentFields,
 				'form' => [
 					'model' => $model,
 					'formOptions' => [
