@@ -557,6 +557,11 @@ trait MessagesTrait {
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
         ],
+        'StaffTrainingApplications' => [
+            'success' => 'The course has been added successfully.',
+            'fail' => 'Failed to add the course.',
+            'exists' => 'This course has already been added.'
+        ],
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
         ],

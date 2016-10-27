@@ -62,15 +62,15 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
             if (empty($existingApplication)) {
                 if ($this->saveCourse($courseId, $extra)) {
-                    $this->Alert->success('general.add.success');
+                    $this->Alert->success($this->aliasField('success'), ['reset' => true]);
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
 
                 } else {
-                    $this->Alert->error('general.add.failed');
+                    $this->Alert->error($this->aliasField('fail'), ['reset' => true]);
                 }
             } else {
-                $this->Alert->warning('general.exists');
+                $this->Alert->warning($this->aliasField('exists'), ['reset' => true]);
             }
         }
 
