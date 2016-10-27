@@ -67,7 +67,9 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 1047;
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`)
-VALUES (1047, 'Visit Requests', 'Institutions', 'Institutions', 'Quality', 1000, 'VisitRequests.index|VisitRequests.view', 'VisitRequests.edit', 'VisitRequests.add', 'VisitRequests.remove', 'VisitRequests.download', 1047, 1, 1, NOW());
+VALUES (1047, 'Visit Requests', 'Institutions', 'Institutions', 'Quality', 1000, 'VisitRequests.index|VisitRequests.view', 'VisitRequests.edit', 'VisitRequests.add', 'VisitRequests.remove', 'VisitRequests.download', 1029, 1, 1, NOW());
+
+UPDATE `security_functions` SET `order` = 1047 WHERE `id` = 1027;
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
