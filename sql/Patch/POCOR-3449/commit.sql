@@ -28,8 +28,7 @@ INSERT INTO `workflow_models` (`name`, `model`, `filter`, `is_school_based`, `cr
 ('Staff > Training > Applications', 'Institution.StaffTrainingApplications', NULL, 0, 1, NOW());
 
 -- Pre-insert workflows
-SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTrainingApplications';
+SET @modelId := 10;
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('TRN-5001', 'Training Applications', @modelId, 1, NOW());
 
@@ -90,7 +89,7 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 
 -- add security_functions
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
-(3037, 'Applications', 'Institutions', 'Institutions', 'Staff - Training', '3000', 'StaffTrainingApplications.index|StaffTrainingApplications.view', null, 'StaffTrainingApplications.add|StaffTrainingCourses.index|StaffTrainingCourses.view', 'StaffTrainingApplications.remove', null, 3037, 1, 1, NOW());
+(3037, 'Applications', 'Institutions', 'Institutions', 'Staff - Training', '3000', 'StaffTrainingApplications.index|StaffTrainingApplications.view', null, 'StaffTrainingApplications.add|CourseCatalogue.index|CourseCatalogue.view', 'StaffTrainingApplications.remove', null, 3037, 1, 1, NOW());
 
 -- update staff training security_functions
 UPDATE `security_functions`

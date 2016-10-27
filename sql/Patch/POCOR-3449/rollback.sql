@@ -2,8 +2,7 @@
 DROP TABLE `staff_training_applications`;
 
 -- delete workflow_models
-SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTrainingApplications' AND `name` = 'Staff > Training > Applications';
+SET @modelId := 10;
 DELETE FROM `workflow_models` WHERE `id` = @modelId;
 
 -- delete workflows
