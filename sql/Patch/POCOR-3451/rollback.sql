@@ -1,8 +1,12 @@
 -- Drop tables
 DROP TABLE IF EXISTS `institution_visit_requests`;
 
+-- Restore tables
+DROP TABLE IF EXISTS `workflow_models`;
+RENAME TABLE `z_3451_workflow_models` TO `workflow_models`;
+
 -- delete pre-insert workflow
-DELETE FROM `workflow_models` WHERE `model` = 'Institution.VisitRequests';
+DELETE FROM `workflow_models` WHERE `id` = 9;
 
 DELETE FROM `workflows` WHERE NOT EXISTS (SELECT 1 FROM `workflow_models` WHERE `workflow_models`.`id` = `workflows`.`workflow_model_id`);
 DELETE FROM `workflows_filters` WHERE NOT EXISTS (SELECT 1 FROM `workflows` WHERE `workflows`.`id` = `workflows_filters`.`workflow_id`);
