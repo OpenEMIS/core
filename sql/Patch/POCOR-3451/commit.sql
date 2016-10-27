@@ -29,12 +29,31 @@ CREATE TABLE IF NOT EXISTS `institution_visit_requests` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all visit requested by the institutions';
 
 -- workflow_models
-INSERT INTO `workflow_models` (`name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
-('Institutions > Visits > Requests', 'Institution.VisitRequests', NULL, 1, 1, NOW());
+RENAME TABLE `workflow_models` TO `z_3451_workflow_models`;
+
+DROP TABLE IF EXISTS `workflow_models`;
+CREATE TABLE IF NOT EXISTS `workflow_models` (
+  `id` int(11) NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `model` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `filter` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_school_based` int(1) NOT NULL DEFAULT '0',
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of features that are workflow-enabled';
+
+INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`)
+SELECT `id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, NOW()
+FROM `z_3451_workflow_models`;
+
+-- workflow_models
+SET @modelId := 9;
+INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
+(@modelId, 'Institutions > Visits > Requests', 'Institution.VisitRequests', NULL, 1, 1, NOW());
 
 -- Pre-insert workflows
-SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.VisitRequests';
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('VISIT-1001', 'Institutions - Visit Requests', @modelId, 1, NOW());
 
