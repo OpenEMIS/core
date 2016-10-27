@@ -72,11 +72,8 @@ class InstitutionsController extends AppController
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
-<<<<<<< HEAD
         $this->loadComponent('Training.Training');
-=======
         $this->loadComponent('Institution.UserOpenEMISID');
->>>>>>> f275329691f788820b4abb86f838e8eb9a7dae16
         $this->attachAngularModules();
     }
 
