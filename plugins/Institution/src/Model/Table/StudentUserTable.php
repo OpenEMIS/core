@@ -392,8 +392,9 @@ class StudentUserTable extends ControllerActionTable
 				$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
 				$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$dropoutButton['attr']['title'] = __('Dropout');
+
+				$dropoutButton['url'] = $this->url('add', 'QUERY');
 				$dropoutButton['url']['action'] = 'DropoutRequests';
-				$dropoutButton['url'][0] = 'add';
 
 				if (!empty($dropoutRequest)) {
 					$dropoutButton['url'][0] = 'edit';
