@@ -4,6 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 
 use Cake\Chronos\Date;
+use Cake\Chronos\Chronos;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Query;
@@ -22,6 +23,7 @@ class AppraisalsTable extends ControllerActionTable {
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('StaffAppraisalTypes', ['className' => 'Staff.StaffAppraisalTypes']);
+        $this->belongsTo('CompetencySets', ['className' => 'Staff.CompetencySets']);
 
         $this->belongsToMany('Competencies', [
             'className' => 'Staff.Competencies',
@@ -59,6 +61,22 @@ class AppraisalsTable extends ControllerActionTable {
         $this->field('modified_user_id',    ['visible' => ['index' => true, 'view' => true], 'after' => 'final_rating']);
         $this->field('modified',            ['visible' => ['index' => true, 'view' => true], 'after' => 'modified_user_id']);
 
+        if (!empty($this->request->params['pass'][1])) {
+            $session = $this->request->session();
+            $staffAppraisalId = $this->request->params['pass'][1];
+
+            $loginUserId = $session->read('Auth.User.id');
+            $createdUserId = $this->get($staffAppraisalId)->created_user_id;
+
+            // if not admin and not his own appraisal remove and edit button will be remove
+            if (!$this->AccessControl->isAdmin()) {
+                if ($loginUserId != $createdUserId) {
+                    $this->toggle('remove', false);
+                    $this->toggle('edit', false);
+                }
+            }
+        }
+
         $this->setupTabElements();
     }
 
@@ -79,18 +97,6 @@ class AppraisalsTable extends ControllerActionTable {
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
-
-        $session = $this->request->session();
-        $loginUserId = $session->read('Auth.User.id');
-        $createdUserId = $entity->created_user->id;
-
-        // if not admin and not his own appraisal remove and edit button will be remove
-        if (!$this->AccessControl->isAdmin()) {
-            if ($loginUserId != $createdUserId) {
-                $this->toggle('remove', false);
-                $this->toggle('edit', false);
-            }
-        }
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -120,31 +126,6 @@ class AppraisalsTable extends ControllerActionTable {
         }
 
         return $finalRating;
-    }
-
-    public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
-    {
-        $dateAttr = ['from' => Date::now(), 'to' => Date::now()];
-        $academicPeriodId = $data[$this->alias()]['academic_period_id'];
-
-        if (!empty($academicPeriodId)) {
-            $dateAttr['from'] = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-            $dateAttr['to'] = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-
-            // add restriction, only can choose within the selected academic period.
-            $this->fields['from']['date_options']['startDate'] = $dateAttr['from']->format('d-m-Y');
-            $this->fields['from']['date_options']['endDate'] = $dateAttr['to']->format('d-m-Y');
-            $this->fields['to']['date_options']['startDate'] = $dateAttr['from']->format('d-m-Y');
-            $this->fields['to']['date_options']['endDate'] = $dateAttr['to']->format('d-m-Y');
-        }
-
-        // will change the 'from' and 'to' timing to the academic period start and end date.
-        $this->fields['from']['value'] = $dateAttr['from'];
-        $this->fields['to']['value'] = $dateAttr['to'];
-
-        // turn off the today button on the date picker
-        $this->fields['from']['date_options']['todayBtn'] = false;
-        $this->fields['to']['date_options']['todayBtn'] = false;
     }
 
     public function addEditOnChangeCompetencySet(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -205,7 +186,7 @@ class AppraisalsTable extends ControllerActionTable {
             $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
 
             $attr['options'] = $academicPeriodOptions;
-            $attr['onChangeReload'] = 'changeAcademicPeriod';
+            $attr['onChangeReload'] = true;
         } else if ($action == 'view') {
             $attr['visible'] = false;
         }
@@ -213,14 +194,111 @@ class AppraisalsTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onUpdateFieldFrom(Event $event, array $attr, $action, $request)
+    {
+        $dateAttr = ['from' => Date::now(), 'to' => Date::now()];
+        $requestData = $request->data;
+        $fromDate = '';
+
+        if ($action == 'add') {
+            if (!empty($requestData[$this->alias()]['academic_period_id'])) {
+                $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
+                $fromDate = new Chronos($requestData[$this->alias()]['from']);
+            } else {
+                $attr['value'] = $dateAttr['from'];
+            }
+        } else if ($action == 'edit') {
+            $staffAppraisalId = $request->params['pass'][1];
+            $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
+            $fromDate = $this->get($staffAppraisalId)->from;
+        }
+
+        if (!empty($fromDate && $academicPeriodId)) {
+            $dateAttr['from'] = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+            $dateAttr['to'] = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+            // will compare the date, if the form-date is within the academic period will not change when reload.
+            if ($fromDate->between($dateAttr['from'], $dateAttr['to'])) {
+                $attr['value'] = $fromDate;
+            } else {
+                $attr['value'] = $dateAttr['from'];
+            }
+
+            // add restriction to from-date-picker, only within selected academic period
+            $attr['date_options']['startDate'] = $dateAttr['from']->format('d-m-Y');
+            $attr['date_options']['endDate'] = $dateAttr['to']->format('d-m-Y');
+        }
+
+        // remove the from-today-date-picker
+        $attr['date_options']['todayBtn'] = false;
+
+        return $attr;
+    }
+
+    public function onUpdateFieldTo(Event $event, array $attr, $action, $request)
+    {
+        $dateAttr = ['from' => Date::now(), 'to' => Date::now()];
+        $requestData = $request->data;
+        $toDate = '';
+
+        if ($action == 'add') {
+            if (!empty($requestData[$this->alias()]['academic_period_id'])) {
+                $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
+                $toDate = new Chronos($requestData[$this->alias()]['to']);
+            } else {
+                $attr['value'] = $dateAttr['to'];
+            }
+        } else if ($action == 'edit') {
+            $staffAppraisalId = $request->params['pass'][1];
+            $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
+            $toDate = $this->get($staffAppraisalId)->to;
+        }
+
+        if (!empty($toDate && $academicPeriodId)) {
+            $dateAttr['from'] = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+            $dateAttr['to'] = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+            // will compare the date, if the form-date is within the academic period will not change when reload.
+            if ($toDate->between($dateAttr['from'], $dateAttr['to'])) {
+                $attr['value'] = $toDate;
+            } else {
+                $attr['value'] = $dateAttr['to'];
+            }
+
+            // add restriction to from-date-picker, only within selected academic period
+            $attr['date_options']['startDate'] = $dateAttr['from']->format('d-m-Y');
+            $attr['date_options']['endDate'] = $dateAttr['to']->format('d-m-Y');
+        }
+
+        // remove the from-today-date-picker
+        $attr['date_options']['todayBtn'] = false;
+
+        return $attr;
+    }
+
     public function onUpdateFieldStaffAppraisalTypeId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            $typeOptions = $this->getStaffAppraisalTypeIdOptions();
-            $attr['options'] = $typeOptions;
-        }
+            // type only self if choose to appraise himself, if appraise other staff will be only supervisor or peer.
+            $staffAppraisalType = TableRegistry::get('Staff.StaffAppraisalTypes');
+            $session = $this->request->session();
+            $loginUserId = $session->read('Auth.User.id');
+            $staffId = $session->read('Staff.Staff.id');
+
+            if ($loginUserId == $staffId) {
+                $attr['type'] = 'readOnly';
+                $attr['attr']['value'] = 'Self';
+                $attr['value'] = 2;
+            } else {
+                $typeOptions = $staffAppraisalType
+                    ->find('list')
+                    ->where([[$staffAppraisalType -> aliasField('code != ') => 'SELF']])
+                    ->toArray();
+                $attr['options'] = $typeOptions;
+            }
 
         return $attr;
+        }
     }
 
     public function onUpdateFieldCompetencySetId(Event $event, array $attr, $action, $request)
@@ -237,11 +315,11 @@ class AppraisalsTable extends ControllerActionTable {
 
     public function onGetCustomRatingElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $tableHeaders = [__('Competency'), __('Rating')];
-        $tableCells = [];
+        $staffAppraisalId = $entity->id;
 
         if ($action == 'view') {
-            $staffAppraisalId = $entity->id;
+            $tableHeaders = [__('Competency'), __('Rating')];
+            $tableCells = [];
 
             $StaffAppraisalsCompetencies = TableRegistry::get('Staff.StaffAppraisalsCompetencies');
 
@@ -268,6 +346,8 @@ class AppraisalsTable extends ControllerActionTable {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
+            $tableHeaders = [__('Competency'), __('Rating'), __('Value')];
+            $tableCells = [];
             $cellCount = 0;
 
             $arrayCompetencies = [];
@@ -275,6 +355,7 @@ class AppraisalsTable extends ControllerActionTable {
                 if ($entity->has('competency_set_id')) {
                     $competencySetId = $entity->competency_set_id;
 
+                    $competencies = TableRegistry::get('Staff.Competencies');
                     $StaffAppraisalsCompetencies = TableRegistry::get('Staff.StaffAppraisalsCompetencies');
                     $CompetencySetsCompetencies = TableRegistry::get('Staff.CompetencySetsCompetencies');
                     $leftJoinConditions = [
@@ -303,7 +384,7 @@ class AppraisalsTable extends ControllerActionTable {
                         ->toArray();
 
                     foreach ($competencyResults as $key => $competencyObj) {
-                        $arrayCompetencies[] = [
+                        $arrayCompetencies[$competencyObj->id] = [
                             'id' => $competencyObj->id,
                             'name' => $competencyObj->name,
                             'min' => $competencyObj->min,
@@ -311,12 +392,26 @@ class AppraisalsTable extends ControllerActionTable {
                             'rating' => $competencyObj->rating
                         ];
                     }
+
+                    $missingCompetency = $this->getMissingCompetency($competencySetId, $staffAppraisalId);
+                    if (!empty($missingCompetency)) {
+                        foreach ($missingCompetency as $key => $obj) {
+                            $arrayCompetencies[$obj['competency_id']] = [
+                                'id' => $obj['competency_id'],
+                                'name' => $competencies->get($obj['competency_id'])->name,
+                                'min' => $competencies->get($obj['competency_id'])->min,
+                                'max' => $competencies->get($obj['competency_id'])->max,
+                                'rating' => 'Deleted'
+                            ];
+                        }
+                        sort($arrayCompetencies);
+                    }
                 }
             } else if ($this->request->is(['post', 'put'])) {
                 $requestData = $this->request->data;
                 if (array_key_exists('competencies', $requestData[$this->alias()])) {
                     foreach ($requestData[$this->alias()]['competencies'] as $key => $obj) {
-                        $arrayCompetencies[] = [
+                        $arrayCompetencies[$obj['id']] = [
                             'id' => $obj['id'],
                             'name' => $obj['name'],
                             'min' => $obj['min'],
@@ -327,36 +422,56 @@ class AppraisalsTable extends ControllerActionTable {
                 }
             }
 
+            $ngModel = [];
+            $totalNgModel = '';
             foreach ($arrayCompetencies as $key => $obj) {
                 $fieldPrefix = $attr['model'] . '.competencies.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
-                $rating = !empty($obj['rating']) ? $obj['rating'] : '';
+                $rating = !empty($obj['rating']) ? $obj['rating'] : 0;
+                // $rating = !empty($obj['rating']) ? $obj['rating'] : 'rating_' . $key;
+                $ngModel[] = 'rating_' . $key;
 
+                $form->unlockField($joinDataPrefix.".rating");
                 $cellData = "";
-                $cellData .= $form->input($joinDataPrefix.".rating", [
-                    'label' => false,
-                    'type' => 'number',
-                    'value' => $rating,
-                    'min' => $obj['min'],
-                    'max' => $obj['max'],
-                    'step' => 0.1,
-                    'onchange' => "jsTable.computeTotalForMoney('finalRating');",
-                    'computeType' => 'finalRating'
-                ]);
-                $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
-                $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
-                $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
-                $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
+                if ($rating === 'Deleted') {
+                    $cellData = $this->getMessage('Staff.Appraisal.deleted_competencies');
+                    // $cellData = __('Deleted');
+
+                } else {
+                    $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="rating_'.$key.'" value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
+                    // $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="'.$rating.'" ng-init="'.$rating.'"  value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
+                    // $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="'.$rating.'" value="{{'.$rating.'}}" min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
+                    $cellData .= $form->hidden($joinDataPrefix.".rating", [
+                        'label' => false,
+                        'type' => 'number',
+                        'value' => '{{rating_'.$key.'}}'
+                    ]);
+                    $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
+                    $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
+                    $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
+                    $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
+                }
 
                 $rowData = [];
                 $rowData[] = $obj['name'];
                 $rowData[] = $cellData;
+                $rowData[] = '{{rating_'.$key.'}}';
 
                 $tableCells[] = $rowData;
             }
 
+            // angular to sum all the rating '{{rating_1+rating_2+.....}}'
+            for ($i=0; $i < count($ngModel) ; $i++) {
+                if ($i < count($ngModel) - 1) {
+                    $totalNgModel .= $ngModel[$i] . ' + ';
+                } else {
+                    $totalNgModel .= $ngModel[$i];
+                }
+            }
+
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
+            $attr['finalRating'] = '{{'.$totalNgModel.'}}';
 
             if ($entity->has('competency_set_id')) {
                 return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
@@ -395,33 +510,14 @@ class AppraisalsTable extends ControllerActionTable {
     public function setupFields(Entity $entity)
     {
         $this->field('academic_period_id');
+        $this->field('from');
+        $this->field('to');
         $this->field('staff_appraisal_type_id', ['type' => 'select']);
         $this->field('competency_set_id');
         $this->field('rating', ['type' => 'custom_rating']);
         $this->field('final_rating', ['type' => 'hidden']);
 
-        $this->setFieldOrder(['title', 'academic_period_id', 'from', 'to', 'staff_appraisal_type_id', 'competency_set_id', 'final_rating', 'comment']);
-    }
-
-    public function getStaffAppraisalTypeIdOptions()
-    {
-        // type only self if choose to appraise himself, if appraise other staff will be only supervisor or peer.
-        $staffAppraisalType = TableRegistry::get('Staff.StaffAppraisalTypes');
-        $session = $this->request->session();
-        $loginUserId = $session->read('Auth.User.id');
-        $staffId = $session->read('Staff.Staff.id');
-
-        if ($loginUserId == $staffId) {
-            $conditions[] = [$staffAppraisalType -> aliasField('code') => 'SELF'];
-        } else {
-            $conditions[] = [$staffAppraisalType -> aliasField('code != ') => 'SELF'];
-        }
-
-        $typeOptions = $staffAppraisalType
-            ->find('list')
-            ->where([$conditions])
-            ->toArray();
-        return $typeOptions;
+        $this->setFieldOrder(['title', 'academic_period_id', 'from', 'to', 'staff_appraisal_type_id', 'competency_set_id', 'rating', 'final_rating', 'comment']);
     }
 
     public function getCompetencySetOptions()
@@ -431,5 +527,38 @@ class AppraisalsTable extends ControllerActionTable {
             ->find('list')
             ->toArray();
         return $competencySetOptions;
+    }
+
+    public function getMissingCompetency($competencySetId, $staffAppraisalId)
+    {
+        $StaffAppraisalsCompetencies = TableRegistry::get('Staff.StaffAppraisalsCompetencies');
+        $CompetencySetsCompetencies = TableRegistry::get('Staff.CompetencySetsCompetencies');
+
+        $oldSetData = $StaffAppraisalsCompetencies
+            ->find()
+            ->where([$StaffAppraisalsCompetencies->aliasField('staff_appraisal_id') => $staffAppraisalId])
+            ->toArray()
+            ;
+
+        $newSetData = $CompetencySetsCompetencies
+            ->find()
+            ->select([$CompetencySetsCompetencies->aliasField('competency_id')])
+            ->where([$CompetencySetsCompetencies->aliasField('competency_set_id') => $competencySetId])
+            ->toArray()
+            ;
+
+        $newSet = [];
+        foreach ($newSetData as $key => $obj) {
+            $newSet[$obj['competency_id']] = $obj['rating'];
+        }
+
+        $missingCompetency = [];
+        foreach ($oldSetData as $key => $obj) {
+           if ((!empty($oldSetData)) && (!array_key_exists($obj['competency_id'], $newSet))) {
+                $missingCompetency[$key] = $obj;
+            }
+        }
+
+        return $missingCompetency;
     }
 }

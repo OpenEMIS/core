@@ -1,9 +1,3 @@
-<script type="text/javascript">
-    $(function() {
-        jsTable.computeTotalForMoney('finalRating');
-        var finalRating = $('.finalRating').html();
-    });
-</script>
 <?php if ($ControllerAction['action'] == 'view') : ?>
     <?php
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
@@ -28,6 +22,7 @@
     <?php
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+        $finalRating = isset($attr['finalRating']) ? $attr['finalRating'] : '';
     ?>
     <div class="clearfix"></div>
     <label><?= __('Rating');?></label>
@@ -36,12 +31,13 @@
             <div class="table-responsive">
                 <div class="table-in-view">
                     <table class="table">
-                        <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+                        <thead><?= $this->Html->tableHeaders($tableHeaders, [], ['width' => '200px']) ?></thead>
                         <tbody id="table_finalRating" computeType="finalRating"><?= $this->Html->tableCells($tableCells) ?></tbody>
                         <tfoot>
                             <tr>
+                                <td></td>
                                 <td><?= __('Final Rating') ?></td>
-                                <td class="finalRating">0.00</td>
+                                <td class="finalRating"><?= $finalRating; ?></td>
                             </tr>
                         </tfoot>
                     </table>
