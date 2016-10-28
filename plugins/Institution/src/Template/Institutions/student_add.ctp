@@ -222,7 +222,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input select required error" ng-show="InstitutionStudentController.StudentNationalities != 2">
+                <div ng-class="InstitutionStudentController.Student.nationality_class" ng-show="InstitutionStudentController.StudentNationalities != 2">
                     <label><?= __('Nationality') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Students[nationality_id]" id="students-nationality_id"
@@ -238,7 +238,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input string required" ng-show="InstitutionStudentController.StudentIdentities != 2">
+                <div ng-class="InstitutionStudentController.Student.identity_class" ng-show="InstitutionStudentController.StudentIdentities != 2">
                     <label><?= __('{{InstitutionStudentController.Student.identity_type_name}}') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" ng-init="InstitutionStudentController.selectedStudentData.identity_number='';">
                     <div ng-if="InstitutionStudentController.postResponse.error.identities[0].number" class="error-message">

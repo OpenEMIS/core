@@ -42,6 +42,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.Student.nationality_name = '';
     StudentController.Student.identity_type_id = '';
     StudentController.Student.identity_type_name = '';
+    StudentController.Student.nationality_class = 'input select error';
+    StudentController.Student.identity_class = 'input string';
 
 
     // filter variables
@@ -136,9 +138,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 promises[1] = InstitutionsStudentsSvc.getUserContactTypes();
             }
             if (StudentController.StudentNationalities != 2) {
+                if (StudentController.StudentNationalities == 1) {
+                    StudentController.Student.nationality_class = StudentController.Student.nationality_class + ' required';
+                }
                 promises[2] = InstitutionsStudentsSvc.getNationalities();
             }
             if (StudentController.StudentIdentities != 2) {
+                if (StudentController.StudentIdentities == 1) {
+                    StudentController.Student.identity_class = StudentController.Student.identity_class + ' required';
+                }
                 promises[3] = InstitutionsStudentsSvc.getIdentityTypes();
             }
             if (StudentController.StudentSpecialNeeds != 2) {
