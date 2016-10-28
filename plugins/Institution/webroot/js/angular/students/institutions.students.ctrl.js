@@ -33,16 +33,17 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.StudentIdentities = 2;
     StudentController.StudentNationalities = 2;
     StudentController.StudentSpecialNeeds = 2;
-    StudentController.StudentContactsOptions = null;
-    StudentController.StudentIdentitiesOptions = null;
-    StudentController.StudentNationalitiesOptions = null;
-    StudentController.StudentSpecialNeedsOptions = null;
+    StudentController.StudentContactsOptions = [];
+    StudentController.StudentIdentitiesOptions = [];
+    StudentController.StudentNationalitiesOptions = [];
+    StudentController.StudentSpecialNeedsOptions = [];
     StudentController.Student = {};
     StudentController.Student.nationality_id = '';
     StudentController.Student.nationality_name = '';
     StudentController.Student.identity_type_id = '';
     StudentController.Student.identity_type_name = '';
     StudentController.Student.nationality_class = 'input select error';
+    StudentController.Student.identity_type_class = 'input select error';
     StudentController.Student.identity_class = 'input string';
 
 
@@ -57,6 +58,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.initNationality = initNationality;
     StudentController.initIdentityType = initIdentityType;
     StudentController.changeNationality = changeNationality;
+    StudentController.changeIdentityType = changeIdentityType;
     StudentController.processStudentRecord = processStudentRecord;
     StudentController.createNewInternalDatasource = createNewInternalDatasource;
     StudentController.createNewExternalDatasource = createNewExternalDatasource;
@@ -88,6 +90,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.startDate = '';
     StudentController.endDateFormatted;
     StudentController.defaultIdentityTypeName;
+    StudentController.defaultIdentityTypeId;
     StudentController.postResponse;
 
     angular.element(document).ready(function () {
@@ -146,6 +149,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (StudentController.StudentIdentities != 2) {
                 if (StudentController.StudentIdentities == 1) {
                     StudentController.Student.identity_class = StudentController.Student.identity_class + ' required';
+                    StudentController.Student.identity_type_class = StudentController.Student.identity_type_class + ' required';
                 }
                 promises[3] = InstitutionsStudentsSvc.getIdentityTypes();
             }
@@ -155,7 +159,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             var defaultIdentityType = promisesObj[1];
             if (defaultIdentityType.length > 0) {
                 StudentController.defaultIdentityTypeName = defaultIdentityType[0].name;
+                StudentController.defaultIdentityTypeId = defaultIdentityType[0].id;
+                StudentController.Student.identity_type_id = StudentController.defaultIdentityTypeId;
                 StudentController.Student.identity_type_name = StudentController.defaultIdentityTypeName;
+            } else {
+                StudentController.Student.identity_type_id = null;
+                StudentController.Student.identity_type_name = 'No default identity set';
             }
             promises[0] = InstitutionsStudentsSvc.getGenders();
 
@@ -258,12 +267,22 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
     }
 
+    function changeIdentityType() {
+        var identityType = StudentController.Student.identity_type_id;
+        var options = StudentController.StudentIdentitiesOptions;
+        for(var i = 0; i < options.length; i++) {
+            if (options[i].id == identityType) {
+                StudentController.Student.identity_type_name = options[i].name;
+                break;
+            }
+        }
+    }
+
     function initIdentityType() {
         if (StudentController.Student.nationality_id == '') {
             var options = StudentController.StudentIdentitiesOptions;
             for(var i = 0; i < options.length; i++) {
                 if (options[i].default == 1) {
-                    console.log(options[i].id);
                     StudentController.Student.identity_type_id = options[i].id;
                     StudentController.Student.identity_type_name = options[i].name;
                     break;
@@ -875,6 +894,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // Step 1 - Internal search
         if (data.step == 1) {
             StudentController.Student.identity_type_name = StudentController.defaultIdentityTypeName;
+            StudentController.Student.identity_type_id = StudentController.defaultIdentityTypeId;
             StudentController.educationGradeOptions.selectedOption = '';
             StudentController.classOptions.selectedOption = '';
             delete StudentController.postResponse;
@@ -886,6 +906,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         // Step 2 - External search
         else if (data.step == 2) {
             StudentController.Student.identity_type_name = StudentController.externalIdentityType;
+            StudentController.Student.identity_type_id = StudentController.defaultIdentityTypeId;
             StudentController.educationGradeOptions.selectedOption = '';
             StudentController.classOptions.selectedOption = '';
             delete StudentController.postResponse;
