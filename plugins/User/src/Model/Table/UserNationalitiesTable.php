@@ -25,8 +25,14 @@ class UserNationalitiesTable extends ControllerActionTable {
 	}
 
 	public function validationNonMandatory(Validator $validator) {
-		$this->validationDefault($validator);
+		$validator = $this->validationDefault($validator);
 		return $validator->allowEmpty('nationality_id');
+	}
+
+	public function validationAddByAssociation(Validator $validator)
+	{
+		$validator = $this->validationDefault($validator);
+		return $validator->requirePresence('security_user_id', false);
 	}
 
 	private function setupTabElements() {
