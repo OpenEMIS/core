@@ -29,6 +29,9 @@ class TrainingSessionsTable extends ControllerActionTable
 	const IN_PROGRESS = 2;
 	const DONE = 3;
 
+	const INTERNAL = 'INTERNAL';
+	const EXTERNAL = 'EXTERNAL';
+
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
@@ -225,7 +228,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function addEditOnAddTrainer(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
-        if (empty($data[$this->alias()]['trainers'])) {
+        if (empty($data[$this->alias()]['trainers'])) { 
             $data[$this->alias()]['trainers'] = [];
         }
 
@@ -238,11 +241,23 @@ class TrainingSessionsTable extends ControllerActionTable
         $data[$this->alias()]['trainers'] = $rearrangedTrainerData;
 
         // adds a new trainer
-        $dataOptions = [
-            'type' => key($this->getSelectOptions($this->aliasField('trainer_types'))),
-            'trainer_id' => '',
-            'name' => ''
-        ];
+        if (array_key_exists('internal_trainer', $data[$this->alias()]) && !empty($data[$this->alias()]['internal_trainer'])) {
+	        $dataOptions = [
+	            'type' => self::INTERNAL,
+	            'trainer_id' => $data[$this->alias()]['internal_trainer'],
+	            'name' => ''
+	        ];
+
+	        $data[$this->alias()]['internal_trainer'] = '';
+        } else {
+	        $trainerTypeOptions = $this->getSelectOptions($this->aliasField('trainer_types'));
+	        $dataOptions = [
+	        	'type' => self::EXTERNAL,
+	            'trainer_id' => '',
+	            'name' => ''
+	        ];
+		}
+
 		$data[$this->alias()]['trainers'][] = $dataOptions;
 
 		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
@@ -449,19 +464,24 @@ class TrainingSessionsTable extends ControllerActionTable
 		return $attr;
 	}
 
+	public function onUpdateFieldInternalTrainer(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add' || $action == 'edit') {
+			$trainerOptions = $this->getTrainerOptions();
+
+			$attr['type'] = 'chosenSelect';
+			$attr['attr']['multiple'] = false;
+			$attr['options'] = $trainerOptions;
+			$attr['onChangeReload'] = 'addTrainer';
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
-			$Users = $this->Trainers->Users;
-			$trainerOptions = $Users
-				->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
-				->where([
-					$Users->aliasField('is_student') => 0,
-					$Users->aliasField('is_staff') => 0,
-					$Users->aliasField('is_guardian') => 0
-				])
-				->toArray();
-			$trainerOptions = ['' => '-- ' . __('Select Trainer') . ' --'] + $trainerOptions;
+			$trainerOptions = $this->getTrainerOptions();
 
 			$attr['options'] = $trainerOptions;
 		}
@@ -486,6 +506,23 @@ class TrainingSessionsTable extends ControllerActionTable
 		return null;
 	}
 
+	public function getTrainerOptions()
+	{
+		$Users = $this->Trainers->Users;
+		$trainers = $Users
+			->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
+			->where([$Users->aliasField('is_student') => 0])
+			->toArray();
+
+		if (!empty($trainers)) {
+			$trainerOptions = ['' => '-- ' . __('Add Trainer') . ' --'] + $trainers;
+		} else {
+			$trainerOptions = ['' => $this->getMessage('general.select.noOptions')];
+		}
+
+		return $trainerOptions;
+	}
+
 	public function setupFields(Event $event, Entity $entity)
 	{
 		$fieldOrder = [
@@ -501,6 +538,7 @@ class TrainingSessionsTable extends ControllerActionTable
 			'type' => 'select',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
+		$this->field('internal_trainer', ['entity' => $entity]);
 		$this->field('trainers', [
 			'type' => 'element',
 			'element' => 'Training.Sessions/trainers',
@@ -508,7 +546,6 @@ class TrainingSessionsTable extends ControllerActionTable
 		]);
 
 		if (isset($entity->id)) {
-
 			/**
 			 * Import field variables
 			 */

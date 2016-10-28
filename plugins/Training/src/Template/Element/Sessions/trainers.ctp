@@ -11,8 +11,7 @@
 				<thead>
 					<tr>
 						<th><?= $this->Label->get($model->aliasField('trainer_type')); ?></th>
-						<th><?= $this->Label->get($model->aliasField('internal_trainer')); ?></th>
-						<th><?= $this->Label->get($model->aliasField('external_trainer')); ?></th>
+						<th><?= $this->Label->get($model->aliasField('trainer')); ?></th>
 					</tr>
 				</thead>
 				<?php if (!empty($data->trainers)) : ?>
@@ -20,8 +19,7 @@
 						<?php foreach ($data->trainers as $key => $obj) : ?>
 						<tr>
 							<td><?= $trainerTypeOptions[$obj->type]; ?></td>
-							<td><?= isset($obj->user->name_with_id) ? $obj->user->name_with_id : ''; ?></td>
-							<td><?= $obj->name; ?></td>
+							<td><?= isset($obj->user->name_with_id) ? $obj->user->name_with_id : $obj->name; ?></td>
 						</tr>
 						<?php endforeach ?>
 					</tbody>
@@ -36,7 +34,7 @@
 			<div class="table-toolbar">
 				<button onclick="$('#reload').val('addTrainer').click();return false;" class="btn btn-default btn-xs">
 					<i class="fa fa-plus"></i>
-					<span><?= __('Add');?></span>
+					<span><?= __('Add External Trainer');?></span>
 				</button>
 			</div>
 			<div class="table-wrapper">
@@ -45,8 +43,7 @@
 						<thead>
 							<tr>
 								<th><?= $this->Label->get($model->aliasField('trainer_type')); ?></th>
-								<th><?= $this->Label->get($model->aliasField('internal_trainer')); ?></th>
-								<th><?= $this->Label->get($model->aliasField('external_trainer')); ?></th>
+								<th><?= $this->Label->get($model->aliasField('trainer')); ?></th>
 								<th></th>
 							</tr>
 							<?php if (!empty($data->trainers)) : ?>
@@ -62,11 +59,22 @@
 													// if(isset($obj['id'])) {	// edit
 														// echo $this->Form->hidden("$prefix.id");
 													// }
-													echo $this->Form->input("$prefix.type", ['label' => false, 'options' => $trainerTypeOptions]);
+													echo $trainerTypeOptions[$obj->type];
+													echo $this->Form->hidden("$prefix.type", ['value' => $obj->type]);
 												?>
 											</td>
-											<td><?= $this->Form->input("$prefix.trainer_id", ['label' => false, 'options' => $trainerOptions]); ?></td>
-											<td><?= $this->Form->input("$prefix.name", ['label' => false]); ?></td>
+											<td>
+												<?php
+													if (isset($obj->trainer_id)) {
+														echo $trainerOptions[$obj->trainer_id];
+														echo $this->Form->hidden("$prefix.trainer_id", ['value' => $obj->trainer_id]);
+														echo $this->Form->hidden("$prefix.name");
+													} else {
+														echo $this->Form->hidden("$prefix.trainer_id");
+														echo $this->Form->input("$prefix.name", ['label' => false]);
+													}
+												?>
+											</td>
 											<td>
 												<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
 													<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
