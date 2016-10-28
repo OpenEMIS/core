@@ -66,6 +66,8 @@ class StaffController extends AppController {
     public function Comments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+	public function Appraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Appraisals']); }
+	public function StaffAppraisalTypes(){ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffAppraisalTypes']); }
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
 	// End
 
@@ -232,6 +234,7 @@ class StaffController extends AppController {
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
 			'Trainings' => ['text' => __('Trainings')],
+			'Appraisals' => ['text' => __('Appraisals')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
