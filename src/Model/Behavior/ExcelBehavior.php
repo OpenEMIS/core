@@ -490,28 +490,29 @@ class ExcelBehavior extends Behavior {
 
     public function beforeAction(Event $event, ArrayObject $extra) {
         $action = $this->_table->action;
-        $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false,
-            'title' => __('Export')
-        ];
-
-        $toolbarButtons['export'] = [
-            'type' => 'button',
-            'label' => '<i class="fa kd-export"></i>',
-            'attr' => $toolbarAttr,
-            'url' => ''
-        ];
-
         if (in_array($action, $this->config('pages'))) {
+            $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
+            $toolbarAttr = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Export')
+            ];
+
+            $toolbarButtons['export'] = [
+                'type' => 'button',
+                'label' => '<i class="fa kd-export"></i>',
+                'attr' => $toolbarAttr,
+                'url' => ''
+            ];
+
             $url = $this->_table->url($action);
             $url[0] = 'excel';
             $toolbarButtons['export']['url'] = $url;
+            $extra['toolbarButtons'] = $toolbarButtons;
         }
-        $extra['toolbarButtons'] = $toolbarButtons;
+
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {

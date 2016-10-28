@@ -288,12 +288,12 @@ class WorkflowBehavior extends Behavior {
 		if ($model->hasField('assignee_id')) {
 			if ($this->isCAv4()) {
 				$model->field('assignee_id', [
-					'type' => 'select',
+					'type' => 'string',
 					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
 				]);
 			} else {
 				$model->ControllerAction->field('assignee_id', [
-					'type' => 'select',
+					'type' => 'string',
 					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
 				]);
 			}
@@ -604,7 +604,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view') {
-			$attr['type'] = 'select';
+			$attr['type'] = 'string';
 		} else if ($action == 'add') {
 			$attr['type'] = 'hidden';
 			$attr['value'] = 0;
@@ -1173,7 +1173,7 @@ class WorkflowBehavior extends Behavior {
 	public function setStatusAsOpen(Entity $entity) {
 		$model = $this->_table;
 
-		if($model->hasBehavior('Workflow') && $entity->has('status_id')) {
+		if($model->hasBehavior('Workflow')) {
 			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
 			if (!empty($workflow)) {
 				$workflowId = $workflow->id;
