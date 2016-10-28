@@ -63,13 +63,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "LAC",
             'order' => 7,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 00:09:00"
         ], [
@@ -188,13 +183,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "TUD",
             'order' => 18,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 05:30:00"
         ], [
@@ -203,13 +193,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "UDL",
             'order' => 19,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 05:30:00"
         ], [
@@ -258,13 +243,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "ART",
             'order' => 20,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:39:00"
         ], [
@@ -273,13 +253,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "COM",
             'order' => 21,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:40:00"
         ], [
@@ -288,13 +263,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "HTH",
             'order' => 22,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:40:00"
         ], [
@@ -313,13 +283,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "ENV",
             'order' => 23,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:43:00"
         ], [
@@ -328,13 +293,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "SSC",
             'order' => 24,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -343,13 +303,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "PDD",
             'order' => 25,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -358,13 +313,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "MAL",
             'order' => 26,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -373,13 +323,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "CUM",
             'order' => 27,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -388,13 +333,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "CAC",
             'order' => 28,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -403,13 +343,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "AGR",
             'order' => 29,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -418,13 +353,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "BUS",
             'order' => 30,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -433,13 +363,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "DES",
             'order' => 31,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:45:00"
         ], [
@@ -458,13 +383,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "ACC",
             'order' => 33,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -473,13 +393,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "AEN",
             'order' => 34,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -488,13 +403,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "ANR",
             'order' => 35,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -503,13 +413,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "ASC",
             'order' => 36,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -518,13 +423,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "BIO",
             'order' => 37,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -533,13 +433,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "CHM",
             'order' => 38,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -548,13 +443,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "CMP",
             'order' => 39,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -563,13 +453,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "DAT",
             'order' => 40,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -578,13 +463,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "ECN",
             'order' => 41,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -593,13 +473,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "GMA",
             'order' => 42,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -608,13 +483,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "GEO",
             'order' => 43,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -623,13 +493,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "GLG",
             'order' => 44,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -638,13 +503,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "HIS",
             'order' => 45,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -663,13 +523,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "LAL",
             'order' => 47,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -678,13 +533,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "LST",
             'order' => 48,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -693,13 +543,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "MUS",
             'order' => 49,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -708,13 +553,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "PHY",
             'order' => 50,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -723,13 +563,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "THA",
             'order' => 51,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -738,13 +573,8 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "TOU",
             'order' => 52,
             'visible' => 1,
-<<<<<<< HEAD
             'modified_user_id' => 0,
             'modified' => NULL,
-=======
-            'modified_user_id' => null,
-            'modified' => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ], [
@@ -783,8 +613,7 @@ class EducationSubjectsFixture extends TestFixture
             'code' => "MMC",
             'order' => 3,
             'visible' => 1,
-            'modified_user_id' => NULL,
-            'modified' => NULL,
+
             'created_user_id' => 1,
             'created' => "2014-09-26 12:25:28"
         ], [
