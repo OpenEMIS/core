@@ -24,11 +24,11 @@ CREATE TABLE `staff_training_applications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the course applications for a particular staff';
 
 -- workflow_models
-INSERT INTO `workflow_models` (`name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
-('Staff > Training > Applications', 'Institution.StaffTrainingApplications', NULL, 0, 1, NOW());
+SET @modelId := 10;
+INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
+(@modelId, 'Administration > Training > Applications', 'Training.TrainingApplications', NULL, 0, 1, NOW());
 
 -- Pre-insert workflows
-SET @modelId := 10;
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('TRN-5001', 'Training Applications', @modelId, 1, NOW());
 
