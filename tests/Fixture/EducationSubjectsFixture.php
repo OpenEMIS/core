@@ -69,7 +69,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 7,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 00:09:00"
         ],
@@ -201,7 +201,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 18,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 05:30:00"
         ],
@@ -212,7 +212,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 19,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 05:30:00"
         ],
@@ -267,7 +267,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 20,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:39:00"
         ],
@@ -278,7 +278,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 21,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:40:00"
         ],
@@ -289,7 +289,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 22,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:40:00"
         ],
@@ -311,7 +311,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 23,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:43:00"
         ],
@@ -322,7 +322,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 24,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -333,7 +333,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 25,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -344,7 +344,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 26,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -355,7 +355,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 27,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -366,7 +366,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 28,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -377,7 +377,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 29,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -388,7 +388,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 30,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -399,7 +399,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 31,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:45:00"
         ],
@@ -421,7 +421,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 33,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -432,7 +432,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 34,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -443,7 +443,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 35,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -454,7 +454,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 36,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -465,7 +465,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 37,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -476,7 +476,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 38,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -487,7 +487,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 39,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -498,7 +498,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 40,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -509,7 +509,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 41,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -520,7 +520,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 42,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -531,7 +531,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 43,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -542,7 +542,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 44,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -553,7 +553,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 45,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -575,7 +575,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 47,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -586,7 +586,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 48,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -597,7 +597,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 49,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -608,7 +608,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 50,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -619,7 +619,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 51,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
@@ -630,7 +630,7 @@ class EducationSubjectsFixture extends TestFixture
             'order' => 52,
             'visible' => 1,
             'modified_user_id' => 0,
-            'modified' => "0000-00-00 00:00:00",
+            'modified' => NULL,
             'created_user_id' => 1,
             'created' => "2019-10-12 06:44:00"
         ],
