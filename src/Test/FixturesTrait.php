@@ -62,6 +62,8 @@ trait FixturesTrait {
         'app.education_subjects',
         'app.education_systems',
         'app.employment_types',
+        'app.examinations',
+        'app.examination_centre_students',
         'app.extracurricular_types',
         'app.fee_types',
         'app.field_option_values',
