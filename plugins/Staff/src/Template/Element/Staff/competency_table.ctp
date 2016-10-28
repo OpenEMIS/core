@@ -31,7 +31,13 @@
             <div class="table-responsive">
                 <div class="table-in-view">
                     <table class="table">
-                        <thead><?= $this->Html->tableHeaders($tableHeaders, [], ['width' => '200px']) ?></thead>
+                        <thead>
+                            <tr>
+                                <th><?=__('Competencies / Goals')?></th>
+                                <th width="300px"><?=__('Rating')?></th>
+                                <th><?=__('Value')?></th>
+                            </tr>
+                        </thead>
                         <tbody id="table_finalRating" computeType="finalRating"><?= $this->Html->tableCells($tableCells) ?></tbody>
                         <tfoot>
                             <tr>
