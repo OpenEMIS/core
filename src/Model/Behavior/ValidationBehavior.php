@@ -1333,6 +1333,38 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function checkDateWithinAcademicPeriod($field, $academicPeriod, $options = [], array $globalData) {
+		if (array_key_exists($academicPeriod, $globalData['data'])) {
+	        $academicPeriodId = $globalData['data'][$academicPeriod];
+
+	        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+	        $periodData = $AcademicPeriods->get($academicPeriodId);
+
+	        $excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
+	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
+
+	        if ($excludeFirstDay) {
+	        	$withFirstDay = Time::parse($periodData->start_date);
+	        	$startDate = $withFirstDay->modify('+1 day')->format('Y-m-d');
+	        } else {
+	        	$startDate = $periodData->start_date->format('Y-m-d');
+	        }
+
+	        if ($excludeLastDay) {
+	        	$withLastDay = Time::parse($periodData->end_date);
+	        	$endDate = $withLastDay->modify('-1 day')->format('Y-m-d');
+	        } else {
+	        	$endDate = $periodData->end_date->format('Y-m-d');
+	        }
+
+	        $effectiveDate = Time::parse($field)->format('Y-m-d');
+
+	        return ($effectiveDate >= $startDate && $effectiveDate <= $endDate);
+	    }
+
+	    return false;
+    }
+
 	public static function checkTimeRange($field, array $globalData) {
 		$systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
 		$model = $globalData['providers']['table'];
