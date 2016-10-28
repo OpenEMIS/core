@@ -27,7 +27,6 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         // ]);
 
         $this->toggle('edit', false);
-        $this->toggle('remove', false);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -36,39 +35,86 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $userType = 'StaffUser';
         $this->controller->changeUserHeader($this, $modelAlias, $userType);
         $this->setupTabElements();
-    }
 
-    public function indexbeforeAction(Event $event, ArrayObject $extra)
-    {
-        if (isset($extra['toolbarButtons']['add']['url'])) {
-            $extra['toolbarButtons']['add']['url']['action'] = 'StaffTrainingCourses';
-            $extra['toolbarButtons']['add']['url'][0] = 'index';
-        }
+        $session = $this->request->session();
+        $extra['staffId'] = $session->read('Staff.Staff.id');
+        $extra['institutionId'] = $session->read('Institution.Institutions.id');
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $query = $this->getQueryString();
+
         if (isset($extra['redirect']['query'])) {
             unset($extra['redirect']['query']);
         }
+
         if ($query) {
-            $query = $this->getUrlParamsv2($query);
-            $id = $query['id'];
-            $this->field('staff_id');
-            $this->field('course_id');
-        } else {
-            $this->controller->redirect($extra['redirect']);
+            $courseId = $query['course_id'];
+
+            // check if user has already added this course before
+            $existingApplication = $this->find()
+                ->where([
+                    $this->aliasField('staff_id') => $extra['staffId'],
+                    $this->aliasField('training_course_id') => $courseId
+                ])
+                ->first();
+
+            if (empty($existingApplication)) {
+                if ($this->saveCourse($courseId, $extra)) {
+                    $this->Alert->success($this->aliasField('success'), ['reset' => true]);
+                    $event->stopPropagation();
+                    return $this->controller->redirect($extra['redirect']);
+
+                } else {
+                    $this->Alert->error($this->aliasField('fail'), ['reset' => true]);
+                }
+            } else {
+                $this->Alert->warning($this->aliasField('exists'), ['reset' => true]);
+            }
+        }
+
+        $event->stopPropagation();
+        return $this->controller->redirect($extra['redirect']);
+    }
+
+    private function saveCourse($courseId, ArrayObject $extra)
+    {
+        $staffId = $extra['staffId'];
+        $institutionId = $extra['institutionId'];
+
+        $application = [];
+        $application['staff_id'] = $staffId;
+        $application['training_course_id'] = $courseId;
+        $application['status_id'] = 0;
+        $application['institution_id'] = $institutionId;
+        $entity = $this->newEntity($application);
+
+        if ($this->save($entity)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public function indexbeforeAction(Event $event, ArrayObject $extra)
+    {
+        if (isset($extra['redirect']['query'])) {
+            unset($extra['redirect']['query']);
+        }
+
+        if (isset($extra['toolbarButtons']['add']['url'])) {
+            $extra['toolbarButtons']['add']['url']['action'] = 'CourseCatalogue';
+            $extra['toolbarButtons']['add']['url'][0] = 'index';
+            $extra['toolbarButtons']['add']['attr']['title'] = 'Apply';
         }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $session = $this->request->session();
-        $staff_id = $session->read('Staff.Staff.id');
         $query
             ->contain(['Courses.TrainingFieldStudies', 'Courses.TrainingLevels'])
-            ->where([$this->aliasField('staff_id') => $staff_id]);
+            ->where([$this->aliasField('staff_id') => $extra['staffId']]);
 
         $extra['auto_contain_fields'] = ['Courses' => ['credit_hours']];
     }

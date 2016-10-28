@@ -3,7 +3,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-3449', NOW());
 
 -- create table
 CREATE TABLE `staff_training_applications` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `training_course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
@@ -28,8 +28,7 @@ INSERT INTO `workflow_models` (`name`, `model`, `filter`, `is_school_based`, `cr
 ('Staff > Training > Applications', 'Institution.StaffTrainingApplications', NULL, 0, 1, NOW());
 
 -- Pre-insert workflows
-SET @modelId := 0;
-SELECT `id` INTO @modelId FROM `workflow_models` WHERE `model` = 'Institution.StaffTrainingApplications';
+SET @modelId := 10;
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
 ('TRN-5001', 'Training Applications', @modelId, 1, NOW());
 
@@ -44,7 +43,7 @@ SET @pendingReviewStatusId := 0;
 SET @approvedStatusId := 0;
 SET @rejectedStatusId := 0;
 INSERT INTO `workflow_steps` (`name`, `category`, `is_editable`, `is_removable`, `is_system_defined`, `workflow_id`, `created_user_id`, `created`) VALUES
-('Open', 1, 1, 1, 1, @workflowId, 1, NOW()),
+('Open', 1, 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending For Approval', 2, 0, 0, 1, @workflowId, 1, NOW()),
 ('Closed', 3, 0, 0, 1, @workflowId, 1, NOW()),
 ('Pending For Review', 0, 0, 0, 0, @workflowId, 1, NOW()),
@@ -66,4 +65,37 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Approve', NULL, 0, 1, 0, 0, NULL, @pendingApprovalStatusId, @approvedStatusId, 1, NOW()),
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingApprovalStatusId, @rejectedStatusId, 1, NOW());
 
--- still have to add statuses and steps_roles
+-- Pre-insert workflow_statuses
+INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
+('PENDINGREVIEW', 'Pending Review', 0, 0, @modelId, 1, NOW()),
+('PENDINGAPPROVAL', 'Pending Approval', 0, 0, @modelId, 1, NOW()),
+('APPROVED', 'Approved', 0, 0, @modelId, 1, NOW()),
+('REJECTED', 'Rejected', 0, 0, @modelId, 1, NOW());
+
+-- Pre-insert workflow_statuses_steps
+SET @pendingReviewId := 0;
+SET @pendingApprovalId := 0;
+SET @approvedId := 0;
+SET @rejectedId := 0;
+SELECT `id` INTO @pendingReviewId FROM `workflow_statuses` WHERE `code` = 'PENDINGREVIEW' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @pendingApprovalId FROM `workflow_statuses` WHERE `code` = 'PENDINGAPPROVAL' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @approvedId FROM `workflow_statuses` WHERE `code` = 'APPROVED' AND `workflow_model_id` = @modelId;
+SELECT `id` INTO @rejectedId FROM `workflow_statuses` WHERE `code` = 'REJECTED' AND `workflow_model_id` = @modelId;
+INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_step_id`) VALUES
+('8b16b531-9c00-11e6-98d5-525400b263eb', @pendingReviewId, @pendingReviewStatusId),
+('9c773e6a-9c00-11e6-98d5-525400b263eb', @pendingApprovalId, @pendingApprovalStatusId),
+('a5ddc9ec-9c00-11e6-98d5-525400b263eb', @approvedId, @approvedStatusId),
+('b0b1b8c1-9c00-11e6-98d5-525400b263eb', @rejectedId, @rejectedStatusId);
+
+-- add security_functions
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(3037, 'Applications', 'Institutions', 'Institutions', 'Staff - Training', '3000', 'StaffTrainingApplications.index|StaffTrainingApplications.view', null, 'StaffTrainingApplications.add|CourseCatalogue.index|CourseCatalogue.view', 'StaffTrainingApplications.remove', null, 3037, 1, 1, NOW());
+
+-- update staff training security_functions
+UPDATE `security_functions`
+SET `controller` = 'Institutions', `_view` = 'StaffTrainingNeeds.index|StaffTrainingNeeds.view', `_edit` = 'StaffTrainingNeeds.edit', `_add` = 'StaffTrainingNeeds.add', `_delete` = 'StaffTrainingNeeds.remove'
+WHERE `name` = 'Needs' AND `category` = 'Staff - Training';
+
+UPDATE `security_functions`
+SET `controller` = 'Institutions', `_view` = 'StaffTrainingResults.index|StaffTrainingResults.view'
+WHERE `name` = 'Results' AND `category` = 'Staff - Training';

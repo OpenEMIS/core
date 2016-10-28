@@ -61,7 +61,7 @@ var Workflow = {
 			$('.workflowtransition-assignee-id').closest('.input').show();
 		}
 	},
-	
+
 	onSubmit: function(obj) {
 		var assigneeRequired = $('.workflowtransition-assignee-required').val();
 		var assigneeId = $('.workflowtransition-assignee-id').val();

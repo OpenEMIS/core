@@ -452,6 +452,20 @@ trait MessagesTrait {
             'pendingRequest' => 'There is a pending student status change request at the moment.',
             'selectNextGrade' => 'Please select a grade to promote to.'
         ],
+        'IndividualPromotion' => [
+            'noGrades' => 'No Available Grades',
+            'noPeriods' => 'You need to configure Academic Periods for Promotion / Graduation',
+            'success' => 'Students status changed successfully.',
+            'noNextGrade' => 'Next grade in the Education Structure is not available in this Institution',
+            'reconfirm' => 'Please review the information before proceeding with the operation',
+            'noAvailableGrades' => 'No Available Grades in this Institution',
+            'noAvailableAcademicPeriod' => 'No Available Academic Periods',
+            'noNextGradeOrNextPeriod' => 'Next grade in the Education Structure is not available in this Institution or no Next Academic Period defined',
+            'savingPromotionError' => 'The student record was not updated succesfully',
+            'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
+            'pendingTransfer' => 'There is a pending transfer request for this student.',
+            'pendingDropout' => 'There is a pending dropout request for this student.',
+        ],
         'StudentTransfer' => [
             'noGrades' => 'No Available Grades',
             'noStudents' => 'No Available Students',
@@ -542,6 +556,11 @@ trait MessagesTrait {
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
+        ],
+        'StaffTrainingApplications' => [
+            'success' => 'The course has been added successfully.',
+            'fail' => 'Failed to add the course.',
+            'exists' => 'This course has already been added.'
         ],
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
@@ -717,6 +736,11 @@ trait MessagesTrait {
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
                     ],
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                ]
+            ],
+            'IndividualPromotion' => [
+                'effective_date' => [
+                    'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
             'Students' => [

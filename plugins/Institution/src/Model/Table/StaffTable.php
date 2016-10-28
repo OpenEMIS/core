@@ -408,8 +408,8 @@ class StaffTable extends AppTable {
 			$affectedRows = $securityGroupUserResults->count();
 			$deleteEntity = $securityGroupUserResults->first();
 			$SecurityGroupUsersTable->delete($deleteEntity);
-			$this->updateSecurityGroupUserId($staffEntity, NULL);
 		}
+		$this->updateSecurityGroupUserId($staffEntity, NULL);
 
 		if ($affectedRows) {
 			$positionEntity = $this->Positions->find()
@@ -1510,15 +1510,17 @@ class StaffTable extends AppTable {
         return $query;
     }
 
-	public function removeInactiveStaffSecurityRole() {
+	public function removeInactiveStaffSecurityRole()
+	{
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
 		$StaffTable = $this;
-		while(true) {
+		while (true) {
 			$query = $this->find()
 				->where([
 					$this->aliasField('security_group_user_id IS NOT NULL'),
-					$this->aliasField('end_date IS NOT NULL')
+					$this->aliasField('end_date IS NOT NULL'),
+					$this->aliasField('staff_status_id') => $this->assigned
 				])
 				->where(
 					function ($exp) use ($StaffTable) {
@@ -1542,7 +1544,8 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function removeIndividualStaffSecurityRole($staffId) {
+	public function removeIndividualStaffSecurityRole($staffId)
+	{
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		$StaffTable = $this;
 		$institutionStaffRecords = $this->find()

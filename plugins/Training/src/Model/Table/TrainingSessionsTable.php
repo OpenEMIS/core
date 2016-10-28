@@ -149,6 +149,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 		$trainerTypeOptions = $this->getSelectOptions($this->aliasField('trainer_types'));
 		$this->controller->set('trainerTypeOptions', $trainerTypeOptions);
+		$this->setupTabElements();
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -539,6 +540,13 @@ class TrainingSessionsTable extends ControllerActionTable
 
 		$this->setFieldOrder($fieldOrder);
 	}
+
+	private function setupTabElements()
+    {
+        $tabElements = $this->controller->getSessionTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Sessions');
+    }
 
 
 /******************************************************************************************************************

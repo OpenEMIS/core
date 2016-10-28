@@ -47,6 +47,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </ul>
     </div>
     <div class="actions top">
+        <?php if ($_createNewStudent) : ?>
         <button
             ng-if="((!InstitutionStudentController.initialLoad && !InstitutionStudentController.hasExternalDataSource)
             || (!InstitutionStudentController.initialLoad && InstitutionStudentController.step == 'external_search')
@@ -55,6 +56,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-click="InstitutionStudentController.onAddNewStudentClick()"
             type="button" class="btn btn-default"><?= __('Create New Student') ?>
         </button>
+        <?php endif; ?>
         <button
             type="button" class="btn btn-default" ng-click="InstitutionStudentController.onExternalSearchClick()"
             ng-if="(!InstitutionStudentController.initialLoad && InstitutionStudentController.hasExternalDataSource && InstitutionStudentController.showExternalSearchButton && InstitutionStudentController.step=='internal_search')" ng-disabled="InstitutionStudentController.selectedStudent"><?= __('External Search') ?>
