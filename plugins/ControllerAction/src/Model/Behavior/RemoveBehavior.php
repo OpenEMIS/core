@@ -335,16 +335,15 @@ class RemoveBehavior extends Behavior
                 if ($assoc->type() == 'oneToMany' || $assoc->type() == 'manyToMany') {
                     if (!array_key_exists($assoc->alias(), $associations)) {
                         $count = 0;
-                        if ($assoc->type() == 'oneToMany') {
-                            $count = $assoc->find()
-                            ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-                            ->count();
-                        } else {
-                            $modelAssociationTable = $assoc->junction();
-                            $count = $modelAssociationTable->find()
-                                ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
-                                ->count();
+                        $assocTable = $assoc;
+                        if ($assoc->type() == 'manyToMany') {
+                            $assocTable = $assoc->junction();
                         }
+                        $conditions = [$assocTable->aliasField($assoc->foreignKey()) => $id];
+                        $query = $assocTable->find()->where($conditions);
+                        $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
+
+                        $count = $query->count();
                         $title = $assoc->name();
                         $event = $assoc->dispatchEvent('ControllerAction.Model.transfer.getModelTitle', [], $this);
                         if (!is_null($event->result)) {
