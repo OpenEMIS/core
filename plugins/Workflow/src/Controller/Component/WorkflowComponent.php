@@ -9,7 +9,7 @@ use Cake\Log\LogTrait;
 
 class WorkflowComponent extends Component {
 	use LogTrait;
-	
+
 	private $controller;
 	private $action;
 
@@ -41,13 +41,23 @@ class WorkflowComponent extends Component {
 
 			$session->write('Workflow.Workflows.models', $models);
 		}
-
-		foreach ($models as $key => $model) {
-			$ignoreList[$model] = ['processWorkflow'];	
-		}
-		$this->AccessControl->config('ignoreList', $ignoreList);
 		// End
 	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+	public function isActionIgnored(Event $event, $action)
+    {
+        $pass = $this->request->pass;
+        if (isset($pass[0]) && $pass[0] == 'processWorkflow') {
+            return true;
+        }
+    }
 
 	/**
 	 *	Function to get the list of the workflow statuses base on the model name
@@ -74,7 +84,7 @@ class WorkflowComponent extends Component {
 
 	/**
 	 *	Function to get the list of the workflow steps and workflow status name mapping
-	 *	by a given model id 
+	 *	by a given model id
 	 *
 	 *	@param string $model The name of the model e.g. Institution.InstitutionSurveys
 	 *	@return array The list of workflow steps status name mapping (key => workflow_step_id, value=>workflow_status_name)
@@ -85,7 +95,7 @@ class WorkflowComponent extends Component {
 	}
 
 	/**
-	 *	Function to get the list of the workflow steps by a given workflow model's model and the workflow status code 
+	 *	Function to get the list of the workflow steps by a given workflow model's model and the workflow status code
 	 *
 	 *	@param string $model The name of the model e.g. Institution.InstitutionSurveys
 	 *	@param string $code The code of the workflow status
@@ -99,7 +109,7 @@ class WorkflowComponent extends Component {
 			])
 			->matching('WorkflowStatuses.WorkflowSteps')
 			->where([
-				$this->WorkflowModels->aliasField('model') => $model, 
+				$this->WorkflowModels->aliasField('model') => $model,
 				'WorkflowStatuses.code' => $code
 			])
 			->select(['id' => 'WorkflowSteps.id'])
@@ -147,7 +157,7 @@ class WorkflowComponent extends Component {
 
 			$query->where(['NOT EXISTS ('.$excludedQuery->sql().')']);
 		}
-			
+
 		$statuses = $query->toArray();
 
 		return $statuses;
