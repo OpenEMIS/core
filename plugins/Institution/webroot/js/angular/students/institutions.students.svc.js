@@ -38,7 +38,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateReverse: formatDateReverse
+        formatDateReverse: formatDateReverse,
+        getAddNewStudentConfig: getAddNewStudentConfig,
+        getUserContactTypes: getUserContactTypes,
+        getIdentityTypes: getIdentityTypes,
+        getNationalities: getNationalities,
+        getSpecialNeedTypes: getSpecialNeedTypes
     };
 
     var models = {
@@ -52,7 +57,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
-        ConfigItems: 'Configuration.ConfigItems'
+        ConfigItems: 'Configuration.ConfigItems',
+        Nationalities: 'FieldOption.Nationalities',
+        ContactTypes: 'User.ContactTypes',
+        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
     };
 
     var externalModels = {
@@ -399,7 +407,20 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         if (externalSource == null) {
             userRecord['username'] = userRecord['openemis_no'];
             delete userRecord['gender'];
-            userRecord['is_student'] = 1;
+            if (userRecord['nationality_id'] != '' && userRecord['nationality_id'] != undefined) {
+                userRecord['nationalities'] = [{
+                    'nationality_id': userRecord['nationality_id']
+                }];
+            }
+            if (userRecord['identity_type_id'] != '' && userRecord['identity_type_id'] != undefined) {
+                userRecord['identities'] = [{
+                    'identity_type_id': userRecord['identity_type_id'],
+                    'number': userRecord['identity_number']
+                }];
+            }
+            delete userRecord['identity_type_id'];
+            delete userRecord['identity_number'];
+            delete userRecord['nationality_id'];
             StudentUser.reset();
             StudentUser.save(userRecord)
             .then(function(studentRecord) {
@@ -677,5 +698,36 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             deferred.reject(error);
         });
         return deferred.promise;
+    }
+
+    function getAddNewStudentConfig() {
+        return ConfigItems
+            .select()
+            .where({type: 'Add New Student'})
+            .ajax({defer: true});
+    }
+
+    function getUserContactTypes() {
+        return ContactTypes
+            .select()
+            .ajax({defer: true});
+    }
+
+    function getIdentityTypes() {
+        return IdentityTypes
+            .select()
+            .ajax({defer: true});
+    }
+
+    function getNationalities() {
+        return Nationalities
+            .select()
+            .contain(['IdentityTypes'])
+            .ajax({defer: true});
+    }
+    function getSpecialNeedTypes() {
+        return SpecialNeedTypes
+            .select()
+            .ajax({defer: true});
     }
 };
