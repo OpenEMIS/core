@@ -1173,7 +1173,7 @@ class WorkflowBehavior extends Behavior {
 	public function setStatusAsOpen(Entity $entity) {
 		$model = $this->_table;
 
-		if($model->hasBehavior('Workflow') && $entity->has('status_id')) {
+		if($model->hasBehavior('Workflow')) {
 			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
 			if (!empty($workflow)) {
 				$workflowId = $workflow->id;
