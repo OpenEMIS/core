@@ -81,8 +81,10 @@ class CourseCatalogueTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // remove add button from index
         $this->toggle('add', false);
-        $this->fields=[];
+
+        $this->fields = [];
         $this->field('code');
         $this->field('name');
         $this->field('training_course_type_id');
@@ -162,7 +164,7 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
 
-        // back button direct to staff course application index
+        // add button to add course
         $addBtn['type'] = 'button';
         $addBtn['label'] = '<i class="fa kd-add"></i>';
         $addBtn['attr'] = [
