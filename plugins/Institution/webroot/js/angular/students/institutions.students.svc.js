@@ -412,7 +412,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     'nationality_id': userRecord['nationality_id']
                 }];
             }
-            if (userRecord['identity_type_id'] != '' && userRecord['identity_type_id'] != undefined) {
+            if (userRecord['identity_type_id'] != '' && userRecord['identity_type_id'] != undefined && userRecord['identity_number'] != undefined && userRecord['identity_number'] != '') {
                 userRecord['identities'] = [{
                     'identity_type_id': userRecord['identity_type_id'],
                     'number': userRecord['identity_number']
