@@ -17,6 +17,9 @@ class NationalitiesTable extends ControllerActionTable
         $this->hasMany('UserNationalities', ['className' => 'User.UserNationalities', 'foreignKey' => 'nationality_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
     }
 
     public function afterAction(Event $event) {
