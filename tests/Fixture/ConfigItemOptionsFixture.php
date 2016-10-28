@@ -79,51 +79,51 @@ class ConfigItemOptionsFixture extends TestFixture
             'order' => '2',
             'visible' => '0'
         ],
-        // [
-        //     'id' => '12',
-        //     'option_type' => 'language',
-        //     'option' => 'العربية',
-        //     'value' => 'ara',
-        //     'order' => '1',
-        //     'visible' => '1'
-        // ],
-        // [
-        //     'id' => '13',
-        //     'option_type' => 'language',
-        //     'option' => '中文',
-        //     'value' => 'chi',
-        //     'order' => '2',
-        //     'visible' => '1'
-        // ],
+        [
+            'id' => '12',
+            'option_type' => 'language',
+            'option' => 'Arabic',
+            'value' => 'ar',
+            'order' => '1',
+            'visible' => '1'
+        ],
+        [
+            'id' => '13',
+            'option_type' => 'language',
+            'option' => 'Chinese',
+            'value' => 'zh',
+            'order' => '2',
+            'visible' => '1'
+        ],
         [
             'id' => '14',
             'option_type' => 'language',
             'option' => 'English',
-            'value' => 'eng',
+            'value' => 'en',
             'order' => '3',
             'visible' => '1'
         ],
         [
             'id' => '15',
             'option_type' => 'language',
-            'option' => 'Français',
-            'value' => 'fre',
+            'option' => 'French',
+            'value' => 'fr',
             'order' => '4',
             'visible' => '1'
         ],
-        // [
-        //     'id' => '16',
-        //     'option_type' => 'language',
-        //     'option' => 'русский',
-        //     'value' => 'ru',
-        //     'order' => '5',
-        //     'visible' => '1'
-        // ],
+        [
+            'id' => '16',
+            'option_type' => 'language',
+            'option' => 'Russian',
+            'value' => 'ru',
+            'order' => '5',
+            'visible' => '1'
+        ],
         [
             'id' => '17',
             'option_type' => 'language',
             'option' => 'español',
-            'value' => 'spa',
+            'value' => 'es',
             'order' => '6',
             'visible' => '1'
         ],
