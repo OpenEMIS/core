@@ -738,6 +738,11 @@ trait MessagesTrait {
                     'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
+            'VisitRequests' => [
+                'date_of_visit' => [
+                    'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                ]
+            ],
             'Students' => [
                 'student_name' => [
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
