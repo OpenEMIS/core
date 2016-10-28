@@ -186,11 +186,7 @@ class SecurityUsersFixture extends TestFixture
             "address_area_id" => "147",
             "birthplace_area_id" => "147",
             "created" => "1970-01-01 00:00:00",
-<<<<<<< HEAD
             "created_user_id" => "0",
-=======
-            "created_user_id" => "1",
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             "date_of_birth" => "2003-01-01",
             "date_of_death" => null,
             "first_name" => "Student2",
@@ -199,11 +195,7 @@ class SecurityUsersFixture extends TestFixture
             "is_guardian" => "0",
             "is_staff" => "0",
             "is_student" => "1",
-<<<<<<< HEAD
             "last_login" => NULL,
-=======
-            "last_login" => null,
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
             "last_name" => "Demo User",
             "middle_name" => null,
             "modified" => null,
