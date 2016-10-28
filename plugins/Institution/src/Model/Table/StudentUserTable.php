@@ -59,6 +59,18 @@ class StudentUserTable extends ControllerActionTable
         $this->toggle('remove', false);
 	}
 
+
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+	{
+		$options['associated']['Nationalities'] = [
+			'validate' => 'AddByAssociation'
+		];
+		$options['associated']['Identities'] = [
+			'validate' => 'AddByAssociation'
+		];
+	}
+
 	public static function handleAssociations($model)
 	{
 		$model->belongsTo('Genders', 		 ['className' => 'User.Genders']);
