@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Network\Session;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
+use Cake\Routing\Router;
 
 class WorkflowBehavior extends Behavior {
 	// Workflow Steps - category
@@ -42,7 +43,7 @@ class WorkflowBehavior extends Behavior {
  			'method' => 'onAssignBack'
  		]
  	];
- 	
+
 
 	private $controller;
 	private $model = null;
@@ -177,6 +178,7 @@ class WorkflowBehavior extends Behavior {
 
 		$notDoneRecords = $model
 			->find()
+			->contain(['Assignees'])
 			->matching('Statuses', function ($q) {
 				return $q->where(['Statuses.category <> ' => self::DONE]);
 			})
@@ -210,6 +212,8 @@ class WorkflowBehavior extends Behavior {
 				['assignee_id' => $assigneeId],
 				['id' => $notDoneEntity->id]
 			);
+
+			$this->WorkflowTransitions->trackChanges($workflowModelEntity, $notDoneEntity, $assigneeId);
 		}
 	}
 
@@ -226,7 +230,7 @@ class WorkflowBehavior extends Behavior {
 			->first();
 
 		$workflowModelEntity = $entity->_matchingData['WorkflowModels'];
-		// only trigger update assignee shell where the workflow step belongs to 
+		// only trigger update assignee shell where the workflow step belongs to
 		if ($workflowModelEntity->model == $model->registryAlias()) {
 			$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId);
 		}
@@ -287,12 +291,12 @@ class WorkflowBehavior extends Behavior {
 		if ($model->hasField('assignee_id')) {
 			if ($this->isCAv4()) {
 				$model->field('assignee_id', [
-					'type' => 'select',
+					'type' => 'string',
 					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
 				]);
 			} else {
 				$model->ControllerAction->field('assignee_id', [
-					'type' => 'select',
+					'type' => 'string',
 					'visible' => ['index' => true, 'view' => true, 'add' => false, 'edit' => false]
 				]);
 			}
@@ -512,7 +516,7 @@ class WorkflowBehavior extends Behavior {
 						$rowData = [];
 						$rowData[] = $transitionDisplay;
 						$rowData[] = $transition->workflow_action_name;
-						$rowData[] = nl2br($transition->comment);
+						$rowData[] = nl2br(htmlspecialchars($transition->comment));
 						$rowData[] = $transition->created_user->name;
 						$rowData[] = $transition->created->format('Y-m-d H:i:s');
 
@@ -603,7 +607,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function onUpdateFieldAssigneeId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'view') {
-			$attr['type'] = 'select';
+			$attr['type'] = 'string';
 		} else if ($action == 'add') {
 			$attr['type'] = 'hidden';
 			$attr['value'] = 0;
@@ -840,6 +844,7 @@ class WorkflowBehavior extends Behavior {
 		$model = $this->_table;
 		$step = $this->getWorkflowStep($entity);
 
+		$assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
 		if (!is_null($step)) {
 			$workflow = $step->_matchingData['Workflows'];
 
@@ -932,7 +937,8 @@ class WorkflowBehavior extends Behavior {
 				$alias.'.assignee_id' => [
 					'label' => __('Assignee'),
 					'type' => 'select',
-					'class'=> 'workflowtransition-assignee-id'
+					'class'=> 'workflowtransition-assignee-id',
+					'assignee-url' => $assigneeUrl
 				],
 				$alias.'.comment' => [
 					'label' => __('Comment'),
@@ -959,7 +965,7 @@ class WorkflowBehavior extends Behavior {
 				'id' => 'workflowTransition',
 				'title' => __('Add Comment'),
 				'content' => $content,
-				'contentFields' => $contentFields, 
+				'contentFields' => $contentFields,
 				'form' => [
 					'model' => $model,
 					'formOptions' => [
