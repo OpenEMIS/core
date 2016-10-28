@@ -206,8 +206,9 @@ class LocalizationComponent extends Component {
 			   		break;
 			   }
 			}
+
+			fclose($file);
 		}
-		fclose($file);
 		return $lastModified;
 	}
 
