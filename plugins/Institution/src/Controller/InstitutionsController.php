@@ -653,17 +653,17 @@ class InstitutionsController extends AppController
 
     public function getTrainingTabElements($options = []) {
         $tabElements = [];
-        $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
-        $studentTabElements = [
+        $trainingUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        $trainingTabElements = [
             'StaffTrainingResults' => ['text' => __('Results')],
             'StaffTrainingApplications' => ['text' => __('Applications')],
             'StaffTrainingNeeds' => ['text' => __('Needs')]
         ];
 
-        $tabElements = array_merge($tabElements, $studentTabElements);
+        $tabElements = array_merge($tabElements, $trainingTabElements);
 
-        foreach ($studentTabElements as $key => $tab) {
-            $tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+        foreach ($trainingTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
         }
         return $tabElements;
     }
