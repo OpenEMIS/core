@@ -282,7 +282,6 @@ trait FixturesTrait {
         'app.workflow_actions',
         'app.workflow_comments',
         'app.workflow_models',
-        'app.workflow_records',
         'app.workflow_statuses',
         'app.workflow_statuses_steps',
         'app.workflow_steps',
