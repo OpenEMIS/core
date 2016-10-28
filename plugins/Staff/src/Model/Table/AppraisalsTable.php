@@ -318,7 +318,10 @@ class AppraisalsTable extends ControllerActionTable {
         $staffAppraisalId = $entity->id;
 
         if ($action == 'view') {
-            $tableHeaders = [__('Competency'), __('Rating')];
+            $tableHeaders = [
+                $this->getMessage('Staff.Appraisal.competencies_goals'),
+                $this->getMessage('Staff.Appraisal.rating')
+            ];
             $tableCells = [];
 
             $StaffAppraisalsCompetencies = TableRegistry::get('Staff.StaffAppraisalsCompetencies');
@@ -346,7 +349,6 @@ class AppraisalsTable extends ControllerActionTable {
             }
         } else if ($action == 'edit') {
             $form = $event->subject()->Form;
-            $tableHeaders = [__('Competency'), __('Rating'), __('Value')];
             $tableCells = [];
             $cellCount = 0;
 
@@ -428,19 +430,15 @@ class AppraisalsTable extends ControllerActionTable {
                 $fieldPrefix = $attr['model'] . '.competencies.' . $cellCount++;
                 $joinDataPrefix = $fieldPrefix . '._joinData';
                 $rating = !empty($obj['rating']) ? $obj['rating'] : 0;
-                // $rating = !empty($obj['rating']) ? $obj['rating'] : 'rating_' . $key;
                 $ngModel[] = 'rating_' . $key;
 
                 $form->unlockField($joinDataPrefix.".rating");
                 $cellData = "";
                 if ($rating === 'Deleted') {
                     $cellData = $this->getMessage('Staff.Appraisal.deleted_competencies');
-                    // $cellData = __('Deleted');
 
                 } else {
                     $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="rating_'.$key.'" value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
-                    // $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="'.$rating.'" ng-init="'.$rating.'"  value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
-                    // $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="'.$rating.'" value="{{'.$rating.'}}" min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
                     $cellData .= $form->hidden($joinDataPrefix.".rating", [
                         'label' => false,
                         'type' => 'number',
@@ -455,7 +453,7 @@ class AppraisalsTable extends ControllerActionTable {
                 $rowData = [];
                 $rowData[] = $obj['name'];
                 $rowData[] = $cellData;
-                $rowData[] = '{{rating_'.$key.'}}';
+                $rowData[] = '{{rating_'.$key.' | number : 1}}'; // "| number : 1"  means the digit after decimal
 
                 $tableCells[] = $rowData;
             }
@@ -469,9 +467,8 @@ class AppraisalsTable extends ControllerActionTable {
                 }
             }
 
-            $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
-            $attr['finalRating'] = '{{'.$totalNgModel.'}}';
+            $attr['finalRating'] = '{{'.$totalNgModel.' | number : 1}}'; // "| number : 1"  means the digit after decimal
 
             if ($entity->has('competency_set_id')) {
                 return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
