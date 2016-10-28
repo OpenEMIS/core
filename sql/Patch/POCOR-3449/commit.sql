@@ -99,4 +99,3 @@ WHERE `name` = 'Needs' AND `category` = 'Staff - Training';
 UPDATE `security_functions`
 SET `controller` = 'Institutions', `_view` = 'StaffTrainingResults.index|StaffTrainingResults.view'
 WHERE `name` = 'Results' AND `category` = 'Staff - Training';
-
