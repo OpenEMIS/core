@@ -141,6 +141,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (StudentController.StudentIdentities != 2) {
                 promises[3] = InstitutionsStudentsSvc.getIdentityTypes();
             }
+            if (StudentController.StudentSpecialNeeds != 2) {
+                promises[4] = InstitutionsStudentsSvc.getSpecialNeedTypes();
+            }
             var defaultIdentityType = promisesObj[1];
             if (defaultIdentityType.length > 0) {
                 StudentController.defaultIdentityTypeName = defaultIdentityType[0].name;
@@ -874,7 +877,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         // Step 2 - External search
         else if (data.step == 2) {
-            StudentController.Student.identity_type_name = StudentController.defaultIdentityTypeName;
+            StudentController.Student.identity_type_name = StudentController.externalIdentityType;
             StudentController.educationGradeOptions.selectedOption = '';
             StudentController.classOptions.selectedOption = '';
             delete StudentController.postResponse;

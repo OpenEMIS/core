@@ -42,7 +42,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getAddNewStudentConfig: getAddNewStudentConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
-        getNationalities: getNationalities
+        getNationalities: getNationalities,
+        getSpecialNeedTypes: getSpecialNeedTypes
     };
 
     var models = {
@@ -59,7 +60,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
-        SpecialNeeds: 'FieldOption.SpecialNeedTypes'
+        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
     };
 
     var externalModels = {
@@ -722,6 +723,11 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return Nationalities
             .select()
             .contain(['IdentityTypes'])
+            .ajax({defer: true});
+    }
+    function getSpecialNeedTypes() {
+        return SpecialNeedTypes
+            .select()
             .ajax({defer: true});
     }
 };
