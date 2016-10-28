@@ -24,10 +24,6 @@ class InstitutionsControllerTest extends AppTestCase
         'app.workflows',
         'app.workflows_filters',
         'app.workflow_actions',
-<<<<<<< HEAD
-        // 'app.workflow_records',
-=======
->>>>>>> 705cf691ef7784b227d9f3dd17d56fa4ae5f9d85
         'app.workflow_comments',
         'app.workflow_transitions',
         'app.workflow_steps_roles',
