@@ -238,6 +238,21 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
                     </div>
                 </div>
+                <div ng-class="InstitutionStudentController.Student.identity_type_class" ng-show="InstitutionStudentController.StudentIdentities != 2 && InstitutionStudentController.StudentNationalities == 2">
+                    <label><?= __('Identity Type') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[identities_type_id]" id="students-identities_type_id"
+                            ng-options="option.id as option.name for option in InstitutionStudentController.StudentIdentitiesOptions"
+                            ng-model="InstitutionStudentController.Student.identity_type_id"
+                            ng-change="InstitutionStudentController.changeIdentityType()"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].identity_type_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
+                    </div>
+                </div>
                 <div ng-class="InstitutionStudentController.Student.identity_class" ng-show="InstitutionStudentController.StudentIdentities != 2">
                     <label><?= __('{{InstitutionStudentController.Student.identity_type_name}}') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" ng-init="InstitutionStudentController.selectedStudentData.identity_number='';">
