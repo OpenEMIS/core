@@ -945,6 +945,11 @@ class WorkflowBehavior extends Behavior {
 				]
 			];
 
+			$event = $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
+			if (!empty($event->result)) {
+				$contentFields = $event->result;
+			}
+
 			$content = '';
 			$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
 			$content .= '<div class="input string"><span class="button-label"></span>';
