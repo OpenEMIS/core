@@ -222,6 +222,44 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.date_of_birth">{{ error }}</p>
                     </div>
                 </div>
+                <div ng-class="InstitutionStudentController.Student.nationality_class" ng-show="InstitutionStudentController.StudentNationalities != 2">
+                    <label><?= __('Nationality') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[nationality_id]" id="students-nationality_id"
+                            ng-options="option.id as option.name for option in InstitutionStudentController.StudentNationalitiesOptions"
+                            ng-model="InstitutionStudentController.Student.nationality_id"
+                            ng-change="InstitutionStudentController.changeNationality()"
+                            ng-init="InstitutionStudentController.Student.nationality_id='';"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.nationalities[0].nationality_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div ng-class="InstitutionStudentController.Student.identity_type_class" ng-show="InstitutionStudentController.StudentIdentities != 2 && InstitutionStudentController.StudentNationalities == 2">
+                    <label><?= __('Identity Type') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Students[identities_type_id]" id="students-identities_type_id"
+                            ng-options="option.id as option.name for option in InstitutionStudentController.StudentIdentitiesOptions"
+                            ng-model="InstitutionStudentController.Student.identity_type_id"
+                            ng-change="InstitutionStudentController.changeIdentityType()"
+                            >
+                            <option value="" >-- <?= __('Select') ?> --</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].identity_type_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div ng-class="InstitutionStudentController.Student.identity_class" ng-show="InstitutionStudentController.StudentIdentities != 2">
+                    <label><?= __('{{InstitutionStudentController.Student.identity_type_name}}') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" ng-init="InstitutionStudentController.selectedStudentData.identity_number='';">
+                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].number" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].number">{{ error }}</p>
+                    </div>
+                </div>
             </form>
         </div>
         <div class="step-pane sample-pane" data-step="4" data-name="addStudent">
@@ -243,9 +281,19 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.last_name">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input string">
-                    <label><?= __('Identity Number') ?></label>
-                    <input ng-model="InstitutionStudentController.selectedStudentData.default_identity_type" type="string" disabled="disabled">
+                <div class="input string" ng-show="InstitutionStudentController.StudentNationalities != 2 && StudentController.createNewStudent == true">
+                    <label><?= __('Nationality') ?></label>
+                    <input ng-model="InstitutionStudentController.Student.nationality_name" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.nationalities[0].nationality_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
+                    </div>
+                </div>
+                <div class="input string" ng-show="InstitutionStudentController.StudentIdentities != 2">
+                    <label><?= __('{{InstitutionStudentController.Student.identity_type_name}}') ?></label>
+                    <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.identities[0].number" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].number">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input string">
                     <label><?= __('Date of Birth') ?></label>
