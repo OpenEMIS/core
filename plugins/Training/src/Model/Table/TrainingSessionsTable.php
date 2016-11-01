@@ -467,7 +467,23 @@ class TrainingSessionsTable extends ControllerActionTable
 	public function onUpdateFieldInternalTrainer(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
-			$trainerOptions = $this->getTrainerOptions();
+			$entity = $attr['entity'];
+
+			$trainerIds = [];
+			if ($entity->has('trainers')) {
+				foreach ($entity->trainers as $key => $obj) {
+					if ($obj->type == self::INTERNAL) {
+						$trainerIds[$obj->trainer_id] = $obj->trainer_id;
+					}
+				}
+			}
+			$trainers = $this->getTrainerOptions(['excludes' => $trainerIds]);
+
+			if (!empty($trainers)) {
+				$trainerOptions = ['' => '-- ' . __('Add Trainer') . ' --'] + $trainers;
+			} else {
+				$trainerOptions = ['' => $this->getMessage('general.select.noOptions')];
+			}
 
 			$attr['type'] = 'chosenSelect';
 			$attr['attr']['multiple'] = false;
@@ -480,7 +496,11 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function onUpdateFieldTrainers(Event $event, array $attr, $action, Request $request)
 	{
-		if ($action == 'add' || $action == 'edit') {
+		if ($action == 'view') {
+			$entity = $attr['entity'];
+			$this->reorderTrainers($entity);
+		} else if ($action == 'add' || $action == 'edit') {
+			$entity = $attr['entity'];
 			$trainerOptions = $this->getTrainerOptions();
 
 			$attr['options'] = $trainerOptions;
@@ -506,21 +526,39 @@ class TrainingSessionsTable extends ControllerActionTable
 		return null;
 	}
 
-	public function getTrainerOptions()
+	public function getTrainerOptions($params=[])
 	{
-		$Users = $this->Trainers->Users;
-		$trainers = $Users
-			->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
-			->where([$Users->aliasField('is_student') => 0])
-			->toArray();
+		$excludes = array_key_exists('excludes', $params) ? $params['excludes'] : [];
 
-		if (!empty($trainers)) {
-			$trainerOptions = ['' => '-- ' . __('Add Trainer') . ' --'] + $trainers;
-		} else {
-			$trainerOptions = ['' => $this->getMessage('general.select.noOptions')];
+		$Users = $this->Trainers->Users;
+		$where = [$Users->aliasField('is_student') => 0];
+		if (!empty($excludes)) {
+			$where[$Users->aliasField('id NOT IN ')] = $excludes;
 		}
 
-		return $trainerOptions;
+		$trainers = $Users
+ 			->find('list', ['keyField' => 'id', 'valueField' => 'name_with_id'])
+			->where($where)
+			->toArray();
+
+		return $trainers;
+	}
+
+	public function reorderTrainers($entity)
+	{
+		if ($entity->has('trainers')) {
+			$internalTrainers = [];
+			$externalTrainers = [];
+			foreach ($entity->trainers as $key => $obj) {
+				if ($obj->type == self::INTERNAL) {
+					$internalTrainers[] = $obj;
+				} else if ($obj->type == self::EXTERNAL) {
+					$externalTrainers[] = $obj;
+				}
+			}
+
+			$entity->trainers = array_merge($internalTrainers, $externalTrainers);
+		}
 	}
 
 	public function setupFields(Event $event, Entity $entity)
@@ -542,7 +580,8 @@ class TrainingSessionsTable extends ControllerActionTable
 		$this->field('trainers', [
 			'type' => 'element',
 			'element' => 'Training.Sessions/trainers',
-			'valueClass' => 'table-full-width'
+			'valueClass' => 'table-full-width',
+			'entity' => $entity
 		]);
 
 		if (isset($entity->id)) {
