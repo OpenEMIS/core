@@ -949,8 +949,8 @@ class WorkflowBehavior extends Behavior {
 				// 	'model' => $alias,
 				// 	'field' => 'chosen',
 				// 	'type' => 'chosenSelect',
-				// 	'class'=> 'workflowtransition-comment',
-				// 	'options' => [1 => 'yes', 2=> 'No']
+				// 	'multiple' => true,
+				// 	'options' => [0 => 'yes', 1=> 'No']
 				// ]
 			];
 
