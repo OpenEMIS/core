@@ -56,8 +56,9 @@ class TrainingApplicationsTable extends ControllerActionTable
 
         $fields[$alias.'.training_session_id'] = [
              'label' => __('Training Session'),
+             'model' => $alias,
+             'field' => 'training_session_id',
              'type' => 'chosenSelect',
-             'class'=> 'workflowtransition-training-session',
              'options' => $sessionOptions
         ];
 
