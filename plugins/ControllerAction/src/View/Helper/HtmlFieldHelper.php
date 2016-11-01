@@ -360,7 +360,8 @@ class HtmlFieldHelper extends Helper {
 		if (isset($options['type'])) {
 			if ($options['type'] == 'chosenSelect') {
 				$entity = new Entity();
-				return $this->chosenSelect('edit', $entity, $options, $options);
+				$options['type'] = 'select';
+				return $this->chosenSelect('edit', $entity, ['field' => $options['field'], 'model' => $options['model']], $options);
 			} else {
 				return $this->Form->input($fieldName, $options);
 			}
