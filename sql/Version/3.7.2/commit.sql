@@ -2,6 +2,10 @@
 -- db_patches
 INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3451', NOW());
 
+-- backup field_options tables
+RENAME TABLE `field_options` TO `z_3451_field_options`;
+RENAME TABLE `field_option_values` TO `z_3451_field_option_values`;
+
 -- institution_visit_requests
 DROP TABLE IF EXISTS `institution_visit_requests`;
 CREATE TABLE IF NOT EXISTS `institution_visit_requests` (
