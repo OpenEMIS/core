@@ -942,18 +942,8 @@ class WorkflowBehavior extends Behavior {
 					'label' => __('Comment'),
 					'type' => 'textarea',
 					'class'=> 'workflowtransition-comment'
-				],
-				// Testing
-				// $alias.'.chosen' => [
-				// 	'label' => __('Test Chosen Select'),
-				// 	'model' => $alias,
-				// 	'field' => 'chosen',
-				// 	'type' => 'chosenSelect',
-				// 	'class'=> 'workflowtransition-comment',
-				// 	'options' => [1 => 'yes', 2=> 'No']
-				// ]
+				]
 			];
-
 			$event = $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
 			if (!empty($event->result)) {
 				$contentFields = $event->result;
@@ -1067,6 +1057,12 @@ class WorkflowBehavior extends Behavior {
 							}
 						}
 
+						$visibleField = [];
+						$actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
+						if ($actionEvent->result) {
+							$visibleField[] = $actionEvent->result;
+						}
+
 						$actionType = $actionObj->action;
 						$button = [
 							'id' => $actionObj->id,
@@ -1077,8 +1073,11 @@ class WorkflowBehavior extends Behavior {
 							'assignee_required' => $actionObj->assignee_required,
 							'comment_required' => $actionObj->comment_required,
 							'event_description' => $eventDescription,
-							'is_school_based' => $isSchoolBased
+							'is_school_based' => $isSchoolBased,
+							'modal_visible_field' => $visibleField
 						];
+
+
 						$json = json_encode($button, JSON_NUMERIC_CHECK);
 
 						$buttonAttr = [
@@ -1086,7 +1085,8 @@ class WorkflowBehavior extends Behavior {
 							'escape' => true,
 							'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
 							'data-toggle' => 'modal',
-							'data-target' => '#workflowTransition'
+							'data-target' => '#workflowTransition',
+
 						];
 						$buttonAttr = array_merge($attr, $buttonAttr);
 
