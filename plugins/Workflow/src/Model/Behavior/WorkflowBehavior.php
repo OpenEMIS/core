@@ -144,7 +144,7 @@ class WorkflowBehavior extends Behavior {
 		$userId = $securityGroupUserEntity->security_user_id;
 		$roleId = $securityGroupUserEntity->security_role_id;
 
-		$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId, $groupId, $userId, $roleId);
+		$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId, $groupId, $userId, $roleId);
 	}
 
 	private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
@@ -170,7 +170,7 @@ class WorkflowBehavior extends Behavior {
 	public function securityGroupUserAfterDelete(Event $event, Entity $securityGroupUserEntity) {
 		$model = $this->_table;
 
-		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $model->registryAlias()])->first();
+		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
 		$isSchoolBased = $workflowModelEntity->is_school_based;
 		$groupId = $securityGroupUserEntity->security_group_id;
 		$userId = $securityGroupUserEntity->security_user_id;
@@ -228,8 +228,8 @@ class WorkflowBehavior extends Behavior {
 
 		$workflowModelEntity = $entity->_matchingData['WorkflowModels'];
 		// only trigger update assignee shell where the workflow step belongs to
-		if ($workflowModelEntity->model == $model->registryAlias()) {
-			$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId);
+		if ($workflowModelEntity->model == $this->config('model')) {
+			$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId);
 		}
 	}
 
@@ -319,7 +319,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event) {
 		$WorkflowModels = $this->WorkflowModels;
-		$registryAlias = $this->_table->registryAlias();
+		$registryAlias = $this->config('model');
 
 		// Find from workflows table
 		$results = $this->Workflows
@@ -413,7 +413,7 @@ class WorkflowBehavior extends Behavior {
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$options = $this->isCAv4() ? $extra['options'] : $extra;
 
-		$registryAlias = $this->_table->registryAlias();
+		$registryAlias = $this->config('model');
 		$workflowModel = $this->getWorkflowSetup($registryAlias);
 
 		$filter = $workflowModel->filter;
@@ -469,7 +469,7 @@ class WorkflowBehavior extends Behavior {
 
 		// setup workflow
 		if ($this->attachWorkflow) {
-			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
+			$workflow = $this->getWorkflow($this->config('model'), $entity);
 
 			if (!empty($workflow)) {
 				$ControllerAction->field('status_id', ['visible' => false]);
@@ -1188,7 +1188,7 @@ class WorkflowBehavior extends Behavior {
 		$model = $this->_table;
 
 		if($model->hasBehavior('Workflow')) {
-			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
+			$workflow = $this->getWorkflow($this->config('model'), $entity);
 			if (!empty($workflow)) {
 				$workflowId = $workflow->id;
 				$workflowStep = $this->WorkflowSteps
@@ -1279,7 +1279,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function deleteWorkflowTransitions(Entity $entity) {
 		$model = $this->_table;
-		$workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $model->registryAlias()])->first();
+		$workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
 
 		$this->WorkflowTransitions->deleteAll([
 			$this->WorkflowTransitions->aliasField('workflow_model_id') => $workflowModel->id,
