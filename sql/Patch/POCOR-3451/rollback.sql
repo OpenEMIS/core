@@ -1,3 +1,7 @@
+-- restore field_options tables
+RENAME TABLE `z_3451_field_options` TO `field_options`;
+RENAME TABLE `z_3451_field_option_values` TO `field_option_values`;
+
 -- Drop tables
 DROP TABLE IF EXISTS `institution_visit_requests`;
 
