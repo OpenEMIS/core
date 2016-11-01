@@ -35,7 +35,17 @@ class TrainingApplicationsTable extends ControllerActionTable
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Workflow.addCustomModalFields'] = 'addCustomModalFields';
+        $events['Workflow.setVisibleCustomModalField'] = 'setVisibleCustomModalField';
         return $events;
+    }
+
+    public function setVisibleCustomModalField(Event $event, $eventKey)
+    {
+        $arr = ['fields' => ['workflowtransition-training-session'], 'visible' => false];
+        if ($eventKey == 'Training.onAssignTrainingSession') {
+            $arr['visible'] = true;
+        }
+        return $arr;
     }
 
     public function addCustomModalFields(Event $event, Entity $entity, $fields, $alias)
@@ -57,6 +67,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         $fields[$alias.'.training_session_id'] = [
              'label' => __('Training Session'),
              'model' => $alias,
+             'id' => 'workflowtransition-training-session',
              'field' => 'training_session_id',
              'type' => 'chosenSelect',
              'options' => $sessionOptions
