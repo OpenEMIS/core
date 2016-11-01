@@ -51,11 +51,18 @@ class TrainingApplicationsTable extends ControllerActionTable
     public function addCustomModalFields(Event $event, Entity $entity, $fields, $alias)
     {
         $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
+        $statuses = $this->Workflow->getStepsByModelCode('Training.TrainingSessions', 'APPROVED');
+        if (empty($statuses)) {
+            $statuses[] = 0;
+        }
         $sessionOptions = $TrainingSessions->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'code_name'
             ])
-            ->where([$TrainingSessions->aliasField('training_course_id') => $entity->training_course_id])
+            ->where([
+                $TrainingSessions->aliasField('training_course_id') => $entity->training_course_id,
+                $TrainingSessions->aliasField('status_id').' IN ' => $statuses
+            ])
             ->toArray();
 
         if (!empty($sessionOptions)) {
