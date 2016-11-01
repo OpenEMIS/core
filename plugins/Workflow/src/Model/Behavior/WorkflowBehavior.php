@@ -942,7 +942,16 @@ class WorkflowBehavior extends Behavior {
 					'label' => __('Comment'),
 					'type' => 'textarea',
 					'class'=> 'workflowtransition-comment'
-				]
+				],
+				// Testing
+				// $alias.'.chosen' => [
+				// 	'label' => __('Test Chosen Select'),
+				// 	'model' => $alias,
+				// 	'field' => 'chosen',
+				// 	'type' => 'chosenSelect',
+				// 	'class'=> 'workflowtransition-comment',
+				// 	'options' => [1 => 'yes', 2=> 'No']
+				// ]
 			];
 
 			$event = $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);

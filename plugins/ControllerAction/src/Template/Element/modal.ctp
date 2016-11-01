@@ -1,6 +1,6 @@
 <?php if (isset($modals)) : ?>
 	<?php foreach ($modals as $id => $modal) : ?>
-	<?php 
+	<?php
 		$title = isset($modal['title']) ? $modal['title'] : '';
 		$content = isset($modal['content']) ? $modal['content'] : '';
 	?>
@@ -31,11 +31,11 @@
 				</div>
 
 				<div class="modal-body">
-					<?php 
+					<?php
 					if (isset($modal['contentFields'])) {
 						$contentFields = $modal['contentFields'];
 						foreach ($contentFields as $name => $attr) {
-							echo $this->Form->input($name, $attr);
+							echo $this->HtmlField->input($name, $attr);
 						}
 					}
 					?>

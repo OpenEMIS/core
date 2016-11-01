@@ -350,6 +350,25 @@ class HtmlFieldHelper extends Helper {
 		return $value;
 	}
 
+	public function input($fieldName, $options) {
+		if (!isset($options['field'])) {
+			$options['field'] = '';
+		}
+		if (!isset($options['model'])) {
+			$options['model'] = '';
+		}
+		if (isset($options['type'])) {
+			if ($options['type'] == 'chosenSelect') {
+				$entity = new Entity();
+				return $this->chosenSelect('edit', $entity, $options, $options);
+			} else {
+				return $this->Form->input($fieldName, $options);
+			}
+		} else {
+			return $this->Form->input($fieldName, $options);
+		}
+	}
+
 	public function text($action, Entity $data, $attr, $options=[]) {
 		$value = '';
 		if ($action == 'index' || $action == 'view') {
