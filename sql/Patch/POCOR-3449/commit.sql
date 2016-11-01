@@ -99,3 +99,18 @@ WHERE `name` = 'Needs' AND `category` = 'Staff - Training';
 UPDATE `security_functions`
 SET `controller` = 'Institutions', `_view` = 'StaffTrainingResults.index|StaffTrainingResults.view'
 WHERE `name` = 'Results' AND `category` = 'Staff - Training';
+
+-- training_sessions_trainees
+ALTER TABLE `training_sessions_trainees`
+CHANGE COLUMN `id` `id` CHAR(64) NOT NULL ,
+ADD COLUMN `status` INT(1) NULL COMMENT '1 -> Active, 2 -> Withdrawed' AFTER `trainee_id`,
+ADD UNIQUE INDEX `id_UNIQUE` (`id`),
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`training_session_id`, `trainee_id`);
+
+UPDATE `training_sessions_trainees`
+SET `id` = sha2(concat(training_session_id, ',', trainee_id), 256), `status` = 1;
+
+ALTER TABLE `training_sessions_trainees`
+CHANGE COLUMN `status` `status` INT(1) NOT NULL COMMENT '1 -> Active, 2 -> Withdrawed' ;
+
