@@ -39,12 +39,12 @@ class TrainingApplicationsTable extends ControllerActionTable
             'description' => 'Performing this action will assign the trainee to the training sessions.',
             'method' => 'onAssignTrainingSession'
         ],
-        // [
-        //     'value' => 'Workflow.onWithdrawTrainingSession',
-        //     'text' => 'Withdrawal from Training Sessions',
-        //     'description' => 'Performing this action will withdraw the trainee from assigned training sessions of a particular course.',
-        //     'method' => 'onWithdrawTrainingSession'
-        // ]
+        [
+            'value' => 'Workflow.onWithdrawTrainingSession',
+            'text' => 'Withdrawal from Training Sessions',
+            'description' => 'Performing this action will withdraw the trainee from assigned training sessions of a particular course.',
+            'method' => 'onWithdrawTrainingSession'
+        ]
     ];
 
     public function getWorkflowEvents(Event $event, ArrayObject $eventsObject) {
@@ -66,8 +66,22 @@ class TrainingApplicationsTable extends ControllerActionTable
         return $events;
     }
 
+    public function onWithdrawTrainingSession(Event $event, $id, Entity $workflowTransitionEntity) {
+        $entity = $this->get($id);
+        $staffId = $entity->staff_id;
+        $courseId = $entity->training_course_id;
+        $TrainingSessionsTable = TableRegistry::get('Training.TrainingSessions');
+        $trainingSessionsId = $TrainingSessionsTable->find()->where([$TrainingSessionsTable->aliasField('training_course_id') => $courseId])->select($TrainingSessionsTable->aliasField('id'));
+        $TrainingSessionsTraineesTable = TableRegistry::get('Training.TrainingSessionsTrainees');
+        $TrainingSessionsTraineesTable->updateAll([
+            'status' => 2
+        ], [
+            'training_session_id IN ' => $trainingSessionsId,
+            'staff_id' => $staffId
+        ]);
+    }
+
     public function onAssignTrainingSession(Event $event, $id, Entity $workflowTransitionEntity) {
-        // $TrainingSessionsTraineesTable
         $entity = $this->get($id);
         $staffId = $entity->staff_id;
         $TrainingSessionsId = $workflowTransitionEntity['training_session_id']['_ids'];
@@ -75,7 +89,8 @@ class TrainingApplicationsTable extends ControllerActionTable
         foreach ($TrainingSessionsId as $sessionId) {
             $trainingSessionsTraineeArr[] = [
                 'training_session_id' => $sessionId,
-                'trainee_id' => $staffId
+                'trainee_id' => $staffId,
+                'status' => 1
             ];
         }
         $TrainingSessionsTraineesTable = TableRegistry::get('Training.TrainingSessionsTrainees');
