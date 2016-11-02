@@ -276,7 +276,7 @@ class AreasControllerTest extends AppTestCase
             ->first()->area_id;
 
         $resultSecurityAreaId = $securityGroupAreas->find()
-            ->where([$securityGroupAreas->aliasField('area_id') => $id])
+            ->where([$securityGroupAreas->aliasField('security_group_id') => $id])
             ->first()->area_id;
 
         $this->assertEquals($expectedSecurityAreaId, $resultSecurityAreaId);
