@@ -26,7 +26,7 @@ CREATE TABLE `staff_training_applications` (
 -- workflow_models
 SET @modelId := 10;
 INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
-(@modelId, 'Administration > Training > Applications', 'Training.TrainingApplications', NULL, 0, 1, NOW());
+(@modelId, 'Administration > Training > Applications', 'Training.TrainingApplications', NULL, 1, 1, NOW());
 
 -- Pre-insert workflows
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
