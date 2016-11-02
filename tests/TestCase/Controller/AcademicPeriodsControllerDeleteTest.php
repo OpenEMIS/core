@@ -7,7 +7,6 @@ use App\Test\AppTestCase;
 class AcademicPeriodsControllerDeleteTest extends AppTestCase
 {
     public $fixtures = [
-<<<<<<< HEAD
         'app.absence_types',
         'app.academic_period_levels',
         'app.academic_periods',
@@ -302,9 +301,6 @@ class AcademicPeriodsControllerDeleteTest extends AppTestCase
         'app.workflow_transitions',
         'app.workflows',
         'app.workflows_filters'
-=======
-        'app.examinations',
->>>>>>> bf169d102dab38c756956f19539a7862b99464f3
     ];
 
     private $testingId = 2;
