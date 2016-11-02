@@ -49,7 +49,7 @@ class DirectoriesTable extends AppTable {
             'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
-        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder]);
+        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder, 'alwaysShow' => 1]);
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -81,6 +81,23 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+
+        $noConditionSql = $this->find()->sql();
+        $search = $this->ControllerAction->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+        }
+
+        // If there is no search condition appended by the advance search or normal name search, then we will not show any records
+        if ($noConditionSql == $query->sql()) {
+            $query->where(['1 = 0']);
+        } else {
+            $this->behaviors()->get('AdvanceSearch')->config([
+                'alwaysShow' => 0,
+            ]);
+        }
+
         $userTypeOptions = [
             self::STAFF => __('Staff'),
             self::STUDENT => __('Students'),
@@ -123,11 +140,7 @@ class DirectoriesTable extends AppTable {
 		$conditions = array_merge($conditions, $notSuperAdminCondition);
 		$query->where($conditions);
 
-		$search = $this->ControllerAction->getSearchKey();
-		if (!empty($search)) {
-			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
-		}
+
 
         $options['auto_search'] = true;
 

@@ -18,7 +18,8 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'display_country' => true,
 		'exclude' => ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'],
-        'order' => []
+        'order' => [],
+        'alwaysShow' => 0
 	];
 
 	public function initialize(array $config) {
@@ -134,11 +135,11 @@ class AdvanceSearchBehavior extends Behavior {
 			$searchables = new ArrayObject();
 	        // trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
-
+            $alwaysShow = $this->config('alwaysShow');
             if($this->isCAv4()) {
                 $this->_table->controller->viewVars['advanced_search'] = [
                     'name' => 'advanced_search',
-                    'data' => compact('filters', 'searchables', 'advancedSearch'),
+                    'data' => compact('filters', 'searchables', 'advancedSearch', 'alwaysShow'),
                     'options' => [],
                     'order' => 0
                 ];
@@ -147,7 +148,7 @@ class AdvanceSearchBehavior extends Behavior {
             // adding of the indexElement
             $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
                 'name' => 'advanced_search',
-                'data' => compact('filters', 'searchables', 'advancedSearch'),
+                'data' => compact('filters', 'searchables', 'advancedSearch', 'alwaysShow'),
                 'options' => [],
                 'order' => 0
             ];
@@ -163,7 +164,7 @@ class AdvanceSearchBehavior extends Behavior {
 
             $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
 	            'name' => 'advanced_search',
-	            'data' => compact('filters', 'searchables', 'order', 'advancedSearch'),
+	            'data' => compact('filters', 'searchables', 'order', 'advancedSearch', 'alwaysShow'),
 	            'options' => [],
 	            'order' => 0
 	        ];
