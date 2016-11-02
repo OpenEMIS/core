@@ -70,6 +70,7 @@ class DirectoriesTable extends AppTable {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
         $events['AdvanceSearch.onModifyConditions'] = 'onModifyConditions';
+        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         return $events;
     }
 
@@ -348,6 +349,26 @@ class DirectoriesTable extends AppTable {
 				break;
 		}
 	}
+
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        if ($action == 'index') {
+            $toolbarButtons['advance_search'] = [
+                'type' => 'button',
+                'attr' => [
+                    'class' => 'btn btn-default btn-xs',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'title' => __('Advanced Search'),
+                    'id' => 'search-toggle',
+                    'escape' => false,
+                    'ng-click'=> 'toggleAdvancedSearch()'
+                ],
+                'url' => '#',
+                'label' => '<i class="fa fa-search-plus"></i>',
+            ];
+        }
+    }
 
 	public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request) {
 		$options = [
