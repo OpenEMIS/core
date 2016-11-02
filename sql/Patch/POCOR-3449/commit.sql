@@ -115,3 +115,6 @@ SET `id` = sha2(concat(training_session_id, ',', trainee_id), 256), `status` = 1
 
 ALTER TABLE `training_sessions_trainees`
 CHANGE COLUMN `status` `status` INT(1) NOT NULL COMMENT '1 -> Active, 2 -> Withdrawed';
+
+-- workflow_models
+UPDATE `workflow_models` SET `model`='Institution.StaffTrainingNeeds' WHERE `model`='Staff.TrainingNeeds';
