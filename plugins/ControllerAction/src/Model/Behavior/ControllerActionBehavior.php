@@ -49,34 +49,36 @@ class ControllerActionBehavior extends Behavior
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
-        $schema = $this->_table->schema();
+        if ($name == 'default') {
+            $schema = $this->_table->schema();
 
-        $columns = $schema->columns();
-        foreach ($columns as $col) {
-            $attr = $schema->column($col);
+            $columns = $schema->columns();
+            foreach ($columns as $col) {
+                $attr = $schema->column($col);
 
-            if ($validator->hasField($col)) {
-                $set = $validator->field($col);
+                if ($validator->hasField($col)) {
+                    $set = $validator->field($col);
 
-                if (!$set->isEmptyAllowed()) {
-                    $set->add('notBlank', ['rule' => 'notBlank']);
-                }
-                if (!$set->isPresenceRequired()) {
-                    if ($this->isForeignKey($col)) {
-                        $validator->requirePresence($col);
+                    if (!$set->isEmptyAllowed()) {
+                        $set->add('notBlank', ['rule' => 'notBlank']);
                     }
-                }
-            } else {
-                if (array_key_exists('null', $attr)) {
-                    $ignoreFields = $this->config('fields.excludes');
-                    if ($attr['null'] === false // not nullable
-                        && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
-                        && $col !== 'id' // not a primary key
-                        && !in_array($col, $ignoreFields) // fields not excluded
-                    ) {
-                        $validator->add($col, 'notBlank', ['rule' => 'notBlank']);
+                    if (!$set->isPresenceRequired()) {
                         if ($this->isForeignKey($col)) {
                             $validator->requirePresence($col);
+                        }
+                    }
+                } else {
+                    if (array_key_exists('null', $attr)) {
+                        $ignoreFields = $this->config('fields.excludes');
+                        if ($attr['null'] === false // not nullable
+                            && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
+                            && $col !== 'id' // not a primary key
+                            && !in_array($col, $ignoreFields) // fields not excluded
+                        ) {
+                            $validator->add($col, 'notBlank', ['rule' => 'notBlank']);
+                            if ($this->isForeignKey($col)) {
+                                $validator->requirePresence($col);
+                            }
                         }
                     }
                 }
