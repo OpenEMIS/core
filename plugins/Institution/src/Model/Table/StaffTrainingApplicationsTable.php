@@ -167,8 +167,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetName(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->name;
         }
 
         return $value;
@@ -177,8 +177,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetDescription(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->description;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->description;
         }
 
         return $value;
@@ -187,8 +187,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetObjective(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->objective;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->objective;
         }
 
         return $value;
@@ -197,8 +197,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetCreditHours(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->credit_hours;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->credit_hours;
         }
 
         return $value;
@@ -207,8 +207,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetDuration(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->duration;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->duration;
         }
 
         return $value;
@@ -217,8 +217,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetExperiences(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->number_of_months;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->number_of_months;
         }
 
         return $value;
@@ -227,8 +227,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetFieldOfStudy(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_field_study->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_field_study->name;
         }
 
         return $value;
@@ -237,8 +237,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetCourseType(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_course_type->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_course_type->name;
         }
 
         return $value;
@@ -247,8 +247,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetModeOfDelivery(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_mode_delivery->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_mode_delivery->name;
         }
 
         return $value;
@@ -257,8 +257,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetTrainingRequirement(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_requirement->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_requirement->name;
         }
 
         return $value;
@@ -267,8 +267,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetTrainingLevel(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_level->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_level->name;
         }
 
         return $value;
