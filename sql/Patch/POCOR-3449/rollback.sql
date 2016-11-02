@@ -38,5 +38,13 @@ UPDATE `security_functions`
 SET `controller` = 'Staff', `_view` = 'TrainingResults.index|TrainingResults.view'
 WHERE `name` = 'Results' AND `category` = 'Staff - Training';
 
+-- training_sessions_trainees
+ALTER TABLE `training_sessions_trainees`
+DROP COLUMN `status`,
+CHANGE COLUMN `id` `id` CHAR(36) NOT NULL ,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`id`),
+DROP INDEX `id_UNIQUE` ;
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3449';
