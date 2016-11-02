@@ -66,8 +66,8 @@ class WorkflowsTable extends AppTable {
 			$data = [
 				'workflow_steps' => [
 					['name' => __('Open'), 'category' => self::TO_DO, 'is_editable' => 1, 'is_removable' => 1, 'is_system_defined' => 1],
-					['name' => __('Pending For Approval'), 'category' => self::IN_PROGRESS, 'is_system_defined' => 1],
-					['name' => __('Closed'), 'category' => self::DONE, 'is_system_defined' => 1]
+					['name' => __('Pending For Approval'), 'category' => self::IN_PROGRESS, 'is_editable' => 0, 'is_removable' => 0, 'is_system_defined' => 1],
+					['name' => __('Closed'), 'category' => self::DONE, 'is_editable' => 0, 'is_removable' => 0, 'is_system_defined' => 1]
 				]
 			];
 
@@ -553,18 +553,32 @@ class WorkflowsTable extends AppTable {
 
 			$filter = $workflowModel->filter;
 			if (!empty($filter)) {
-				$showFilters = false;
+				$showFilters = true;
 
-				$filterResults = $this->WorkflowsFilters
-					->find()
-					->where([
-						$this->WorkflowsFilters->aliasField('workflow_id') => $entity->id,
-						$this->WorkflowsFilters->aliasField('filter_id') => 0
-					])
-					->all();
+				if (isset($entity->id)) {
+					// edit
+					$filterResults = $this->WorkflowsFilters
+						->find()
+						->where([
+							$this->WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+							$this->WorkflowsFilters->aliasField('filter_id') => 0
+						])
+						->all();
 
-				if ($filterResults->isEmpty()) {
-					$showFilters = true;
+					if (!$filterResults->isEmpty()) {
+						$showFilters = false;
+					}
+				} else {
+					// when add, check whether any workflow added before, if is not then hide Filters
+					$workflowResults = $this->find()
+						->matching('WorkflowModels', function ($q) use ($selectedModel) {
+							return $q->where(['workflow_model_id' => $selectedModel]);
+						})
+						->all();
+
+					if ($workflowResults->isEmpty()) {
+						$showFilters = false;
+					}
 				}
 
 				$applyToAllOptions = $this->getSelectOptions('general.yesno');
@@ -633,6 +647,10 @@ class WorkflowsTable extends AppTable {
 		// Step - Open
 		$dataOpen = [
 			'id' => $stepOpen->id,
+			'category' => $stepOpen->category,
+			'is_editable' => $stepOpen->is_editable,
+			'is_removable' => $stepOpen->is_removable,
+			'is_system_defined' => $stepOpen->is_system_defined,
 			'workflow_actions' => [
 				[
 					'name' => __('Submit For Approval'),
@@ -662,6 +680,10 @@ class WorkflowsTable extends AppTable {
 		// Step - Pending
 		$dataPending = [
 			'id' => $stepPending->id,
+			'category' => $stepPending->category,
+			'is_editable' => $stepPending->is_editable,
+			'is_removable' => $stepPending->is_removable,
+			'is_system_defined' => $stepPending->is_system_defined,
 			'workflow_actions' => [
 				[
 					'name' => __('Approve'),
@@ -691,6 +713,10 @@ class WorkflowsTable extends AppTable {
 		// Step - Closed
 		$dataClosed = [
 			'id' => $stepClosed->id,
+			'category' => $stepClosed->category,
+			'is_editable' => $stepClosed->is_editable,
+			'is_removable' => $stepClosed->is_removable,
+			'is_system_defined' => $stepClosed->is_system_defined,
 			'workflow_actions' => [
 				[
 					'name' => __('Approve'),
