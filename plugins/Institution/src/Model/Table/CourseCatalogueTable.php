@@ -67,9 +67,6 @@ class CourseCatalogueTable extends ControllerActionTable
             'dependent' => true
         ]);
 
-        $this->setDeleteStrategy('restrict');
-
-
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
@@ -93,7 +90,7 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->field('objective', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
 
-        // back button direct to staff course application index
+        // back button direct to staff application index
         $backBtn['type'] = 'button';
         $backBtn['label'] = '<i class="fa kd-back"></i>';
         $backBtn['attr'] = [
@@ -126,7 +123,6 @@ class CourseCatalogueTable extends ControllerActionTable
         $session = $this->request->session();
         $staffId = $session->read('Staff.Staff.id');
         $InstitutionId = $session->read('Institution.Institutions.id');
-
         $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
         $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
 
@@ -140,7 +136,6 @@ class CourseCatalogueTable extends ControllerActionTable
             ])
             ->first();
 
-        $positionTitle = '';
         if ($staffData->has('position')) {
             $positionTitle = $staffData->position->staff_position_title_id;
 
@@ -174,7 +169,6 @@ class CourseCatalogueTable extends ControllerActionTable
             'escape' => false,
             'title' => 'Apply'
         ];
-
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',

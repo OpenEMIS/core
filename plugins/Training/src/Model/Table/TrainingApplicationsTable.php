@@ -166,14 +166,12 @@ class TrainingApplicationsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // only show applications which are "Pending for Approval"
-        // $steps = $this->Workflow->getStepsByModelCode('Institution.StaffTrainingApplications', 'PENDINGAPPROVAL');
+        // $steps = $this->Workflow->getStepsByModelCode('Training.TrainingApplications', 'PENDINGAPPROVAL');
         // if (!empty($steps)) {
         //     $query->where([
         //         $this->aliasField('status_id IN') => $steps
         //     ]);
         // }
-
-        // pr($query->sql());die;
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -239,7 +237,7 @@ class TrainingApplicationsTable extends ControllerActionTable
                             'action' => 'Applications',
                             'view',
                             $row->id,
-                            'institution_id' => $row->institution_id
+                            // 'institution_id' => $row->institution_id
                         ];
 
                     if (is_null($row->modified)) {

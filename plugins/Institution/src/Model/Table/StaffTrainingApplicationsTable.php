@@ -63,6 +63,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
                 ->first();
 
             if (empty($existingApplication)) {
+                // save course
                 if ($this->saveCourse($courseId, $extra)) {
                     $this->Alert->success($this->aliasField('success'), ['reset' => true]);
                     $event->stopPropagation();
@@ -105,6 +106,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             unset($extra['redirect']['query']);
         }
 
+        // add button to course catalogue
         if (isset($extra['toolbarButtons']['add']['url'])) {
             $extra['toolbarButtons']['add']['url']['action'] = 'CourseCatalogue';
             $extra['toolbarButtons']['add']['url'][0] = 'index';
