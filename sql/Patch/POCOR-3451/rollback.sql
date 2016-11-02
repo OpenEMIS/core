@@ -22,7 +22,9 @@ DELETE FROM `workflow_statuses_steps` WHERE NOT EXISTS (SELECT 1 FROM `workflow_
 DELETE FROM `workflow_transitions` WHERE NOT EXISTS (SELECT 1 FROM `workflow_models` WHERE `workflow_models`.`id` = `workflow_transitions`.`workflow_model_id`);
 
 -- security_functions
-DELETE FROM `security_functions` WHERE `id` = 1047;
+DELETE FROM `security_functions` WHERE `id` = 1048;
+
+UPDATE `security_functions` SET `_execute` = 'Visits.download', `order` = 1029 WHERE `id` = 1027;
 
 -- labels
 DELETE FROM `labels` WHERE `id` = '8077f98a-9b4f-11e6-8f28-525400b263eb';
