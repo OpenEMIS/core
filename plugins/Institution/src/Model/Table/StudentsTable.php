@@ -523,6 +523,8 @@ class StudentsTable extends ControllerActionTable
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
+        $extra['institutionId'] = $institutionId;
+
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                     'keyField' => 'EducationGrades.id',
@@ -546,6 +548,7 @@ class StudentsTable extends ControllerActionTable
         $selectedStatus = $this->queryString('status_id', $statusOptions);
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        $extra['academicPeriodId'] = $selectedAcademicPeriod;
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -693,7 +696,7 @@ class StudentsTable extends ControllerActionTable
 
             // Get Age
             $InstitutionArray[__('Age')] = $this->getDonutChart('institution_student_age',
-                ['query' => $this->dashboardQuery, 'key' => __('Age')]);
+                ['institutionId' => $extra['institutionId'], 'academicPeriodId' => $extra['academicPeriodId'], 'key' => __('Age')]);
 
             // Get Grades
             $InstitutionArray[__('Grade')] = $this->getDonutChart('institution_class_student_grade',
@@ -1035,17 +1038,24 @@ class StudentsTable extends ControllerActionTable
     // Function use by the mini dashboard (For Institution Students)
     public function getNumberOfStudentsByAge($params=[])
     {
-        $query = $params['query'];
-        $InstitutionRecords = clone $query;
-        $ageQuery = $InstitutionRecords
+        $institutionId = $params['institutionId'];
+        $academicPeriodId = $params['academicPeriodId'];
+
+        $query = $this->find();
+        $ageQuery = $query
             ->select([
-                'age' => $InstitutionRecords->func()->dateDiff([
-                    $InstitutionRecords->func()->now(),
+                'age' => $query->func()->dateDiff([
+                    $query->func()->now(),
                     'Users.date_of_birth' => 'literal'
                 ]),
                 'student' => $this->aliasField('student_id')
             ])
-            ->distinct(['student'])
+            ->matching('Users')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->distinct(['student_id'])
             ->order('age');
 
         $InstitutionStudentCount = $ageQuery->toArray();
