@@ -7,12 +7,18 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 
 use App\Model\Table\ControllerActionTable;
 
 class TrainingApplicationsTable extends ControllerActionTable
 {
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
+
     public function initialize(array $config)
     {
         $this->table('staff_training_applications');
@@ -22,10 +28,11 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
-        // $this->addBehavior('Restful.RestfulAccessControl', [
-        //     'Dashboard' => ['index']
-        // ]);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
+        ]);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -184,4 +191,74 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->controller->set('selectedAction', 'Applications');
     }
 
+    public function findWorkbench(Query $query, array $options)
+    {
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $doneStatus = self::DONE;
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('status_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->Staff->aliasField('openemis_no'),
+                $this->Staff->aliasField('first_name'),
+                $this->Staff->aliasField('middle_name'),
+                $this->Staff->aliasField('third_name'),
+                $this->Staff->aliasField('last_name'),
+                $this->Staff->aliasField('preferred_name'),
+                $this->Courses->aliasField('code'),
+                $this->Courses->aliasField('name'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([$this->Staff->alias(), $this->Courses->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId])
+            ->order([$this->aliasField('created') => 'DESC'])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                        $url = [
+                            'plugin' => 'Training',
+                            'controller' => 'Trainings',
+                            'action' => 'Applications',
+                            'view',
+                            $row->id,
+                            'institution_id' => $row->institution_id
+                        ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
+                    } else {
+                        $receivedDate = $this->formatDate($row->modified);
+                    }
+
+                    $row['url'] = $url;
+                    $row['status'] = $row->_matchingData['Statuses']->name;
+                    $row['request_title'] = $row->staff->name_with_id . ' - ' . $row->course->code_name;
+                    $row['institution'] = $row->institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
+    }
 }

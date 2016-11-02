@@ -18,15 +18,15 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->table('staff_training_applications');
         parent::initialize($config);
 
-        // point workflow to TrainingApplications
-        $this->attachWorkflow(['model' => 'Training.TrainingApplications']);
-
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+
+        // point workflow to TrainingApplications
+        $this->attachWorkflow(['model' => 'Training.TrainingApplications']);
 
         $this->toggle('edit', false);
     }
