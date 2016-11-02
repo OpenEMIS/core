@@ -388,6 +388,7 @@ trait MessagesTrait {
             'select_staff' => 'Select Staff',
             'add_staff' => 'Add Staff',
             'select_teacher' => 'Select Teacher',
+            'select_room' => 'Select Room',
             'add_teacher' => 'Add Teacher'
         ],
         'UserGroups' => [
