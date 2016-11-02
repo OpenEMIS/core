@@ -5,7 +5,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-3449', NOW());
 CREATE TABLE `staff_training_applications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `staff_id` int(11) NOT NULL COMMENT 'links to security_users.id',
-  `training_course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
+  `training_session_id` int(11) NOT NULL COMMENT 'links to training_sessions.id',
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
@@ -15,7 +15,7 @@ CREATE TABLE `staff_training_applications` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `staff_id` (`staff_id`),
-  KEY `training_course_id` (`training_course_id`),
+  KEY `training_session_id` (`training_session_id`),
   KEY `status_id` (`status_id`),
   KEY `assignee_id` (`assignee_id`),
   KEY `institution_id` (`institution_id`),
@@ -62,7 +62,7 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Submit For Approval', NULL, 0, 1, 0, 1, NULL, @openStatusId, @pendingReviewStatusId, 1, NOW()),
 ('Approve', NULL, 0, 1, 0, 0, NULL, @pendingReviewStatusId, @pendingApprovalStatusId, 1, NOW()),
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingReviewStatusId, @rejectedStatusId, 1, NOW()),
-('Approve', NULL, 0, 1, 0, 0, NULL, @pendingApprovalStatusId, @approvedStatusId, 1, NOW()),
+('Approve', NULL, 0, 1, 0, 0, 'Workflow.onAssignTrainingSession', @pendingApprovalStatusId, @approvedStatusId, 1, NOW()),
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingApprovalStatusId, @rejectedStatusId, 1, NOW());
 
 -- Pre-insert workflow_statuses
