@@ -87,6 +87,7 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->field('training_course_type_id');
         $this->field('credit_hours');
         $this->field('description');
+        $this->field('sessions');
         $this->field('objective', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
 
@@ -145,7 +146,48 @@ class CourseCatalogueTable extends ControllerActionTable
                 ->where(['TargetPopulations.id' => $positionTitle]);
         }
 
-        $query->order($this->aliasField('code'));
+        $query
+            ->contain(['TrainingSessions'])
+            ->order($this->aliasField('code'));
+    }
+
+    public function onGetSessions(Event $event, Entity $entity)
+    {
+        $trainingSessions = count($entity->training_sessions);
+        if ($trainingSessions) {
+            return $trainingSessions;
+        } else {
+            return __('No Training Sessions');
+        }
+    }
+
+    public function onGetSessionsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        if ($action == 'view') {
+            $trainingSessions = $entity->training_sessions;
+            if (count($trainingSessions) == 0) {
+                return __('No Training Sessions');
+            } else {
+                $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date')];;
+                $tableCells = [];
+                foreach ($trainingSessions as $trainingSession) {
+                    $rowData = [];
+                    $rowData[] = $trainingSession->code;
+                    $rowData[] = $trainingSession->name;
+                    $rowData[] = $trainingSession->start_date;
+                    $rowData[] = $trainingSession->end_date;
+                    $tableCells[] = $rowData;
+                }
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
+                return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
+            }
+        }
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['TrainingSessions']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -158,6 +200,7 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->field('modified', ['visible' => false]);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
+        $this->field('sessions', ['type' => 'sessions', 'before' => 'description']);
 
         // add button to add course
         $addBtn['type'] = 'button';
