@@ -346,24 +346,25 @@ class ControllerActionBehavior extends Behavior
         $signature = $this->urlsafeB64Decode($signature);
 
         $payload = json_decode($payload, true);
-
-        if (!isset($payload['session_id'])) {
+        $sessionId = Security::hash('session_id', 'sha256');
+        if (!isset($payload[$sessionId])) {
             throw new SecurityException('No session id in payload');
         } else {
             $checkPayload = $payload;
-            $checkPayload['session_id'] = session_id();
+            $checkPayload[$sessionId] = session_id();
             $checkSignature = Security::hash(json_encode($checkPayload), 'sha256');
             if ($signature !== $checkSignature) {
                 throw new SecurityException('Query String has been tampered');
             }
         }
-        unset($payload['session_id']);
+        unset($payload[$sessionId]);
         return $payload;
     }
 
     public function paramsEncode($params = [])
     {
-        $params['session_id'] = session_id();
+        $sessionId = Security::hash('session_id', 'sha256');
+        $params[$sessionId] = session_id();
         $jsonParam = json_encode($params);
         $base64Param = $this->urlsafeB64Encode($jsonParam);
         $signature = Security::hash($jsonParam, 'sha256');
