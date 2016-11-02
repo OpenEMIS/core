@@ -226,7 +226,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetExperiences(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
+        if ($entity->session->has('course')) {
             $value = $entity->session->course->number_of_months;
         }
 
