@@ -42,6 +42,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
+        KdOrmSvc.controllerAction('Results');
         KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(models);
     };
