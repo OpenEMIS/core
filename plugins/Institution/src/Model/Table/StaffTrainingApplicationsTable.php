@@ -19,7 +19,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
+        $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -52,19 +52,19 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         }
 
         if ($query) {
-            $courseId = $query['course_id'];
+            $sessionId = $query['training_session_id'];
 
             // check if user has already added this course before
             $existingApplication = $this->find()
                 ->where([
                     $this->aliasField('staff_id') => $extra['staffId'],
-                    $this->aliasField('training_course_id') => $courseId
+                    $this->aliasField('training_session_id') => $sessionId
                 ])
                 ->first();
 
             if (empty($existingApplication)) {
                 // save course
-                if ($this->saveCourse($courseId, $extra)) {
+                if ($this->saveCourse($sessionId, $extra)) {
                     $this->Alert->success($this->aliasField('success'), ['reset' => true]);
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
@@ -81,14 +81,14 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $this->controller->redirect($extra['redirect']);
     }
 
-    private function saveCourse($courseId, ArrayObject $extra)
+    private function saveCourse($sessionId, ArrayObject $extra)
     {
         $staffId = $extra['staffId'];
         $institutionId = $extra['institutionId'];
 
         $application = [];
         $application['staff_id'] = $staffId;
-        $application['training_course_id'] = $courseId;
+        $application['training_session_id'] = $sessionId;
         $application['status_id'] = 0;
         $application['institution_id'] = $institutionId;
         $entity = $this->newEntity($application);
@@ -117,7 +117,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['Courses.TrainingFieldStudies', 'Courses.TrainingLevels'])
+            ->contain(['Sessions.Courses.TrainingFieldStudies', 'Sessions.Courses.TrainingLevels'])
             ->where([$this->aliasField('staff_id') => $extra['staffId']]);
 
         $extra['auto_contain_fields'] = ['Courses' => ['credit_hours']];
@@ -125,7 +125,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $this->field('training_course_id');
+        $this->field('training_session_id');
         $this->field('field_of_study');
         $this->field('credit_hours');
         $this->field('training_level');
@@ -133,13 +133,13 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'training_course_id', 'field_of_study', 'credit_hours', 'training_level'
+            'training_session_id', 'field_of_study', 'credit_hours', 'training_level'
         ]);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Courses.TrainingFieldStudies', 'Courses.TrainingCourseTypes', 'Courses.TrainingModeDeliveries', 'Courses.TrainingRequirements', 'Courses.TrainingLevels']);
+        $query->contain(['Sessions.Courses.TrainingFieldStudies', 'Sessions.Courses.TrainingCourseTypes', 'Sessions.Courses.TrainingModeDeliveries', 'Sessions.Courses.TrainingRequirements', 'Sessions.Courses.TrainingLevels']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
