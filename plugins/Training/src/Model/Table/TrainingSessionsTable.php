@@ -73,7 +73,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
 	{
-		$tableHeaders = [__('OpenEMIS No'), __('Name')];
+		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Status')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'trainees';
@@ -84,9 +84,15 @@ class TrainingSessionsTable extends ControllerActionTable
 			$associated = $entity->extractOriginal([$key]);
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
+					$traineeStatus = $obj['_joinData']->status;
 					$rowData = [];
 					$rowData[] = $obj->openemis_no;
 					$rowData[] = $obj->name;
+					if ($traineeStatus) {
+						$rowData[] = __('Approved');
+					} else {
+						$rowData[] = __('Withdrawn');
+					}
 
 					$tableCells[] = $rowData;
 				}
@@ -808,7 +814,7 @@ class TrainingSessionsTable extends ControllerActionTable
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }

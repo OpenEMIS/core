@@ -55,5 +55,8 @@ DROP PRIMARY KEY,
 ADD PRIMARY KEY (`id`),
 DROP INDEX `id_UNIQUE`;
 
+-- workflow_models
+UPDATE `workflow_models` SET `model`='Staff.TrainingNeeds' WHERE `model`='Institution.StaffTrainingNeeds';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3449';
