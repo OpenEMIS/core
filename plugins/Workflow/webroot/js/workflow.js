@@ -34,19 +34,6 @@ var Workflow = {
 		$('.workflowtransition-comment-required').val(jsonObj.comment_required);
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
         var assigneeUrl = $('.workflowtransition-assignee-id').attr('assignee-url');
-        var customModalfields = jsonObj.modal_visible_field;
-        for(i = 0; i < customModalfields.length; i++) {
-            var fields = customModalfields[i]['fields'];
-            var visible = customModalfields[i]['visible'];
-            for(j = 0; j < fields.length; j++) {
-                var idName = '#' + fields[j];
-                if (visible) {
-                    $(idName).parent().show();
-                } else {
-                    $(idName).parent().hide();
-                }
-            }
-        }
 
 		Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id);
 		Workflow.resetError();
