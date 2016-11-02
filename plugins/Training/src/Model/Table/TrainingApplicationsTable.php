@@ -107,8 +107,9 @@ class TrainingApplicationsTable extends ControllerActionTable
 
     public function setVisibleCustomModalField(Event $event, $eventKey)
     {
+        $eventKeys = explode(',', $eventKey);
         $arr = ['fields' => ['workflowtransition-training-session'], 'visible' => false];
-        if ($eventKey == 'Workflow.onAssignTrainingSession') {
+        if (in_array('Workflow.onAssignTrainingSession', $eventKeys)) {
             $arr['visible'] = true;
         }
         return $arr;
