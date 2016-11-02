@@ -6,14 +6,6 @@ DROP TABLE `competency_sets`;
 DROP TABLE `competency_sets_competencies`;
 DROP TABLE `staff_appraisals_competencies`;
 
-
--- field_options
-DELETE FROM `field_options` WHERE `code` = 'Competencies';
-DELETE FROM `field_options` WHERE `code` = 'CompetencySets';
-
-UPDATE `field_options` SET `order` = `order` - 2 WHERE `order` >= 19;
-
-
 -- security_function
 DELETE FROM `security_functions` WHERE `id` = 3037;
 DELETE FROM `security_functions` WHERE `id` = 7049;

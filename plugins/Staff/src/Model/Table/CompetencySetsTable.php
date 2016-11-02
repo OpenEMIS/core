@@ -18,6 +18,7 @@ class CompetencySetsTable extends ControllerActionTable
     {
         $this->table('competency_sets');
         parent::initialize($config);
+        $this->hasMany('StaffAppraisals', ['className' => 'Staff.StaffAppraisals']);
 
         $this->belongsToMany('Competencies', [
             'className' => 'Staff.Competencies',
@@ -30,6 +31,14 @@ class CompetencySetsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('FieldOption.FieldOption');
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        //this will exclude checking during remove restrict
+        $extra['excludedModels'] = [
+            $this->Competencies->alias()
+        ];
     }
 
     public function beforeAction(Event $event, arrayObject $extra)
@@ -49,11 +58,13 @@ class CompetencySetsTable extends ControllerActionTable
         $this->field('national_code', ['visible' => false]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query) {
+    public function viewEditBeforeQuery(Event $event, Query $query)
+    {
         $query->contain(['Competencies']);
     }
 
-    public function onUpdateFieldCompetencies(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldCompetencies(Event $event, array $attr, $action, Request $request)
+    {
         switch ($action) {
             case 'add':
             case 'edit':
@@ -75,7 +86,8 @@ class CompetencySetsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onGetCompetencies(Event $event, Entity $entity) {
+    public function onGetCompetencies(Event $event, Entity $entity)
+    {
         if (!$entity->has('competencies')) {
             $query = $this->find()
             ->where([$this->aliasField($this->primaryKey()) => $entity->id])
@@ -95,5 +107,13 @@ class CompetencySetsTable extends ControllerActionTable
         }
 
         return (!empty($competency))? implode(', ', $competency): ' ';
+    }
+
+    public function findCompetencySetsOptions(Query $query, array $options)
+    {
+        return $query
+            ->find('list')
+            ->order([$this->aliasField('order')])
+        ;
     }
 }
