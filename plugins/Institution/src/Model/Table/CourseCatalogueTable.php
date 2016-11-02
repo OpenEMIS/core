@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
+use Cake\Routing\Router;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -168,7 +169,8 @@ class CourseCatalogueTable extends ControllerActionTable
             if (count($trainingSessions) == 0) {
                 return __('No Training Sessions');
             } else {
-                $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date')];;
+                $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date'), ''];
+
                 $tableCells = [];
                 foreach ($trainingSessions as $trainingSession) {
                     $rowData = [];
@@ -176,6 +178,18 @@ class CourseCatalogueTable extends ControllerActionTable
                     $rowData[] = $trainingSession->name;
                     $rowData[] = $trainingSession->start_date;
                     $rowData[] = $trainingSession->end_date;
+
+                    $params = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'StaffTrainingApplications',
+                    '0' => 'add'
+                    ];
+                    $url = $this->setQueryString($params, ['training_session_id' => $trainingSession->id]);
+                    $applyUrl = Router::url($url);
+
+                    $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>Apply</span></button>";
+
                     $tableCells[] = $rowData;
                 }
                 $attr['tableHeaders'] = $tableHeaders;
@@ -202,42 +216,5 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->field('created', ['visible' => false]);
         $this->field('sessions', ['type' => 'sessions', 'before' => 'description']);
 
-        // add button to add course
-        $addBtn['type'] = 'button';
-        $addBtn['label'] = '<i class="fa kd-add"></i>';
-        $addBtn['attr'] = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false,
-            'title' => 'Apply'
-        ];
-        $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StaffTrainingApplications',
-            '0' => 'add'
-        ];
-        $addBtn['url']= $this->setQueryString($url, ['course_id' => $entity->id]);
-        $extra['toolbarButtons']['add'] = $addBtn;
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $buttons['add'] = [
-            'label' => '<i class="fa kd-add"></i>'.__('Apply'),
-            'attr' => $buttons['view']['attr']
-        ];
-
-        $url = [
-            'plugin' => 'Institution',
-            'controller' => 'Institutions',
-            'action' => 'StaffTrainingApplications',
-            '0' => 'add'
-        ];
-
-        $buttons['add']['url'] = $this->setQueryString($url, ['course_id' => $entity->id]);
-
-        return $buttons;
     }
 }
