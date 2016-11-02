@@ -15,19 +15,28 @@ DELETE FROM `workflow_actions` WHERE `workflow_actions`.`workflow_step_id` IN (
   SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = @workflowId
 );
 
--- delete workflow_steps
-DELETE FROM `workflow_steps` WHERE `workflow_id` = @workflowId;
+-- delete workflow_steps_roles
+DELETE FROM `workflow_steps_roles` WHERE `workflow_steps_roles`.`workflow_step_id` IN (
+  SELECT `id` FROM `workflow_steps` WHERE `workflow_id` = @workflowId
+);
 
 -- delete workflow_statuses_steps
 DELETE FROM `workflow_statuses_steps` WHERE `workflow_status_id` IN (
   SELECT `id` FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId
 );
 
+-- delete workflow_steps
+DELETE FROM `workflow_steps` WHERE `workflow_id` = @workflowId;
+
 -- delete workflow_statuses
 DELETE FROM `workflow_statuses` WHERE `workflow_model_id` = @modelId;
 
+-- delete workflow_transitions
+DELETE FROM `workflow_transitions` WHERE `workflow_model_id` = @modelId;
+
 -- delete security_functions
 DELETE FROM `security_functions` WHERE `controller` = 'Institutions' AND `name` = 'Applications';
+DELETE FROM `security_functions` WHERE `controller` = 'Trainings' AND `name` = 'Applications';
 
 -- revert staff training security_functions
 UPDATE `security_functions`
@@ -44,7 +53,7 @@ DROP COLUMN `status`,
 CHANGE COLUMN `id` `id` CHAR(36) NOT NULL ,
 DROP PRIMARY KEY,
 ADD PRIMARY KEY (`id`),
-DROP INDEX `id_UNIQUE` ;
+DROP INDEX `id_UNIQUE`;
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3449';
