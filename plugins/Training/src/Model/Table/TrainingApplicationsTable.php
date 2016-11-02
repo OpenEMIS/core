@@ -24,7 +24,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->table('staff_training_applications');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_course_id']);
+        $this->belongsTo('Sessions', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -74,16 +74,15 @@ class TrainingApplicationsTable extends ControllerActionTable
     public function onWithdrawTrainingSession(Event $event, $id, Entity $workflowTransitionEntity) {
         $entity = $this->get($id);
         $staffId = $entity->staff_id;
-        $courseId = $entity->training_course_id;
-        $TrainingSessionsTable = TableRegistry::get('Training.TrainingSessions');
-        $trainingSessionsId = $TrainingSessionsTable->find()->where([$TrainingSessionsTable->aliasField('training_course_id') => $courseId])->select($TrainingSessionsTable->aliasField('id'));
+        $sessionId = $entity->training_session_id;
         $TrainingSessionsTraineesTable = TableRegistry::get('Training.TrainingSessionsTrainees');
-        $TrainingSessionsTraineesTable->updateAll([
+        $trainingSessionsTraineeArr = [
+            'training_session_id' => $sessionId,
+            'trainee_id' => $staffId,
             'status' => 2
-        ], [
-            'training_session_id IN ' => $trainingSessionsId,
-            'staff_id' => $staffId
-        ]);
+        ];
+        $newEntity = $TrainingSessionsTraineesTable->newEntity($trainingSessionsTraineeArr);
+        $TrainingSessionsTraineesTable->save($newEntity);
     }
 
     public function onAssignTrainingSession(Event $event, $id, Entity $workflowTransitionEntity) {
@@ -110,7 +109,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->field('status_id');
         $this->field('assignee_id', ['visible' => false]);
         $this->setFieldOrder([
-            'status_id', 'staff_id', 'institution_id', 'training_course_id'
+            'status_id', 'staff_id', 'institution_id', 'training_session_id'
         ]);
     }
 
@@ -129,7 +128,7 @@ class TrainingApplicationsTable extends ControllerActionTable
     {
         $this->field('assignee_id', ['visible' => false]);
         $this->setFieldOrder([
-            'status_id', 'staff_id', 'institution_id', 'training_course_id'
+            'status_id', 'staff_id', 'institution_id', 'training_session_id'
         ]);
     }
 
