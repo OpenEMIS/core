@@ -399,7 +399,10 @@ class ExaminationCentresTable extends ControllerActionTable {
             $attr['type'] = 'chosenSelect';
             $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
             $attr['options'] = $this->Institutions
-                ->find('list')
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
                 ->find('NotExamCentres', ['examination_id' => $examinationId])
                 ->toArray();
             $attr['fieldName'] = $this->alias().'.institutions';
