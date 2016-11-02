@@ -90,6 +90,8 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 -- add security_functions
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
 (3037, 'Applications', 'Institutions', 'Institutions', 'Staff - Training', '3000', 'StaffTrainingApplications.index|StaffTrainingApplications.view', null, 'StaffTrainingApplications.add|CourseCatalogue.index|CourseCatalogue.view', 'StaffTrainingApplications.remove', null, 3037, 1, 1, NOW());
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(5050, 'Applications', 'Trainings', 'Administration', 'Trainings', '5000', 'Applications.index|Applications.view', 5050, 1, 1, NOW());
 
 -- update staff training security_functions
 UPDATE `security_functions`
@@ -112,5 +114,4 @@ UPDATE `training_sessions_trainees`
 SET `id` = sha2(concat(training_session_id, ',', trainee_id), 256), `status` = 1;
 
 ALTER TABLE `training_sessions_trainees`
-CHANGE COLUMN `status` `status` INT(1) NOT NULL COMMENT '1 -> Active, 2 -> Withdrawed' ;
-
+CHANGE COLUMN `status` `status` INT(1) NOT NULL COMMENT '1 -> Active, 2 -> Withdrawed';
