@@ -38,6 +38,16 @@ class InstitutionRoomsTable extends AppTable {
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
 		$this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_room_id']);
 
+		$this->belongsToMany('Subjects', [
+            'className' => 'Institution.InstitutionSubjects',
+            'joinTable' => 'institution_subjects_rooms',
+            'foreignKey' => 'institution_room_id',
+            'targetForeignKey' => 'institution_subject_id',
+            'through' => 'Institution.InstitutionSubjectsRooms',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('CustomField.Record', [
@@ -866,5 +876,19 @@ class InstitutionRoomsTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	public function findInUse(Query $query, array $options) {
+		$institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
+		$academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+		$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+
+		$query->where([
+			$this->aliasField('institution_id') => $institutionId,
+			$this->aliasField('academic_period_id') => $academicPeriodId,
+			$this->aliasField('room_status_id') => $inUseId
+		]);
+
+		return $query;
 	}
 }
