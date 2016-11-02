@@ -49,7 +49,7 @@ class DirectoriesTable extends AppTable {
             'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
-        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder]);
+        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder, 'alwaysShow' => 1]);
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -82,26 +82,28 @@ class DirectoriesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 
-
-        if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
-            $userTypeOptions = [
-                self::STAFF => __('Staff'),
-                self::STUDENT => __('Students'),
-                self::GUARDIAN => __('Guardians'),
-                self::OTHER => __('Others')
-            ];
-        } else {
-            $userTypeOptions = [
-                __('In School') => [
-                    self::STAFF => __('Staff'),
-                    self::STUDENT => __('Students'),
-                ],
-                __('Not In School') => [
-                    self::STAFFNOTINSCHOOL => __('Staff'),
-                    self::STUDENTNOTINSCHOOL => __('Student')
-                ]
-            ];
+        $noConditionSql = $this->find()->sql();
+        $search = $this->ControllerAction->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
         }
+
+        // If there is no search condition appended by the advance search or normal name search, then we will not show any records
+        if ($noConditionSql == $query->sql()) {
+            $query->where(['1 = 0']);
+        } else {
+            $this->behaviors()->get('AdvanceSearch')->config([
+                'alwaysShow' => 0,
+            ]);
+        }
+
+        $userTypeOptions = [
+            self::STAFF => __('Staff'),
+            self::STUDENT => __('Students'),
+            self::GUARDIAN => __('Guardians'),
+            self::OTHER => __('Others')
+        ];
 
 		$selectedUserType = $this->queryString('user_type', $userTypeOptions);
 		$this->advancedSelectOptions($userTypeOptions, $selectedUserType);
@@ -109,71 +111,38 @@ class DirectoriesTable extends AppTable {
 
 		$conditions = [];
 
-        if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
-    		if (!is_null($request->query('user_type'))) {
-    			switch($request->query('user_type')) {
-    				case self::STUDENT:
-    					$conditions = [$this->aliasField('is_student') => 1];
-    					break;
+		if (!is_null($request->query('user_type'))) {
+			switch($request->query('user_type')) {
+				case self::STUDENT:
+					$conditions = [$this->aliasField('is_student') => 1];
+					break;
 
-    				case self::STAFF:
-    					$conditions = [$this->aliasField('is_staff') => 1];
-    					break;
+				case self::STAFF:
+					$conditions = [$this->aliasField('is_staff') => 1];
+					break;
 
-                    case self::GUARDIAN:
-                        $conditions = [$this->aliasField('is_guardian') => 1];
-                        break;
+                case self::GUARDIAN:
+                    $conditions = [$this->aliasField('is_guardian') => 1];
+                    break;
 
-                    case self::OTHER:
-                        $conditions = [
-                            $this->aliasField('is_student') => 0,
-                            $this->aliasField('is_staff') => 0,
-                            $this->aliasField('is_guardian') => 0
-                        ];
-                        break;
-    			}
-    		}
-        }
+                case self::OTHER:
+                    $conditions = [
+                        $this->aliasField('is_student') => 0,
+                        $this->aliasField('is_staff') => 0,
+                        $this->aliasField('is_guardian') => 0
+                    ];
+                    break;
+			}
+		}
 		$notSuperAdminCondition = [
 			$this->aliasField('super_admin') => 0
 		];
 		$conditions = array_merge($conditions, $notSuperAdminCondition);
 		$query->where($conditions);
 
-		$search = $this->ControllerAction->getSearchKey();
-		if (!empty($search)) {
-			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
-		}
 
-		// this part filters the list by institutions/areas granted to the group
-		if (!$this->AccessControl->isAdmin()) { // if user is not super admin, the list will be filtered
-			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$institutionIds = implode(', ', $institutionIds);
-			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 
-            if (!is_null($request->query('user_type'))) {
-                switch($request->query('user_type')) {
-                    case self::STUDENT:
-                        $query->find('StudentsInSchool', ['institutionIds' => $institutionIds]);
-                        break;
-
-                    case self::STUDENTNOTINSCHOOL:
-                        $query->find('StudentsNotInSchool');
-                        break;
-
-                    case self::STAFF:
-                        $query->find('StaffInSchool', ['institutionIds' => $institutionIds]);
-                        break;
-
-                    case self::STAFFNOTINSCHOOL:
-                        $query->find('StaffNotInSchool');
-                        break;
-                }
-            }
-		}
-
-        $options['auto_search'] = false;
+        $options['auto_search'] = true;
 
 		$this->dashboardQuery = clone $query;
 	}
