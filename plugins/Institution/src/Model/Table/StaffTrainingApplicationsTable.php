@@ -120,32 +120,34 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             ->contain(['Sessions.Courses.TrainingFieldStudies', 'Sessions.Courses.TrainingLevels'])
             ->where([$this->aliasField('staff_id') => $extra['staffId']]);
 
-        $extra['auto_contain_fields'] = ['Courses' => ['credit_hours']];
+        $extra['auto_contain_fields'] = ['Sessions.Courses' => ['credit_hours']];
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $this->field('training_session_id');
+        $this->field('course');
+        $this->field('training_level');
         $this->field('field_of_study');
         $this->field('credit_hours');
-        $this->field('training_level');
+        $this->field('training_session_id', ['type' => 'hidden']);
         $this->field('assignee_id', ['type' => 'hidden']);
         $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'training_session_id', 'field_of_study', 'credit_hours', 'training_level'
+            'course', 'training_level', 'field_of_study', 'credit_hours'
         ]);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Sessions.Courses.TrainingFieldStudies', 'Sessions.Courses.TrainingCourseTypes', 'Sessions.Courses.TrainingModeDeliveries', 'Sessions.Courses.TrainingRequirements', 'Sessions.Courses.TrainingLevels']);
+        $query->contain(['Sessions.Courses.TrainingFieldStudies', 'Sessions.Courses.TrainingCourseTypes', 'Sessions.Courses.TrainingModeDeliveries', 'Sessions.Courses.TrainingRequirements', 'Sessions.Courses.TrainingLevels', 'Sessions.Courses.TargetPopulations', 'Sessions.Courses.TrainingProviders', 'Sessions.Courses.CoursePrerequisites', 'Sessions.Courses.Specialisations', 'Sessions.Courses.ResultTypes']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields = [];
-        $this->field('name');
+        $this->field('course');
+        $this->field('applied_session', ['type' => 'sessions']);
         $this->field('description');
         $this->field('objective');
         $this->field('credit_hours');
@@ -156,19 +158,26 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->field('mode_of_delivery');
         $this->field('training_requirement');
         $this->field('training_level');
+        $this->field('target_populations');
+        $this->field('training_providers');
+        $this->field('course_prerequisites');
+        $this->field('specialisations');
+        $this->field('result_types');
+        $this->field('attachment');
 
         $this->setFieldOrder([
-            'name', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
+            'course', 'applied_session', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
             'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
-            // 'target_populations', 'training_providers', 'course_prerequisites', 'specialisations',
+            // 'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types', 'attachment'
         ]);
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetCourse(Event $event, Entity $entity)
     {
+        // pr($entity);
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->name;
         }
 
         return $value;
@@ -177,8 +186,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetDescription(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->description;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->description;
         }
 
         return $value;
@@ -187,8 +196,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetObjective(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->objective;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->objective;
         }
 
         return $value;
@@ -197,8 +206,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetCreditHours(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->credit_hours;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->credit_hours;
         }
 
         return $value;
@@ -207,8 +216,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetDuration(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->duration;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->duration;
         }
 
         return $value;
@@ -218,7 +227,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     {
         $value = '';
         if ($entity->has('course')) {
-            $value = $entity->course->number_of_months;
+            $value = $entity->session->course->number_of_months;
         }
 
         return $value;
@@ -227,8 +236,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetFieldOfStudy(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_field_study->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_field_study->name;
         }
 
         return $value;
@@ -237,8 +246,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetCourseType(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_course_type->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_course_type->name;
         }
 
         return $value;
@@ -247,8 +256,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetModeOfDelivery(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_mode_delivery->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_mode_delivery->name;
         }
 
         return $value;
@@ -257,8 +266,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetTrainingRequirement(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_requirement->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_requirement->name;
         }
 
         return $value;
@@ -267,11 +276,124 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function onGetTrainingLevel(Event $event, Entity $entity)
     {
         $value = '';
-        if ($entity->has('course')) {
-            $value = $entity->course->training_level->name;
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->training_level->name;
         }
 
         return $value;
+    }
+
+    public function onGetTargetPopulations(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->session->has('course')) {
+            if (!empty($entity->session->course->target_populations)) {
+                $targetPopulations = $entity->session->course->target_populations;
+                foreach ($targetPopulations as $key => $item) {
+                    $data[] = $item->name;
+                }
+
+                $value = implode(', ', $data);
+            }
+        }
+
+        return $value;
+    }
+
+    public function onGetTrainingProviders(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->session->has('course')) {
+            if (!empty($entity->session->course->training_providers)) {
+                $providers = $entity->session->course->training_providers;
+                foreach ($providers as $key => $item) {
+                    $data[] = $item->name;
+                }
+
+                $value = implode(', ', $data);
+            }
+        }
+
+        return $value;
+    }
+
+    public function onGetCoursePrerequisites(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->session->has('course')) {
+            if (!empty($entity->session->course->course_prerequisites)) {
+                $prerequisites = $entity->session->course->course_prerequisites;
+                foreach ($prerequisites as $key => $item) {
+                    $data[] = $item->name;
+                }
+
+                $value = implode(', ', $data);
+            }
+        }
+
+        return $value;
+    }
+
+    public function onGetSpecialisations(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->session->has('course')) {
+            if (!empty($entity->session->course->specialisations)) {
+                $specialisations = $entity->session->course->specialisations;
+                foreach ($specialisations as $key => $item) {
+                    $data[] = $item->name;
+                }
+
+                $value = implode(', ', $data);
+            }
+        }
+
+        return $value;
+    }
+
+    public function onGetResultTypes(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->session->has('course')) {
+            if (!empty($entity->session->course->result_types)) {
+                $types = $entity->session->course->result_types;
+                foreach ($types as $key => $item) {
+                    $data[] = $item->name;
+                }
+
+                $value = implode(', ', $data);
+            }
+        }
+
+        return $value;
+    }
+
+    // public function onGetTrainingLevel(Event $event, Entity $entity)
+    // {
+    //     $value = '';
+    //     if ($entity->session->has('course')) {
+    //         $value = $entity->session->course->training_level->name;
+    //     }
+
+    //     return $value;
+    // }
+
+    public function onGetSessionsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        if ($action == 'view') {
+            $trainingSession = $entity->session;
+            $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date')];
+
+            $tableCells = [];
+            $tableCells[] = $trainingSession->code;
+            $tableCells[] = $trainingSession->name;
+            $tableCells[] = $trainingSession->start_date;
+            $tableCells[] = $trainingSession->end_date;
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+            return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
+        }
     }
 
     private function setupTabElements()
