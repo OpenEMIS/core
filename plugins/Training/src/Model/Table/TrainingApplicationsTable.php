@@ -64,8 +64,6 @@ class TrainingApplicationsTable extends ControllerActionTable
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        $events['Workflow.addCustomModalFields'] = 'addCustomModalFields';
-        $events['Workflow.setVisibleCustomModalField'] = 'setVisibleCustomModalField';
         $events['Workflow.getEvents'] = 'getWorkflowEvents';
         foreach($this->workflowEvents as $event) {
             $events[$event['value']] = $event['method'];
@@ -91,63 +89,15 @@ class TrainingApplicationsTable extends ControllerActionTable
     public function onAssignTrainingSession(Event $event, $id, Entity $workflowTransitionEntity) {
         $entity = $this->get($id);
         $staffId = $entity->staff_id;
-        $TrainingSessionsId = $workflowTransitionEntity['training_session_id']['_ids'];
-        $trainingSessionsTraineeArr = [];
-        foreach ($TrainingSessionsId as $sessionId) {
-            $trainingSessionsTraineeArr[] = [
-                'training_session_id' => $sessionId,
-                'trainee_id' => $staffId,
-                'status' => 1
-            ];
-        }
-        $TrainingSessionsTraineesTable = TableRegistry::get('Training.TrainingSessionsTrainees');
-        $newEntities = $TrainingSessionsTraineesTable->newEntities($trainingSessionsTraineeArr);
-        $TrainingSessionsTraineesTable->saveMany($newEntities);
-    }
-
-    public function setVisibleCustomModalField(Event $event, $eventKey)
-    {
-        $eventKeys = explode(',', $eventKey);
-        $arr = ['fields' => ['workflowtransition-training-session'], 'visible' => false];
-        if (in_array('Workflow.onAssignTrainingSession', $eventKeys)) {
-            $arr['visible'] = true;
-        }
-        return $arr;
-    }
-
-    public function addCustomModalFields(Event $event, Entity $entity, $fields, $alias)
-    {
-        $TrainingSessions = TableRegistry::get('Training.TrainingSessions');
-        $statuses = $this->Workflow->getStepsByModelCode('Training.TrainingSessions', 'APPROVED');
-        if (empty($statuses)) {
-            $statuses[] = 0;
-        }
-        $sessionOptions = $TrainingSessions->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'code_name'
-            ])
-            ->where([
-                $TrainingSessions->aliasField('training_course_id') => $entity->training_course_id,
-                $TrainingSessions->aliasField('status_id').' IN ' => $statuses
-            ])
-            ->toArray();
-
-        if (!empty($sessionOptions)) {
-            $sessionOptions = ['' => __('-- Select --')] + $sessionOptions;
-        } else {
-            $sessionOptions = ['' => __('No Options')];
-        }
-
-        $fields[$alias.'.training_session_id'] = [
-             'label' => __('Training Session'),
-             'model' => $alias,
-             'id' => 'workflowtransition-training-session',
-             'field' => 'training_session_id',
-             'type' => 'chosenSelect',
-             'options' => $sessionOptions
+        $sessionId = $entity->training_session_id;
+        $trainingSessionsTraineeArr = [
+            'training_session_id' => $sessionId,
+            'trainee_id' => $staffId,
+            'status' => 1
         ];
-
-        return $fields;
+        $TrainingSessionsTraineesTable = TableRegistry::get('Training.TrainingSessionsTrainees');
+        $newEntity = $TrainingSessionsTraineesTable->newEntity($trainingSessionsTraineeArr);
+        $TrainingSessionsTraineesTable->save($newEntity);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
