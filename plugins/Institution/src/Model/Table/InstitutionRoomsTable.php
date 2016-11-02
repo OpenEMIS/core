@@ -143,6 +143,22 @@ class InstitutionRoomsTable extends AppTable {
 		return $this->levelOptions[$this->roomLevel];
 	}
 
+	public function onGetSubjects(Event $event, Entity $entity) {
+		if ($entity->has('subjects')) {
+            $resultArray = [];
+
+            foreach ($entity->subjects as $key => $obj) {
+                $resultArray[] = $obj->name;
+            }
+
+            if (!empty($resultArray)) {
+                return implode(', ', $resultArray);
+            } else {
+            	return '<span>&lt;'.__('No Subject Allocated').'&gt;</span>';
+            }
+        }
+	}
+
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
 		if ($field == 'institution_id') {
 			return __('Owner');
@@ -173,7 +189,7 @@ class InstitutionRoomsTable extends AppTable {
     }
 
 	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id', 'subjects']);
 
 		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
@@ -185,6 +201,13 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
 		$this->ControllerAction->field('previous_room_id', ['visible' => false]);
+		$this->ControllerAction->field('subjects', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'subjects',
+            'fieldName' => $this->alias() . '.subjects._ids',
+            'placeholder' => $this->getMessage($this->aliasField('select_subject')),
+            'valueWhenEmpty' => __('No Subject Allocated')
+        ]);
 
 		$toolbarElements = [];
 		$toolbarElements = $this->addBreadcrumbElement($toolbarElements);
@@ -244,6 +267,8 @@ class InstitutionRoomsTable extends AppTable {
 		$this->controller->set(compact('statusOptions', 'selectedStatus'));
 		// End
 
+		$query->contain(['Subjects']);
+
 		$options['order'] = [
 			$this->aliasField('code') => 'asc',
 			$this->aliasField('name') => 'asc'
@@ -262,7 +287,7 @@ class InstitutionRoomsTable extends AppTable {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['AcademicPeriods', 'RoomTypes', 'InfrastructureConditions']);
+		$query->contain(['AcademicPeriods', 'RoomTypes', 'InfrastructureConditions', 'Subjects']);
 	}
 
 	public function editBeforeAction(Event $event) {
@@ -584,6 +609,21 @@ class InstitutionRoomsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$session = $request->session();
+
+			if ($session->check('Institution.Institutions.id') && !is_null($this->currentAcademicPeriod)) {
+                $institutionId = $session->read('Institution.Institutions.id');
+				$academicPeriodId = $this->currentAcademicPeriod->id;
+
+				$attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
+			}
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldNewRoomType(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'edit') {
 			$entity = $attr['entity'];
@@ -675,6 +715,14 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('end_date', ['entity' => $entity]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
 		$this->ControllerAction->field('previous_room_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('subjects', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'subjects',
+            'fieldName' => $this->alias() . '.subjects._ids',
+            'placeholder' => $this->getMessage($this->aliasField('select_subject')),
+            'valueWhenEmpty' => __('No Subject Allocated'),
+            'entity' => $entity
+        ]);
 		$this->ControllerAction->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
 		$this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
 	}
@@ -859,6 +907,34 @@ class InstitutionRoomsTable extends AppTable {
 
 		return compact('statusOptions', 'selectedStatus');
 	}
+
+	public function getSubjectOptions($params=[]) {
+		$institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
+		$academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : null;
+
+        $options = [];
+
+        $Classes = $this->Subjects->Classes;
+        $classOptions = $Classes
+        	->find()
+        	->contain(['Subjects'])
+        	->where([
+        		$Classes->aliasField('institution_id') => $institutionId,
+        		$Classes->aliasField('academic_period_id') => $academicPeriodId
+        	])
+        	->toArray();
+
+        foreach ($classOptions as $classKey => $class) {
+        	$className = $class->name;
+        	if ($class->has('subjects')) {
+        		foreach ($class->subjects as $subjectKey => $subject) {
+        			$options[$className][$subject->id] = $subject->name;		
+        		}
+        	}
+        }
+
+        return $options;
+    }
 
 	public function processCopy(Entity $entity) {
 		// if is new and room status of previous room usage is change in room type then copy all general custom fields

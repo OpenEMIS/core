@@ -1256,6 +1256,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
             if (!empty($resultArray)) {
                 return implode(', ', $resultArray);
+            } else {
+                return '<span>&lt;'.__('No Room Allocated').'&gt;</span>';
             }
         }
     }

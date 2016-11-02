@@ -142,7 +142,8 @@ trait MessagesTrait {
             ],
             'change_in_room_type' => [
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
-            ]
+            ],
+            'select_subject' => 'Select Subject'
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
