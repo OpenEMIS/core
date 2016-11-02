@@ -87,8 +87,7 @@ class DirectoriesController extends AppController {
     public function Identities() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
-	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Appraisals']); }
-	public function StaffAppraisalTypes()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffAppraisalTypes']); }
+	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
 	// End
 
 	// AngularJS
