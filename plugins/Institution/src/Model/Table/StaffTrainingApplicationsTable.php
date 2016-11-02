@@ -27,9 +27,6 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
-        // $this->addBehavior('Restful.RestfulAccessControl', [
-        //     'Dashboard' => ['index']
-        // ]);
 
         $this->toggle('edit', false);
     }
