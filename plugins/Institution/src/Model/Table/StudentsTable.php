@@ -35,7 +35,7 @@ class StudentsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']); 
+        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
         // Behaviors
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -537,7 +537,7 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
-        
+
         // Query Strings
 
         if (empty($request->query['academic_period_id'])) {
@@ -571,10 +571,6 @@ class StudentsTable extends ControllerActionTable
             $query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
         }
 
-        if ($selectedStatus != -1) {
-            $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
-        }
-
         $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // Start: sort by class column
@@ -593,6 +589,10 @@ class StudentsTable extends ControllerActionTable
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        } else {
+            if ($selectedStatus != -1) {
+                $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
+            }
         }
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
