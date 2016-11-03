@@ -2,7 +2,7 @@
 use Cake\Utility\Inflector;
 ?>
 
-<div class="adv-search" ng-show="showAdvSearch" ng-init="showAdvSearch=<?= $alwaysShow?>">
+<div class="adv-search" ng-show="showAdvSearch" ng-init="showAdvSearch=<?= $showOnLoad?>">
 	<button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
 	<div class="adv-search-label">
 		<i class="fa fa-search-plus"></i>
