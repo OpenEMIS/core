@@ -199,9 +199,13 @@ class CourseCatalogueTable extends ControllerActionTable
     {
         if ($action == 'view') {
             $trainingSessions = $entity->training_sessions;
+            $session = $this->request->session();
+            $staffId = $session->read('Staff.Staff.id');
+
             if (count($trainingSessions) == 0) {
                 return __('No Training Sessions');
             } else {
+                $StaffTrainingApplications = TableRegistry::get('Institution.StaffTrainingApplications');
                 $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date'), ''];
 
                 $tableCells = [];
@@ -212,16 +216,35 @@ class CourseCatalogueTable extends ControllerActionTable
                     $rowData[] = $trainingSession->start_date;
                     $rowData[] = $trainingSession->end_date;
 
-                    $params = [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'StaffTrainingApplications',
-                    '0' => 'add'
-                    ];
-                    $url = $this->setQueryString($params, ['training_session_id' => $trainingSession->id]);
-                    $applyUrl = Router::url($url);
+                    $existingApplication = $StaffTrainingApplications->find()
+                        ->where([
+                            $StaffTrainingApplications->aliasField('staff_id') => $staffId,
+                            $StaffTrainingApplications->aliasField('training_session_id') => $trainingSession->id
+                        ])
+                        ->first();
 
-                    $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>Apply</span></button>";
+                    if (empty($existingApplication)) {
+                        $params = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffTrainingApplications',
+                        '0' => 'add'
+                        ];
+                        $url = $this->setQueryString($params, ['training_session_id' => $trainingSession->id]);
+                        $applyUrl = Router::url($url);
+
+                        $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>Apply</span></button>";
+
+                    } else {
+                        $rowData[] = $event->subject()->Html->link(__('Already Applied'), [
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'StaffTrainingApplications',
+                            '0' => 'view',
+                            '1' => $existingApplication->id
+                        ]);
+                    }
+
 
                     $tableCells[] = $rowData;
                 }
