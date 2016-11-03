@@ -44,16 +44,16 @@ SET @approvedStatusId := 0;
 SET @rejectedStatusId := 0;
 INSERT INTO `workflow_steps` (`name`, `category`, `is_editable`, `is_removable`, `is_system_defined`, `workflow_id`, `created_user_id`, `created`) VALUES
 ('Open', 1, 0, 1, 1, @workflowId, 1, NOW()),
+('Pending For Review', 0, 0, 0, 0, @workflowId, 1, NOW()),
 ('Pending For Approval', 2, 0, 0, 1, @workflowId, 1, NOW()),
 ('Withdrawn', 3, 0, 0, 1, @workflowId, 1, NOW()),
-('Pending For Review', 0, 0, 0, 0, @workflowId, 1, NOW()),
 ('Approved', 0, 0, 0, 0, @workflowId, 1, NOW()),
 ('Rejected', 0, 0, 0, 0, @workflowId, 1, NOW());
 
 SELECT `id` INTO @openStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 1;
+SELECT `id` INTO @pendingReviewStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending For Review';
 SELECT `id` INTO @pendingApprovalStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 2;
 SELECT `id` INTO @closedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 3;
-SELECT `id` INTO @pendingReviewStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending For Review';
 SELECT `id` INTO @approvedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Approved';
 SELECT `id` INTO @rejectedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Rejected';
 
