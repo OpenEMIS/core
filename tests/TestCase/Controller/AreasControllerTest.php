@@ -26,6 +26,7 @@ class AreasControllerTest extends AppTestCase
         'app.institution_providers',
         'app.institution_genders',
         'app.institution_network_connectivities',
+        'app.examination_centres',
 
         // needed by testDelete()
         'app.institutions',
@@ -271,11 +272,11 @@ class AreasControllerTest extends AppTestCase
         $this->table->doUpdateAssociatedRecord($requestData);
 
         $resultInstitutionAreaId = $institutions->find()
-            ->where(['id' => $id])
+            ->where([$institutions->aliasField('id') => $id])
             ->first()->area_id;
 
         $resultSecurityAreaId = $securityGroupAreas->find()
-            ->where(['security_group_id' => $id])
+            ->where([$securityGroupAreas->aliasField('security_group_id') => $id])
             ->first()->area_id;
 
         $this->assertEquals($expectedSecurityAreaId, $resultSecurityAreaId);
