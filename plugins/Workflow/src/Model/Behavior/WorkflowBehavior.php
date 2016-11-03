@@ -144,7 +144,7 @@ class WorkflowBehavior extends Behavior {
 		$userId = $securityGroupUserEntity->security_user_id;
 		$roleId = $securityGroupUserEntity->security_role_id;
 
-		$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId, $groupId, $userId, $roleId);
+		$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId, $groupId, $userId, $roleId);
 	}
 
 	private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
@@ -170,7 +170,7 @@ class WorkflowBehavior extends Behavior {
 	public function securityGroupUserAfterDelete(Event $event, Entity $securityGroupUserEntity) {
 		$model = $this->_table;
 
-		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $model->registryAlias()])->first();
+		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
 		$isSchoolBased = $workflowModelEntity->is_school_based;
 		$groupId = $securityGroupUserEntity->security_group_id;
 		$userId = $securityGroupUserEntity->security_user_id;
@@ -228,8 +228,8 @@ class WorkflowBehavior extends Behavior {
 
 		$workflowModelEntity = $entity->_matchingData['WorkflowModels'];
 		// only trigger update assignee shell where the workflow step belongs to
-		if ($workflowModelEntity->model == $model->registryAlias()) {
-			$this->triggerUpdateAssigneeShell($model->registryAlias(), $id, $statusId);
+		if ($workflowModelEntity->model == $this->config('model')) {
+			$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId);
 		}
 	}
 
@@ -319,7 +319,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function indexBeforeAction(Event $event) {
 		$WorkflowModels = $this->WorkflowModels;
-		$registryAlias = $this->_table->registryAlias();
+		$registryAlias = $this->config('model');
 
 		// Find from workflows table
 		$results = $this->Workflows
@@ -413,7 +413,7 @@ class WorkflowBehavior extends Behavior {
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$options = $this->isCAv4() ? $extra['options'] : $extra;
 
-		$registryAlias = $this->_table->registryAlias();
+		$registryAlias = $this->config('model');
 		$workflowModel = $this->getWorkflowSetup($registryAlias);
 
 		$filter = $workflowModel->filter;
@@ -469,7 +469,7 @@ class WorkflowBehavior extends Behavior {
 
 		// setup workflow
 		if ($this->attachWorkflow) {
-			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
+			$workflow = $this->getWorkflow($this->config('model'), $entity);
 
 			if (!empty($workflow)) {
 				$ControllerAction->field('status_id', ['visible' => false]);
@@ -842,6 +842,7 @@ class WorkflowBehavior extends Behavior {
 		$step = $this->getWorkflowStep($entity);
 
 		$assigneeUrl = Router::url(['plugin' => 'Workflow', 'controller' => 'Workflows', 'action' => 'ajaxGetAssignees']);
+
 		if (!is_null($step)) {
 			$workflow = $step->_matchingData['Workflows'];
 
@@ -943,6 +944,10 @@ class WorkflowBehavior extends Behavior {
 					'class'=> 'workflowtransition-comment'
 				]
 			];
+			$event = $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
+			if (!empty($event->result)) {
+				$contentFields = $event->result;
+			}
 
 			$content = '';
 			$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
@@ -1052,6 +1057,12 @@ class WorkflowBehavior extends Behavior {
 							}
 						}
 
+						$visibleField = [];
+						$actionEvent = $this->_table->dispatchEvent('Workflow.setVisibleCustomModalField', [$eventKeys], $this->_table);
+						if ($actionEvent->result) {
+							$visibleField[] = $actionEvent->result;
+						}
+
 						$actionType = $actionObj->action;
 						$button = [
 							'id' => $actionObj->id,
@@ -1062,8 +1073,11 @@ class WorkflowBehavior extends Behavior {
 							'assignee_required' => $actionObj->assignee_required,
 							'comment_required' => $actionObj->comment_required,
 							'event_description' => $eventDescription,
-							'is_school_based' => $isSchoolBased
+							'is_school_based' => $isSchoolBased,
+							'modal_visible_field' => $visibleField
 						];
+
+
 						$json = json_encode($button, JSON_NUMERIC_CHECK);
 
 						$buttonAttr = [
@@ -1071,7 +1085,8 @@ class WorkflowBehavior extends Behavior {
 							'escape' => true,
 							'onclick' => 'Workflow.init();Workflow.copy('.$json.');return false;',
 							'data-toggle' => 'modal',
-							'data-target' => '#workflowTransition'
+							'data-target' => '#workflowTransition',
+
 						];
 						$buttonAttr = array_merge($attr, $buttonAttr);
 
@@ -1172,8 +1187,8 @@ class WorkflowBehavior extends Behavior {
 	public function setStatusAsOpen(Entity $entity) {
 		$model = $this->_table;
 
-		if($model->hasBehavior('Workflow') && $entity->has('status_id')) {
-			$workflow = $this->getWorkflow($model->registryAlias(), $entity);
+		if($model->hasBehavior('Workflow')) {
+			$workflow = $this->getWorkflow($this->config('model'), $entity);
 			if (!empty($workflow)) {
 				$workflowId = $workflow->id;
 				$workflowStep = $this->WorkflowSteps
@@ -1264,7 +1279,7 @@ class WorkflowBehavior extends Behavior {
 
 	public function deleteWorkflowTransitions(Entity $entity) {
 		$model = $this->_table;
-		$workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $model->registryAlias()])->first();
+		$workflowModel = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
 
 		$this->WorkflowTransitions->deleteAll([
 			$this->WorkflowTransitions->aliasField('workflow_model_id') => $workflowModel->id,
@@ -1283,7 +1298,7 @@ class WorkflowBehavior extends Behavior {
 		if ($request->is(['post', 'put'])) {
 			$requestData = $request->data;
 
-			$subject = $this->_table;
+			$subject = $this->config('model') == null ? $this->_table : TableRegistry::get($this->config('model'));
 			// Trigger workflow before save event here
 			$event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
 			if ($event->isStopped()) { return $event->result; }
