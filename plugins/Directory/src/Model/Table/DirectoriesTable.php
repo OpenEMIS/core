@@ -134,10 +134,28 @@ class DirectoriesTable extends AppTable {
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 
-        $noConditionSql = $this->find()->sql();
+        // Logic to check if there is any value in advance search
+        $advanceSearchSession = $this->Session->check($this->aliasField('advanceSearch')) ? $this->Session->read($this->aliasField('advanceSearch')) : [];
+        $isAdvanceSearch = false;
+        if (isset($advanceSearchSession['belongsTo'])) {
+            foreach ($advanceSearchSession['belongsTo'] as $value) {
+                if (!empty($value)) {
+                    $isAdvanceSearch = true;
+                    break;
+                }
+            }
+        }
 
-        // If there is no search condition appended by the advance search or normal name search, then we will not show any records
-        if ($noConditionSql == $query->sql()) {
+        if (isset($advanceSearchSession['hasMany']) && !$isAdvanceSearch) {
+            foreach ($advanceSearchSession['hasMany'] as $value) {
+                if (!empty($value)) {
+                    $isAdvanceSearch = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$isAdvanceSearch) {
             $event->stopPropagation();
             return [];
         } else {
