@@ -213,8 +213,9 @@ class UserBehavior extends Behavior {
 
                 $tableClass = get_class($this->_table);
                 $userType = $tableClass::OTHER;
-                if (isset($this->_table->request->query['user_type'])) {
-                    $userType = $this->_table->request->query['user_type'];
+                $session = $this->_table->request->session();
+                if ($session->check('Directories.advanceSearch.belongsTo.user_type')) {
+                    $userType = $session->read('Directories.advanceSearch.belongsTo.user_type');
                 }
                 if ($userType == $tableClass::STUDENT) {
                     $imageDefault = 'kd-students';
