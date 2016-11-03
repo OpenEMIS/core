@@ -425,8 +425,8 @@ class StudentsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['visible' => false]);
-        $this->field('class', ['order' => 90]);
-        $this->field('student_status_id', ['order' => 100]);
+        $this->field('class', ['after' => 'education_grade_id']);
+        $this->field('student_status_id', ['after' => 'class']);
         $this->fields['start_date']['visible'] = false;
         $this->fields['end_date']['visible'] = false;
         $this->fields['class']['sort'] = ['field' => 'InstitutionClasses.name'];
@@ -596,29 +596,25 @@ class StudentsTable extends ControllerActionTable
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
         } else {
-            if ($selectedStatus != -1) {
+            if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
                 $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
             }
         }
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
-
+// pr($query->sql());
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
         $this->dashboardQuery = clone $query;
-
-        $this->setFieldOrder([
-            'photo_content', 'openemis_no', 'identity', 'student_id', 'education_grade_id', 'class', 'student_status_id'
-        ]);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('photo_content', ['type' => 'image', 'order' => 0]);
+        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
         $this->fields['student_id']['order'] = 10;
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentProgrammes';
@@ -711,7 +707,7 @@ class StudentsTable extends ControllerActionTable
 
             $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 
-            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $indexElements[] = [
                     'name' => $indexDashboard,
                     'data' => [
