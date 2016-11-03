@@ -141,7 +141,7 @@ class DirectoriesTable extends AppTable {
             $query->where(['1 = 0']);
         } else {
             $this->behaviors()->get('AdvanceSearch')->config([
-                'alwaysShow' => 0,
+                'showOnLoad' => 0,
             ]);
         }
 
