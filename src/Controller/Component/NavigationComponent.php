@@ -512,11 +512,10 @@ class NavigationComponent extends Component
 					'selected' => ['Institutions.Rubrics', 'Institutions.RubricAnswers'],
 				],
 
-			'Institutions.Visits' => [
+			'Institutions.VisitRequests' => [
 				'title' => 'Visits',
 				'parent' => 'Institutions.index',
-				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Visits']
+				'params' => ['plugin' => 'Institution']
 			]
 		];
 
