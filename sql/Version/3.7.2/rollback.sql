@@ -48,7 +48,7 @@ DELETE FROM `workflow_transitions` WHERE NOT EXISTS (SELECT 1 FROM `workflow_mod
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 1048;
 
-UPDATE `security_functions` SET `_execute` = 'Visits.download', `order` = 1029 WHERE `id` = 1027;
+UPDATE `security_functions` SET `order` = 1029 WHERE `id` = 1027;
 
 -- labels
 DELETE FROM `labels` WHERE `id` = '8077f98a-9b4f-11e6-8f28-525400b263eb';
