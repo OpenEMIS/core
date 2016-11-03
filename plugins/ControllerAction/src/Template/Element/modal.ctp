@@ -35,7 +35,7 @@
 					if (isset($modal['contentFields'])) {
 						$contentFields = $modal['contentFields'];
 						foreach ($contentFields as $name => $attr) {
-							echo $this->HtmlField->input($name, $attr);
+							echo $this->Form->input($name, $attr);
 						}
 					}
 					?>
