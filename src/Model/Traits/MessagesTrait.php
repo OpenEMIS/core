@@ -550,8 +550,7 @@ trait MessagesTrait {
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'internal_trainer' => 'Internal Trainer',
-            'external_trainer' => 'External Trainer'
+            'trainer' => 'Trainer'
         ],
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
