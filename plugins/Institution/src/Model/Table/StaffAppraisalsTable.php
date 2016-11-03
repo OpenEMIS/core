@@ -107,6 +107,14 @@ class StaffAppraisalsTable extends ControllerActionTable
         $session = $this->request->session();
         $staffId = $session->read('Staff.Staff.id');
         $query = $query->where([$this->aliasField('staff_id') => $staffId]);
+
+        //Add controls filter to index page
+        $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period')) ? $this->request->query('academic_period') : $this->AcademicPeriods->getCurrent();
+
+        $extra['elements']['controls'] = ['name' => 'Institution.StaffAppraisals/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $this->controller->set(compact('academicPeriodList', 'selectedAcademicPeriod'));
+        $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query)

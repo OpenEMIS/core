@@ -73,6 +73,17 @@ class AppraisalsTable extends ControllerActionTable
         $this->setFieldOrder(['staff_appraisal_type_id', 'title', 'from', 'to', 'final_rating']);
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        //Add controls filter to index page
+        $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period')) ? $this->request->query('academic_period') : $this->AcademicPeriods->getCurrent();
+
+        $extra['elements']['controls'] = ['name' => 'Institution.StaffAppraisals/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $this->controller->set(compact('academicPeriodList', 'selectedAcademicPeriod'));
+        $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
         $query->contain(['Competencies']);
