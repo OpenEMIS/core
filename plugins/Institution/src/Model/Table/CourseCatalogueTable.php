@@ -230,7 +230,7 @@ class CourseCatalogueTable extends ControllerActionTable
                         'action' => 'StaffTrainingApplications',
                         '0' => 'add'
                         ];
-                        $url = $this->setQueryString($params, ['training_session_id' => $trainingSession->id]);
+                        $url = $this->ControllerAction->setQueryString($params, ['training_session_id' => $trainingSession->id]);
                         $applyUrl = Router::url($url);
 
                         $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>Apply</span></button>";
