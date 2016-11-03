@@ -51,7 +51,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $query = $this->getQueryString();
+        $query = $this->ControllerAction->getQueryString();
 
         if (isset($extra['redirect']['query'])) {
             unset($extra['redirect']['query']);
