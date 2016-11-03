@@ -87,6 +87,7 @@ class DirectoriesController extends AppController {
     public function Identities() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
 	// End
 
 	// AngularJS
@@ -433,6 +434,7 @@ class DirectoriesController extends AppController {
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
 			'Trainings' => ['text' => __('Trainings')],
+			'Appraisals' => ['text' => __('Appraisals')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
