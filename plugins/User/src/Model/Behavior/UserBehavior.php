@@ -88,10 +88,8 @@ class UserBehavior extends Behavior {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event) {
-        $this->_table->fields['is_student']['type'] = 'hidden';
-        $this->_table->fields['is_staff']['type'] = 'hidden';
-        $this->_table->fields['is_guardian']['type'] = 'hidden';
+    public function beforeAction(Event $event)
+    {
         switch ($this->_table->table()) {
             case 'institution_students':
             case 'institution_staff':
@@ -195,7 +193,8 @@ class UserBehavior extends Behavior {
         $this->_table->fields['is_guardian']['value'] = 0;
     }
 
-    public function indexAfterAction(Event $event) {
+    public function indexAfterAction(Event $event)
+    {
         $plugin = $this->_table->controller->plugin;
         $name = $this->_table->controller->name;
 
@@ -264,6 +263,9 @@ class UserBehavior extends Behavior {
                 ]);
             }
         }
+        $this->_table->fields['is_student']['type'] = 'hidden';
+        $this->_table->fields['is_staff']['type'] = 'hidden';
+        $this->_table->fields['is_guardian']['type'] = 'hidden';
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
