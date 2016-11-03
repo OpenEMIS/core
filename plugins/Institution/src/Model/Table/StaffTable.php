@@ -1041,7 +1041,7 @@ class StaffTable extends AppTable {
 			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
 			$indexDashboard = 'dashboard';
 
-            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
     			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
     	            'name' => $indexDashboard,
     	            'data' => [

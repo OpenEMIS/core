@@ -132,30 +132,9 @@ class DirectoriesTable extends AppTable {
         return $filters;
     }
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-
-        // Logic to check if there is any value in advance search
-        $advanceSearchSession = $this->Session->check($this->aliasField('advanceSearch')) ? $this->Session->read($this->aliasField('advanceSearch')) : [];
-        $isAdvanceSearch = false;
-        if (isset($advanceSearchSession['belongsTo'])) {
-            foreach ($advanceSearchSession['belongsTo'] as $value) {
-                if (!empty($value)) {
-                    $isAdvanceSearch = true;
-                    break;
-                }
-            }
-        }
-
-        if (isset($advanceSearchSession['hasMany']) && !$isAdvanceSearch) {
-            foreach ($advanceSearchSession['hasMany'] as $value) {
-                if (!empty($value)) {
-                    $isAdvanceSearch = true;
-                    break;
-                }
-            }
-        }
-
-        if (!$isAdvanceSearch) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
+        if (!$this->isAdvancedSearchEnabled()) {
             $event->stopPropagation();
             return [];
         } else {

@@ -339,13 +339,13 @@ class AdvanceSearchBehavior extends Behavior {
             foreach ($advanceSearchData[$this->_table->alias()] as $key => $value) {
                 if (!empty($value)) {
                     foreach ($value as $key => $searchValue) {
-                        if (!empty($searchValue)){
-                            return false;
+                        if (!empty($searchValue)) {
+                            return true;
                         }
                     }
                 }
             }
         }
-        return true;
+        return false;
     }
 }
