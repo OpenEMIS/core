@@ -4,6 +4,7 @@ namespace Training\Model\Table;
 use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
 use Cake\Utility\Security;
+use Cake\Event\Event;
 use ArrayObject;
 
 class TrainingSessionsTraineesTable extends AppTable {
