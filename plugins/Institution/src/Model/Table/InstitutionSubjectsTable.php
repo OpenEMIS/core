@@ -129,8 +129,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'fieldNameKey' => 'teachers',
             'fieldName' => $this->alias() . '.teachers._ids',
             'placeholder' => $this->getMessage('Users.select_teacher'),
-            'valueWhenEmpty' => __('No Teacher Assigned'),
-            'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
+            'valueWhenEmpty' => '<span>&lt;'.__('No Teacher Assigned').'&gt;</span>',
+            'visible' => ['index' => true, 'view' => true, 'edit' => true]
         ]);
 
         $this->field('rooms', [
@@ -138,7 +138,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'fieldNameKey' => 'rooms',
             'fieldName' => $this->alias() . '.rooms._ids',
             'placeholder' => $this->getMessage('Users.select_room'),
-            'valueWhenEmpty' => __('No Room Allocated'),
+            'valueWhenEmpty' => '<span>&lt;'.__('No Room Allocated').'&gt;</span>',
             'visible' => ['index' => true, 'view' => true, 'edit' => true]
         ]);
 
@@ -1256,8 +1256,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
             if (!empty($resultArray)) {
                 return implode(', ', $resultArray);
-            } else {
-                return '<span>&lt;'.__('No Room Allocated').'&gt;</span>';
             }
         }
     }
