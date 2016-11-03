@@ -66,8 +66,6 @@ class StaffController extends AppController {
     public function Comments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
-	public function Appraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Appraisals']); }
-	public function StaffAppraisalTypes(){ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffAppraisalTypes']); }
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
 	// End
 
@@ -226,23 +224,13 @@ class StaffController extends AppController {
 	}
 
 	public function getProfessionalDevelopmentTabElements($options = []) {
-		$tabElements = [];
-		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
-		$studentTabElements = [
-			'Qualifications' => ['text' => __('Qualifications')],
-			'Extracurriculars' => ['text' => __('Extracurriculars')],
-			'Memberships' => ['text' => __('Memberships')],
-			'Licenses' => ['text' => __('Licenses')],
-			'Trainings' => ['text' => __('Trainings')],
-			'Appraisals' => ['text' => __('Appraisals')],
-		];
-
-		$tabElements = array_merge($tabElements, $studentTabElements);
-
-		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+		$options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+		$session = $this->request->session();
+		if ($session->check('Staff.Staff.id')) {
+			$userId = $session->read('Staff.Staff.id');
+			$options['user_id'] = $userId;
 		}
-		return $tabElements;
+		return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
 	}
 
 	public function getFinanceTabElements($options = []) {
