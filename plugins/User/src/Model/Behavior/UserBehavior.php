@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use User\Model\Entity\User;
 use Cake\I18n\I18n;
+use Cake\ORM\ResultSet;
 
 class UserBehavior extends Behavior {
     private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
@@ -50,7 +51,7 @@ class UserBehavior extends Behavior {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 0];
         $events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
-        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
+        $events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 50];
         $events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 0];
         $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch', 'priority' => 50];
@@ -195,7 +196,7 @@ class UserBehavior extends Behavior {
         $this->_table->fields['is_guardian']['value'] = 0;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+    public function indexAfterAction(Event $event, ResultSet $data) {
         $plugin = $this->_table->controller->plugin;
         $name = $this->_table->controller->name;
 
