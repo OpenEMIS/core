@@ -468,7 +468,7 @@ class TrainingSessionsTable extends ControllerActionTable
 				foreach ($associated[$fieldKey] as $i => $obj) {
 					$cell = '';
 					if ($obj->type == self::INTERNAL) {
-						$cell = $obj->user->name;
+						$cell = $obj->user->name_with_id;
 					} else if ($obj->type == self::EXTERNAL) {
 						$cell = $obj->name;
 					}
@@ -498,21 +498,21 @@ class TrainingSessionsTable extends ControllerActionTable
 						$trainerType = $obj['type'];
 
 						if ($trainerType == self::INTERNAL) {
-							$traineeId = $obj->trainee_id;
+							$trainerId = $obj->trainer_id;
 							$name = '';
-							$traineeName = $obj->user->name;
+							$trainerName = $obj->user->name_with_id;
 						} else if ($trainerType == self::EXTERNAL) {
-							$traineeId = '';
+							$trainerId = '';
 							$name = $obj->name;
-							$traineeName = '';
+							$trainerName = '';
 						}
 
 						$this->request->data[$alias][$fieldKey][$key] = [
 							'id' => $obj->id,
 							'type' => $trainerType,
-							'trainer_id' => $traineeId,
+							'trainer_id' => $trainerId,
 							'name' => $name,
-							'trainer_name' => $traineeName
+							'trainer_name' => $trainerName
 						];
 					}
 				}
