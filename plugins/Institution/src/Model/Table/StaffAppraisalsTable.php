@@ -74,9 +74,9 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('modified',            ['visible' => ['index' => true, 'view' => true], 'after' => 'modified_user_id']);
         $this->field('staff_id',            ['type' => 'hidden', 'value' => $staffId]);
 
-        if (!empty($this->request->params['pass'][1])) {
+        if (!empty($this->paramsPass(0))) {
 
-            $staffAppraisalId = $this->request->params['pass'][1];
+            $staffAppraisalId = $this->paramsPass(0);
 
             $loginUserId = $this->Auth->user('id');
             $createdUserId = $this->get($staffAppraisalId)->created_user_id;
@@ -233,7 +233,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $attr['value'] = $dateAttr['from'];
             }
         } else if ($action == 'edit') {
-            $staffAppraisalId = $request->params['pass'][1];
+            $staffAppraisalId = $this->paramsPass(0);
             $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
             $fromDate = $this->get($staffAppraisalId)->from;
         }
@@ -274,7 +274,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $attr['value'] = $dateAttr['to'];
             }
         } else if ($action == 'edit') {
-            $staffAppraisalId = $request->params['pass'][1];
+            $staffAppraisalId = $this->paramsPass(0);
             $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
             $toDate = $this->get($staffAppraisalId)->to;
         }
@@ -538,7 +538,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         $session = $this->request->session();
         $loginUserId = $this->Auth->user('id');
-        $createdUserId = $entity->created_user->id;
+        $createdUserId = $entity->created_user_id;
 
         // if not admin and not his own appraisal remove and edit button will be remove
         if (!$this->AccessControl->isAdmin()) {
