@@ -153,8 +153,6 @@ class InstitutionRoomsTable extends AppTable {
 
             if (!empty($resultArray)) {
                 return implode(', ', $resultArray);
-            } else {
-            	return '<span>&lt;'.__('No Subject Allocated').'&gt;</span>';
             }
         }
 	}
@@ -189,7 +187,7 @@ class InstitutionRoomsTable extends AppTable {
     }
 
 	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id', 'subjects']);
+		$this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
 
 		$this->ControllerAction->field('institution_id');
 		$this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
@@ -201,13 +199,6 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
 		$this->ControllerAction->field('previous_room_id', ['visible' => false]);
-		$this->ControllerAction->field('subjects', [
-            'type' => 'chosenSelect',
-            'fieldNameKey' => 'subjects',
-            'fieldName' => $this->alias() . '.subjects._ids',
-            'placeholder' => $this->getMessage($this->aliasField('select_subject')),
-            'valueWhenEmpty' => __('No Subject Allocated')
-        ]);
 
 		$toolbarElements = [];
 		$toolbarElements = $this->addBreadcrumbElement($toolbarElements);
@@ -266,8 +257,6 @@ class InstitutionRoomsTable extends AppTable {
 		}
 		$this->controller->set(compact('statusOptions', 'selectedStatus'));
 		// End
-
-		$query->contain(['Subjects']);
 
 		$options['order'] = [
 			$this->aliasField('code') => 'asc',
@@ -720,8 +709,7 @@ class InstitutionRoomsTable extends AppTable {
             'fieldNameKey' => 'subjects',
             'fieldName' => $this->alias() . '.subjects._ids',
             'placeholder' => $this->getMessage($this->aliasField('select_subject')),
-            'valueWhenEmpty' => __('No Subject Allocated'),
-            'entity' => $entity
+            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>'
         ]);
 		$this->ControllerAction->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
 		$this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
