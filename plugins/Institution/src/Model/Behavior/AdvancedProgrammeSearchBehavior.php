@@ -8,19 +8,22 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 
-class AdvancedProgrammeSearchBehavior extends Behavior {
+class AdvancedProgrammeSearchBehavior extends Behavior
+{
     protected $_defaultConfig = [
         'associatedKey' => '',
     ];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $associatedKey = $this->config('associatedKey');
         if (empty($associatedKey)) {
             $this->config('associatedKey', $this->_table->aliasField('id'));
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $newEvent = [
             'AdvanceSearch.onSetupFormField' => 'onSetupFormField',
@@ -29,8 +32,8 @@ class AdvancedProgrammeSearchBehavior extends Behavior {
         $events = array_merge($events, $newEvent);
         return $events;
     }
-    
-    public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) 
+
+    public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany)
     {
         if (isset($advancedSearchHasMany['education_programmes'])) {
             $search = $advancedSearchHasMany['education_programmes'];
@@ -66,7 +69,8 @@ class AdvancedProgrammeSearchBehavior extends Behavior {
         return $query;
     }
 
-    public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData) {
+    public function onSetupFormField(Event $event, ArrayObject $searchables, $advanceSearchModelData)
+    {
         $searchables['education_programmes'] = [
             'label' => __('Education Programme'),
             'type' => 'select',
@@ -75,14 +79,15 @@ class AdvancedProgrammeSearchBehavior extends Behavior {
         ];
     }
 
-    public function getProgrammesOptions() 
+    public function getProgrammesOptions()
     {
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $programmeOptions = [];
 
         $query = $InstitutionGrades
                 ->find('all')
                 ->select([
-                    'id' => 'EducationProgrammes.id', 
+                    'id' => 'EducationProgrammes.id',
                     'name' => 'EducationProgrammes.name'
                 ])
                 ->join([
@@ -101,12 +106,11 @@ class AdvancedProgrammeSearchBehavior extends Behavior {
                 ])
                 ->group('EducationProgrammes.id')
                 ->toArray();
-        
+
         foreach ($query as $key => $value) {
             $programmeOptions[$value->id] = $value->name;
         }
 
         return $programmeOptions;
     }
-
 }

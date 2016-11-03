@@ -8,7 +8,7 @@ VALUES (1002, 'Type', 'external_data_source_type', 'External Data Source', 'Type
 
 -- config_item_options
 INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (100, 'external_data_source_type', 'None', 'None', 1, 1);
-INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (101, 'external_data_source_type', 'Openemis Identities', 'Openemis Identities', 2, 1);
+INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES (101, 'external_data_source_type', 'OpenEMIS Identity', 'OpenEMIS Identity', 2, 1);
 
 -- external_data_source_attributes
 CREATE TABLE `external_data_source_attributes` (
@@ -343,7 +343,9 @@ INNER JOIN `institution_staff` AS `Staff`
 ON `Staff`.`staff_id` = `StaffLeaves`.`staff_id`
 INNER JOIN `staff_statuses` AS `StaffStatuses`
 ON `StaffStatuses`.`id` = `Staff`.`staff_status_id`
-WHERE `StaffStatuses`.`code` = 'ASSIGNED';
+WHERE `StaffStatuses`.`code` = 'ASSIGNED'
+GROUP BY `Staff`.`staff_id`
+ORDER BY `Staff`.`start_date` DESC;
 
 -- institution_positions
 RENAME TABLE `institution_positions` TO `z_3253_institution_positions`;
