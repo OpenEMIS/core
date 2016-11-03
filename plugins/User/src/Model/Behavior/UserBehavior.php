@@ -10,7 +10,6 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use User\Model\Entity\User;
 use Cake\I18n\I18n;
-use Cake\ORM\ResultSet;
 
 class UserBehavior extends Behavior {
     private $defaultStudentProfileIndex = "<div class='table-thumb'><div class='profile-image-thumbnail'><i class='kd-students'></i></div></div>";
@@ -196,7 +195,7 @@ class UserBehavior extends Behavior {
         $this->_table->fields['is_guardian']['value'] = 0;
     }
 
-    public function indexAfterAction(Event $event, ResultSet $data) {
+    public function indexAfterAction(Event $event) {
         $plugin = $this->_table->controller->plugin;
         $name = $this->_table->controller->name;
 

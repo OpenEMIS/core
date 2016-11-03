@@ -10,7 +10,6 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
-use Cake\ORM\ResultSet;
 
 class DirectoriesTable extends AppTable {
 	// public $InstitutionStudent;
@@ -460,7 +459,7 @@ class DirectoriesTable extends AppTable {
 		$requestData[$this->alias()] = $directoryEntity;
 	}
 
-	public function indexAfterAction(Event $event, ResultSet $data) {
+	public function indexAfterAction(Event $event) {
 		$this->fields = [];
 		$this->controller->set('ngController', 'AdvancedSearchCtrl');
         $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
