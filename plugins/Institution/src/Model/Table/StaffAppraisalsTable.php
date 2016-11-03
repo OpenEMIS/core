@@ -1,5 +1,5 @@
 <?php
-namespace Staff\Model\Table;
+namespace Institution\Model\Table;
 
 use ArrayObject;
 
@@ -14,9 +14,10 @@ use Cake\ORM\TableRegistry;
 
 use App\Model\Table\ControllerActionTable;
 
-class AppraisalsTable extends ControllerActionTable {
-
-    public function initialize(array $config) {
+class StaffAppraisalsTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
         $this->table('staff_appraisals');
         parent::initialize($config);
 
@@ -38,7 +39,8 @@ class AppraisalsTable extends ControllerActionTable {
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -47,25 +49,36 @@ class AppraisalsTable extends ControllerActionTable {
                     'rule' => ['compareDate', 'to', false]
                 ]
             ])
-            ;
+        ;
     }
 
-    private function setupTabElements() {
-        $tabElements = $this->controller->getProfessionalDevelopmentTabElements();
+    private function setupTabElements()
+    {
+        $options['type'] = 'staff';
+        $userId = $this->Auth->user('id');
+        if (!is_null($userId)) {
+            $options['user_id'] = $userId;
+        }
+
+        $tabElements = $this->controller->getProfessionalDevelopmentTabElements($options);
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $session = $this->request->session();
+        $staffId = $session->read('Staff.Staff.id');
+
         $this->field('modified_user_id',    ['visible' => ['index' => true, 'view' => true], 'after' => 'final_rating']);
         $this->field('modified',            ['visible' => ['index' => true, 'view' => true], 'after' => 'modified_user_id']);
+        $this->field('staff_id',            ['type' => 'hidden', 'value' => $staffId]);
 
         if (!empty($this->request->params['pass'][1])) {
-            $session = $this->request->session();
+
             $staffAppraisalId = $this->request->params['pass'][1];
 
-            $loginUserId = $session->read('Auth.User.id');
+            $loginUserId = $this->Auth->user('id');
             $createdUserId = $this->get($staffAppraisalId)->created_user_id;
 
             // if not admin and not his own appraisal remove and edit button will be remove
@@ -89,6 +102,21 @@ class AppraisalsTable extends ControllerActionTable {
         $this->setFieldOrder(['staff_appraisal_type_id', 'title', 'from', 'to', 'final_rating']);
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $session = $this->request->session();
+        $staffId = $session->read('Staff.Staff.id');
+        $query = $query->where([$this->aliasField('staff_id') => $staffId]);
+
+        //Add controls filter to index page
+        $academicPeriodList = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
+        $selectedAcademicPeriod = !is_null($this->request->query('academic_period')) ? $this->request->query('academic_period') : $this->AcademicPeriods->getCurrent();
+
+        $extra['elements']['controls'] = ['name' => 'Institution.StaffAppraisals/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $this->controller->set(compact('academicPeriodList', 'selectedAcademicPeriod'));
+        $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
         $query->contain(['Competencies']);
@@ -104,24 +132,19 @@ class AppraisalsTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $entity['final_rating'] = $this->getFinalRating($entity, $data);
+        $entity['final_rating'] = $this->getFinalRating($entity);
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data)
-    {
-        $entity['final_rating'] = $this->getFinalRating($entity, $data);
-    }
-
-    private function getFinalRating(Entity $entity, ArrayObject $data)
+    private function getFinalRating(Entity $entity)
     {
         $finalRating = 0.00;
 
-        if (isset($data[$this->alias()]['competencies'])) {
-            $competenciesRating = $data[$this->alias()]['competencies'];
-            foreach ($competenciesRating as $key => $value) {
-                $finalRating = $finalRating + $value['_joinData']['rating'];
+        if (isset($entity->competencies)) {
+            $competenciesRating = $entity->competencies;
+            foreach ($competenciesRating as $key => $obj) {
+                $finalRating = $finalRating + $obj->_joinData->rating;
             }
         }
 
@@ -136,7 +159,7 @@ class AppraisalsTable extends ControllerActionTable {
             if (array_key_exists('competency_set_id', $data[$this->alias()]) && !empty($data[$this->alias()]['competency_set_id'])) {
                 $competencySetId = $data[$this->alias()]['competency_set_id'];
 
-                $CompetencySets = TableRegistry::get('Staff.CompetencySets');
+                $CompetencySets = $this->CompetencySets;
                 $competencySetResults = $CompetencySets
                     ->find()
                     ->contain(['Competencies'])
@@ -168,14 +191,14 @@ class AppraisalsTable extends ControllerActionTable {
 
     public function onGetModifiedUserId(Event $event, Entity $entity)
     {
-        if($this->action == 'index') {
+        if ($this->action == 'index') {
             $entity['modified_user'] = !empty($entity['modified_user']) ? $entity['modified_user'] : $entity['created_user'];
         }
     }
 
     public function onGetModified(Event $event, Entity $entity)
     {
-        if($this->action == 'index') {
+        if ($this->action == 'index') {
             $entity['modified'] = date('d-M-Y', strtotime(!empty($entity['modified']) ? $entity['modified'] : $entity['created']));
         }
     }
@@ -280,21 +303,25 @@ class AppraisalsTable extends ControllerActionTable {
     {
         if ($action == 'add' || $action == 'edit') {
             // type only self if choose to appraise himself, if appraise other staff will be only supervisor or peer.
-            $staffAppraisalType = TableRegistry::get('Staff.StaffAppraisalTypes');
+            $staffAppraisalType = $this->StaffAppraisalTypes;
             $session = $this->request->session();
-            $loginUserId = $session->read('Auth.User.id');
+            $loginUserId = $this->Auth->user('id');
             $staffId = $session->read('Staff.Staff.id');
 
-            if ($loginUserId == $staffId) {
-                $attr['type'] = 'readOnly';
-                $attr['attr']['value'] = 'Self';
-                $attr['value'] = 2;
-            } else {
-                $typeOptions = $staffAppraisalType
-                    ->find('list')
-                    ->where([[$staffAppraisalType -> aliasField('code != ') => 'SELF']])
-                    ->toArray();
-                $attr['options'] = $typeOptions;
+            if (!$this->AccessControl->isAdmin()) {
+                if ($loginUserId == $staffId) {
+                    $typeId = $this->StaffAppraisalTypes->getIdByCode('SELF');
+
+                    $attr['type'] = 'readOnly';
+                    $attr['attr']['value'] = 'Self';
+                    $attr['value'] = $typeId;
+                } else {
+                    $typeOptions = $staffAppraisalType
+                        ->find('list')
+                        ->where([[$staffAppraisalType -> aliasField('code != ') => 'SELF']])
+                        ->toArray();
+                    $attr['options'] = $typeOptions;
+                }
             }
 
         return $attr;
@@ -303,10 +330,28 @@ class AppraisalsTable extends ControllerActionTable {
 
     public function onUpdateFieldCompetencySetId(Event $event, array $attr, $action, $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            $competencySetOptions = $this->getCompetencySetOptions();
+        $CompetencySetsCompetencies = TableRegistry::get('Staff.CompetencySetsCompetencies');
 
-            $attr['options'] = $competencySetOptions;
+        if ($action == 'add' || $action == 'edit') {
+            $competencySetOptionsArray = $this->CompetencySets
+                ->find('CompetencySetsOptions')
+                ->toArray()
+                ;
+
+            if (!empty($competencySetOptionsArray)) {
+                // if competency set doesnt have any competency will not be shown on the list.
+                foreach ($competencySetOptionsArray as $key => $obj) {
+                    $competencyCount = $CompetencySetsCompetencies
+                        ->find()
+                        ->where([$CompetencySetsCompetencies->aliasField('competency_set_id') => $key])
+                        ->count();
+
+                    if ($competencyCount > 0) {
+                        $attr['options'][$key] = $obj;
+                    }
+                }
+            }
+
             $attr['onChangeReload'] = 'changeCompetencySet';
         }
 
@@ -324,18 +369,16 @@ class AppraisalsTable extends ControllerActionTable {
             ];
             $tableCells = [];
 
-            $StaffAppraisalsCompetencies = TableRegistry::get('Staff.StaffAppraisalsCompetencies');
-
-            $competencyItems = $StaffAppraisalsCompetencies
+            $competencyItems = $this
                 ->find()
                 ->contain(['Competencies'])
-                ->where([$StaffAppraisalsCompetencies->aliasField('staff_appraisal_id') => $staffAppraisalId])
-                ->toArray();
+                ->where([$this->aliasField('id') => $entity->id])
+                ->first()->competencies;
 
             foreach ($competencyItems as $key => $obj) {
                 $rowData = [];
-                $rowData[] = $obj->competency->name;
-                $rowData[] = $obj->rating;
+                $rowData[] = $obj->name;
+                $rowData[] = $obj->_joinData->rating;
 
                 $tableCells[] = $rowData;
             }
@@ -426,52 +469,53 @@ class AppraisalsTable extends ControllerActionTable {
 
             $ngModel = [];
             $totalNgModel = '';
-            foreach ($arrayCompetencies as $key => $obj) {
-                $fieldPrefix = $attr['model'] . '.competencies.' . $cellCount++;
-                $joinDataPrefix = $fieldPrefix . '._joinData';
-                $rating = !empty($obj['rating']) ? $obj['rating'] : 0;
-                $ngModel[] = 'rating_' . $key;
+            if (!empty($arrayCompetencies)) {
+                foreach ($arrayCompetencies as $key => $obj) {
+                    $fieldPrefix = $attr['model'] . '.competencies.' . $cellCount++;
+                    $joinDataPrefix = $fieldPrefix . '._joinData';
+                    $rating = !empty($obj['rating']) ? $obj['rating'] : 0;
+                    $ngModel[] = 'rating_' . $key;
 
-                $form->unlockField($joinDataPrefix.".rating");
-                $cellData = "";
-                if ($rating === 'Deleted') {
-                    $cellData = $this->getMessage('Staff.Appraisal.deleted_competencies');
+                    $form->unlockField($joinDataPrefix.".rating");
+                    $cellData = "";
+                    if ($rating === 'Deleted') {
+                        $cellData = $this->getMessage('Staff.Appraisal.deleted_competencies');
+                    } else {
+                        $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="rating_'.$key.'" value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
+                        $cellData .= $form->hidden($joinDataPrefix.".rating", [
+                            'label' => false,
+                            'type' => 'number',
+                            'value' => '{{rating_'.$key.'}}'
+                        ]);
+                        $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
+                        $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
+                        $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
+                        $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
+                    }
 
-                } else {
-                    $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="rating_'.$key.'" value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
-                    $cellData .= $form->hidden($joinDataPrefix.".rating", [
-                        'label' => false,
-                        'type' => 'number',
-                        'value' => '{{rating_'.$key.'}}'
-                    ]);
-                    $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
-                    $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
-                    $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
-                    $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
+                    $rowData = [];
+                    $rowData[] = $obj['name'];
+                    $rowData[] = $cellData;
+                    $rowData[] = '{{rating_'.$key.' | number : 1}}'; // "| number : 1"  means the digit after decimal
+
+                    $tableCells[] = $rowData;
                 }
 
-                $rowData = [];
-                $rowData[] = $obj['name'];
-                $rowData[] = $cellData;
-                $rowData[] = '{{rating_'.$key.' | number : 1}}'; // "| number : 1"  means the digit after decimal
-
-                $tableCells[] = $rowData;
-            }
-
-            // angular to sum all the rating '{{rating_1+rating_2+.....}}'
-            for ($i=0; $i < count($ngModel) ; $i++) {
-                if ($i < count($ngModel) - 1) {
-                    $totalNgModel .= $ngModel[$i] . ' + ';
-                } else {
-                    $totalNgModel .= $ngModel[$i];
+                // angular to sum all the rating '{{rating_1+rating_2+.....}}'
+                for ($i=0; $i < count($ngModel) ; $i++) {
+                    if ($i < count($ngModel) - 1) {
+                        $totalNgModel .= $ngModel[$i] . ' + ';
+                    } else {
+                        $totalNgModel .= $ngModel[$i];
+                    }
                 }
-            }
 
-            $attr['tableCells'] = $tableCells;
-            $attr['finalRating'] = '{{'.$totalNgModel.' | number : 1}}'; // "| number : 1"  means the digit after decimal
+                $attr['tableCells'] = $tableCells;
+                $attr['finalRating'] = '{{'.$totalNgModel.' | number : 1}}'; // "| number : 1"  means the digit after decimal
 
-            if ($entity->has('competency_set_id')) {
-                return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
+                if ($entity->has('competency_set_id')) {
+                    return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
+                }
             }
         }
     }
@@ -490,7 +534,7 @@ class AppraisalsTable extends ControllerActionTable {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         $session = $this->request->session();
-        $loginUserId = $session->read('Auth.User.id');
+        $loginUserId = $this->Auth->user('id');
         $createdUserId = $entity->created_user->id;
 
         // if not admin and not his own appraisal remove and edit button will be remove
@@ -515,15 +559,6 @@ class AppraisalsTable extends ControllerActionTable {
         $this->field('final_rating', ['type' => 'hidden']);
 
         $this->setFieldOrder(['title', 'academic_period_id', 'from', 'to', 'staff_appraisal_type_id', 'competency_set_id', 'rating', 'final_rating', 'comment']);
-    }
-
-    public function getCompetencySetOptions()
-    {
-        $competencySets = TableRegistry::get('Staff.CompetencySets');
-        $competencySetOptions = $competencySets
-            ->find('list')
-            ->toArray();
-        return $competencySetOptions;
     }
 
     public function getMissingCompetency($competencySetId, $staffAppraisalId)
