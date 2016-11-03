@@ -608,6 +608,10 @@ class InstitutionRoomsTable extends AppTable {
 
 				$attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
 			}
+
+			if (!$this->canUpdateDetails) {
+				$attr['visible'] = false;
+			}
 		}
 
 		return $attr;
