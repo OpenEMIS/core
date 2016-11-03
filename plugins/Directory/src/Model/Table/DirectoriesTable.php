@@ -48,7 +48,7 @@ class DirectoriesTable extends AppTable {
             'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
-        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder, 'alwaysShow' => 1, 'customFields' => ['user_type']]);
+        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder, 'showOnLoad' => 1, 'customFields' => ['user_type']]);
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
@@ -461,29 +461,27 @@ class DirectoriesTable extends AppTable {
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields = [];
 		$this->controller->set('ngController', 'AdvancedSearchCtrl');
+        $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
+		switch($userType) {
+			case self::ALL:
+				// Do nothing
+				break;
+			case self::STUDENT:
+				$this->ControllerAction->field('institution', ['order' => 50]);
+				$this->ControllerAction->field('student_status', ['order' => 51]);
+				break;
 
-		if (!is_null($this->request->query('user_type'))) {
-			switch($this->request->query('user_type')) {
-				case self::ALL:
-					// Do nothing
-					break;
-				case self::STUDENT:
-					$this->ControllerAction->field('institution', ['order' => 50]);
-					$this->ControllerAction->field('student_status', ['order' => 51]);
-					break;
+			case self::STAFF:
+				$this->ControllerAction->field('institution', ['order' => 50]);
+				break;
 
-				case self::STAFF:
-					$this->ControllerAction->field('institution', ['order' => 50]);
-					break;
+			case self::GUARDIAN:
 
-				case self::GUARDIAN:
+				break;
 
-					break;
+			case self::OTHER:
 
-				case self::OTHER:
-
-					break;
-			}
+				break;
 		}
 	}
 
