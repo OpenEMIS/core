@@ -44,6 +44,12 @@ class VisitRequestsTable extends ControllerActionTable
         	'Dashboard' => ['index']
         ]);
         $this->addBehavior('Institution.Visit');
+
+        // setting this up to be overridden in viewAfterAction(), this code is required
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			true
+		);
 	}
 
 	public function validationDefault(Validator $validator)
@@ -69,6 +75,17 @@ class VisitRequestsTable extends ControllerActionTable
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
+		// determine if download button is shown
+		$showFunc = function() use ($entity) {
+			$filename = $entity->file_content;
+			return !empty($filename);
+		};
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			$showFunc
+		);
+		// End
+
 		$this->setupFields($entity, $extra);
 	}
 
@@ -139,6 +156,7 @@ class VisitRequestsTable extends ControllerActionTable
 		$this->field('date_of_visit', ['entity' => $entity]);
 		$this->field('quality_visit_type_id', ['type' => 'select']);
 		$this->field('file_name', ['type' => 'hidden']);
+		$this->field('file_content', ['visible' => ['view' => false, 'edit' => true]]);
 
 		$this->setFieldOrder(['academic_period_id', 'date_of_visit', 'quality_visit_type_id', 'comment', 'file_name', 'file_content']);
 	}

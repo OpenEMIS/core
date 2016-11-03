@@ -37,6 +37,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 		]);
 		$this->addBehavior('Institution.Visit');
 
+		// setting this up to be overridden in viewAfterAction(), this code is required
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			true
+		);
+
 		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 	}
 
@@ -67,6 +73,17 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
+		// determine if download button is shown
+		$showFunc = function() use ($entity) {
+			$filename = $entity->file_content;
+			return !empty($filename);
+		};
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			$showFunc
+		);
+		// End
+
 		$this->setupValues($entity);
 		$this->setupFields($entity);
 	}
@@ -259,11 +276,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 		$this->field('institution_subject_id', ['type' => 'select']);
 		$this->field('staff_id', ['type' => 'select']);
 		$this->field('evaluator');
+		$this->field('quality_visit_type_id', ['type' => 'select']);
 		$this->field('file_name', [
 			'type' => 'hidden',
 			'visible' => ['view' => false, 'edit' => true]
 		]);
-		$this->field('quality_visit_type_id', ['type' => 'select']);
+		$this->field('file_content', ['visible' => ['view' => false, 'edit' => true]]);
 
 		$this->setFieldOrder([
 			'date', 'academic_period_id', 'institution_subject_id', 'staff_id',
