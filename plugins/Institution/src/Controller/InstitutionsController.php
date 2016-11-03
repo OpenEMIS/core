@@ -72,13 +72,8 @@ class InstitutionsController extends AppController
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
+        $this->loadComponent('Institution.UserOpenEMISID');
         $this->attachAngularModules();
-
-        $controller = $this->name;
-        $accessMap = [
-            "$controller.StudentUser" => "$controller.%s"
-        ];
-        $this->request->addParams(['accessMap' => $accessMap]);
     }
 
     // CAv4
@@ -97,8 +92,8 @@ class InstitutionsController extends AppController
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
     public function ExaminationStudents()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
-    public function StudentUser()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']);
-    }
+    public function IndividualPromotion()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.IndividualPromotion']); }
+    public function StudentUser()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']); }
     public function TransferRequests()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
     // public function StaffAbsences() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     public function StaffLeave()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
@@ -130,7 +125,16 @@ class InstitutionsController extends AppController
 
     public function Students($pass = 'index') {
         if ($pass == 'add') {
+            $session = $this->request->session();
+            $roles = [];
+
+            if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+                $userId = $this->Auth->user('id');
+                $institutionId = $session->read('Institution.Institutions.id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            }
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
+            $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
         	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
         	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
@@ -147,34 +151,16 @@ class InstitutionsController extends AppController
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Controller.AccessControl.checkIgnoreActions'] = 'checkIgnoreActions';
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
         return $events;
     }
 
-    public function checkIgnoreActions(Event $event, $controller, $action)
+    public function isActionIgnored(Event $event, $action)
     {
-        $ignore = false;
-        if ($controller == 'Institutions') {
-            $ignoredList = ['downloadFile'];
-            if (in_array($action, $ignoredList)) {
-                $ignore = true;
-            } else {
-                $ignoredList = [
-                    'StudentUser' => ['downloadFile'],
-                    'StaffUser' => ['downloadFile'],
-                    'Infrastructures' => ['downloadFile'],
-                    'Surveys' => ['downloadFile']
-                ];
-
-                if (array_key_exists($action, $ignoredList)) {
-                    $pass = $this->request->params['pass'];
-                    if (count($pass) > 0 && in_array($pass[0], $ignoredList[$action])) {
-                        $ignore = true;
-                    }
-                }
-            }
+        $pass = $this->request->pass;
+        if (isset($pass[0]) && $pass[0] == 'downloadFile') {
+            return true;
         }
-        return $ignore;
     }
 
     private function checkInstitutionAccess($id, $event)
@@ -245,6 +231,13 @@ class InstitutionsController extends AppController
         }
 
         $this->set('contentHeader', $header);
+
+    }
+
+    public function getUniqueOpenemisId()
+    {
+        $this->autoRender = false;
+        echo $this->UserOpenEMISID->getUniqueOpenemisId();
     }
 
 	private function attachAngularModules()
@@ -334,6 +327,8 @@ class InstitutionsController extends AppController
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
+            } else if ($model->alias() == 'IndividualPromotion') {
+                $header .= ' - '. __('Individual Promotion / Repeat');
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
             }

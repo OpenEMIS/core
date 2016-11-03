@@ -59,6 +59,18 @@ class StudentUserTable extends ControllerActionTable
         $this->toggle('remove', false);
 	}
 
+
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+	{
+		$options['associated']['Nationalities'] = [
+			'validate' => 'AddByAssociation'
+		];
+		$options['associated']['Identities'] = [
+			'validate' => 'AddByAssociation'
+		];
+	}
+
 	public static function handleAssociations($model)
 	{
 		$model->belongsTo('Genders', 		 ['className' => 'User.Genders']);
@@ -130,15 +142,33 @@ class StudentUserTable extends ControllerActionTable
 		$BaseUsers = TableRegistry::get('User.Users');
 		$validator = $BaseUsers->setUserValidation($validator, $this);
 		$validator
+            ->allowEmpty('student_name')
+            ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
+                'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
+                'on' => 'create',
+                'last' => true
+            ])
+            ->add('student_name', 'ruleStudentNotCompletedGrade', [
+                'rule' => ['studentNotCompletedGrade', []],
+                'on' => 'create',
+                'last' => true
+            ])
+            ->add('student_name', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
+                'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
+                'on' => 'create'
+            ])
+            ->allowEmpty('class')
+            ->add('class', 'ruleClassMaxLimit', [
+                'rule' => ['checkInstitutionClassMaxLimit'],
+                'on' => 'create'
+            ])
 			->add('date_of_birth', 'ruleCheckAdmissionAgeWithEducationCycleGrade', [
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
 			->requirePresence('start_date', 'create')
-			->add('education_grade_id', [
-			])
-			->add('academic_period_id', [
-			])
+			->requirePresence('education_grade_id', 'create')
+			->requirePresence('academic_period_id', 'create')
 			->allowEmpty('postal_code')
 			->add('postal_code', 'ruleCustomPostalCode', [
         		'rule' => ['validateCustomPattern', 'postal_code'],
@@ -153,13 +183,10 @@ class StudentUserTable extends ControllerActionTable
 	{
 		$this->field('username', ['visible' => false]);
 		$toolbarButtons = $extra['toolbarButtons'];
-		$action = $this->action;
-		if ($action == 'add') {
-			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Students', 'add'];
-			$toolbarButtons['back']['url'] = $backAction;
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
+
+		// Back button does not contain the pass
+		if (isset($this->request->pass[1])) {
+			$toolbarButtons['back']['url'][1] = $this->request->pass[1];
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
@@ -186,6 +213,9 @@ class StudentUserTable extends ControllerActionTable
 
 			$isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
 			$isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
+			if (isset($extra['toolbarButtons']['edit']['url'])) {
+				$extra['toolbarButtons']['edit']['url'][1] = $studentId;
+			}
 			if (!$isStudentEnrolled || !$isAllowedByClass) {
 				$this->toggle('edit', false);
 			}
@@ -235,6 +265,7 @@ class StudentUserTable extends ControllerActionTable
 			}
 		}
 
+		$this->addPromoteButton($entity, $extra);
 		$this->addTransferButton($entity, $extra);
 		$this->addDropoutButton($entity, $extra);
 	}
@@ -271,7 +302,7 @@ class StudentUserTable extends ControllerActionTable
 			$studentId = $studentEntity->student_id;
 
 			$params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
-			$action = $this->setUrlParams(['action' => 'TransferRequests', 'add'], $params);
+			$action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'TransferRequests', 'add'], $params);
 
 			$checkIfCanTransfer = $StudentsTable->checkIfCanTransfer($studentEntity, $institutionId);
 
@@ -301,6 +332,41 @@ class StudentUserTable extends ControllerActionTable
 				$toolbarButtons['transfer'] = $transferButton;
 			}
     	}
+    }
+
+    private function addPromoteButton(Entity $entity, ArrayObject $extra)
+    {
+		if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
+			$session = $this->Session;
+    		$toolbarButtons = $extra['toolbarButtons'];
+
+    		$StudentsTable = TableRegistry::get('Institution.Students');
+			$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+			$editableAcademicPeriods = $AcademicPeriods->getYearList(['isEditable' => true]);
+
+			$Enrolled = $StudentStatuses->getIdByCode('CURRENT');
+			$institutionStudentId = $extra['institutionStudentId'];
+			$studentEntity = $StudentsTable->get($institutionStudentId);
+			$academicPeriodId = $studentEntity->academic_period_id;
+
+			$params = ['student_id' => $institutionStudentId, 'user_id' => $entity->id];
+			$action = $this->setUrlParams(['controller' => $this->controller->name, 'action' => 'IndividualPromotion', 'add'], $params);
+
+			// Show Promote button only if the Student Status is Current and academic period is editable
+			if ($studentEntity->student_status_id == $Enrolled && array_key_exists($academicPeriodId, $editableAcademicPeriods)) {
+				// Promote button
+				$promoteButton = $toolbarButtons['back'];
+				$promoteButton['type'] = 'button';
+				$promoteButton['label'] = '<i class="fa kd-graduate"></i>';
+				$promoteButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$promoteButton['attr']['title'] = __('Promotion / Repeat');
+				$promoteButton['url'] = $action;
+
+				$toolbarButtons['promote'] = $promoteButton;
+				//End
+			}
+		}
     }
 
     private function addDropoutButton(Entity $entity, ArrayObject $extra)
@@ -338,8 +404,9 @@ class StudentUserTable extends ControllerActionTable
 				$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
 				$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
 				$dropoutButton['attr']['title'] = __('Dropout');
+
+				$dropoutButton['url'] = $this->url('add', 'QUERY');
 				$dropoutButton['url']['action'] = 'DropoutRequests';
-				$dropoutButton['url'][0] = 'add';
 
 				if (!empty($dropoutRequest)) {
 					$dropoutButton['url'][0] = 'edit';
