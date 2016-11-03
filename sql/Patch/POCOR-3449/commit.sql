@@ -89,7 +89,7 @@ INSERT INTO `workflow_statuses_steps` (`id`, `workflow_status_id`, `workflow_ste
 
 -- add security_functions
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
-(3037, 'Applications', 'Institutions', 'Institutions', 'Staff - Training', '3000', 'StaffTrainingApplications.index|StaffTrainingApplications.view', null, 'StaffTrainingApplications.add|CourseCatalogue.index|CourseCatalogue.view', 'StaffTrainingApplications.remove', null, 3037, 1, 1, NOW());
+(3037, 'Applications', 'Institutions', 'Institutions', 'Staff - Training', '3000', 'StaffTrainingApplications.index|StaffTrainingApplications.view|StaffTrainingApplications.download', null, 'StaffTrainingApplications.add|CourseCatalogue.index|CourseCatalogue.view|CourseCatalogue.download', 'StaffTrainingApplications.remove', null, 3037, 1, 1, NOW());
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `order`, `visible`, `created_user_id`, `created`) VALUES
 (5050, 'Applications', 'Trainings', 'Administration', 'Trainings', '5000', 'Applications.index|Applications.view', 5050, 1, 1, NOW());
 
