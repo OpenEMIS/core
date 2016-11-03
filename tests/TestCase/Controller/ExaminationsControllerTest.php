@@ -19,6 +19,7 @@ class ExaminationsControllerTest extends AppTestCase
         'app.area_administrative_levels',
         'app.area_administratives',
         'app.institutions',
+        'app.institution_grades',
         'app.institution_shifts',
         'app.institution_localities',
         'app.institution_types',

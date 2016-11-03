@@ -512,11 +512,10 @@ class NavigationComponent extends Component
 					'selected' => ['Institutions.Rubrics', 'Institutions.RubricAnswers'],
 				],
 
-			'Institutions.Visits' => [
+			'Institutions.VisitRequests' => [
 				'title' => 'Visits',
 				'parent' => 'Institutions.index',
-				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Visits']
+				'params' => ['plugin' => 'Institution']
 			]
 		];
 
@@ -579,7 +578,7 @@ class NavigationComponent extends Component
 				'title' => 'Professional Development',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
-				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Trainings'],
+				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Trainings', 'Institutions.StaffAppraisals'],
 			],
 			'Staff.BankAccounts' => [
 				'title' => 'Finance',
@@ -644,7 +643,7 @@ class NavigationComponent extends Component
 					'title' => 'Professional Development',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffTrainings']
+					'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffTrainings', 'Directories.StaffAppraisals']
 				],
 				'Directories.StaffBankAccounts' => [
 					'title' => 'Finance',
@@ -962,7 +961,7 @@ class NavigationComponent extends Component
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
-				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Statuses']
+				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Statuses']
 			]
 		];
 		return $navigation;
