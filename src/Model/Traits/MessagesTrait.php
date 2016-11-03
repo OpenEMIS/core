@@ -550,12 +550,16 @@ trait MessagesTrait {
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'internal_trainer' => 'Internal Trainer',
-            'external_trainer' => 'External Trainer'
+            'trainer' => 'Trainer'
         ],
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
+        ],
+        'StaffTrainingApplications' => [
+            'success' => 'This session has been added successfully.',
+            'fail' => 'Failed to add the session.',
+            'exists' => 'This session has already been added.'
         ],
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
