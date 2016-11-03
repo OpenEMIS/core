@@ -14,7 +14,7 @@ class DirectoriesController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Directory.Directories');
+		$this->ControllerAction->model('Directory.Directories', ['!search']);
 		$this->ControllerAction->models = [
 			// Users
 			'Attachments' 			=> ['className' => 'User.Attachments'],
