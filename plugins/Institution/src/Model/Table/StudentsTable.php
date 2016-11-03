@@ -549,6 +549,9 @@ class StudentsTable extends ControllerActionTable
         $selectedStatus = $this->queryString('status_id', $statusOptions);
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+
+        $extra['statusId'] = $selectedStatus;
+        $extra['educationGradeId'] = $selectedEducationGrades;
         $extra['academicPeriodId'] = $selectedAcademicPeriod;
 
         // To add the academic_period_id to export
@@ -697,7 +700,7 @@ class StudentsTable extends ControllerActionTable
 
             // Get Age
             $InstitutionArray[__('Age')] = $this->getDonutChart('institution_student_age',
-                ['institutionId' => $extra['institutionId'], 'academicPeriodId' => $extra['academicPeriodId'], 'key' => __('Age')]);
+                ['institutionId' => $extra['institutionId'], 'academicPeriodId' => $extra['academicPeriodId'], 'educationGradeId' => $extra['educationGradeId'], 'statusId' => $extra['statusId'], 'key' => __('Age')]);
 
             // Get Grades
             $InstitutionArray[__('Grade')] = $this->getDonutChart('institution_class_student_grade',
@@ -1022,6 +1025,8 @@ class StudentsTable extends ControllerActionTable
     {
         $institutionId = $params['institutionId'];
         $academicPeriodId = $params['academicPeriodId'];
+        $educationGradeId = $params['educationGradeId'];
+        $statusId = $params['statusId'];
 
         $query = $this->find();
         $ageQuery = $query
@@ -1035,10 +1040,15 @@ class StudentsTable extends ControllerActionTable
             ->matching('Users')
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('academic_period_id') => $academicPeriodId
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('student_status_id') => $statusId
             ])
             ->distinct(['student_id'])
             ->order('age');
+
+        if ($educationGradeId != -1) {
+            $ageQuery->where([$this->aliasField('education_grade_id') => $educationGradeId]);
+        }
 
         $InstitutionStudentCount = $ageQuery->toArray();
 
