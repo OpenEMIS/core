@@ -404,12 +404,14 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function onGetAttachment(Event $event, Entity $entity)
     {
-        // pr($entity);
         $value = '';
-        // if ($entity->session->has('course')) {
-        //     $value = $entity->session->course->file_content;
-        // }
-        // $attr['type'] = 'binary';
+        if ($entity->has('session') && $entity->session->has('course')) {
+            if (!empty($entity->session->course['file_name'])) {
+                $courseId = $entity->session->course->id;
+                $link = $event->subject()->HtmlField->link($entity->session->course['file_name'], ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'CourseCatalogue', 'download', $courseId]);
+                $value = $link;
+            }
+        }
         return $value;
     }
 
