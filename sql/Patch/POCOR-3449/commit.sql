@@ -45,7 +45,7 @@ SET @rejectedStatusId := 0;
 INSERT INTO `workflow_steps` (`name`, `category`, `is_editable`, `is_removable`, `is_system_defined`, `workflow_id`, `created_user_id`, `created`) VALUES
 ('Open', 1, 0, 1, 1, @workflowId, 1, NOW()),
 ('Pending For Approval', 2, 0, 0, 1, @workflowId, 1, NOW()),
-('Closed', 3, 0, 0, 1, @workflowId, 1, NOW()),
+('Withdrawn', 3, 0, 0, 1, @workflowId, 1, NOW()),
 ('Pending For Review', 0, 0, 0, 0, @workflowId, 1, NOW()),
 ('Approved', 0, 0, 0, 0, @workflowId, 1, NOW()),
 ('Rejected', 0, 0, 0, 0, @workflowId, 1, NOW());
@@ -63,7 +63,8 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Approve', NULL, 0, 1, 0, 0, NULL, @pendingReviewStatusId, @pendingApprovalStatusId, 1, NOW()),
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingReviewStatusId, @rejectedStatusId, 1, NOW()),
 ('Approve', NULL, 0, 1, 0, 0, 'Workflow.onAssignTrainingSession', @pendingApprovalStatusId, @approvedStatusId, 1, NOW()),
-('Reject', NULL, 1, 1, 0, 0, NULL, @pendingApprovalStatusId, @rejectedStatusId, 1, NOW());
+('Reject', NULL, 1, 1, 0, 0, NULL, @pendingApprovalStatusId, @rejectedStatusId, 1, NOW()),
+('Withdraw From Training Session', NULL, NULL, 1, 0, 1, 'Workflow.onWithdrawTrainingSession', @approvedStatusId, @closedStatusId, 1, NOW());
 
 -- Pre-insert workflow_statuses
 INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
