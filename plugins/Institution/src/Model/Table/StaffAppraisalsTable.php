@@ -166,14 +166,16 @@ class StaffAppraisalsTable extends ControllerActionTable
                     ->where([$CompetencySets->aliasField('id') => $competencySetId])
                     ->first();
 
-                foreach ($competencySetResults->competencies as $key => $obj) {
-                    $data[$this->alias()]['competencies'][] = [
-                        'id' => $obj['id'],
-                        'name' => $obj['name'],
-                        'min' => $obj['min'],
-                        'max' => $obj['max'],
-                        '_joinData' => ['rating' => 0]
-                    ];
+                if (!empty($competencySetResults)) {
+                    foreach ($competencySetResults->competencies as $key => $obj) {
+                        $data[$this->alias()]['competencies'][] = [
+                            'id' => $obj['id'],
+                            'name' => $obj['name'],
+                            'min' => $obj['min'],
+                            'max' => $obj['max'],
+                            '_joinData' => ['rating' => 0]
+                        ];
+                    }
                 }
             }
         }
@@ -340,6 +342,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
             if (!empty($competencySetOptionsArray)) {
                 // if competency set doesnt have any competency will not be shown on the list.
+                $attr['options'] = [];
                 foreach ($competencySetOptionsArray as $key => $obj) {
                     $competencyCount = $CompetencySetsCompetencies
                         ->find()
