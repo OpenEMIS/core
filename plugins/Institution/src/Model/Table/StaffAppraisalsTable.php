@@ -469,51 +469,53 @@ class StaffAppraisalsTable extends ControllerActionTable
 
             $ngModel = [];
             $totalNgModel = '';
-            foreach ($arrayCompetencies as $key => $obj) {
-                $fieldPrefix = $attr['model'] . '.competencies.' . $cellCount++;
-                $joinDataPrefix = $fieldPrefix . '._joinData';
-                $rating = !empty($obj['rating']) ? $obj['rating'] : 0;
-                $ngModel[] = 'rating_' . $key;
+            if (!empty($arrayCompetencies)) {
+                foreach ($arrayCompetencies as $key => $obj) {
+                    $fieldPrefix = $attr['model'] . '.competencies.' . $cellCount++;
+                    $joinDataPrefix = $fieldPrefix . '._joinData';
+                    $rating = !empty($obj['rating']) ? $obj['rating'] : 0;
+                    $ngModel[] = 'rating_' . $key;
 
-                $form->unlockField($joinDataPrefix.".rating");
-                $cellData = "";
-                if ($rating === 'Deleted') {
-                    $cellData = $this->getMessage('Staff.Appraisal.deleted_competencies');
-                } else {
-                    $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="rating_'.$key.'" value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
-                    $cellData .= $form->hidden($joinDataPrefix.".rating", [
-                        'label' => false,
-                        'type' => 'number',
-                        'value' => '{{rating_'.$key.'}}'
-                    ]);
-                    $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
-                    $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
-                    $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
-                    $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
+                    $form->unlockField($joinDataPrefix.".rating");
+                    $cellData = "";
+                    if ($rating === 'Deleted') {
+                        $cellData = $this->getMessage('Staff.Appraisal.deleted_competencies');
+                    } else {
+                        $cellData .= '<div class="slider-wrapper input-slider"><slider ng-model="rating_'.$key.'" value='.$rating.' min='.$obj['min'].' step="0.5" max='.$obj['max'].'></div>';
+                        $cellData .= $form->hidden($joinDataPrefix.".rating", [
+                            'label' => false,
+                            'type' => 'number',
+                            'value' => '{{rating_'.$key.'}}'
+                        ]);
+                        $cellData .= $form->hidden($fieldPrefix.".id", ['value' => $obj['id']]);
+                        $cellData .= $form->hidden($fieldPrefix.".name", ['value' => $obj['name']]);
+                        $cellData .= $form->hidden($fieldPrefix.".min", ['value' => $obj['min']]);
+                        $cellData .= $form->hidden($fieldPrefix.".max", ['value' => $obj['max']]);
+                    }
+
+                    $rowData = [];
+                    $rowData[] = $obj['name'];
+                    $rowData[] = $cellData;
+                    $rowData[] = '{{rating_'.$key.' | number : 1}}'; // "| number : 1"  means the digit after decimal
+
+                    $tableCells[] = $rowData;
                 }
 
-                $rowData = [];
-                $rowData[] = $obj['name'];
-                $rowData[] = $cellData;
-                $rowData[] = '{{rating_'.$key.' | number : 1}}'; // "| number : 1"  means the digit after decimal
-
-                $tableCells[] = $rowData;
-            }
-
-            // angular to sum all the rating '{{rating_1+rating_2+.....}}'
-            for ($i=0; $i < count($ngModel) ; $i++) {
-                if ($i < count($ngModel) - 1) {
-                    $totalNgModel .= $ngModel[$i] . ' + ';
-                } else {
-                    $totalNgModel .= $ngModel[$i];
+                // angular to sum all the rating '{{rating_1+rating_2+.....}}'
+                for ($i=0; $i < count($ngModel) ; $i++) {
+                    if ($i < count($ngModel) - 1) {
+                        $totalNgModel .= $ngModel[$i] . ' + ';
+                    } else {
+                        $totalNgModel .= $ngModel[$i];
+                    }
                 }
-            }
 
-            $attr['tableCells'] = $tableCells;
-            $attr['finalRating'] = '{{'.$totalNgModel.' | number : 1}}'; // "| number : 1"  means the digit after decimal
+                $attr['tableCells'] = $tableCells;
+                $attr['finalRating'] = '{{'.$totalNgModel.' | number : 1}}'; // "| number : 1"  means the digit after decimal
 
-            if ($entity->has('competency_set_id')) {
-                return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
+                if ($entity->has('competency_set_id')) {
+                    return $event->subject()->renderElement('Staff.Staff/competency_table', ['attr' => $attr]);
+                }
             }
         }
     }

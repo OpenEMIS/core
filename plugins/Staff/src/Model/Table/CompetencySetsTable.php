@@ -113,6 +113,7 @@ class CompetencySetsTable extends ControllerActionTable
     {
         return $query
             ->find('list')
+            ->find('visible')
             ->order([$this->aliasField('order')])
         ;
     }
