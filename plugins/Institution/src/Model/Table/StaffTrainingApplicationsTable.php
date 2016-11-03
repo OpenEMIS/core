@@ -131,7 +131,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $this->field('name');
+        $this->field('course');
         $this->field('training_level');
         $this->field('field_of_study');
         $this->field('credit_hours');
@@ -140,7 +140,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'name', 'training_level', 'field_of_study', 'credit_hours', 'training_session_id'
+            'course', 'training_level', 'field_of_study', 'credit_hours', 'training_session_id'
         ]);
     }
 
@@ -153,7 +153,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     {
         $this->fields = [];
         $this->field('code');
-        $this->field('name');
+        $this->field('course');
         $this->field('applied_session', ['type' => 'sessions']);
         $this->field('description');
         $this->field('objective');
@@ -173,7 +173,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->field('attachment');
 
         $this->setFieldOrder([
-            'code', 'name', 'applied_session', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
+            'code', 'course', 'applied_session', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
             'field_of_study', 'course_type', 'mode_of_delivery', 'training_requirement', 'training_level',
             'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types', 'attachment'
         ]);
@@ -189,7 +189,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    public function onGetName(Event $event, Entity $entity)
+    public function onGetCourse(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('session') && $entity->session->has('course')) {
