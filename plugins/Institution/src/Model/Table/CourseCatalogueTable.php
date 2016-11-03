@@ -68,11 +68,7 @@ class CourseCatalogueTable extends ControllerActionTable
             'dependent' => true
         ]);
 
-        $this->addBehavior('ControllerAction.FileUpload', [
-            'name' => 'file_name',
-            'content' => 'file_content',
-            'useDefaultName' => true
-        ]);
+        $this->addBehavior('ControllerAction.FileUpload');
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);
