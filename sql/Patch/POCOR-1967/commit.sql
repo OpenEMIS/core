@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS `institution_subjects_rooms` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- room_types
+UPDATE `room_types` SET `default` = 0;
+
 SET @order := 0;
 SELECT MAX(`order`) INTO @order FROM `room_types`;
 SET @order := @order +1;
