@@ -77,6 +77,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function beforeAction(Event $event, ArrayObject $extra)
 	{
+		$this->setupTabElements();
 		// Type / Visible
 		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
 		$this->field('end_date', ['visible' => $visible]);
