@@ -6,6 +6,10 @@ use App\Test\AppTestCase;
 
 class AcademicPeriodsControllerDeleteTest extends AppTestCase
 {
+    public $fixtures = [
+        'app.examinations',
+    ];
+
     private $testingId = 2;
 
     public function setup()
