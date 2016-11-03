@@ -35,7 +35,7 @@ class StudentsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']); 
+        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
         // Behaviors
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -523,6 +523,8 @@ class StudentsTable extends ControllerActionTable
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
+        $extra['institutionId'] = $institutionId;
+
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                     'keyField' => 'EducationGrades.id',
@@ -537,7 +539,7 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
-        
+
         // Query Strings
 
         if (empty($request->query['academic_period_id'])) {
@@ -546,6 +548,7 @@ class StudentsTable extends ControllerActionTable
         $selectedStatus = $this->queryString('status_id', $statusOptions);
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
+        $extra['academicPeriodId'] = $selectedAcademicPeriod;
 
         // To add the academic_period_id to export
         if (isset($extra['toolbarButtons']['export']['url'])) {
@@ -571,10 +574,6 @@ class StudentsTable extends ControllerActionTable
             $query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
         }
 
-        if ($selectedStatus != -1) {
-            $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
-        }
-
         $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // Start: sort by class column
@@ -593,6 +592,10 @@ class StudentsTable extends ControllerActionTable
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        } else {
+            if ($selectedStatus != -1) {
+                $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
+            }
         }
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
@@ -693,7 +696,7 @@ class StudentsTable extends ControllerActionTable
 
             // Get Age
             $InstitutionArray[__('Age')] = $this->getDonutChart('institution_student_age',
-                ['query' => $this->dashboardQuery, 'key' => __('Age')]);
+                ['institutionId' => $extra['institutionId'], 'academicPeriodId' => $extra['academicPeriodId'], 'key' => __('Age')]);
 
             // Get Grades
             $InstitutionArray[__('Grade')] = $this->getDonutChart('institution_class_student_grade',
@@ -1035,17 +1038,24 @@ class StudentsTable extends ControllerActionTable
     // Function use by the mini dashboard (For Institution Students)
     public function getNumberOfStudentsByAge($params=[])
     {
-        $query = $params['query'];
-        $InstitutionRecords = clone $query;
-        $ageQuery = $InstitutionRecords
+        $institutionId = $params['institutionId'];
+        $academicPeriodId = $params['academicPeriodId'];
+
+        $query = $this->find();
+        $ageQuery = $query
             ->select([
-                'age' => $InstitutionRecords->func()->dateDiff([
-                    $InstitutionRecords->func()->now(),
+                'age' => $query->func()->dateDiff([
+                    $query->func()->now(),
                     'Users.date_of_birth' => 'literal'
                 ]),
                 'student' => $this->aliasField('student_id')
             ])
-            ->distinct(['student'])
+            ->matching('Users')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->distinct(['student_id'])
             ->order('age');
 
         $InstitutionStudentCount = $ageQuery->toArray();
