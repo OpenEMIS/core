@@ -68,6 +68,12 @@ class CourseCatalogueTable extends ControllerActionTable
             'dependent' => true
         ]);
 
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'file_name',
+            'content' => 'file_content',
+            'useDefaultName' => true
+        ]);
+
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
@@ -85,10 +91,11 @@ class CourseCatalogueTable extends ControllerActionTable
         $this->fields = [];
         $this->field('code');
         $this->field('name');
-        $this->field('training_course_type_id');
+        $this->field('training_level_id');
+        $this->field('training_field_of_study_id');
         $this->field('credit_hours');
-        $this->field('description');
         $this->field('sessions');
+        $this->field('description', ['visible' => false]);
         $this->field('objective', ['visible' => false]);
         $this->field('file_name', ['visible' => false]);
 
@@ -152,6 +159,36 @@ class CourseCatalogueTable extends ControllerActionTable
             ->order($this->aliasField('code'));
     }
 
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['TrainingSessions', 'TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes']);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('sessions', ['type' => 'sessions']);
+        $this->field('target_populations', ['type' => 'chosenSelect']);
+        $this->field('training_providers', ['type' => 'chosenSelect']);
+        $this->field('course_prerequisites', ['type' => 'chosenSelect']);
+        $this->field('specialisations', ['type' => 'chosenSelect']);
+        $this->field('result_types', ['type' => 'chosenSelect']);
+        $this->field('file_content');
+
+        $this->field('file_name', ['visible' => false]);
+        $this->field('assignee_id', ['visible' => false]);
+        $this->field('status_id', ['visible' => false]);
+        $this->field('modified_user_id', ['visible' => false]);
+        $this->field('modified', ['visible' => false]);
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+
+        $this->setFieldOrder([
+            'code', 'name', 'sessions', 'description', 'objective', 'credit_hours', 'duration', 'number_of_months',
+            'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
+            'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types', 'file_content'
+        ]);
+    }
+
     public function onGetSessions(Event $event, Entity $entity)
     {
         $trainingSessions = count($entity->training_sessions);
@@ -192,29 +229,11 @@ class CourseCatalogueTable extends ControllerActionTable
 
                     $tableCells[] = $rowData;
                 }
+
                 $attr['tableHeaders'] = $tableHeaders;
                 $attr['tableCells'] = $tableCells;
                 return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
             }
         }
-    }
-
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query->contain(['TrainingSessions']);
-    }
-
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->field('file_name', ['visible' => false]);
-        $this->field('file_content', ['visible' => false]);
-        $this->field('assignee_id', ['visible' => false]);
-        $this->field('status_id', ['visible' => false]);
-        $this->field('modified_user_id', ['visible' => false]);
-        $this->field('modified', ['visible' => false]);
-        $this->field('created_user_id', ['visible' => false]);
-        $this->field('created', ['visible' => false]);
-        $this->field('sessions', ['type' => 'sessions', 'before' => 'description']);
-
     }
 }

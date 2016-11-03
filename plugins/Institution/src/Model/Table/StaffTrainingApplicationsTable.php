@@ -23,9 +23,15 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 
-        // point workflow to TrainingApplications
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'file_name',
+            'content' => 'file_content',
+            'useDefaultName' => true
+        ]);
+
+        // manually attach TrainingApplications workflow
         $this->attachWorkflow(['model' => 'Training.TrainingApplications']);
 
         $this->toggle('edit', false);
@@ -54,7 +60,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         if ($query) {
             $sessionId = $query['training_session_id'];
 
-            // check if user has already added this course before
+            // check if user has already added this session before
             $existingApplication = $this->find()
                 ->where([
                     $this->aliasField('staff_id') => $extra['staffId'],
@@ -63,8 +69,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
                 ->first();
 
             if (empty($existingApplication)) {
-                // save course
-                if ($this->saveCourse($sessionId, $extra)) {
+                // save session
+                if ($this->saveSession($sessionId, $extra)) {
                     $this->Alert->success($this->aliasField('success'), ['reset' => true]);
                     $event->stopPropagation();
                     return $this->controller->redirect($extra['redirect']);
@@ -81,7 +87,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $this->controller->redirect($extra['redirect']);
     }
 
-    private function saveCourse($sessionId, ArrayObject $extra)
+    private function saveSession($sessionId, ArrayObject $extra)
     {
         $staffId = $extra['staffId'];
         $institutionId = $extra['institutionId'];
@@ -125,16 +131,16 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-        $this->field('course');
+        $this->field('name');
         $this->field('training_level');
         $this->field('field_of_study');
         $this->field('credit_hours');
-        $this->field('training_session_id', ['type' => 'hidden']);
+        $this->field('training_session_id');
         $this->field('assignee_id', ['type' => 'hidden']);
         $this->field('staff_id', ['type' => 'hidden']);
 
         $this->setFieldOrder([
-            'course', 'training_level', 'field_of_study', 'credit_hours'
+            'name', 'training_level', 'field_of_study', 'credit_hours', 'training_session_id'
         ]);
     }
 
@@ -146,7 +152,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->fields = [];
-        $this->field('course');
+        $this->field('code');
+        $this->field('name');
         $this->field('applied_session', ['type' => 'sessions']);
         $this->field('description');
         $this->field('objective');
@@ -166,21 +173,48 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         $this->field('attachment');
 
         $this->setFieldOrder([
-            'course', 'applied_session', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
-            'training_field_of_study_id', 'training_course_type_id', 'training_mode_of_delivery_id', 'training_requirement_id', 'training_level_id',
-            // 'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types', 'attachment'
+            'code', 'name', 'applied_session', 'description', 'objective', 'credit_hours', 'duration', 'experiences',
+            'field_of_study', 'course_type', 'mode_of_delivery', 'training_requirement', 'training_level',
+            'target_populations', 'training_providers', 'course_prerequisites', 'specialisations', 'result_types', 'attachment'
         ]);
     }
 
-    public function onGetCourse(Event $event, Entity $entity)
+    public function onGetCode(Event $event, Entity $entity)
     {
-        // pr($entity);
+        $value = '';
+        if ($entity->session->has('course')) {
+            $value = $entity->session->course->code;
+        }
+
+        return $value;
+    }
+
+    public function onGetName(Event $event, Entity $entity)
+    {
         $value = '';
         if ($entity->session->has('course')) {
             $value = $entity->session->course->name;
         }
 
         return $value;
+    }
+
+    public function onGetSessionsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        if ($action == 'view') {
+            $trainingSession = $entity->session;
+            $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date')];
+
+            $tableCells = [];
+            $tableCells[] = $trainingSession->code;
+            $tableCells[] = $trainingSession->name;
+            $tableCells[] = $trainingSession->start_date;
+            $tableCells[] = $trainingSession->end_date;
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+            return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
+        }
     }
 
     public function onGetDescription(Event $event, Entity $entity)
@@ -368,32 +402,15 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
         return $value;
     }
 
-    // public function onGetTrainingLevel(Event $event, Entity $entity)
-    // {
-    //     $value = '';
-    //     if ($entity->session->has('course')) {
-    //         $value = $entity->session->course->training_level->name;
-    //     }
-
-    //     return $value;
-    // }
-
-    public function onGetSessionsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetAttachment(Event $event, Entity $entity)
     {
-        if ($action == 'view') {
-            $trainingSession = $entity->session;
-            $tableHeaders = [__('Code'), __('Name'), __('Start Date'), __('End Date')];
-
-            $tableCells = [];
-            $tableCells[] = $trainingSession->code;
-            $tableCells[] = $trainingSession->name;
-            $tableCells[] = $trainingSession->start_date;
-            $tableCells[] = $trainingSession->end_date;
-
-            $attr['tableHeaders'] = $tableHeaders;
-            $attr['tableCells'] = $tableCells;
-            return $event->subject()->renderElement('Institution.course_sessions', ['attr' => $attr]);
-        }
+        // pr($entity);
+        $value = '';
+        // if ($entity->session->has('course')) {
+        //     $value = $entity->session->course->file_content;
+        // }
+        // $attr['type'] = 'binary';
+        return $value;
     }
 
     private function setupTabElements()
