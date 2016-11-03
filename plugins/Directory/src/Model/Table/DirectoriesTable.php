@@ -10,6 +10,7 @@ use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
+use Cake\ORM\ResultSet;
 
 class DirectoriesTable extends AppTable {
 	// public $InstitutionStudent;
@@ -138,7 +139,8 @@ class DirectoriesTable extends AppTable {
 
         // If there is no search condition appended by the advance search or normal name search, then we will not show any records
         if ($noConditionSql == $query->sql()) {
-            $query->where(['1 = 0']);
+            $event->stopPropagation();
+            return [];
         } else {
             $this->behaviors()->get('AdvanceSearch')->config([
                 'showOnLoad' => 0,
@@ -458,7 +460,7 @@ class DirectoriesTable extends AppTable {
 		$requestData[$this->alias()] = $directoryEntity;
 	}
 
-	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+	public function indexAfterAction(Event $event, ResultSet $data) {
 		$this->fields = [];
 		$this->controller->set('ngController', 'AdvancedSearchCtrl');
         $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
