@@ -233,7 +233,7 @@ class CourseCatalogueTable extends ControllerActionTable
                         $url = $this->ControllerAction->setQueryString($params, ['training_session_id' => $trainingSession->id]);
                         $applyUrl = Router::url($url);
 
-                        $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>Apply</span></button>";
+                        $rowData[] = "<button aria-expanded='true' onclick='location.href=\"$applyUrl\"' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa kd-add'></i>&nbsp;<span>".__('Apply')."</span></button>";
 
                     } else {
                         $rowData[] = $event->subject()->Html->link(__('Already Applied'), [
