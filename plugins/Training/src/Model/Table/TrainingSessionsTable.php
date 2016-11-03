@@ -166,7 +166,7 @@ class TrainingSessionsTable extends ControllerActionTable
 		$alias = $this->alias();
 		$fieldKey = 'trainers';
 
-		if (empty($data[$this->alias()][$fieldKey])) { 
+		if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
 
@@ -211,7 +211,7 @@ class TrainingSessionsTable extends ControllerActionTable
 		$alias = $this->alias();
 		$fieldKey = 'trainees';
 
-		if (empty($data[$this->alias()][$fieldKey])) { 
+		if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
 
@@ -540,7 +540,7 @@ class TrainingSessionsTable extends ControllerActionTable
 						$cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_id", ['value' => $trainerId]);
 						$cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_name", ['value' => $trainerName]);
 					}
-					
+
 					$rowData[] = [$trainerTypeOptions[$trainerType], ['autocomplete-exclude' => $trainerId]];
 					$rowData[] = $cell;
 					$rowData[] = $this->getDeleteButton();
@@ -718,7 +718,7 @@ class TrainingSessionsTable extends ControllerActionTable
 		$excelFile = 'OpenEMIS_Core_Import_Training_Session_Trainees.xlsx';
 		$excelPath = $folder . DS . $excelFile;
 
-		$header = ['OpemEMIS ID'];
+		$header = ['OpenEMIS ID'];
 		$dataSheetName = __('Training Session Trainees');
 
 		$objPHPExcel = new \PHPExcel();
@@ -804,7 +804,7 @@ class TrainingSessionsTable extends ControllerActionTable
 			$controller = $model->controller;
 			$controller->loadComponent('PhpExcel');
 			$columns = ['trainees_import'];
-			$header = ['OpemEMIS ID'];
+			$header = ['OpenEMIS ID'];
 
 			$fileObj = $data[$alias]['trainees_import'];
 			$uploaded = $fileObj['tmp_name'];
@@ -954,7 +954,7 @@ class TrainingSessionsTable extends ControllerActionTable
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }
