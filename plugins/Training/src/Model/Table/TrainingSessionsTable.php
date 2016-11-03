@@ -75,97 +75,12 @@ class TrainingSessionsTable extends ControllerActionTable
 			]);
 	}
 
-<<<<<<< HEAD
-	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
-	{
-		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Status')];
-		$tableCells = [];
-		$alias = $this->alias();
-		$key = 'trainees';
-
-		if ($action == 'index') {
-			// not showing
-		} else if ($action == 'view') {
-			$associated = $entity->extractOriginal([$key]);
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					$traineeStatus = $obj['_joinData']->status;
-					$rowData = [];
-					$rowData[] = $obj->openemis_no;
-					$rowData[] = $obj->name;
-					if ($traineeStatus) {
-						$rowData[] = __('Approved');
-					} else {
-						$rowData[] = __('Withdrawn');
-					}
-
-					$tableCells[] = $rowData;
-				}
-			}
-		} else if ($action == 'edit') {
-			$tableHeaders[] = ''; // for delete column
-			$Form = $event->subject()->Form;
-			$Form->unlockField('TrainingSessions.trainees');
-
-			if ($this->request->is(['get'])) {
-				if (!array_key_exists($alias, $this->request->data)) {
-					$this->request->data[$alias] = [$key => []];
-				} else {
-					$this->request->data[$alias][$key] = [];
-				}
-
-				$associated = $entity->extractOriginal([$key]);
-				if (!empty($associated[$key])) {
-					foreach ($associated[$key] as $i => $obj) {
-						$this->request->data[$alias][$key][$obj->id] = [
-							'id' => $obj->id,
-							'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id]
-						];
-					}
-				}
-			}
-			// refer to addEditOnAddTrainee for http post
-			if ($this->request->data("$alias.$key")) {
-				$associated = $this->request->data("$alias.$key");
-
-				foreach ($associated as $i => $obj) {
-					$joinData = $obj['_joinData'];
-					$rowData = [];
-					$name = $joinData['name'];
-					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['trainee_id']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.trainee_id", ['value' => $joinData['trainee_id']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.training_session_id", ['value' => $joinData['training_session_id']]);
-					$rowData[] = [$joinData['openemis_no'], ['autocomplete-exclude' => $joinData['trainee_id']]];
-					$rowData[] = $name;
-					$rowData[] = $this->getDeleteButton();
-					$tableCells[] = $rowData;
-				}
-			}
-		}
-
-		$attr['tableHeaders'] = $tableHeaders;
-    	$attr['tableCells'] = $tableCells;
-
-		return $event->subject()->renderElement('Training.Sessions/' . $key, ['attr' => $attr]);
-	}
-
-=======
->>>>>>> d3ac7a58e2c48d31207c54f677ee066624bbc3a2
 	public function beforeAction(Event $event, ArrayObject $extra)
 	{
 		// Type / Visible
 		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
 		$this->field('end_date', ['visible' => $visible]);
 		$this->field('comment', ['visible' => $visible]);
-<<<<<<< HEAD
-
-		$trainerTypeOptions = $this->getSelectOptions($this->aliasField('trainer_types'));
-		$this->controller->set('trainerTypeOptions', $trainerTypeOptions);
-		$this->setupTabElements();
-=======
->>>>>>> d3ac7a58e2c48d31207c54f677ee066624bbc3a2
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -251,7 +166,7 @@ class TrainingSessionsTable extends ControllerActionTable
 		$alias = $this->alias();
 		$fieldKey = 'trainers';
 
-		if (empty($data[$this->alias()][$fieldKey])) { 
+		if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
 
@@ -296,7 +211,7 @@ class TrainingSessionsTable extends ControllerActionTable
 		$alias = $this->alias();
 		$fieldKey = 'trainees';
 
-		if (empty($data[$this->alias()][$fieldKey])) { 
+		if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
 
@@ -625,7 +540,7 @@ class TrainingSessionsTable extends ControllerActionTable
 						$cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_id", ['value' => $trainerId]);
 						$cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_name", ['value' => $trainerName]);
 					}
-					
+
 					$rowData[] = [$trainerTypeOptions[$trainerType], ['autocomplete-exclude' => $trainerId]];
 					$rowData[] = $cell;
 					$rowData[] = $this->getDeleteButton();
@@ -642,7 +557,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function onGetCustomTraineesElement(Event $event, $action, $entity, $attr, $options=[])
 	{
-		$tableHeaders = [__('OpenEMIS ID'), __('Name')];
+		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Status')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'trainees';
@@ -651,9 +566,15 @@ class TrainingSessionsTable extends ControllerActionTable
 			$associated = $entity->extractOriginal([$key]);
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
+					$traineeStatus = $obj['_joinData']->status;
 					$rowData = [];
 					$rowData[] = $obj->openemis_no;
 					$rowData[] = $obj->name;
+					if ($traineeStatus) {
+						$rowData[] = __('Approved');
+					} else {
+						$rowData[] = __('Withdrawn');
+					}
 
 					$tableCells[] = $rowData;
 				}
