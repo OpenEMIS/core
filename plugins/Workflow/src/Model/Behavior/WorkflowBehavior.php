@@ -1298,7 +1298,7 @@ class WorkflowBehavior extends Behavior {
 		if ($request->is(['post', 'put'])) {
 			$requestData = $request->data;
 
-			$subject = $this->_table;
+			$subject = $this->config('model') == null ? $this->_table : TableRegistry::get($this->config('model'));
 			// Trigger workflow before save event here
 			$event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
 			if ($event->isStopped()) { return $event->result; }
