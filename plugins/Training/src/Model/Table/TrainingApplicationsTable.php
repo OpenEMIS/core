@@ -24,7 +24,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->table('staff_training_applications');
         parent::initialize($config);
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-        $this->belongsTo('Sessions', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'training_session_id']);
+        $this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('Assignees', ['className' => 'User.Users', 'foreignKey' => 'assignee_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -162,8 +162,10 @@ class TrainingApplicationsTable extends ControllerActionTable
                 $this->Staff->aliasField('third_name'),
                 $this->Staff->aliasField('last_name'),
                 $this->Staff->aliasField('preferred_name'),
-                $this->Courses->aliasField('code'),
-                $this->Courses->aliasField('name'),
+                $this->Sessions->aliasField('code'),
+                $this->Sessions->aliasField('name'),
+                $this->Sessions->Courses->aliasField('code'),
+                $this->Sessions->Courses->aliasField('name'),
                 $this->Institutions->aliasField('code'),
                 $this->Institutions->aliasField('name'),
                 $this->CreatedUser->aliasField('openemis_no'),
@@ -173,7 +175,7 @@ class TrainingApplicationsTable extends ControllerActionTable
                 $this->CreatedUser->aliasField('last_name'),
                 $this->CreatedUser->aliasField('preferred_name')
             ])
-            ->contain([$this->Staff->alias(), $this->Courses->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->contain([$this->Staff->alias(), 'Sessions.Courses', $this->Institutions->alias(), $this->CreatedUser->alias()])
             ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
                 return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
             })
@@ -182,12 +184,12 @@ class TrainingApplicationsTable extends ControllerActionTable
             ->formatResults(function (ResultSetInterface $results) {
                 return $results->map(function ($row) {
                         $url = [
-                            'plugin' => 'Training',
-                            'controller' => 'Trainings',
-                            'action' => 'Applications',
+                            'plugin' => 'Institution',
+                            'controller' => 'Institutions',
+                            'action' => 'StaffTrainingApplications',
                             'view',
                             $row->id,
-                            // 'institution_id' => $row->institution_id
+                            'institution_id' => $row->institution_id
                         ];
 
                     if (is_null($row->modified)) {
@@ -198,7 +200,7 @@ class TrainingApplicationsTable extends ControllerActionTable
 
                     $row['url'] = $url;
                     $row['status'] = $row->_matchingData['Statuses']->name;
-                    $row['request_title'] = $row->staff->name_with_id . ' - ' . $row->course->code_name;
+                    $row['request_title'] = $row->staff->name_with_id . ', ' . $row->session->course->code_name . ': ' . $row->session->code_name;
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;

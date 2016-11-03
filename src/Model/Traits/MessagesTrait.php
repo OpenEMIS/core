@@ -558,9 +558,9 @@ trait MessagesTrait {
             'noTrainees' => 'No Available Trainees'
         ],
         'StaffTrainingApplications' => [
-            'success' => 'The course has been added successfully.',
-            'fail' => 'Failed to add the course.',
-            'exists' => 'This course has already been added.'
+            'success' => 'This session has been added successfully.',
+            'fail' => 'Failed to add the session.',
+            'exists' => 'This session has already been added.'
         ],
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
