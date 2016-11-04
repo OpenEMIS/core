@@ -571,7 +571,7 @@ class TrainingSessionsTable extends ControllerActionTable
 					$rowData = [];
 					$rowData[] = $obj->openemis_no;
 					$rowData[] = $obj->name;
-					if ($traineeStatus) {
+					if ($traineeStatus == 1) {
 						$rowData[] = __('Approved');
 					} else {
 						$rowData[] = __('Withdrawn');
@@ -598,7 +598,7 @@ class TrainingSessionsTable extends ControllerActionTable
 					foreach ($associated[$key] as $i => $obj) {
 						$this->request->data[$alias][$key][$obj->id] = [
 							'id' => $obj->id,
-							'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id]
+							'_joinData' => ['openemis_no' => $obj->openemis_no, 'trainee_id' => $obj->id, 'name' => $obj->name, 'training_session_id' => $obj->_joinData->training_session_id, 'status' => $obj->_joinData->status]
 						];
 					}
 				}
@@ -617,6 +617,10 @@ class TrainingSessionsTable extends ControllerActionTable
 					$name .= $Form->hidden("$alias.$key.$i._joinData.trainee_id", ['value' => $joinData['trainee_id']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
 					$name .= $Form->hidden("$alias.$key.$i._joinData.training_session_id", ['value' => $joinData['training_session_id']]);
+					if (empty($joinData['status'])) {
+						$joinData['status'] = 1;
+					}
+					$name .= $Form->hidden("$alias.$key.$i._joinData.status", ['value' => $joinData['status']]);
 					$rowData[] = [$joinData['openemis_no'], ['autocomplete-exclude' => $joinData['trainee_id']]];
 					$rowData[] = $name;
 					$rowData[] = $this->getDeleteButton();
