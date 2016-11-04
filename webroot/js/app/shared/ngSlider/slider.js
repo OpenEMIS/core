@@ -103,7 +103,11 @@ angular.module('ui.bootstrap-slider', [])
                         $scope.ngModel = options.value; // needed, otherwise turns value into [null, ##]
                     }
                     else {
+                        if(typeof $scope.value != "undefined" && $scope.value != null){
+                            $scope.ngModel = $scope.value;
+                        }
                         setFloatOption('value', $scope.value, 5);
+
                     }
 
                     if ($scope.formatter) options.formatter = $scope.$eval($scope.formatter);

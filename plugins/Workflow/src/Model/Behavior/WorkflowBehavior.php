@@ -182,6 +182,7 @@ class WorkflowBehavior extends Behavior {
 
 		$notDoneRecords = $model
 			->find()
+			->contain(['Assignees'])
 			->matching('Statuses', function ($q) {
 				return $q->where(['Statuses.category <> ' => self::DONE]);
 			})
@@ -215,6 +216,8 @@ class WorkflowBehavior extends Behavior {
 				['assignee_id' => $assigneeId],
 				['id' => $notDoneEntity->id]
 			);
+
+			$this->WorkflowTransitions->trackChanges($workflowModelEntity, $notDoneEntity, $assigneeId);
 		}
 	}
 
@@ -517,7 +520,7 @@ class WorkflowBehavior extends Behavior {
 						$rowData = [];
 						$rowData[] = $transitionDisplay;
 						$rowData[] = $transition->workflow_action_name;
-						$rowData[] = nl2br($transition->comment);
+						$rowData[] = nl2br(htmlspecialchars($transition->comment));
 						$rowData[] = $transition->created_user->name;
 						$rowData[] = $transition->created->format('Y-m-d H:i:s');
 

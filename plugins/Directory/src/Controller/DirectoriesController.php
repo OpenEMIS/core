@@ -14,7 +14,7 @@ class DirectoriesController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Directory.Directories');
+		$this->ControllerAction->model('Directory.Directories', ['!search']);
 		$this->ControllerAction->models = [
 			// Users
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -52,7 +52,6 @@ class DirectoriesController extends AppController {
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
-			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
 
 			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
 		];
@@ -87,6 +86,8 @@ class DirectoriesController extends AppController {
     public function Identities() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+    public function TrainingNeeds() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
+	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
 	// End
 
 	// AngularJS
@@ -433,6 +434,7 @@ class DirectoriesController extends AppController {
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
 			'Trainings' => ['text' => __('Trainings')],
+			'Appraisals' => ['text' => __('Appraisals')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);

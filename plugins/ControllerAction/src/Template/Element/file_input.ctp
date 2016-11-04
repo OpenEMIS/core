@@ -94,6 +94,7 @@ if (isset($attr['alwaysShowOneButton'])) {
 			<div class="input-group-addon btn btn-default btn-file" data-toggle="tooltip" data-container="body" data-placement="bottom" title="<?=__('Browse') ?>">
 				<span class="fileinput-new"><i class="fa fa-folder"></i></span>
 				<span class="fileinput-exists fa fa-folder"></span>
+				<?php $this->Form->unlockField($attr['model'].'.'.$attr['field']); ?>
 				<?=	$this->Form->file($attr['model'].'.'.$attr['field'], [
 						'class' => 'fa fa-folder'
 					]) 
