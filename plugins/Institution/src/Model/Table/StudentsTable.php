@@ -1046,7 +1046,9 @@ class StudentsTable extends ControllerActionTable
                 'student' => $this->aliasField('student_id')
             ])
             ->distinct(['student'])
-            ->order('age');
+            ->order('age')
+            ->limit(null)
+            ->offset(null);
 
         $InstitutionStudentCount = $ageQuery->toArray();
 
