@@ -37,7 +37,7 @@ trait OptionsTrait {
 			'TrainingSessions' => [
 				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
 			],
-			'TrainingNeeds' => [
+			'StaffTrainingNeeds' => [
 				'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
 			],
 			'Health' => [
@@ -50,9 +50,9 @@ trait OptionsTrait {
 			],
 			'StaffPositionProfiles' => [
 				'FTE' => [
-					'0.25' => '25%', 
-					'0.5' => '50%', 
-					'0.75' => '75%', 
+					'0.25' => '25%',
+					'0.5' => '50%',
+					'0.75' => '75%',
 					'1' => '100%'
 				],
 			],
@@ -66,7 +66,7 @@ trait OptionsTrait {
 					3 => __('Multiple Shift Owner'),
 					4 => __('Multiple Shift Occupier')
         		]
-        	], 
+        	],
         	'ExaminationCentres' => [
         		'create_as' => [
         			'existing' => __('Existing Institution'),
