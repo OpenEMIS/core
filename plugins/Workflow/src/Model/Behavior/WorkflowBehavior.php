@@ -58,6 +58,10 @@ class WorkflowBehavior extends Behavior {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$models = $this->config('models');
+		if (is_null($this->config('model'))) {
+			$this->_config['model'] = $this->_table->registryAlias();
+		}
+
 		foreach ($models as $key => $model) {
 			if (!is_null($model)) {
 				$this->{$key} = TableRegistry::get($model);

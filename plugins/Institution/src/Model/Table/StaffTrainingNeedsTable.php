@@ -38,7 +38,7 @@ class StaffTrainingNeedsTable extends ControllerActionTable
 		$this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Assignees', ['className' => 'User.Users']);
-
+		$this->addBehavior('Workflow.Workflow');
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']

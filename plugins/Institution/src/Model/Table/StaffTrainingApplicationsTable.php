@@ -31,8 +31,7 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             'useDefaultName' => true
         ]);
 
-        // manually attach TrainingApplications workflow
-        $this->attachWorkflow(['model' => 'Training.TrainingApplications']);
+        $this->addBehavior('Workflow.Workflow', ['model' => 'Training.TrainingApplications']);
 
         $this->toggle('edit', false);
     }
