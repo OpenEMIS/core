@@ -15,9 +15,9 @@ class CompetenciesTable extends ControllerActionTable
     {
         $this->table('competencies');
         parent::initialize($config);
+        $this->hasMany('StaffAppraisalsCompetencies', ['className' => 'Staff.StaffAppraisalsCompetencies']);
 
         $this->addBehavior('FieldOption.FieldOption');
-        $this->setDeleteStrategy('cascade');
     }
 
     public function beforeAction(Event $event, arrayObject $extra)
