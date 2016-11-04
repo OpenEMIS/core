@@ -136,6 +136,8 @@ class TrainingApplicationsTable extends ControllerActionTable
         $userId = $session->read('Auth.User.id');
         $Statuses = $this->Statuses;
         $doneStatus = self::DONE;
+        $InstitutionsTable = $this->Institutions;
+        $AccessControl = $controller->AccessControl;
 
         $query
             ->select([
@@ -170,8 +172,11 @@ class TrainingApplicationsTable extends ControllerActionTable
             })
             ->where([$this->aliasField('assignee_id') => $userId])
             ->order([$this->aliasField('created') => 'DESC'])
-            ->formatResults(function (ResultSetInterface $results) {
-                return $results->map(function ($row) {
+            ->formatResults(function (ResultSetInterface $results) use ($userId, $AccessControl, $InstitutionsTable) {
+
+                return $results->map(function ($row) use ($userId, $AccessControl, $InstitutionsTable) {
+                    $roleIds = $InstitutionsTable->getInstitutionRoles($userId, $row->institution_id);
+                    if ($AccessControl->isAdmin() || $AccessControl->check(['controller' => 'Institutions', 'action' => 'StaffTrainingApplications', 'view'], $roleIds)) {
                         $url = [
                             'plugin' => 'Institution',
                             'controller' => 'Institutions',
@@ -180,6 +185,15 @@ class TrainingApplicationsTable extends ControllerActionTable
                             $row->id,
                             'institution_id' => $row->institution_id
                         ];
+                    } else {
+                        $url = [
+                            'plugin' => 'Training',
+                            'controller' => 'Trainings',
+                            'action' => 'Applications',
+                            'view',
+                            $row->id
+                        ];
+                    }
 
                     if (is_null($row->modified)) {
                         $receivedDate = $this->formatDate($row->created);

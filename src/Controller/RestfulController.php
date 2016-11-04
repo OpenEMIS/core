@@ -37,6 +37,8 @@ class RestfulController extends BaseController
             'controller' => 'Users',
             'action' => 'login'
         ]);
+
+        $this->loadComponent('AccessControl');
     }
 
     public function beforeFilter(Event $event)
