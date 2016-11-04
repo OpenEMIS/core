@@ -70,6 +70,15 @@ class WorkflowsFixture extends TestFixture
             'modified' => null,
             'created_user_id' => '1',
             'created' => '2016-04-15 10:45:45'
+        ], [
+            'id' => '9',
+            'code' => 'TRN-5001',
+            'name' => 'Training Applications',
+            'workflow_model_id' => '10',
+            'modified_user_id' => null,
+            'modified' => null,
+            'created_user_id' => '1',
+            'created' => '2016-04-15 10:45:45'
         ]
     ];
 }
