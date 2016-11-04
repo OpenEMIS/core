@@ -52,7 +52,7 @@ class TrainingSessionsTable extends ControllerActionTable
 			'through' => 'Training.TrainingSessionsTrainees',
 			'dependent' => false
 		]);
-
+		$this->addBehavior('Workflow.Workflow');
 		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']

@@ -33,7 +33,7 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Dashboard' => ['index']
         ]);
-
+        $this->addBehavior('Workflow.Workflow');
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);

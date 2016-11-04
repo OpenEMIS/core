@@ -65,6 +65,7 @@ class InstitutionSurveysTable extends AppTable {
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
         $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+        $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
         ]);
@@ -89,7 +90,7 @@ class InstitutionSurveysTable extends AppTable {
 
 		// To update to this code when upgrade server to PHP 5.5 and above
 		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
-		
+
 		foreach ($fields as $key => $field) {
 			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
@@ -341,7 +342,7 @@ class InstitutionSurveysTable extends AppTable {
 	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
 		$includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
 	}
-	
+
 	public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request) {
 		$attr['type'] = 'hidden';
 		$attr['value'] = 0;
@@ -504,7 +505,7 @@ class InstitutionSurveysTable extends AppTable {
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }

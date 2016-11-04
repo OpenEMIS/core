@@ -85,7 +85,6 @@ class AppTable extends Table {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 		$this->addBehavior('Validation');
-		$this->attachWorkflow();
 		$this->addBehavior('Modification');
 
         $this->addBehavior('TrackDelete');
@@ -118,18 +117,6 @@ class AppTable extends Table {
 			return $entity->invalid($propertyName);
 		} else {
 			return null;
-		}
-	}
-
-	public function attachWorkflow($config = []) {
-		// check for session and attach workflow behavior
-		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
-			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
-				$config = array_merge($config, ['model' => $this->registryAlias()]);
-				$this->addBehavior('Workflow.Workflow', $config);
-			} else if (isset($config['model']) && in_array($config['model'], $_SESSION['Workflow']['Workflows']['models'])) {
-				$this->addBehavior('Workflow.Workflow', $config);
-			}
 		}
 	}
 
