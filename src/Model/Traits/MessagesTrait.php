@@ -742,6 +742,11 @@ trait MessagesTrait {
                     'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
+            'VisitRequests' => [
+                'date_of_visit' => [
+                    'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                ]
+            ],
             'Students' => [
                 'student_name' => [
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
@@ -1184,7 +1189,14 @@ trait MessagesTrait {
                 'net_salary' => [
                     'ruleMoney' => 'Please enter a valid amount.'
                 ]
-            ]
+            ],
+            'Appraisal' => [
+                'competencies_goals' => 'Competencies / Goals',
+                'rating' => 'Rating',
+                'value' => 'Value',
+                'final_rating' => 'Final Rating',
+                'deleted_competencies' => 'This competency has been removed'
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
