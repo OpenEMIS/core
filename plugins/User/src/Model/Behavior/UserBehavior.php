@@ -102,6 +102,9 @@ class UserBehavior extends Behavior {
         }
         if ($this->_table->table() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');
+            $this->_table->fields['is_student']['type'] = 'hidden';
+            $this->_table->fields['is_staff']['type'] = 'hidden';
+            $this->_table->fields['is_guardian']['type'] = 'hidden';
             $this->_table->fields['photo_name']['visible'] = false;
             $this->_table->fields['super_admin']['visible'] = false;
             $this->_table->fields['date_of_death']['visible'] = false;
@@ -263,9 +266,6 @@ class UserBehavior extends Behavior {
                 ]);
             }
         }
-        $this->_table->fields['is_student']['type'] = 'hidden';
-        $this->_table->fields['is_staff']['type'] = 'hidden';
-        $this->_table->fields['is_guardian']['type'] = 'hidden';
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
