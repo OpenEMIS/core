@@ -17,6 +17,7 @@ class CompetenciesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->setDeleteStrategy('cascade');
     }
 
     public function beforeAction(Event $event, arrayObject $extra)
