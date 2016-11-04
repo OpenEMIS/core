@@ -550,8 +550,7 @@ trait MessagesTrait {
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'internal_trainer' => 'Internal Trainer',
-            'external_trainer' => 'External Trainer'
+            'trainer' => 'Trainer'
         ],
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
@@ -735,6 +734,11 @@ trait MessagesTrait {
             ],
             'IndividualPromotion' => [
                 'effective_date' => [
+                    'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                ]
+            ],
+            'VisitRequests' => [
+                'date_of_visit' => [
                     'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
@@ -1180,7 +1184,14 @@ trait MessagesTrait {
                 'net_salary' => [
                     'ruleMoney' => 'Please enter a valid amount.'
                 ]
-            ]
+            ],
+            'Appraisal' => [
+                'competencies_goals' => 'Competencies / Goals',
+                'rating' => 'Rating',
+                'value' => 'Value',
+                'final_rating' => 'Final Rating',
+                'deleted_competencies' => 'This competency has been removed'
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
