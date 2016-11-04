@@ -340,9 +340,9 @@ class StaffAppraisalsTable extends ControllerActionTable
                 ->toArray()
                 ;
 
+            $attr['options'] = [];
             if (!empty($competencySetOptionsArray)) {
                 // if competency set doesnt have any competency will not be shown on the list.
-                $attr['options'] = [];
                 foreach ($competencySetOptionsArray as $key => $obj) {
                     $competencyCount = $CompetencySetsCompetencies
                         ->find()
