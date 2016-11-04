@@ -126,6 +126,12 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             ->where([$this->aliasField('staff_id') => $extra['staffId']]);
 
         $extra['auto_contain_fields'] = ['Sessions.Courses' => ['credit_hours']];
+
+        // for searching survey forms, questions, dependent questions
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $extra['OR'] = [$this->Sessions->Courses->aliasField('name').' LIKE' => '%' . $search . '%'];
+        }
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
