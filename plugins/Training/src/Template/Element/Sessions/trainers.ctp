@@ -37,8 +37,7 @@
 			'type' => 'button',
 			'class' => 'btn btn-default',
 			'aria-expanded' => 'true',
-			'onclick' => "$('#reload').val('addTrainer').click();",
-			'required' =>'required'
+			'onclick' => "$('#reload').val('addTrainer').click();"
 		]);
 	?>
 	<div class="clearfix"></div>
