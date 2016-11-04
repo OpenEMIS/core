@@ -125,6 +125,9 @@ class CourseCatalogueTable extends ControllerActionTable
             ]);
         }
 
+        $Sessions = TableRegistry::get('Training.TrainingSessions');
+        $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+
         $session = $this->request->session();
         $staffId = $session->read('Staff.Staff.id');
         $InstitutionId = $session->read('Institution.Institutions.id');
@@ -151,13 +154,20 @@ class CourseCatalogueTable extends ControllerActionTable
         }
 
         $query
-            ->contain(['TrainingSessions'])
+            ->contain(['TrainingSessions' => function ($q) use ($sessionSteps) {
+                return $q->where([('TrainingSessions.status_id IN ') => $sessionSteps]);
+            }])
             ->order($this->aliasField('code'));
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['TrainingSessions', 'TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes']);
+        $Sessions = TableRegistry::get('Training.TrainingSessions');
+        $sessionSteps = $this->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+        $query->contain(['TargetPopulations', 'TrainingProviders', 'CoursePrerequisites', 'Specialisations', 'ResultTypes'])
+            ->contain(['TrainingSessions' => function ($q) use ($sessionSteps) {
+                return $q->where([('TrainingSessions.status_id IN ') => $sessionSteps]);
+            }]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)

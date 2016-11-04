@@ -104,13 +104,33 @@ class TrainingApplicationsTable extends ControllerActionTable
         $this->setupTabElements();
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['Sessions.Courses']);
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $extra['OR'] = [
+                [$this->Sessions->Courses->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->Institutions->aliasField('name').' LIKE' => $search . '%']
+            ];
+        }
+    }
+
     public function indexbeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status_id');
         $this->field('assignee_id', ['visible' => false]);
+        $this->field('training_course_id');
         $this->setFieldOrder([
-            'status_id', 'staff_id', 'institution_id', 'training_session_id'
+            'status_id', 'staff_id', 'institution_id', 'training_course_id', 'training_session_id'
         ]);
+    }
+
+    public function onGetTrainingCourseId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'index') {
+            return $entity->session->course->name;
+        }
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
