@@ -1,7 +1,5 @@
 <?php
 	echo $this->Html->script('Workflow.workflow', ['block' => true]);
-	echo $this->Html->script('ControllerAction.../plugins/chosen/js/chosen.jquery.min', ['block' => true]);
-	echo $this->Html->css('ControllerAction.../plugins/chosen/css/chosen.min', ['block' => true]);
 ?>
 <?php if ($ControllerAction['action'] == 'view') : ?>
 	<?php
