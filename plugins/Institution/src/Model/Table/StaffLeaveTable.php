@@ -40,6 +40,7 @@ class StaffLeaveTable extends ControllerActionTable
 			'allowable_file_types' => 'all',
 			'useDefaultName' => true
 		]);
+		$this->addBehavior('Workflow.Workflow');
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']

@@ -52,7 +52,7 @@ class TrainingSessionsTable extends ControllerActionTable
 			'through' => 'Training.TrainingSessionsTrainees',
 			'dependent' => false
 		]);
-
+		$this->addBehavior('Workflow.Workflow');
 		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
@@ -77,6 +77,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function beforeAction(Event $event, ArrayObject $extra)
 	{
+		$this->setupTabElements();
 		// Type / Visible
 		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
 		$this->field('end_date', ['visible' => $visible]);
@@ -168,7 +169,7 @@ class TrainingSessionsTable extends ControllerActionTable
 		$alias = $this->alias();
 		$fieldKey = 'trainers';
 
-		if (empty($data[$this->alias()][$fieldKey])) { 
+		if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
 
@@ -213,7 +214,7 @@ class TrainingSessionsTable extends ControllerActionTable
 		$alias = $this->alias();
 		$fieldKey = 'trainees';
 
-		if (empty($data[$this->alias()][$fieldKey])) { 
+		if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
 
@@ -542,7 +543,7 @@ class TrainingSessionsTable extends ControllerActionTable
 						$cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_id", ['value' => $trainerId]);
 						$cell .= $Form->hidden("$alias.$fieldKey.$key.trainer_name", ['value' => $trainerName]);
 					}
-					
+
 					$rowData[] = [$trainerTypeOptions[$trainerType], ['autocomplete-exclude' => $trainerId]];
 					$rowData[] = $cell;
 					$rowData[] = $this->getDeleteButton();
@@ -559,7 +560,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function onGetCustomTraineesElement(Event $event, $action, $entity, $attr, $options=[])
 	{
-		$tableHeaders = [__('OpenEMIS ID'), __('Name')];
+		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Status')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'trainees';
@@ -568,9 +569,15 @@ class TrainingSessionsTable extends ControllerActionTable
 			$associated = $entity->extractOriginal([$key]);
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
+					$traineeStatus = $obj['_joinData']->status;
 					$rowData = [];
 					$rowData[] = $obj->openemis_no;
 					$rowData[] = $obj->name;
+					if ($traineeStatus) {
+						$rowData[] = __('Approved');
+					} else {
+						$rowData[] = __('Withdrawn');
+					}
 
 					$tableCells[] = $rowData;
 				}
@@ -695,6 +702,13 @@ class TrainingSessionsTable extends ControllerActionTable
 
 		$this->setFieldOrder($fieldOrder);
 	}
+
+	private function setupTabElements()
+    {
+        $tabElements = $this->controller->getSessionTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Sessions');
+    }
 
 
 /******************************************************************************************************************
@@ -956,7 +970,7 @@ class TrainingSessionsTable extends ControllerActionTable
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }
