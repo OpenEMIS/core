@@ -916,45 +916,43 @@ class WorkflowBehavior extends Behavior {
 				]
 			];
 
-			$contentFields = [];
-			$contentFields = [
-				$alias.'.action_name' => [
-					'label' => __('Action'),
-					'type' => 'string',
-					'readonly' => 'readonly',
-					'disabled' => 'disabled',
-					'class'=> 'workflowtransition-action-name'
-				],
-				$alias.'.action_description' => [
-					'label' => __('Description'),
-					'type' => 'textarea',
-					'readonly' => 'readonly',
-					'disabled' => 'disabled',
-					'class'=> 'workflowtransition-action-description'
-				],
-				$alias.'.step_name' => [
-					'label' => __('Next Step'),
-					'type' => 'string',
-					'readonly' => 'readonly',
-					'disabled' => 'disabled',
-					'class'=> 'workflowtransition-step-name'
-				],
-				$alias.'.assignee_id' => [
-					'label' => __('Assignee'),
-					'type' => 'select',
-					'class'=> 'workflowtransition-assignee-id',
-					'assignee-url' => $assigneeUrl
-				],
-				$alias.'.comment' => [
-					'label' => __('Comment'),
-					'type' => 'textarea',
-					'class'=> 'workflowtransition-comment'
-				]
-			];
-			$event = $model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
-			if (!empty($event->result)) {
-				$contentFields = $event->result;
-			}
+			$contentFields = new ArrayObject(
+				[
+					$alias.'.action_name' => [
+						'label' => __('Action'),
+						'type' => 'string',
+						'readonly' => 'readonly',
+						'disabled' => 'disabled',
+						'class'=> 'workflowtransition-action-name'
+					],
+					$alias.'.action_description' => [
+						'label' => __('Description'),
+						'type' => 'textarea',
+						'readonly' => 'readonly',
+						'disabled' => 'disabled',
+						'class'=> 'workflowtransition-action-description'
+					],
+					$alias.'.step_name' => [
+						'label' => __('Next Step'),
+						'type' => 'string',
+						'readonly' => 'readonly',
+						'disabled' => 'disabled',
+						'class'=> 'workflowtransition-step-name'
+					],
+					$alias.'.assignee_id' => [
+						'label' => __('Assignee'),
+						'type' => 'select',
+						'class'=> 'workflowtransition-assignee-id',
+						'assignee-url' => $assigneeUrl
+					],
+					$alias.'.comment' => [
+						'label' => __('Comment'),
+						'type' => 'textarea',
+						'class'=> 'workflowtransition-comment'
+					]
+				]);
+
+			$model->dispatchEvent('Workflow.addCustomModalFields', [$entity, $contentFields, $alias], $this);
 
 			$content = '';
 			$content = '<style type="text/css">.modal-footer { clear: both; } .modal-body textarea { width: 60%; }</style>';
