@@ -1036,7 +1036,7 @@ class StudentsTable extends ControllerActionTable
     public function getNumberOfStudentsByAge($params=[])
     {
         $query = $params['query'];
-        $InstitutionRecords = clone $query;
+        $InstitutionRecords = $query->cleanCopy();
         $ageQuery = $InstitutionRecords
             ->select([
                 'age' => $InstitutionRecords->func()->dateDiff([
@@ -1046,9 +1046,7 @@ class StudentsTable extends ControllerActionTable
                 'student' => $this->aliasField('student_id')
             ])
             ->distinct(['student'])
-            ->order('age')
-            ->limit(null)
-            ->offset(null);
+            ->order('age');
 
         $InstitutionStudentCount = $ageQuery->toArray();
 
