@@ -29,7 +29,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
 		$this->belongsTo('Assignees', ['className' => 'User.Users']);
-
+		$this->addBehavior('Workflow.Workflow');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
         ]);
@@ -409,7 +409,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	public function buildRecords($sessionId=null)
 	{
 		$sessions = $this->Training->getSessionList();
-		
+
 		$openStatusId = null;
 		$workflow = $this->getWorkflow($this->registryAlias());
 		if (!empty($workflow)) {
@@ -547,7 +547,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }
