@@ -94,12 +94,14 @@ class TrainingSessionsTable extends ControllerActionTable
 	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$query->contain([
-			'Trainers.Users',
-			'Trainers' => [
-				'sort' => ['Trainers.type' => 'DESC']
-			],
-			'Trainees'
-		]);
+				'Trainers' => [
+					'Users',
+					'sort' => ['Trainers.type' => 'DESC', 'Users.first_name' => 'ASC', 'Users.last_name' => 'ASC', 'Trainers.name' => 'ASC']
+				],
+				'Trainees' => [
+					'sort' => ['Trainees.first_name' => 'ASC', 'Trainees.last_name' => 'ASC']
+				]
+			]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)

@@ -15,6 +15,8 @@ class CompetenciesTable extends ControllerActionTable
     {
         $this->table('competencies');
         parent::initialize($config);
+        $this->hasMany('CompetencySetsCompetencies', ['className' => 'Staff.CompetencySetsCompetencies']);
+        $this->hasMany('StaffAppraisalsCompetencies', ['className' => 'Staff.StaffAppraisalsCompetencies']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
