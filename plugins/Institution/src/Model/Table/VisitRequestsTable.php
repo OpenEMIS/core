@@ -44,7 +44,7 @@ class VisitRequestsTable extends ControllerActionTable
         	'Dashboard' => ['index']
         ]);
         $this->addBehavior('Institution.Visit');
-
+        $this->addBehavior('Workflow.Workflow');
         // setting this up to be overridden in viewAfterAction(), this code is required
 		$this->behaviors()->get('ControllerAction')->config(
 			'actions.download.show',
