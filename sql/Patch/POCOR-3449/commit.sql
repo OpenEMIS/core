@@ -38,7 +38,7 @@ SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'TRN-5001';
 -- Pre-insert workflow_steps
 SET @openStatusId := 0;
 SET @pendingApprovalStatusId := 0;
-SET @closedStatusId := 0;
+SET @withdrawnStatusId := 0;
 SET @pendingReviewStatusId := 0;
 SET @approvedStatusId := 0;
 SET @rejectedStatusId := 0;
@@ -53,7 +53,7 @@ INSERT INTO `workflow_steps` (`name`, `category`, `is_editable`, `is_removable`,
 SELECT `id` INTO @openStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 1;
 SELECT `id` INTO @pendingReviewStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Pending For Review';
 SELECT `id` INTO @pendingApprovalStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 2;
-SELECT `id` INTO @closedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 3;
+SELECT `id` INTO @withdrawnStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 3;
 SELECT `id` INTO @approvedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Approved';
 SELECT `id` INTO @rejectedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `name` = 'Rejected';
 
@@ -64,7 +64,13 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingReviewStatusId, @rejectedStatusId, 1, NOW()),
 ('Approve', NULL, 0, 1, 0, 0, 'Workflow.onAssignTrainingSession', @pendingApprovalStatusId, @approvedStatusId, 1, NOW()),
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingApprovalStatusId, @rejectedStatusId, 1, NOW()),
-('Withdraw From Training Session', NULL, NULL, 1, 0, 1, 'Workflow.onWithdrawTrainingSession', @approvedStatusId, @closedStatusId, 1, NOW());
+('Withdraw From Training Session', NULL, NULL, 1, 0, 1, 'Workflow.onWithdrawTrainingSession', @approvedStatusId, @withdrawnStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @approvedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @approvedStatusId, 0, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @rejectedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @rejectedStatusId, 0, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @withdrawnStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @withdrawnStatusId, 0, 1, NOW());
 
 -- Pre-insert workflow_statuses
 INSERT INTO `workflow_statuses` (`code`, `name`, `is_editable`, `is_removable`, `workflow_model_id`, `created_user_id`, `created`) VALUES
