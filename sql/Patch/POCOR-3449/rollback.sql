@@ -58,5 +58,12 @@ DROP INDEX `id_UNIQUE`;
 -- workflow_models
 UPDATE `workflow_models` SET `model`='Staff.TrainingNeeds' WHERE `model`='Institution.StaffTrainingNeeds';
 
+-- labels
+DELETE FROM `labels` WHERE `module` = 'CourseCatalogue' AND `field` = 'number_of_months';
+DELETE FROM `labels` WHERE `module` = 'CourseCatalogue' AND `field` = 'training_field_of_study_id';
+DELETE FROM `labels` WHERE `module` = 'CourseCatalogue' AND `field` = 'training_course_type_id';
+DELETE FROM `labels` WHERE `module` = 'CourseCatalogue' AND `field` = 'training_mode_of_delivery_id';
+DELETE FROM `labels` WHERE `module` = 'CourseCatalogue' AND `field` = 'file_content';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3449';
