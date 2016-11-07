@@ -125,3 +125,16 @@ CHANGE COLUMN `status` `status` INT(1) NOT NULL COMMENT '1 -> Active, 2 -> Withd
 
 -- workflow_models
 UPDATE `workflow_models` SET `model`='Institution.StaffTrainingNeeds' WHERE `model`='Staff.TrainingNeeds';
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('fdf35e7d-a4a3-11e6-bcc8-525400b263eb', 'CourseCatalogue', 'number_of_months', 'Institution -> Staff -> Training -> Applications -> Course Catalogue', 'Experiences', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('a94745c4-a4a3-11e6-bcc8-525400b263eb', 'CourseCatalogue', 'training_field_of_study_id', 'Institution -> Staff -> Training -> Applications -> Course Catalogue', 'Field of Study', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('eb397acb-a4a3-11e6-bcc8-525400b263eb', 'CourseCatalogue', 'training_course_type_id', 'Institution -> Staff -> Training -> Applications -> Course Catalogue', 'Course Type', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('f07bbeb9-a4a3-11e6-bcc8-525400b263eb', 'CourseCatalogue', 'training_mode_of_delivery_id', 'Institution -> Staff -> Training -> Applications -> Course Catalogue', 'Mode of Delivery', 1, 1, NOW());
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`)
+VALUES ('f8801450-a4a3-11e6-bcc8-525400b263eb', 'CourseCatalogue', 'file_content', 'Institution -> Staff -> Training -> Applications -> Course Catalogue', 'Attachment', 1, 1, NOW());
+

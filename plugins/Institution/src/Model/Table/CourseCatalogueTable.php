@@ -144,13 +144,16 @@ class CourseCatalogueTable extends ControllerActionTable
             ])
             ->first();
 
-        if ($staffData->has('position')) {
+        if (!empty($staffData) && $staffData->has('position')) {
             $positionTitle = $staffData->position->staff_position_title_id;
 
             // only show courses where user is in target population
             $query
                 ->matching('TargetPopulations')
                 ->where(['TargetPopulations.id' => $positionTitle]);
+        } else {
+            // To return no results
+            $query->where(['1 = 0']);
         }
 
         $query
