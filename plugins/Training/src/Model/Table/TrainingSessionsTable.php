@@ -560,12 +560,13 @@ class TrainingSessionsTable extends ControllerActionTable
 
 	public function onGetCustomTraineesElement(Event $event, $action, $entity, $attr, $options=[])
 	{
-		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Status')];
+		$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Action')];
 		$tableCells = [];
 		$alias = $this->alias();
 		$key = 'trainees';
 
 		if ($action == 'view') {
+			$tableHeaders = [__('OpenEMIS ID'), __('Name'), __('Status')];
 			$associated = $entity->extractOriginal([$key]);
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
