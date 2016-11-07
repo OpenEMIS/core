@@ -416,7 +416,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 ->find('list')
                 ->find('NotExamCentres', ['examination_id' => $examinationId]);
 
-            if (isset($request->data[$this->alias()]['institution_type'])) {
+            // if no institution type is selected, all institutions will be shown
+            if (!empty($request->data[$this->alias()]['institution_type'])) {
                 $type = $request->data[$this->alias()]['institution_type'];
                 $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
             }
