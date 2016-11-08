@@ -32,6 +32,10 @@ class AreaAdministrativesTable extends ControllerActionTable
             ]);
         }
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StaffRoom' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
