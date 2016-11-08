@@ -322,7 +322,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['id'] = Text::uuid();
                             $obj['education_subject_id'] = $subject;
-                            $newEntities[] = $obj;
+                            $newEntities[$key] = $obj;
                         }
                     }
                 }
@@ -331,12 +331,16 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     $entity->errors('student_id', __('There are no students selected'));
                 }
 
+                if (empty($newEntities)) {
+                    return false;
+                }
+
                 return $this->connection()->transactional(function() use ($newEntities, $entity) {
                     $return = true;
-                    foreach ($newEntities as $newEntity) {
+                    foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
                         if ($examCentreStudentEntity->errors('registration_number')) {
-                            $entity->errors("examination_students", [$key => ['registration_number' => $newEntity->errors('registration_number')]]);
+                            $entity->errors("examination_students", [$key => ['registration_number' => $examCentreStudentEntity->errors('registration_number')]]);
                         }
                         if (!$this->save($examCentreStudentEntity)) {
                             $return = false;

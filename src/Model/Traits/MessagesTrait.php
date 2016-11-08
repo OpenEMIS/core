@@ -576,6 +576,11 @@ trait MessagesTrait {
             'noStudentSelected' => 'There are no students selected',
         ],
 
+        'ExaminationCentreStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration',
+            'noStudentSelected' => 'There are no students selected',
+        ],
+
         // Validation Messages
         'Institution' => [
             'Institutions' => [
