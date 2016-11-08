@@ -74,6 +74,7 @@ class TrainingCoursesTable extends ControllerActionTable
 		]);
 
 		$this->setDeleteStrategy('restrict');
+		$this->addBehavior('Workflow.Workflow');
 		$this->addBehavior('ControllerAction.FileUpload', [
 			// 'name' => 'file_name',
 			// 'content' => 'file_content',
@@ -327,7 +328,7 @@ class TrainingCoursesTable extends ControllerActionTable
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }
