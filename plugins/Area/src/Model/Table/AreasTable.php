@@ -37,6 +37,11 @@ class AreasTable extends ControllerActionTable
                 'filter' => 'parent_id',
             ]);
         }
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StaffRoom' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
