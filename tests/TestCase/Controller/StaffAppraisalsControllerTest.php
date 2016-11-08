@@ -6,10 +6,14 @@ use Cake\ORM\TableRegistry;
 
 class StaffAppraisalsControllerTest extends AppTestCase
 {
-	public $fixtures = [
+    public $fixtures = [
+        'app.academic_periods',
         'app.config_items',
         'app.config_item_options',
         'app.config_product_lists',
+        'app.competency_sets_competencies',
+        'app.competency_sets',
+        'app.competencies',
         'app.labels',
         'app.security_users',
         'app.translations',
@@ -38,319 +42,123 @@ class StaffAppraisalsControllerTest extends AppTestCase
         'app.custom_field_types',
         'app.survey_forms',
         'app.survey_rules',
-        'app.staff_appraisals'
+        'app.staff_appraisals',
+        'app.staff_appraisal_types',
+        'app.staff_appraisals_competencies',
+        'app.academic_period_levels',
+        'app.user_identities'
     ];
 
-    // private $nonAcademicInstitutionId = 517;
-    // private $academicInstitutionId = 2;
+    private $table;
+    private $id = 11;
 
     public function setup()
     {
         parent::setUp();
-        $this->urlPrefix('/Staff/Appraisals/'); // Staff/Appraisals/index
+        $this->urlPrefix('/Institutions/StaffAppraisals/');
+        $this->table = TableRegistry::get('Institution.StaffAppraisals');
+        $this->setInstitutionSession(2);
     }
 
-	public function testCompetenciesIndex()
+    public function testIndexAppraisals()
     {
-        $testUrl = $this->url('index');
-		$this->get($testUrl);
-		$this->assertResponseCode(200);
-	}
+        $testUrl = $this->url('index?user_id=5');
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
+    }
 
-//     public function testNonAcademicInstitutionCreate()
-//     {
-//         $testUrl = $this->url('add');
-//         $this->get($testUrl);
+    public function testViewAppraisals()
+    {
+        $testUrl = $this->url('view/' . $this->id . '?user_id=5');
+        $this->get($testUrl);
 
-//         $this->assertResponseCode(200);
+        $this->assertResponseCode(200);
+        $this->assertEquals(true, ($this->viewVariable('data')->id == $this->id));
+    }
 
-//         $table = TableRegistry::get('Institution.Institutions');
-//         $data = [
-//             'Institutions' => [
-//                 'name' => 'Central Region Office',
-//                 'code' => 'MOECENTRALREGION',
-//                 'is_academic' => 0,
-//                 'address' => '2 Infinite Loop',
-//                 'date_opened' => '1978-05-07',
-//                 'date_closed' => null,
-//                 'area_id' => '3',
-//                 'area_administrative_id' => '4',
-//                 'shift_type' => 0,
-//                 'institution_locality_id' => '1',
-//                 'institution_type_id' => '2',
-//                 'institution_ownership_id' => '4',
-//                 'institution_status_id' => '117',
-//                 'institution_sector_id' => '1',
-//                 'institution_provider_id' => '1',
-//                 'institution_gender_id' => '1',
-//                 'institution_network_connectivity_id' => '2',
-//             ],
-//             'submit' => 'save'
-//         ];
-//         $this->postData($testUrl, $data);
+    public function testUpdateIdentities()
+    {
+        $alias = $this->table->alias();
+        $testUrl = $this->url('edit/' . $this->id . '?user_id=5');
 
-//         $record = $table->find()
-//             ->where([$table->aliasField('code') => $data['Institutions']['code']])
-//             ->first();
+        // TODO: DO A GET FIRST
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
 
-//         // Test institution record inserted
-//         $this->assertEquals(true, (!empty($record)));
+        $data = [
+            $alias => [
+                'academic_period_id' => '10',
+                'comment' => 'Testing',
+                'competency_set_id' => '2',
+                'created' => '2016-10-25 15:15:39',
+                'created_user_id' => '5',
+                'final_rating' => '13.50',
+                'from' => '2015-01-01',
+                'id' => '11',
+                'modified' => '2016-10-27 15:49:43',
+                'modified_user_id' => '5',
+                'staff_appraisal_type_id' => '2',
+                'staff_id' => '5',
+                'title' => 'Appraisal self test 1',
+                'to' => '2015-12-31'
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
 
-//         // Test security_group_institutions record inserted
-//         $this->assertEquals(true, (!empty($this->getSecurityGroupInstitutionRecord($record->security_group_id, $record->id))));
+        $entity = $this->table->get($this->id);
+        $this->assertEquals($data[$alias]['comment'], $entity->comment);
+    }
 
-//         // Test security_group_areas record inserted
-//         $this->assertEquals(true, (!empty($this->getSecurityGroupAreaRecord($record->security_group_id, $record->area_id))));
+    public function testCreateAppraisals()
+    {
+        $alias = $this->table->alias();
+        $testUrl = $this->url('add?user_id=5');
+        $this->get($testUrl);
+        $this->assertResponseCode(200);
 
-//     }
+        $data = [
+            $alias=> [
+                'academic_period_id' => '10',
+                'comment' => '',
+                'competency_set_id' => '2',
+                'created' => '2016-10-25 15:15:39',
+                'created_user_id' => '5',
+                'final_rating' => '15.50',
+                'from' => '2015-01-01',
+                'id' => '80',
+                'modified' => '2016-10-27 15:49:43',
+                'modified_user_id' => '5',
+                'staff_appraisal_type_id' => '2',
+                'staff_id' => '5',
+                'title' => 'Appraisal unit test 1',
+                'to' => '2015-12-31'
+            ],
+            'submit' => 'save'
+        ];
+        $this->postData($testUrl, $data);
 
-//     public function testAcademicInstitutionCreate()
-//     {
-//         $testUrl = $this->url('add');
+        $lastInsertedRecord = $this->table->find()
+            ->where([$this->table->aliasField('id') => $data[$alias]['id']])
+            ->first();
+        $this->assertEquals(true, (!empty($lastInsertedRecord)));
+    }
 
-//         $this->get($testUrl);
-//         $this->assertResponseCode(200);
+    public function testDeleteAppraisals()
+    {
+        $testUrl = $this->url('remove'); // Delete records with confirmation modal (delete modal)
 
-//         $table = TableRegistry::get('Institution.Institutions');
-//         $data = [
-//             'Institutions' => [
-//                 'name' => 'Test College',
-//                 'code' => 'ATESTCOLLEGE',
-//                 'is_academic' => 1,
-//                 'address' => 'Test Address',
-//                 'date_opened' => '2015-05-07',
-//                 'area_id' => '94',
-//                 'area_administrative_id' => '94',
-//                 'shift_type' => 0,
-//                 'institution_locality_id' => '1',
-//                 'institution_type_id' => '2',
-//                 'institution_ownership_id' => '4',
-//                 'institution_status_id' => '117',
-//                 'institution_sector_id' => '1',
-//                 'institution_provider_id' => '1',
-//                 'institution_gender_id' => '1',
-//                 'institution_network_connectivity_id' => '2',
-//             ],
-//             'submit' => 'save'
-//         ];
-//         $this->postData($testUrl, $data);
+        $exists = $this->table->exists([$this->table->primaryKey() => $this->id]);
+        $this->assertTrue($exists);
 
-//         $record = $table->find()
-//             ->where([$table->aliasField('code') => $data['Institutions']['code']])
-//             ->first();
+        $data = [
+            'id' => $this->id,
+            '_method' => 'DELETE'
+        ];
+        $this->postData($testUrl, $data);
 
-//         // Test institution record inserted
-//         $this->assertEquals(true, (!empty($record)));
-
-//         // Test security_group_institutions record inserted
-//         $this->assertEquals(true, (!empty($this->getSecurityGroupInstitutionRecord($record->security_group_id, $record->id))));
-
-//         // Test security_group_areas record inserted
-//         $this->assertEquals(false, (!empty($this->getSecurityGroupAreaRecord($record->security_group_id, $record->area_id))));
-
-//     }
-
-//     public function testAcademicInstitutionUpdate()
-//     {
-//         $testUrl = $this->url('edit/'.$this->academicInstitutionId);
-
-//         $this->get($testUrl);
-//         $this->assertResponseCode(200);
-//         $data = [
-//             'Institutions' => [
-//                 'id' => $this->academicInstitutionId,
-//                 'name' => 'Test Edit College',
-//                 'code' => 'TESTEDITCOLLEGE',
-//                 'address' => 'Test Change Address',
-//                 'area_id' => '94',
-//                 'area_administrative_id' => '94',
-//                 'institution_locality_id' => '1',
-//                 'institution_type_id' => '2',
-//                 'institution_ownership_id' => '4',
-//                 'institution_status_id' => '117',
-//                 'institution_sector_id' => '1',
-//                 'institution_provider_id' => '1',
-//                 'institution_gender_id' => '1',
-//                 'institution_network_connectivity_id' => '2',
-//             ],
-//             'submit' => 'save'
-//         ];
-//         $table = TableRegistry::get('Institution.Institutions');
-//         $originalRecord = $table->find()
-//             ->where([
-//                 $table->aliasField('id') => $this->academicInstitutionId
-//             ])
-//             ->hydrate(false)
-//             ->firstOrFail();
-
-//         $patchedRecord = array_merge($originalRecord, $data['Institutions']);
-
-//         unset($patchedRecord['modified']);
-//         unset($patchedRecord['modified_user_id']);
-
-//         $this->postData($testUrl, $data);
-
-//         $table = TableRegistry::get('Institution.Institutions');
-//         $record = $table->find()
-//             ->where([
-//                 $table->aliasField('id') => $this->academicInstitutionId
-//             ])
-//             ->hydrate(false)
-//             ->firstOrFail();
-
-//         unset($record['modified']);
-//         unset($record['modified_user_id']);
-
-//         // Test institution record inserted
-//         $this->assertEquals($patchedRecord, $record);
-
-//         // Test security_group_institutions record inserted
-//         $this->assertTrue(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
-
-//         // Test security_group_areas record inserted
-//         $this->assertFalse(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
-
-//     }
-
-//     public function testNonAcademicInstitutionUpdate()
-//     {
-//         $testUrl = $this->url('edit/'.$this->nonAcademicInstitutionId);
-
-//         $this->get($testUrl);
-//         $this->assertResponseCode(200);
-//         $data = [
-//             'Institutions' => [
-//                 'id' => $this->nonAcademicInstitutionId,
-//                 'name' => 'Test Edit College',
-//                 'code' => 'TESTEDITCOLLEGE',
-//                 'address' => 'Test Change Address',
-//                 'area_id' => '94',
-//                 'area_administrative_id' => '94',
-//                 'institution_locality_id' => '1',
-//                 'institution_type_id' => '2',
-//                 'institution_ownership_id' => '4',
-//                 'institution_status_id' => '117',
-//                 'institution_sector_id' => '1',
-//                 'institution_provider_id' => '1',
-//                 'institution_gender_id' => '1',
-//                 'institution_network_connectivity_id' => '2',
-//             ],
-//             'submit' => 'save'
-//         ];
-//         $table = TableRegistry::get('Institution.Institutions');
-//         $originalRecord = $table->find()
-//             ->where([
-//                 $table->aliasField('id') => $this->nonAcademicInstitutionId
-//             ])
-//             ->hydrate(false)
-//             ->firstOrFail();
-
-//         $patchedRecord = array_merge($originalRecord, $data['Institutions']);
-
-//         unset($patchedRecord['modified']);
-//         unset($patchedRecord['modified_user_id']);
-
-//         $this->postData($testUrl, $data);
-
-//         $table = TableRegistry::get('Institution.Institutions');
-//         $record = $table->find()
-//             ->where([
-//                 $table->aliasField('id') => $this->nonAcademicInstitutionId
-//             ])
-//             ->hydrate(false)
-//             ->firstOrFail();
-
-//         unset($record['modified']);
-//         unset($record['modified_user_id']);
-
-//         // Test institution record inserted
-//         $this->assertEquals($patchedRecord, $record);
-
-//         // Test security_group_institutions record inserted
-//         $this->assertTrue(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
-
-//         // Test security_group_areas record inserted
-//         $this->assertTrue(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
-
-//     }
-
-//     public function testNonAcademicInstitutionDelete()
-//     {
-//         $testUrl = $this->url('remove/'.$this->nonAcademicInstitutionId);
-
-//         $table = TableRegistry::get('Institution.Institutions');
-
-//         $record = $table->find()
-//             ->where([
-//                 $table->aliasField('id') => $this->nonAcademicInstitutionId
-//             ])
-//             ->first();
-
-//         $this->assertTrue(!empty($record));
-
-//         $data = [
-//             'id' => $this->nonAcademicInstitutionId,
-//             '_method' => 'DELETE'
-//         ];
-//         $this->postData($testUrl, $data);
-
-//         $exists = $table->exists([$table->primaryKey() => $this->nonAcademicInstitutionId]);
-//         $this->assertFalse($exists);
-
-//         // Test security_group_institutions record inserted
-//         $this->assertFalse(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
-
-//         // Test security_group_areas record inserted
-//         $this->assertFalse(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
-//     }
-
-//     public function testAcademicInstitutionDelete()
-//     {
-//         $testUrl = $this->url('remove/'.$this->academicInstitutionId);
-
-//         $table = TableRegistry::get('Institution.Institutions');
-
-//         $record = $table->find()
-//             ->where([
-//                 $table->aliasField('id') => $this->academicInstitutionId
-//             ])
-//             ->first();
-
-//         $this->assertTrue(!empty($record));
-
-//         $data = [
-//             'id' => $this->academicInstitutionId,
-//             '_method' => 'DELETE'
-//         ];
-//         $this->postData($testUrl, $data);
-
-//         $exists = $table->exists([$table->primaryKey() => $this->academicInstitutionId]);
-//         $this->assertFalse($exists);
-
-//         // Test security_group_institutions record inserted
-//         $this->assertFalse(!empty($this->getSecurityGroupInstitutionRecord($record['security_group_id'], $record['id'])));
-
-//         // Test security_group_areas record inserted
-//         $this->assertFalse(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
-//     }
-
-//     private function getSecurityGroupAreaRecord($securityGroupId, $areaId) {
-//         $SecurityGroupAreasTable = TableRegistry::get('Security.SecurityGroupAreas');
-//         return $SecurityGroupAreasTable->find()
-//             ->where([
-//                 $SecurityGroupAreasTable->aliasField('security_group_id') => $securityGroupId,
-//                 $SecurityGroupAreasTable->aliasField('area_id') => $areaId,
-//             ])
-//             ->first();
-//     }
-
-//     private function getSecurityGroupInstitutionRecord($securityGroupId, $institutionId) {
-//         $SecurityGroupInstitutionsTable = TableRegistry::get('Security.SecurityGroupInstitutions');
-//         return $SecurityGroupInstitutionsTable->find()
-//             ->where([
-//                 $SecurityGroupInstitutionsTable->aliasField('security_group_id') => $securityGroupId,
-//                 $SecurityGroupInstitutionsTable->aliasField('institution_id') => $institutionId,
-//             ])
-//             ->first();
-//     }
+        $exists = $this->table->exists([$this->table->primaryKey() => $this->id]);
+        $this->assertFalse($exists);
+    }
 }
+
