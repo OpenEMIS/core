@@ -63,6 +63,13 @@ class WorkflowModelsFixture extends TestFixture
             'filter' => null,
             'created_user_id' => '1',
             'created' => '2016-04-15 10:45:45'
+        ], [
+            'id' => '10',
+            'name' => 'Administration > Training > Applications',
+            'model' => 'Training.TrainingApplications',
+            'filter' => null,
+            'created_user_id' => '1',
+            'created' => '2016-04-15 10:45:45'
         ]
     ];
 }
