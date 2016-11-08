@@ -63,7 +63,7 @@ class UsersTable extends AppTable {
 		$this->addBehavior('Area.Areapicker');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'StaffRoom' => ['index']
+        	'StaffRoom' => ['index', 'add']
         ]);
 	}
 
