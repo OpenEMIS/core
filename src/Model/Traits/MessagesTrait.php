@@ -739,7 +739,7 @@ trait MessagesTrait {
             ],
             'IndividualPromotion' => [
                 'effective_date' => [
-                    'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
             'VisitRequests' => [
