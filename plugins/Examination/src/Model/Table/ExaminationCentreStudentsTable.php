@@ -338,7 +338,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['id'] = Text::uuid();
                             $obj['education_subject_id'] = $subject;
-                            $newEntities[] = $model->newEntity($obj);
+                            $newEntity = $model->newEntity($obj);
+                            $newEntities[] = $newEntity;
+                            if ($newEntity->errors('registration_number')) {
+                                $entity->errors("examination_students", [$key => ['registration_number' => $newEntity->errors('registration_number')]]);
+                            }
                         }
                     }
                 }
