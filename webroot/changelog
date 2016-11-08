@@ -1,3 +1,11 @@
+v3.7.2
+- Directory page will show Advanced Search by default
+- System allows user to search for all users regardless of user's permission
+- System allows Institutions to request visits
+- Staff > Professional Development > Appraisal Tab : Introduced an Appraisal feature
+- System allows user to apply for training courses
+- Admin is able to manage training course applicants
+
 v3.7.1.1
 - Introduced individual student promote/repeat feature that allows promote/repeat within the same year
 - Institution > Studentlist will show enrolled students by default
