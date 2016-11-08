@@ -48,6 +48,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->fields['total_mark']['visible'] = false;
         $this->controller->getStudentsTab();
     }
 
@@ -329,9 +330,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 if (empty($newEntities)) {
                     $model->Alert->warning($this->aliasField('noStudentSelected'));
                     $entity->errors('student_id', __('There are no students selected'));
-                }
-
-                if (empty($newEntities)) {
                     return false;
                 }
 
@@ -340,7 +338,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
                         if ($examCentreStudentEntity->errors('registration_number')) {
-                            $entity->errors("examination_students", [$key => ['registration_number' => $examCentreStudentEntity->errors('registration_number')]]);
+                            $entity->errors("examination_students.$key", ['registration_number' => $examCentreStudentEntity->errors('registration_number')]);
                         }
                         if (!$this->save($examCentreStudentEntity)) {
                             $return = false;
