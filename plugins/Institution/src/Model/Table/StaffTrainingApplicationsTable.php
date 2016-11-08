@@ -213,8 +213,8 @@ class StaffTrainingApplicationsTable extends ControllerActionTable
             $tableCells = [];
             $tableCells[] = $trainingSession->code;
             $tableCells[] = $trainingSession->name;
-            $tableCells[] = $trainingSession->start_date;
-            $tableCells[] = $trainingSession->end_date;
+            $tableCells[] = $this->formatDate($trainingSession->start_date);
+            $tableCells[] = $this->formatDate($trainingSession->end_date);
 
             $attr['tableHeaders'] = $tableHeaders;
             $attr['tableCells'] = $tableCells;
