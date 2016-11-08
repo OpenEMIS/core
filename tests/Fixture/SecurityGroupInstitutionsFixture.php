@@ -58,6 +58,11 @@ class SecurityGroupInstitutionsFixture extends TestFixture
             'created_user_id' => '2',
             'created' => '2016-06-03 04:01:55'
         ],[
+            'security_group_id' => '13',
+            'institution_id' => '13',
+            'created_user_id' => '2',
+            'created' => '2016-06-03 04:01:55'
+        ],[
             'security_group_id' => '517',
             'institution_id' => '517',
             'created_user_id' => '2',
