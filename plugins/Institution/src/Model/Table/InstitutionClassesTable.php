@@ -66,7 +66,9 @@ class InstitutionClassesTable extends ControllerActionTable
         // this behavior restricts current user to see All Classes or My Classes
         $this->addBehavior('Security.InstitutionClass');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
-
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
         $this->setDeleteStrategy('restrict');
     }
 
@@ -1062,6 +1064,39 @@ class InstitutionClassesTable extends ControllerActionTable
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $conditions = [$InstitutionGrades->aliasField('institution_id') => $institutionId];
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
+    }
+
+    public function findClassOptions(Query $query, array $options)
+    {
+        $institutionId = array_key_exists('institution_id', $options)? $options['institution_id']: null;
+        $academicPeriodId = array_key_exists('academic_period_id', $options)? $options['academic_period_id']: null;
+        $gradeId = array_key_exists('grade_id', $options)? $options['grade_id']: null;
+
+        if (!is_null($academicPeriodId) && !is_null($institutionId) && !is_null($gradeId)) {
+            $query->select(['InstitutionClasses.id', 'InstitutionClasses.name']);
+            $query->where([
+                'InstitutionClasses.academic_period_id' => $academicPeriodId,
+                'InstitutionClasses.institution_id' => $institutionId
+            ]);
+            if($gradeId != false) {
+                $query->join([
+                        [
+                            'table' => 'institution_class_grades',
+                            'alias' => 'InstitutionClassGrades',
+                            'conditions' => [
+                                'InstitutionClassGrades.institution_class_id = InstitutionClasses.id',
+                                'InstitutionClassGrades.education_grade_id = ' . $gradeId
+                            ]
+                        ]
+                    ]
+                );
+                $query->group(['InstitutionClasses.id']);
+            }
+        } else {
+            // incomplete data return nothing
+            $query->where([$this->aliasField('id') => -1]);
+        }
+        return $query;
     }
 
     /**

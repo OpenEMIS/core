@@ -72,6 +72,13 @@ trait OptionsTrait {
         			'existing' => __('Existing Institution'),
         			'new' => __('New Examination Centre')
         		]
+        	],
+        	'WorkflowSteps' => [
+        		'category' => [
+	    			1 => __('To Do'),
+	    			2 => __('In Progress'),
+	    			3 => __('Done')
+	    		]
         	]
 		];
 

@@ -13,7 +13,7 @@ use App\Model\Table\AppTable;
 
 class DirectoriesTable extends AppTable {
 	// public $InstitutionStudent;
-	
+
 	// these constants are being used in AdvancedPositionSearchBehavior as well
 	// remember to check AdvancedPositionSearchBehavior if these constants are being modified
 	const ALL = 0;
@@ -45,8 +45,8 @@ class DirectoriesTable extends AppTable {
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
-            'first_name', 'middle_name', 'third_name', 'last_name', 
-            'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position', 
+            'first_name', 'middle_name', 'third_name', 'last_name',
+            'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
         $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder]);
@@ -68,12 +68,20 @@ class DirectoriesTable extends AppTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
+        $validator
+            ->allowEmpty('postal_code')
+            ->add('postal_code', 'ruleCustomPostalCode', [
+                'rule' => ['validateCustomPattern', 'postal_code'],
+                'provider' => 'table',
+                'last' => true
+            ])
+            ;
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		
+
 
         if ($this->AccessControl->isAdmin()) { // if user is super admin, this condition is used for filtering
             $userTypeOptions = [
@@ -91,7 +99,7 @@ class DirectoriesTable extends AppTable {
                 __('Not In School') => [
                     self::STAFFNOTINSCHOOL => __('Staff'),
                     self::STUDENTNOTINSCHOOL => __('Student')
-                ]  
+                ]
             ];
         }
 
@@ -150,7 +158,7 @@ class DirectoriesTable extends AppTable {
                         $query->find('StudentsInSchool', ['institutionIds' => $institutionIds]);
                         break;
 
-                    case self::STUDENTNOTINSCHOOL: 
+                    case self::STUDENTNOTINSCHOOL:
                         $query->find('StudentsNotInSchool');
                         break;
 
@@ -164,11 +172,13 @@ class DirectoriesTable extends AppTable {
                 }
             }
 		}
-		
+
+        $options['auto_search'] = false;
+
 		$this->dashboardQuery = clone $query;
 	}
 
-    public function findStudentsInSchool(Query $query, array $options) 
+    public function findStudentsInSchool(Query $query, array $options)
     {
         $institutionIds = (array_key_exists('institutionIds', $options))? $options['institutionIds']: [];
         if (!empty($institutionIds)) {
@@ -189,11 +199,11 @@ class DirectoriesTable extends AppTable {
             // return nothing if $institutionIds is empty
             $query->where([$this->aliasField('id') => -1]);
         }
-        
+
         return $query;
     }
 
-    public function findStudentsNotInSchool(Query $query, array $options) 
+    public function findStudentsNotInSchool(Query $query, array $options)
     {
         $InstitutionStudentTable = TableRegistry::get('Institution.Students');
         $allInstitutionStudents = $InstitutionStudentTable->find()
@@ -208,7 +218,7 @@ class DirectoriesTable extends AppTable {
         return $query;
     }
 
-    public function findStaffInSchool(Query $query, array $options) 
+    public function findStaffInSchool(Query $query, array $options)
     {
         $institutionIds = (array_key_exists('institutionIds', $options))? $options['institutionIds']: [];
         if (!empty($institutionIds)) {
@@ -231,7 +241,7 @@ class DirectoriesTable extends AppTable {
         return $query;
     }
 
-    public function findStaffNotInSchool(Query $query, array $options) 
+    public function findStaffNotInSchool(Query $query, array $options)
     {
         $InstitutionStaffTable = TableRegistry::get('Institution.Staff');
         $allInstitutionStaff = $InstitutionStaffTable->find()
@@ -277,12 +287,12 @@ class DirectoriesTable extends AppTable {
 			}
 			$userCount = $this->dashboardQuery;
 			//Get Gender
-			$userArray[__('Gender')] = $this->getDonutChart('user_gender', 
+			$userArray[__('Gender')] = $this->getDonutChart('user_gender',
 				['query' => $this->dashboardQuery, 'key' => __('Gender')]);
 
 			$indexDashboard = 'dashboard';
 			$indexElements = $this->controller->viewVars['indexElements'];
-			
+
 			$indexElements[] = ['name' => 'Directory.Users/controls', 'data' => [], 'options' => [], 'order' => 0];
 
             if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
@@ -298,7 +308,7 @@ class DirectoriesTable extends AppTable {
                     'order' => 2
                 ];
             }
-			
+
 			foreach ($indexElements as $key => $value) {
 				if ($value['name']=='advanced_search') {
 					$indexElements[$key]['order'] = 1;
@@ -361,7 +371,7 @@ class DirectoriesTable extends AppTable {
 						'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
 					]);
 					break;
-			}	
+			}
 		} else if ($this->action == 'edit') {
 			$this->hideOtherInformationSection($this->controller->name, 'edit');
 		}
@@ -376,14 +386,14 @@ class DirectoriesTable extends AppTable {
 		}
 	}
 
-	public function addBeforeAction(Event $event)
-	{
-		if (!isset($this->request->data[$this->alias()]['user_type'])) {
-			$this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
-		}
-	}
+    public function addBeforeAction(Event $event)
+    {
+        if (!isset($this->request->data[$this->alias()]['user_type'])) {
+            $this->request->data[$this->alias()]['user_type'] = $this->request->query('user_type');
+        }
+    }
 
-	public function addAfterAction(Event $event) { 
+	public function addAfterAction(Event $event) {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
@@ -497,10 +507,10 @@ class DirectoriesTable extends AppTable {
 		$requestData[$this->alias()] = $directoryEntity;
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields = [];
 		$this->controller->set('ngController', 'AdvancedSearchCtrl');
-		
+
 		if (!is_null($this->request->query('user_type'))) {
 			switch($this->request->query('user_type')) {
 				case self::ALL:
@@ -516,11 +526,11 @@ class DirectoriesTable extends AppTable {
 					break;
 
 				case self::GUARDIAN:
-					
+
 					break;
 
 				case self::OTHER:
-					
+
 					break;
 			}
 		}
@@ -540,13 +550,13 @@ class DirectoriesTable extends AppTable {
 		$genderCount = $userRecords
 			->contain(['Genders'])
 			->select([
-				'count' => $userRecords->func()->count($this->aliasField('id')),	
+				'count' => $userRecords->func()->count($this->aliasField('id')),
 				'gender' => 'Genders.name'
 			])
 			->group('gender', true)
 			->bufferResults(false);
 
-		// Creating the data set		
+		// Creating the data set
 		$dataSet = [];
 		foreach ($genderCount as $value) {
 			//Compile the dataset
@@ -568,7 +578,7 @@ class DirectoriesTable extends AppTable {
 			$institutionIds = $this->AccessControl->getInstitutionsByUser();
 			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
 		}
-		
+
 		$isStudent = $entity->is_student;
 		$isStaff = $entity->is_staff;
 		$isGuardian = $entity->is_guardian;
@@ -595,7 +605,7 @@ class DirectoriesTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		
+
 		$isSet = $this->setSessionAfterAction($event, $entity);
 
 		if ($isSet) {
@@ -670,7 +680,7 @@ class DirectoriesTable extends AppTable {
 				$name = $studentInstitutions->name;
 			}
 			$entity->student_status_name = $value;
-			
+
 			return $name;
 		}
 

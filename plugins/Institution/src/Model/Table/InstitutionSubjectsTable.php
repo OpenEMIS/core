@@ -250,9 +250,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
-    public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-
         if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
             $this->Alert->warning($extra[$this->aliasField('notice')], ['reset'=>true]);
             unset($extra[$this->aliasField('notice')]);
@@ -1252,7 +1251,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $table = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $count = $table
                         ->find()
-                        ->where([$table->aliasField('institution_subject_id') => $entity->id])
+                        ->where([
+                            $table->aliasField('institution_subject_id') => $entity->id,
+                            $table->aliasField('status') .' > 0'
+                            ])
                         ->count();
             return $count;
         }

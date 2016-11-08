@@ -1,7 +1,6 @@
 <?php
 namespace User\Controller;
 use Cake\Event\Event;
-use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use ArrayObject;
@@ -96,7 +95,15 @@ class UsersController extends AppController
         $events['Auth.afterIdentify'] = 'afterIdentify';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
         return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        if (in_array($action, ['login', 'logout', 'postLogin', 'login_remote'])) {
+            return true;
+        }
     }
 
     public function afterCheckLogin(Event $event, $extra)
@@ -147,11 +154,10 @@ class UsersController extends AppController
     public function afterIdentify(Event $event, $user)
     {
         $user = $this->Users->get($user['id']);
-        $user->last_login = new DateTime();
-        $this->Users->save($user);
 
         $listeners = [
-            TableRegistry::get('Security.SecurityUserLogins')
+            TableRegistry::get('Security.SecurityUserLogins'),
+            $this->Users
         ];
         $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
 

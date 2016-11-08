@@ -207,6 +207,7 @@ class NavigationComponent extends Component
 		if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
+			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
 		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
@@ -373,7 +374,7 @@ class NavigationComponent extends Component
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
-				'selected' => ['Institutions.Students.add', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
+				'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
 					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add',
 					'Institutions.ImportStudents'],
 				'params' => ['plugin' => 'Institution']
@@ -532,7 +533,7 @@ class NavigationComponent extends Component
 				'title' => 'General',
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Institution', '1' => $studentId, 'id' => $id],
-				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit',
+				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
 					'Students.History', 'Students.GuardianUser']],
 			'Institutions.StudentProgrammes.index' => [
@@ -572,7 +573,7 @@ class NavigationComponent extends Component
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-					'Staff.Leave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
+					'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
 			],
 			'Staff.Qualifications' => [
 				'title' => 'Professional Development',
