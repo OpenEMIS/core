@@ -70,6 +70,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getAssociatedRecordConditions'] = 'getAssociatedRecordConditions';
+        return $events;
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -721,7 +728,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         return $entity;
     }
-
+    
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
@@ -730,6 +737,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->SubjectStaff->alias(),
             $this->Classes->alias()
         ];
+    }
+
+    public function getAssociatedRecordConditions(Event $event, Query $query, $assocTable, ArrayObject $extra)
+    {
+        if ($assocTable->alias() == 'InstitutionSubjectStudents') {
+            $query->where([
+                $assocTable->aliasField('status') => 1
+            ]);
+        }
+        
     }
 
 /******************************************************************************************************************
