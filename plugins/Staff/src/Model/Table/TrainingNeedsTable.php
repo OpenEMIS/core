@@ -38,7 +38,7 @@ class TrainingNeedsTable extends ControllerActionTable
 		$this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Assignees', ['className' => 'User.Users']);
-
+		$this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffTrainingNeeds']);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
@@ -399,13 +399,13 @@ class TrainingNeedsTable extends ControllerActionTable
 	public function _getSelectOptions()
 	{
 		//Return all required options and their key
-		$typeOptions = $this->getSelectOptions($this->aliasField('types'));
+		$typeOptions = $this->getSelectOptions('StaffTrainingNeeds.types');
 		// $selectedType = $this->queryString('type', $typeOptions);
 		$selectedType = array_key_exists('type', $this->request->query)? $this->request->query['type']: '';
 
 		return compact('typeOptions', 'selectedType');
 	}
-	
+
 	private function setupTabElements()
 	{
 		$tabElements = $this->controller->getTrainingTabElements();
@@ -485,7 +485,7 @@ class TrainingNeedsTable extends ControllerActionTable
 					return $row;
 				});
 			});
-		
+
 		return $query;
 	}
 }
