@@ -54,7 +54,7 @@ class UndoRepeatedBehavior extends UndoBehavior {
                             'student_id' => $studentId
                         ];
                     }
-					$this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
+					$this->updateStudentStatus('REPEATED', $whereId, $whereConditions);
 				}
 			}
 		}

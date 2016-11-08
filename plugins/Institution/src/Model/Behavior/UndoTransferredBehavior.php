@@ -59,7 +59,7 @@ class UndoTransferredBehavior extends UndoBehavior {
                         ];
                     }
                     
-                    $this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
+                    $this->updateStudentStatus('TRANSFERRED', $whereId, $whereConditions);
 
                     //update transfer request (student admission) to undo status.
                     $conditions = [
