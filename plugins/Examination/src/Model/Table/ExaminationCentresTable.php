@@ -214,6 +214,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['email']['visible'] = true;
                     $this->fields['website']['visible'] = true;
                 } else if ($entity->create_as == 'existing') {
+                    $this->field('institution_type', ['before' => 'institutions']);
                     $this->field('institutions');
                     $this->fields['name']['visible'] = false;
                 } else {
@@ -393,15 +394,35 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onUpdateFieldInstitutionType(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['options'] = $this->Institutions->Types
+                ->find('list')
+                ->toArray();
+
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+        }
+        return $attr;
+    }
+
     public function onUpdateFieldInstitutions(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $attr['type'] = 'chosenSelect';
             $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
-            $attr['options'] = $this->Institutions
+            $institutionOptions = $this->Institutions
                 ->find('list')
-                ->find('NotExamCentres', ['examination_id' => $examinationId])
-                ->toArray();
+                ->find('NotExamCentres', ['examination_id' => $examinationId]);
+
+            // if no institution type is selected, all institutions will be shown
+            if (!empty($request->data[$this->alias()]['institution_type'])) {
+                $type = $request->data[$this->alias()]['institution_type'];
+                $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
+            }
+
+            $attr['options'] = $institutionOptions->toArray();
             $attr['fieldName'] = $this->alias().'.institutions';
         }
         return $attr;
