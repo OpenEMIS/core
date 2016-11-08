@@ -64,7 +64,8 @@ class AcademicPeriodsTable extends AppTable {
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
-            'Results' => ['index']
+            'Results' => ['index'],
+            'ExamResults' => ['index']
         ]);
     }
 

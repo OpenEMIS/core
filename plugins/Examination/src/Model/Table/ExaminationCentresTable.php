@@ -26,6 +26,10 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
