@@ -142,9 +142,6 @@ class InstitutionsTable extends AppTable  {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		$session = new Session();
-		$userId = $session->read('Auth.User.id');
-		$superAdmin = $session->read('Auth.User.super_admin');
 
 		$validator
 			->add('date_opened', [
@@ -215,7 +212,7 @@ class InstitutionsTable extends AppTable  {
 			    ])
 
 			->add('area_id', 'ruleAuthorisedArea', [
-					'rule' => ['checkAuthorisedArea', $superAdmin, $userId]
+					'rule' => ['checkAuthorisedArea']
 				])
 			->add('institution_provider_id', 'ruleLinkedSector', [
 						'rule' => 'checkLinkedSector',
@@ -660,7 +657,16 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-		public function editBeforeAction(Event $event) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
+		$userId = $this->Session->read('Auth.User.id');
+		$superAdmin = $this->Session->read('Auth.User.super_admin');
+
+		$data['userId'] = $userId;
+		$data['superAdmin'] = $superAdmin;
+	}
+
+	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
 			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
