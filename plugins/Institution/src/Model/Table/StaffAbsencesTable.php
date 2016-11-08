@@ -67,8 +67,12 @@ class StaffAbsencesTable extends ControllerActionTable {
 					'on' => 'create'
 				],
 				'ruleInAcademicPeriod' => [
+<<<<<<< HEAD
 					'rule' => ['inAcademicPeriod', 'academic_period_id'],
 					'last' => true,
+=======
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+>>>>>>> a21cbbe482ace88642465df8e1a9721cac3460ea
 					'on' => 'create'
 				],
 				'ruleNoOverlappingAbsenceDate' => [
@@ -84,8 +88,12 @@ class StaffAbsencesTable extends ControllerActionTable {
 					'rule' => ['compareDateReverse', 'start_date', true]
 				],
 				'ruleInAcademicPeriod' => [
+<<<<<<< HEAD
 					'rule' => ['inAcademicPeriod', 'academic_period_id'],
 					'last' => true,
+=======
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+>>>>>>> a21cbbe482ace88642465df8e1a9721cac3460ea
 					'on' => 'create'
 				]
 			])
