@@ -71,12 +71,12 @@ class InstitutionRoomsTable extends AppTable {
 		    ])
 		    ->add('start_date', [
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period_id']
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []]
 				]
 			])
 			->add('end_date', [
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period_id']
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []]
 				],
 				'ruleCompareDateReverse' => [
 					'rule' => ['compareDateReverse', 'start_date', true]
