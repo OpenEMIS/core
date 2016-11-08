@@ -1,14 +1,16 @@
 <?php
 namespace App\Test\TestCases;
 
-use App\Test\AppTestCase;
 use Cake\ORM\TableRegistry;
+use App\Test\AppTestCase;
 
 class InstitutionsControllerTest extends AppTestCase
 {
 	public $fixtures = [
         'app.assessment_item_results',
         'app.examination_centres',
+        'app.education_grades',
+        'app.education_programmes',
         'app.institution_quality_rubrics',
         'app.institution_quality_visits',
         'app.institution_surveys',
@@ -94,7 +96,7 @@ class InstitutionsControllerTest extends AppTestCase
         'app.security_roles'
     ];
 
-    private $nonAcademicInstitutionId = 517;
+    private $nonAcademicInstitutionId = 13;
     private $academicInstitutionId = 2;
 
     public function setup()
@@ -119,23 +121,36 @@ class InstitutionsControllerTest extends AppTestCase
         $table = TableRegistry::get('Institution.Institutions');
         $data = [
             'Institutions' => [
-                'name' => 'Central Region Office',
-                'code' => 'MOECENTRALREGION',
+                'id' => '517',
+                'name' => 'Amaris',
+                'alternative_name' => '',
                 'is_academic' => 0,
-                'address' => '2 Infinite Loop',
-                'date_opened' => '1978-05-07',
+                'code' => 'AMR',
+                'address' => 'qwe',
+                'postal_code' => '',
+                'contact_person' => '',
+                'telephone' => '',
+                'fax' => '',
+                'email' => '',
+                'website' => '',
+                'date_opened' => '2016-11-03',
+                'year_opened' => '2016',
                 'date_closed' => null,
+                'year_closed' => null,
+                'longitude' => '',
+                'latitude' => '',
+                'shift_type' => '0',
+                'is_academic' => '0',
                 'area_id' => '3',
-                'area_administrative_id' => '4',
-                'shift_type' => 0,
+                'area_administrative_id' => '1',
                 'institution_locality_id' => '1',
-                'institution_type_id' => '2',
+                'institution_type_id' => '1',
                 'institution_ownership_id' => '4',
                 'institution_status_id' => '117',
                 'institution_sector_id' => '1',
                 'institution_provider_id' => '1',
                 'institution_gender_id' => '1',
-                'institution_network_connectivity_id' => '2',
+                'institution_network_connectivity_id' => '5'
             ],
             'submit' => 'save'
         ];
@@ -153,7 +168,6 @@ class InstitutionsControllerTest extends AppTestCase
 
         // Test security_group_areas record inserted
         $this->assertEquals(true, (!empty($this->getSecurityGroupAreaRecord($record->security_group_id, $record->area_id))));
-
     }
 
     public function testAcademicInstitutionCreate()
@@ -267,6 +281,7 @@ class InstitutionsControllerTest extends AppTestCase
     public function testNonAcademicInstitutionUpdate()
     {
         $testUrl = $this->url('edit/'.$this->nonAcademicInstitutionId);
+        $table = TableRegistry::get('Institution.Institutions');
 
         $this->get($testUrl);
         $this->assertResponseCode(200);
@@ -289,7 +304,7 @@ class InstitutionsControllerTest extends AppTestCase
             ],
             'submit' => 'save'
         ];
-        $table = TableRegistry::get('Institution.Institutions');
+
         $originalRecord = $table->find()
             ->where([
                 $table->aliasField('id') => $this->nonAcademicInstitutionId
@@ -304,7 +319,6 @@ class InstitutionsControllerTest extends AppTestCase
 
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institution.Institutions');
         $record = $table->find()
             ->where([
                 $table->aliasField('id') => $this->nonAcademicInstitutionId
@@ -386,7 +400,8 @@ class InstitutionsControllerTest extends AppTestCase
         $this->assertFalse(!empty($this->getSecurityGroupAreaRecord($record['security_group_id'], $record['area_id'])));
     }
 
-    private function getSecurityGroupAreaRecord($securityGroupId, $areaId) {
+    private function getSecurityGroupAreaRecord($securityGroupId, $areaId)
+    {
         $SecurityGroupAreasTable = TableRegistry::get('Security.SecurityGroupAreas');
         return $SecurityGroupAreasTable->find()
             ->where([
@@ -396,7 +411,8 @@ class InstitutionsControllerTest extends AppTestCase
             ->first();
     }
 
-    private function getSecurityGroupInstitutionRecord($securityGroupId, $institutionId) {
+    private function getSecurityGroupInstitutionRecord($securityGroupId, $institutionId)
+    {
         $SecurityGroupInstitutionsTable = TableRegistry::get('Security.SecurityGroupInstitutions');
         return $SecurityGroupInstitutionsTable->find()
             ->where([
