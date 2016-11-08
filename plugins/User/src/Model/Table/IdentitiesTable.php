@@ -21,7 +21,9 @@ class IdentitiesTable extends ControllerActionTable
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
-
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 		$this->excludeDefaultValidations(['security_user_id']);
 	}
 
@@ -97,9 +99,15 @@ class IdentitiesTable extends ControllerActionTable
 		;
 	}
 
+	public function validationAddByAssociation(Validator $validator)
+	{
+		$validator = $this->validationDefault($validator);
+		return $validator->requirePresence('security_user_id', false);
+	}
+
 	public function validationNonMandatory(Validator $validator)
 	{
-		$this->validationDefault($validator);
+		$validator = $this->validationDefault($validator);
 		return $validator->allowEmpty('number');
 	}
 

@@ -626,7 +626,8 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptionsData = $AcademicPeriod->getList();
@@ -775,9 +776,7 @@ class StaffAttendancesTable extends AppTable {
 				;
 
 			$InstitutionArray = [];
-			if ($selectedDay != -1) {
-
-			}
+			
 			$queryClone = clone $query;
 			$totalStaff = $queryClone->distinct([$this->aliasField('staff_id')])->count();
 

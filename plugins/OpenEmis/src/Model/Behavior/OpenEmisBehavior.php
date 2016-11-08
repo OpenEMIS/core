@@ -4,6 +4,7 @@ namespace OpenEmis\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 
@@ -87,8 +88,38 @@ class OpenEmisBehavior extends Behavior {
         // end deprecated
 
         $this->attachEntityInfoToToolBar($extra);
+
+        $access = $model->AccessControl;
+        $toolbarButtons = $extra['toolbarButtons'];
+        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
+            if (array_key_exists('url', $buttons)) {
+                if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
+                    $toolbarButtons->offsetUnset($key);
+                }
+            }
+        }
+
+        $indexButtons = $extra['indexButtons'];
+        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
+            if ($buttons['url'] != '#' && array_key_exists('url', $buttons)) {
+                if (!$access->check($buttons['url'])) {
+                    $indexButtons->offsetUnset($key);
+                }
+            }
+        }
+
+        $extra['toolbarButtons'] = $toolbarButtons;
+        $extra['indexButtons'] = $indexButtons;
+
+        if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
+            $model->controller->set('reorder', true);
+        }
+
         if ($extra->offsetExists('indexButtons')) {
             $model->controller->set('indexButtons', $extra['indexButtons']);
+        }
+        if ($extra['toolbarButtons']->offsetExists('back')) {
+            $model->controller->set('backButton', $extra['toolbarButtons']['back']);
         }
     }
 
@@ -129,11 +160,23 @@ class OpenEmisBehavior extends Behavior {
                     }
                 }
             }
+
+            $actions = ['index', 'add', 'edit', 'remove'];
+            $disabledActions = [];
+            foreach ($toolbarButtons as $action => $attr) {
+                if (in_array($action, $actions) && !$model->actions($action)) {
+                    $disabledActions[] = $action;
+                }
+            }
+            foreach ($disabledActions as $action) {
+                $toolbarButtons->offsetUnset($action);
+            }
             $model->controller->set('toolbarButtons', $toolbarButtons);
         }
     }
 
-    public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
+    public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+    {
         if ($resultSet->count() == 0) {
             $this->_table->Alert->info('general.noData');
         }
@@ -305,6 +348,7 @@ class OpenEmisBehavior extends Behavior {
                 }
             }
 
+
         } else if ($action == 'transfer' || ($action == 'remove' && $model->actions('remove') == 'restrict')) {
             $toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
             $toolbarButtons['back']['type'] = 'button';
@@ -336,34 +380,14 @@ class OpenEmisBehavior extends Behavior {
             $indexButtons['remove']['attr'] = $indexAttr;
         }
 
-        if ($toolbarButtons->offsetExists('back')) {
-            $controller->set('backButton', $toolbarButtons['back']);
-        }
-
-        $access = $model->AccessControl;
-        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
-                    unset($toolbarButtons[$key]);
-                }
-            }
-        }
-        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
-                    unset($indexButtons[$key]);
-                }
-            }
-        }
-
-        if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
-            $controller->set('reorder', true);
-        }
-
         $extra['toolbarButtons'] = $toolbarButtons;
         $extra['indexButtons'] = $indexButtons;
 
         // entity information will be attached to toolbar in afterAction()
         // refer to attachEntityInfoToToolBar() in afterAction()
+    }
+
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 }

@@ -201,6 +201,7 @@ class AccessControlComponent extends Component {
 		if ($superAdmin) {
 			return true;
 		}
+
 		// we only need controller and action
 		foreach ($url as $i => $val) {
 			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val)) {
@@ -210,21 +211,48 @@ class AccessControlComponent extends Component {
 		// Log::write('debug', $url);
 
 		if (empty($url)) {
-			$url = [$this->controller->name, $this->action];
+			$url = ['controller' => $this->controller->name, 'action' => $this->action];
+		} else {
+			if (!array_key_exists('controller', $url)) {
+				$url['controller'] = $this->controller->name;
+			}
 		}
-
 		$url = $this->checkAccessMap($url);
-
-		// check if the action is excluded from permissions checking
-		$action = next($url);
-		$controller = reset($url);
-		if ($this->isIgnored($controller, $action)) {
-			return true;
+		$checkUrl = [];
+		if (array_key_exists('0', $url) && array_key_exists('1', $url) && array_key_exists('2', $url)) {
+			$url['controller'] = $url[0];
+			$url['action'] = $url[1];
+			$url[0] = $url[2];
+			unset($url[1]);
+			unset($url[2]);
+		} else if (array_key_exists('0', $url) && array_key_exists('1', $url)) {
+			$url['controller'] = $url[0];
+			$url['action'] = $url[1];
+			unset($url[0]);
+			unset($url[1]);
 		}
 
+		if (array_key_exists('controller', $url)) {
+			$checkUrl[] = $url['controller'];
+			unset($url['controller']);
+		}
+		if (array_key_exists('action', $url)) {
+			$checkUrl[] = $url['action'];
+			unset($url['action']);
+		}
+		$controller = $checkUrl[0];
+		$action = $checkUrl[1];
+		$url = array_merge($checkUrl, $url);
 		$url = array_merge(['Permissions'], $url);
 		$permissionKey = implode('.', $url);
-		// pr($permissionKey);
+		// Log::write('debug', $permissionKey);
+
+		if ($controller == $this->controller->name) {
+			$event = $this->controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
+	    	if ($event->result == true) {
+	    		return true;
+	    	}
+		}
 
 		if ($this->Session->check($permissionKey)) {
 			if (!empty($roleIds)) {
@@ -287,31 +315,6 @@ class AccessControlComponent extends Component {
 		return $superAdmin == 1;
 	}
 
-	// determines whether the action is required for access control checking
-	public function isIgnored($controller, $action) {
-		$ignoreList = $this->config('ignoreList');
-		$ignored = false;
-
-		if (array_key_exists($controller, $ignoreList)) {
-			if (!empty($ignoreList[$controller])) {
-				$actions = $ignoreList[$controller];
-				if (in_array($action, $actions)) {
-					$ignored = true;
-				}
-			} else {
-				$ignored = true;
-			}
-		} else {
-			$event = new Event('Controller.AccessControl.checkIgnoreActions', $this, [$controller, $action]);
-            $event = $this->controller->eventManager()->dispatch($event);
-            if ($event->result) {
-            	$ignored = $event->result;
-            }
-		}
-
-		return $ignored;
-	}
-
 	public function getRolesByUser($userId = null) {
 		if (is_null($userId)) {
 			$userId = $this->Auth->user('id');
@@ -329,6 +332,17 @@ class AccessControlComponent extends Component {
 	}
 
 	public function getInstitutionsByUser($userId = null) {
+		$institutionIds = [];
+
+		if (is_null($userId)) {
+			$userId = $this->Auth->user('id');
+		}
+
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
+
+		return $institutionIds;
+		/*
 		if (is_null($userId)) {
 			$userId = $this->Auth->user('id');
 		}
@@ -364,6 +378,7 @@ class AccessControlComponent extends Component {
 		} else {
 			return [];
 		}
+		*/
 	}
 
 	public function getAreasByUser($userId = null) {

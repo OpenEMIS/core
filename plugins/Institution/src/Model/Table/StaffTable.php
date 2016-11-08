@@ -83,7 +83,7 @@ class StaffTable extends AppTable {
 		 * If no "belongsTo" relation from the main model is needed, include its foreign key name in AdvanceSearch->exclude options.
 		 */
         $advancedSearchFieldOrder = [
-            'first_name', 'middle_name', 'third_name', 'last_name', 
+            'first_name', 'middle_name', 'third_name', 'last_name',
             'contact_number', 'identity_type', 'identity_number'
         ];
 
@@ -184,7 +184,7 @@ class StaffTable extends AppTable {
 		$fields->exchangeArray($newFields);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields['staff_id']['order'] = 5;
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
@@ -401,7 +401,14 @@ class StaffTable extends AppTable {
 	// IMPORTANT: when editing this method, need to consider impact on removeInactiveStaffSecurityRole()
 	public function removeStaffRole($staffEntity) {
 		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-		$affectedRows = $SecurityGroupUsersTable->deleteAll([$SecurityGroupUsersTable->primaryKey() => $staffEntity->security_group_user_id]);
+		$securityGroupUserResults = $SecurityGroupUsersTable->find()->where([$SecurityGroupUsersTable->aliasField('id') => $staffEntity->security_group_user_id])->all();
+
+		$affectedRows = 0;
+		if (!$securityGroupUserResults->isEmpty()) {
+			$affectedRows = $securityGroupUserResults->count();
+			$deleteEntity = $securityGroupUserResults->first();
+			$SecurityGroupUsersTable->delete($deleteEntity);
+		}
 		$this->updateSecurityGroupUserId($staffEntity, NULL);
 
 		if ($affectedRows) {
@@ -1106,6 +1113,12 @@ class StaffTable extends AppTable {
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		$broadcaster = $this;
+		$listeners = [
+            TableRegistry::get('Institution.StaffLeave')	// Staff Leave associated to institution must be deleted.
+        ];
+        $this->dispatchEventToModels('Model.InstitutionStaff.afterDelete', [$entity], $broadcaster, $listeners);
+
 		// note that $this->table('institution_staff');
 		$id = $entity->id;
 		$institutionId = $entity->institution_id;
@@ -1274,7 +1287,7 @@ class StaffTable extends AppTable {
 				'count' => $InstitutionRecords->func()->count('DISTINCT staff_id'),
 				'gender' => 'Genders.name'
 			])
-			->group('gender_id');
+			->group('Users.gender_id');
 
 		// Creating the data set
 		$dataSet = [];
@@ -1497,15 +1510,17 @@ class StaffTable extends AppTable {
         return $query;
     }
 
-	public function removeInactiveStaffSecurityRole() {
+	public function removeInactiveStaffSecurityRole()
+	{
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
 		$StaffTable = $this;
-		while(true) {
+		while (true) {
 			$query = $this->find()
 				->where([
 					$this->aliasField('security_group_user_id IS NOT NULL'),
-					$this->aliasField('end_date IS NOT NULL')
+					$this->aliasField('end_date IS NOT NULL'),
+					$this->aliasField('staff_status_id') => $this->assigned
 				])
 				->where(
 					function ($exp) use ($StaffTable) {
@@ -1529,7 +1544,8 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function removeIndividualStaffSecurityRole($staffId) {
+	public function removeIndividualStaffSecurityRole($staffId)
+	{
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		$StaffTable = $this;
 		$institutionStaffRecords = $this->find()
