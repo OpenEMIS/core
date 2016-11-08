@@ -274,7 +274,6 @@ class WorkflowActionsTable extends AppTable {
 
 			$eventOptions = $this->getEvents($selectedWorkflow, true);
 			$attr['attr']['eventOptions'] = $eventOptions;
-
 			$eventSelectOptions = $this->getEvents($selectedWorkflow, true);
 
 			$selectedEventKeys = [];
