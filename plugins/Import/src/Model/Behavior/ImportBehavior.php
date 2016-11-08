@@ -30,11 +30,11 @@ use PHPExcel_Worksheet;
  * This behavior could not be attached to a table file that loads ExportBehavior as well. Currently, there is a conflict
  * since both ImportBehavior and ExcelBehavior uses EventTrait.
  *
- * 
+ *
  * Usage:
  * - create a table file in a plugin and define its table as `import_mapping`.
  * - in the table file initialize function, add this behavior using one of the following ways
- * 
+ *
  * #1
  * `
  * $this->addBehavior('Import.Import');
@@ -49,12 +49,12 @@ use PHPExcel_Worksheet;
  * `
  * - ImportBehavior will acknowledge the plugin name and model name as defined above
  *
- * 
+ *
  * Default Configuration:
  * - Maximum size of uploaded is set to 512KB as PhpExcel class will not be able to handle files which are too large due to
- * php.ini setting on memory_limit. the size of 512KB will eventually becomes close to tripled when the file was 
+ * php.ini setting on memory_limit. the size of 512KB will eventually becomes close to tripled when the file was
  * passed to PhpExcel to read it.
- * 
+ *
  * @author  hanafi <hanafi.ahmat@kordit.com>
  */
 class ImportBehavior extends Behavior {
@@ -70,7 +70,7 @@ class ImportBehavior extends Behavior {
 
     protected $labels = [];
     protected $directTables = [];
-    
+
     protected $_defaultConfig = [
         'plugin' => '',
         'model' => '',
@@ -123,7 +123,7 @@ class ImportBehavior extends Behavior {
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
     }
-    
+
 
 /******************************************************************************************************************
 **
@@ -210,12 +210,12 @@ class ImportBehavior extends Behavior {
     }
 
     /**
-     * addBeforePatch turns off the validation when patching entity with post data, and check the uploaded file size. 
+     * addBeforePatch turns off the validation when patching entity with post data, and check the uploaded file size.
      * @param Event       $event   [description]
      * @param Entity      $entity  [description]
      * @param ArrayObject $data    [description]
      * @param ArrayObject $options [description]
-     * 
+     *
      * Refer to phpFileUploadErrors below for the list of file upload errors defination.
      */
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -227,7 +227,7 @@ class ImportBehavior extends Behavior {
         if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->file_upload_max_size()) {
             $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
             $options['validate'] = true;
-        } 
+        }
         if ($event->subject()->request->env('CONTENT_LENGTH') >= $this->post_upload_max_size()) {
             $entity->errors('select_file', [$this->getExcelLabel('Import', 'over_max')], true);
             $options['validate'] = true;
@@ -263,14 +263,14 @@ class ImportBehavior extends Behavior {
         foreach ($supportedFormats as $eachformat) {
             if (in_array($fileFormat, $eachformat)) {
                 $formatFound = true;
-            } 
+            }
         }
         if (!$formatFound) {
             if (!empty($fileFormat)) {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
                 $options['validate'] = true;
             }
-        }               
+        }
 
         $fileExt = $fileObj['name'];
         $fileExt = explode('.', $fileExt);
@@ -280,14 +280,14 @@ class ImportBehavior extends Behavior {
                 $entity->errors('select_file', [$this->getExcelLabel('Import', 'not_supported_format')], true);
                 $options['validate'] = true;
             }
-        } 
+        }
 
     }
 
     /**
      * Actual Import business logics reside in this function
      * @param  Event        $event  Event object
-     * @param  Entity       $entity Entity object containing the uploaded file parameters 
+     * @param  Entity       $entity Entity object containing the uploaded file parameters
      * @param  ArrayObject  $data   Event object
      * @return Response             Response object
      */
@@ -318,7 +318,7 @@ class ImportBehavior extends Behavior {
             $totalColumns = count($columns);
             $lookup = $this->getCodesByMapping($mapping);
 
-            $fileObj = $entity->select_file;        
+            $fileObj = $entity->select_file;
             $uploadedName = $fileObj['name'];
             $uploaded = $fileObj['tmp_name'];
             $objPHPExcel = $controller->PhpExcel->loadWorksheet($uploaded);
@@ -359,21 +359,21 @@ class ImportBehavior extends Behavior {
                         break;
                     }
                 }
-                
+
                 // check for unique record
                 $tempRow = new ArrayObject;
                 $rowInvalidCodeCols = new ArrayObject;
                 $params = [$sheet, $row, $columns, $tempRow, $importedUniqueCodes, $rowInvalidCodeCols];
                 $this->dispatchEvent($this->_table, $this->eventKey('onImportCheckUnique'), 'onImportCheckUnique', $params);
-        
+
                 // for each columns
                 $references = [
-                    'sheet'=>$sheet, 
-                    'mapping'=>$mapping, 
-                    'columns'=>$columns, 
+                    'sheet'=>$sheet,
+                    'mapping'=>$mapping,
+                    'columns'=>$columns,
                     'lookup'=>$lookup,
-                    'totalColumns'=>$totalColumns, 
-                    'row'=>$row, 
+                    'totalColumns'=>$totalColumns,
+                    'row'=>$row,
                     'activeModel'=>$activeModel,
                     'systemDateFormat'=>$systemDateFormat,
                 ];
@@ -476,7 +476,7 @@ class ImportBehavior extends Behavior {
             ];
             $session->write($this->sessionKey, $completedData);
             return $model->controller->redirect($this->_table->ControllerAction->url('results'));
-        
+
         };
     }
 
@@ -490,7 +490,7 @@ class ImportBehavior extends Behavior {
         $folder = $this->prepareDownload();
         $modelName = $this->config('model');
         $modelName = str_replace(' ', '_', Inflector::humanize(Inflector::tableize($modelName)));
-        // Do not lcalize file name as certain non-latin characters might cause issue 
+        // Do not lcalize file name as certain non-latin characters might cause issue
         $excelFile = sprintf('OpenEMIS_Core_Import_%s_Template.xlsx', $modelName);
         $excelPath = $folder . DS . $excelFile;
 
@@ -656,7 +656,7 @@ class ImportBehavior extends Behavior {
         $sheetName = __('References');
         $objPHPExcel->createSheet(1);
         $objPHPExcel->setActiveSheetIndex(1);
-        
+
         $this->beginExcelHeaderStyling( $objPHPExcel, $sheetName, 3 );
 
         $objPHPExcel->getActiveSheet()->getRowDimension(3)->setRowHeight(25);
@@ -691,7 +691,7 @@ class ImportBehavior extends Behavior {
                     $objPHPExcel->getActiveSheet()->getColumnDimension( $alpha )->setAutoSize(true);
                 }
             }
-        
+
             if (count($modelData)>1 && !array_key_exists('noDropDownList', $modelArr)) {
                 $lookupColumn = $firstColumn + intval($modelArr['lookupColumn']) - 1;
                 $alpha = $this->getExcelColumnAlpha( $columnOrder - 1 );
@@ -725,7 +725,7 @@ class ImportBehavior extends Behavior {
      */
     private function _getReorderedEntityArray( Entity $entity, Array $columns, ArrayObject $originalRow, $systemDateFormat ) {
         $array = [];
-        foreach ($columns as $col=>$property) {            
+        foreach ($columns as $col=>$property) {
             /*
             //if value in datetime format, then format it according to the systemDateFormat
             $value = ( $entity->$property instanceof DateTimeInterface ) ? $entity->$property->format( $systemDateFormat ) : $originalRow[$col];
@@ -739,7 +739,7 @@ class ImportBehavior extends Behavior {
     private function _generateDownloadableFile( $data, $type, $header, $systemDateFormat ) {
         if (!empty($data)) {
             $downloadFolder = $this->prepareDownload();
-            // Do not lcalize file name as certain non-latin characters might cause issue 
+            // Do not lcalize file name as certain non-latin characters might cause issue
             $excelFile = sprintf( 'OpenEMIS_Core_Import_%s_%s_%s.xlsx', $this->config('model'), ucwords($type), time() );
             $excelPath = $downloadFolder . DS . $excelFile;
 
@@ -777,7 +777,7 @@ class ImportBehavior extends Behavior {
             if ($type == 'failed') {
                 $this->setCodesDataTemplate( $objPHPExcel );
             }
-            
+
             $objPHPExcel->setActiveSheetIndex(0);
             $objWriter = new \PHPExcel_Writer_Excel2007($objPHPExcel);
             $objWriter->save($excelPath);
@@ -811,7 +811,7 @@ class ImportBehavior extends Behavior {
         if ($column_number === 'last') {
             $column_number = count($alpha) - 1;
         }
-        return $alpha[$column_number];      
+        return $alpha[$column_number];
     }
 
     /**
@@ -834,7 +834,7 @@ class ImportBehavior extends Behavior {
         }
         return in_array(true, $cellsState);
     }
-    
+
     /**
      * Check if the uploaded file is the correct template by comparing the headers extracted from mapping table
      * and first row of the uploaded file record
@@ -852,7 +852,7 @@ class ImportBehavior extends Behavior {
         }
         return $header === $cellsValue;
     }
-    
+
     public function getMapping() {
         $model = $this->_table;
         $mapping = $model->find('all')
@@ -863,13 +863,13 @@ class ImportBehavior extends Behavior {
             ->toArray();
         return $mapping;
     }
-    
+
     protected function getHeader($mapping=[]) {
         $model = $this->_table;
         if (empty($mapping)) {
             $mapping = $this->getMapping($model);
         }
-        
+
         $header = [];
         foreach ($mapping as $key => $value) {
             if ($value->foreign_key == self::CUSTOM) { //custom then need check the default value.
@@ -910,13 +910,13 @@ class ImportBehavior extends Behavior {
         }
         return $header;
     }
-    
+
     protected function getColumns($mapping=[]) {
         $columns = [];
         if (empty($mapping)) {
             $mapping = $this->getMapping($model);
         }
-        
+
         foreach($mapping as $key => $value) {
             $column = $value->column_name;
             $columns[] = $column;
@@ -924,7 +924,7 @@ class ImportBehavior extends Behavior {
 
         return $columns;
     }
-    
+
     protected function getCodesByMapping($mapping) {
         $lookup = [];
         foreach ($mapping as $key => $obj) {
@@ -960,7 +960,7 @@ class ImportBehavior extends Behavior {
                 }
             }
         }
-        
+
         return $lookup;
     }
 
@@ -973,19 +973,19 @@ class ImportBehavior extends Behavior {
             ->order($model->aliasField('order'))
             ->toArray()
             ;
-        
+
         $data = new ArrayObject;
         foreach($mapping as $row) {
             $foreignKey = $row->foreign_key;
             $lookupPlugin = $row->lookup_plugin;
             $lookupModel = $row->lookup_model;
             $lookupColumn = $row->lookup_column;
-            
+
             $translatedCol = $this->getExcelLabel($model, $lookupColumn);
 
             $sheetName = trim($this->getExcelLabel($row->model, $row->column_name));
             $data[$row->order] = [
-                'data'=>[], 
+                'data'=>[],
                 'sheetName'=>$sheetName
             ];
             $modelData = [];
@@ -1022,7 +1022,7 @@ class ImportBehavior extends Behavior {
         }
         return $data;
     }
-    
+
     public function prepareDownload() {
         $folder = WWW_ROOT . $this->rootFolder;
         if (!file_exists($folder)) {
@@ -1047,15 +1047,15 @@ class ImportBehavior extends Behavior {
                 }
             }
         }
-        
+
         return $folder;
     }
-    
+
     public function performDownload($excelFile) {
         $folder = WWW_ROOT . $this->rootFolder;
         $excelPath = $folder . DS . $excelFile;
         $filename = basename($excelPath);
-        
+
         header("Pragma: public", true);
         header("Expires: 0"); // set expiration time
         header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
@@ -1102,8 +1102,8 @@ class ImportBehavior extends Behavior {
      * Extract the values in every columns
      * @param  array        $references         the variables/arrays in this array are for references
      * @param  ArrayObject  $tempRow            for holding converted values extracted from the excel sheet on a per row basis
-     * @param  ArrayObject  $originalRow        for holding the original value extracted from the excel sheet on a per row basis 
-     * @param  ArrayObject  $rowInvalidCodeCols for holding error messages found on option field columns 
+     * @param  ArrayObject  $originalRow        for holding the original value extracted from the excel sheet on a per row basis
+     * @param  ArrayObject  $rowInvalidCodeCols for holding error messages found on option field columns
      * @return boolean                          returns whether the row being checked pass option field columns check
      */
     protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
@@ -1139,7 +1139,7 @@ class ImportBehavior extends Behavior {
             $columnName = $columns[$col];
             $originalRow[$col] = $originalValue;
             $val = $cellValue;
-            
+
             // skip a record column which has value defined earlier before this function is called
             // example; openemis_no
             // but if the value is 0, it will still proceed
@@ -1154,7 +1154,7 @@ class ImportBehavior extends Behavior {
                         // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
                         $val = date('d/m/Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
                     }
-                    
+
                     // converts val to Date object so that this field will pass 'validDate' check since
                     // different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
                     // so it is best to convert the date here instead of adjusting individual model's date validation format
@@ -1258,6 +1258,21 @@ class ImportBehavior extends Behavior {
                 $tempRow[$columnName] = $val;
             }
         }
+
+        // add condition to check if its importing institutions
+        $plugin = $this->config('plugin');
+        $model = $this->config('model');
+
+        if ($plugin == 'Institution' && $model == 'Institutions') {
+            // if its importing institution will get the userId and super_admin from the session and add the userId and Super_admin to the extracted data.
+            $session = $this->_table->Session;
+            $userId = $session->read('Auth.User.id');
+            $superAdmin = $session->read('Auth.User.super_admin');
+
+            $tempRow['userId'] = $userId;
+            $tempRow['superAdmin'] = $superAdmin;
+        }
+
         if ($rowPass) {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
             $rowPass = $rowPassEvent->result;
@@ -1291,7 +1306,7 @@ class ImportBehavior extends Behavior {
         return $period->toArray();
     }
 
-    public function getAcademicPeriodLevel($academicPeriodId) 
+    public function getAcademicPeriodLevel($academicPeriodId)
     {
         if (empty($academicPeriodId)) {
             return false;
@@ -1326,7 +1341,7 @@ class ImportBehavior extends Behavior {
             // If upload_max_size is less, then reduce. Except if upload_max_size is
             // zero, which indicates no limit.
             $upload_max = $this->upload_max_filesize();
-            
+
             if ($upload_max > 0 && $upload_max < $max_size) {
                 $max_size = $upload_max;
             }
@@ -1345,7 +1360,7 @@ class ImportBehavior extends Behavior {
         }
     }
     /**
-     * 
+     *
      */
 
     protected function post_upload_max_size() {
