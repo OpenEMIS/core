@@ -102,48 +102,55 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
-    public static function checkAuthorisedArea($check, $superAdmin, $userId, array $globalData) {
-        $isValid = false;
-        if ($superAdmin == 1) {
-        	$isValid = true;
-        } else {
-        	$data = $globalData['data'];
-        	$isSystemGroup = false;
-        	if (!$globalData['newRecord']) { // only applicable for edit mode
-        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
-	        		$isSystemGroup = true;
-	        	}
-        	}
+    public static function checkAuthorisedArea($check, array $globalData)
+    {
+    	$data = $globalData['data'];
+    	$isValid = false;
 
-        	$condition = [];
-        	$areaCondition = [];
+    	if (array_key_exists('superAdmin', $data) && array_key_exists('userId', $data)) {
+    		$superAdmin = $globalData['data']['superAdmin'];
+    		$userId = $globalData['data']['userId'];
 
-        	if (!$isSystemGroup) {
-        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-	        	$Areas = TableRegistry::get('Area.Areas');
-	        	// get areas from security group areas
-	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
-
-	        	if (count($areasByUser) > 0) {
-					foreach($areasByUser as $area) {
-		        		$areaCondition[] = [
-							$Areas->aliasField('lft').' >= ' => $area['lft'],
-							$Areas->aliasField('rght').' <= ' => $area['rght']
-						];
+    		if ($superAdmin == 1) {
+	        	$isValid = true;
+	        } else {
+	        	$isSystemGroup = false;
+	        	if (!$globalData['newRecord']) { // only applicable for edit mode
+	        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
+		        		$isSystemGroup = true;
 		        	}
-		        	$condition['OR'] = $areaCondition;
+	        	}
 
-					$isChild = $Areas->find()
-			        	->where([$Areas->aliasField('id') => $check])
-			        	->where($condition)
-			        	->count();
+	        	$condition = [];
+	        	$areaCondition = [];
 
-			        $isValid = $isChild > 0;
-				}
-        	} else {
-        		$isValid = true;
-        	}
-        }
+	        	if (!$isSystemGroup) {
+	        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		        	$Areas = TableRegistry::get('Area.Areas');
+		        	// get areas from security group areas
+		        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
+
+		        	if (count($areasByUser) > 0) {
+						foreach($areasByUser as $area) {
+			        		$areaCondition[] = [
+								$Areas->aliasField('lft').' >= ' => $area['lft'],
+								$Areas->aliasField('rght').' <= ' => $area['rght']
+							];
+			        	}
+			        	$condition['OR'] = $areaCondition;
+
+						$isChild = $Areas->find()
+				        	->where([$Areas->aliasField('id') => $check])
+				        	->where($condition)
+				        	->count();
+
+				        $isValid = $isChild > 0;
+					}
+	        	} else {
+	        		$isValid = true;
+	        	}
+	        }
+    	}
         return $isValid;
     }
 

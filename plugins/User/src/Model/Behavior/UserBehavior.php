@@ -50,7 +50,7 @@ class UserBehavior extends Behavior {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 0];
         $events['ControllerAction.Model.index.beforePaginate'] = ['callable' => 'indexBeforePaginate', 'priority' => 0];
-        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 50];
+        $events['ControllerAction.Model.index.afterAction'] = ['callable' => 'indexAfterAction', 'priority' => 50];
         $events['ControllerAction.Model.add.beforeAction'] = ['callable' => 'addBeforeAction', 'priority' => 0];
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 0];
         $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch', 'priority' => 50];
@@ -88,10 +88,8 @@ class UserBehavior extends Behavior {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event) {
-        $this->_table->fields['is_student']['type'] = 'hidden';
-        $this->_table->fields['is_staff']['type'] = 'hidden';
-        $this->_table->fields['is_guardian']['type'] = 'hidden';
+    public function beforeAction(Event $event)
+    {
         switch ($this->_table->table()) {
             case 'institution_students':
             case 'institution_staff':
@@ -104,6 +102,9 @@ class UserBehavior extends Behavior {
         }
         if ($this->_table->table() == 'security_users') {
             $this->_table->addBehavior('OpenEmis.Section');
+            $this->_table->fields['is_student']['type'] = 'hidden';
+            $this->_table->fields['is_staff']['type'] = 'hidden';
+            $this->_table->fields['is_guardian']['type'] = 'hidden';
             $this->_table->fields['photo_name']['visible'] = false;
             $this->_table->fields['super_admin']['visible'] = false;
             $this->_table->fields['date_of_death']['visible'] = false;
@@ -195,7 +196,8 @@ class UserBehavior extends Behavior {
         $this->_table->fields['is_guardian']['value'] = 0;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+    public function indexAfterAction(Event $event)
+    {
         $plugin = $this->_table->controller->plugin;
         $name = $this->_table->controller->name;
 
@@ -213,8 +215,9 @@ class UserBehavior extends Behavior {
 
                 $tableClass = get_class($this->_table);
                 $userType = $tableClass::OTHER;
-                if (isset($this->_table->request->query['user_type'])) {
-                    $userType = $this->_table->request->query['user_type'];
+                $session = $this->_table->request->session();
+                if ($session->check('Directories.advanceSearch.belongsTo.user_type')) {
+                    $userType = $session->read('Directories.advanceSearch.belongsTo.user_type');
                 }
                 if ($userType == $tableClass::STUDENT) {
                     $imageDefault = 'kd-students';
