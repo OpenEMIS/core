@@ -815,19 +815,19 @@ class ValidationBehavior extends Behavior {
 
 	        if ($excludeFirstDay) {
 	        	$withFirstDay = Time::parse($periodObj->start_date);
-	        	$startDate = $withFirstDay->modify('+1 day')->format('Y-m-d');
+	        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
 	        } else {
-	        	$startDate = $periodObj->start_date->format('Y-m-d');
+	        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
 	        }
 
 	        if ($excludeLastDay) {
 	        	$withLastDay = Time::parse($periodObj->end_date);
-	        	$endDate = $withLastDay->modify('-1 day')->format('Y-m-d');
+	        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
 	        } else {
-	        	$endDate = $periodObj->end_date->format('Y-m-d');
+	        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
 	        }
 
-	        $checkDate = Time::parse($field)->format('Y-m-d');
+	        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
 
 	        return ($checkDate >= $startDate && $checkDate <= $endDate);
 		}
