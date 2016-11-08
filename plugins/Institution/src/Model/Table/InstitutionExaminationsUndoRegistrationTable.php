@@ -60,9 +60,11 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
+        $this->field('total_mark', ['visible' => false]);
+        $this->field('registration_number', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'capacity', 'special_needs', 'institution_class_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_class_id', 'student_id'
         ]);
     }
 
