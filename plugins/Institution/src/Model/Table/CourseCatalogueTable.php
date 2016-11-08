@@ -226,8 +226,8 @@ class CourseCatalogueTable extends ControllerActionTable
                     $rowData = [];
                     $rowData[] = $trainingSession->code;
                     $rowData[] = $trainingSession->name;
-                    $rowData[] = $trainingSession->start_date;
-                    $rowData[] = $trainingSession->end_date;
+                    $rowData[] = $this->formatDate($trainingSession->start_date);
+                    $rowData[] = $this->formatDate($trainingSession->end_date);
 
                     $existingApplication = $StaffTrainingApplications->find()
                         ->where([
