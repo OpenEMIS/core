@@ -17,6 +17,9 @@ class ExaminationItemsTable extends AppTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationGradingTypes', ['className' => 'Examination.ExaminationGradingTypes']);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['index']
+        ]);
     }
 
     public function validationDefault(Validator $validator)

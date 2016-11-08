@@ -36,6 +36,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
 
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
+        KdOrmSvc.controllerAction('ExamResults');
         KdOrmSvc.init(models);
     };
 
@@ -127,6 +128,12 @@ function getColumnDefs(action, subject, _results) {
             columnDefs.push({
                 headerName: "institution id",
                 field: "institution_id",
+                hide: true,
+                filterParams: filterParams
+            });
+            columnDefs.push({
+                headerName: "education grade id",
+                field: "education_grade_id",
                 hide: true,
                 filterParams: filterParams
             });
@@ -347,13 +354,11 @@ function getColumnDefs(action, subject, _results) {
                 if (angular.isObject(subjectStudents) && subjectStudents.length > 0) {
                     var studentId = null;
                     var currentStudentId = null;
-                    var institutionId = null;
                     var studentResults = {};
                     var rowData = [];
 
                     angular.forEach(subjectStudents, function(subjectStudent, key) {
                         currentStudentId = parseInt(subjectStudent.student_id);
-                        institutionId = parseInt(subjectStudent.institution_id);
 
                         if (studentId != currentStudentId) {
                             if (studentId != null) {
@@ -364,16 +369,18 @@ function getColumnDefs(action, subject, _results) {
                                 openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                 name: subjectStudent._matchingData.Users.name,
                                 student_id: currentStudentId,
-                                institution_id: institutionId,
+                                institution_id: subjectStudent.institution_id,
+                                education_grade_id: subjectStudent.education_grade_id,
                                 mark: '',
-                                weight: itemWeight,
-                                total_mark: 0
+                                weight: 0,
+                                total_mark: subjectStudent.total_mark
                             };
 
                             studentId = currentStudentId;
                         }
 
                         if (isMarksType) {
+                            studentResults['weight'] = itemWeight;
                             var marks = parseFloat(subjectStudent.ExaminationItemResults.marks);
                             if (!isNaN(marks)) {
                                 studentResults['mark'] = marks;
@@ -443,6 +450,7 @@ function getColumnDefs(action, subject, _results) {
     function saveRowData(results, subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
         var promises = [];
 
+        console.log();
         angular.forEach(results, function(result, studentId) {
             angular.forEach(result, function(obj, institutionId) {
                 var resultType = subject.examination_grading_type.result_type;
@@ -481,7 +489,7 @@ function getColumnDefs(action, subject, _results) {
         return $q.all(promises);
     };
 
-    function saveTotal(row, studentId, institutionId, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
+    function saveTotal(row, studentId, institutionId, educationGradeId, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
         var totalMark = this.calculateTotal(row);
         totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
 
@@ -489,6 +497,7 @@ function getColumnDefs(action, subject, _results) {
             "total_mark" : totalMark,
             "student_id" : studentId,
             "institution_id" : institutionId,
+            "education_grade_id" : educationGradeId,
             "academic_period_id" : academicPeriodId,
             "examination_id" : examinationId,
             "examination_centre_id" : examinationCentreId,

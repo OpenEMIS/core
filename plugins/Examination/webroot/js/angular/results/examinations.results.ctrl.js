@@ -285,7 +285,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             })
             .finally(function() {
                 vm.gridOptions.api.forEachNode(function(row) {
-                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, row.data.institution_id, academicPeriodId, examinationId, examinationCentreId, educationSubjectId);
+                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, row.data.institution_id, row.data.education_grade_id, academicPeriodId, examinationId, examinationCentreId, educationSubjectId);
                 });
 
                 $scope.action = 'view';
