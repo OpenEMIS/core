@@ -36,7 +36,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_centre_id', 'student_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_centre_id', 'education_subject_id']]],
                 'provider' => 'table'
             ]);
     }
@@ -59,14 +59,15 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->field('special_needs_required', ['type' => 'chosenSelect', 'onChangeReload' => true]);
 
         $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true]);
-        $this->field('available_capacity', ['type' => 'readonly']);
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
+        $this->field('total_mark', ['visible' => false]);
+        $this->field('registration_number', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'available_capacity', 'special_needs', 'institution_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_id', 'student_id'
         ]);
     }
 
@@ -199,23 +200,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldAvailableCapacity(Event $event, array $attr, $action, $request) {
-        $capacity = '';
-
-        if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
-            $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
-            $examinationCentres = $this->ExaminationCentres
-                ->get($examinationCentreId)
-                ->toArray();
-
-            $capacity = $examinationCentres['total_capacity'] - $examinationCentres['total_registered'];
-            $attr['attr']['value'] = $capacity;
-            $attr['value'] = $capacity;
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request) {
         $specialNeeds = [];
 
@@ -338,11 +322,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['id'] = Text::uuid();
                             $obj['education_subject_id'] = $subject;
-                            $newEntity = $model->newEntity($obj);
-                            $newEntities[] = $newEntity;
-                            if ($newEntity->errors('registration_number')) {
-                                $entity->errors("examination_students", [$key => ['registration_number' => $newEntity->errors('registration_number')]]);
-                            }
+                            $newEntities[] = $obj;
                         }
                     }
                 }
@@ -351,11 +331,19 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     $entity->errors('student_id', __('There are no students selected'));
                 }
 
-                if ($model->saveMany($newEntities)) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return $this->connection()->transactional(function() use ($newEntities, $entity) {
+                    $return = true;
+                    foreach ($newEntities as $newEntity) {
+                        $examCentreStudentEntity = $this->newEntity($newEntity);
+                        if ($examCentreStudentEntity->errors('registration_number')) {
+                            $entity->errors("examination_students", [$key => ['registration_number' => $newEntity->errors('registration_number')]]);
+                        }
+                        if (!$this->save($examCentreStudentEntity)) {
+                            $return = false;
+                        }
+                    }
+                    return $return;
+                });
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
                 $entity->errors('student_id', __('There are no students selected'));
