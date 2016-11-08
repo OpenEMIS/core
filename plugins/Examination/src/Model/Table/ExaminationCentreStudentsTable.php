@@ -10,6 +10,7 @@ use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
+use Cake\Validation\Validator;
 
 class ExaminationCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -28,6 +29,16 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
+    }
+
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->allowEmpty('registration_number')
+            ->add('registration_number', 'ruleUnique', [
+                'rule' => ['validateUnique', ['scope' => ['examination_centre_id', 'student_id', 'education_subject_id']]],
+                'provider' => 'table'
+            ]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
