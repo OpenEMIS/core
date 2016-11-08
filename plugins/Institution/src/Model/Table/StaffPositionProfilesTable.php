@@ -59,6 +59,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
 		$this->addBehavior('Institution.StaffValidation');
+		$this->addBehavior('Workflow.Workflow');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
         ]);
@@ -484,7 +485,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
 
 		$statuses = array_merge($approvedStatus, $closedStatus);
-		
+
 		$staffPositionProfilesRecord = $this->find()
 			->where([
 				$this->aliasField('institution_staff_id') => $staff->id,
