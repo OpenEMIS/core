@@ -7,7 +7,6 @@ use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-// use Cake\I18n\Time;
 use Cake\Log\Log;
 
 use ControllerAction\Model\Traits\EventTrait;
