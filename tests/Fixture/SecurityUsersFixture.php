@@ -186,11 +186,7 @@ class SecurityUsersFixture extends TestFixture
             "address_area_id" => "147",
             "birthplace_area_id" => "147",
             "created" => "1970-01-01 00:00:00",
-<<<<<<< HEAD
-            "created_user_id" => "0",
-=======
             "created_user_id" => "1",
->>>>>>> bf169d102dab38c756956f19539a7862b99464f3
             "date_of_birth" => "2003-01-01",
             "date_of_death" => null,
             "first_name" => "Student2",
