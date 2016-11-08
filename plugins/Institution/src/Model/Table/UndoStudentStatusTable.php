@@ -157,7 +157,7 @@ class UndoStudentStatusTable extends AppTable {
 			$Grades = $this->Grades;
 
 			$periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-			$selectedPeriod = null;
+            $selectedPeriod = null;
 			$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
 				'selectOption' => false,
 				'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
@@ -169,10 +169,11 @@ class UndoStudentStatusTable extends AppTable {
 						->count();
 				}
 			]);
-
-			$attr['options'] = $periodOptions;
-			$attr['onChangeReload'] = 'changePeriod';
-		}
+            
+            $attr['options'] = $periodOptions;
+            $attr['attr']['value'] = $request->query('period');
+            $attr['onChangeReload'] = 'changePeriod';
+        }
 
 		return $attr;
 	}
@@ -221,6 +222,7 @@ class UndoStudentStatusTable extends AppTable {
 			}
 
 			$attr['options'] = $gradeOptions;
+            $attr['attr']['value'] = $request->query('grade');
 			$attr['onChangeReload'] = 'changeGrade';
 		}
 
@@ -315,6 +317,7 @@ class UndoStudentStatusTable extends AppTable {
 			$this->advancedSelectOptions($options, $selectedClass);
 			$request->query['class'] = $selectedClass;
 			$attr['options'] = $options;
+            $attr['attr']['value'] = $request->query('class');
 			$attr['onChangeReload'] = 'changeClass';
 		}
 		return $attr;
@@ -471,9 +474,7 @@ class UndoStudentStatusTable extends AppTable {
 
 	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		$request->query['period'] = -1;
 		$request->query['grade'] = -1;
-		$request->query['status'] = -1;
 		$request->query['class'] = -1;
 
 		if ($request->is(['post', 'put'])) {
@@ -481,10 +482,7 @@ class UndoStudentStatusTable extends AppTable {
 				if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
 					$request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
 				}
-				if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-					$request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
-				}
-				if (array_key_exists('student_status_id', $request->data[$this->alias()])) {
+                if (array_key_exists('student_status_id', $request->data[$this->alias()])) {
 					$request->query['status'] = $request->data[$this->alias()]['student_status_id'];
 				}
 			}
@@ -493,10 +491,6 @@ class UndoStudentStatusTable extends AppTable {
 
 	public function addEditOnChangeClass(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		$request->query['period'] = -1;
-		$request->query['grade'] = -1;
-		$request->query['status'] = -1;
-		$request->query['class'] = -1;
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
@@ -518,8 +512,6 @@ class UndoStudentStatusTable extends AppTable {
 
 	public function addEditOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		$request->query['grade'] = -1;
-		$request->query['status'] = -1;
 		$request->query['class'] = -1;
 
 		if ($request->is(['post', 'put'])) {
@@ -530,13 +522,18 @@ class UndoStudentStatusTable extends AppTable {
 				if (array_key_exists('student_status_id', $request->data[$this->alias()])) {
 					$request->query['status'] = $request->data[$this->alias()]['student_status_id'];
 				}
+                if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
+                    $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
+                }
 			}
 		}
 	}
 
 	public function addEditOnChangeStatus(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		$request = $this->request;
-		$request->query['status'] = -1;
+		$request->query['period'] = -1;
+        $request->query['grade'] = -1;
+        $request->query['class'] = -1;
 
 		if ($request->is(['post', 'put'])) {
 			if (array_key_exists($this->alias(), $request->data)) {
