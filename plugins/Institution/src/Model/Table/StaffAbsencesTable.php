@@ -355,6 +355,7 @@ class StaffAbsencesTable extends ControllerActionTable {
 		$this->field('staff_id', ['type' => 'select']);
 		$absenceTypeOptions = $this->absenceList;
 		$this->field('absence_type_id', [
+			'select' => false,
 			'options' => $this->absenceList
 		]);
 		$fullDayOptions = $this->getSelectOptions('general.yesno');

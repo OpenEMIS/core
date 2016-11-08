@@ -776,7 +776,7 @@ class StaffAttendancesTable extends AppTable {
 				;
 
 			$InstitutionArray = [];
-			
+
 			$queryClone = clone $query;
 			$totalStaff = $queryClone->distinct([$this->aliasField('staff_id')])->count();
 
@@ -959,6 +959,25 @@ class StaffAttendancesTable extends AppTable {
 			$codeAbsenceType = array_flip($this->absenceCodeList);
 			$error = false;
 
+			$configTiming = $StaffAbsences->getConfigTiming();
+
+			$selectedPeriod = $this->request->query['academic_period_id'];
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+				->toArray();
+
+			if (!empty($shiftTime)) {
+				$shiftStartTimeArray = [];
+				$shiftEndTimeArray = [];
+				foreach ($shiftTime as $key => $value) {
+					$shiftStartTimeArray[$key] = $value->start_time;
+					$shiftEndTimeArray[$key] = $value->end_time;
+				}
+			}
+
 			if (array_key_exists($StaffAbsences->Users->alias(), $requestData)) {
 				if (array_key_exists($alias, $requestData[$StaffAbsences->Users->alias()])) {
 					foreach ($requestData[$StaffAbsences->Users->alias()][$alias] as $key => $obj) {
@@ -972,36 +991,19 @@ class StaffAttendancesTable extends AppTable {
 
 							$lateTime = strtotime($obj['late_time']);
 
-							$selectedPeriod = $this->request->query['academic_period_id'];
-							$institutionId = $this->Session->read('Institution.Institutions.id');
-
-							$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
-							$shiftTime = $InstitutionShift
-								->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
-								->toArray();
-
-							if (!empty($shiftTime)) {
-								$shiftStartTimeArray = [];
-								$shiftEndTimeArray = [];
-								foreach ($shiftTime as $key => $value) {
-									$shiftStartTimeArray[$key] = $value->start_time;
-									$shiftEndTimeArray[$key] = $value->end_time;
-								}
-
+							if (!empty($shiftStartTimeArray) && !empty($shiftEndTimeArray)) {
 								$startTime = min($shiftStartTimeArray);
 
 								$startTimestamp = intval(min($shiftStartTimeArray)->toUnixString());
 								$endTimestamp = intval(max($shiftEndTimeArray)->toUnixString());
 							} else {
-								$configTiming = $StaffAbsences->getConfigTiming();
-
 								$startTime = $configTiming['startTime'];
 
 								$startTimestamp = intval($configTiming['startTime']->toUnixString());
 								$endTimestamp = intval($configTiming['endTime']->toUnixString());
 							}
 
-							$obj['start_time'] = $startTime;
+							$obj['start_time'] = $startTime->format('H:i A');
 							$endTime = $obj['late_time'];
 							$obj['end_time'] = $endTime;
 
@@ -1013,6 +1015,9 @@ class StaffAttendancesTable extends AppTable {
 								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.startTimestamp', $startTimestamp);
 								$this->Session->write($StaffAbsences->Users->alias().'.'.$alias.'.'.$key.'.endTimestamp', $endTimestamp);
 							}
+						} else if ($obj['absence_type_id'] == $codeAbsenceType['EXCUSED']) {
+							$startTime = !empty($shiftStartTimeArray) ? min($shiftStartTimeArray) : $configTiming['startTime'];
+							$obj['start_time'] = $startTime->format('H:i A');
 						}
 
 						if ($obj['absence_type_id'] == self::PRESENT) {
