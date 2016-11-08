@@ -10,7 +10,8 @@ use Cake\Log\Log;
 
 class WorkflowsController extends AppController
 {
-	public function initialize() {
+	public function initialize()
+    {
 		parent::initialize();
 
         $this->ControllerAction->models = [
@@ -22,49 +23,76 @@ class WorkflowsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         parent::beforeFilter($event);
 
+        $hasWorkflowsAccess = $this->AccessControl->check([$this->name, 'Workflows', 'view']);
+        $hasStepsAccess = $this->AccessControl->check([$this->name, 'Steps', 'view']);
+        $hasActionsAccess = $this->AccessControl->check([$this->name, 'Actions', 'view']);
+        $hasStatusesAccess = $this->AccessControl->check([$this->name, 'Statuses', 'view']);
+
         $tabElements = [];
-        if ($this->AccessControl->check([$this->name, 'Workflows', 'view'])) {
+        if ($hasWorkflowsAccess) {
+            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Workflows'];
+            $paramsQuery = $this->paramsQuery(['model']);
+            $url = array_merge($url, $paramsQuery);
+
             $tabElements['Workflows'] = [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Workflows'],
+                'url' => $url,
                 'text' => __('Workflows')
             ];
         }
 
-        if ($this->AccessControl->check([$this->name, 'Steps', 'view'])) {
+        if ($hasStepsAccess) {
+            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Steps'];
+            $paramsQuery = $this->paramsQuery(['model', 'workflow']);
+            $url = array_merge($url, $paramsQuery);
+
             $tabElements['Steps'] = [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Steps'],
+                'url' => $url,
                 'text' => __('Steps')
             ];
+        }
+
+        if ($hasActionsAccess) {
+            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Actions'];
+            $paramsQuery = $this->paramsQuery();
+            $url = array_merge($url, $paramsQuery);
+
             $tabElements['Actions'] = [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Actions'],
+                'url' => $url,
                 'text' => __('Actions')
             ];
         }
 
-        if ($this->AccessControl->check([$this->name, 'Statuses', 'view'])) {
+        if ($hasStatusesAccess) {
+            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Statuses'];
+            $paramsQuery = $this->paramsQuery(['model']);
+            $url = array_merge($url, $paramsQuery);
+
             $tabElements['Statuses'] = [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Statuses'],
+                'url' => $url,
                 'text' => __('Statuses')
             ];
         }
 
         $selectedAction = $this->request->action;
-        if (!$this->AccessControl->check([$this->name, 'Workflows', 'view'])) {
-            if ($this->AccessControl->check([$this->name, 'Steps', 'view'])) {
-                $selectedAction = 'Steps';
-            } elseif ($this->AccessControl->check([$this->name, 'Statuses', 'view'])) {
-                $selectedAction = 'Statuses';
-            }
+        // add this logic to highlight the tab correctly
+        if (!$hasWorkflowsAccess && !$hasStepsAccess && !$hasActionsAccess) {
+            $selectedAction = 'Statuses';
+        } else if (!$hasWorkflowsAccess && !$hasStepsAccess) {
+            $selectedAction = 'Actions';
+        } else if (!$hasWorkflowsAccess) {
+            $selectedAction = 'Steps';
         }
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
     }
 
-    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
         $header = __('Workflow');
 
         $header .= ' - ' . $model->getHeader($model->alias);
@@ -74,7 +102,8 @@ class WorkflowsController extends AppController
         $this->set('contentHeader', $header);
     }
 
-    public function ajaxGetAssignees() {
+    public function ajaxGetAssignees()
+    {
         $this->viewBuilder()->layout('ajax');
 
         $isSchoolBased = $this->request->query('is_school_based');
@@ -108,5 +137,25 @@ class WorkflowsController extends AppController
         $this->response->type('json');
 
         return $this->response;
+    }
+
+    private function paramsQuery($keys=[])
+    {
+        $requestQuery = $this->request->query;
+
+        if (!empty($keys)) {
+            $params = [];
+            foreach ($keys as $value) {
+                if (array_key_exists($value, $requestQuery)) {
+                    $params[$value] = $requestQuery[$value];
+                }
+            }
+
+            if (!empty($params)) {
+                return $params;
+            }
+        }
+
+        return $requestQuery;
     }
 }
