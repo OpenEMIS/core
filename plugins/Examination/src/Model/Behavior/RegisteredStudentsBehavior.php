@@ -213,7 +213,8 @@ class RegisteredStudentsBehavior extends Behavior {
             ]);
     }
 
-    public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
         $model = $this->_table;
         $session = $model->request->session();
 

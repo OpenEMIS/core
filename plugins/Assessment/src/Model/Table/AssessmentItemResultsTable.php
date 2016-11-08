@@ -18,6 +18,9 @@ class AssessmentItemResultsTable extends AppTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index', 'add']
+        ]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {

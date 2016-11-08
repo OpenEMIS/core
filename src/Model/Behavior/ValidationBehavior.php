@@ -702,7 +702,7 @@ class ValidationBehavior extends Behavior {
 
 		if (array_key_exists('student_id', $data)) {
 			// saving for existing students
-			$Students = TableRegistry::get('Student.Students');
+			$Students = TableRegistry::get('Institution.StudentUser');
 			$studentQuery = $Students->find()
 				->select([$Students->aliasField('date_of_birth')])
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
@@ -1349,6 +1349,38 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function checkDateWithinAcademicPeriod($field, $academicPeriod, $options = [], array $globalData) {
+		if (array_key_exists($academicPeriod, $globalData['data'])) {
+	        $academicPeriodId = $globalData['data'][$academicPeriod];
+
+	        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+	        $periodData = $AcademicPeriods->get($academicPeriodId);
+
+	        $excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
+	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
+
+	        if ($excludeFirstDay) {
+	        	$withFirstDay = Time::parse($periodData->start_date);
+	        	$startDate = $withFirstDay->modify('+1 day')->format('Y-m-d');
+	        } else {
+	        	$startDate = $periodData->start_date->format('Y-m-d');
+	        }
+
+	        if ($excludeLastDay) {
+	        	$withLastDay = Time::parse($periodData->end_date);
+	        	$endDate = $withLastDay->modify('-1 day')->format('Y-m-d');
+	        } else {
+	        	$endDate = $periodData->end_date->format('Y-m-d');
+	        }
+
+	        $effectiveDate = Time::parse($field)->format('Y-m-d');
+
+	        return ($effectiveDate >= $startDate && $effectiveDate <= $endDate);
+	    }
+
+	    return false;
+    }
+
 	public static function checkTimeRange($field, array $globalData) {
 		$systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
 		$model = $globalData['providers']['table'];
@@ -1592,6 +1624,28 @@ class ValidationBehavior extends Behavior {
 		return false;
 	}
 
+	public static function checkPendingAdmissionExist($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$studentId = $data['student_id'];
+		$institutionId = $data['institution_id'];
+		$academicPeriodId = $data['academic_period_id'];
+		$educationGradeId = $data['education_grade_id'];
+		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+		$studentExist = $AdmissionTable->find()
+			->where([
+					$AdmissionTable->aliasField('status') => 0,
+					$AdmissionTable->aliasField('student_id') => $studentId,
+					$AdmissionTable->aliasField('institution_id') => $institutionId,
+					$AdmissionTable->aliasField('academic_period_id') => $academicPeriodId,
+					$AdmissionTable->aliasField('education_grade_id') => $educationGradeId,
+					$AdmissionTable->aliasField('type') => 1
+				])
+			->count();
+
+		return $studentExist == 0;
+	}
+
 	public static function validateCustomIdentityNumber($field, array $globalData)
 	{
 		$subject = $field;
@@ -1616,6 +1670,21 @@ class ValidationBehavior extends Behavior {
 		// custom validation is nullable, have to cater for the null pattern.
 		if (!empty($pattern) && !preg_match($pattern, $subject)) {
 			return $model->getMessage('User.Identities.number.custom_validation');
+		}
+
+		return true;
+	}
+
+	public static function validateCustomPattern($field, $code, array $globalData)
+	{
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value($code) . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+			return $model->getMessage('general.custom_validation_pattern');
 		}
 
 		return true;

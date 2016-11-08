@@ -23,6 +23,9 @@ class ConfigItemsTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index']
+        ]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -103,6 +106,27 @@ class ConfigItemsTable extends AppTable {
 ** specific field methods
 **
 ******************************************************************************************************************/
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+	{
+		$session = $this->request->session();
+		if ($entity->code == 'language') {
+			if ($entity->value != 'en') {
+				$entity = $this->find()
+					->where([
+						$this->aliasField('code') => 'language_menu',
+						$this->aliasField('type') => 'System'
+					])
+					->first();
+				$entity->value = 0;
+				$this->save($entity);
+			}
+			$session->delete('System.language_menu');
+		} else if ($entity->code == 'language_menu') {
+			$session->delete('System.language_menu');
+		}
+	}
+
 	public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
 		if (in_array($action, ['edit', 'add'])) {
 			$pass = $request->param('pass');
