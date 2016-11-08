@@ -64,7 +64,7 @@ class StaffAbsencesTable extends AppTable {
 					'on' => 'create'
 				],
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period_id'],
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
 					'on' => 'create'
 				],
 				'ruleNoOverlappingAbsenceDate' => [
@@ -80,7 +80,7 @@ class StaffAbsencesTable extends AppTable {
 					'rule' => ['compareDateReverse', 'start_date', true]
 				],
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period_id'],
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
 					'on' => 'create'
 				]
 			])
