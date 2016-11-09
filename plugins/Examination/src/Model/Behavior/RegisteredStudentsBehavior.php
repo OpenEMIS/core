@@ -193,6 +193,7 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->aliasField('student_id'),
                 $model->aliasField('academic_period_id'),
                 $model->aliasField('examination_id'),
+                $model->aliasField('registration_number'),
                 $model->Users->aliasField('openemis_no'),
                 $model->Users->aliasField('first_name'),
                 $model->Users->aliasField('middle_name'),
