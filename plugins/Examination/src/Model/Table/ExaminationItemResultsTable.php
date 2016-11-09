@@ -4,6 +4,7 @@ namespace Examination\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\Event\Event;
 use Cake\Utility\Text;
 
 use App\Model\Table\AppTable;
