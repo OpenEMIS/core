@@ -29,10 +29,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
-<<<<<<< HEAD
         // $this->toggle('add', false);
-=======
->>>>>>> 49a5a55eb38a5f601a9a566cc88136a50b9ab47f
     }
 
     public function validationDefault(Validator $validator) {
