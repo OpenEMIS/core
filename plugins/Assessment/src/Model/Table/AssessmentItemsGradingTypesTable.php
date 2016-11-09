@@ -22,7 +22,7 @@ class AssessmentItemsGradingTypesTable extends AppTable {
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
