@@ -56,7 +56,8 @@ class ExaminationsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         $header = __('Examination');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
+        $alias = ($model->alias == 'ExamResults') ? 'Results' : $model->alias;
+        $header .= ' - ' . $model->getHeader($alias);
         $this->Navigation->addCrumb('Examination', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 

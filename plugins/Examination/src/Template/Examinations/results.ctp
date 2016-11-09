@@ -6,6 +6,15 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
+    <?php
+        $backUrl = [
+            'plugin' => $this->request->params['plugin'],
+            'controller' => $this->request->params['controller'],
+            'action' => 'ExamResults',
+            'index'
+        ];
+        echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
+    ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="ExaminationsResultsController.onEditClick()">
