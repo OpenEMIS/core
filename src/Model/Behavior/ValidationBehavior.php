@@ -983,17 +983,33 @@ class ValidationBehavior extends Behavior {
 					->where($conditions)
 					->toArray();
 
-			$shiftStartTimeArray = [];
-			$shiftEndTimeArray = [];
-			foreach ($shiftTime as $key => $value) {
-				$shiftStartTimeArray[$key] = $value->start_time;
-				$shiftEndTimeArray[$key] = $value->end_time;
-			}
+			if (!empty($shiftTime)) {
+				$shiftStartTimeArray = [];
+				$shiftEndTimeArray = [];
+				foreach ($shiftTime as $key => $value) {
+					$shiftStartTimeArray[$key] = $value->start_time;
+					$shiftEndTimeArray[$key] = $value->end_time;
+				}
 
-			// get the earliest shift start time for the start time.
-			// get the latest shift end time for the end time.
-			$startTime = min($shiftStartTimeArray);
-			$endTime = max($shiftEndTimeArray);
+				// get the earliest shift start time for the start time.
+				// get the latest shift end time for the end time.
+				$startTime = min($shiftStartTimeArray);
+				$endTime = max($shiftEndTimeArray);
+			} else {
+				$configItems = TableRegistry::get('Configuration.configItems');
+
+				$shiftTime = $configItems->find()
+					->where([$configItems->aliasField('type') => 'Attendance'])
+					->toArray();
+
+				$configStartTime = $shiftTime[2]['value'] ? $shiftTime[2]['value'] : $shiftTime[2]['default_value'];
+				$hourPerDay = $shiftTime[1]['value'] ? $shiftTime[1]['value'] : $shiftTime[1]['default_value'];
+
+				$startTime = new time($configStartTime);
+
+				$endTime = new time($configStartTime);
+				$endTime->addHour($hourPerDay);
+			}
 
 			$institutionShiftStartTime = strtotime($InstitutionShift->formatTime($startTime));
 			$institutionShiftEndTime = strtotime($InstitutionShift->formatTime($endTime));
