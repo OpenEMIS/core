@@ -8,7 +8,9 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
+use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
+use Cake\Validation\Validator;
 
 class ExaminationCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -27,14 +29,42 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
-        $this->toggle('add', false);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->allowEmpty('registration_number')
+            ->add('registration_number', 'ruleUnique', [
+                'rule' => ['validateUnique', ['scope' => ['examination_centre_id', 'education_subject_id']]],
+                'provider' => 'table'
+            ]);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'BulkStudentRegistration', 'add'];
+        $button['type'] = 'button';
+        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['attr'] = $toolbarAttr;
+        $button['attr']['title'] = __('Bulk Add');
+        $extra['toolbarButtons']['bulkAdd'] = $button;
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
         $entity->id = Text::uuid();
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields['total_mark']['visible'] = false;
         $this->controller->getStudentsTab();
     }
 
