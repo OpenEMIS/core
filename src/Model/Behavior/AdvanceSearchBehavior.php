@@ -18,7 +18,9 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'display_country' => true,
 		'exclude' => ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'],
-        'order' => []
+        'customFields' => [],
+        'order' => [],
+        'showOnLoad' => 0
 	];
 
 	public function initialize(array $config) {
@@ -59,10 +61,11 @@ class AdvanceSearchBehavior extends Behavior {
 			$session = $this->_table->request->session();
 			$language = $session->read('System.language');
 			$fields = $this->_table->schema()->columns();
+            $customFields = $this->config('customFields');
+            $fields = array_merge($fields, $customFields);
 			$requestData = $this->_table->request->data;
 			$advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
 			$advanceSearchModelData = isset($advanceSearchData[$this->_table->alias()]) ? $advanceSearchData[$this->_table->alias()] : [];
-
 			foreach ($fields as $key) {
 				if (!in_array($key , $this->config('exclude'))) {
 
@@ -99,7 +102,6 @@ class AdvanceSearchBehavior extends Behavior {
 					if ($customFilter->result) {
 						$result = $customFilter->result;
 						$customFilterKey = key($result);
-
 						if ($key == $customFilterKey) {
 							$filters[$customFilterKey] = [
 								'label' => $result[$customFilterKey]['label'],
@@ -134,11 +136,11 @@ class AdvanceSearchBehavior extends Behavior {
 			$searchables = new ArrayObject();
 	        // trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
-
+            $showOnLoad = $this->config('showOnLoad');
             if($this->isCAv4()) {
                 $this->_table->controller->viewVars['advanced_search'] = [
                     'name' => 'advanced_search',
-                    'data' => compact('filters', 'searchables', 'advancedSearch'),
+                    'data' => compact('filters', 'searchables', 'advancedSearch', 'showOnLoad'),
                     'options' => [],
                     'order' => 0
                 ];
@@ -147,11 +149,10 @@ class AdvanceSearchBehavior extends Behavior {
             // adding of the indexElement
             $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
                 'name' => 'advanced_search',
-                'data' => compact('filters', 'searchables', 'advancedSearch'),
+                'data' => compact('filters', 'searchables', 'advancedSearch', 'showOnLoad'),
                 'options' => [],
                 'order' => 0
             ];
-
             if (empty($order)) { //if no order declared, then build the default order.
                 foreach ($filters as $key=>$filter) {
                     $order[] = $key;
@@ -163,7 +164,7 @@ class AdvanceSearchBehavior extends Behavior {
 
             $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
 	            'name' => 'advanced_search',
-	            'data' => compact('filters', 'searchables', 'order', 'advancedSearch'),
+	            'data' => compact('filters', 'searchables', 'order', 'advancedSearch', 'showOnLoad'),
 	            'options' => [],
 	            'order' => 0
 	        ];
@@ -214,7 +215,7 @@ class AdvanceSearchBehavior extends Behavior {
 	}
 
 	public function advancedSearchQuery(Request $request, Query $query) {
-		$conditions = '';
+		$conditions = [];
 
 		$model = $this->_table;
 		$alias = $model->alias();
@@ -263,14 +264,19 @@ class AdvanceSearchBehavior extends Behavior {
 							break;
 					}
 				} else {
-					$conditions[$model->aliasField($key)] = $value;
+                    $modifiedCondition = $model->dispatchEvent('AdvanceSearch.onModifyConditions', [$key, $value], $this);
+                    if ($modifiedCondition->result) {
+                        $result = $modifiedCondition->result;
+                        $conditions = array_merge($conditions, $result);
+                    } else {
+                        $conditions[$model->aliasField($key)] = $value;
+                    }
 				}
         	}
         }
         if (!empty($conditions)) {
         	$query->where($conditions);
         }
-
         if (!empty($advancedSearchHasMany)) {
 	        // trigger events for additional searchable fields
 	        $model->dispatchEvent('AdvanceSearch.onBuildQuery', [$query, $advancedSearchHasMany], $this);
@@ -340,6 +346,6 @@ class AdvanceSearchBehavior extends Behavior {
                 }
             }
         }
-        return true;
+        return false;
     }
 }
