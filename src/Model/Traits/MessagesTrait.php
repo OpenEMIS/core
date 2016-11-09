@@ -142,7 +142,8 @@ trait MessagesTrait {
             ],
             'change_in_room_type' => [
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
-            ]
+            ],
+            'select_subject' => 'Select Subject'
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -388,6 +389,7 @@ trait MessagesTrait {
             'select_staff' => 'Select Staff',
             'add_staff' => 'Add Staff',
             'select_teacher' => 'Select Teacher',
+            'select_room' => 'Select Room',
             'add_teacher' => 'Add Teacher'
         ],
         'UserGroups' => [
@@ -550,12 +552,16 @@ trait MessagesTrait {
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
-            'internal_trainer' => 'Internal Trainer',
-            'external_trainer' => 'External Trainer'
+            'trainer' => 'Trainer'
         ],
         'TrainingSessionResults' => [
             'noResultTypes' => 'You need to configure Result Types under Training Course.',
             'noTrainees' => 'No Available Trainees'
+        ],
+        'StaffTrainingApplications' => [
+            'success' => 'This session has been added successfully.',
+            'fail' => 'Failed to add the session.',
+            'exists' => 'This session has already been added.'
         ],
         'CustomForms' => [
             'notSupport' => 'Not supported in this form.'
@@ -735,6 +741,11 @@ trait MessagesTrait {
             ],
             'IndividualPromotion' => [
                 'effective_date' => [
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                ]
+            ],
+            'VisitRequests' => [
+                'date_of_visit' => [
                     'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
@@ -1180,7 +1191,14 @@ trait MessagesTrait {
                 'net_salary' => [
                     'ruleMoney' => 'Please enter a valid amount.'
                 ]
-            ]
+            ],
+            'Appraisal' => [
+                'competencies_goals' => 'Competencies / Goals',
+                'rating' => 'Rating',
+                'value' => 'Value',
+                'final_rating' => 'Final Rating',
+                'deleted_competencies' => 'This competency has been removed'
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
