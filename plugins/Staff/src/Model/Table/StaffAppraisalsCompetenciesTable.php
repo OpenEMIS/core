@@ -17,7 +17,7 @@ class StaffAppraisalsCompetenciesTable extends AppTable
 		$this->belongsTo('Competencies', ['className' => 'Staff.Competencies']);
 	}
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $data)
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
