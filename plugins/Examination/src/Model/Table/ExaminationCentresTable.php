@@ -412,17 +412,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         if ($action == 'add') {
             $attr['type'] = 'chosenSelect';
             $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
-<<<<<<< HEAD
-            $attr['options'] = $this->Institutions
+            $institutionOptions = $this->Institutions
                 ->find('list', [
                     'keyField' => 'id',
                     'valueField' => 'code_name'
                 ])
-                ->find('NotExamCentres', ['examination_id' => $examinationId])
-                ->toArray();
-=======
-            $institutionOptions = $this->Institutions
-                ->find('list')
                 ->find('NotExamCentres', ['examination_id' => $examinationId]);
 
             // if no institution type is selected, all institutions will be shown
@@ -432,7 +426,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             }
 
             $attr['options'] = $institutionOptions->toArray();
->>>>>>> b163b9b3c97eda84669a23180af13f30cc6a95ef
             $attr['fieldName'] = $this->alias().'.institutions';
         }
         return $attr;
