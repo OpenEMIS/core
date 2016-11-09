@@ -1415,6 +1415,11 @@ trait MessagesTrait {
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
                 ]
+            ],
+            'BulkStudentRegistration' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ]
             ]
         ],
         'Configuration' => [
