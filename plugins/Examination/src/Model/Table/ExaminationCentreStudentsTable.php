@@ -15,7 +15,8 @@ use Cake\Validation\Validator;
 class ExaminationCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -29,21 +30,27 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
-        // $this->toggle('add', false);
+        $this->addBehavior('OpenEmis.Section');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_centre_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id']]],
+                'provider' => 'table'
+            ])
+            ->add('student_id', 'ruleUnique', [
+                'rule' => ['validateUnique', ['scope' => ['examination_id']]],
                 'provider' => 'table'
             ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // bulk registration button
         $toolbarAttr = [
             'class' => 'btn btn-xs btn-default',
             'data-toggle' => 'tooltip',
@@ -52,10 +59,17 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         ];
         $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'BulkStudentRegistration', 'add'];
         $button['type'] = 'button';
-        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['label'] = '<i class="fa kd-remove"></i>';
         $button['attr'] = $toolbarAttr;
         $button['attr']['title'] = __('Bulk Add');
         $extra['toolbarButtons']['bulkAdd'] = $button;
+
+         // single registration button
+        if (isset($extra['toolbarButtons']['add']['url'])) {
+            $extra['toolbarButtons']['add']['url']['action'] = 'RegistrationDirectory';
+            $extra['toolbarButtons']['add']['url'][0] = 'index';
+            $extra['toolbarButtons']['add']['attr']['title'] = __('Single Registration');
+        }
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -69,102 +83,154 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->controller->getStudentsTab();
     }
 
-    public function indexbeforeAction(Event $event, ArrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        // add button to course catalogue
-        if (isset($extra['toolbarButtons']['add']['url'])) {
-            $extra['toolbarButtons']['add']['url']['action'] = 'IndividualRegistration';
-            $extra['toolbarButtons']['add']['url'][0] = 'index';
-            $extra['toolbarButtons']['add']['attr']['title'] = 'Register';
+        $query = $this->ControllerAction->getQueryString();
+
+        if ($query) {
+            $userId = $query['user_id'];
+
+            $this->fields = [];
+            $this->field('student_id', ['userId' => $userId]);
+            $this->field('exam_details_header', ['type' => 'section', 'title' => __('Register for Examination')]);
+            $this->field('registration_number', ['type' => 'string']);
+            $this->field('academic_period_id');
+            $this->field('examination_id');
+            $this->field('examination_education_grade');
+            $this->field('examination_centre_id');
+
+            $this->setFieldOrder([
+                'student_id', 'exam_details_header', 'registration_number', 'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id'
+            ]);
+
+        } else {
+            $url = $this->url('index');
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
         }
     }
 
-        // public function addBeforeAction(Event $event, ArrayObject $extra)
-    // {
-    //     $query = $this->ControllerAction->getQueryString();
-    //     if (isset($extra['redirect']['query'])) {
-    //         unset($extra['redirect']['query']);
-    //     }
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            $selectedStudent = $attr['userId'];
 
-    //     if ($query) {
-    //         $userId = $query['id'];
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $this->Users->get($selectedStudent)->name_with_id;
+            $attr['value'] = $selectedStudent;
+        }
 
-    //         $this->fields = [];
-    //         $this->field('student', ['userId' => $userId]);
+        return $attr;
+    }
 
-    //         $this->field('exam_details_header', ['type' => 'section', 'title' => __('Register to Exam')]);
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
 
-    //         $this->field('academic_period_id');
-    //         $this->field('examination_id');
-    //         $this->field('examination_centre_id');
+            $attr['type'] = 'select';
+            $attr['options'] = $periodOptions;
+            $attr['onChangeReload'] = true;
+        }
 
-    //         // name emis num, acad, exam,
-    //     } else {
-    //         // return $this->controller->redirect([
-    //         //     'plugin' => 'Institution',
-    //         //     'controller' => 'Institutions',
-    //         //     'action' => 'StaffTrainingApplications',
-    //         //     '0' => 'index'
-    //         // ]);
-    //     }
+        return $attr;
+    }
 
-    //     // $event->stopPropagation();
-    //     // return $this->controller->redirect($extra['redirect']);
-    // }
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['academic_period_id'])) {
+                $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
+                $examinationOptions = $this->Examinations
+                    ->find('list')
+                    ->where([$this->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
+                    ->toArray();
+            }
 
-    // public function onUpdateFieldStudent(Event $event, array $attr, $action, $request)
-    // {
-    //     $selectedStudent = $attr['userId'];
+            $attr['type'] = 'select';
+            $attr['options'] = !empty($examinationOptions)? $examinationOptions: [];
+            $attr['onChangeReload'] = true;
+        }
 
-    //     $attr['type'] = 'readonly';
-    //     $attr['attr']['value'] = $this->get($selectedStudent)->name_with_id;
+        return $attr;
+    }
 
-    //     return $attr;
-    // }
+    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['examination_id'])) {
+                $selectedExamination = $request->data[$this->alias()]['examination_id'];
+                $Examinations = $this->Examinations
+                    ->get($selectedExamination, [
+                        'contain' => ['EducationGrades']
+                    ])
+                    ->toArray();
 
-    // public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request)
-    // {
-    //     $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+                $gradeName = $Examinations['education_grade']['name'];
+            }
 
-    //     $attr['type'] = 'select';
-    //     $attr['options'] = $periodOptions;
-    //     $attr['onChangeReload'] = true;
-    //     return $attr;
-    // }
+            $attr['attr']['value'] = !empty($gradeName)? $gradeName: '';
+            $attr['type'] = 'readonly';
+        }
 
-    // public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request)
-    // {
-    //     if (!empty($request->data[$this->alias()]['academic_period_id'])) {
-    //         $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
-    //         $Examinations = TableRegistry::get('Examination.Examinations');
-    //         $examinationOptions = $Examinations
-    //             ->find('list')
-    //             ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
-    //             ->toArray();
-    //     }
+        return $attr;
+    }
 
-    //     $attr['type'] = 'select';
-    //     $attr['options'] = !empty($examinationOptions)? $examinationOptions: [];
-    //     $attr['onChangeReload'] = true;
-    //     return $attr;
-    // }
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['examination_id'])) {
+                $selectedExam = $request->data[$this->alias()]['examination_id'];
+                $examCentreOptions = $this->ExaminationCentres
+                    ->find('list')
+                    ->where([$this->ExaminationCentres->aliasField('examination_id') => $selectedExam])
+                    ->toArray();
+            }
 
-    // public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request)
-    // {
-    //     if (!empty($request->data[$this->alias()]['examination_id'])) {
-    //         $selectedExam = $request->data[$this->alias()]['examination_id'];
-    //         $ExamCentres = TableRegistry::get('Examination.ExaminationCentres');
-    //         $examCentreOptions = $ExamCentres
-    //             ->find('list')
-    //             ->where([$ExamCentres->aliasField('examination_id') => $selectedExam])
-    //             ->toArray();
-    //     }
+            $attr['type'] = 'select';
+            $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
+        }
 
-    //     $attr['type'] = 'select';
-    //     $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
+        return $attr;
+    }
 
-    //     return $attr;
-    // }
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $requestData[$this->alias()]['education_subject_id'] = 0;
+    }
+
+    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+        $process = function ($model, $entity) use ($requestData) {
+            if (empty($entity->errors())) {
+                // get subjects for exam centre
+                $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
+                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+
+                $newEntities = [];
+                foreach ($ExaminationCentreSubjects as $subjectId => $name) {
+                    $obj = $requestData[$this->alias()];
+                    $obj['education_subject_id'] = $subjectId;
+                    $newEntities[] = $obj;
+                }
+
+                return $this->connection()->transactional(function() use ($newEntities) {
+                    $return = true;
+                    foreach ($newEntities as $key => $newEntity) {
+                        $examCentreStudentEntity = $this->newEntity($newEntity);
+                        if (!$this->save($examCentreStudentEntity)) {
+                            $return = false;
+                        }
+                    }
+                    return $return;
+                });
+            }
+
+            return false;
+        };
+
+        return $process;
+    }
 
     public function findResults(Query $query, array $options) {
         $academicPeriodId = $options['academic_period_id'];

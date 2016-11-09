@@ -23,29 +23,12 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
         $this->addBehavior('User.User');
-        $this->addBehavior('OpenEmis.Section');
 
         // $this->toggle('add', false);
         $this->toggle('edit', false);
         // $this->toggle('view', false);
         $this->toggle('remove', false);
     }
-
-    // public function validationDefault(Validator $validator) {
-    //     $validator = parent::validationDefault($validator);
-
-    //     return $validator
-    //         ->add('text_value', 'ruleUnique', [
-    //             'rule' => ['validateUnique', ['scope' => ['examination_id', 'student_id']]],
-    //             'provider' => 'table',
-    //             // 'message' => __('This field has to be unique'),
-    //             // 'on' => function ($context) {
-    //             //     if (array_key_exists('unique', $context['data'])) {
-    //             //         return $context['data']['unique'];
-    //             //     }
-    //             // }
-    //         ]);
-    // }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -94,16 +77,16 @@ class RegistrationDirectoryTable extends ControllerActionTable {
     {
         $query->where([$this->aliasField('is_student') => 1]);
 
-        $search = $this->getSearchKey();
-        if (!empty($search)) {
-            // function from AdvancedNameSearchBehavior
-            $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
-        }
+        // $search = $this->getSearchKey();
+        // if (!empty($search)) {
+        //     // function from AdvancedNameSearchBehavior
+        //     $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+        // }
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        // add button direct to register students
+        // add button direct to register students add
         $addBtn['type'] = 'button';
         $addBtn['label'] = '<i class="fa kd-add"></i>';
         $addBtn['attr'] = [
