@@ -1430,6 +1430,9 @@ trait MessagesTrait {
             'ExaminationCentreStudents' => [
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
+                ],
+                'student_id' => [
+                    'ruleUnique' => 'This student is already registered to the selected exam'
                 ]
             ],
             'BulkStudentRegistration' => [
