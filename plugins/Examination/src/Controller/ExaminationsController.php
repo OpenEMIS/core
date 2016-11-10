@@ -83,7 +83,29 @@ class ExaminationsController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
-    public function getStudentsTab()
+    public function getExamCentreTab($action = null)
+    {
+        $tabElements = [
+            'ExamCentres' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres'],
+                'text' => __('Exam Centres')
+            ],
+            'ExamCentreRooms' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
+                'text' => __('Rooms')
+            ],
+            'LinkedInstitutions' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
+                'text' => __('Linked Institutions')
+            ],
+        ];
+
+        $this->set('tabElements', $tabElements);
+        $action = !is_null($action) ? $action : $this->request->action;
+        $this->set('selectedAction', $this->request->action);
+    }
+
+    public function getStudentsTab($action = null)
     {
         $tabElements = [
             'RegisteredStudents' => [
