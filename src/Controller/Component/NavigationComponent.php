@@ -955,7 +955,7 @@ class NavigationComponent extends Component
 						'title' => 'Results',
 						'parent' => 'Administration.Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.ExamResults', 'Examinations.Results']
+						'selected' => ['Examinations.ExamResults', 'Examinations.Results', 'Examinations.ImportExaminationResults']
 					],
 
 			'Workflows.Workflows' => [
