@@ -72,6 +72,7 @@ class StudentFeesTable extends ControllerActionTable {
     	$this->field('academic_period_id', 	['visible' => ['view'=>true, 'edit'=>true]]);
     	$this->field('start_date', 			['visible' => false]);
     	$this->field('end_date', 			['visible' => false]);
+        $this->field('previous_institution_student_id', ['visible' => false]);
 
     	$this->field('openemis_no', 		['type' => 'string', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
     	$this->field('student_id', 			['type' => 'string',	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
