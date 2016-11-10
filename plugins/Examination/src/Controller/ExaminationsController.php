@@ -11,6 +11,9 @@ class ExaminationsController extends AppController
 {
 	public function initialize() {
         parent::initialize();
+        $this->ControllerAction->models = [
+            'ImportExaminationResults' => ['className' => 'Examination.ImportExaminationResults', 'actions' => ['add']],
+        ];
         $this->attachAngularModules();
     }
 

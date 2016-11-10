@@ -284,3 +284,13 @@ CREATE TABLE IF NOT EXISTS `examination_item_results` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the examination results for an individual student in a particular examination'
 /*!50100 PARTITION BY HASH (`academic_period_id`)
 PARTITIONS 8 */;
+
+INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) VALUES
+('Examination.ExaminationItemResults', 'academic_period_id', 'Code', 1, 2, 'AcademicPeriod', 'AcademicPeriods', 'code'),
+('Examination.ExaminationItemResults', 'examination_id', 'Code', 2, 2, 'Examination', 'Examinations', 'code'),
+('Examination.ExaminationItemResults', 'examination_centre_id', 'Code', 3, 2, 'Examination', 'ExaminationCentres', 'code'),
+('Examination.ExaminationItemResults', 'education_subject_id', 'Code', 4, 2, 'Education', 'EducationSubjects', 'code'),
+('Examination.ExaminationItemResults', 'student_id', 'OpenEMIS ID', 5, 2, 'Security', 'Users', 'openemis_no'),
+('Examination.ExaminationItemResults', 'institution_id', '(Leave as blank for private candidate)', 6, 2, 'Institution', 'Institutions', 'code'),
+('Examination.ExaminationItemResults', 'marks', NULL, 7, 0, NULL, NULL, NULL),
+('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Code', 8, 2, 'Examination', 'ExaminationGradingOptions', 'code');

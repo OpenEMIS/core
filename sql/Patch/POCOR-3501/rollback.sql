@@ -21,5 +21,7 @@ DROP TABLE IF EXISTS `examination_centre_room_invigilators`;
 DROP TABLE IF EXISTS `examination_centres_institutions`;
 DROP TABLE IF EXISTS `examination_item_results`;
 
+DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationItemResults';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3501';
