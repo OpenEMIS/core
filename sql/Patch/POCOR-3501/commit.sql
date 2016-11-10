@@ -248,6 +248,17 @@ CREATE TABLE IF NOT EXISTS `examination_centre_room_invigilators` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the invigilators assigned to a room for a particular examination centre';
 
+-- examination_centres_institutions
+DROP TABLE IF EXISTS `examination_centres_institutions`;
+CREATE TABLE IF NOT EXISTS `examination_centres_institutions` (
+  `id` char(36) NOT NULL,
+  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
+  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+  PRIMARY KEY (`id`),
+  KEY `examination_centre_id` (`examination_centre_id`),
+  KEY `institution_id` (`institution_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions for a particular examination centre';
+
 -- examination_item_results
 DROP TABLE IF EXISTS `examination_item_results`;
 CREATE TABLE IF NOT EXISTS `examination_item_results` (
