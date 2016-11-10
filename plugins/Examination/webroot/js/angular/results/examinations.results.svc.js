@@ -8,8 +8,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
 
     var models = {
-        AcademicPeriodsTable: 'AcademicPeriod.AcademicPeriods',
-        ExaminationsTable: 'Examination.Examinations',
         ExaminationItemsTable: 'Examination.ExaminationItems',
         ExaminationCentresTable: 'Examination.ExaminationCentres',
         ExaminationCentreStudentsTable: 'Examination.ExaminationCentreStudents',
@@ -18,9 +16,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
 
     var service = {
         init: init,
-        getAcademicPeriods: getAcademicPeriods,
-        getExaminations: getExaminations,
-        getExaminationCentres: getExaminationCentres,
+        getExaminationCentre: getExaminationCentre,
         getSubjects: getSubjects,
         getColumnDefs: getColumnDefs,
         renderMarks: renderMarks,
@@ -40,29 +36,10 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         KdOrmSvc.init(models);
     };
 
-    function getAcademicPeriods() {
-        return AcademicPeriodsTable
-            .select()
-            .find('years')
-            .find('visible')
-            .find('editable', {isEditable: true})
-            .ajax({defer: true});
-    };
-
-    function getExaminations(academicPeriodId) {
-        return ExaminationsTable
-            .select()
-            .where({academic_period_id: academicPeriodId})
-            .ajax({defer: true});
-    };
-
-    function getExaminationCentres(academicPeriodId, examinationId) {
+    function getExaminationCentre(examinationCentreId) {
         return ExaminationCentresTable
-            .select()
-            .where({
-                academic_period_id: academicPeriodId,
-                examination_id: examinationId
-            })
+            .get(examinationCentreId)
+            .contain(['AcademicPeriods', 'Examinations'])
             .ajax({defer: true});
     };
 
@@ -78,10 +55,16 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                     educationSubject.examination_grading_type = examinationSubject.examination_grading_type;
                     educationSubject.weight = examinationSubject.weight;
 
-                    this.push(educationSubject);
+                    if (educationSubject.weight > 0) {
+                        this.push(educationSubject);
+                    }
                 }, subjects);
 
-                deferred.resolve(subjects);
+                if (subjects.length > 0) {
+                    deferred.resolve(subjects);
+                } else {
+                    deferred.reject('You need to configure weight in Examination Items first');
+                }
             } else {
                 deferred.reject('You need to configure Examination Items first');
             }
@@ -91,6 +74,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             .select()
             .contain(['EducationSubjects', 'ExaminationGradingTypes.GradingOptions'])
             .where({examination_id: examinationId})
+            .order(['EducationSubjects.name'])
             .ajax({success: success, defer: true});
     };
 
@@ -108,6 +92,11 @@ function getColumnDefs(action, subject, _results) {
 
             var columnDefs = [];
 
+            columnDefs.push({
+                headerName: "Registration Number",
+                field: "registration_no",
+                filterParams: filterParams
+            });
             columnDefs.push({
                 headerName: "OpenEMIS ID",
                 field: "openemis_id",
@@ -210,6 +199,11 @@ function getColumnDefs(action, subject, _results) {
                 },
                 filterParams: filterParams
             });
+
+            var bodyDir = getComputedStyle(document.body).direction;
+            if (bodyDir == 'rtl') {
+                columnDefs.reverse();
+            }
 
             deferred.resolve(columnDefs);
         }
@@ -340,7 +334,7 @@ function getColumnDefs(action, subject, _results) {
         return cols;
     };
 
-    function getRowData(academicPeriodId, examinationId, examinationCentreId, subject) {
+    function getRowData(academicPeriodId, examinationId, examinationCentreId, subject, limit, page) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);
@@ -366,6 +360,7 @@ function getColumnDefs(action, subject, _results) {
                             }
 
                             studentResults = {
+                                registration_no: subjectStudent.registration_number,
                                 openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                 name: subjectStudent._matchingData.Users.name,
                                 student_id: currentStudentId,
@@ -396,9 +391,10 @@ function getColumnDefs(action, subject, _results) {
                         rowData.push(studentResults);
                     }
 
-                    deferred.resolve(rowData);
+                    response.data.data = rowData;
+                    deferred.resolve(response);
                 } else {
-                    deferred.reject('No Students');
+                    deferred.resolve(response);
                 }
             }
         };
@@ -411,6 +407,8 @@ function getColumnDefs(action, subject, _results) {
                 examination_centre_id: examinationCentreId,
                 education_subject_id: subject.id
             })
+            .limit(limit)
+            .page(page)
             .ajax({success: success, defer: true});
     };
 
@@ -450,7 +448,6 @@ function getColumnDefs(action, subject, _results) {
     function saveRowData(results, subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
         var promises = [];
 
-        console.log();
         angular.forEach(results, function(result, studentId) {
             angular.forEach(result, function(obj, institutionId) {
                 var resultType = subject.examination_grading_type.result_type;
