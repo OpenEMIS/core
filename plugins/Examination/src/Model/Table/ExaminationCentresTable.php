@@ -185,7 +185,12 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->controller->getExamsTab();
+        if ($this->action != 'view') {
+            $this->controller->getExamsTab();
+        } else {
+            $this->controller->getExamCentreTab('ExamCentres');
+        }
+
         $this->fields['total_registered']['visible'] = false;
         $entity = $extra['entity'];
         if ($this->action == 'edit' || $this->action == 'add') {
