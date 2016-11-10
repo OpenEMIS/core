@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS `examination_centre_invigilators`;
 DROP TABLE IF EXISTS `examination_centre_rooms`;
 DROP TABLE IF EXISTS `examination_centre_room_students`;
 DROP TABLE IF EXISTS `examination_centre_room_invigilators`;
+DROP TABLE IF EXISTS `examination_centres_institutions`;
 DROP TABLE IF EXISTS `examination_item_results`;
 
 -- db_patches
