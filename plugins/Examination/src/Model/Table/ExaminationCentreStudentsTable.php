@@ -57,6 +57,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 $ItemResults->aliasField('marks'),
                 $ItemResults->aliasField('examination_grading_option_id'),
                 $ItemResults->aliasField('academic_period_id'),
+                $this->aliasField('registration_number'),
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('education_grade_id'),
