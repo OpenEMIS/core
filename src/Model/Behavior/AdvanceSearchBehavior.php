@@ -340,7 +340,7 @@ class AdvanceSearchBehavior extends Behavior {
                 if (!empty($value)) {
                     foreach ($value as $key => $searchValue) {
                         if (!empty($searchValue) || strlen($searchValue) > 0){
-                            return false;
+                            return true;
                         }
                     }
                 }
