@@ -158,7 +158,7 @@ FROM `z_3501_examination_centre_subjects`;
 -- examination_centre_invigilators
 DROP TABLE IF EXISTS `examination_centre_invigilators`;
 CREATE TABLE IF NOT EXISTS `examination_centre_invigilators` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_rooms` (
   `number_of_seats` int(3) DEFAULT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
-  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',  
+  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -228,7 +228,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_room_students` (
 -- examination_centre_room_invigilators
 DROP TABLE IF EXISTS `examination_centre_room_invigilators`;
 CREATE TABLE IF NOT EXISTS `examination_centre_room_invigilators` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_room_id` int(11) NOT NULL COMMENT 'links to examination_centre_rooms.id',
   `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -251,13 +251,13 @@ CREATE TABLE IF NOT EXISTS `examination_centre_room_invigilators` (
 -- examination_centres_institutions
 DROP TABLE IF EXISTS `examination_centres_institutions`;
 CREATE TABLE IF NOT EXISTS `examination_centres_institutions` (
-  `id` char(36) NOT NULL,
+  `id` char(64) NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`examination_centre_id`, `institution_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
   KEY `institution_id` (`institution_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions for a particular examination centre';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions linked to a particular examination centre';
 
 -- examination_item_results
 DROP TABLE IF EXISTS `examination_item_results`;
