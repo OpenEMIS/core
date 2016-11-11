@@ -628,6 +628,19 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
+    public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'edit' || $action == 'unregister') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->registration_number;
+            $attr['attr']['value'] = $entity->registration_number;
+            $event->stopPropagation();
+        }
+
+        return $attr;
+    }
+
     public function getExaminationOptions($selectedAcademicPeriod) {
         $model = $this->_table;
         $examinationOptions = $model->Examinations
@@ -650,10 +663,11 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('gender_id', ['entity' => $entity]);
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
+        $model->field('registration_number', ['type' => 'string', 'entity' => $entity]);
         // temporary hide subjects
         // $model->field('subjects', ['type' => 'custom_subjects']);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs']);
+        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'registration_number']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {

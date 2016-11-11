@@ -39,11 +39,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
                 'provider' => 'table'
             ])
             ->add('student_id', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
                 'provider' => 'table'
             ]);
     }
@@ -103,12 +103,12 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 $this->field('registration_number', ['type' => 'string']);
                 $this->field('academic_period_id');
                 $this->field('examination_id');
-                $this->field('examination_education_grade');
+                $this->field('education_grade_id');
                 $this->field('examination_centre_id');
                 $this->field('special_need_accommodations');
 
                 $this->setFieldOrder([
-                    'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'exam_details_header', 'registration_number', 'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'special_need_accommodations'
+                    'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'exam_details_header', 'registration_number', 'academic_period_id', 'examination_id', 'education_grade_id', 'examination_centre_id', 'special_need_accommodations'
                 ]);
 
             } else {
@@ -233,7 +233,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['examination_id'])) {
@@ -245,9 +245,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     ->toArray();
 
                 $gradeName = $Examinations['education_grade']['name'];
+                $gradeId = $Examinations['education_grade']['id'];
             }
 
             $attr['attr']['value'] = !empty($gradeName)? $gradeName: '';
+            $attr['value'] = !empty($gradeId)? $gradeId: '';
             $attr['type'] = 'readonly';
         }
 
@@ -315,15 +317,30 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
                 $newEntities = [];
                 foreach ($ExaminationCentreSubjects as $subjectId => $name) {
-                    $obj = $requestData[$this->alias()];
+                    $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
+                    $obj['student_id'] = $requestData[$this->alias()]['student_id'];
                     $obj['education_subject_id'] = $subjectId;
+                    $obj['education_grade_id'] = $requestData[$this->alias()]['education_grade_id'];
+                    $obj['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                    $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
+
+                    if (!empty($requestData[$this->alias()]['registration_number'])) {
+                        $obj['registration_number'] = $requestData[$this->alias()]['registration_number'];
+                    }
+
                     $newEntities[] = $obj;
                 }
 
-                return $this->connection()->transactional(function() use ($newEntities) {
+                return $this->connection()->transactional(function() use ($newEntities, $entity) {
                     $return = true;
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
+                        if ($examCentreStudentEntity->errors('student_id')) {
+                            $entity->errors('student_id', $examCentreStudentEntity->errors('student_id'));
+                        }
+                        if ($examCentreStudentEntity->errors('registration_number')) {
+                            $entity->errors('registration_number', $examCentreStudentEntity->errors('registration_number'));
+                        }
                         if (!$this->save($examCentreStudentEntity)) {
                             $return = false;
                         }
