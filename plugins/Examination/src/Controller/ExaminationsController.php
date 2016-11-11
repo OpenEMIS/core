@@ -12,7 +12,7 @@ class ExaminationsController extends AppController
 	public function initialize() {
         parent::initialize();
         $this->ControllerAction->models = [
-            'ImportExaminationResults' => ['className' => 'Examination.ImportExaminationResults', 'actions' => ['add']],
+            'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
         ];
         $this->attachAngularModules();
     }
@@ -36,7 +36,7 @@ class ExaminationsController extends AppController
 
     // AngularJS
     public function Results() {
-        $this->set('_edit', true);
+        $this->set('_edit', $this->AccessControl->check(['Examinations', 'Results', 'edit']));
         $this->set('ngController', 'ExaminationsResultsCtrl as ExaminationsResultsController');
     }
     // End
