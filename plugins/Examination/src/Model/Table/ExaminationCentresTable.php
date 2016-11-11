@@ -117,6 +117,21 @@ class ExaminationCentresTable extends ControllerActionTable {
         $query->where($where);
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $params = ['examination_centre_id' => $entity->id];
+        if (isset($buttons['view']['url'])) {
+            $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
+        }
+
+        if (isset($buttons['edit']['url'])) {
+            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
+        }
+
+        return $buttons;
+    }
+
     private function getExaminationOptions($selectedAcademicPeriod) {
         $examinationOptions = $this->Examinations
             ->find('list')
@@ -143,6 +158,10 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        if ($this->action != 'index') {
+            $this->request->params['pass'][1] = $this->ControllerAction->getQueryString('examination_centre_id');
+            $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
+        }
         $this->field('institution_id', ['visible' => false]);
         $this->field('name');
         $this->fields['area_id']['visible'] = false;
@@ -161,7 +180,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         $query->contain(['ExaminationCentreSubjects.EducationSubjects'])
             ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes'])
-            ->contain(['ExaminationCentreRooms.ExaminationCentreRoomStudents'])
+            ->contain(['ExaminationCentreRooms.Students'])
             ->matching('Examinations')
             ->matching('Areas')
             ->matching('AcademicPeriods');
@@ -185,12 +204,6 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        if ($this->action != 'view') {
-            $this->controller->getExamsTab();
-        } else {
-            $this->controller->getExamCentreTab('ExamCentres');
-        }
-
         $this->fields['total_registered']['visible'] = false;
         $entity = $extra['entity'];
         if ($this->action == 'edit' || $this->action == 'add') {
@@ -198,7 +211,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->field('examination_id', ['entity' => $entity]);
             $this->field('special_need_types', ['type' => 'chosenSelect', 'entity' => $entity]);
             $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
-            $this->field('rooms', ['entity' => $entity]);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
             $this->fields['institution_id']['visible'] = true;
             $this->fields['institution_id']['type'] = 'hidden';
@@ -208,7 +220,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             if ($this->action == 'add') {
                 if ($entity->create_as == 'new') {
                     $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
-                    $this->fields['rooms']['visible'] = false;
                     $this->fields['name']['visible'] = true;
                     $this->fields['code']['visible'] = true;
                     $this->fields['address']['visible'] = true;
@@ -251,17 +262,13 @@ class ExaminationCentresTable extends ControllerActionTable {
             }
 
             // field order
-            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'rooms', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
             $this->field('subjects', [
                 'type' => 'element',
                 'element' => 'Examination.exam_centre_subjects'
-            ]);
-            $this->field('rooms', [
-                'type' => 'element',
-                'element' => 'Examination.exam_centre_rooms'
             ]);
             $this->fields['code']['visible'] = true;
             $this->fields['address']['visible'] = true;
@@ -273,7 +280,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['website']['visible'] = true;
             $this->fields['total_registered']['visible'] = true;
 
-            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'rooms', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         }
     }
 
@@ -372,18 +379,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             }
             $attr['type'] = 'element';
             $attr['element'] = 'Examination.exam_centre_subjects';
-            $attr['data'] = $subjects;
-        }
-        return $attr;
-    }
-
-    public function onUpdateFieldRooms(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'edit') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'element';
-            $attr['element'] = 'Examination.exam_centre_rooms';
             $attr['data'] = $subjects;
         }
         return $attr;
