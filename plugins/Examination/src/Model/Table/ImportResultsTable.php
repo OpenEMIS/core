@@ -9,8 +9,10 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use PHPExcel_Worksheet;
 
-class ImportExaminationResultsTable extends AppTable {
-    public function initialize(array $config) {
+class ImportResultsTable extends AppTable
+{
+    public function initialize(array $config)
+    {
         $this->table('import_mapping');
         parent::initialize($config);
 
@@ -20,7 +22,8 @@ class ImportExaminationResultsTable extends AppTable {
         $this->ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateAcademicPeriodsData'] = 'onImportPopulateAcademicPeriodsData';
         $events['Model.import.onImportPopulateExaminationsData'] = 'onImportPopulateExaminationsData';
@@ -32,7 +35,8 @@ class ImportExaminationResultsTable extends AppTable {
         return $events;
     }
 
-    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $selectFields = ['name', $lookupColumn];
@@ -53,7 +57,8 @@ class ImportExaminationResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateExaminationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateExaminationsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -75,7 +80,8 @@ class ImportExaminationResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateExaminationCentresData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateExaminationCentresData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -97,7 +103,8 @@ class ImportExaminationResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -119,11 +126,13 @@ class ImportExaminationResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         unset($data[$columnOrder]);
     }
 
-    public function onImportPopulateInstitutionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateInstitutionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -145,7 +154,8 @@ class ImportExaminationResultsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateExaminationGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateExaminationGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);

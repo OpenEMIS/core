@@ -27,7 +27,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportResults']);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
