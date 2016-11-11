@@ -48,6 +48,17 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             ]);
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $entity->id = Text::uuid();
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->fields['total_mark']['visible'] = false;
+        $this->controller->getStudentsTab();
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // bulk registration button
@@ -72,36 +83,40 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $entity->id = Text::uuid();
-    }
-
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->fields['total_mark']['visible'] = false;
-        $this->controller->getStudentsTab();
-    }
-
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $query = $this->ControllerAction->getQueryString();
 
         if ($query) {
             $userId = $query['user_id'];
-
-            $this->fields = [];
-            $this->field('student_id', ['userId' => $userId]);
-            $this->field('exam_details_header', ['type' => 'section', 'title' => __('Register for Examination')]);
-            $this->field('registration_number', ['type' => 'string']);
-            $this->field('academic_period_id');
-            $this->field('examination_id');
-            $this->field('examination_education_grade');
-            $this->field('examination_centre_id');
-
-            $this->setFieldOrder([
-                'student_id', 'exam_details_header', 'registration_number', 'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id'
+            $studentEntity = $this->Users->get($userId, [
+                'contain' => ['Genders', 'SpecialNeeds.SpecialNeedTypes']
             ]);
+
+            if (!empty($studentEntity)) {
+                $this->fields = [];
+                $this->field('student_id', ['entity' => $studentEntity]);
+                $this->field('date_of_birth', ['entity' => $studentEntity]);
+                $this->field('gender_id', ['entity' => $studentEntity]);
+                $this->field('special_needs', ['entity' => $studentEntity]);
+                $this->field('exam_details_header', ['type' => 'section', 'title' => __('Register for Examination')]);
+                $this->field('registration_number', ['type' => 'string']);
+                $this->field('academic_period_id');
+                $this->field('examination_id');
+                $this->field('examination_education_grade');
+                $this->field('examination_centre_id');
+                $this->field('special_need_accommodations');
+
+                $this->setFieldOrder([
+                    'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'exam_details_header', 'registration_number', 'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'special_need_accommodations'
+                ]);
+
+            } else {
+                $this->Alert->error('general.notExists', ['reset' => 'override']);
+                $url = $this->url('index');
+                $event->stopPropagation();
+                return $this->controller->redirect($url);
+            }
 
         } else {
             $url = $this->url('index');
@@ -113,11 +128,53 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
-            $selectedStudent = $attr['userId'];
-
             $attr['type'] = 'readonly';
-            $attr['attr']['value'] = $this->Users->get($selectedStudent)->name_with_id;
-            $attr['value'] = $selectedStudent;
+            $attr['attr']['value'] = $attr['entity']->name_with_id;
+            $attr['value'] = $attr['entity']->id;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldDateOfBirth(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            $dob = $attr['entity']->date_of_birth;
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $this->formatDate($dob);
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldGenderId(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if ($attr['entity']->has('gender') && !empty($attr['entity']->gender)) {
+                $gender = $attr['entity']->gender->name;
+            }
+
+            $attr['attr']['value'] = !empty($gender)? $gender: '';
+            $attr['type'] = 'readonly';
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if ($attr['entity']->has('special_needs') && !empty($attr['entity']->special_needs)) {
+                $specialNeeds = $attr['entity']->special_needs;
+
+                foreach ($specialNeeds as $key => $need) {
+                    $needsArray[] = $need->special_need_type->name;
+                }
+                $value = implode(', ', $needsArray);
+            }
+
+            $attr['attr']['value'] = !empty($value)? $value: '';
+            $attr['type'] = 'readonly';
         }
 
         return $attr;
@@ -130,10 +187,22 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
             $attr['type'] = 'select';
             $attr['options'] = $periodOptions;
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeAcademicPeriodId';
         }
 
         return $attr;
+    }
+
+    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('examination_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_id']);
+            }
+            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_centre_id']);
+            }
+        }
     }
 
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request)
@@ -147,12 +216,21 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     ->toArray();
             }
 
-            $attr['type'] = 'select';
             $attr['options'] = !empty($examinationOptions)? $examinationOptions: [];
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeExaminationId';
+            $attr['type'] = 'select';
         }
 
         return $attr;
+    }
+
+    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_centre_id']);
+            }
+        }
     }
 
     public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request)
@@ -187,8 +265,36 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     ->toArray();
             }
 
-            $attr['type'] = 'select';
             $attr['options'] = !empty($examCentreOptions)? $examCentreOptions: [];
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+        }
+
+        return $attr;
+    }
+
+        public function onUpdateFieldSpecialNeedAccommodations(Event $event, array $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
+                $selectedExamCentre = $request->data[$this->alias()]['examination_centre_id'];
+                $ExaminationCentreSpecialNeeds = TableRegistry::get('Examination.ExaminationCentreSpecialNeeds');
+                $query = $ExaminationCentreSpecialNeeds
+                    ->find('list', [
+                        'keyField' => 'special_need_type_id',
+                        'valueField' => 'special_need_type.name'
+                    ])
+                    ->contain('SpecialNeedTypes')
+                    ->where([$ExaminationCentreSpecialNeeds->aliasField('examination_centre_id') => $selectedExamCentre])
+                    ->toArray();
+
+                if (!empty($query)) {
+                    $specialNeeds = implode(', ', $query);
+                }
+            }
+
+            $attr['attr']['value'] = !empty($specialNeeds)? $specialNeeds: '';
+            $attr['type'] = 'readonly';
         }
 
         return $attr;
