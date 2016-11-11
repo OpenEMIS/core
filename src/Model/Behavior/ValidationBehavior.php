@@ -996,14 +996,10 @@ class ValidationBehavior extends Behavior {
 				$startTime = min($shiftStartTimeArray);
 				$endTime = max($shiftEndTimeArray);
 			} else {
-				$configItems = TableRegistry::get('Configuration.configItems');
+				$ConfigItems = TableRegistry::get('Configuration.configItems');
 
-				$shiftTime = $configItems->find()
-					->where([$configItems->aliasField('type') => 'Attendance'])
-					->toArray();
-
-				$configStartTime = $shiftTime[2]['value'] ? $shiftTime[2]['value'] : $shiftTime[2]['default_value'];
-				$hourPerDay = $shiftTime[1]['value'] ? $shiftTime[1]['value'] : $shiftTime[1]['default_value'];
+				$configStartTime = $ConfigItems->value('start_time');
+				$hourPerDay = $ConfigItems->value('hours_per_day');
 
 				$startTime = new time($configStartTime);
 
