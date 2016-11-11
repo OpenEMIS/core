@@ -1388,6 +1388,11 @@ trait MessagesTrait {
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
                 ],
             ],
+            'ExaminationCentreRooms' => [
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name for this examination centre room'
+                ],
+            ],
             'ExaminationItems' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
