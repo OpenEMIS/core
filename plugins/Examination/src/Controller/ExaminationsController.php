@@ -28,6 +28,8 @@ class ExaminationsController extends AppController
     }
     public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
+    public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
+
     // End
 
     // AngularJS
@@ -69,10 +71,6 @@ class ExaminationsController extends AppController
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
                 'text' => __('Exams')
             ],
-            'ExamCentres' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres'],
-                'text' => __('Exam Centres')
-            ],
             'GradingTypes' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
                 'text' => __('Grading Types')
@@ -80,28 +78,6 @@ class ExaminationsController extends AppController
         ];
 
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
-    }
-
-    public function getExamCentreTab($action = null)
-    {
-        $tabElements = [
-            'ExamCentres' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres'],
-                'text' => __('Exam Centres')
-            ],
-            'ExamCentreRooms' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
-                'text' => __('Rooms')
-            ],
-            'LinkedInstitutions' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
-                'text' => __('Linked Institutions')
-            ],
-        ];
-
-        $this->set('tabElements', $tabElements);
-        $action = !is_null($action) ? $action : $this->request->action;
         $this->set('selectedAction', $this->request->action);
     }
 

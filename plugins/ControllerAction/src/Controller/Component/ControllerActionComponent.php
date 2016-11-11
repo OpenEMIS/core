@@ -1960,6 +1960,11 @@ class ControllerActionComponent extends Component {
     public function getQueryString($queryString = null)
     {
         $query = $this->request->query('queryString');
+
+        if (is_null($query)) {
+            return null;
+        }
+
         $query = $this->paramsDecode($query);
 
         if (is_null($queryString)) {

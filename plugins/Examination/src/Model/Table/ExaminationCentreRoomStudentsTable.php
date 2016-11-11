@@ -7,6 +7,8 @@ use Cake\Network\Request;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
+use Cake\Utility\Security;
+use Cake\ORM\Entity;
 
 class ExaminationCentreRoomStudentsTable extends ControllerActionTable {
 
@@ -28,5 +30,13 @@ class ExaminationCentreRoomStudentsTable extends ControllerActionTable {
     {
         $this->field('examination_id', ['visible' => false]);
         $this->field('examination_centre_id', ['visible' => false]);
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $hashString = $entity->examination_centre_room_id . ',' . $entity->student_id;
+            $entity->id = Security::hash($hashString, 'sha256');
+        }
     }
 }
