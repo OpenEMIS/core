@@ -49,8 +49,8 @@ class IndividualPromotionTable extends ControllerActionTable
     {
         $validator = parent::validationDefault($validator);
         $validator
-            ->add('effective_date', 'ruleDateWithinAcademicPeriod', [
-                'rule' => ['checkDateWithinAcademicPeriod', 'academic_period_id',  ['excludeFirstDay' => true]],
+            ->add('effective_date', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id',  ['excludeFirstDay' => true]],
                 'provider' => 'table',
                 'on' => function ($context) {
                     $fromAcademicPeriodId = $context['data']['from_academic_period_id'];

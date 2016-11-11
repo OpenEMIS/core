@@ -100,6 +100,15 @@ class TransferApprovalsTable extends AppTable {
                 $newEndDate = (new Date($startDate))->modify('-1 day'); //set the end date of the 'transfered' record to a day before the start date of the 'enrolled' record.
 				$newEndDate = date('Y-m-d', strtotime($newEndDate));
 
+                // add the student to the new school
+                $newData = [
+                    'institution_id' => $newSchoolId,
+                    'student_id' => $studentId,
+                    'academic_period_id' => $periodId,
+                    'education_grade_id' => $gradeId,
+                    'student_status_id' => $statuses['CURRENT']
+                ];
+
                 $existingStudentEntity = $Students->find()->where([
                         $Students->aliasField('institution_id') => $previousSchoolId,
                         $Students->aliasField('student_id') => $studentId,
@@ -112,18 +121,10 @@ class TransferApprovalsTable extends AppTable {
                 // if cannot be found (perhaps is a promoted/graduated transfer record). then dont change the record
                 if (!empty($existingStudentEntity)) {
                 	$prevEndDate = $existingStudentEntity->end_date;
+                    $newData['previous_institution_student_id'] = $existingStudentEntity->id;
                     $this->updateStudentStatus($existingStudentEntity, 'CURRENT', 'TRANSFERRED', $newEndDate);
                 }
 
-				// add the student to the new school
-				$newData = [
-                    'institution_id' => $newSchoolId,
-                    'student_id' => $studentId,
-                    'academic_period_id' => $periodId,
-                    'education_grade_id' => $gradeId,
-                    'student_status_id' => $statuses['CURRENT'],
-                    'previous_institution_student_id' => $existingStudentEntity->id
-                ];
 				$newData['start_date'] = $startDate;
 				$newData['end_date'] = $entity->end_date->format('Y-m-d');
 				$newEntity = $Students->newEntity($newData);
@@ -543,22 +544,14 @@ class TransferApprovalsTable extends AppTable {
 
 		if (!$isAdmin) {
 			if ($AccessControl->check(['Institutions', 'TransferApprovals', 'edit'])) {
-				$institutionRoles = [];
-
 				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 				$institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
 
-				$Institutions = TableRegistry::get('Institution.Institutions');
-				foreach ($institutionIds as $institutionId) {
-					$roles = $Institutions->getInstitutionRoles($userId, $institutionId);
-					$institutionRoles[$institutionId] = $roles;
-				}
-
-				if (empty($institutionRoles)) {
+				if (empty($institutionIds)) {
 					// return empty list if the user does not have access to any schools
 					return $query->where([$this->aliasField('id') => -1]);
 				} else {
-					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
 				}
 			} else {
 				// return empty list if the user does not permission to do Transfer Approvals
