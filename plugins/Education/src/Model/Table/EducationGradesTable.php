@@ -123,6 +123,7 @@ class EducationGradesTable extends ControllerActionTable
 					$this->aliasField('education_programme_id') => $programmeId,
 					$this->aliasField('order').' > ' => $order
 				])
+				->order([$this->aliasField('order')])
 				->toArray();
 			// Default is to get the list of grades with the next programme grades
 			if ($getNextProgrammeGrades) {
