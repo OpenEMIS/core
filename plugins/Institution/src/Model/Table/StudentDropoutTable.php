@@ -388,22 +388,14 @@ class StudentDropoutTable extends AppTable {
 
 		if (!$isAdmin) {
 			if ($AccessControl->check(['Institutions', $this->alias(), 'edit'])) {
-				$institutionRoles = [];
-
 				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 				$institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
 
-				$Institutions = TableRegistry::get('Institution.Institutions');
-				foreach ($institutionIds as $institutionId) {
-					$roles = $Institutions->getInstitutionRoles($userId, $institutionId);
-					$institutionRoles[$institutionId] = $roles;
-				}
-
-				if (empty($institutionRoles)) {
+				if (empty($institutionIds)) {
 					// return empty list if the user does not have access to any schools
 					return $query->where([$this->aliasField('id') => -1]);
 				} else {
-					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
 				}
 			} else {
 				// return empty list if the user does not permission to approve Student Admission

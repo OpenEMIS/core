@@ -142,7 +142,8 @@ trait MessagesTrait {
             ],
             'change_in_room_type' => [
                 'restrictEdit' => 'Not allowed to change room type in the same day.'
-            ]
+            ],
+            'select_subject' => 'Select Subject'
         ],
         'InfrastructureCustomFields' => [
             'infrastructure_level_id' => 'Level Name'
@@ -388,6 +389,7 @@ trait MessagesTrait {
             'select_staff' => 'Select Staff',
             'add_staff' => 'Add Staff',
             'select_teacher' => 'Select Teacher',
+            'select_room' => 'Select Room',
             'add_teacher' => 'Add Teacher'
         ],
         'UserGroups' => [
@@ -739,7 +741,7 @@ trait MessagesTrait {
             ],
             'IndividualPromotion' => [
                 'effective_date' => [
-                    'ruleDateWithinAcademicPeriod' => 'Please select a date within the chosen Academic Period'
+                    'ruleInAcademicPeriod' => 'Please select a date within the chosen Academic Period'
                 ]
             ],
             'VisitRequests' => [
