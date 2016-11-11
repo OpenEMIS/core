@@ -15,7 +15,11 @@ class AssessmentPeriod extends Entity
 		if ($dateEnabled instanceof DateTimeInterface && $dateDisabled instanceof DateTimeInterface) {
 			return ($today >= $dateEnabled->format('Y-m-d') && $today <= $dateDisabled->format('Y-m-d')) ? 1 : 0;
 		} else {
-			return 1;
+			$today = time();
+			$dateEnabled = strtotime($this->date_enabled);
+			$dateDisabled = strtotime($this->date_disabled);
+
+			return ($today >= $dateEnabled && $today <= $dateDisabled) ? 1 : 0;
 		}
 	}
 }
