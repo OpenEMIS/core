@@ -523,7 +523,8 @@ class StudentPromotionTable extends AppTable
                 // Only display the options that are available in the institution and also linked to the current programme
                 $gradeOptions = array_intersect_key($listOfInstitutionGrades, $listOfGrades);
 
-                if (count($gradeOptions) == 0) {
+                // if no grade option or the next grade is not available in the institution
+                if (count($gradeOptions) == 0 || (key($gradeOptions) != key($listOfGrades))) {
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
