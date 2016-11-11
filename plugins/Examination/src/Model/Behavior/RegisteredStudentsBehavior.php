@@ -76,10 +76,9 @@ class RegisteredStudentsBehavior extends Behavior {
             $query = $model->find()->where([$idKey => $id]);
 
             $query
-                ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'], true)
+                ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'], true)
                 ->matching('AcademicPeriods')
-                ->matching('Examinations')
-                ->matching('Institutions');
+                ->matching('Examinations');
 
             $entity = $query->first();
         }
@@ -243,10 +242,9 @@ class RegisteredStudentsBehavior extends Behavior {
         $model = $this->_table;
 
         $query
-            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'])
+            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'])
             ->matching('AcademicPeriods')
-            ->matching('Examinations')
-            ->matching('Institutions');
+            ->matching('Examinations');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -400,8 +398,8 @@ class RegisteredStudentsBehavior extends Behavior {
         $value = '';
         if ($entity->has('institution')) {
             $value = $entity->institution->code_name;
-        } else if ($entity->has('_matchingData')) {
-            $value = $entity->_matchingData['Institutions']->code_name;
+        } else {
+            $value = '';
         }
 
         return $value;
@@ -599,9 +597,15 @@ class RegisteredStudentsBehavior extends Behavior {
         if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
+            if ($entity->has('institution')) {
+                $attr['value'] = $entity->institution_id;
+                $attr['attr']['value'] = $entity->institution->code_name;
+            } else {
+                $attr['value'] = 0;
+                $attr['attr']['value'] = '';
+            }
+
             $attr['type'] = 'readonly';
-            $attr['value'] = $entity->institution_id;
-            $attr['attr']['value'] = $entity->_matchingData['Institutions']->code_name;
             $event->stopPropagation();
         }
 

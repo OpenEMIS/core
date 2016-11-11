@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
@@ -24,13 +25,11 @@ class RegistrationDirectoryTable extends ControllerActionTable {
 
         $this->addBehavior('User.User');
 
-        // $this->toggle('add', false);
         $this->toggle('edit', false);
-        // $this->toggle('view', false);
         $this->toggle('remove', false);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->toggle('add', false);
 
@@ -39,20 +38,12 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->field('third_name', ['visible' => false]);
         $this->field('last_name', ['visible' => false]);
         $this->field('preferred_name', ['visible' => false]);
-        $this->field('gender_id', ['visible' => false]);
-        $this->field('date_of_birth', ['visible' => false]);
         $this->field('identity_number', ['visible' => false]);
         $this->field('address', ['visible' => false]);
         $this->field('postal_code', ['visible' => false]);
         $this->field('address_area_id', ['visible' => false]);
         $this->field('birthplace_area_id', ['visible' => false]);
-
-        $this->field('institution');
-        $this->field('student_status');
-        // $this->fields['student_status']['order'] = 5;
-
-        // $this->field('student_status', ['after' => 'name']);
-        // $this->setFieldOrder('photo_content', 'openemis_no', 'name', 'student_status');
+        $this->field('photo_content', ['visible' => false]);
 
         // back button direct to Registered Students
         $backBtn['type'] = 'button';
@@ -73,18 +64,14 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $extra['toolbarButtons']['back'] = $backBtn;
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
-        $query->where([$this->aliasField('is_student') => 1]);
-
-        // $search = $this->getSearchKey();
-        // if (!empty($search)) {
-        //     // function from AdvancedNameSearchBehavior
-        //     $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
-        // }
+        if ($this->action == 'index') {
+            $this->setFieldOrder(['openemis_no', 'name', 'date_of_birth', 'gender']);
+        }
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // add button direct to register students add
         $addBtn['type'] = 'button';
@@ -94,7 +81,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
             'data-toggle' => 'tooltip',
             'data-placement' => 'bottom',
             'escape' => false,
-            'title' => 'Register'
+            'title' => __('Register')
         ];
         $params = [
             'plugin' => 'Examination',
@@ -106,38 +93,23 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $extra['toolbarButtons']['add'] = $addBtn;
     }
 
-    public function onGetInstitution(Event $event, Entity $entity)
+    public function onGetDateOfBirth(Event $event, Entity $entity)
     {
-        $userId = $entity->id;
-
-        $studentInstitutions = [];
-        $InstitutionStudentTable = TableRegistry::get('Institution.Students');
-        $studentInstitutions = $InstitutionStudentTable->find()
-            ->matching('StudentStatuses')
-            ->matching('Institutions')
-            ->where([
-                $InstitutionStudentTable->aliasField('student_id') => $userId,
-            ])
-            ->distinct(['id'])
-            ->select(['id' => $InstitutionStudentTable->aliasField('institution_id'), 'name' => 'Institutions.name', 'student_status_name' => 'StudentStatuses.name'])
-            ->order(['(CASE WHEN '.$InstitutionStudentTable->aliasField('modified').' IS NOT NULL THEN '.$InstitutionStudentTable->aliasField('modified').' ELSE '.
-            $InstitutionStudentTable->aliasField('created').' END) DESC'])
-            ->first();
-
         $value = '';
-        $name = '';
-        if (!empty($studentInstitutions)) {
-            $value = $studentInstitutions->student_status_name;
-            $name = $studentInstitutions->name;
+        if ($entity->has('date_of_birth')) {
+            $value = $entity->date_of_birth;
         }
-        $entity->student_status_name = $value;
-
-        return $name;
+        return $value;
     }
 
-    public function onGetStudentStatus(Event $event, Entity $entity)
+    public function onGetGenderId(Event $event, Entity $entity)
     {
-        return __($entity->student_status_name);
+        $value = '';
+        if ($entity->has('gender')) {
+            $value = $entity->gender->name;
+        }
+
+        return $value;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
