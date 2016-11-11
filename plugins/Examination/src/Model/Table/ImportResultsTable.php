@@ -16,7 +16,11 @@ class ImportResultsTable extends AppTable
         $this->table('import_mapping');
         parent::initialize($config);
 
-        $this->addBehavior('Import.Import', ['plugin' => 'Examination', 'model' => 'ExaminationItemResults']);
+        $this->addBehavior('Import.Import', [
+            'plugin' => 'Examination',
+            'model' => 'ExaminationItemResults',
+            'backUrl' => ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamResults']
+        ]);
 
         // register the target table once
         $this->ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
