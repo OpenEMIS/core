@@ -38,6 +38,16 @@ class InstitutionRoomsTable extends AppTable {
 		$this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
 		$this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_room_id']);
 
+		$this->belongsToMany('Subjects', [
+            'className' => 'Institution.InstitutionSubjects',
+            'joinTable' => 'institution_subjects_rooms',
+            'foreignKey' => 'institution_room_id',
+            'targetForeignKey' => 'institution_subject_id',
+            'through' => 'Institution.InstitutionSubjectsRooms',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('CustomField.Record', [
@@ -71,12 +81,12 @@ class InstitutionRoomsTable extends AppTable {
 		    ])
 		    ->add('start_date', [
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period_id']
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []]
 				]
 			])
 			->add('end_date', [
 				'ruleInAcademicPeriod' => [
-					'rule' => ['inAcademicPeriod', 'academic_period_id']
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []]
 				],
 				'ruleCompareDateReverse' => [
 					'rule' => ['compareDateReverse', 'start_date', true]
@@ -131,6 +141,20 @@ class InstitutionRoomsTable extends AppTable {
 
 	public function onGetInfrastructureLevel(Event $event, Entity $entity) {
 		return $this->levelOptions[$this->roomLevel];
+	}
+
+	public function onGetSubjects(Event $event, Entity $entity) {
+		if ($entity->has('subjects')) {
+            $resultArray = [];
+
+            foreach ($entity->subjects as $key => $obj) {
+                $resultArray[] = $obj->name;
+            }
+
+            if (!empty($resultArray)) {
+                return implode(', ', $resultArray);
+            }
+        }
 	}
 
 	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
@@ -252,7 +276,7 @@ class InstitutionRoomsTable extends AppTable {
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain(['AcademicPeriods', 'RoomTypes', 'InfrastructureConditions']);
+		$query->contain(['AcademicPeriods', 'RoomTypes', 'InfrastructureConditions', 'Subjects']);
 	}
 
 	public function editBeforeAction(Event $event) {
@@ -574,6 +598,25 @@ class InstitutionRoomsTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$session = $request->session();
+
+			if ($session->check('Institution.Institutions.id') && !is_null($this->currentAcademicPeriod)) {
+                $institutionId = $session->read('Institution.Institutions.id');
+				$academicPeriodId = $this->currentAcademicPeriod->id;
+
+				$attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
+			}
+
+			if (!$this->canUpdateDetails) {
+				$attr['visible'] = false;
+			}
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldNewRoomType(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'edit') {
 			$entity = $attr['entity'];
@@ -665,6 +708,13 @@ class InstitutionRoomsTable extends AppTable {
 		$this->ControllerAction->field('end_date', ['entity' => $entity]);
 		$this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
 		$this->ControllerAction->field('previous_room_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('subjects', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'subjects',
+            'fieldName' => $this->alias() . '.subjects._ids',
+            'placeholder' => $this->getMessage($this->aliasField('select_subject')),
+            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>'
+        ]);
 		$this->ControllerAction->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
 		$this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
 	}
@@ -850,6 +900,34 @@ class InstitutionRoomsTable extends AppTable {
 		return compact('statusOptions', 'selectedStatus');
 	}
 
+	public function getSubjectOptions($params=[]) {
+		$institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
+		$academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : null;
+
+        $options = [];
+
+        $Classes = $this->Subjects->Classes;
+        $classOptions = $Classes
+        	->find()
+        	->contain(['Subjects'])
+        	->where([
+        		$Classes->aliasField('institution_id') => $institutionId,
+        		$Classes->aliasField('academic_period_id') => $academicPeriodId
+        	])
+        	->toArray();
+
+        foreach ($classOptions as $classKey => $class) {
+        	$className = $class->name;
+        	if ($class->has('subjects')) {
+        		foreach ($class->subjects as $subjectKey => $subject) {
+        			$options[$className][$subject->id] = $subject->name;		
+        		}
+        	}
+        }
+
+        return $options;
+    }
+
 	public function processCopy(Entity $entity) {
 		// if is new and room status of previous room usage is change in room type then copy all general custom fields
 		if ($entity->isNew()) {
@@ -866,5 +944,19 @@ class InstitutionRoomsTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	public function findInUse(Query $query, array $options) {
+		$institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
+		$academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
+		$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+
+		$query->where([
+			$this->aliasField('institution_id') => $institutionId,
+			$this->aliasField('academic_period_id') => $academicPeriodId,
+			$this->aliasField('room_status_id') => $inUseId
+		]);
+
+		return $query;
 	}
 }
