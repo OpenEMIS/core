@@ -64,7 +64,7 @@ class BulkStudentsInstitutionsRegistrationTable extends ControllerActionTable {
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
 
-        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions'];
+        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions', 'queryString' => $this->request->query('queryString')];
 
         $this->setFieldOrder([
             'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_id', 'student_id'
@@ -81,7 +81,9 @@ class BulkStudentsInstitutionsRegistrationTable extends ControllerActionTable {
             $InstitutionGradesTable = $this->Institutions->InstitutionGrades;
             $institutionsData = $InstitutionGradesTable
                 ->find()
-                ->matching('Institutions')
+                ->matching('Institutions.ExaminationCentres', function ($q) {
+                    return $q->where(['ExaminationCentres.id' => $this->examCentreId]);
+                })
                 ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                 ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
                 ->group('institution_id')
@@ -137,7 +139,7 @@ class BulkStudentsInstitutionsRegistrationTable extends ControllerActionTable {
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions'];
+        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions', 'queryString' => $this->request->query('queryString')];
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
     }
