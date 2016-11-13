@@ -50,11 +50,12 @@ class StudentFeesTable extends ControllerActionTable {
 					'edit' => true,
 					'add' => false,
 					'remove' => false,
-					'search' => false,
 					'reorder' => false
 				],
             ]);
         }
+
+        $this->addBehavior('User.AdvancedNameSearch');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -72,6 +73,7 @@ class StudentFeesTable extends ControllerActionTable {
     	$this->field('academic_period_id', 	['visible' => ['view'=>true, 'edit'=>true]]);
     	$this->field('start_date', 			['visible' => false]);
     	$this->field('end_date', 			['visible' => false]);
+        $this->field('previous_institution_student_id', ['visible' => false]);
 
     	$this->field('openemis_no', 		['type' => 'string', 	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
     	$this->field('student_id', 			['type' => 'string',	'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]]);
@@ -132,6 +134,17 @@ class StudentFeesTable extends ControllerActionTable {
 			];
 		}
 	}
+
+    public function implementedEvents() {
+       $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'student_id';
+    }
 
 
 /******************************************************************************************************************
@@ -198,6 +211,7 @@ class StudentFeesTable extends ControllerActionTable {
 			$this->aliasField('education_grade_id') => $this->_selectedEducationGradeId,
 		])
 		;
+
 		if (!$this->InstitutionFeeEntity) {
 			$this->Alert->warning('InstitutionFees.noProgrammeGradeFees');
 			$query->where([
@@ -209,6 +223,12 @@ class StudentFeesTable extends ControllerActionTable {
 			])
 			;
 		}
+
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        }
 	}
 
 

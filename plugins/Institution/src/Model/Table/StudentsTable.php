@@ -35,7 +35,7 @@ class StudentsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Institutions',    ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']); 
+        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
         // Behaviors
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -425,8 +425,8 @@ class StudentsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id', ['visible' => false]);
-        $this->field('class', ['order' => 90]);
-        $this->field('student_status_id', ['order' => 100]);
+        $this->field('class', ['after' => 'education_grade_id']);
+        $this->field('student_status_id', ['after' => 'class']);
         $this->fields['start_date']['visible'] = false;
         $this->fields['end_date']['visible'] = false;
         $this->fields['class']['sort'] = ['field' => 'InstitutionClasses.name'];
@@ -523,6 +523,7 @@ class StudentsTable extends ControllerActionTable
         $InstitutionEducationGrades = TableRegistry::get('Institution.InstitutionGrades');
         $session = $this->Session;
         $institutionId = $session->read('Institution.Institutions.id');
+
         $educationGradesOptions = $InstitutionEducationGrades
             ->find('list', [
                     'keyField' => 'EducationGrades.id',
@@ -537,7 +538,7 @@ class StudentsTable extends ControllerActionTable
             ->toArray();
 
         $educationGradesOptions = ['-1' => __('All Grades')] + $educationGradesOptions;
-        
+
         // Query Strings
 
         if (empty($request->query['academic_period_id'])) {
@@ -571,10 +572,6 @@ class StudentsTable extends ControllerActionTable
             $query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
         }
 
-        if ($selectedStatus != -1) {
-            $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
-        }
-
         $query->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // Start: sort by class column
@@ -593,26 +590,26 @@ class StudentsTable extends ControllerActionTable
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        } else {
+            if (!$this->isAdvancedSearchEnabled() && $selectedStatus != -1) {
+                $query->where([$this->aliasField('student_status_id') => $selectedStatus]);
+            }
         }
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
-
+// pr($query->sql());
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
     {
         $this->dashboardQuery = clone $query;
-
-        $this->setFieldOrder([
-            'photo_content', 'openemis_no', 'identity', 'student_id', 'education_grade_id', 'class', 'student_status_id'
-        ]);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('photo_content', ['type' => 'image', 'order' => 0]);
+        $this->field('photo_content', ['type' => 'image', 'before' => 'openemis_no']);
         $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
         $this->fields['student_id']['order'] = 10;
         $extra['toolbarButtons']['back']['url']['action'] = 'StudentProgrammes';
@@ -705,7 +702,7 @@ class StudentsTable extends ControllerActionTable
 
             $indexElements[] = ['name' => 'Institution.Students/controls', 'data' => [], 'options' => [], 'order' => 0];
 
-            if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+            if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
                 $indexElements[] = [
                     'name' => $indexDashboard,
                     'data' => [
@@ -749,7 +746,10 @@ class StudentsTable extends ControllerActionTable
                                     $this->aliasField('student_id') => $entity->student_id,
                                     $this->aliasField('id <> ') => $entity->id,
                                 ])
-                                ->order(['created' => 'desc'])
+                                ->order([
+                                    'created' => 'desc',
+                                    'start_date' => 'desc'
+                                ])
                                 ->first();
 
             if ($prevInstitutionStudent) { //if has previous record.
@@ -1036,7 +1036,7 @@ class StudentsTable extends ControllerActionTable
     public function getNumberOfStudentsByAge($params=[])
     {
         $query = $params['query'];
-        $InstitutionRecords = clone $query;
+        $InstitutionRecords = $query->cleanCopy();
         $ageQuery = $InstitutionRecords
             ->select([
                 'age' => $InstitutionRecords->func()->dateDiff([
