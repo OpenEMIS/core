@@ -1,0 +1,62 @@
+/* NOTICES v.1.0.0 */
+
+#news .list-group-item {
+	border-left: 0;
+	border-right: 0;
+}
+
+#news .list-group-item:first-child {
+	border-top: 0;
+}
+
+#news .list-group-item:last-child {
+	border-bottom: 0;
+}
+
+#news .notice-message,
+#news .notice-attachments {
+	display: inline-block;
+	vertical-align: top;
+}
+
+#news .notice-message {
+	width: 80%;
+}
+
+#news .notice-attachments {
+	width: calc(100% - 82%);
+}
+
+#news .notice-attachments ul li {
+	line-height: 24px;
+	max-width: 210px;
+	overflow: hidden;
+	-ms-text-overflow: ellipsis;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+#news .notice-attachments ul li:before {
+	display: inline-block;
+	font-family: 'FontAwesome';
+	content: "\f0c6";
+	font-size: 16px;
+	-webkit-transform: rotate(225deg);
+	-moz-transform: rotate(225deg);
+	-ms-transform: rotate(225deg);
+	-o-transform: rotate(225deg);
+	transform: rotate(225deg);	
+	color: #999;
+}
+
+@media only screen and (max-width: 800px) {
+	#news .notice-messages,
+	#news .notice-attachments {
+		width: 100%;
+	}
+}
+
+.rtl #news .rotate-icon {
+	float: right;
+    margin: 3px;
+}
