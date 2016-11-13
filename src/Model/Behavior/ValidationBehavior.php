@@ -102,48 +102,55 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
-    public static function checkAuthorisedArea($check, $superAdmin, $userId, array $globalData) {
-        $isValid = false;
-        if ($superAdmin == 1) {
-        	$isValid = true;
-        } else {
-        	$data = $globalData['data'];
-        	$isSystemGroup = false;
-        	if (!$globalData['newRecord']) { // only applicable for edit mode
-        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
-	        		$isSystemGroup = true;
-	        	}
-        	}
+    public static function checkAuthorisedArea($check, array $globalData)
+    {
+    	$data = $globalData['data'];
+    	$isValid = false;
 
-        	$condition = [];
-        	$areaCondition = [];
+    	if (array_key_exists('superAdmin', $data) && array_key_exists('userId', $data)) {
+    		$superAdmin = $globalData['data']['superAdmin'];
+    		$userId = $globalData['data']['userId'];
 
-        	if (!$isSystemGroup) {
-        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-	        	$Areas = TableRegistry::get('Area.Areas');
-	        	// get areas from security group areas
-	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
-
-	        	if (count($areasByUser) > 0) {
-					foreach($areasByUser as $area) {
-		        		$areaCondition[] = [
-							$Areas->aliasField('lft').' >= ' => $area['lft'],
-							$Areas->aliasField('rght').' <= ' => $area['rght']
-						];
+    		if ($superAdmin == 1) {
+	        	$isValid = true;
+	        } else {
+	        	$isSystemGroup = false;
+	        	if (!$globalData['newRecord']) { // only applicable for edit mode
+	        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
+		        		$isSystemGroup = true;
 		        	}
-		        	$condition['OR'] = $areaCondition;
+	        	}
 
-					$isChild = $Areas->find()
-			        	->where([$Areas->aliasField('id') => $check])
-			        	->where($condition)
-			        	->count();
+	        	$condition = [];
+	        	$areaCondition = [];
 
-			        $isValid = $isChild > 0;
-				}
-        	} else {
-        		$isValid = true;
-        	}
-        }
+	        	if (!$isSystemGroup) {
+	        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		        	$Areas = TableRegistry::get('Area.Areas');
+		        	// get areas from security group areas
+		        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
+
+		        	if (count($areasByUser) > 0) {
+						foreach($areasByUser as $area) {
+			        		$areaCondition[] = [
+								$Areas->aliasField('lft').' >= ' => $area['lft'],
+								$Areas->aliasField('rght').' <= ' => $area['rght']
+							];
+			        	}
+			        	$condition['OR'] = $areaCondition;
+
+						$isChild = $Areas->find()
+				        	->where([$Areas->aliasField('id') => $check])
+				        	->where($condition)
+				        	->count();
+
+				        $isValid = $isChild > 0;
+					}
+	        	} else {
+	        		$isValid = true;
+	        	}
+	        }
+    	}
         return $isValid;
     }
 
@@ -802,27 +809,34 @@ class ValidationBehavior extends Behavior {
         return $count==0;
     }
 
-	public static function inAcademicPeriod($field, $academicFieldName, $globalData)
+	public static function inAcademicPeriod($field, $academicFieldName, $options = [], $globalData)
 	{
 		if (array_key_exists($academicFieldName, $globalData['data'])) {
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$periodObj = $AcademicPeriods
 					->findById($globalData['data'][$academicFieldName])
 					->first();
-			$startDate = strtotime($globalData['data']['start_date']);
-			$endDate = strtotime($globalData['data']['end_date']);
 
-			if (!empty($periodObj)) {
-				$academicPeriodStartDate = (!is_null($periodObj['start_date']))? $periodObj['start_date']->toUnixString(): null;
-				$academicPeriodEndDate = (!is_null($periodObj['end_date']))? $periodObj['end_date']->toUnixString(): null;
+			$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
+	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
 
-				$rangecheck = ($startDate >= $academicPeriodStartDate && $startDate <= $academicPeriodEndDate) &&
-				(is_null($academicPeriodEndDate) ||
-					(!is_null($academicPeriodEndDate) && ($endDate >= $academicPeriodStartDate && $endDate <= $academicPeriodEndDate))
-				)
-				;
-				return $rangecheck;
-			}
+	        if ($excludeFirstDay) {
+	        	$withFirstDay = Time::parse($periodObj->start_date);
+	        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
+	        } else {
+	        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
+	        }
+
+	        if ($excludeLastDay) {
+	        	$withLastDay = Time::parse($periodObj->end_date);
+	        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
+	        } else {
+	        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
+	        }
+
+	        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
+
+	        return ($checkDate >= $startDate && $checkDate <= $endDate);
 		}
 
 		return false;
@@ -1332,38 +1346,6 @@ class ValidationBehavior extends Behavior {
 			return true;
 		}
 	}
-
-	public static function checkDateWithinAcademicPeriod($field, $academicPeriod, $options = [], array $globalData) {
-		if (array_key_exists($academicPeriod, $globalData['data'])) {
-	        $academicPeriodId = $globalData['data'][$academicPeriod];
-
-	        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-	        $periodData = $AcademicPeriods->get($academicPeriodId);
-
-	        $excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
-	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
-
-	        if ($excludeFirstDay) {
-	        	$withFirstDay = Time::parse($periodData->start_date);
-	        	$startDate = $withFirstDay->modify('+1 day')->format('Y-m-d');
-	        } else {
-	        	$startDate = $periodData->start_date->format('Y-m-d');
-	        }
-
-	        if ($excludeLastDay) {
-	        	$withLastDay = Time::parse($periodData->end_date);
-	        	$endDate = $withLastDay->modify('-1 day')->format('Y-m-d');
-	        } else {
-	        	$endDate = $periodData->end_date->format('Y-m-d');
-	        }
-
-	        $effectiveDate = Time::parse($field)->format('Y-m-d');
-
-	        return ($effectiveDate >= $startDate && $effectiveDate <= $endDate);
-	    }
-
-	    return false;
-    }
 
 	public static function checkTimeRange($field, array $globalData) {
 		$systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');

@@ -49,4 +49,13 @@ class ConfigCustomValidationTable extends ControllerActionTable
     {
         $query->where([$this->aliasField('type') => 'Custom Validation']);
     }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'value') {
+            return __('Validation Pattern');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
 }

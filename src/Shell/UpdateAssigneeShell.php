@@ -1,9 +1,9 @@
 <?php
 namespace App\Shell;
 
-use Cake\Console\Shell;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\Console\Shell;
 
 class UpdateAssigneeShell extends Shell {
 	// Workflow Steps - category
@@ -14,6 +14,7 @@ class UpdateAssigneeShell extends Shell {
 	public function initialize() {
 		parent::initialize();
 		$this->loadModel('Workflow.WorkflowModels');
+		$this->loadModel('Workflow.WorkflowTransitions');
 		$this->loadModel('Security.SecurityGroupUsers');
 		$this->loadModel('Institution.Institutions');
 	}
@@ -66,6 +67,7 @@ class UpdateAssigneeShell extends Shell {
 
 			$unassignedRecords = $model
 				->find()
+				->contain(['Assignees'])
 				->matching('Statuses', function ($q) {
 					return $q->where(['Statuses.category <> ' => self::DONE]);
 				})
@@ -102,6 +104,8 @@ class UpdateAssigneeShell extends Shell {
 					['assignee_id' => $assigneeId],
 					['id' => $unassignedEntity->id]
 				);
+
+				$this->WorkflowTransitions->trackChanges($workflowModelEntity, $unassignedEntity, $assigneeId);
 			}
 
 			$this->out("End Processing Update Assignee Shell of ".$workflowModelEntity->name);

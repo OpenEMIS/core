@@ -35,7 +35,7 @@ var Workflow = {
 		$('.workflowtransition-event-description').html(jsonObj.event_description);
         var assigneeUrl = $('.workflowtransition-assignee-id').attr('assignee-url');
 
-        Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id);
+		Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id);
 		Workflow.resetError();
 		Workflow.toggleAssignee(jsonObj.assignee_required);
 	},
