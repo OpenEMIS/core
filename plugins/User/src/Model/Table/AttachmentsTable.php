@@ -5,8 +5,10 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Network\Request;
 
 use App\Model\Table\AppTable;
 
@@ -36,6 +38,13 @@ class AttachmentsTable extends AppTable {
 		$this->ControllerAction->field('description', 			['type' => 'text', 'visible' => true]);
 
 		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
+
+		$this->ControllerAction->field('shared', [
+			'type' => 'chosenSelect',
+			'placeholder' => __('Add role to share'),
+			'after' => 'date_on_file'
+			//'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+		]);
 	}
 
 	public function implementedEvents() {
@@ -116,7 +125,19 @@ class AttachmentsTable extends AppTable {
 		return $this->getFileTypeForView($entity->file_name);
 	}
 
+	public function onUpdateFieldShared(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add' || $action == 'edit') {
+			// $sharedOptions = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
+			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+			$roleOptions = $SecurityRolesTable->getSystemRolesList();
+			if (!empty($roleOptions)) {
+				$attr['options'] = array('all' => __('Share with All')) + $roleOptions;
+			}
+		}
 
+		return $attr;
+	}
 	/******************************************************************************************************************
 **
 ** adding download button to index page
