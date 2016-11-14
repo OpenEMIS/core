@@ -42,7 +42,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_centre_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
                 'provider' => 'table'
             ]);
     }

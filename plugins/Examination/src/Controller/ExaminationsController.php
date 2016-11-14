@@ -22,6 +22,9 @@ class ExaminationsController extends AppController
     public function BulkStudentRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
     public function RegistrationDirectory() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.RegistrationDirectory']); }
+    public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
+    public function LinkedInstitutions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresInstitutions']); }
+    public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
     // End
 
     // AngularJS
@@ -62,10 +65,6 @@ class ExaminationsController extends AppController
             'Exams' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
                 'text' => __('Exams')
-            ],
-            'ExamCentres' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres'],
-                'text' => __('Exam Centres')
             ],
             'GradingTypes' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],

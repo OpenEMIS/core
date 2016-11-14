@@ -158,7 +158,7 @@ FROM `z_3501_examination_centre_subjects`;
 -- examination_centre_invigilators
 DROP TABLE IF EXISTS `examination_centre_invigilators`;
 CREATE TABLE IF NOT EXISTS `examination_centre_invigilators` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -185,7 +185,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_rooms` (
   `number_of_seats` int(3) DEFAULT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
-  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',  
+  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -228,7 +228,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_room_students` (
 -- examination_centre_room_invigilators
 DROP TABLE IF EXISTS `examination_centre_room_invigilators`;
 CREATE TABLE IF NOT EXISTS `examination_centre_room_invigilators` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_room_id` int(11) NOT NULL COMMENT 'links to examination_centre_rooms.id',
   `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -251,13 +251,13 @@ CREATE TABLE IF NOT EXISTS `examination_centre_room_invigilators` (
 -- examination_centres_institutions
 DROP TABLE IF EXISTS `examination_centres_institutions`;
 CREATE TABLE IF NOT EXISTS `examination_centres_institutions` (
-  `id` char(36) NOT NULL,
+  `id` char(64) NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`examination_centre_id`, `institution_id`),
   KEY `examination_centre_id` (`examination_centre_id`),
   KEY `institution_id` (`institution_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions for a particular examination centre';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions linked to a particular examination centre';
 
 -- examination_item_results
 DROP TABLE IF EXISTS `examination_item_results`;
@@ -284,3 +284,17 @@ CREATE TABLE IF NOT EXISTS `examination_item_results` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the examination results for an individual student in a particular examination'
 /*!50100 PARTITION BY HASH (`academic_period_id`)
 PARTITIONS 8 */;
+
+INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) VALUES
+('Examination.ExaminationItemResults', 'academic_period_id', 'Code', 1, 2, 'AcademicPeriod', 'AcademicPeriods', 'code'),
+('Examination.ExaminationItemResults', 'examination_id', 'Code', 2, 2, 'Examination', 'Examinations', 'code'),
+('Examination.ExaminationItemResults', 'examination_centre_id', 'Code', 3, 2, 'Examination', 'ExaminationCentres', 'code'),
+('Examination.ExaminationItemResults', 'education_subject_id', 'Code', 4, 2, 'Education', 'EducationSubjects', 'code'),
+('Examination.ExaminationItemResults', 'student_id', 'OpenEMIS ID', 5, 2, 'Security', 'Users', 'openemis_no'),
+('Examination.ExaminationItemResults', 'institution_id', '(Leave as blank for private candidate)', 6, 2, 'Institution', 'Institutions', 'code'),
+('Examination.ExaminationItemResults', 'marks', NULL, 7, 0, NULL, NULL, NULL),
+('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Code', 8, 2, 'Examination', 'ExaminationGradingOptions', 'code');
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(5051, 'Results', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamResults.index|Results.index|ExamResults.view', 'Results.edit', NULL, NULL, NULL, 5051, 1, NULL, NULL, NULL, 1, NOW()),
+(5052, 'Import Results', 'Examinations', 'Administration', 'Examinations', 5000, NULL, NULL, NULL, NULL, 'ImportResults.add|ImportResults.template|ImportResults.results|ImportResults.downloadFailed|ImportResults.downloadPassed', 5052, 1, NULL, NULL, NULL, 1, NOW());
