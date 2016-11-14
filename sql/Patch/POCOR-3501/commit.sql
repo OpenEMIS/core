@@ -248,7 +248,7 @@ RENAME TABLE `examination_items` TO `z_3501_examination_items`;
 
 DROP TABLE IF EXISTS `examination_items`;
 CREATE TABLE IF NOT EXISTS `examination_items` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `weight` decimal(6,2) DEFAULT '0.00',
   `examination_date` date DEFAULT NULL,
   `start_time` time DEFAULT NULL,
