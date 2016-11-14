@@ -26,12 +26,24 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('Invigilators', [
+            'className' => 'User.Users',
+            'joinTable' => 'examination_centres_invigilators',
+            'foreignKey' => 'examination_centre_id',
+            'targetForeignKey' => 'invigilator_id',
+            'through' => 'Examination.ExaminationCentresInvigilators',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+            // 'saveStrategy' => 'append'
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $newEvent = [
+            'ControllerAction.Model.ajaxInvigilatorAutocomplete' => 'ajaxInvigilatorAutocomplete',
             'Model.Institutions.afterSave' => 'institutionAfterSave',
         ];
         $events = array_merge($events, $newEvent);
@@ -117,6 +129,17 @@ class ExaminationCentresTable extends ControllerActionTable {
         $query->where($where);
     }
 
+    public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
+    {
+        if ($action == 'edit') {
+            $includes['autocomplete'] = [
+                'include' => true,
+                'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
+                'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
+            ];
+        }
+    }
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -139,6 +162,53 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->toArray();
 
         return $examinationOptions;
+    }
+
+    public function ajaxInvigilatorAutocomplete()
+    {
+        $this->controller->autoRender = false;
+        $this->autoRender = false;
+
+        if ($this->request->is(['ajax'])) {
+            $term = $this->request->query['term'];
+            $search = sprintf('%s%%', $term);
+
+            $data = [];
+            $Users = $this->Invigilators;
+            $list = $Users
+                ->find()
+                ->select([
+                    $Users->aliasField('id'),
+                    $Users->aliasField('openemis_no'),
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('middle_name'),
+                    $Users->aliasField('third_name'),
+                    $Users->aliasField('last_name'),
+                    $Users->aliasField('preferred_name')
+                ])
+                ->where([
+                    $Users->aliasField('is_student') => 0,
+                    'OR' => [
+                        $Users->aliasField('openemis_no LIKE ') => $search,
+                        $Users->aliasField('first_name LIKE ') => $search,
+                        $Users->aliasField('middle_name LIKE ') => $search,
+                        $Users->aliasField('third_name LIKE ') => $search,
+                        $Users->aliasField('last_name LIKE ') => $search
+                    ]
+                ])
+                ->order([$Users->aliasField('first_name')])
+                ->all();
+
+            foreach($list as $obj) {
+                $data[] = [
+                    'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+                    'value' => $obj->id
+                ];
+            }
+
+            echo json_encode($data);
+            die;
+        }
     }
 
     public function findBySpecialNeeds(Query $query, array $options)
@@ -181,6 +251,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $query->contain(['ExaminationCentreSubjects.EducationSubjects'])
             ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes'])
             ->contain(['ExaminationCentreRooms.Students'])
+            ->contain(['Invigilators'])
             ->matching('Examinations')
             ->matching('Areas')
             ->matching('AcademicPeriods');
@@ -211,6 +282,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->field('examination_id', ['entity' => $entity]);
             $this->field('special_need_types', ['type' => 'chosenSelect', 'entity' => $entity]);
             $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
+            $this->field('invigilators', ['type' => 'custom_invigilators']);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
             $this->fields['institution_id']['visible'] = true;
             $this->fields['institution_id']['type'] = 'hidden';
@@ -263,7 +335,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             }
 
             // field order
-            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'invigilators', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
@@ -383,6 +455,26 @@ class ExaminationCentresTable extends ControllerActionTable {
             $attr['data'] = $subjects;
         }
         return $attr;
+    }
+
+    public function onGetCustomInvigilatorsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        $tableHeaders = [__('Invigilator')];
+        $tableCells = [];
+        $alias = $this->alias();
+        $fieldKey = 'invigilators';
+
+        if ($action == 'view') {
+        } else if ($action == 'edit') {
+            if (!$entity->isNew()) {
+
+            }
+        }
+
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+
+        return $event->subject()->renderElement('Examination.ExaminationCentres/' . $fieldKey, ['attr' => $attr]);
     }
 
     public function onGetName(Event $event, Entity $entity)
