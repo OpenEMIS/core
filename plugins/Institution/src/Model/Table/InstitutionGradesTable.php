@@ -436,7 +436,7 @@ class InstitutionGradesTable extends AppTable {
 					;
 		$result = $query->toArray();
 		if (empty($result)) {
-			$Alert->warning('Institution.Institutions.noProgrammes');
+			// $Alert->warning('Institution.Institutions.noProgrammes');
 			return [];
 		} else {
 			return $result;
