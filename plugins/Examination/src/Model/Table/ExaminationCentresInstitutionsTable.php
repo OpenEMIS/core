@@ -19,6 +19,8 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->toggle('view', false);
+        $this->toggle('edit', false);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -33,6 +35,22 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
     {
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
         $this->fields['institution_id']['type'] = 'integer';
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutionAddStudents', 'add', 'queryString' => $this->request->query('queryString')];
+        $button['type'] = 'button';
+        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['attr'] = $toolbarAttr;
+        $button['attr']['title'] = __('Bulk Add');
+        $extra['toolbarButtons']['bulkAdd'] = $button;
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -54,7 +72,6 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
     {
     	if ($action == 'add') {
     		$options = $this->Institutions->find()
-    			->find('list')
                 ->innerJoinWith('InstitutionGrades', function ($q) use ($attr) {
                     return $q->where(['InstitutionGrades.education_grade_id' => $attr['education_grade_id']]);
                 })
@@ -69,7 +86,12 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
     			->group([$this->Institutions->aliasField('id')])
     			->toArray();
 
-    		$attr['options'] = $options;
+            $institutions = [];
+            foreach ($options as $value) {
+                $institutions[$value->id] = $value->code.' - '.$value->name;
+            }
+
+    		$attr['options'] = $institutions;
     		$attr['type'] = 'select';
 
     		return $attr;
