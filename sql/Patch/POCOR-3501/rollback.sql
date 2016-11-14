@@ -14,11 +14,15 @@ RENAME TABLE `z_3501_examination_centre_students` TO `examination_centre_student
 DROP TABLE IF EXISTS `examination_centre_subjects`;
 RENAME TABLE `z_3501_examination_centre_subjects` TO `examination_centre_subjects`;
 
-DROP TABLE IF EXISTS `examination_centre_invigilators`;
+DROP TABLE IF EXISTS `examination_centres_invigilators`;
 DROP TABLE IF EXISTS `examination_centre_rooms`;
 DROP TABLE IF EXISTS `examination_centre_room_students`;
-DROP TABLE IF EXISTS `examination_centre_room_invigilators`;
+DROP TABLE IF EXISTS `examination_centre_rooms_invigilators`;
 DROP TABLE IF EXISTS `examination_centres_institutions`;
+
+DROP TABLE IF EXISTS `examination_items`;
+RENAME TABLE `z_3501_examination_items` TO `examination_items`;
+
 DROP TABLE IF EXISTS `examination_item_results`;
 
 DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationItemResults';
