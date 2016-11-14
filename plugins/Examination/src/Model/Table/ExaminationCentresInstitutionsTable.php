@@ -54,7 +54,6 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
     {
     	if ($action == 'add') {
     		$options = $this->Institutions->find()
-    			->find('list')
                 ->innerJoinWith('InstitutionGrades', function ($q) use ($attr) {
                     return $q->where(['InstitutionGrades.education_grade_id' => $attr['education_grade_id']]);
                 })
@@ -69,7 +68,12 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
     			->group([$this->Institutions->aliasField('id')])
     			->toArray();
 
-    		$attr['options'] = $options;
+            $institutions = [];
+            foreach ($options as $value) {
+                $institutions[$value->id] = $value->code.' - '.$value->name;
+            }
+
+    		$attr['options'] = $institutions;
     		$attr['type'] = 'select';
 
     		return $attr;
