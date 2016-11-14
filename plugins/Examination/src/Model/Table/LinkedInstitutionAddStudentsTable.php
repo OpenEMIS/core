@@ -12,7 +12,7 @@ use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 
-class BulkStudentsInstitutionsRegistrationTable extends ControllerActionTable {
+class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
     private $examCentreId = null;
