@@ -35,7 +35,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_centre_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
                 'provider' => 'table'
             ]);
     }
@@ -238,13 +238,11 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
                 $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
 
-                $InstitutionClassesTable = $this->Institutions->InstitutionClasses;
-                $institutionsData = $InstitutionClassesTable
+                $InstitutionGradesTable = $this->Institutions->InstitutionGrades;
+                $institutionsData = $InstitutionGradesTable
                     ->find()
                     ->matching('Institutions')
-                    ->innerJoinWith('ClassGrades', function ($q) use ($educationGradeId) {
-                        return $q->where(['ClassGrades.education_grade_id' => $educationGradeId]);
-                    })
+                    ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                     ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
                     ->group('institution_id')
                     ->hydrate(false)
@@ -267,6 +265,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $institutionId = $request->data[$this->alias()]['institution_id'];
                 $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
                 $examinationId = $request->data[$this->alias()]['examination_id'];
+                $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
                 $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
                 $examinationCentreId = $request->data[$this->alias()]['examination_centre_id'];
 
@@ -282,6 +281,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                         $InstitutionStudents->aliasField('institution_id') => $institutionId,
                         $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
                         $InstitutionStudents->aliasField('student_status_id') => $enrolledStatus,
+                        $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
                         'InstitutionExaminationStudents.student_id IS NULL'
                     ])
                     ->group($InstitutionStudents->aliasField('student_id'))

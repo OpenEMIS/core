@@ -156,6 +156,7 @@ class NavigationComponent extends Component
 		$controllerActionLink = $linkName;
 		if (!empty($pass[0])) {
 			$linkName .= '.'.$pass[0];
+
 		}
 		if (!in_array($linkName, $navigations)) {
 			$selectedArray = $this->array_column($navigations, 'selected');
@@ -744,6 +745,7 @@ class NavigationComponent extends Component
 
 	public function getAdministrationNavigation()
 	{
+		$queryString = $this->request->query('queryString');
 		$navigation = [
 			'SystemSetup' => [
 				'title' => 'System Setup',
@@ -943,8 +945,32 @@ class NavigationComponent extends Component
 						'title' => 'Exams',
 						'parent' => 'Administration.Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.Exams', 'Examinations.ExamCentres', 'Examinations.GradingTypes']
+						'selected' => ['Examinations.Exams', 'Examinations.GradingTypes']
 					],
+					'Examinations.ExamCentres.index'  => [
+						'title' => 'Centres',
+						'parent' => 'Administration.Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.ExamCentres.add', 'Examinations.ExamCentres.remove']
+					],
+						'Examinations.ExamCentres.view'  => [
+							'title' => 'Overview',
+							'parent' => 'Examinations.ExamCentres.index',
+							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
+							'selected' => ['Examinations.ExamCentres.view', 'Examinations.ExamCentres.edit']
+						],
+						'Examinations.ExamCentreRooms'  => [
+							'title' => 'Rooms',
+							'parent' => 'Examinations.ExamCentres.index',
+							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
+							'selected' => []
+						],
+						'Examinations.LinkedInstitutions'  => [
+							'title' => 'Linked Institutions',
+							'parent' => 'Examinations.ExamCentres.index',
+							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
+							'selected' => ['Examinations.LinkedInstitutionAddStudents']
+						],
 					'Examinations.RegisteredStudents' => [
 						'title' => 'Students',
 						'parent' => 'Administration.Examinations',

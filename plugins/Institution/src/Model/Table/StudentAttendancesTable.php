@@ -53,7 +53,7 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$classId = $this->request->query['class_id'];
+		$classId = !empty($this->request->query['class_id']) ? $this->request->query['class_id'] : 0 ;
 		$query->where([$this->aliasField('institution_class_id') => $classId]);
 	}
 
@@ -64,7 +64,7 @@ class StudentAttendancesTable extends AppTable {
 		$endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$classId = $this->request->query['class_id'];
+		$classId = !empty($this->request->query['class_id']) ? $this->request->query['class_id'] : 0 ;
 
 		foreach ($months as $month) {
 			$year = $month['year'];
