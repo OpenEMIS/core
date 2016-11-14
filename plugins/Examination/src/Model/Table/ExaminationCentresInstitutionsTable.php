@@ -63,9 +63,9 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-    	$examCentre = $this->ExaminationCentres->get($this->examCentreId);
+    	$examCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['Examinations']]);
     	$this->field('examination_centre_id', ['type' => 'readonly', 'value' => $examCentre->id, 'attr' => ['value' => $examCentre->code_name]]);
-    	$this->field('institution_id', ['examination_id' => $examCentre->examination_id]);
+    	$this->field('institution_id', ['examination_id' => $examCentre->examination_id, 'academic_period_id' => $examCentre->academic_period_id, 'education_grade_id' => $examCentre->examination->education_grade_id]);
     }
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
@@ -73,6 +73,9 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
     	if ($action == 'add') {
     		$options = $this->Institutions->find()
     			->find('list')
+                ->innerJoinWith('InstitutionGrades', function ($q) use ($attr) {
+                    return $q->where(['InstitutionGrades.education_grade_id' => $attr['education_grade_id']]);
+                })
     			->leftJoin(['ExaminationCentresInstitutions' => 'examination_centres_institutions'], [
     				'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id')
     			])
@@ -80,13 +83,12 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
     				'ExaminationCentres.id = ExaminationCentresInstitutions.examination_centre_id',
     				'ExaminationCentres.examination_id' => $attr['examination_id']
     			])
-    			->where(['ExaminationCentresInstitutions.institution_id IS NULL'])
+    			->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('is_academic') => 1])
     			->group([$this->Institutions->aliasField('id')])
     			->toArray();
 
     		$attr['options'] = $options;
-    		$attr['type'] = 'chosenSelect';
-    		$attr['attr']['multiple'] = false;
+    		$attr['type'] = 'select';
 
     		return $attr;
     	}
