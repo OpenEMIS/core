@@ -969,7 +969,7 @@ class NavigationComponent extends Component
 							'title' => 'Linked Institutions',
 							'parent' => 'Examinations.ExamCentres.index',
 							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
-							'selected' => []
+							'selected' => ['Examinations.LinkedInstitutionAddStudents']
 						],
 					'Examinations.RegisteredStudents' => [
 						'title' => 'Students',
