@@ -7,10 +7,10 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
-use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
+use App\Model\Table\ControllerActionTable;
 
 class ExaminationCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -45,7 +45,13 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             ->add('student_id', 'ruleUnique', [
                 'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
                 'provider' => 'table'
-            ]);
+            ])
+            ->add('student_id', 'ruleNotInvigilator',  [
+                'rule' => ['checkNotInvigilator'],
+                'provider' => 'table'
+            ])
+            // ->requirePresence('auto_assign_to_room')
+            ;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -100,15 +106,16 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 $this->field('gender_id', ['entity' => $studentEntity]);
                 $this->field('special_needs', ['entity' => $studentEntity]);
                 $this->field('exam_details_header', ['type' => 'section', 'title' => __('Register for Examination')]);
-                $this->field('registration_number', ['type' => 'string']);
                 $this->field('academic_period_id');
                 $this->field('examination_id');
                 $this->field('education_grade_id');
                 $this->field('examination_centre_id');
                 $this->field('special_need_accommodations');
+                $this->field('registration_number', ['type' => 'string']);
+                $this->field('auto_assign_to_room', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
 
                 $this->setFieldOrder([
-                    'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'exam_details_header', 'registration_number', 'academic_period_id', 'examination_id', 'education_grade_id', 'examination_centre_id', 'special_need_accommodations'
+                    'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'exam_details_header', 'academic_period_id', 'examination_id', 'education_grade_id', 'examination_centre_id', 'special_need_accommodations', 'registration_number', 'auto_assign_to_room'
                 ]);
 
             } else {
@@ -314,6 +321,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 // get subjects for exam centre
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
                 $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $autoAssignToRoom = $requestData[$this->alias()]['auto_assign_to_room'];
 
                 $newEntities = [];
                 foreach ($ExaminationCentreSubjects as $subjectId => $name) {
@@ -331,7 +339,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     $newEntities[] = $obj;
                 }
 
-                return $this->connection()->transactional(function() use ($newEntities, $entity) {
+                $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
                     $return = true;
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
@@ -347,8 +355,57 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     }
                     return $return;
                 });
-            }
 
+                // auto assignment to a room
+                if ($autoAssignToRoom) {
+                    if ($success) {
+                        $examCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms
+                            ->find()
+                            ->leftJoin(['ExaminationCentreRoomStudents' => 'examination_centre_room_students'], [
+                                'ExaminationCentreRoomStudents.examination_centre_room_id = '.$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')
+                            ])
+                            ->order([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
+                            ->select([
+                                $this->ExaminationCentres->ExaminationCentreRooms->aliasField('id'),
+                                $this->ExaminationCentres->ExaminationCentreRooms->aliasField('number_of_seats'),
+                                'seats_taken' => 'COUNT(ExaminationCentreRoomStudents.student_id)'])
+                            ->where([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('examination_centre_id') => $selectedExaminationCentre])
+                            ->group([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
+                            ->toArray();
+
+                        $assigned = false;
+                        foreach ($examCentreRooms as $room) {
+                            $counter = $room->number_of_seats - $room->seats_taken;
+                            if ($counter > 0) {
+                                $newEntity = [
+                                    'examination_centre_room_id' => $room->id,
+                                    'student_id' => $requestData[$this->alias()]['student_id'],
+                                    'education_grade_id' => $requestData[$this->alias()]['education_grade_id'],
+                                    'academic_period_id' => $requestData[$this->alias()]['academic_period_id'],
+                                    'examination_id' => $requestData[$this->alias()]['examination_id'],
+                                    'examination_centre_id' => $requestData[$this->alias()]['examination_centre_id']
+                                ];
+                                $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+                                $examCentreRoomStudentEntity = $ExaminationCentreRoomStudents->newEntity($newEntity);
+                                if ($ExaminationCentreRoomStudents->save($examCentreRoomStudentEntity)) {
+                                    $assigned = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // if student was not added to any room
+                        if (!$assigned) {
+                            $model->Alert->warning($this->aliasField('notAssignedRoom'));
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return $success;
+                }
+            }
             return false;
         };
 
