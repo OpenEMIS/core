@@ -102,6 +102,26 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
+	public static function checkNotInvigilator($check, array $globalData) {
+		$data = $globalData['data'];
+
+        $Table = TableRegistry::get('Examination.ExaminationCentreRoomInvigilators');
+        $recordExists = $Table
+        	->find()
+        	->where([
+        		$Table->aliasField('examination_id') => $data['examination_id'],
+        		$Table->aliasField('invigilator_id') => $check,
+        		$Table->aliasField('academic_period_id') => $data['academic_period_id']
+        	])
+        	->first();
+
+        if ($recordExists) {
+        	return false;
+        } else {
+        	return true;
+        }
+    }
+
     public static function checkAuthorisedArea($check, array $globalData)
     {
     	$data = $globalData['data'];

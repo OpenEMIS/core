@@ -585,6 +585,7 @@ trait MessagesTrait {
         'ExaminationCentreStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'This student is not assigned to a room as there are no available rooms.',
         ],
 
         'LinkedInstitutionAddStudents' => [
@@ -1444,7 +1445,8 @@ trait MessagesTrait {
                     'ruleUnique' => 'Registration Number must be unique'
                 ],
                 'student_id' => [
-                    'ruleUnique' => 'This student is already registered to the selected exam'
+                    'ruleUnique' => 'This student is already registered to the selected exam',
+                    'ruleNotInvigilator' => 'An invigilator cannot be added to this exam'
                 ]
             ],
             'BulkStudentRegistration' => [
