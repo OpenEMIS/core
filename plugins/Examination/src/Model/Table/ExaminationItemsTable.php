@@ -1,10 +1,13 @@
 <?php
 namespace Examination\Model\Table;
 
+use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Validation\Validator;
 use Cake\ORM\Query;
+use Cake\Validation\Validator;
+use Cake\Utility\Security;
+use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
 
@@ -42,6 +45,14 @@ class ExaminationItemsTable extends AppTable {
             ->allowEmpty('start_time')
             ->allowEmpty('end_time');
         return $validator;
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $hashString = $entity->examination_id . ',' . $entity->education_subject_id;
+            $entity->id = Security::hash($hashString, 'sha256');
+        }
     }
 
     public function populateExaminationItemsArray($gradeId)
