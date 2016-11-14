@@ -177,7 +177,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                     return false;
                 }
 
-                return $this->connection()->transactional(function() use ($newEntities, $entity) {
+                $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
                     $return = true;
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
@@ -190,6 +190,53 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                     }
                     return $return;
                 });
+
+
+                if ($success) {
+                    $examCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms
+                        ->find()
+                        ->leftJoin(['ExaminationCentreRoomStudents' => 'examination_centre_room_students'], [
+                            'ExaminationCentreRoomStudents.examination_centre_room_id = '.$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')
+                        ])
+                        ->order([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
+                        ->select([
+                            $this->ExaminationCentres->ExaminationCentreRooms->aliasField('id'),
+                            $this->ExaminationCentres->ExaminationCentreRooms->aliasField('number_of_seats'),
+                            'seats_taken' => 'COUNT(ExaminationCentreRoomStudents.student_id)'])
+                        ->where([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('examination_centre_id') => $selectedExaminationCentre])
+                        ->group([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
+                        ->toArray();
+
+                    foreach ($examCentreRooms as $room) {
+                        $counter = $room->number_of_seats - $room->seats_taken;
+                        while ($counter > 0) {
+                            $examCentreRoomStudent = array_shift($newEntities);
+                            $newEntity = [
+                                'examination_centre_room_id' => $room->id,
+                                'student_id' => $examCentreRoomStudent['student_id'],
+                                'institution_id' => $examCentreRoomStudent['institution_id'],
+                                'education_grade_id' => $examCentreRoomStudent['education_grade_id'],
+                                'academic_period_id' => $examCentreRoomStudent['academic_period_id'],
+                                'examination_id' => $examCentreRoomStudent['examination_id'],
+                                'examination_centre_id' => $examCentreRoomStudent['examination_centre_id']
+                            ];
+                            $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+                            $examCentreRoomStudentEntity = $ExaminationCentreRoomStudents->newEntity($newEntity);
+                            $saveSucess = $ExaminationCentreRoomStudents->save($examCentreRoomStudentEntity);
+                            $counter--;
+                        }
+                    }
+                    if (!empty($newEntities)) {
+                        $model->Alert->warning($this->aliasField('notAssignedRoom'));
+                        return false;
+                    }
+
+                    return true;
+                } else {
+                    return false;
+                }
+
+
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
                 $entity->errors('student_id', __('There are no students selected'));
