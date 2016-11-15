@@ -70,7 +70,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions', 'queryString' => $this->request->query('queryString')];
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'auto_assign_to_rooms', 'institution_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'auto_assign_to_rooms', 'institution_id', 'student_id'
         ]);
     }
 
