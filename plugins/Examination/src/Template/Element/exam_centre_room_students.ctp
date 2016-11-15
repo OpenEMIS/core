@@ -34,30 +34,6 @@
     <div class="clearfix"></div>
     <hr>
     <h3><?= __('Students') ?></h3>
-    <?php
-        $url = $this->Url->build([
-            'plugin' => $this->request->params['plugin'],
-            'controller' => $this->request->params['controller'],
-            'action' => $this->request->params['action'],
-            'ajaxStudentAutocomplete',
-            $examCentreId
-        ]);
-        $alias = $ControllerAction['table']->alias();
-
-        echo $this->Form->input("$alias.student_search", [
-            'label' => __('Add Student'),
-            'type' => 'text',
-            'class' => 'autocomplete',
-            'value' => '',
-            'autocomplete-url' => $url,
-            'autocomplete-no-results' => __('No Students found.'),
-            'autocomplete-class' => 'error-message',
-            'autocomplete-target' => 'student_id',
-            'autocomplete-submit' => "$('#reload').val('addStudents').click();"
-        ]);
-        echo $this->Form->hidden("$alias.student_id", ['autocomplete-value' => 'student_id']);
-    ?>
-
     <div class="<?= $tableClass; ?>" autocomplete-ref="student_id">
         <table class="table">
             <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
