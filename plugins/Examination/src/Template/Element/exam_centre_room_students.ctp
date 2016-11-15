@@ -57,8 +57,6 @@
         ]);
         echo $this->Form->hidden("$alias.student_id", ['autocomplete-value' => 'student_id']);
     ?>
-    <div class="clearfix"></div>
-    <hr>
 
     <div class="<?= $tableClass; ?>" autocomplete-ref="student_id">
         <table class="table">
@@ -67,4 +65,3 @@
         </table>
     </div>
 <?php endif ?>
-

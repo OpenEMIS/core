@@ -309,6 +309,13 @@ class ExaminationCentresTable extends ControllerActionTable {
         }
     }
 
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        if (!isset($data['ExaminationCentres']['invigilators'])) {
+            $data['ExaminationCentres']['invigilators'] = [];
+        }
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->fields['total_registered']['visible'] = false;
@@ -496,7 +503,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function onGetCustomInvigilatorsElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $tableHeaders = [__('OpenEMIS ID'), $this->getMessage('general.name')];
+        $tableHeaders = [__('OpenEMIS ID'), __('Invigilator')];
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'invigilators';
@@ -519,6 +526,12 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $Form->unlockField('ExaminationCentres.invigilators');
 
                 if ($this->request->is(['get'])) {
+                    if (!array_key_exists($alias, $this->request->data)) {
+                        $this->request->data[$alias] = [$fieldKey => []];
+                    } else {
+                        $this->request->data[$alias][$fieldKey] = [];
+                    }
+                    
                     $associated = $entity->extractOriginal([$fieldKey]);
                     if (!empty($associated[$fieldKey])) {
                         foreach ($associated[$fieldKey] as $key => $obj) {
