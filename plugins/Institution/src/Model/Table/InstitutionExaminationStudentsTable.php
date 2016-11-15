@@ -37,7 +37,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         ]);
     }
 
-
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -206,7 +205,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('examination_education_grade', ['type' => 'readonly']);
         $this->field('special_needs_required', ['type' => 'chosenSelect', 'onChangeReload' => true]);
 
-        $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true]);
+        $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('student_id', ['entity' => $entity]);
@@ -332,14 +331,20 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     }
 
     public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request) {
+        $attr['options'] = [];
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['examination_id'])) {
+                $institutionId = $attr['entity']->institution_id;
                 $selectedExamination = $request->data[$this->alias()]['examination_id'];
                 $selectedSpecialNeeds = $request->data[$this->alias()]['special_needs_required']['_ids'];
 
                 $query = $this->ExaminationCentres
                     ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
-                    ->where([$this->ExaminationCentres->aliasField('examination_id') => $selectedExamination]);
+                    ->innerJoinWith('Institutions')
+                    ->where([
+                        $this->ExaminationCentres->aliasField('examination_id') => $selectedExamination,
+                        'ExaminationCentresInstitutions.institution_id' => $institutionId
+                    ]);
 
                 if (!empty($selectedSpecialNeeds)) {
                     $query->find('bySpecialNeeds', ['selectedSpecialNeeds' => $selectedSpecialNeeds]);
@@ -483,7 +488,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     return false;
                 }
 
-                return $this->connection()->transactional(function() use ($newEntities, $entity) {
+                $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
                     $return = true;
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
@@ -496,6 +501,61 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     }
                     return $return;
                 });
+
+                if ($success) {
+                    $studentCount = $this->find()
+                        ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+                        ->group([$this->aliasField('student_id')])
+                        ->count();
+                    $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+                }
+
+                if ($entity->auto_assign_to_rooms) {
+                    if ($success) {
+                        $examCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms
+                            ->find()
+                            ->leftJoin(['ExaminationCentreRoomStudents' => 'examination_centre_room_students'], [
+                                'ExaminationCentreRoomStudents.examination_centre_room_id = '.$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')
+                            ])
+                            ->order([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
+                            ->select([
+                                $this->ExaminationCentres->ExaminationCentreRooms->aliasField('id'),
+                                $this->ExaminationCentres->ExaminationCentreRooms->aliasField('number_of_seats'),
+                                'seats_taken' => 'COUNT(ExaminationCentreRoomStudents.student_id)'])
+                            ->where([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('examination_centre_id') => $selectedExaminationCentre])
+                            ->group([$this->ExaminationCentres->ExaminationCentreRooms->aliasField('id')])
+                            ->toArray();
+
+                        foreach ($examCentreRooms as $room) {
+                            $counter = $room->number_of_seats - $room->seats_taken;
+                            while ($counter > 0) {
+                                $examCentreRoomStudent = array_shift($newEntities);
+                                $newEntity = [
+                                    'examination_centre_room_id' => $room->id,
+                                    'student_id' => $examCentreRoomStudent['student_id'],
+                                    'institution_id' => $examCentreRoomStudent['institution_id'],
+                                    'education_grade_id' => $examCentreRoomStudent['education_grade_id'],
+                                    'academic_period_id' => $examCentreRoomStudent['academic_period_id'],
+                                    'examination_id' => $examCentreRoomStudent['examination_id'],
+                                    'examination_centre_id' => $examCentreRoomStudent['examination_centre_id']
+                                ];
+                                $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+                                $examCentreRoomStudentEntity = $ExaminationCentreRoomStudents->newEntity($newEntity);
+                                $saveSucess = $ExaminationCentreRoomStudents->save($examCentreRoomStudentEntity);
+                                $counter--;
+                            }
+                        }
+                        if (!empty($newEntities)) {
+                            $model->Alert->warning($this->aliasField('notAssignedRoom'));
+                            return false;
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return $success;
+                }
             } else {
                 $model->Alert->warning($this->aliasField('noStudentSelected'));
                 $entity->errors('student_id', __('There are no students selected'));
