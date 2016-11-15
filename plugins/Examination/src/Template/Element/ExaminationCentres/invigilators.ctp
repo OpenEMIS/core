@@ -41,7 +41,4 @@
 			<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
 		</table>
 	</div>
-
-	<div class="clearfix"></div>
-	<hr>
 <?php endif ?>

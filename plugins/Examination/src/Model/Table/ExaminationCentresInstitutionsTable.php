@@ -19,7 +19,6 @@ class ExaminationCentresInstitutionsTable extends ControllerActionTable {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->toggle('view', false);
         $this->toggle('edit', false);
     }
 
