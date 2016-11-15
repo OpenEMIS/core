@@ -28,6 +28,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('Invigilators', [
             'className' => 'User.Users',
             'joinTable' => 'examination_centres_invigilators',
@@ -36,6 +37,10 @@ class ExaminationCentresTable extends ControllerActionTable {
             'through' => 'Examination.ExaminationCentresInvigilators',
             'dependent' => true,
             'cascadeCallbacks' => true
+        ]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['view']
         ]);
 
         $this->setDeleteStrategy('restrict');
