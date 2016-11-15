@@ -16,53 +16,53 @@
                     </tr>
                 </thead>
                 <?php if (isset($attr['data'])) : ?>
-                <?php
-                    $elementData = $attr['data'];
-                    $classesData = $elementData['classes'];
-                    // pr($classesData);
-                 ?>
-                <tbody>
                     <?php
-                    $staffId = $data->staff_id;
-                    foreach ($classesData as $key => $value) {
-                    ?>
-                        <tr>
-                            <td class="checkbox-column">
-                                <?php
-                                $n = intval($value->id);
+                        $elementData = $attr['data'];
+                        $classesData = $elementData['classes'];
+                        // pr($classesData);
+                     ?>
+                    <tbody>
+                    <?php
+                        $staffId = $data->staff_id;
+                        foreach ($classesData as $key => $value) {
 
-                                $selected = false;
-                                $disabled = (!empty($value->staff_id) && $value->staff_id != $staffId)? 'disabled': '';
-                                if ($disabled) {
-                                    // class's homeroom is another teacher
-                                    $selected = 'checked';
-                                } else {
-                                    if(!empty($this->request->data)) {
-                                        if ($this->request->data['submit'] == 'save') {
-                                            $selected = (isset($this->request->data['Classes'][$key]['class_id']) && !empty($this->request->data['Classes'][$key]['class_id']))? 'checked': '';
-                                        } else {
-                                            $selected = ($value->staff_id == $staffId)? 'checked': '';
-                                        }
+                            $n = intval($value->id);
+
+                            $selected = false;
+                            $disabled = (!empty($value->staff_id) && $value->staff_id != $staffId)? 'disabled': '';
+                            if ($disabled) {
+                                // class's homeroom is another teacher
+                                $selected = 'checked';
+                            } else {
+                                if(!empty($this->request->data)) {
+                                    if ($this->request->data['submit'] == 'save') {
+                                        $selected = (isset($this->request->data['Classes'][$key]['class_id']) && !empty($this->request->data['Classes'][$key]['class_id']))? 'checked': '';
+                                    } else {
+                                        $selected = ($value->staff_id == $staffId)? 'checked': '';
                                     }
                                 }
-                                echo $this->Form->input('Classes.' . $key . '.class_id', [
-                                    'type'      => 'checkbox',
-                                    'class'     => 'icheck-input',
-                                    'value'     => $n,
-                                    'checked'   => $selected,
-                                    'label'     => false,
-                                    'disabled'  => $disabled
-                                ]);
-                                ?>
-                            </td>
+                            }
+                    ?>
+                            <tr>
+                                <td <?php if(!$disabled){ ?>class="checkbox-column"<?php } ?>>
+                                    <?php
+                                    
+                                    echo $this->Form->input('Classes.' . $key . '.class_id', [
+                                        'type'      => 'checkbox',
+                                        'class'     => 'icheck-input',
+                                        'value'     => $n,
+                                        'checked'   => $selected,
+                                        'label'     => false,
+                                        'disabled'  => $disabled
+                                    ]);
+                                    ?>
+                                </td>
 
-                            <td><?=$value->name?></td>
-                            <td><?php echo ($value->has('user') && !empty($value->user))? $value->user->name: '-'; ?></td>
-                        </tr>
-
+                                <td><?=$value->name?></td>
+                                <td><?php echo ($value->has('user') && !empty($value->user))? $value->user->name: '-'; ?></td>
+                            </tr>
 
                     <?php } ?>
-
                 </tbody>
                 <?php endif ?>
             </table>

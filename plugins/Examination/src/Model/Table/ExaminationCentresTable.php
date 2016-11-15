@@ -29,6 +29,14 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('Institutions', [
+            'className' => 'Institution.Institutions',
+            'joinTable' => 'examination_centres_institutions',
+            'foreignKey' => 'examination_centre_id',
+            'targetForeignKey' => 'examination_centre_id',
+            'through' => 'Examination.ExaminationCentresInstitutions',
+            'dependent' => true
+        ]);
         $this->belongsToMany('Invigilators', [
             'className' => 'User.Users',
             'joinTable' => 'examination_centres_invigilators',
@@ -42,7 +50,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['view']
         ]);
-
         $this->setDeleteStrategy('restrict');
     }
 
@@ -265,6 +272,16 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->matching('Examinations')
             ->matching('Areas')
             ->matching('AcademicPeriods');
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
+    }
+
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
     }
 
 
@@ -536,7 +553,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     } else {
                         $this->request->data[$alias][$fieldKey] = [];
                     }
-                    
+
                     $associated = $entity->extractOriginal([$fieldKey]);
                     if (!empty($associated[$fieldKey])) {
                         foreach ($associated[$fieldKey] as $key => $obj) {
@@ -728,8 +745,8 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if ($entity->has('institutions')) {
-                $institutions = $entity->institutions;
+            if (isset($requestData[$model->alias()]['institutions'])) {
+                $institutions = $requestData[$model->alias()]['institutions'];
                 $newEntities = [];
                 if (is_array($institutions)) {
                     foreach ($institutions as $institution) {
