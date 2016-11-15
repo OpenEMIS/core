@@ -14,6 +14,8 @@ class ExaminationCentresInvigilatorsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
 		$this->belongsTo('Invigilators', ['className' => 'User.Users']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
 	}
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
