@@ -50,8 +50,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 'rule' => ['checkNotInvigilator'],
                 'provider' => 'table'
             ])
-            // ->requirePresence('auto_assign_to_room')
-            ;
+            ->requirePresence('auto_assign_to_room');
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -76,7 +75,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         ];
         $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'BulkStudentRegistration', 'add'];
         $button['type'] = 'button';
-        $button['label'] = '<i class="fa kd-remove"></i>';
+        $button['label'] = '<i class="fa kd-add"></i>';
         $button['attr'] = $toolbarAttr;
         $button['attr']['title'] = __('Bulk Add');
         $extra['toolbarButtons']['bulkAdd'] = $button;
@@ -92,6 +91,12 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $query = $this->ControllerAction->getQueryString();
+
+        // back button goes back to RegistrationDirectory
+        if (isset($extra['toolbarButtons']['back']['url'])) {
+            $extra['toolbarButtons']['back']['url']['action'] = 'RegistrationDirectory';
+            unset($extra['toolbarButtons']['back']['url']['queryString']);
+        }
 
         if ($query) {
             $userId = $query['user_id'];
@@ -282,7 +287,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-        public function onUpdateFieldSpecialNeedAccommodations(Event $event, array $attr, $action, $request)
+    public function onUpdateFieldSpecialNeedAccommodations(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
@@ -311,6 +316,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
+        // unset hash querystring when redirect to index page
+        if (isset($extra['redirect']['queryString'])) {
+            unset($extra['redirect']['queryString']);
+        }
+
         $requestData[$this->alias()]['education_subject_id'] = 0;
     }
 
@@ -331,6 +341,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     $obj['education_grade_id'] = $requestData[$this->alias()]['education_grade_id'];
                     $obj['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
                     $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
+                    $obj['auto_assign_to_room'] = $autoAssignToRoom;
 
                     if (!empty($requestData[$this->alias()]['registration_number'])) {
                         $obj['registration_number'] = $requestData[$this->alias()]['registration_number'];
