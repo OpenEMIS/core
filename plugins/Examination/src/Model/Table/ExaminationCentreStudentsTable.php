@@ -29,6 +29,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['index', 'add']
+        ]);
+
+        $this->toggle('add', false);
     }
 
     public function validationDefault(Validator $validator) {
@@ -83,8 +88,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 $ItemResults->aliasField('marks'),
                 $ItemResults->aliasField('examination_grading_option_id'),
                 $ItemResults->aliasField('academic_period_id'),
+                $this->aliasField('registration_number'),
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('total_mark'),
                 $Users->aliasField('openemis_no'),
                 $Users->aliasField('first_name'),
                 $Users->aliasField('middle_name'),
@@ -96,11 +104,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             ->leftJoin(
                 [$ItemResults->alias() => $ItemResults->table()],
                 [
-                    $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
                     $ItemResults->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
-                    $ItemResults->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
+                    $ItemResults->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                    $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
             )
             ->where([
@@ -111,10 +119,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             ])
             ->group([
                 $this->aliasField('student_id'),
-                $ItemResults->aliasField('academic_period_id')
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('examination_id')
             ])
             ->order([
-                $this->aliasField('student_id')
+                $Users->aliasField('first_name'), $Users->aliasField('last_name')
             ]);
     }
 }

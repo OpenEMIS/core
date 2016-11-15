@@ -34,9 +34,6 @@
     <div class="clearfix"></div>
     <hr>
     <h3><?= __('Students') ?></h3>
-    <div class="clearfix"></div>
-    <hr>
-
     <div class="<?= $tableClass; ?>" autocomplete-ref="student_id">
         <table class="table">
             <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
@@ -44,4 +41,3 @@
         </table>
     </div>
 <?php endif ?>
-

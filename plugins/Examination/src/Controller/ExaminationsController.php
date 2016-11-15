@@ -11,6 +11,9 @@ class ExaminationsController extends AppController
 {
 	public function initialize() {
         parent::initialize();
+        $this->ControllerAction->models = [
+            'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
+        ];
         $this->attachAngularModules();
     }
 
@@ -21,16 +24,16 @@ class ExaminationsController extends AppController
     public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
     public function BulkStudentRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
+    public function ExamResults() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationResults']); }
     public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
     public function LinkedInstitutions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresInstitutions']); }
     public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
     public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']); }
-
     // End
 
     // AngularJS
     public function Results() {
-        $this->set('_edit', true);
+        $this->set('_edit', $this->AccessControl->check(['Examinations', 'Results', 'edit']));
         $this->set('ngController', 'ExaminationsResultsCtrl as ExaminationsResultsController');
     }
     // End
@@ -53,7 +56,8 @@ class ExaminationsController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
         $header = __('Examination');
 
-        $header .= ' - ' . $model->getHeader($model->alias);
+        $alias = ($model->alias == 'ExamResults') ? 'Results' : $model->alias;
+        $header .= ' - ' . $model->getHeader($alias);
         $this->Navigation->addCrumb('Examination', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
