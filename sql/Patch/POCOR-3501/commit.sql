@@ -155,25 +155,17 @@ INSERT INTO `examination_centre_subjects` (`id`, `examination_centre_id`, `educa
 SELECT `id`, `examination_centre_id`, `education_subject_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3501_examination_centre_subjects`;
 
--- examination_centre_invigilators
-DROP TABLE IF EXISTS `examination_centre_invigilators`;
-CREATE TABLE IF NOT EXISTS `examination_centre_invigilators` (
+-- examination_centres_invigilators
+DROP TABLE IF EXISTS `examination_centres_invigilators`;
+CREATE TABLE IF NOT EXISTS `examination_centres_invigilators` (
   `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
   PRIMARY KEY (`examination_centre_id`,`invigilator_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `invigilator_id` (`invigilator_id`),
   KEY `academic_period_id` (`academic_period_id`),
-  KEY `examination_id` (`examination_id`),
-  KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`)
+  KEY `examination_id` (`examination_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the invigilators for a particular examination centre';
 
 -- examination_centre_rooms
@@ -225,27 +217,19 @@ CREATE TABLE IF NOT EXISTS `examination_centre_room_students` (
   KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students allocated to a room for a particular examination center';
 
--- examination_centre_room_invigilators
-DROP TABLE IF EXISTS `examination_centre_room_invigilators`;
-CREATE TABLE IF NOT EXISTS `examination_centre_room_invigilators` (
+-- examination_centre_rooms_invigilators
+DROP TABLE IF EXISTS `examination_centre_rooms_invigilators`;
+CREATE TABLE IF NOT EXISTS `examination_centre_rooms_invigilators` (
   `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_room_id` int(11) NOT NULL COMMENT 'links to examination_centre_rooms.id',
   `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
-  `modified_user_id` int(11) DEFAULT NULL,
-  `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
-  `created` datetime NOT NULL,
   PRIMARY KEY (`examination_centre_room_id`,`invigilator_id`),
-  KEY `examination_centre_room_id` (`examination_centre_room_id`),
-  KEY `invigilator_id` (`invigilator_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `examination_id` (`examination_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`)
+  KEY `examination_centre_id` (`examination_centre_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the invigilators assigned to a room for a particular examination centre';
 
 -- examination_centres_institutions
@@ -259,10 +243,37 @@ CREATE TABLE IF NOT EXISTS `examination_centres_institutions` (
   KEY `institution_id` (`institution_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions linked to a particular examination centre';
 
+-- examination_items
+RENAME TABLE `examination_items` TO `z_3501_examination_items`;
+
+DROP TABLE IF EXISTS `examination_items`;
+CREATE TABLE IF NOT EXISTS `examination_items` (
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `weight` decimal(6,2) DEFAULT '0.00',
+  `examination_date` date DEFAULT NULL,
+  `start_time` time DEFAULT NULL,
+  `end_time` time DEFAULT NULL,
+  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
+  `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
+  `examination_grading_type_id` int(11) NOT NULL COMMENT 'links to examination_grading_types.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`examination_id`,`education_subject_id`),
+  KEY `examination_grading_type_id` (`examination_grading_type_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination subjects for a particular examination';
+
+INSERT INTO `examination_items` (`id`, `weight`, `examination_date`, `start_time`, `end_time`, `examination_id`, `education_subject_id`, `examination_grading_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `weight`, `examination_date`, `start_time`, `end_time`, `examination_id`, `education_subject_id`, `examination_grading_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_3501_examination_items`;
+
 -- examination_item_results
 DROP TABLE IF EXISTS `examination_item_results`;
 CREATE TABLE IF NOT EXISTS `examination_item_results` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `marks` decimal(6,2) DEFAULT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
