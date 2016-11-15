@@ -400,7 +400,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             }
 
             // field order
-            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'invigilators']);
+            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'invigilators', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
@@ -419,7 +419,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['total_registered']['visible'] = true;
             $this->field('invigilators', ['type' => 'custom_invigilators']);
 
-            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'invigilators']);
+            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'invigilators', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
         }
     }
 
