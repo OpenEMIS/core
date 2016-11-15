@@ -17,17 +17,14 @@ class ExaminationsController extends AppController
     // CAv4
     public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
-    public function ExamCentres($pass = 'index')
-    {
-        // if ($pass == 'add') {
-        //     $this->set('ngController', 'ExaminationCentresCtrl as ExamCentreController');
-        //     $this->render('examinationCentres');
-        // } else {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
-        // }
-    }
+    public function ExamCentres($pass = 'index') { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);}
     public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
+    public function BulkStudentRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
+    public function RegistrationDirectory() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.RegistrationDirectory']); }
+    public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
+    public function LinkedInstitutions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresInstitutions']); }
+    public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
     // End
 
     // AngularJS
@@ -69,10 +66,6 @@ class ExaminationsController extends AppController
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Exams'],
                 'text' => __('Exams')
             ],
-            'ExamCentres' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres'],
-                'text' => __('Exam Centres')
-            ],
             'GradingTypes' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
                 'text' => __('Grading Types')
@@ -83,7 +76,7 @@ class ExaminationsController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
-    public function getStudentsTab()
+    public function getStudentsTab($action = null)
     {
         $tabElements = [
             'RegisteredStudents' => [
@@ -97,7 +90,8 @@ class ExaminationsController extends AppController
         ];
 
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $action = !is_null($action) ? $action : $this->request->action;
+        $this->set('selectedAction', $action);
     }
 
     private function checkExamCentresPermission() {

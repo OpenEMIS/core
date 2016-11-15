@@ -582,6 +582,17 @@ trait MessagesTrait {
             'noStudentSelected' => 'There are no students selected',
         ],
 
+        'ExaminationCentreStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration',
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'This student is not assigned to a room as there are no available rooms.',
+        ],
+
+        'LinkedInstitutionAddStudents' => [
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+        ],
+
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -832,8 +843,8 @@ trait MessagesTrait {
                 ]
             ],
             'InstitutionExaminationStudents' => [
-                'available_capacity' => [
-                    'ruleAvailable' => 'Total students exceeded examination centre capacity'
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
                 ]
             ]
         ],
@@ -1388,6 +1399,11 @@ trait MessagesTrait {
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
                 ],
             ],
+            'ExaminationCentreRooms' => [
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name for this examination centre room'
+                ],
+            ],
             'ExaminationItems' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
@@ -1422,6 +1438,20 @@ trait MessagesTrait {
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'ExaminationCentreStudents' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ],
+                'student_id' => [
+                    'ruleUnique' => 'This student is already registered to the selected exam',
+                    'ruleNotInvigilator' => 'This student is an invigilator in this examination'
+                ]
+            ],
+            'BulkStudentRegistration' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
                 ]
             ]
         ],
