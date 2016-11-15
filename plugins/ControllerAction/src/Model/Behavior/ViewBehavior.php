@@ -41,6 +41,8 @@ class ViewBehavior extends Behavior {
 		if (empty($id)) {
 			if ($model->Session->check($sessionKey)) {
 				$id = $model->Session->read($sessionKey);
+			} else if (!empty($model->ControllerAction->getQueryString('id'))) {
+				$id = $model->ControllerAction->getQueryString('id');
 			}
 		}
 
