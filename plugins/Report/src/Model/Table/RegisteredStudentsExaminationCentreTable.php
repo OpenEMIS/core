@@ -25,8 +25,9 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
 
         $this->addBehavior('Excel', [
             'excludes' => ['id', 'total_mark'],
-            'pages' => false
-            ]);
+            'pages' => false,
+            'orientation' => 'landscape'
+        ]);
         $this->addBehavior('Report.ReportList');
     }
 
@@ -40,18 +41,23 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $selectedExam = $requestData->examination_id;
         $selectedExamCentre = $requestData->examination_centre_id;
 
-        // $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-        // $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
-                    // ->leftJoin(['InstitutionClassStudents' => 'institution_class_student'],[
-            //     'InstitutionClassStudents.student_id' => $this->aliasField('student_id'),
-            //     'InstitutionClassStudents.institution_id' => $this->aliasField('institution_id'),
-            //     'InstitutionClassStudents.education_grade_id' => $this->aliasField('education_grade_id'),
-            //     'InstitutionClassStudents.student_status_id' => $enrolledStatus
-            // ])
+        $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $Class = TableRegistry::get('Institution.InstitutionClasses');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
         $query
             ->contain(['Users.Genders', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions'])
-            ->select(['code' => 'Institutions.code', 'openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name'])
+            ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
+                $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus
+            ])
+            ->innerJoinWith([$Class->alias() => $Class->table()], [
+                $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
+            ])
+            ->select(['code' => 'Institutions.code', 'openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
             ->group([$this->aliasField('student_id')])
             ->order([$this->aliasField('institution_id'), $this->aliasField('examination_centre_id')]);
@@ -84,6 +90,13 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             'field' => 'education_grade_id',
             'type' => 'integer',
             'label' => 'Education Grade',
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.name',
+            'field' => 'class_name',
+            'type' => 'integer',
+            'label' => 'Class',
         ];
 
         $newFields[] = [
