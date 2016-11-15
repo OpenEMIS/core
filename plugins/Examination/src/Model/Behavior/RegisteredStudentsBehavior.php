@@ -76,10 +76,9 @@ class RegisteredStudentsBehavior extends Behavior {
             $query = $model->find()->where([$idKey => $id]);
 
             $query
-                ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'], true)
+                ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'], true)
                 ->matching('AcademicPeriods')
-                ->matching('Examinations')
-                ->matching('Institutions');
+                ->matching('Examinations');
 
             $entity = $query->first();
         }
@@ -243,10 +242,9 @@ class RegisteredStudentsBehavior extends Behavior {
         $model = $this->_table;
 
         $query
-            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'])
+            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'])
             ->matching('AcademicPeriods')
-            ->matching('Examinations')
-            ->matching('Institutions');
+            ->matching('Examinations');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -400,8 +398,8 @@ class RegisteredStudentsBehavior extends Behavior {
         $value = '';
         if ($entity->has('institution')) {
             $value = $entity->institution->code_name;
-        } else if ($entity->has('_matchingData')) {
-            $value = $entity->_matchingData['Institutions']->code_name;
+        } else {
+            $value = '';
         }
 
         return $value;
@@ -599,9 +597,15 @@ class RegisteredStudentsBehavior extends Behavior {
         if ($action == 'edit' || $action == 'unregister') {
             $entity = $attr['entity'];
 
+            if ($entity->has('institution')) {
+                $attr['value'] = $entity->institution_id;
+                $attr['attr']['value'] = $entity->institution->code_name;
+            } else {
+                $attr['value'] = 0;
+                $attr['attr']['value'] = '';
+            }
+
             $attr['type'] = 'readonly';
-            $attr['value'] = $entity->institution_id;
-            $attr['attr']['value'] = $entity->_matchingData['Institutions']->code_name;
             $event->stopPropagation();
         }
 
@@ -618,6 +622,19 @@ class RegisteredStudentsBehavior extends Behavior {
             $attr['type'] = 'readonly';
             $attr['value'] = $value;
             $attr['attr']['value'] = $value;
+            $event->stopPropagation();
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldRegistrationNumber(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'edit' || $action == 'unregister') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->registration_number;
+            $attr['attr']['value'] = $entity->registration_number;
             $event->stopPropagation();
         }
 
@@ -646,10 +663,11 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('gender_id', ['entity' => $entity]);
         $model->field('institution_id', ['type' => 'select', 'entity' => $entity]);
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
+        $model->field('registration_number', ['type' => 'string', 'entity' => $entity]);
         // temporary hide subjects
         // $model->field('subjects', ['type' => 'custom_subjects']);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs']);
+        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'registration_number']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {
