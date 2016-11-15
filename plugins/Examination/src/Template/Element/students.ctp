@@ -29,12 +29,27 @@ $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => 
                             <tr>
                                 <td class="checkbox-column">
                                     <?php
+                                        $specialNeeds = false;
+                                        if (count($obj->user->special_needs) > 0) {
+                                            $specialNeeds = true;
+                                        }
                                         $fieldPrefix = "$alias.examination_students.$i";
-                                        echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
+
+                                        if ($specialNeeds) {
+                                            echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
+                                        } else {
+                                            echo $this->Form->input("$fieldPrefix.selected", ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false, 'checked' => 'checked']);
+                                        }
                                         echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
+
                                     ?>
                                 </td>
-                                <td><?= $this->Form->input("$fieldPrefix.registration_number", ['label' => false, 'maxlength' => 20]) ?></td>
+                                <td>
+                                <?php
+                                    echo $this->Form->input("$fieldPrefix.registration_number", ['label' => false, 'maxlength' => 20]);
+                                ?>
+
+                                </td>
                                 <td class="error">
                                 <?php
                                     if ($attr['entity']->errors("examination_students.$i") && isset($attr['entity']->errors("examination_students.$i")['registration_number'])) : ?>
@@ -48,7 +63,15 @@ $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => 
                                     </ul>
                                 <?php endif; ?>
                                 </td>
-                                <td><?= $obj->user->openemis_no ?></td>
+                                <td>
+                                <?php
+                                    echo $obj->user->openemis_no;
+                                    if ($specialNeeds) {
+                                        echo ' <i class="fa fa-info-circle fa-lg icon-red"></i>';
+                                    }
+                                ?>
+
+                                </td>
                                 <td><?= $obj->user->name ?></td>
                                 <td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
                                 <td>
