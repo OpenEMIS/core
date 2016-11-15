@@ -31,13 +31,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeGenerate(Event $event, $settings)
-    {
-    }
-
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
-        // pr($requestData);
         $selectedExam = $requestData->examination_id;
         $selectedExamCentre = $requestData->examination_centre_id;
 
@@ -222,7 +217,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
     public function onExcelGetStudentType(Event $event, Entity $entity) {
         $normal = 'Normal Candidate';
         $private = 'Private Candidate';
-        pr($entity);
+
         if ($entity->has('institution') && !empty($entity->institution)) {
             return $normal;
         } else {
