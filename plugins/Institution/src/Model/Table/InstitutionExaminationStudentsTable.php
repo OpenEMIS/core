@@ -37,6 +37,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         ]);
     }
 
+
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -212,6 +213,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
+
+        $this->field('registration_number' , ['visible' => false]);
+        $this->field('total_mark' , ['visible' => false]);
 
         $this->setFieldOrder([
             'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_class_id', 'student_id'
@@ -450,7 +454,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             if (!empty($requestData[$this->alias()]['examination_students'])) {
                 $students = $requestData[$this->alias()]['examination_students'];
                 $examinationCentre = $this->ExaminationCentres->get($requestData[$this->alias()]['examination_centre_id']);
-                $remainingCapacity = $examinationCentre->total_capacity - $examinationCentre->total_registered;
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
