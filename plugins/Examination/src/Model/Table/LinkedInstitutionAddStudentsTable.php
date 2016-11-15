@@ -84,8 +84,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
             $InstitutionGradesTable = $this->Institutions->InstitutionGrades;
             $institutionsData = $InstitutionGradesTable
                 ->find()
-                ->matching('Institutions.ExaminationCentres', function ($q) {
-                    return $q->where(['ExaminationCentres.id' => $this->examCentreId]);
+                ->matching('Institutions.ExamCentres', function ($q) {
+                    return $q->where(['ExamCentres.id' => $this->examCentreId]);
                 })
                 ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                 ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
