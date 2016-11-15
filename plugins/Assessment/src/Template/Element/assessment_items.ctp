@@ -42,22 +42,32 @@
                                     ?>
                                     <tr>
                                         <td>
+                                            <div style="display:inline-block;">
                                             <?php
                                                 echo $item->education_subject->code . ' - ' . $item->education_subject->name;
                                                 echo $this->Form->hidden("$fieldPrefix.education_subject_id", ['value' => $item->education_subject_id]);
                                                 if (isset($item->id)) {
                                                     echo $this->Form->hidden("$fieldPrefix.id", ['value' => $item->id]);
                                                 }
+                                                echo $this->Form->hidden("$fieldPrefix.status", ['value' => $item->status]);
                                             ?>
+                                            </div>
+                                            <?php if ($item->status == 'new') { ?>
+                                                    &nbsp;<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='<?= __('Newly Added Subject to the Education Grade')?>'></i>
+                                            <?php } ?>
                                         </td>
                                         <td>
                                             <?php
-                                                echo $this->Form->input("$fieldPrefix.weight", [
-                                                    'type' => 'float',
-                                                    'label' => false,
-                                                    'onblur' => "return utility.checkDecimal(this, 2);",
-                                                    'onkeypress' => "return utility.floatCheck(event)",
-                                                ]);
+                                                if ($item->status != 'deleted') {
+                                                    echo $this->Form->input("$fieldPrefix.weight", [
+                                                        'type' => 'float',
+                                                        'label' => false,
+                                                        'onblur' => "return utility.checkDecimal(this, 2);",
+                                                        'onkeypress' => "return utility.floatCheck(event)",
+                                                    ]);
+                                                } else {
+                                                    echo __('This Subject has been Removed from the Education Grade');
+                                                }
                                             ?>
                                         </td>
                                     </tr>
