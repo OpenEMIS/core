@@ -485,6 +485,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 if (empty($newEntities)) {
                     $model->Alert->warning($this->aliasField('noStudentSelected'));
                     $entity->errors('student_id', __('There are no students selected'));
+                    return false;
                 }
 
                 $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
