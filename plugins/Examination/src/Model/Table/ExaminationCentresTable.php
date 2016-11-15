@@ -36,7 +36,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             'through' => 'Examination.ExaminationCentresInvigilators',
             'dependent' => true,
             'cascadeCallbacks' => true
-            // 'saveStrategy' => 'append'
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -297,7 +296,8 @@ class ExaminationCentresTable extends ControllerActionTable {
 
                     $data[$alias][$fieldKey][] = [
                         'id' => $obj->id,
-                        'name' => $obj->name_with_id,
+                        'openemis_no' => $obj->openemis_no,
+                        'name' => $obj->name,
                         '_joinData' => ['academic_period_id' => $entity->academic_period_id, 'examination_id' => $entity->examination_id]
                     ];
 
@@ -496,7 +496,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function onGetCustomInvigilatorsElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $tableHeaders = [$this->getMessage('general.name')];
+        $tableHeaders = [__('OpenEMIS ID'), $this->getMessage('general.name')];
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'invigilators';
@@ -506,7 +506,8 @@ class ExaminationCentresTable extends ControllerActionTable {
             if (!empty($associated[$fieldKey])) {
                 foreach ($associated[$fieldKey] as $key => $obj) {
                     $rowData = [];
-                    $rowData[] = $obj->name_with_id;
+                    $rowData[] = $obj->openemis_no;
+                    $rowData[] = $obj->name;
 
                     $tableCells[] = $rowData;
                 }
@@ -523,7 +524,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                         foreach ($associated[$fieldKey] as $key => $obj) {
                             $this->request->data[$alias][$fieldKey][$key] = [
                                 'id' => $obj->id,
-                                'name' => $obj->name_with_id,
+                                'openemis_no' => $obj->openemis_no,
+                                'name' => $obj->name,
                                 '_joinData' => ['academic_period_id' => $entity->academic_period_id, 'examination_id' => $entity->examination_id]
                             ];
                         }
@@ -536,17 +538,20 @@ class ExaminationCentresTable extends ControllerActionTable {
 
                     foreach ($associated as $key => $obj) {
                         $invigilatorId = $obj['id'];
+                        $openemisId = $obj['openemis_no'];
                         $name = $obj['name'];
                         $joinData = $obj['_joinData'];
 
                         $rowData = [];
 
                         $cell = $name;
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name, 'autocomplete-exclude' => $invigilatorId]);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $invigilatorId]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $invigilatorId, 'autocomplete-exclude' => $invigilatorId]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key.openemis_no", ['value' => $openemisId]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
                         $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.academic_period_id", ['value' => $joinData['academic_period_id']]);
                         $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.examination_id", ['value' => $joinData['examination_id']]);
 
+                        $rowData[] = $openemisId;
                         $rowData[] = $cell;
                         $rowData[] = $this->getDeleteButton();
                         $tableCells[] = $rowData;
