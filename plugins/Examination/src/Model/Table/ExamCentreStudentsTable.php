@@ -11,6 +11,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
+use Cake\Log\Log;
 
 class ExamCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -28,8 +29,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -55,6 +54,21 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['examination_id']['visible'] = false;
         $this->fields['student_id']['type'] = 'string';
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $examCentreId = $entity->examination_centre_id;
+        $studentId = $entity->student_id;
+        $this->deleteAll([
+            'examination_centre_id' => $examCentreId,
+            'student_id' => $studentId
+        ]);
+
+        TableRegistry::get('Examination.ExaminationCentreRoomStudents')->deleteAll([
+            'examination_centre_id' => $examCentreId,
+            'student_id' => $studentId
+        ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
