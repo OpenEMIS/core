@@ -75,7 +75,8 @@ class ImportBehavior extends Behavior {
         'plugin' => '',
         'model' => '',
         'max_rows' => 2000,
-        'max_size' => 524288
+        'max_size' => 524288,
+        'backUrl' => []
     ];
     protected $rootFolder = 'import';
     private $_fileTypesMap = [
@@ -154,7 +155,9 @@ class ImportBehavior extends Behavior {
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
                 break;
         }
-        if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
+        if (!empty($this->config('backUrl'))) {
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
+        } else if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
             if ($this->_table->request->params['pass'][0] == 'add') {
                 $back = str_replace('Import', '', $this->_table->alias());
             } else  if ($this->_table->request->params['pass'][0] == 'results') {
