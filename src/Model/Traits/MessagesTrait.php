@@ -1404,6 +1404,9 @@ trait MessagesTrait {
                 'name' => [
                     'ruleUnique' => 'Please enter a unique name for this examination centre room'
                 ],
+                'number_of_seats' => [
+                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available'
+                ]
             ],
             'ExaminationItems' => [
                 'weight' => [
