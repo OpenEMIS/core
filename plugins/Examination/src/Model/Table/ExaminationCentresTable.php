@@ -5,6 +5,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\HtmlTrait;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
@@ -13,6 +14,7 @@ use Cake\Utility\Text;
 
 class ExaminationCentresTable extends ControllerActionTable {
     use OptionsTrait;
+    use HtmlTrait;
 
     public function initialize(array $config)
     {
@@ -26,6 +28,15 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('Institutions', [
+            'className' => 'Institution.Institutions',
+            'joinTable' => 'examination_centres_institutions',
+            'foreignKey' => 'examination_centre_id',
+            'targetForeignKey' => 'examination_centre_id',
+            'through' => 'Examination.ExaminationCentresInstitutions',
+            'dependent' => true
+        ]);
         $this->belongsToMany('Invigilators', [
             'className' => 'User.Users',
             'joinTable' => 'examination_centres_invigilators',
@@ -34,9 +45,11 @@ class ExaminationCentresTable extends ControllerActionTable {
             'through' => 'Examination.ExaminationCentresInvigilators',
             'dependent' => true,
             'cascadeCallbacks' => true
-            // 'saveStrategy' => 'append'
         ]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['view']
+        ]);
         $this->setDeleteStrategy('restrict');
     }
 
@@ -251,10 +264,24 @@ class ExaminationCentresTable extends ControllerActionTable {
         $query->contain(['ExaminationCentreSubjects.EducationSubjects'])
             ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes'])
             ->contain(['ExaminationCentreRooms.Students'])
-            ->contain(['Invigilators'])
+            ->contain([
+                'Invigilators' => [
+                    'sort' => ['Invigilators.first_name' => 'ASC', 'Invigilators.last_name' => 'ASC']
+                ]
+            ])
             ->matching('Examinations')
             ->matching('Areas')
             ->matching('AcademicPeriods');
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
+    }
+
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
     }
 
 
@@ -273,6 +300,44 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->request->data[$this->alias()]['special_need_types']['_ids'] = $specialNeeds;
     }
 
+    public function editOnAddInvigilator(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $alias = $this->alias();
+        $fieldKey = 'invigilators';
+
+        if (empty($data[$this->alias()][$fieldKey])) {
+            $data[$this->alias()][$fieldKey] = [];
+        }
+
+        if ($data->offsetExists($alias)) {
+            if (array_key_exists('invigilator_id', $data[$alias]) && !empty($data[$alias]['invigilator_id'])) {
+                $id = $data[$alias]['invigilator_id'];
+
+                try {
+                    $obj = $this->Invigilators->get($id);
+
+                    $data[$alias][$fieldKey][] = [
+                        'id' => $obj->id,
+                        'openemis_no' => $obj->openemis_no,
+                        'name' => $obj->name,
+                        '_joinData' => ['academic_period_id' => $entity->academic_period_id, 'examination_id' => $entity->examination_id]
+                    ];
+
+                    $data[$alias]['invigilator_id'] = '';
+                } catch (RecordNotFoundException $ex) {
+                    Log::write('debug', __METHOD__ . ': Record not found for id: ' . $id);
+                }
+            }
+        }
+    }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        if (!isset($data['ExaminationCentres']['invigilators'])) {
+            $data['ExaminationCentres']['invigilators'] = [];
+        }
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->fields['total_registered']['visible'] = false;
@@ -282,10 +347,10 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->field('examination_id', ['entity' => $entity]);
             $this->field('special_need_types', ['type' => 'chosenSelect', 'entity' => $entity]);
             $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
-            $this->field('invigilators', ['type' => 'custom_invigilators']);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
             $this->fields['institution_id']['visible'] = true;
             $this->fields['institution_id']['type'] = 'hidden';
+            $this->field('invigilators', ['type' => 'custom_invigilators']);
 
             // to add logic for edit
 
@@ -335,7 +400,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             }
 
             // field order
-            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'invigilators', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'invigilators']);
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
@@ -352,8 +417,9 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['email']['visible'] = true;
             $this->fields['website']['visible'] = true;
             $this->fields['total_registered']['visible'] = true;
+            $this->field('invigilators', ['type' => 'custom_invigilators']);
 
-            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
+            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'invigilators']);
         }
     }
 
@@ -459,15 +525,73 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function onGetCustomInvigilatorsElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $tableHeaders = [__('Invigilator')];
+        $tableHeaders = [__('OpenEMIS ID'), __('Invigilator')];
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'invigilators';
 
         if ($action == 'view') {
+            $associated = $entity->extractOriginal([$fieldKey]);
+            if (!empty($associated[$fieldKey])) {
+                foreach ($associated[$fieldKey] as $key => $obj) {
+                    $rowData = [];
+                    $rowData[] = $obj->openemis_no;
+                    $rowData[] = $obj->name;
+
+                    $tableCells[] = $rowData;
+                }
+            }
         } else if ($action == 'edit') {
             if (!$entity->isNew()) {
+                $tableHeaders[] = ''; // for delete column
+                $Form = $event->subject()->Form;
+                $Form->unlockField('ExaminationCentres.invigilators');
 
+                if ($this->request->is(['get'])) {
+                    if (!array_key_exists($alias, $this->request->data)) {
+                        $this->request->data[$alias] = [$fieldKey => []];
+                    } else {
+                        $this->request->data[$alias][$fieldKey] = [];
+                    }
+
+                    $associated = $entity->extractOriginal([$fieldKey]);
+                    if (!empty($associated[$fieldKey])) {
+                        foreach ($associated[$fieldKey] as $key => $obj) {
+                            $this->request->data[$alias][$fieldKey][$key] = [
+                                'id' => $obj->id,
+                                'openemis_no' => $obj->openemis_no,
+                                'name' => $obj->name,
+                                '_joinData' => ['academic_period_id' => $entity->academic_period_id, 'examination_id' => $entity->examination_id]
+                            ];
+                        }
+                    }
+                }
+
+                // refer to editOnAddInvigilator for http post
+                if ($this->request->data("$alias.$fieldKey")) {
+                    $associated = $this->request->data("$alias.$fieldKey");
+
+                    foreach ($associated as $key => $obj) {
+                        $invigilatorId = $obj['id'];
+                        $openemisId = $obj['openemis_no'];
+                        $name = $obj['name'];
+                        $joinData = $obj['_joinData'];
+
+                        $rowData = [];
+
+                        $cell = $name;
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $invigilatorId, 'autocomplete-exclude' => $invigilatorId]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key.openemis_no", ['value' => $openemisId]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.academic_period_id", ['value' => $joinData['academic_period_id']]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.examination_id", ['value' => $joinData['examination_id']]);
+
+                        $rowData[] = $openemisId;
+                        $rowData[] = $cell;
+                        $rowData[] = $this->getDeleteButton();
+                        $tableCells[] = $rowData;
+                    }
+                }
             }
         }
 
