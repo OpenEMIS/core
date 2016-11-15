@@ -71,6 +71,10 @@ class InstitutionGradesTable extends ControllerActionTable
             $this->setFieldOrder([
                 'education_grade_id', 'programme', 'level', 'start_date', 'end_date'
             ]);
+        } else if ($this->action == 'view' || $this->action == 'edit') {
+            $this->setFieldOrder([
+                'level', 'programme', 'education_grade_id', 'start_date', 'end_date'
+            ]);
         }
     }
 
