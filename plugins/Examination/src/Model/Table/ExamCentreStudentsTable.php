@@ -32,6 +32,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
+        $this->toggle('edit', false);
     }
 
     public function validationDefault(Validator $validator) {
@@ -46,6 +47,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
         $this->fields['total_mark']['visible'] = false;
         $this->fields['student_id']['visible'] = true;
@@ -77,5 +79,10 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
             ->where([$ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId])
             ->toArray();
+    }
+
+    public function onGetRoom(Event $event, Entity $entity)
+    {
+        return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
     }
 }
