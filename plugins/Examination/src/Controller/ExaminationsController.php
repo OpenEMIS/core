@@ -17,19 +17,14 @@ class ExaminationsController extends AppController
     // CAv4
     public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
-    public function ExamCentres($pass = 'index')
-    {
-        // if ($pass == 'add') {
-        //     $this->set('ngController', 'ExaminationCentresCtrl as ExamCentreController');
-        //     $this->render('examinationCentres');
-        // } else {
-            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);
-        // }
-    }
+    public function ExamCentres($pass = 'index') { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);}
     public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
+    public function BulkStudentRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
     public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
     public function LinkedInstitutions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresInstitutions']); }
+    public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
+    public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']); }
 
     // End
 
@@ -82,6 +77,25 @@ class ExaminationsController extends AppController
         $this->set('selectedAction', $this->request->action);
     }
 
+    public function getExamCentresTab($action = null)
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'ExamCentres' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres', 'queryString' => $queryString],
+                'text' => __('Overview')
+            ],
+            'ExamCentreStudents' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreStudents', 'queryString' => $queryString],
+                'text' => __('Students')
+            ]
+        ];
+
+        $this->set('tabElements', $tabElements);
+        $action = !is_null($action) ? $action : $this->request->action;
+        $this->set('selectedAction', $action);
+    }
+
     public function getStudentsTab($action = null)
     {
         $tabElements = [
@@ -96,7 +110,8 @@ class ExaminationsController extends AppController
         ];
 
         $this->set('tabElements', $tabElements);
-        $this->set('selectedAction', $this->request->action);
+        $action = !is_null($action) ? $action : $this->request->action;
+        $this->set('selectedAction', $action);
     }
 
     private function checkExamCentresPermission() {
