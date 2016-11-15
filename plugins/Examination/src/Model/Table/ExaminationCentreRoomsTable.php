@@ -9,6 +9,8 @@ use Cake\Validation\Validator;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use App\Model\Traits\HtmlTrait;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Hash;
 
 class ExaminationCentreRoomsTable extends ControllerActionTable {
     use HtmlTrait;
@@ -92,7 +94,42 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->academic_period_id, 'attr' => ['value' => $entity->academic_period->name]]);
         $this->field('examination_id', ['type' => 'readonly', 'value' => $entity->examination_id, 'attr' => ['value' => $entity->examination->name]]);
         $this->field('examination_centre_id', ['type' => 'readonly', 'value' => $entity->examination_centre_id, 'attr' => ['value' => $entity->examination_centre->code_name]]);
-        $this->field('students', ['type' => 'students', 'after' => 'examination_centre_id']);
+        $this->field('student_id', ['type' => 'chosenSelect']);
+        $this->field('students', ['type' => 'students']);
+
+        $this->setFieldOrder(['name', 'size', 'number_of_seats', 'academic_period_id', 'examination_id', 'examination_centre_id', 'student_id', 'students']);
+    }
+
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    {
+        $ExaminatonCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
+        $list = $ExaminatonCentreStudents
+                ->find()
+                ->matching('Users')
+                ->leftJoin(['ExaminationCentreRoomStudents' => 'examination_centre_room_students'], [
+                    'ExaminationCentreRoomStudents.student_id = '.$ExaminatonCentreStudents->aliasField('student_id')
+                ])
+                ->where(['ExaminationCentreRoomStudents.student_id IS NULL', $ExaminatonCentreStudents->aliasField('examination_centre_id') => $this->examCentreId])
+                ->group([
+                    $ExaminatonCentreStudents->aliasField('student_id')
+                ])
+                ->order(['Users.first_name'])
+                ->all();
+        $options = [];
+        $examCentreStudentId = [];
+        if (isset($this->request->data[$this->alias()]['students'])) {
+            $examCentreStudentId = Hash::extract($this->request->data[$this->alias()]['students'], '{n}.id');
+        }
+        foreach($list as $students) {
+            if (!in_array($students->id, $examCentreStudentId)) {
+                $options[$students->id] = $students['_matchingData']['Users']['name_with_id'];
+            }
+        }
+
+        $attr['options'] = ['' => '-- '.__('Select One').' --'] + $options;
+        $attr['onChangeReload'] = 'AddStudents';
+        $attr['attr']['multiple'] = false;
+        return $attr;
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -188,7 +225,6 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         if (empty($data[$this->alias()][$fieldKey])) {
             $data[$this->alias()][$fieldKey] = [];
         }
-
         if ($data->offsetExists($alias)) {
             if (array_key_exists('student_id', $data[$alias]) && !empty($data[$alias]['student_id'])) {
                 $id = $data[$alias]['student_id'];
