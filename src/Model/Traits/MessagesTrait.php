@@ -1446,7 +1446,7 @@ trait MessagesTrait {
                 ],
                 'student_id' => [
                     'ruleUnique' => 'This student is already registered to the selected exam',
-                    'ruleNotInvigilator' => 'An invigilator cannot be added to this exam'
+                    'ruleNotInvigilator' => 'This student is an invigilator in this examination'
                 ]
             ],
             'BulkStudentRegistration' => [

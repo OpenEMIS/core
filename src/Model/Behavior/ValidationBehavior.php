@@ -105,8 +105,8 @@ class ValidationBehavior extends Behavior {
 	public static function checkNotInvigilator($check, array $globalData) {
 		$data = $globalData['data'];
 
-        $Table = TableRegistry::get('Examination.ExaminationCentreRoomInvigilators');
-        $recordExists = $Table
+        $Table = TableRegistry::get('Examination.ExaminationCentresInvigilators');
+        $record = $Table
         	->find()
         	->where([
         		$Table->aliasField('examination_id') => $data['examination_id'],
@@ -115,7 +115,7 @@ class ValidationBehavior extends Behavior {
         	])
         	->first();
 
-        if ($recordExists) {
+        if (!empty($record)) {
         	return false;
         } else {
         	return true;
