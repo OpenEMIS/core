@@ -16,6 +16,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
     private $examCentreId;
+    private $examCentreRoomStudents = [];
 
     public function initialize(array $config) {
         $this->table('examination_centre_students');
@@ -63,14 +64,18 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->leftJoin(['ExaminationCentreRoomStudents' => 'examination_centre_room_students'], [
-                'ExaminationCentreRoomStudents.examination_centre_id = '.$this->aliasField('examination_centre_id'),
-                'ExaminationCentreRoomStudents.student_id = '.$this->aliasField('student_id')
-            ])
-            ->matching('ExaminationCentres.ExaminationCentreRooms')
-            ->where([$this->aliasField('examination_centre_id') => $this->examCentreId])
-            ->select(['room' => 'ExaminationCentreRooms.name'])
-            ->autoFields(true)
+            ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
             ->group([$this->aliasField('student_id')]);
+
+        $ExamCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+
+        $this->examCentreRoomStudents = $ExamCentreRoomStudents->find('list', [
+                'keyField' => 'student_id',
+                'valueField' => 'room_name'
+            ])
+            ->innerJoinWith('ExaminationCentreRooms')
+            ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
+            ->where([$ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId])
+            ->toArray();
     }
 }
