@@ -22,6 +22,15 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
+        $this->belongsToMany('Invigilators', [
+            'className' => 'User.Users',
+            'joinTable' => 'examination_centre_rooms_invigilators',
+            'foreignKey' => 'examination_centre_room_id',
+            'targetForeignKey' => 'invigilator_id',
+            'through' => 'Examination.ExaminationCentreRoomsInvigilators',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
         $this->belongsToMany('Students', [
             'className' => 'User.Users',
             'joinTable' => 'examination_centre_room_students',
@@ -61,7 +70,22 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->field('examination_id', ['visible' => false]);
         $this->field('examination_centre_id', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
-        $this->field('students', ['type' => 'integer', 'after' => 'number_of_seats']);
+        $this->field('invigilators', ['type' => 'integer', 'after' => 'number_of_seats']);
+        $this->field('students', ['type' => 'integer', 'after' => 'invigilators']);
+    }
+
+    public function onGetInvigilators(Event $event, Entity $entity)
+    {
+        if ($this->action == 'index') {
+            return count($entity->invigilators);
+        } else if ($this->action == 'view') {
+            $invigilatorList = [];
+            foreach ($entity->invigilators as $key => $obj) {
+                $invigilatorList[] = $obj->name_with_id;
+            }
+
+            return implode(', ', $invigilatorList);
+        }
     }
 
     public function onGetStudents(Event $event, Entity $entity)
@@ -81,7 +105,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('students', ['type' => 'element', 'element' => 'Examination.exam_centre_room_students', 'data' => $entity, 'after' => 'examination_centre_id']);
+        $this->field('invigilators', ['type' => 'chosenSelect', 'after' => 'examination_centre_id']);
+        $this->field('students', ['type' => 'element', 'element' => 'Examination.exam_centre_room_students', 'data' => $entity, 'after' => 'invigilators']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -92,7 +117,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->academic_period_id, 'attr' => ['value' => $entity->academic_period->name]]);
         $this->field('examination_id', ['type' => 'readonly', 'value' => $entity->examination_id, 'attr' => ['value' => $entity->examination->name]]);
         $this->field('examination_centre_id', ['type' => 'readonly', 'value' => $entity->examination_centre_id, 'attr' => ['value' => $entity->examination_centre->code_name]]);
-        $this->field('students', ['type' => 'students', 'after' => 'examination_centre_id']);
+        $this->field('invigilators', ['type' => 'chosenSelect', 'after' => 'examination_centre_id']);
+        $this->field('students', ['type' => 'students', 'after' => 'invigilators']);
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -106,7 +132,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $examCentre->academic_period_id, 'attr' => ['value' => $examCentre->academic_period->name]]);
         $this->field('examination_id', ['type' => 'readonly', 'value' => $examCentre->examination_id, 'attr' => ['value' => $examCentre->examination->name]]);
         $this->field('examination_centre_id', ['type' => 'readonly', 'value' => $examCentre->id, 'attr' => ['value' => $examCentre->code_name]]);
-        $this->field('students', ['type' => 'students', 'after' => 'examination_centre_id']);
+        $this->field('invigilators', ['type' => 'chosenSelect', 'after' => 'examination_centre_id']);
+        $this->field('students', ['type' => 'students', 'after' => 'invigilators']);
     }
 
     public function onUpdateIncludes(Event $event, ArrayObject $includes, $action)
@@ -212,6 +239,34 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         ];
     }
 
+    public function onUpdateFieldInvigilators(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'view') {
+        } else if ($action == 'add' || $action == 'edit') {
+            $examCentreEntity = $this->ExaminationCentres
+                ->find()
+                ->contain([
+                    'Invigilators' => [
+                        'sort' => ['Invigilators.first_name' => 'ASC', 'Invigilators.last_name' => 'ASC']
+                    ]
+                ])
+                ->where([$this->ExaminationCentres->aliasField('id') => $this->examCentreId])
+                ->first();
+
+            $invigilatorOptions = [];
+            if ($examCentreEntity->has('invigilators')) {
+                foreach ($examCentreEntity->invigilators as $key => $obj) {
+                    $invigilatorOptions[$obj->id] = $obj->name_with_id;
+                }
+            }
+
+            $attr['placeholder'] = __('Select Invigilators');
+            $attr['options'] = $invigilatorOptions;
+        }
+
+        return $attr;
+    }
+
     public function onGetStudentsElement(Event $event, $action, $entity, $attr, $options=[])
     {
         $tableHeaders = [__('OpenEMIS ID'), __('Student'), ''];
@@ -280,6 +335,9 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     {
         $query
             ->contain([
+                'Invigilators' => [
+                    'sort' => ['Invigilators.first_name' => 'ASC', 'Invigilators.last_name' => 'ASC']
+                ],
                 'Students' => [
                     'sort' => ['Students.first_name' => 'ASC', 'Students.last_name' => 'ASC']
                 ],
@@ -289,13 +347,18 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['Students'])
+            ->contain(['Invigilators', 'Students'])
             ->where([$this->aliasField('examination_centre_id') => $this->examCentreId]);
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $options['associated'] = ['Students._joinData' => ['validate' => false]];
+        // $options['associated'] = ['Students._joinData' => ['validate' => false]];
+        $options['associated']['Students._joinData'] = ['validate' => false];
+        $options['associated']['Invigilators._joinData'] = ['validate' => false];
+
+        $data['ExaminationCentreRooms']['invigilators'] = $this->processInvigilators($entity, $data);
+
         if (!isset($data['ExaminationCentreRooms']['students'])) {
             $data['ExaminationCentreRooms']['students'] = [];
         }
@@ -304,8 +367,34 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $options['associated'][] = 'Students._joinData';
+        $options['associated'][] = 'Invigilators._joinData';
+
+        $data['ExaminationCentreRooms']['invigilators'] = $this->processInvigilators($entity, $data);
+
         if (!isset($data['ExaminationCentreRooms']['students'])) {
             $data['ExaminationCentreRooms']['students'] = [];
         }
+    }
+
+    public function processInvigilators(Entity $entity, ArrayObject $data)
+    {
+        $invigilators = [];
+
+        if (isset($data[$this->alias()]['invigilators']['_ids']) && !empty($data[$this->alias()]['invigilators']['_ids'])) {
+            foreach ($data[$this->alias()]['invigilators']['_ids'] as $key => $value) {
+                $invigilators[] = [
+                    'id' => $value,
+                    '_joinData' => [
+                        'academic_period_id' => $data[$this->alias()]['academic_period_id'],
+                        'examination_id' => $data[$this->alias()]['examination_id'],
+                        'examination_centre_id' => $data[$this->alias()]['examination_centre_id']
+                    ]
+                ];
+            }
+
+            unset($data[$this->alias()]['invigilators']['_ids']);
+        }
+
+        return $invigilators;
     }
 }
