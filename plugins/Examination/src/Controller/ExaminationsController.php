@@ -24,6 +24,7 @@ class ExaminationsController extends AppController
     public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
     public function LinkedInstitutions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresInstitutions']); }
     public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
+    public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']); }
 
     // End
 
@@ -74,6 +75,25 @@ class ExaminationsController extends AppController
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
+    }
+
+    public function getExamCentresTab($action = null)
+    {
+        $queryString = $this->request->query('queryString');
+        $tabElements = [
+            'ExamCentres' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres', 'queryString' => $queryString],
+                'text' => __('Overview')
+            ],
+            'ExamCentreStudents' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreStudents', 'queryString' => $queryString],
+                'text' => __('Students')
+            ]
+        ];
+
+        $this->set('tabElements', $tabElements);
+        $action = !is_null($action) ? $action : $this->request->action;
+        $this->set('selectedAction', $action);
     }
 
     public function getStudentsTab($action = null)

@@ -194,6 +194,16 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->matching('AcademicPeriods');
     }
 
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
+    }
+
+    public function editBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
+    }
+
 
     public function editOnInitialize(Event $event, Entity $entity)
     {
