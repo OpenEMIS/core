@@ -160,22 +160,24 @@ class ImportResultsTable extends AppTable
 
     public function onImportPopulateExaminationGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $order = [$lookupModel.'.name', $lookupModel.'.code'];
+        $order = [$lookupModel.'.examination_grading_type_id', $lookupModel.'.order'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
+        $selectFields = [$lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), 'ExaminationGradingTypes.name'];
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
+            ->contain('ExaminationGradingTypes')
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol, __('Grading Types')];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
-                    $row->$lookupColumn
+                    $row->$lookupColumn,
+                    $row->examination_grading_type->name
                 ];
             }
         }
