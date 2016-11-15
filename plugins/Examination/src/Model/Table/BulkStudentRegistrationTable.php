@@ -356,6 +356,14 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                     return $return;
                 });
 
+                if ($success) {
+                    $studentCount = $this->find()
+                        ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+                        ->group([$this->aliasField('student_id')])
+                        ->count();
+                    $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+                }
+
                 if ($entity->auto_assign_to_rooms) {
                     if ($success) {
                         $examCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms
