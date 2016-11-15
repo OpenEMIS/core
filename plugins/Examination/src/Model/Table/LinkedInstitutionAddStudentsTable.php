@@ -241,7 +241,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         }
                         if (!empty($newEntities)) {
                             $model->Alert->warning($this->aliasField('notAssignedRoom'));
-                            return false;
+                            return true;
                         }
                         return true;
                     } else {
