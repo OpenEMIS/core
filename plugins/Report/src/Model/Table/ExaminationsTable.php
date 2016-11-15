@@ -14,20 +14,16 @@ use App\Model\Table\AppTable;
 class ExaminationsTable extends AppTable
 {
     public function initialize(array $config) {
-        $this->table('examination_centre_students');
+        $this->table('examinations');
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
-        $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        // $this->addBehavior('Excel', ['excludes' => ['security_group_id'], 'pages' => false]);
+        $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
         // $this->addBehavior('Report.CustomFieldList', [
         //     'model' => 'Institution.Institutions',
@@ -96,13 +92,14 @@ class ExaminationsTable extends AppTable
                 $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
             }
 
-            $Examinations = $this->Examinations;
-            $examinationOptions = $Examinations->find('list')
-                ->where([$Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            $examinationOptions = $this->find('list')
+                ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
                 ->toArray();
 
             $attr['options'] = $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';
+            $attr['type'] = 'select';
+            // $attr['select'] = false;
             return $attr;
         }
     }
@@ -148,11 +145,12 @@ class ExaminationsTable extends AppTable
                 if (!empty($request->data[$this->alias()]['examination_id'])) {
                     $selectedExamination = $request->data[$this->alias()]['examination_id'];
 
-                    $institutionOptions = $this
+                    $ExamCentreStudents = $this->ExaminationCentreStudents;
+                    $institutionOptions = $ExamCentreStudents
                         ->find('list' ,['keyField' => 'institution_id', 'valueField' => 'institution.code_name'])
                         ->contain('Institutions')
-                        ->where([$this->aliasField('examination_id') => $selectedExamination])
-                        ->group([$this->aliasField('institution_id')])
+                        ->where([$ExamCentreStudents->aliasField('examination_id') => $selectedExamination])
+                        ->group([$ExamCentreStudents->aliasField('institution_id')])
                         ->toArray();
 
                     // cater for 0
