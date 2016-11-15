@@ -26,6 +26,14 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('Institutions', [
+            'className' => 'Institution.Institutions',
+            'joinTable' => 'examination_centres_institutions',
+            'foreignKey' => 'examination_centre_id',
+            'targetForeignKey' => 'examination_centre_id',
+            'through' => 'Examination.ExaminationCentresInstitutions',
+            'dependent' => true
+        ]);
         $this->setDeleteStrategy('restrict');
     }
 
