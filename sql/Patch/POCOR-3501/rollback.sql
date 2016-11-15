@@ -1,4 +1,3 @@
--- POCOR-3501
 -- Restore tables
 DROP TABLE IF EXISTS `examinations`;
 RENAME TABLE `z_3501_examinations` TO `examinations`;
@@ -32,11 +31,3 @@ DELETE FROM `security_functions` WHERE `id` IN (5051, 5052);
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3501';
-
-
--- db_patches
-DELETE FROM `db_patches` WHERE `issue`='POCOR-2737';
-
-
--- 3.7.3
-UPDATE config_items SET value = '3.7.3' WHERE code = 'db_version';
