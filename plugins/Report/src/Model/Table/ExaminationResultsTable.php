@@ -10,6 +10,11 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class ExaminationResultsTable extends AppTable  {
+
+    private $examinationResults = [];
+    private $totalMarks = 0;
+    private $totalWeightedMark = 0;
+
     public function initialize(array $config)
     {
         $this->table('examination_centre_students');
@@ -39,7 +44,7 @@ class ExaminationResultsTable extends AppTable  {
 
         $query
             ->contain(['Users', 'Institutions'])
-            ->select(['code' => 'Institutions.code', 'openemis_no' => 'Users.openemis_no'])
+            ->select(['openemis_no' => 'Users.openemis_no'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
             ->order([$this->aliasField('institution_id')]);
 
@@ -64,13 +69,6 @@ class ExaminationResultsTable extends AppTable  {
             'field' => 'examination_id',
             'type' => 'integer',
             'label' => 'Examination',
-        ];
-
-        $newFields[] = [
-            'key' => 'Institutions.code',
-            'field' => 'code',
-            'type' => 'string',
-            'label' => '',
         ];
 
         $newFields[] = [
@@ -132,11 +130,18 @@ class ExaminationResultsTable extends AppTable  {
             ];
         }
 
-        $fields[] = [
+        $newFields[] = [
             'key' => 'total_mark',
-            'field' => 'examination_item',
-            'type' => 'total_mark',
+            'field' => 'total_mark',
+            'type' => 'integer',
             'label' => __('Total Marks')
+        ];
+
+        $newFields[] = [
+            'key' => 'total_weighted_mark',
+            'field' => 'total_weighted_mark',
+            'type' => 'integer',
+            'label' => __('Total Weighted Marks')
         ];
 
 
@@ -151,18 +156,25 @@ class ExaminationResultsTable extends AppTable  {
         $resultType = $attr['resultType'];
         $weight = $attr['weight'];
         $ExaminationItemResultsTable = TableRegistry::get('Examination.ExaminationItemResults');
-        $results = $ExaminationItemResultsTable->getExaminationItemResults($academicPeriodId, $examinationId, $subjectId, $studentId);
+        $results = $this->examinationResults;
+        if (!(isset($results[$studentId]))) {
+            $results = $ExaminationItemResultsTable->getExaminationItemResults($academicPeriodId, $examinationId, $subjectId, $studentId);
+            $this->examinationResults = $results;
+        }
 
-        if (isset($results)) {
-            $marks = $assessmentItemResults[$institutionId][$studentId][$subjectId][$assessmentPeriodId];
+        $printedResult = __('No Results');
+
+        if (isset($results[$studentId][$subjectId])) {
+            $marks = $results[$studentId][$subjectId];
             switch($resultType) {
                 case 'MARKS':
-                    // Add logic to add weighted mark to subjectWeightedMark
-                    $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
-                    $printedResult = ' '.$result['marks'];
+                    $weightedMark = $marks['marks']*$weight;
+                    $this->totalMarks += $marks['marks'];
+                    $this->totalWeightedMark += $weightedMark;
+                    $printedResult = $marks['marks'] . ' (' . $weightedMark .')';
                     break;
                 case 'GRADES':
-                    $printedResult = $result['grade_code'] . ' - ' . $result['grade_name'];
+                    $printedResult = $marks['grade_code'] . ' - ' . $marks['grade_name'];
                     break;
             }
         }
@@ -170,10 +182,25 @@ class ExaminationResultsTable extends AppTable  {
         return $printedResult;
     }
 
-    public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr) {
-        pr($entity);
-        // $totalMark = $this->totalMark;
-        // $this->totalMark = 0;
-        // return ' '.$totalMark;
+    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->institution_id) {
+            return $entity->institution->code_name;
+        } else {
+            return __('Private Candidate');
+        }
+    }
+
+    public function onExcelGetTotalWeightedMark(Event $event, Entity $entity, array $attr)
+    {
+        $printedResult = $this->totalWeightedMark;
+        $this->totalWeightedMark = 0;
+        return $printedResult;
+    }
+
+    public function onExcelGetTotalMark(Event $event, Entity $entity, array $attr) {
+        $printedResult = $this->totalMarks;
+        $this->totalMarks = 0;
+        return $printedResult;
     }
 }
