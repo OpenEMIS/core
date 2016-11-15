@@ -87,7 +87,7 @@ class ExaminationsController extends AppController
         $queryString = $this->request->query('queryString');
         $tabElements = [
             'ExamCentres' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres', 'queryString' => $queryString],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres', 'view', 'queryString' => $queryString],
                 'text' => __('Overview')
             ],
             'ExamCentreStudents' => [
