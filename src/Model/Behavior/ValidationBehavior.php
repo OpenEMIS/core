@@ -1573,23 +1573,6 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
-	public static function checkAvailableCapacity($field, array $globalData)
-	{
-		$data = $globalData['data'];
-		if (isset($data['available_capacity'])) {
-			if (isset($data['examination_students']) && is_array($data['examination_students'])) {
-				$students = [];
-				foreach($data['examination_students'] as $student) {
-					if ($student['selected']) {
-						$students[] = $student['student_id'];
-					}
-				}
-				return count($students) <= $data['available_capacity'];
-			}
-		}
-		return false;
-	}
-
 	public static function checkPendingAdmissionExist($field, array $globalData)
 	{
 		$data = $globalData['data'];
