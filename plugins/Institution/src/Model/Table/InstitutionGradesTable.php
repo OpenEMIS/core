@@ -151,6 +151,7 @@ class InstitutionGradesTable extends ControllerActionTable
                         return false;
                     } else {
                         foreach ($gradeEntities as $grade) {
+                            $entity->education_grade_id = $grade->education_grade_id;
                             $this->save($grade);
                         }
                         return true;
@@ -164,6 +165,7 @@ class InstitutionGradesTable extends ControllerActionTable
                 return false;
             }
         };
+
         if (empty($errors) || count($errors)==1) {
             $educationGradeCount = $this->EducationGrades->find('list')
                     ->find('visible')
@@ -178,6 +180,7 @@ class InstitutionGradesTable extends ControllerActionTable
                         $this->aliasField('institution_id') => $entity->institution_id
                     ])
                     ->count();
+
             if ($educationGradeCount == $existingGradeCount) {
                 $this->Alert->warning($this->aliasField('allGradesAlreadyAdded'));
                 $event->stopPropagation();
