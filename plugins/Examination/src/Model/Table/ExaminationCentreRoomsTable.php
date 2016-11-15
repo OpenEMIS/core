@@ -157,66 +157,6 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         }
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.Model.ajaxStudentAutocomplete'] = 'ajaxStudentAutocomplete';
-        return $events;
-    }
-
-    public function ajaxStudentAutocomplete()
-    {
-        $examCentreId = $this->paramsPass(0);
-        $this->controller->autoRender = false;
-        $this->autoRender = false;
-
-        if ($this->request->is(['ajax'])) {
-            $term = $this->request->query['term'];
-            // autocomplete
-            $data = [];
-            $search = sprintf('%s%%', $term);
-
-            $ExaminatonCentreStudents = $this->ExaminationCentres->ExaminationCentreStudents;
-
-            $list = $ExaminatonCentreStudents
-                ->find()
-                ->matching('Users', function($q) use ($search) {
-                    return $q
-                        ->find('all')
-                        ->where([
-                            'OR' => [
-                                'Users.openemis_no LIKE' => $search,
-                                'Users.first_name LIKE' => $search,
-                                'Users.middle_name LIKE' => $search,
-                                'Users.third_name LIKE' => $search,
-                                'Users.last_name LIKE' => $search
-                            ]
-                        ]);
-                })
-                ->leftJoin(['ExaminationCentreRoomStudents' => 'examination_centre_room_students'], [
-                    'ExaminationCentreRoomStudents.student_id = '.$ExaminatonCentreStudents->aliasField('student_id')
-                ])
-                ->where(['ExaminationCentreRoomStudents.student_id IS NULL', $ExaminatonCentreStudents->aliasField('examination_centre_id') => $examCentreId])
-                ->group([
-                    $ExaminatonCentreStudents->aliasField('student_id')
-                ])
-                ->order(['Users.first_name'])
-                ->all();
-
-            foreach($list as $obj) {
-                $_matchingData = $obj->_matchingData['Users'];
-                $data[] = [
-                    'label' => sprintf('%s - %s', $_matchingData->openemis_no, $_matchingData->name),
-                    'value' => $obj->id
-                ];
-            }
-            // End
-
-            echo json_encode($data);
-            die;
-        }
-    }
-
     public function addEditOnAddStudents(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $alias = $this->alias();
