@@ -6,11 +6,14 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
+use Cake\Utility\Security;
 
 use App\Model\Table\AppTable;
 
-class ExaminationItemResultsTable extends AppTable {
-    public function initialize(array $config) {
+class ExaminationItemResultsTable extends AppTable
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
@@ -25,7 +28,11 @@ class ExaminationItemResultsTable extends AppTable {
         ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-        $entity->id = Text::uuid();
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $hashString = $entity->academic_period_id . ',' . $entity->examination_id . ',' . $entity->education_subject_id . ',' . $entity->student_id;
+            $entity->id = Security::hash($hashString, 'sha256');
+        }
     }
 }
