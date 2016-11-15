@@ -583,6 +583,16 @@ trait MessagesTrait {
             'noStudentSelected' => 'There are no students selected',
         ],
 
+        'ExaminationCentreStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration',
+            'noStudentSelected' => 'There are no students selected',
+        ],
+
+        'LinkedInstitutionAddStudents' => [
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+        ],
+
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -833,8 +843,8 @@ trait MessagesTrait {
                 ]
             ],
             'InstitutionExaminationStudents' => [
-                'available_capacity' => [
-                    'ruleAvailable' => 'Total students exceeded examination centre capacity'
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
                 ]
             ]
         ],
@@ -1428,6 +1438,16 @@ trait MessagesTrait {
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'ExaminationCentreStudents' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ]
+            ],
+            'BulkStudentRegistration' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
                 ]
             ]
         ],
