@@ -745,8 +745,8 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if ($entity->has('institutions')) {
-                $institutions = $entity->institutions;
+            if (isset($requestData[$model->alias()]['institutions'])) {
+                $institutions = $requestData[$model->alias()]['institutions'];
                 $newEntities = [];
                 if (is_array($institutions)) {
                     foreach ($institutions as $institution) {
