@@ -3,6 +3,7 @@ namespace Examination\Model\Table;
 
 use ArrayObject;
 
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
@@ -33,6 +34,32 @@ class ExaminationItemResultsTable extends AppTable
         if ($entity->isNew()) {
             $hashString = $entity->academic_period_id . ',' . $entity->examination_id . ',' . $entity->education_subject_id . ',' . $entity->student_id;
             $entity->id = Security::hash($hashString, 'sha256');
+        }
+        $this->getExamGrading($entity);
+    }
+
+    public function getExamGrading(Entity $entity)
+    {
+        if (!$entity->has('examination_grading_option_id')) {
+            $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
+            $examItemEntity = $ExaminationItems
+                ->find()
+                ->contain(['ExaminationGradingTypes.GradingOptions'])
+                ->where([
+                    $ExaminationItems->aliasField('examination_id') => $entity->examination_id,
+                    $ExaminationItems->aliasField('education_subject_id') => $entity->education_subject_id
+                ])
+                ->first();
+
+            if ($examItemEntity->has('examination_grading_type') && $examItemEntity->examination_grading_type->result_type == 'MARKS') {
+                if ($examItemEntity->examination_grading_type->has('grading_options') && !empty($examItemEntity->examination_grading_type->grading_options)) {
+                    foreach ($examItemEntity->examination_grading_type->grading_options as $key => $obj) {
+                        if ($entity->marks >= $obj->min && $entity->marks <= $obj->max) {
+                            $entity->examination_grading_option_id = $obj->id;
+                        }
+                    }
+                }
+            }
         }
     }
 }
