@@ -951,13 +951,13 @@ class NavigationComponent extends Component
 						'title' => 'Centres',
 						'parent' => 'Administration.Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.ExamCentres.add', 'Examinations.ExamCentres.remove', 'Examinations.ExamCentreStudents']
+						'selected' => ['Examinations.ExamCentres.add', 'Examinations.ExamCentres.remove']
 					],
 						'Examinations.ExamCentres.view'  => [
 							'title' => 'Overview',
 							'parent' => 'Examinations.ExamCentres.index',
 							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
-							'selected' => ['Examinations.ExamCentres.view', 'Examinations.ExamCentres.edit']
+							'selected' => ['Examinations.ExamCentres.view', 'Examinations.ExamCentres.edit', 'Examinations.ExamCentreStudents']
 						],
 						'Examinations.ExamCentreRooms'  => [
 							'title' => 'Rooms',
