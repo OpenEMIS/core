@@ -951,7 +951,7 @@ class NavigationComponent extends Component
 						'title' => 'Centres',
 						'parent' => 'Administration.Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.ExamCentres.add', 'Examinations.ExamCentres.remove']
+						'selected' => ['Examinations.ExamCentres.add', 'Examinations.ExamCentres.remove', 'Examinations.ExamCentreStudents']
 					],
 						'Examinations.ExamCentres.view'  => [
 							'title' => 'Overview',
@@ -969,7 +969,7 @@ class NavigationComponent extends Component
 							'title' => 'Linked Institutions',
 							'parent' => 'Examinations.ExamCentres.index',
 							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
-							'selected' => []
+							'selected' => ['Examinations.LinkedInstitutionAddStudents']
 						],
 					'Examinations.RegisteredStudents' => [
 						'title' => 'Students',
