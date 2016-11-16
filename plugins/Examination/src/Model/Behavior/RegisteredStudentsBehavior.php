@@ -292,12 +292,15 @@ class RegisteredStudentsBehavior extends Behavior {
             $academicPeriodId = $entity->academic_period_id;
             $examinationId = $entity->examination_id;
 
-            $model->deleteAll([
-                'student_id' => $studentId,
-                'education_grade_id' => $educationGradeId,
-                'academic_period_id' => $academicPeriodId,
-                'examination_id' => $examinationId
-            ]);
+            $deleteStudentEntity = $this->find()
+                ->where([$this->aliasField('student_id') => $studentId, $this->aliasField('examination_id') => $examinationId])
+                ->group([$this->aliasField('student_id')])
+                ->first();
+
+            if (!empty($deleteStudentEntity)) {
+                $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
+                $ExamCentreStudents->delete($deleteStudentEntity);
+            }
 
             if (array_key_exists($model->alias(), $requestData) && array_key_exists('education_subjects', $requestData[$model->alias()])) {
                 $newEntities = [];

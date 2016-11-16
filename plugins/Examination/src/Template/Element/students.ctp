@@ -35,11 +35,7 @@ $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => 
                                         }
                                         $fieldPrefix = "$alias.examination_students.$i";
 
-                                        if ($specialNeeds) {
-                                            echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
-                                        } else {
-                                            echo $this->Form->input("$fieldPrefix.selected", ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => false, 'div' => false, 'checked' => 'checked']);
-                                        }
+                                        echo $this->Form->input("$fieldPrefix.selected", $checkboxOptions);
                                         echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
 
                                     ?>

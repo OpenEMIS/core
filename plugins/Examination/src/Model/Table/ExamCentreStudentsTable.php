@@ -11,11 +11,13 @@ use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
+use Cake\Log\Log;
 
 class ExamCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
     private $examCentreId;
+    private $examCentreRoomStudents = [];
 
     public function initialize(array $config) {
         $this->table('examination_centre_students');
@@ -27,10 +29,9 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
+        $this->toggle('edit', false);
     }
 
     public function validationDefault(Validator $validator) {
@@ -45,6 +46,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
         $this->fields['total_mark']['visible'] = false;
         $this->fields['student_id']['visible'] = true;
@@ -54,8 +56,42 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->fields['student_id']['type'] = 'string';
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $examCentreId = $entity->examination_centre_id;
+        $studentId = $entity->student_id;
+        $this->deleteAll([
+            'examination_centre_id' => $examCentreId,
+            'student_id' => $studentId
+        ]);
+
+        TableRegistry::get('Examination.ExaminationCentreRoomStudents')->deleteAll([
+            'examination_centre_id' => $examCentreId,
+            'student_id' => $studentId
+        ]);
+
+        $studentCount = $this->find()
+            ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+            ->group([$this->aliasField('student_id')])
+            ->count();
+
+        $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutionAddStudents', 'add', 'queryString' => $this->request->query('queryString')];
+        $button['type'] = 'button';
+        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['attr'] = $toolbarAttr;
+        $button['attr']['title'] = __('Bulk Add');
+        $extra['toolbarButtons']['bulkAdd'] = $button;
         $this->field('room');
         $this->setFieldOrder(['registration_number', 'student_id', 'institution_id', 'room']);
     }
@@ -63,14 +99,23 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->leftJoin(['ExaminationCentreRoomStudents' => 'examination_centre_room_students'], [
-                'ExaminationCentreRoomStudents.examination_centre_id = '.$this->aliasField('examination_centre_id'),
-                'ExaminationCentreRoomStudents.student_id = '.$this->aliasField('student_id')
-            ])
-            ->matching('ExaminationCentres.ExaminationCentreRooms')
-            ->where([$this->aliasField('examination_centre_id') => $this->examCentreId])
-            ->select(['room' => 'ExaminationCentreRooms.name'])
-            ->autoFields(true)
+            ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
             ->group([$this->aliasField('student_id')]);
+
+        $ExamCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+
+        $this->examCentreRoomStudents = $ExamCentreRoomStudents->find('list', [
+                'keyField' => 'student_id',
+                'valueField' => 'room_name'
+            ])
+            ->innerJoinWith('ExaminationCentreRooms')
+            ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
+            ->where([$ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId])
+            ->toArray();
+    }
+
+    public function onGetRoom(Event $event, Entity $entity)
+    {
+        return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
     }
 }
