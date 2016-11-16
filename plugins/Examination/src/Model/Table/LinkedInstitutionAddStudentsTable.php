@@ -56,6 +56,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->controller->getExamCentresTab('ExamCentreStudents');
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
         $examCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['Examinations.EducationGrades', 'AcademicPeriods']]);
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $examCentre->academic_period_id, 'attr' => ['value' => $examCentre->academic_period->name]]);
@@ -68,7 +69,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
 
-        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->request->query('queryString')];
+        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
 
         $this->setFieldOrder([
             'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'auto_assign_to_rooms', 'institution_id', 'student_id'
@@ -143,7 +144,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->request->query('queryString')];
+        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
     }
