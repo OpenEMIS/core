@@ -243,7 +243,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->action != 'index') {
+        if ($this->action == 'view' || $this->action == 'edit') {
             $this->request->params['pass'][1] = $this->ControllerAction->getQueryString('examination_centre_id');
             $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
         }
