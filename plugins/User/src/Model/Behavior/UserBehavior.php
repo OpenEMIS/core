@@ -270,7 +270,7 @@ class UserBehavior extends Behavior {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $extra['auto_search'] = false;
-        $extra['auto_contain'] = false;
+        // $extra['auto_contain'] = false;
 
         $table = $query->repository()->table();
         if ($table != 'security_users') {
