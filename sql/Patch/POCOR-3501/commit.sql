@@ -304,7 +304,7 @@ UPDATE `security_functions` SET `_add`='RegistrationDirectory.index|RegisteredSt
 UPDATE `security_functions` SET `order`='5052' WHERE `id`='5048';
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(5051, 'Exam Centre Students', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreStudents.view|ExamCentreStudents.view', NULL, 'LinkedInstitutionAddStudents.add', 'ExamCentreStudents.remove', NULL, 5046, 1, NULL, NULL, NULL, 1, NOW()),
+(5051, 'Exam Centre Students', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreStudents.index|ExamCentreStudents.view', NULL, 'LinkedInstitutionAddStudents.add', 'ExamCentreStudents.remove', NULL, 5046, 1, NULL, NULL, NULL, 1, NOW()),
 (5052, 'Exam Centre Rooms', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreRooms.view|ExamCentreRooms.index', NULL, 'ExamCentreRooms.add', 'ExamCentreRooms.remove', NULL, 5047, 1, NULL, NULL, NULL, 1, NOW()),
 (5053, 'Results', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamResults.index|Results.index|ExamResults.view', 'Results.edit', NULL, NULL, NULL, 5051, 1, NULL, NULL, NULL, 1, NOW()),
 (5054, 'Import Results', 'Examinations', 'Administration', 'Examinations', 5000, NULL, NULL, NULL, NULL, 'ImportResults.add|ImportResults.template|ImportResults.results|ImportResults.downloadFailed|ImportResults.downloadPassed', 5052, 1, NULL, NULL, NULL, 1, NOW());
