@@ -6,7 +6,7 @@
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
-    <?php if (isset($data['students']) && !empty($data['students'])) : ?>
+    <?php if (isset($data['invigilators']) && !empty($data['invigilators'])) : ?>
     <div class="table-in-view">
         <table class="table">
             <thead>
@@ -14,7 +14,7 @@
                 <th><?= __('Name') ?></th>
             </thead>
             <tbody>
-                <?php foreach ($data['students'] as $i => $item) :?>
+                <?php foreach ($data['invigilators'] as $i => $item) :?>
                     <tr>
                         <td><?= $item->openemis_no; ?></td>
                         <td><?= $item->name; ?></td>
@@ -24,7 +24,7 @@
         </table>
     </div>
     <?php else :
-        echo __('No Students');
+        echo __('No Invigilators');
     ?>
 
     <?php endif; ?>
