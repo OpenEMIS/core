@@ -12,6 +12,7 @@ use App\Model\Table\AppTable;
 class ExaminationResultsTable extends AppTable  {
 
     private $examinationResults = [];
+    private $subjectWeightedMark = 0;
     private $totalMarks = 0;
     private $totalWeightedMark = 0;
 
@@ -20,14 +21,13 @@ class ExaminationResultsTable extends AppTable  {
         $this->table('examination_centre_students');
         parent::initialize($config);
 
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
-        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('ExaminationGradingOptions', ['className' => 'Examination.ExaminationGradingOptions']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
 
         $this->addBehavior('Excel', [
             'excludes' => ['id', 'total_mark'],
@@ -46,7 +46,8 @@ class ExaminationResultsTable extends AppTable  {
             ->contain(['Users', 'Institutions'])
             ->select(['openemis_no' => 'Users.openemis_no'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
-            ->order([$this->aliasField('institution_id')]);
+            ->group($this->aliasField('student_id'))
+            ->order($this->aliasField('institution_id'));
 
         if ($selectedInstitution != -1) {
             $query->where([$this->aliasField('institution_id') => $selectedInstitution]);
@@ -96,30 +97,30 @@ class ExaminationResultsTable extends AppTable  {
         $selectedExam = $requestData->examination_id;
         $selectedAcademicPeriod = $requestData->academic_period_id;
 
-        $examSubjects = $this->ExaminationItems
+        $ExamItems = TableRegistry::get('Examination.ExaminationItems');
+        $examSubjects = $ExamItems
             ->find()
             ->matching('EducationSubjects')
-            ->where([$this->ExaminationItems->aliasField('examination_id') => $selectedExam])
+            ->contain('ExaminationGradingTypes')
+            ->where([$ExamItems->aliasField('examination_id') => $selectedExam])
             ->toArray();
 
         foreach ($examSubjects as $subject) {
             $subjectId = $subject->education_subject_id;
-            $weight = $subject->weight;
             $subjectName = $subject->_matchingData['EducationSubjects']->name;
+            $weight = $subject->weight;
+
             $label = __($subjectName);
-
-            $gradingType = TableRegistry::get('Examination.ExaminationGradingTypes')->get($subject->examination_grading_type_id);
-            if (!empty($gradingType)) {
-                $resultType = $gradingType->result_type;
-
-                if ($resultType == 'MARKS') {
-                    $label = $label.' ('.$weight.') ';
-                }
+            $weightLabel = __('Weighted Marks');
+            $resultType = $subject->examination_grading_type->result_type;
+            if ($resultType == 'MARKS') {
+                $label = $label.' ('.$weight.') ';
+                $weightLabel = $weightLabel.' ('.$weight.')';
             }
 
             $newFields[] = [
-                'key' => $label,
-                'field' => 'examination_item',
+                'key' => 'subject_mark',
+                'field' => 'subject_mark',
                 'type' => 'subject_mark',
                 'label' => $label,
                 'examinationId' => $selectedExam,
@@ -127,6 +128,13 @@ class ExaminationResultsTable extends AppTable  {
                 'academicPeriodId' => $selectedAcademicPeriod,
                 'resultType' => $resultType,
                 'weight' => $weight
+            ];
+
+            $newFields[] = [
+                'key' => 'subject_weighted_mark',
+                'field' => 'subject_weighted_mark',
+                'type' => 'integer',
+                'label' => $weightLabel
             ];
         }
 
@@ -144,34 +152,44 @@ class ExaminationResultsTable extends AppTable  {
             'label' => __('Total Weighted Marks')
         ];
 
-
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelRenderSubjectMark(Event $event, Entity $entity, array $attr) {
+    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->institution_id) {
+            return $entity->institution->code_name;
+        } else {
+            return __('Private Candidate');
+        }
+    }
+
+    public function onExcelRenderSubjectMark(Event $event, Entity $entity, array $attr)
+    {
         $studentId = $entity->student_id;
         $examinationId = $attr['examinationId'];
         $subjectId = $attr['subjectId'];
         $academicPeriodId = $attr['academicPeriodId'];
         $resultType = $attr['resultType'];
         $weight = $attr['weight'];
+
         $ExaminationItemResultsTable = TableRegistry::get('Examination.ExaminationItemResults');
         $results = $this->examinationResults;
         if (!(isset($results[$studentId]))) {
-            $results = $ExaminationItemResultsTable->getExaminationItemResults($academicPeriodId, $examinationId, $subjectId, $studentId);
+            $results = $ExaminationItemResultsTable->getExaminationItemResults($academicPeriodId, $examinationId, $studentId);
             $this->examinationResults = $results;
         }
 
-        $printedResult = __('No Results');
-
+        $printedResult = '';
         if (isset($results[$studentId][$subjectId])) {
             $marks = $results[$studentId][$subjectId];
             switch($resultType) {
                 case 'MARKS':
                     $weightedMark = $marks['marks']*$weight;
                     $this->totalMarks += $marks['marks'];
+                    $this->subjectWeightedMark = $weightedMark;
                     $this->totalWeightedMark += $weightedMark;
-                    $printedResult = $marks['marks'] . ' (' . $weightedMark .')';
+                    $printedResult = $marks['marks'];
                     break;
                 case 'GRADES':
                     $printedResult = $marks['grade_code'] . ' - ' . $marks['grade_name'];
@@ -182,13 +200,11 @@ class ExaminationResultsTable extends AppTable  {
         return $printedResult;
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetSubjectWeightedMark(Event $event, Entity $entity, array $attr)
     {
-        if ($entity->institution_id) {
-            return $entity->institution->code_name;
-        } else {
-            return __('Private Candidate');
-        }
+        $printedResult = $this->subjectWeightedMark;
+        $this->subjectWeightedMark = 0;
+        return ' '.$printedResult;
     }
 
     public function onExcelGetTotalWeightedMark(Event $event, Entity $entity, array $attr)

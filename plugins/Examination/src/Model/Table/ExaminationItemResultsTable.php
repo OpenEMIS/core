@@ -89,7 +89,7 @@ class ExaminationItemResultsTable extends AppTable
         }
     }
 
-    public function getExaminationItemResults($academicPeriodId, $examinationId, $subjectId, $studentId) {
+    public function getExaminationItemResults($academicPeriodId, $examinationId, $studentId) {
         $results = $this
             ->find()
             ->contain(['ExaminationGradingOptions'])
@@ -102,6 +102,7 @@ class ExaminationItemResultsTable extends AppTable
             ->autoFields(true)
             ->hydrate(false)
             ->toArray();
+
         $returnArray = [];
         foreach ($results as $result) {
             $returnArray[$studentId][$result['subject_id']] = [

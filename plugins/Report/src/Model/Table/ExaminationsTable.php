@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 
 class ExaminationsTable extends AppTable
@@ -53,11 +54,6 @@ class ExaminationsTable extends AppTable
             }
             return $attr;
         }
-    }
-
-    public function onGetReportName(Event $event, ArrayObject $data)
-    {
-        return __('Overview');
     }
 
     public function addBeforeAction(Event $event)
