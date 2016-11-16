@@ -396,7 +396,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['institution_id']['visible'] = true;
             $this->fields['institution_id']['type'] = 'hidden';
             $this->field('invigilators', ['type' => 'custom_invigilators']);
-            $this->field('linked_institutions', ['type' => 'chosenSelect', 'examination_id' => $entity->examination_id, 'education_grade_id' => $entity->examination->education_grade_id, 'visible' => false]);
             // to add logic for edit
 
             if ($this->action == 'add') {
@@ -446,7 +445,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['website']['type'] = 'readonly';
                 }
 
-                $this->fields['linked_institutions']['visible'] = true;
+                $this->field('linked_institutions', ['type' => 'chosenSelect', 'examination_id' => $entity->examination_id, 'education_grade_id' => $entity->examination->education_grade_id]);
                 $this->fields['subjects_section']['visible'] = true;
                 $this->fields['linked_institutions_section']['visible'] = true;
                 $this->fields['invigilators_section']['visible'] = true;
