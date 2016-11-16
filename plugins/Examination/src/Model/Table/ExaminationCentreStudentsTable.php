@@ -11,6 +11,7 @@ use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\Utility\Security;
 
 class ExaminationCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -25,8 +26,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
@@ -58,7 +57,10 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $entity->id = Text::uuid();
+        if ($entity->isNew()) {
+            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ',' . $entity->education_subject_id;
+            $entity->id = Security::hash($hashString, 'sha256');
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

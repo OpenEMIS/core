@@ -11,6 +11,7 @@ use Cake\Utility\Text;
 use Cake\I18n\Time;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
+use Cake\Utility\Security;
 
 class InstitutionExaminationStudentsTable extends ControllerActionTable
 {
@@ -478,7 +479,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['id'] = Text::uuid();
                             $obj['education_subject_id'] = $subject;
-                            $newEntities[$key] = $obj;
+                            $newEntities[] = $obj;
                         }
                     }
                 }

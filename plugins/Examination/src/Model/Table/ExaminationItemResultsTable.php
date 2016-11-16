@@ -3,6 +3,7 @@ namespace Examination\Model\Table;
 
 use ArrayObject;
 
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
@@ -33,6 +34,58 @@ class ExaminationItemResultsTable extends AppTable
         if ($entity->isNew()) {
             $hashString = $entity->academic_period_id . ',' . $entity->examination_id . ',' . $entity->education_subject_id . ',' . $entity->student_id;
             $entity->id = Security::hash($hashString, 'sha256');
+        }
+        $this->getExamGrading($entity);
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $this->setTotalMark($entity);
+    }
+
+    private function getExamGrading(Entity $entity)
+    {
+        if (!$entity->has('examination_grading_option_id') && $entity->has('marks') && $entity->marks > 0) {
+            $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
+            $examItemEntity = $ExaminationItems
+                ->find()
+                ->contain(['ExaminationGradingTypes.GradingOptions'])
+                ->where([
+                    $ExaminationItems->aliasField('examination_id') => $entity->examination_id,
+                    $ExaminationItems->aliasField('education_subject_id') => $entity->education_subject_id
+                ])
+                ->first();
+
+            if ($examItemEntity->has('examination_grading_type')) {
+                $resultType = $examItemEntity->examination_grading_type->result_type;
+                if ($resultType == 'MARKS') {
+                    if ($examItemEntity->examination_grading_type->has('grading_options') && !empty($examItemEntity->examination_grading_type->grading_options)) {
+                        foreach ($examItemEntity->examination_grading_type->grading_options as $key => $obj) {
+                            if ($entity->marks >= $obj->min && $entity->marks <= $obj->max) {
+                                $entity->examination_grading_option_id = $obj->id;
+                            }
+                        }
+                    }
+                    $entity->total_mark = round($entity->marks * $examItemEntity->weight, 2);
+                } else if ($resultType == 'GRADES') {
+                    $entity->total_mark = NULL;
+                }
+            }
+        }
+    }
+
+    private function setTotalMark(Entity $entity)
+    {
+        if ($entity->has('total_mark')) {
+            $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
+            $ExaminationCentreStudents->updateAll(['total_mark' => $entity->total_mark], [
+                'examination_centre_id' => $entity->examination_centre_id,
+                'student_id' => $entity->student_id,
+                'education_subject_id' => $entity->education_subject_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'examination_id' => $entity->examination_id
+            ]);
         }
     }
 }

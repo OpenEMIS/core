@@ -11,6 +11,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
+use Cake\Utility\Security;
 
 class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -55,6 +56,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->controller->getExamCentresTab('ExamCentreStudents');
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
         $examCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['Examinations.EducationGrades', 'AcademicPeriods']]);
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $examCentre->academic_period_id, 'attr' => ['value' => $examCentre->academic_period->name]]);
@@ -67,7 +69,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
 
-        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions', 'queryString' => $this->request->query('queryString')];
+        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
 
         $this->setFieldOrder([
             'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'auto_assign_to_rooms', 'institution_id', 'student_id'
@@ -84,8 +86,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
             $InstitutionGradesTable = $this->Institutions->InstitutionGrades;
             $institutionsData = $InstitutionGradesTable
                 ->find()
-                ->matching('Institutions.ExaminationCentres', function ($q) {
-                    return $q->where(['ExaminationCentres.id' => $this->examCentreId]);
+                ->matching('Institutions.ExamCentres', function ($q) {
+                    return $q->where(['ExamCentres.id' => $this->examCentreId]);
                 })
                 ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                 ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
@@ -142,7 +144,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions', 'queryString' => $this->request->query('queryString')];
+        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
     }
@@ -172,7 +174,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         $studentCount++;
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['education_subject_id'] = $subject;
-                            $newEntities[$key] = $obj;
+                            $newEntities[] = $obj;
                         }
                     }
                 }
@@ -241,7 +243,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         }
                         if (!empty($newEntities)) {
                             $model->Alert->warning($this->aliasField('notAssignedRoom'));
-                            return false;
+                            return true;
                         }
                         return true;
                     } else {

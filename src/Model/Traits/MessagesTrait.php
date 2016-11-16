@@ -231,6 +231,7 @@ trait MessagesTrait {
             'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
             'noSubjectsInClass' => 'There are no subjects in the assigned grade',
             'noSubjectSelected' => 'There is no subject selected',
+            'noProgrammes' => 'There is no programme set for available Academic Period on this institution'
         ],
         'InstitutionFees' => [
             'fee_types' => 'Fee Types',
@@ -1392,9 +1393,6 @@ trait MessagesTrait {
                 ]
             ],
             'ExaminationCentres' => [
-                'total_capacity' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
-                ],
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
                 ],
@@ -1403,6 +1401,13 @@ trait MessagesTrait {
                 'name' => [
                     'ruleUnique' => 'Please enter a unique name for this examination centre room'
                 ],
+                'size' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ],
+                'number_of_seats' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value',
+                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available'
+                ]
             ],
             'ExaminationItems' => [
                 'weight' => [
