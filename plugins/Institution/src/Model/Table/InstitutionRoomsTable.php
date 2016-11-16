@@ -120,6 +120,12 @@ class InstitutionRoomsTable extends AppTable {
 		;
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
+		return $events;
+	}
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		if (!$entity->isNew() && $entity->has('change_type')) {
 			$editType = $entity->change_type;
@@ -329,7 +335,7 @@ class InstitutionRoomsTable extends AppTable {
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
-		
+
 		if (!$isDeletable) {
 			$inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
 			$endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
@@ -920,7 +926,7 @@ class InstitutionRoomsTable extends AppTable {
         	$className = $class->name;
         	if ($class->has('subjects')) {
         		foreach ($class->subjects as $subjectKey => $subject) {
-        			$options[$className][$subject->id] = $subject->name;		
+        			$options[$className][$subject->id] = $subject->name;
         		}
         	}
         }
@@ -958,5 +964,21 @@ class InstitutionRoomsTable extends AppTable {
 		]);
 
 		return $query;
+	}
+
+	public function academicPeriodAfterSave(Event $event, Entity $academicPeriodEntity) {
+		if (!$academicPeriodEntity->isNew()) {
+			$newStartDate = $academicPeriodEntity->start_date;
+			$originalArray = $academicPeriodEntity->extractOriginal(['start_date']);
+			$originalStartDate = $originalArray['start_date'];
+
+			// compare start date and end date
+			// pr('newStartDate');
+			// pr($newStartDate);
+			// pr('originalStartDate');
+			// pr($originalStartDate);
+			// pr($academicPeriodEntity);
+			// die;
+		}
 	}
 }
