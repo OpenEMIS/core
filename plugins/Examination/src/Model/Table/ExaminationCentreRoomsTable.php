@@ -68,6 +68,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
     }
 

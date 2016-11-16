@@ -282,18 +282,6 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab();
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutionAddStudents', 'add', 'queryString' => $this->request->query('queryString')];
-        $button['type'] = 'button';
-        $button['label'] = '<i class="fa kd-add"></i>';
-        $button['attr'] = $toolbarAttr;
-        $button['attr']['title'] = __('Bulk Add');
-        $extra['toolbarButtons']['bulkAdd'] = $button;
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
