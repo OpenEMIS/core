@@ -158,6 +158,7 @@ class AssessmentsTable extends ControllerActionTable {
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) 
     {
         $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+        $AssessmentItemsResults = TableRegistry::get('Assessment.AssessmentItemResults');
 
         //during edit, before the remain and new subject updated, need to process the deleted subject first.
         if ($entity->has('assessment_items')) {
@@ -170,6 +171,12 @@ class AssessmentsTable extends ControllerActionTable {
                     $AssessmentItemsGradingTypes->deleteAll([
                         'education_subject_id' => $value->education_subject_id,
                         'assessment_id' => $entity->id
+                    ]);
+
+                    //remove assessment results
+                    $AssessmentItemsResults->deleteAll([
+                        'assessment_id' => $entity->id,
+                        'education_subject_id' => $value->education_subject_id
                     ]);
 
                     //unset from entity so it wont be saved
@@ -193,30 +200,30 @@ class AssessmentsTable extends ControllerActionTable {
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
         //check the period which ties to the assessment id, then loop and re-insert the newly added subject.
-        $assessmentPeriods = $AssessmentItemsGradingTypes
+        $assessmentPeriods = $AssessmentPeriods
                             ->find()
                             ->select([
-                                'assessment_period_id' => $AssessmentItemsGradingTypes->aliasField('assessment_period_id')
+                                'id' => $AssessmentPeriods->aliasField('id')
                             ])
                             ->where([
-                                $AssessmentItemsGradingTypes->aliasField('assessment_id') => $entity->id
+                                $AssessmentPeriods->aliasField('assessment_id') => $entity->id
                             ])
                             ->toArray();
         
         $defaultGradingType = $this->GradingTypes->find()->first()->id; //get the first record of grading type as default value.
-        
+
         foreach ($assessmentPeriods as $key => $index) { //loop through period.
             foreach ($entity->assessment_items as $key1 => $value) { 
 
                 if ($value->status == 'new') { //loop through newly added subject
-
                     $newEntity = $AssessmentItemsGradingTypes->newEntity([
                         'assessment_id' => $entity->id,
                         'education_subject_id' => $value->education_subject_id,
                         'assessment_grading_type_id' => $defaultGradingType,
-                        'assessment_period_id' => $assessmentPeriods[$key]->assessment_period_id
+                        'assessment_period_id' => $assessmentPeriods[$key]->id
                     ]);
                     
                     $AssessmentItemsGradingTypes->save($newEntity); //insert new record
