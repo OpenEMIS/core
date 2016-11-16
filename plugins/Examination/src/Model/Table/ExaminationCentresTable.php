@@ -714,7 +714,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         if (is_array($subjects)) {
             foreach($subjects as $subject) {
                 $examinationCentreSubjects[] = [
-                    'id' => Text::uuid(),
                     'examination_id' => $examinationId,
                     'academic_period_id' => $academicPeriodId,
                     'education_subject_id' => $subject,
@@ -730,7 +729,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         if (is_array($specialNeedTypes)) {
             foreach($specialNeedTypes as $specialNeed) {
                 $examinationCentreSpecialNeeds[] = [
-                    'id' => Text::uuid(),
                     'examination_id' => $examinationId,
                     'academic_period_id' => $academicPeriodId,
                     'special_need_type_id' => $specialNeed,

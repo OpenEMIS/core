@@ -11,6 +11,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
+use Cake\Utility\Security;
 
 class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -172,7 +173,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         $studentCount++;
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['education_subject_id'] = $subject;
-                            $newEntities[$key] = $obj;
+                            $newEntities[] = $obj;
                         }
                     }
                 }
