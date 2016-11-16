@@ -269,7 +269,7 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
                 foreach ($associated[$key] as $i => $obj) {
                     $this->request->data[$alias][$key][$obj->id] = [
                         'id' => $obj->id,
-                        '_joinData' => ['openemis_no' => $obj->openemis_no, 'student_id' => $obj->id, 'name' => $obj->name, 'institution_id' => $obj->institution_id, 'education_grade_id' => $obj->education_grade_id]
+                        '_joinData' => ['openemis_no' => $obj->openemis_no, 'student_id' => $obj->id, 'name' => $obj->name, 'institution_id' => $obj->_joinData->institution_id, 'education_grade_id' => $obj->_joinData->education_grade_id]
                     ];
                 }
             }
