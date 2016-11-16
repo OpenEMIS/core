@@ -452,7 +452,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->fields['exam_centre_info_section']['visible'] = true;
 
                 // field order
-                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website',  'subjects_section', 'subjects', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators']);
+                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators', 'subjects_section', 'subjects']);
             }
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
@@ -480,7 +480,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             // $this->fields['invigilators_section']['visible'] = true;
             // $this->fields['exam_centre_info_section']['visible'] = true;
 
-            $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'subjects_section', 'subjects', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators']);
+            $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators', 'subjects_section', 'subjects']);
         }
     }
 
