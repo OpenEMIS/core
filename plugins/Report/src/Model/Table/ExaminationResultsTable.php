@@ -37,6 +37,15 @@ class ExaminationResultsTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $selectedExam = $requestData->examination_id;
