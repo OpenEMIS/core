@@ -172,6 +172,7 @@ class RegisteredStudentsBehavior extends Behavior {
         // End
 
         $extra['auto_order'] = false;
+        $extra['auto_search'] = false;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $sortList = ['Users.openemis_no', 'Users.first_name'];
