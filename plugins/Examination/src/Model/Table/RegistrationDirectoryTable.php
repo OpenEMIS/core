@@ -24,9 +24,19 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 
         $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('edit', false);
         $this->toggle('remove', false);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+        }
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
