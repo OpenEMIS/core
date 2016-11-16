@@ -232,7 +232,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                         $ClassStudents->aliasField('student_status_id') => $enrolledStatus,
                         'InstitutionExaminationStudents.student_id IS NOT NULL'
                     ])
-                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id'])
+                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id', 'registration_number' => 'InstitutionExaminationStudents.registration_number'])
                     ->autoFields(true)
                     ->group(['InstitutionExaminationStudents.student_id'])
                     ->toArray();
@@ -253,7 +253,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
                     ->where([$ClassStudents->aliasField('student_id').' IN ' => $studentIds])
                     ->group([$ClassStudents->aliasField('student_id')])
-                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id'])
+                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id', 'registration_number' => 'InstitutionExaminationStudents.registration_number'])
                     ->autoFields(true)
                     ->toArray();
             }
