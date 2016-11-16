@@ -52,6 +52,12 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
                 'rule' => ['validateUnique', ['scope' => ['examination_centre_id']]],
                 'provider' => 'table'
             ])
+            ->add('size', 'ruleValidateNumeric',  [
+                'rule' => ['numericPositive']
+            ])
+            ->add('number_of_seats', 'ruleValidateNumeric',  [
+                'rule' => ['numericPositive']
+            ])
             ->add('number_of_seats', 'ruleExceedRoomCapacity', [
                 'rule' => 'validateRoomCapacity'
             ]);
