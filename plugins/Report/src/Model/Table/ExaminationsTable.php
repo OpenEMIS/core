@@ -20,19 +20,12 @@ class ExaminationsTable extends AppTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
+        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents']);
 
         $this->addBehavior('Excel', ['pages' => false]);
         $this->addBehavior('Report.ReportList');
-        // $this->addBehavior('Report.CustomFieldList', [
-        //     'model' => 'Institution.Institutions',
-        //     'formFilterClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFormsFilters'],
-        //     'fieldValueClass' => ['className' => 'InstitutionCustomField.InstitutionCustomFieldValues', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true],
-        //     'tableCellClass' => ['className' => 'InstitutionCustomField.InstitutionCustomTableCells', 'foreignKey' => 'institution_id', 'dependent' => true, 'cascadeCallbacks' => true]
-        // ]);
-        // $this->addBehavior('Report.InstitutionSecurity');
     }
 
     public function beforeAction(Event $event)
@@ -42,7 +35,7 @@ class ExaminationsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
-    public function addBeforeAction(Event $event)
+    public function addAfterAction(Event $event)
     {
         $this->ControllerAction->field('academic_period_id');
         $this->ControllerAction->field('examination_id');
@@ -70,12 +63,27 @@ class ExaminationsTable extends AppTable
             $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
             $selectedPeriod = $this->AcademicPeriods->getCurrent();
 
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeAcademicPeriodId';
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
             $attr['type'] = 'select';
             $attr['select'] = false;
             return $attr;
+        }
+    }
+
+    public function addOnChangeAcademicPeriodId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('examination_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_id']);
+            }
+            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_centre_id']);
+            }
+            if (array_key_exists('institution_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['institution_id']);
+            }
         }
     }
 
@@ -95,8 +103,19 @@ class ExaminationsTable extends AppTable
             $attr['options'] = $examinationOptions;
             $attr['onChangeReload'] = 'changeExaminationId';
             $attr['type'] = 'select';
-            // $attr['select'] = false;
             return $attr;
+        }
+    }
+
+    public function addOnChangeExaminationId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['examination_centre_id']);
+            }
+            if (array_key_exists('institution_id', $data[$this->alias()])) {
+                unset($data[$this->alias()]['institution_id']);
+            }
         }
     }
 
@@ -140,7 +159,7 @@ class ExaminationsTable extends AppTable
         if (isset($this->request->data[$this->alias()]['feature'])) {
             $feature = $this->request->data[$this->alias()]['feature'];
 
-            if (in_array($feature, ['Report.NotRegisteredStudents', 'Report.ExaminationResults'])) {
+            if (in_array($feature, ['Report.ExaminationResults'])) {
                 if (!empty($request->data[$this->alias()]['examination_id'])) {
                     $selectedExamination = $request->data[$this->alias()]['examination_id'];
 
@@ -157,6 +176,36 @@ class ExaminationsTable extends AppTable
 
                     if (!empty($institutionOptions)) {
                         $institutionOptions =  ['-1' => __('All Institutions'), '0' => __('Private Candidate')] + $institutionOptions;
+                    }
+                }
+
+                $attr['options'] = !empty($institutionOptions)? $institutionOptions: [];
+                $attr['type'] = 'chosenSelect';
+                $attr['attr']['multiple'] = false;
+                $attr['select'] = false;
+
+            } else if (in_array($feature, ['Report.NotRegisteredStudents'])) {
+                if (!empty($request->data[$this->alias()]['examination_id'])) {
+                    $selectedExamination = $request->data[$this->alias()]['examination_id'];
+                    $Examinations = TableRegistry::get('Examination.Examinations');
+                    $Institutions = TableRegistry::get('Institution.Institutions');
+
+                    $examInfo = $Examinations->find()
+                        ->where([$Examinations->aliasField('id') => $selectedExamination])
+                        ->first();
+                    $selectedGrade = $examInfo->education_grade_id;
+
+                    $institutionOptions = $Institutions
+                        ->find('list', [
+                            'keyField' => 'id',
+                            'valueField' => 'code_name',
+                        ])
+                        ->matching('InstitutionGrades')
+                        ->where(['InstitutionGrades.education_grade_id' => $selectedGrade])
+                        ->toArray();
+
+                    if (!empty($institutionOptions)) {
+                        $institutionOptions =  ['-1' => __('All Institutions')] + $institutionOptions;
                     }
                 }
 
