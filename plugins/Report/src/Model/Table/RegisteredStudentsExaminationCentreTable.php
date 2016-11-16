@@ -91,21 +91,21 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             'key' => 'RegisteredStudentsExaminationCentre.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
-            'label' => 'Institution',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.education_grade_id',
             'field' => 'education_grade_id',
             'type' => 'integer',
-            'label' => 'Education Grade',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'InstitutionClasses.name',
             'field' => 'class_name',
             'type' => 'integer',
-            'label' => 'Class',
+            'label' => '',
         ];
 
         $newFields[] = [
@@ -154,35 +154,35 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             'key' => 'special_needs',
             'field' => 'special_needs',
             'type' => 'string',
-            'label' => 'Special Needs',
+            'label' => __('Special Needs'),
         ];
 
         $newFields[] = [
             'key' => 'Users.birthplace_area_id',
             'field' => 'birthplace_area',
             'type' => 'string',
-            'label' => 'Area of Birth',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'Users.address_area_id',
             'field' => 'address_area',
             'type' => 'string',
-            'label' => 'District',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.academic_period_id',
             'field' => 'academic_period_id',
             'type' => 'integer',
-            'label' => 'Academic Period',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.examination_id',
             'field' => 'examination_id',
             'type' => 'integer',
-            'label' => 'Examination',
+            'label' => '',
         ];
 
         $newFields[] = [
@@ -196,21 +196,21 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             'key' => 'RegisteredStudentsExaminationCentre.registration_number',
             'field' => 'registration_number',
             'type' => 'string',
-            'label' => 'Registration Number',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.examination_centre_id',
             'field' => 'examination_centre_id',
             'type' => 'integer',
-            'label' => 'Examination Centre',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'ExaminationCentreRooms.name',
             'field' => 'room_name',
             'type' => 'integer',
-            'label' => 'Examination Room',
+            'label' => __('Examination Room'),
         ];
 
         $fields->exchangeArray($newFields);
