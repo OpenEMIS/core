@@ -92,7 +92,12 @@ class ExaminationsController extends AppController
             'ExamCentreStudents' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreStudents', 'queryString' => $queryString],
                 'text' => __('Students')
-            ]
+            ],
+            'ExamCentreRooms' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreRooms', 'queryString' => $queryString],
+                'text' => __('Rooms')
+            ],
+
         ];
 
         $this->set('tabElements', $tabElements);
