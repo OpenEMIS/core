@@ -128,11 +128,12 @@ function getColumnDefs(action, subject, _results) {
             });
 
             var resultType = subject.examination_grading_type.result_type;
+            var itemMax = subject.examination_grading_type.max;
             var itemWeight = subject.weight;
             var isMarksType = (resultType == resultTypes.MARKS) ? true : false;
 
             var allowEdit = action == 'edit';
-            var headerLabel = "Mark <span class='divider'></span> " + itemWeight;
+            var headerLabel = "Mark <span class='divider'></span> " + itemMax;
             var headerName = allowEdit ? headerLabel + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : headerLabel;
 
             var columnDef = {
