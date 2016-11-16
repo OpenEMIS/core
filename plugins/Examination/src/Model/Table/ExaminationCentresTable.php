@@ -50,6 +50,8 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['view']
         ]);
+
+        $this->addBehavior('OpenEmis.Section');
         $this->setDeleteStrategy('restrict');
     }
 
@@ -241,7 +243,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        if ($this->action != 'index') {
+        if ($this->action == 'view' || $this->action == 'edit') {
             $this->request->params['pass'][1] = $this->ControllerAction->getQueryString('examination_centre_id');
             $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
         }
@@ -261,10 +263,13 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['ExaminationCentreSubjects.EducationSubjects'])
+        $query
+            ->contain(['ExaminationCentreSubjects.EducationSubjects'])
             ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes'])
             ->contain(['ExaminationCentreRooms.Students'])
             ->contain([
+                'Examinations',
+                'Institutions',
                 'Invigilators' => [
                     'sort' => ['Invigilators.first_name' => 'ASC', 'Invigilators.last_name' => 'ASC']
                 ]
@@ -333,15 +338,43 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
+        $options['associated'][] = 'Institutions._joinData';
+
         if (!isset($data['ExaminationCentres']['invigilators'])) {
             $data['ExaminationCentres']['invigilators'] = [];
         }
+
+        $data[$this->alias()]['institutions'] = $this->processInstitutions($data);
+    }
+
+    public function processInstitutions(ArrayObject $data)
+    {
+        $institutions = [];
+        if (isset($data[$this->alias()]['linked_institutions']['_ids']) && !empty($data[$this->alias()]['linked_institutions']['_ids'])) {
+            foreach ($data[$this->alias()]['linked_institutions']['_ids'] as $key => $value) {
+                $joinData = [
+                    'examination_centre_id' => $data[$this->alias()]['id'],
+                    'institution_id' => $value,
+                ];
+                $institutions[] = [
+                    'id' => $value,
+                    '_joinData' => $joinData
+                ];
+            }
+            unset($data[$this->alias()]['linked_institutions']);
+        }
+
+        return $institutions;
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->fields['total_registered']['visible'] = false;
         $entity = $extra['entity'];
+        $this->field('linked_institutions_section', ['type' => 'section', 'title' => __('Linked Institutions'), 'visible' => false]);
+        $this->field('subjects_section', ['type' => 'section', 'title' => __('Subjects'), 'visible' => false]);
+        $this->field('exam_centre_info_section', ['type' => 'section', 'title' => __('Examination Centre Information'), 'visible' => false]);
+        $this->field('invigilators_section', ['type' => 'section', 'title' => __('Invigilators'), 'visible' => false]);
         if ($this->action == 'edit' || $this->action == 'add') {
             $this->field('academic_period_id', ['entity' => $entity]);
             $this->field('examination_id', ['entity' => $entity]);
@@ -351,7 +384,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['institution_id']['visible'] = true;
             $this->fields['institution_id']['type'] = 'hidden';
             $this->field('invigilators', ['type' => 'custom_invigilators']);
-
             // to add logic for edit
 
             if ($this->action == 'add') {
@@ -373,6 +405,9 @@ class ExaminationCentresTable extends ControllerActionTable {
                 } else {
                     $this->fields['name']['visible'] = false;
                 }
+
+                // field order
+                $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website']);
             } else if ($this->action == 'edit') {
                 $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
                 $this->fields['name']['visible'] = true;
@@ -397,10 +432,16 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['email']['type'] = 'readonly';
                     $this->fields['website']['type'] = 'readonly';
                 }
-            }
 
-            // field order
-            $this->setFieldOrder(['create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'invigilators']);
+                $this->field('linked_institutions', ['type' => 'chosenSelect', 'examination_id' => $entity->examination_id, 'education_grade_id' => $entity->examination->education_grade_id]);
+                $this->fields['subjects_section']['visible'] = true;
+                $this->fields['linked_institutions_section']['visible'] = true;
+                $this->fields['invigilators_section']['visible'] = true;
+                $this->fields['exam_centre_info_section']['visible'] = true;
+
+                // field order
+                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website',  'subjects_section', 'subjects', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators']);
+            }
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
             $this->field('special_need_types');
@@ -418,8 +459,16 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['website']['visible'] = true;
             $this->fields['total_registered']['visible'] = true;
             $this->field('invigilators', ['type' => 'custom_invigilators']);
+            $this->field('linked_institutions', [
+                'type' => 'element',
+                'element' => 'Examination.exam_centre_institutions'
+            ]);
+            // $this->fields['subjects_section']['visible'] = true;
+            // $this->fields['linked_institutions_section']['visible'] = true;
+            // $this->fields['invigilators_section']['visible'] = true;
+            // $this->fields['exam_centre_info_section']['visible'] = true;
 
-            $this->setFieldOrder(['code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'subjects', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'invigilators']);
+            $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'examination_id', 'special_need_types', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'subjects_section', 'subjects', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators']);
         }
     }
 
@@ -638,6 +687,37 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onUpdateFieldLinkedInstitutions(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $options = $this->Institutions->find()
+                    ->innerJoinWith('InstitutionGrades', function ($q) use ($attr) {
+                        return $q->where(['InstitutionGrades.education_grade_id' => $attr['education_grade_id']]);
+                    })
+                    ->leftJoin(['ExaminationCentresInstitutions' => 'examination_centres_institutions'], [
+                        'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id')
+                    ])
+                    ->leftJoin(['ExaminationCentres' => 'examination_centres'], [
+                        'ExaminationCentres.id = ExaminationCentresInstitutions.examination_centre_id',
+                        'ExaminationCentres.examination_id' => $attr['examination_id']
+                    ])
+                    ->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('is_academic') => 1])
+                    ->group([$this->Institutions->aliasField('id')]);
+
+            if ($action == 'edit') {
+                $options = $options->orWhere(['ExaminationCentresInstitutions.examination_centre_id' => $this->paramsPass(0)]);
+            }
+
+            $institutions = [];
+            foreach ($options as $value) {
+                $institutions[$value->id] = $value->code.' - '.$value->name;
+            }
+            $attr['options'] = $institutions;
+
+            return $attr;
+        }
+    }
+
     public function onUpdateFieldInstitutions(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -714,7 +794,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         if (is_array($subjects)) {
             foreach($subjects as $subject) {
                 $examinationCentreSubjects[] = [
-                    'id' => Text::uuid(),
                     'examination_id' => $examinationId,
                     'academic_period_id' => $academicPeriodId,
                     'education_subject_id' => $subject,
@@ -730,7 +809,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         if (is_array($specialNeedTypes)) {
             foreach($specialNeedTypes as $specialNeed) {
                 $examinationCentreSpecialNeeds[] = [
-                    'id' => Text::uuid(),
                     'examination_id' => $examinationId,
                     'academic_period_id' => $academicPeriodId,
                     'special_need_type_id' => $specialNeed,
@@ -745,8 +823,8 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if ($entity->has('institutions')) {
-                $institutions = $entity->institutions;
+            if (isset($requestData[$model->alias()]['institutions'])) {
+                $institutions = $requestData[$model->alias()]['institutions'];
                 $newEntities = [];
                 if (is_array($institutions)) {
                     foreach ($institutions as $institution) {
