@@ -49,6 +49,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->field('start_year', ['visible' => false]);
         $model->field('end_date', ['visible' => false]);
         $model->field('end_year', ['visible' => false]);
+        $model->field('previous_institution_student_id', ['visible' => false]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {

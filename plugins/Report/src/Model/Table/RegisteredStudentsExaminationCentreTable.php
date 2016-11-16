@@ -31,13 +31,17 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeGenerate(Event $event, $settings)
-    {
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
-        // pr($requestData);
         $selectedExam = $requestData->examination_id;
         $selectedExamCentre = $requestData->examination_centre_id;
 
@@ -69,7 +73,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             ->leftJoin([$Rooms->alias() => $Rooms->table()], [
                 $Rooms->aliasField('id = ') . $RoomStudents->aliasField('examination_centre_room_id'),
             ])
-            ->select(['code' => 'Institutions.code', 'openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name'])
+            ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
             ->group([$this->aliasField('student_id')])
             ->order([$this->aliasField('institution_id'), $this->aliasField('examination_centre_id')]);
@@ -84,31 +88,24 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'Institutions.code',
-            'field' => 'code',
-            'type' => 'string',
-            'label' => '',
-        ];
-
-        $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
-            'label' => 'Institution',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.education_grade_id',
             'field' => 'education_grade_id',
             'type' => 'integer',
-            'label' => 'Education Grade',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'InstitutionClasses.name',
             'field' => 'class_name',
             'type' => 'integer',
-            'label' => 'Class',
+            'label' => '',
         ];
 
         $newFields[] = [
@@ -157,35 +154,35 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             'key' => 'special_needs',
             'field' => 'special_needs',
             'type' => 'string',
-            'label' => 'Special Needs',
+            'label' => __('Special Needs'),
         ];
 
         $newFields[] = [
             'key' => 'Users.birthplace_area_id',
             'field' => 'birthplace_area',
             'type' => 'string',
-            'label' => 'Area of Birth',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'Users.address_area_id',
             'field' => 'address_area',
             'type' => 'string',
-            'label' => 'District',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.academic_period_id',
             'field' => 'academic_period_id',
             'type' => 'integer',
-            'label' => 'Academic Period',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.examination_id',
             'field' => 'examination_id',
             'type' => 'integer',
-            'label' => 'Examination',
+            'label' => '',
         ];
 
         $newFields[] = [
@@ -199,30 +196,39 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             'key' => 'RegisteredStudentsExaminationCentre.registration_number',
             'field' => 'registration_number',
             'type' => 'string',
-            'label' => 'Registration Number',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'RegisteredStudentsExaminationCentre.examination_centre_id',
             'field' => 'examination_centre_id',
             'type' => 'integer',
-            'label' => 'Examination Centre',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'ExaminationCentreRooms.name',
             'field' => 'room_name',
             'type' => 'integer',
-            'label' => 'Examination Room',
+            'label' => __('Examination Room'),
         ];
 
         $fields->exchangeArray($newFields);
     }
 
+    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->institution_id) {
+            return $entity->institution->code_name;
+        } else {
+            return '';
+        }
+    }
+
     public function onExcelGetStudentType(Event $event, Entity $entity) {
         $normal = 'Normal Candidate';
         $private = 'Private Candidate';
-        pr($entity);
+
         if ($entity->has('institution') && !empty($entity->institution)) {
             return $normal;
         } else {
