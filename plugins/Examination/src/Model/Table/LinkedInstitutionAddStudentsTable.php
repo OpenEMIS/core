@@ -68,7 +68,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
 
-        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions', 'queryString' => $this->request->query('queryString')];
+        $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->request->query('queryString')];
 
         $this->setFieldOrder([
             'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'auto_assign_to_rooms', 'institution_id', 'student_id'
@@ -143,7 +143,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
-        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutions', 'queryString' => $this->request->query('queryString')];
+        $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->request->query('queryString')];
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
     }
