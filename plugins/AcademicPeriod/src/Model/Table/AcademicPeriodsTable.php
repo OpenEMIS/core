@@ -142,6 +142,15 @@ class AcademicPeriodsTable extends AppTable {
                 $this->triggerUpdateInstitutionShiftTypeShell($entity->id);
             }
         }
+
+        $broadcaster = $this;
+        $listeners = [];
+        $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
+
+        if (!empty($listeners)) {
+            pr('academic period : afterSave');
+            $this->dispatchEventToModels('Model.AcademicPeriods.afterSave', [$entity], $broadcaster, $listeners);
+        }
     }
 
     public function beforeAction(Event $event) {
