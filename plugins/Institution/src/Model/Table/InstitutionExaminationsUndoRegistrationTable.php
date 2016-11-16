@@ -312,8 +312,18 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $entity->errors('student_id', 'No selected students');
                 if (!empty($examStudents)) {
                     $students = array_column($examStudents, 'student_id');
+
+                    $deleteStudentEntity = $this->find()
+                        ->where([$this->aliasField('student_id').' IN ' => $students, $this->aliasField('examination_id') => $examinationId])
+                        ->group([$this->aliasField('student_id')])
+                        ->toArray();
+
+                    foreach ($deleteStudentEntity as $deleteStudent) {
+                        $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
+                        $ExamCentreStudents->delete($deleteStudent);
+                    }
+
                     $examinationCentreId = array_unique(array_column($examStudents, 'examination_centre_id'));
-                    $this->deleteAll(['student_id IN ' => $students, 'examination_id' => $examinationId]);
                     foreach ($examinationCentreId as $centreId) {
                         $studentCount = $this->find()
                             ->where([$this->aliasField('examination_centre_id') => $centreId])
