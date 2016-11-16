@@ -11,6 +11,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
+use Cake\Log\Log;
 
 class ExamCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -28,10 +29,9 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->addBehavior('User.AdvancedNameSearch');
         $this->toggle('add', false);
+        $this->toggle('edit', false);
     }
 
     public function validationDefault(Validator $validator) {
@@ -46,6 +46,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
         $this->fields['total_mark']['visible'] = false;
         $this->fields['student_id']['visible'] = true;
@@ -53,6 +54,21 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['examination_id']['visible'] = false;
         $this->fields['student_id']['type'] = 'string';
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $examCentreId = $entity->examination_centre_id;
+        $studentId = $entity->student_id;
+        $this->deleteAll([
+            'examination_centre_id' => $examCentreId,
+            'student_id' => $studentId
+        ]);
+
+        TableRegistry::get('Examination.ExaminationCentreRoomStudents')->deleteAll([
+            'examination_centre_id' => $examCentreId,
+            'student_id' => $studentId
+        ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -77,5 +93,10 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
             ->where([$ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId])
             ->toArray();
+    }
+
+    public function onGetRoom(Event $event, Entity $entity)
+    {
+        return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
     }
 }
