@@ -41,7 +41,6 @@ class ImportResultsTable extends AppTable
 
     public function onImportPopulateAcademicPeriodsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $selectFields = ['name', $lookupColumn];
         $modelData = $lookedUpTable->find('all')
@@ -69,6 +68,7 @@ class ImportResultsTable extends AppTable
         $selectFields = ['name', $lookupColumn];
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
+            ->group(['code'])
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -92,6 +92,7 @@ class ImportResultsTable extends AppTable
         $selectFields = ['name', $lookupColumn];
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
+            ->group(['institution_id'])
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -112,9 +113,12 @@ class ImportResultsTable extends AppTable
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
-        $modelData = $lookedUpTable->find('all')
+        $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+        $selectFields = [$lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn)];
+        $modelData = $ExaminationCentreSubjects->find('all')
             ->select($selectFields)
+            ->matching($lookedUpTable->alias())
+            ->group(['education_subject_id'])
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -123,8 +127,8 @@ class ImportResultsTable extends AppTable
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->$lookupColumn
+                    $row->_matchingData[$lookedUpTable->alias()]->name,
+                    $row->_matchingData[$lookedUpTable->alias()]->$lookupColumn
                 ];
             }
         }
@@ -160,24 +164,25 @@ class ImportResultsTable extends AppTable
 
     public function onImportPopulateExaminationGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
-        $order = [$lookupModel.'.examination_grading_type_id', $lookupModel.'.order'];
-
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = [$lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), 'ExaminationGradingTypes.name'];
+        $ExaminationGradingTypes = TableRegistry::get('Examination.ExaminationGradingTypes');
+        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $ExaminationGradingTypes->aliasField('code'), $ExaminationGradingTypes->aliasField('name')];
+        $order = [$ExaminationGradingTypes->aliasField('name'), $lookupModel.'.order'];
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
-            ->contain('ExaminationGradingTypes')
+            ->matching($ExaminationGradingTypes->alias())
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol, __('Grading Types')];
+        $data[$columnOrder]['lookupColumn'] = 3;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol, __('Grading Types')];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
+                    $row->code,
                     $row->$lookupColumn,
-                    $row->examination_grading_type->name
+                    $row->_matchingData[$ExaminationGradingTypes->alias()]->name
                 ];
             }
         }
