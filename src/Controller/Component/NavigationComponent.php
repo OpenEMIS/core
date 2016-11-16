@@ -957,19 +957,13 @@ class NavigationComponent extends Component
 							'title' => 'Overview',
 							'parent' => 'Examinations.ExamCentres.index',
 							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
-							'selected' => ['Examinations.ExamCentres.view', 'Examinations.ExamCentres.edit', 'Examinations.ExamCentreStudents']
+							'selected' => ['Examinations.ExamCentres.view', 'Examinations.ExamCentres.edit', 'Examinations.ExamCentreStudents', 'Examinations.LinkedInstitutionAddStudents']
 						],
 						'Examinations.ExamCentreRooms'  => [
 							'title' => 'Rooms',
 							'parent' => 'Examinations.ExamCentres.index',
 							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
 							'selected' => []
-						],
-						'Examinations.LinkedInstitutions'  => [
-							'title' => 'Linked Institutions',
-							'parent' => 'Examinations.ExamCentres.index',
-							'params' => ['plugin' => 'Examination', 'queryString' => $queryString],
-							'selected' => ['Examinations.LinkedInstitutionAddStudents']
 						],
 					'Examinations.RegisteredStudents' => [
 						'title' => 'Students',
