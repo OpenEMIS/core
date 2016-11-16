@@ -334,6 +334,19 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRoom = $requestData[$this->alias()]['auto_assign_to_room'];
 
+                // check if candidate is a current student
+                $enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+                $Students = TableRegistry::get('Institution.Students');
+                $existInInstitution = $Students
+                    ->find()
+                    ->where([
+                        $Students->aliasField('student_id') => $requestData[$this->alias()]['student_id'],
+                        $Students->aliasField('education_grade_id') => $requestData[$this->alias()]['education_grade_id'],
+                        $Students->aliasField('academic_period_id') => $requestData[$this->alias()]['academic_period_id'],
+                        $Students->aliasField('student_status_id') => $enrolledStatus
+                    ])
+                    ->first();
+
                 $newEntities = [];
                 foreach ($ExaminationCentreSubjects as $subjectId => $name) {
                     $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
@@ -346,6 +359,11 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
                     if (!empty($requestData[$this->alias()]['registration_number'])) {
                         $obj['registration_number'] = $requestData[$this->alias()]['registration_number'];
+                    }
+
+                    // if current student
+                    if (!empty($existInInstitution)) {
+                        $obj['institution_id'] = $existInInstitution->institution_id;
                     }
 
                     $newEntities[] = $obj;
@@ -397,6 +415,12 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                                     'examination_id' => $requestData[$this->alias()]['examination_id'],
                                     'examination_centre_id' => $requestData[$this->alias()]['examination_centre_id']
                                 ];
+
+                                // if current student
+                                if (!empty($existInInstitution)) {
+                                    $newEntity['institution_id'] = $existInInstitution->institution_id;
+                                }
+
                                 $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
                                 $examCentreRoomStudentEntity = $ExaminationCentreRoomStudents->newEntity($newEntity);
                                 if ($ExaminationCentreRoomStudents->save($examCentreRoomStudentEntity)) {
