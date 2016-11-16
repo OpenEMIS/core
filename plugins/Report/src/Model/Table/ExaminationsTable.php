@@ -42,6 +42,14 @@ class ExaminationsTable extends AppTable
         $this->ControllerAction->field('format');
     }
 
+    public function addBeforeAction(Event $event)
+    {
+        $this->ControllerAction->field('academic_period_id');
+        $this->ControllerAction->field('examination_id');
+        $this->ControllerAction->field('examination_centre_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
+    }
+
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -54,14 +62,6 @@ class ExaminationsTable extends AppTable
             }
             return $attr;
         }
-    }
-
-    public function addBeforeAction(Event $event)
-    {
-        $this->ControllerAction->field('academic_period_id');
-        $this->ControllerAction->field('examination_id');
-        $this->ControllerAction->field('examination_centre_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_id', ['type' => 'hidden']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -110,7 +110,10 @@ class ExaminationsTable extends AppTable
                     $selectedExamination = $request->data[$this->alias()]['examination_id'];
 
                     $examCentreOptions = $this->ExaminationCentres
-                        ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
+                        ->find('list' ,[
+                            'keyField' => 'id',
+                            'valueField' => 'code_name'
+                        ])
                         ->where([$this->ExaminationCentres->aliasField('examination_id') => $selectedExamination])
                         ->toArray();
 
@@ -143,15 +146,17 @@ class ExaminationsTable extends AppTable
 
                     $ExamCentreStudents = $this->ExaminationCentreStudents;
                     $institutionOptions = $ExamCentreStudents
-                        ->find('list' ,['keyField' => 'institution_id', 'valueField' => 'institution.code_name'])
+                        ->find('list' ,[
+                            'keyField' => 'institution_id',
+                            'valueField' => 'institution.code_name'
+                        ])
                         ->contain('Institutions')
                         ->where([$ExamCentreStudents->aliasField('examination_id') => $selectedExamination])
                         ->group([$ExamCentreStudents->aliasField('institution_id')])
                         ->toArray();
 
-                    // cater for 0
                     if (!empty($institutionOptions)) {
-                        $institutionOptions =  ['-1' => __('All Institutions')] + $institutionOptions;
+                        $institutionOptions =  ['-1' => __('All Institutions'), '0' => __('Private Candidate')] + $institutionOptions;
                     }
                 }
 
