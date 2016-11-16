@@ -98,6 +98,8 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
+
         $query
             ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
             ->group([$this->aliasField('student_id')]);
@@ -117,5 +119,14 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     public function onGetRoom(Event $event, Entity $entity)
     {
         return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {
+        if ($entity->institution_id) {
+            return $entity->institution->code_name;
+        } else {
+            return __('Private Candidate');
+        }
     }
 }
