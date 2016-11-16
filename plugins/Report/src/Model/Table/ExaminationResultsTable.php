@@ -71,21 +71,21 @@ class ExaminationResultsTable extends AppTable  {
             'key' => 'ExaminationResults.academic_period_id',
             'field' => 'academic_period_id',
             'type' => 'integer',
-            'label' => 'Academic Period',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'ExaminationResults.examination_id',
             'field' => 'examination_id',
             'type' => 'integer',
-            'label' => 'Examination',
+            'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'ExaminationResults.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
-            'label' => 'Institution',
+            'label' => '',
         ];
 
         $newFields[] = [
