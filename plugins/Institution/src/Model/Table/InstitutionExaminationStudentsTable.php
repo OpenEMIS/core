@@ -38,7 +38,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         ]);
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
         return $validator
             ->allowEmpty('registration_number')
@@ -48,7 +49,16 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             ]);
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->education_subject_id;
+            $entity->id = Security::hash($hashString, 'sha256');
+        }
+    }
+
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -159,7 +169,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->fields['total_mark']['visible'] = false;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
 
         if (array_key_exists('add', $toolbarButtonsArray)) {
@@ -249,7 +260,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request)
+    {
         $examinationOptions = [];
 
         if ($action == 'add') {
@@ -300,7 +312,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request)
+    {
         $educationGrade = '';
 
         if (!empty($request->data[$this->alias()]['examination_id'])) {
@@ -319,7 +332,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeedsRequired(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldSpecialNeedsRequired(Event $event, array $attr, $action, $request)
+    {
         $specialNeedOptions = [];
 
         if ($action == 'add') {
@@ -331,7 +345,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request)
+    {
         $attr['options'] = [];
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['examination_id'])) {
@@ -357,7 +372,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request)
+    {
         $specialNeeds = [];
 
         if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
@@ -382,7 +398,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, $request)
+    {
         $classes = [];
 
         if ($action == 'add') {
@@ -409,7 +426,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request)
+    {
         $students = [];
 
         if ($action == 'add') {
@@ -457,7 +475,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if (!empty($requestData[$this->alias()]['examination_students'])) {
+            $errors = $entity->errors();
+            if (!empty($errors)) {
+                return false;
+            }
+
+            if (!empty($requestData[$this->alias()]['examination_students']) && !empty($requestData[$this->alias()]['examination_centre_id'])) {
                 $students = $requestData[$this->alias()]['examination_students'];
                 $examinationCentre = $this->ExaminationCentres->get($requestData[$this->alias()]['examination_centre_id']);
                 $newEntities = [];
