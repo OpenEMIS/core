@@ -204,8 +204,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('examination_id', ['type' => 'select', 'onChangeReload' => true]);
         $this->field('examination_education_grade', ['type' => 'readonly']);
-        $this->field('special_needs_required', ['type' => 'chosenSelect', 'onChangeReload' => true]);
-
         $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
@@ -218,7 +216,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('total_mark' , ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_class_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'examination_centre_id', 'special_needs', 'institution_class_id', 'student_id'
         ]);
     }
 
@@ -319,26 +317,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeedsRequired(Event $event, array $attr, $action, $request) {
-        $specialNeedOptions = [];
-
-        if ($action == 'add') {
-            $SpecialNeedTypes = TableRegistry::get('FieldOption.SpecialNeedTypes');
-            $specialNeedOptions = $SpecialNeedTypes->findVisibleNeedTypes();
-        }
-
-        $attr['options'] = $specialNeedOptions;
-        return $attr;
-    }
-
     public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request) {
         $attr['options'] = [];
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['examination_id'])) {
                 $institutionId = $attr['entity']->institution_id;
                 $selectedExamination = $request->data[$this->alias()]['examination_id'];
-                $selectedSpecialNeeds = $request->data[$this->alias()]['special_needs_required']['_ids'];
-
                 $query = $this->ExaminationCentres
                     ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
                     ->innerJoinWith('LinkedInstitutions')
@@ -346,10 +330,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         $this->ExaminationCentres->aliasField('examination_id') => $selectedExamination,
                         'ExaminationCentresInstitutions.institution_id' => $institutionId
                     ]);
-
-                if (!empty($selectedSpecialNeeds)) {
-                    $query->find('bySpecialNeeds', ['selectedSpecialNeeds' => $selectedSpecialNeeds]);
-                }
 
                 $attr['options'] = $query->toArray();
             }
