@@ -339,9 +339,10 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $options['associated'][] = 'LinkedInstitutions._joinData';
+        $options['associated'][] = 'Invigilators._joinData';
 
-        if (!isset($data['ExaminationCentres']['invigilators'])) {
-            $data['ExaminationCentres']['invigilators'] = [];
+        if (!isset($data[$this->alias()]['invigilators'])) {
+            $data[$this->alias()]['invigilators'] = [];
         }
 
         $data[$this->alias()]['linked_institutions'] = $this->processInstitutions($data);
@@ -634,6 +635,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
                         $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.academic_period_id", ['value' => $joinData['academic_period_id']]);
                         $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.examination_id", ['value' => $joinData['examination_id']]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.examination_centre_id", ['value' => $this->paramsPass(0)]);
 
                         $rowData[] = $openemisId;
                         $rowData[] = $cell;
