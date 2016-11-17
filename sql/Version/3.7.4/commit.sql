@@ -232,9 +232,11 @@ CREATE TABLE IF NOT EXISTS `examination_centres_institutions` (
   `id` char(64) NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
+  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   PRIMARY KEY (`examination_centre_id`, `institution_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `institution_id` (`institution_id`)
+  KEY `examination_id` (`examination_id`),
+  KEY `academic_period_id` (`academic_period_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions linked to a particular examination centre';
 
 -- examination_items
