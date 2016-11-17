@@ -170,7 +170,21 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('invigilators', ['type' => 'element', 'element' => 'Examination.exam_centre_room_invigilators', 'data' => $entity]);
-        $this->field('students', ['type' => 'element', 'element' => 'Examination.exam_centre_room_students', 'data' => $entity, 'after' => 'invigilators']);
+        $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+        $examinationCentreRoomStudentList = $ExaminationCentreRoomStudents->findByExaminationCentreRoomId($this->paramsPass(0))
+            ->find('list', [
+                'keyField' => 'student_id',
+                'valueField' => 'registration_no'
+            ])
+            ->innerJoin(['ExaminationCentreStudents' => 'examination_centre_students'], [
+                    'ExaminationCentreStudents.examination_centre_id = '.$ExaminationCentreRoomStudents->aliasField('examination_centre_id'),
+                    'ExaminationCentreStudents.student_id = '.$ExaminationCentreRoomStudents->aliasField('student_id'),
+                ])
+            ->select(['registration_no' =>'ExaminationCentreStudents.registration_number', 'student_id' => $ExaminationCentreRoomStudents->aliasField('student_id')])
+            ->group(['ExaminationCentreStudents.student_id'])
+            ->toArray();
+
+        $this->field('students', ['type' => 'element', 'element' => 'Examination.exam_centre_room_students', 'data' => $entity, 'registrationNoList' => $examinationCentreRoomStudentList, 'after' => 'invigilators']);
         $this->setFieldOrder(['name', 'size', 'number_of_seats', 'academic_period_id', 'examination_id', 'examination_centre_id', 'invigilators', 'students']);
     }
 
