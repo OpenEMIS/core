@@ -295,9 +295,9 @@ INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `f
 ('Examination.ExaminationItemResults', 'examination_centre_id', 'Code', 3, 2, 'Examination', 'ExaminationCentres', 'code'),
 ('Examination.ExaminationItemResults', 'education_subject_id', 'Code', 4, 2, 'Education', 'EducationSubjects', 'code'),
 ('Examination.ExaminationItemResults', 'student_id', 'OpenEMIS ID', 5, 2, 'Security', 'Users', 'openemis_no'),
-('Examination.ExaminationItemResults', 'institution_id', '(Leave as blank for private candidate)', 6, 2, 'Institution', 'Institutions', 'code'),
-('Examination.ExaminationItemResults', 'marks', NULL, 7, 0, NULL, NULL, NULL),
-('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Code', 8, 2, 'Examination', 'ExaminationGradingOptions', 'code');
+('Examination.ExaminationItemResults', 'institution_id', 'Code (Leave as blank for private candidate)', 6, 2, 'Institution', 'Institutions', 'code'),
+('Examination.ExaminationItemResults', 'marks', '(Leave as blank for Grades type)', 7, 0, NULL, NULL, NULL),
+('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Id (Leave as blank for Marks type)', 8, 2, 'Examination', 'ExaminationGradingOptions', 'id');
 
 UPDATE `security_functions` SET `order`='5048' WHERE `id`='5046';
 UPDATE `security_functions` SET `_add`='RegistrationDirectory.index|RegisteredStudents.add|BulkStudentRegistration.add', `order`='5051' WHERE `id`='5047';
