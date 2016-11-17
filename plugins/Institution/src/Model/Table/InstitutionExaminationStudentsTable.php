@@ -462,7 +462,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 return false;
             }
 
-            if (!empty($requestData[$this->alias()]['examination_students'])) {
+            if (!empty($requestData[$this->alias()]['examination_students']) && !empty($requestData[$this->alias()]['examination_centre_id'])) {
                 $students = $requestData[$this->alias()]['examination_students'];
                 $examinationCentre = $this->ExaminationCentres->get($requestData[$this->alias()]['examination_centre_id']);
                 $newEntities = [];
