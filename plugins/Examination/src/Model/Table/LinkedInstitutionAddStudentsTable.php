@@ -7,6 +7,8 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
@@ -47,6 +49,23 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
             ->requirePresence('auto_assign_to_rooms');
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $queryString = $request->query['queryString'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
+
+        $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+        $Navigation->substituteCrumb('Linked Institution Add Students', 'Exam Centres', $overviewUrl);
+        $Navigation->addCrumb('Students');
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
@@ -59,6 +78,11 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     {
         $this->controller->getExamCentresTab('ExamCentreStudents');
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+
+        // Set the header of the page
+        $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+        $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Students'));
+
         $examCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['Examinations.EducationGrades', 'AcademicPeriods']]);
         $this->field('academic_period_id', ['type' => 'readonly', 'value' => $examCentre->academic_period_id, 'attr' => ['value' => $examCentre->academic_period->name]]);
         $this->field('examination_id',  ['type' => 'readonly', 'value' => $examCentre->examination_id, 'attr' => ['value' => $examCentre->examination->name]]);
