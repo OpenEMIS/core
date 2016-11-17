@@ -16,6 +16,8 @@ class ExaminationCentresTable extends ControllerActionTable {
     use OptionsTrait;
     use HtmlTrait;
 
+    private $examCentreName = null;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -244,8 +246,10 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'view' || $this->action == 'edit') {
-            $this->request->params['pass'][1] = $this->ControllerAction->getQueryString('examination_centre_id');
+            $examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+            $this->request->params['pass'][1] = $examCentreId;
             $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
+            $this->examCentreName = $this->get($examCentreId)->name;
         }
         $this->field('institution_id', ['visible' => false]);
         $this->field('name');
@@ -281,11 +285,17 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        // Set the header of the page
+        $this->controller->set('contentHeader', $this->examCentreName. ' - ' .__('Overview'));
+
         $this->controller->getExamCentresTab();
     }
 
     public function editBeforeAction(Event $event, ArrayObject $extra)
     {
+        // Set the header of the page
+        $this->controller->set('contentHeader', $this->examCentreName. ' - ' .__('Overview'));
+
         $this->controller->getExamCentresTab();
     }
 
