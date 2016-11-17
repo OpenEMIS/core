@@ -1463,6 +1463,11 @@ trait MessagesTrait {
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
                 ]
+            ],
+            'LinkedInstitutionAddStudents' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ]
             ]
         ],
         'Configuration' => [
