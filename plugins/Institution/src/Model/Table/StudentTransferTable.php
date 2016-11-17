@@ -40,6 +40,7 @@ class StudentTransferTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('Institution.ClassStudents');
 	}
