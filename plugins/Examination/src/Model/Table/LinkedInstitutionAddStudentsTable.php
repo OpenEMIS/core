@@ -160,6 +160,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRooms = $entity->auto_assign_to_rooms;
                 $studentCount = 0;
+                $roomStudents = [];
                 foreach ($students as $key => $student) {
                     $obj = [];
                     if ($student['selected'] == 1) {
@@ -171,6 +172,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         $obj['examination_id'] = $requestData[$this->alias()]['examination_id'];
                         $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
                         $obj['auto_assign_to_rooms'] = $autoAssignToRooms;
+                        $obj['counterNo'] = $key;
+                        $roomStudents[] = $obj;
                         $studentCount++;
                         foreach($ExaminationCentreSubjects as $subject => $name) {
                             $obj['education_subject_id'] = $subject;
@@ -189,7 +192,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                     foreach ($newEntities as $key => $newEntity) {
                         $examCentreStudentEntity = $this->newEntity($newEntity);
                         if ($examCentreStudentEntity->errors('registration_number')) {
-                            $entity->errors("examination_students.$key", ['registration_number' => $examCentreStudentEntity->errors('registration_number')]);
+                            $counterNo = $newEntity['counterNo'];
+                            $entity->errors("examination_students.$counterNo", ['registration_number' => $examCentreStudentEntity->errors('registration_number')]);
                         }
                         if (!$this->save($examCentreStudentEntity)) {
                             $return = false;
@@ -225,7 +229,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         foreach ($examCentreRooms as $room) {
                             $counter = $room->number_of_seats - $room->seats_taken;
                             while ($counter > 0) {
-                                $examCentreRoomStudent = array_shift($newEntities);
+                                $examCentreRoomStudent = array_shift($roomStudents);
                                 $newEntity = [
                                     'examination_centre_room_id' => $room->id,
                                     'student_id' => $examCentreRoomStudent['student_id'],
@@ -241,7 +245,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                                 $counter--;
                             }
                         }
-                        if (!empty($newEntities)) {
+                        if (!empty($roomStudents)) {
                             $model->Alert->warning($this->aliasField('notAssignedRoom'));
                             return true;
                         }
