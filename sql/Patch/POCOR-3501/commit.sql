@@ -295,16 +295,21 @@ INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `f
 ('Examination.ExaminationItemResults', 'examination_centre_id', 'Code', 3, 2, 'Examination', 'ExaminationCentres', 'code'),
 ('Examination.ExaminationItemResults', 'education_subject_id', 'Code', 4, 2, 'Education', 'EducationSubjects', 'code'),
 ('Examination.ExaminationItemResults', 'student_id', 'OpenEMIS ID', 5, 2, 'Security', 'Users', 'openemis_no'),
-('Examination.ExaminationItemResults', 'institution_id', '(Leave as blank for private candidate)', 6, 2, 'Institution', 'Institutions', 'code'),
-('Examination.ExaminationItemResults', 'marks', NULL, 7, 0, NULL, NULL, NULL),
-('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Code', 8, 2, 'Examination', 'ExaminationGradingOptions', 'code');
+('Examination.ExaminationItemResults', 'institution_id', 'Code (Leave as blank for private candidate)', 6, 2, 'Institution', 'Institutions', 'code'),
+('Examination.ExaminationItemResults', 'marks', '(Leave as blank for Grades type)', 7, 0, NULL, NULL, NULL),
+('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Id (Leave as blank for Marks type)', 8, 2, 'Examination', 'ExaminationGradingOptions', 'id');
 
 UPDATE `security_functions` SET `order`='5048' WHERE `id`='5046';
 UPDATE `security_functions` SET `_add`='RegistrationDirectory.index|RegisteredStudents.add|BulkStudentRegistration.add', `order`='5051' WHERE `id`='5047';
 UPDATE `security_functions` SET `order`='5052' WHERE `id`='5048';
 
+-- reorder for reports
+UPDATE `security_functions` SET `order`='6004' WHERE `id`='6003';
+UPDATE `security_functions` SET `order`='6005' WHERE `id`='6004';
+
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (5051, 'Exam Centre Students', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreStudents.index|ExamCentreStudents.view', NULL, 'LinkedInstitutionAddStudents.add', 'ExamCentreStudents.remove', NULL, 5046, 1, NULL, NULL, NULL, 1, NOW()),
 (5052, 'Exam Centre Rooms', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreRooms.view|ExamCentreRooms.index', NULL, 'ExamCentreRooms.add', 'ExamCentreRooms.remove', NULL, 5047, 1, NULL, NULL, NULL, 1, NOW()),
 (5053, 'Results', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamResults.index|Results.index|ExamResults.view', 'Results.edit', NULL, NULL, NULL, 5051, 1, NULL, NULL, NULL, 1, NOW()),
-(5054, 'Import Results', 'Examinations', 'Administration', 'Examinations', 5000, NULL, NULL, NULL, NULL, 'ImportResults.add|ImportResults.template|ImportResults.results|ImportResults.downloadFailed|ImportResults.downloadPassed', 5052, 1, NULL, NULL, NULL, 1, NOW());
+(5054, 'Import Results', 'Examinations', 'Administration', 'Examinations', 5000, NULL, NULL, NULL, NULL, 'ImportResults.add|ImportResults.template|ImportResults.results|ImportResults.downloadFailed|ImportResults.downloadPassed', 5052, 1, NULL, NULL, NULL, 1, NOW()),
+(6009, 'Examinations', 'Reports', 'Reports', 'Reports', -1, 'Examinations.index', NULL, 'Examinations.add', NULL, 'Examinations.download', 6003, 1, NULL, NULL, NULL, 1, NOW());
