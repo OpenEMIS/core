@@ -58,8 +58,10 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         $queryString = $request->query['queryString'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
 
+        $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Linked Institution Add Students', 'Exam Centres', $overviewUrl);
         $Navigation->addCrumb('Students');
     }
