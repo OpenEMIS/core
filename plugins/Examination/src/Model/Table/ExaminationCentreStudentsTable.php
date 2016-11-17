@@ -390,6 +390,14 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     return $return;
                 });
 
+                if ($success) {
+                    $studentCount = $this->find()
+                        ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+                        ->group([$this->aliasField('student_id')])
+                        ->count();
+                    $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+                }
+
                 // auto assignment to a room
                 if ($autoAssignToRoom) {
                     if ($success) {
