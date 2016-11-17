@@ -16,6 +16,7 @@ class ExaminationCentresInvigilatorsTable extends AppTable {
 		$this->belongsTo('Invigilators', ['className' => 'User.Users']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
+        $this->hasOne('ExaminationCentreRoomsInvigilators', ['className' => 'Examination.ExaminationCentreRoomsInvigilators', 'foreignKey' => ['examination_centre_id', 'invigilator_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 	}
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
