@@ -6,14 +6,14 @@
 ?>
 
 <?php if ($ControllerAction['action'] == 'view') : ?>
-    <?php if (isset($data['institutions']) && !empty($data['institutions'])) : ?>
+    <?php if (isset($data['linked_institutions']) && !empty($data['linked_institutions'])) : ?>
     <div class="table-in-view">
         <table class="table">
             <thead>
                 <th><?= __('Name') ?></th>
             </thead>
                 <tbody>
-                    <?php foreach ($data['institutions'] as $i => $item) : ?>
+                    <?php foreach ($data['linked_institutions'] as $i => $item) : ?>
                         <tr>
                             <td><?= $item->code_name; ?></td>
                         </tr>

@@ -27,7 +27,11 @@ DROP TABLE IF EXISTS `examination_item_results`;
 
 DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationItemResults';
 
-DELETE FROM `security_functions` WHERE `id` IN (5051, 5052);
+UPDATE `security_functions` SET `order`='5046' WHERE `id`='5046';
+UPDATE `security_functions` SET `_add`= NULL, `order`='5047' WHERE `id`='5047';
+UPDATE `security_functions` SET `order`='5048' WHERE `id`='5048';
+
+DELETE FROM `security_functions` WHERE `id` IN (5051, 5052, 5053, 5054);
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3501';

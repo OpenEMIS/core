@@ -29,11 +29,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->belongsToMany('Institutions', [
+        $this->belongsToMany('LinkedInstitutions', [
             'className' => 'Institution.Institutions',
             'joinTable' => 'examination_centres_institutions',
             'foreignKey' => 'examination_centre_id',
-            'targetForeignKey' => 'examination_centre_id',
+            'targetForeignKey' => 'institution_id',
             'through' => 'Examination.ExaminationCentresInstitutions',
             'dependent' => true
         ]);
@@ -269,7 +269,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->contain(['ExaminationCentreRooms.Students'])
             ->contain([
                 'Examinations',
-                'Institutions',
+                'LinkedInstitutions',
                 'Invigilators' => [
                     'sort' => ['Invigilators.first_name' => 'ASC', 'Invigilators.last_name' => 'ASC']
                 ]
@@ -338,13 +338,13 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $options['associated'][] = 'Institutions._joinData';
+        $options['associated'][] = 'LinkedInstitutions._joinData';
 
         if (!isset($data['ExaminationCentres']['invigilators'])) {
             $data['ExaminationCentres']['invigilators'] = [];
         }
 
-        $data[$this->alias()]['institutions'] = $this->processInstitutions($data);
+        $data[$this->alias()]['linked_institutions'] = $this->processInstitutions($data);
     }
 
     public function processInstitutions(ArrayObject $data)
