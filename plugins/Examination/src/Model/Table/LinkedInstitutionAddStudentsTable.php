@@ -67,7 +67,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $entity->id = Text::uuid();
+            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->education_subject_id;
+            $entity->id = Security::hash($hashString, 'sha256');
         }
     }
 
@@ -174,7 +175,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if (!empty($requestData[$this->alias()]['examination_students'])) {
+            if (!empty($requestData[$this->alias()]['examination_students']) && !empty($requestData[$this->alias()]['examination_centre_id'])) {
                 $students = $requestData[$this->alias()]['examination_students'];
                 $newEntities = [];
 

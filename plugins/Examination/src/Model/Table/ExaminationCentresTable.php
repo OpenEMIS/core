@@ -189,11 +189,15 @@ class ExaminationCentresTable extends ControllerActionTable {
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
             $search = sprintf('%s%%', $term);
-
+            $examinationId = $this->paramsPass(0);
             $data = [];
             $Users = $this->Invigilators;
             $list = $Users
                 ->find()
+                ->leftJoin(['ExaminationCentresInvigilators' => 'examination_centres_invigilators'], [
+                    'ExaminationCentresInvigilators.invigilator_id = '.$Users->aliasField('id'),
+                    'ExaminationCentresInvigilators.examination_id' => $examinationId
+                ])
                 ->select([
                     $Users->aliasField('id'),
                     $Users->aliasField('openemis_no'),
@@ -204,6 +208,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $Users->aliasField('preferred_name')
                 ])
                 ->where([
+                    'ExaminationCentresInvigilators.invigilator_id IS NULL',
                     $Users->aliasField('is_student') => 0,
                     'OR' => [
                         $Users->aliasField('openemis_no LIKE ') => $search,
@@ -366,6 +371,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $joinData = [
                     'examination_centre_id' => $data[$this->alias()]['id'],
                     'institution_id' => $value,
+                    'examination_id' => $data[$this->alias()]['examination_id'],
+                    'academic_period_id' => $data[$this->alias()]['academic_period_id']
                 ];
                 $institutions[] = [
                     'id' => $value,
@@ -589,6 +596,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'invigilators';
+        $examinationId = $entity->examination_id;
 
         if ($action == 'view') {
             $associated = $entity->extractOriginal([$fieldKey]);
@@ -602,6 +610,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
         } else if ($action == 'edit') {
+
             if (!$entity->isNew()) {
                 $tableHeaders[] = ''; // for delete column
                 $Form = $event->subject()->Form;
@@ -655,7 +664,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
         }
-
+        $attr['examination_id'] = $examinationId;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
@@ -707,11 +716,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                         return $q->where(['InstitutionGrades.education_grade_id' => $attr['education_grade_id']]);
                     })
                     ->leftJoin(['ExaminationCentresInstitutions' => 'examination_centres_institutions'], [
-                        'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id')
-                    ])
-                    ->leftJoin(['ExaminationCentres' => 'examination_centres'], [
-                        'ExaminationCentres.id = ExaminationCentresInstitutions.examination_centre_id',
-                        'ExaminationCentres.examination_id' => $attr['examination_id']
+                        'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id'),
+                        'ExaminationCentresInstitutions.examination_id' => $attr['examination_id']
                     ])
                     ->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('is_academic') => 1])
                     ->group([$this->Institutions->aliasField('id')]);
