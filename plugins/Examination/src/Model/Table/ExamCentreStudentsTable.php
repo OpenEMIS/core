@@ -69,16 +69,37 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             'examination_centre_id' => $examCentreId,
             'student_id' => $studentId
         ]);
+
+        $studentCount = $this->find()
+            ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+            ->group([$this->aliasField('student_id')])
+            ->count();
+
+        $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutionAddStudents', 'add', 'queryString' => $this->request->query('queryString')];
+        $button['type'] = 'button';
+        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['attr'] = $toolbarAttr;
+        $button['attr']['title'] = __('Bulk Add');
+        $extra['toolbarButtons']['bulkAdd'] = $button;
         $this->field('room');
         $this->setFieldOrder(['registration_number', 'student_id', 'institution_id', 'room']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
+
         $query
             ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
             ->group([$this->aliasField('student_id')]);
@@ -98,5 +119,14 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     public function onGetRoom(Event $event, Entity $entity)
     {
         return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
+    }
+
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {
+        if ($entity->institution_id) {
+            return $entity->institution->code_name;
+        } else {
+            return __('Private Candidate');
+        }
     }
 }

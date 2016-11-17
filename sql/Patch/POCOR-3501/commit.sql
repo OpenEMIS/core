@@ -71,7 +71,7 @@ RENAME TABLE `examination_centre_special_needs` TO `z_3501_examination_centre_sp
 
 DROP TABLE IF EXISTS `examination_centre_special_needs`;
 CREATE TABLE IF NOT EXISTS `examination_centre_special_needs` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `special_need_type_id` int(11) NOT NULL COMMENT 'links to special_need_types.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -81,8 +81,6 @@ CREATE TABLE IF NOT EXISTS `examination_centre_special_needs` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`examination_centre_id`,`special_need_type_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `special_need_type_id` (`special_need_type_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `examination_id` (`examination_id`),
   KEY `modified_user_id` (`modified_user_id`),
@@ -90,7 +88,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_special_needs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the special needs for a particular examination centre';
 
 INSERT INTO `examination_centre_special_needs` (`id`, `examination_centre_id`, `special_need_type_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, `examination_centre_id`, `special_need_type_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `special_need_type_id`), '256'), `examination_centre_id`, `special_need_type_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3501_examination_centre_special_needs`;
 
 -- examination_centre_students
@@ -98,7 +96,7 @@ RENAME TABLE `examination_centre_students` TO `z_3501_examination_centre_student
 
 DROP TABLE IF EXISTS `examination_centre_students`;
 CREATE TABLE IF NOT EXISTS `examination_centre_students` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `registration_number` varchar(20) DEFAULT NULL,
   `total_mark` decimal(6,2) DEFAULT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
@@ -113,9 +111,6 @@ CREATE TABLE IF NOT EXISTS `examination_centre_students` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`examination_centre_id`,`student_id`,`education_subject_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `student_id` (`student_id`),
-  KEY `education_subject_id` (`education_subject_id`),
   KEY `institution_id` (`institution_id`),
   KEY `education_grade_id` (`education_grade_id`),
   KEY `academic_period_id` (`academic_period_id`),
@@ -125,7 +120,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_students` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
 
 INSERT INTO `examination_centre_students` (`id`, `registration_number`, `total_mark`, `examination_centre_id`, `student_id`, `education_subject_id`, `institution_id`, `education_grade_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, NULL, NULL, `examination_centre_id`, `student_id`, `education_subject_id`, `institution_id`, `education_grade_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `student_id`, ',', `education_subject_id`), '256'), NULL, NULL, `examination_centre_id`, `student_id`, `education_subject_id`, `institution_id`, `education_grade_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3501_examination_centre_students`;
 
 -- examination_centre_subjects
@@ -133,7 +128,7 @@ RENAME TABLE `examination_centre_subjects` TO `z_3501_examination_centre_subject
 
 DROP TABLE IF EXISTS `examination_centre_subjects`;
 CREATE TABLE IF NOT EXISTS `examination_centre_subjects` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -143,8 +138,6 @@ CREATE TABLE IF NOT EXISTS `examination_centre_subjects` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`examination_centre_id`,`education_subject_id`),
-  KEY `examination_centre_id` (`examination_centre_id`),
-  KEY `education_subject_id` (`education_subject_id`),
   KEY `academic_period_id` (`academic_period_id`),
   KEY `examination_id` (`examination_id`),
   KEY `modified_user_id` (`modified_user_id`),
@@ -152,7 +145,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_subjects` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination subject';
 
 INSERT INTO `examination_centre_subjects` (`id`, `examination_centre_id`, `education_subject_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, `examination_centre_id`, `education_subject_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `education_subject_id`), '256'), `examination_centre_id`, `education_subject_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3501_examination_centre_subjects`;
 
 -- examination_centres_invigilators
@@ -306,6 +299,12 @@ INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `f
 ('Examination.ExaminationItemResults', 'marks', NULL, 7, 0, NULL, NULL, NULL),
 ('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Code', 8, 2, 'Examination', 'ExaminationGradingOptions', 'code');
 
+UPDATE `security_functions` SET `order`='5048' WHERE `id`='5046';
+UPDATE `security_functions` SET `_add`='RegistrationDirectory.index|RegisteredStudents.add|BulkStudentRegistration.add', `order`='5051' WHERE `id`='5047';
+UPDATE `security_functions` SET `order`='5052' WHERE `id`='5048';
+
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-(5051, 'Results', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamResults.index|Results.index|ExamResults.view', 'Results.edit', NULL, NULL, NULL, 5051, 1, NULL, NULL, NULL, 1, NOW()),
-(5052, 'Import Results', 'Examinations', 'Administration', 'Examinations', 5000, NULL, NULL, NULL, NULL, 'ImportResults.add|ImportResults.template|ImportResults.results|ImportResults.downloadFailed|ImportResults.downloadPassed', 5052, 1, NULL, NULL, NULL, 1, NOW());
+(5051, 'Exam Centre Students', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreStudents.index|ExamCentreStudents.view', NULL, 'LinkedInstitutionAddStudents.add', 'ExamCentreStudents.remove', NULL, 5046, 1, NULL, NULL, NULL, 1, NOW()),
+(5052, 'Exam Centre Rooms', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreRooms.view|ExamCentreRooms.index', NULL, 'ExamCentreRooms.add', 'ExamCentreRooms.remove', NULL, 5047, 1, NULL, NULL, NULL, 1, NOW()),
+(5053, 'Results', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamResults.index|Results.index|ExamResults.view', 'Results.edit', NULL, NULL, NULL, 5051, 1, NULL, NULL, NULL, 1, NOW()),
+(5054, 'Import Results', 'Examinations', 'Administration', 'Examinations', 5000, NULL, NULL, NULL, NULL, 'ImportResults.add|ImportResults.template|ImportResults.results|ImportResults.downloadFailed|ImportResults.downloadPassed', 5052, 1, NULL, NULL, NULL, 1, NOW());
