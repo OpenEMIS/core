@@ -187,11 +187,15 @@ class ExaminationCentresTable extends ControllerActionTable {
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
             $search = sprintf('%s%%', $term);
-
+            $examinationId = $this->paramsPass(0);
             $data = [];
             $Users = $this->Invigilators;
             $list = $Users
                 ->find()
+                ->leftJoin(['ExaminationCentresInvigilators' => 'examination_centres_invigilators'], [
+                    'ExaminationCentresInvigilators.invigilator_id = '.$Users->aliasField('id'),
+                    'ExaminationCentresInvigilators.examination_id' => $examinationId
+                ])
                 ->select([
                     $Users->aliasField('id'),
                     $Users->aliasField('openemis_no'),
@@ -202,6 +206,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $Users->aliasField('preferred_name')
                 ])
                 ->where([
+                    'ExaminationCentresInvigilators.invigilator_id IS NULL',
                     $Users->aliasField('is_student') => 0,
                     'OR' => [
                         $Users->aliasField('openemis_no LIKE ') => $search,
@@ -581,6 +586,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'invigilators';
+        $examinationId = $entity->examination_id;
 
         if ($action == 'view') {
             $associated = $entity->extractOriginal([$fieldKey]);
@@ -594,6 +600,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
         } else if ($action == 'edit') {
+
             if (!$entity->isNew()) {
                 $tableHeaders[] = ''; // for delete column
                 $Form = $event->subject()->Form;
@@ -647,7 +654,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
         }
-
+        $attr['examination_id'] = $examinationId;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 

@@ -13,7 +13,8 @@
 				'plugin' => $this->request->params['plugin'],
 			    'controller' => $this->request->params['controller'],
 			    'action' => $this->request->params['action'],
-			    'ajaxInvigilatorAutocomplete'
+			    'ajaxInvigilatorAutocomplete',
+			    $attr['examination_id']
 			]);
 			$alias = $ControllerAction['table']->alias();
 
