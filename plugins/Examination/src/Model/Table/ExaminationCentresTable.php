@@ -356,6 +356,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $joinData = [
                     'examination_centre_id' => $data[$this->alias()]['id'],
                     'institution_id' => $value,
+                    'examination_id' => $data[$this->alias()]['examination_id'],
+                    'academic_period_id' => $data[$this->alias()]['academic_period_id']
                 ];
                 $institutions[] = [
                     'id' => $value,
@@ -697,11 +699,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                         return $q->where(['InstitutionGrades.education_grade_id' => $attr['education_grade_id']]);
                     })
                     ->leftJoin(['ExaminationCentresInstitutions' => 'examination_centres_institutions'], [
-                        'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id')
-                    ])
-                    ->leftJoin(['ExaminationCentres' => 'examination_centres'], [
-                        'ExaminationCentres.id = ExaminationCentresInstitutions.examination_centre_id',
-                        'ExaminationCentres.examination_id' => $attr['examination_id']
+                        'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id'),
+                        'ExaminationCentresInstitutions.examination_id' => $attr['examination_id']
                     ])
                     ->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('is_academic') => 1])
                     ->group([$this->Institutions->aliasField('id')]);
