@@ -7,11 +7,8 @@
 
 <?php if ($ControllerAction['action'] == 'view' || $ControllerAction['action'] == 'edit') : ?>
 	<?php if ($ControllerAction['action'] == 'edit') : ?>
-		<?php $tableClass = 'table-responsive'; ?>
-		<div class="clearfix"></div>
-		<hr>
-		<h3><?= __('Invigilators') ?></h3>
 		<?php
+			$tableClass = 'table-responsive';
 			$url = $this->Url->build([
 				'plugin' => $this->request->params['plugin'],
 			    'controller' => $this->request->params['controller'],
