@@ -10,9 +10,10 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class AttachmentsTable extends AppTable {
+class AttachmentsTable extends ControllerActionTable 
+{
 	public function initialize(array $config) {
 		$this->table('user_attachments');
 		parent::initialize($config);
@@ -20,31 +21,43 @@ class AttachmentsTable extends AppTable {
 		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+		
+		$this->belongsToMany('SecurityRoles', [
+            'className' => 'Security.SecurityRoles',
+            'joinTable' => 'user_attachments_roles',
+            'foreignKey' => 'attachment_id',
+            'targetForeignKey' => 'security_role_id',
+            'through' => 'User.AttachmentRoles',
+            'dependent' => true
+        ]);
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('security_user_id', 		['type' => 'hidden', 'visible' => ['edit' => true]]);
+	public function beforeAction(Event $event, ArrayObject $extra) {
+        // pr($this->associations());
+		$this->field('security_user_id',	['type' => 'hidden', 'visible' => ['edit' => true]]);
 
-		$this->ControllerAction->field('modified', 				['visible' => ['view' => true]]);
-		$this->ControllerAction->field('modified_user_id', 		['visible' => ['view' => true]]);
-		$this->ControllerAction->field('created', 				['type' => 'datetime', 'visible' => ['index'=>true, 'view'=>true]]);
-		$this->ControllerAction->field('created_user_id', 		['visible' => ['view' => true]]);
+		$this->field('modified',			['visible' => ['view' => true]]);
+		$this->field('modified_user_id',	['visible' => ['view' => true]]);
+		$this->field('created', 			['type' => 'datetime', 'visible' => ['index'=>true, 'view'=>true]]);
+		$this->field('created_user_id',		['visible' => ['view' => true]]);
 
-		$this->ControllerAction->field('file_name', 			['visible' => false]);
-		$this->ControllerAction->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
-		$this->ControllerAction->field('date_on_file', 			['type' => 'date', 'visible' => true]);
+		$this->field('file_name',			['visible' => false]);
+		$this->field('file_content',		['type' => 'binary', 'visible' => ['edit' => true]]);
+		$this->field('date_on_file',		['type' => 'date', 'visible' => true]);
 
-		$this->ControllerAction->field('name', 					['type' => 'string', 'visible' => true]);
-		$this->ControllerAction->field('description', 			['type' => 'text', 'visible' => true]);
+		$this->field('name',				['type' => 'string', 'visible' => true]);
+		$this->field('description',			['type' => 'text', 'visible' => true]);
 
-		$this->ControllerAction->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
+		$this->field('file_type',			['type' => 'string', 'visible' => ['index'=>true]]);
 
-		$this->ControllerAction->field('shared', [
+		$this->field('security_roles', [
 			'type' => 'chosenSelect',
-			'placeholder' => __('Add role to share'),
-			'after' => 'date_on_file'
-			//'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+			'placeholder' => __('Add specific role to share or leave empty to share to All')
 		]);
+
+        $this->setFieldOrder([
+            'name', 'description', 'file_content', 'date_on_file', 'security_roles'
+        ]);
 	}
 
 	public function implementedEvents() {
@@ -58,12 +71,16 @@ class AttachmentsTable extends AppTable {
 ** index action logics
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event) {
-	
-		$this->ControllerAction->setFieldOrder([
-			'name', 'description', 'file_type', 'date_on_file', 'created'
+    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    {
+		$this->setFieldOrder([
+			'name', 'description', 'file_type', 'date_on_file', 'security_roles', 'created'
 		]);
-		
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+    	$query->contain(['SecurityRoles']);
     }
 
 	private function setupTabElements() {
@@ -85,7 +102,7 @@ class AttachmentsTable extends AppTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->setupTabElements();
 	}
 
@@ -95,7 +112,7 @@ class AttachmentsTable extends AppTable {
 ** view action logics
 **
 ******************************************************************************************************************/
-    public function viewAfterAction(Event $event, Entity $entity) {
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
     	
     	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
     	if (!empty($entity->modified_user_id)) {
@@ -111,10 +128,14 @@ class AttachmentsTable extends AppTable {
 ** edit action logics
 **
 ******************************************************************************************************************/
-    public function editBeforeAction(Event $event) {
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$query->contain(['SecurityRoles']);
+	}
+	
+    public function editBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['date_on_file']['visible'] = false;
     }
-
 
 /******************************************************************************************************************
 **
@@ -125,20 +146,15 @@ class AttachmentsTable extends AppTable {
 		return $this->getFileTypeForView($entity->file_name);
 	}
 
-	public function onUpdateFieldShared(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
-			// $sharedOptions = TableRegistry::get('Institution.StaffPositionTitles')->getList()->toArray();
-			$SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
-			$roleOptions = $SecurityRolesTable->getSystemRolesList();
-			if (!empty($roleOptions)) {
-				$attr['options'] = array('all' => __('Share with All')) + $roleOptions;
-			}
+			$attr['options'] = TableRegistry::get('Security.SecurityRoles')->getSystemRolesList();
 		}
 
 		return $attr;
 	}
-	/******************************************************************************************************************
+/******************************************************************************************************************
 **
 ** adding download button to index page
 **
@@ -161,12 +177,10 @@ class AttachmentsTable extends AppTable {
 			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
 			$toolbarButtons['download']['attr'] = $attr;
 			$toolbarButtons['download']['attr']['title'] = __('Download');
-			$url = $this->ControllerAction->url('download');
+			$url = $this->url('download');
 			if(!empty($url['action'])){
 				$toolbarButtons['download']['url'] = $url;
 			}
 		}
 	}
-
-
 }
