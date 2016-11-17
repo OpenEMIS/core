@@ -457,6 +457,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
+            $errors = $entity->errors();
+            if (!empty($errors)) {
+                return false;
+            }
+
             if (!empty($requestData[$this->alias()]['examination_students'])) {
                 $students = $requestData[$this->alias()]['examination_students'];
                 $examinationCentre = $this->ExaminationCentres->get($requestData[$this->alias()]['examination_centre_id']);
