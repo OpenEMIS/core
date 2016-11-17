@@ -300,7 +300,7 @@ INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `f
 ('Examination.ExaminationItemResults', 'examination_grading_option_id', 'Id (Leave as blank for Marks type)', 8, 2, 'Examination', 'ExaminationGradingOptions', 'id');
 
 UPDATE `security_functions` SET `order`='5048' WHERE `id`='5046';
-UPDATE `security_functions` SET `_add`='RegistrationDirectory.index|RegisteredStudents.add|BulkStudentRegistration.add', `order`='5051' WHERE `id`='5047';
+UPDATE `security_functions` SET `_add`='RegistrationDirectory.index|RegistrationDirectory.view|RegisteredStudents.add|BulkStudentRegistration.add', `order`='5051' WHERE `id`='5047';
 UPDATE `security_functions` SET `order`='5052' WHERE `id`='5048';
 
 -- reorder for reports
