@@ -121,7 +121,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                 $this->field('education_grade_id');
                 $this->field('examination_centre_id');
                 $this->field('special_need_accommodations');
-                $this->field('registration_number', ['type' => 'string']);
+                $this->field('registration_number', ['type' => 'string', 'length' => 20]);
                 $this->field('auto_assign_to_room', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
 
                 $this->setFieldOrder([
