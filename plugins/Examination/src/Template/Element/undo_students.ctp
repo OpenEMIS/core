@@ -9,6 +9,7 @@
                     <thead>
                         <tr>
                             <th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
+                            <th><?= __('Registration Number') ?></th>
                             <th><?= __('OpenEMIS ID') ?></th>
                             <th><?= __('Student') ?></th>
                             <th><?= __('Current Grade') ?></th>
@@ -32,6 +33,7 @@
                                             echo $this->Form->hidden("$fieldPrefix.student_id", ['value' => $obj->student_id]);
                                         ?>
                                     </td>
+                                    <td><?= $obj->registration_number ?></td>
                                     <td><?= $obj->user->openemis_no ?></td>
                                     <td><?= $obj->user->name ?></td>
                                     <td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>

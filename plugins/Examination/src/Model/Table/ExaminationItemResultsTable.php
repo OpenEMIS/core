@@ -88,4 +88,29 @@ class ExaminationItemResultsTable extends AppTable
             ]);
         }
     }
+
+    public function getExaminationItemResults($academicPeriodId, $examinationId, $studentId) {
+        $results = $this
+            ->find()
+            ->contain(['ExaminationGradingOptions'])
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('examination_id') => $examinationId,
+                $this->aliasField('student_id') => $studentId
+            ])
+            ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'subject_id' => $this->aliasField('education_subject_id')])
+            ->autoFields(true)
+            ->hydrate(false)
+            ->toArray();
+
+        $returnArray = [];
+        foreach ($results as $result) {
+            $returnArray[$studentId][$result['subject_id']] = [
+                'marks' => $result['marks'],
+                'grade_name' => $result['grade_name'],
+                'grade_code' => $result['grade_code']
+            ];
+        }
+        return $returnArray;
+    }
 }
