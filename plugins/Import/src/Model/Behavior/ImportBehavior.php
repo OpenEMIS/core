@@ -1204,8 +1204,15 @@ class ImportBehavior extends Behavior {
                     // if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
                     $record = $record->first();
                 } else {
-                    if ($activeModel->schema()->column($columnName) && !$activeModel->schema()->column($columnName)['null']) {
-                        $record = '';
+                    $columnAttr = $activeModel->schema()->column($columnName);
+                    // when blank and the field is not nullable, set cell value as default value setup in database
+                    if ($columnAttr && !$columnAttr['null']) {
+                        if (isset($columnAttr['default']) && strlen($columnAttr['default']) > 0) {
+                            $cellValue = $columnAttr['default'];
+                            $excludeValidation = true;
+                        } else {
+                            $record = '';
+                        }
                     } else {
                         $excludeValidation = true;
                     }
