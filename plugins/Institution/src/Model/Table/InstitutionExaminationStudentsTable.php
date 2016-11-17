@@ -341,7 +341,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
                 $query = $this->ExaminationCentres
                     ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
-                    ->innerJoinWith('Institutions')
+                    ->innerJoinWith('LinkedInstitutions')
                     ->where([
                         $this->ExaminationCentres->aliasField('examination_id') => $selectedExamination,
                         'ExaminationCentresInstitutions.institution_id' => $institutionId
