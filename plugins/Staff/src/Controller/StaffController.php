@@ -67,7 +67,8 @@ class StaffController extends AppController {
     public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
-	// End
+    public function Attachments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+    // End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
