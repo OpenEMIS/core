@@ -157,6 +157,21 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $fields->exchangeArray($newFields);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
+        return $events;
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+        if ($field == 'identity_number') {
+            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         //work around for export button showing in pages not specified
@@ -167,6 +182,14 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
             }
         }
         $this->fields['total_mark']['visible'] = false;
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->action == 'index' || $this->action == 'view') {
+            $this->field('identity_number');
+            $this->setFieldOrder('registration_number', 'openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number');
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -203,6 +226,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                 unset($extra['toolbarButtons']['export']);
             }
         }
+    }
+
+    public function onGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->user->identity_number;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
