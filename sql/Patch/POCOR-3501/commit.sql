@@ -315,3 +315,6 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (5053, 'Results', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamResults.index|Results.index|ExamResults.view', 'Results.edit', NULL, NULL, NULL, 5051, 1, NULL, NULL, NULL, 1, NOW()),
 (5054, 'Import Results', 'Examinations', 'Administration', 'Examinations', 5000, NULL, NULL, NULL, NULL, 'ImportResults.add|ImportResults.template|ImportResults.results|ImportResults.downloadFailed|ImportResults.downloadPassed', 5052, 1, NULL, NULL, NULL, 1, NOW()),
 (6009, 'Examinations', 'Reports', 'Reports', 'Reports', -1, 'Examinations.index', NULL, 'Examinations.add', NULL, 'Examinations.download', 6003, 1, NULL, NULL, NULL, 1, NOW());
+
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES ('dce3109a-ad53-11e6-bad3-525400b263eb', 'ExamCentreStudents', 'openemis_no', 'Administration > Examinations > Centres > Students', 'OpenEMIS ID', '1', '1', '2016-11-18 13:57:18');
+
