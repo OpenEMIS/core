@@ -31,8 +31,12 @@ DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationItemResults
 UPDATE `security_functions` SET `order`='5046' WHERE `id`='5046';
 UPDATE `security_functions` SET `_add`= NULL, `order`='5047' WHERE `id`='5047';
 UPDATE `security_functions` SET `order`='5048' WHERE `id`='5048';
+UPDATE `security_functions` SET `order`='6003' WHERE `id`='6003';
+UPDATE `security_functions` SET `order`='6004' WHERE `id`='6004';
 
-DELETE FROM `security_functions` WHERE `id` IN (5051, 5052, 5053, 5054);
+DELETE FROM `security_functions` WHERE `id` IN (5051, 5052, 5053, 5054, 6009);
+
+DELETE FROM `labels` WHERE `id` = 'dce3109a-ad53-11e6-bad3-525400b263eb';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3501';

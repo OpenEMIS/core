@@ -35,5 +35,7 @@ UPDATE `security_functions` SET `order`='6004' WHERE `id`='6004';
 
 DELETE FROM `security_functions` WHERE `id` IN (5051, 5052, 5053, 5054, 6009);
 
+DELETE FROM `labels` WHERE `id` = 'dce3109a-ad53-11e6-bad3-525400b263eb';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3501';
