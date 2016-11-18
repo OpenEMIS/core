@@ -132,6 +132,13 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'institution_id', 'room']);
     }
 
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('room');
+        $this->field('openemis_no');
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'institution_id', 'room']);
+    }
+
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         return $entity->user->openemis_no;
@@ -142,7 +149,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 
         $query
-            ->contain(['Users'])
             ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
             ->group([$this->aliasField('student_id')]);
 
@@ -160,7 +166,25 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onGetRoom(Event $event, Entity $entity)
     {
-        return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
+
+        if ($this->action == 'index') {
+            return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
+        } else if ($this->action == 'view') {
+            $ExamCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+            $examCentreRoomStudents = $ExamCentreRoomStudents->find()
+                ->innerJoinWith('ExaminationCentreRooms')
+                ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
+                ->where([
+                    $ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId,
+                    $ExamCentreRoomStudents->aliasField('student_id') => $entity->student_id
+                ])
+                ->first();
+            if (!empty($examCentreRoomStudents)) {
+                return $examCentreRoomStudents->room_name;
+            } else {
+                return '';
+            }
+        }
     }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
