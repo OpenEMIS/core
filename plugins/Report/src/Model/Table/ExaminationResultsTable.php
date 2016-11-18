@@ -82,9 +82,23 @@ class ExaminationResultsTable extends AppTable  {
         ];
 
         $newFields[] = [
+            'key' => 'ExaminationResults.examination_centre_id',
+            'field' => 'examination_centre_id',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
             'key' => 'ExaminationResults.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'ExaminationResults.registration_number',
+            'field' => 'registration_number',
+            'type' => 'string',
             'label' => '',
         ];
 
@@ -162,6 +176,24 @@ class ExaminationResultsTable extends AppTable  {
         ];
 
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetExaminationId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->examination_id) {
+            return $entity->examination->code_name;
+        } else {
+            return '';
+        }
+    }
+
+    public function onExcelGetExaminationCentreId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->examination_centre_id) {
+            return $entity->examination_centre->code_name;
+        } else {
+            return '';
+        }
     }
 
     public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
