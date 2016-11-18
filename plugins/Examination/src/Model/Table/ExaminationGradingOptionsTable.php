@@ -10,7 +10,13 @@ class ExaminationGradingOptionsTable extends ExaminationsAppTable {
         parent::initialize($config);
 
         $this->belongsTo('ExaminationGradingTypes', ['className' => 'Examination.ExaminationGradingTypes']);
-        // $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        if ($this->behaviors()->has('Reorder')) {
+            $this->behaviors()->get('Reorder')->config([
+                'filter' => 'examination_grading_type_id'
+            ]);
+        }
 
         $this->fields['examination_grading_type_id']['type'] = 'hidden';
         $this->fields['id']['type'] = 'hidden';
