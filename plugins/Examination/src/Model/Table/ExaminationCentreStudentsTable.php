@@ -80,7 +80,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         ];
         $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'BulkStudentRegistration', 'add'];
         $button['type'] = 'button';
-        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['label'] = '<i class="fa kd-add-multiple"></i>';
         $button['attr'] = $toolbarAttr;
         $button['attr']['title'] = __('Bulk Add');
         $extra['toolbarButtons']['bulkAdd'] = $button;
