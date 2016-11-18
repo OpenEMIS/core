@@ -128,7 +128,13 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $button['attr']['title'] = __('Bulk Add');
         $extra['toolbarButtons']['bulkAdd'] = $button;
         $this->field('room');
-        $this->setFieldOrder(['registration_number', 'student_id', 'institution_id', 'room']);
+        $this->field('openemis_no');
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'institution_id', 'room']);
+    }
+
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        return $entity->user->openemis_no;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -136,6 +142,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 
         $query
+            ->contain(['Users'])
             ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
             ->group([$this->aliasField('student_id')]);
 
