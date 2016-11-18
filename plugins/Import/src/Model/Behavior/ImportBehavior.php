@@ -448,10 +448,9 @@ class ImportBehavior extends Behavior {
                     $dataPassed[] = $tempPassedRecord->getArrayCopy();
                 }
 
-                $newEntity = $activeModel->save($tableEntity);
-                // checking of isNew should be after saving the entity
-                // example: saving of entity into table with composite primary keys
+                // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
                 $isNew = $tableEntity->isNew();
+                $newEntity = $activeModel->save($tableEntity);
                 if ($newEntity) {
                     if ($isNew) {
                         $totalImported++;
