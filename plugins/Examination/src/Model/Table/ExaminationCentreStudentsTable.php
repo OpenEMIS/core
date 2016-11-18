@@ -32,6 +32,13 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->addBehavior('OpenEmis.Section');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
+        return $events;
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -90,6 +97,14 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         }
     }
 
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->action == 'index' || $this->action == 'view') {
+            $this->field('identity_number');
+            $this->setFieldOrder('registration_number', 'openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number');
+        }
+    }
+
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $query = $this->ControllerAction->getQueryString();
@@ -137,6 +152,19 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+        if ($field == 'identity_number') {
+            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->user->identity_number;
     }
 
     public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request)
