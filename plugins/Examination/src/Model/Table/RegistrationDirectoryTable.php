@@ -87,7 +87,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['SpecialNeeds.SpecialNeedTypes']);
+        $query->contain(['SpecialNeeds.SpecialNeedTypes', 'SpecialNeeds.SpecialNeedDifficulties']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -111,7 +111,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $addBtn['url'] = $this->ControllerAction->setQueryString($params, ['user_id' => $entity->id]);
         $extra['toolbarButtons']['add'] = $addBtn;
 
-        $this->field('special_need', ['after' => 'identity_number']);
+        $this->field('special_needs', ['after' => 'identity_number', 'type' => 'custom_special_needs']);
     }
 
     public function onGetDateOfBirth(Event $event, Entity $entity)
@@ -146,6 +146,24 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         }
 
         return $value;
+    }
+
+    public function onGetCustomSpecialNeedsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        if ($action == 'view') {
+            $needsArray = [];
+            if ($entity->has('special_needs') && !empty($entity->special_needs)) {
+                $specialNeeds = $entity->special_needs;
+
+                foreach ($specialNeeds as $key => $need) {
+                    $needsArray[] = ['special_need' => $need->special_need_type->name, 'special_need_difficulty' => $need->special_need_difficulty->name];
+                }
+            }
+
+            $attr['data'] = $needsArray;
+        }
+
+        return $event->subject()->renderElement('Examination.special_needs', ['attr' => $attr]);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
