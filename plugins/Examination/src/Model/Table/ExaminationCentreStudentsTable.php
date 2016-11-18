@@ -8,6 +8,8 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\I18n\Time;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
@@ -52,6 +54,19 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             ->requirePresence('auto_assign_to_room');
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        if ($this->action == 'add') {
+            $Navigation->substituteCrumb('Registered Students', 'Single Student Registration');
+        }
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
@@ -79,19 +94,22 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $button['type'] = 'button';
         $button['label'] = '<i class="fa kd-add-multiple"></i>';
         $button['attr'] = $toolbarAttr;
-        $button['attr']['title'] = __('Bulk Add');
+        $button['attr']['title'] = __('Bulk Register');
         $extra['toolbarButtons']['bulkAdd'] = $button;
 
          // single registration button
         if (isset($extra['toolbarButtons']['add']['url'])) {
             $extra['toolbarButtons']['add']['url']['action'] = 'RegistrationDirectory';
             $extra['toolbarButtons']['add']['url'][0] = 'index';
-            $extra['toolbarButtons']['add']['attr']['title'] = __('Single Registration');
+            $extra['toolbarButtons']['add']['attr']['title'] = __('Single Register');
         }
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // Set the header of the page
+        $this->controller->set('contentHeader', __('Examination') . ' - ' .__('Single Student Registration'));
+
         $query = $this->ControllerAction->getQueryString();
 
         // back button goes back to RegistrationDirectory
@@ -103,7 +121,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         if ($query) {
             $userId = $query['user_id'];
             $studentEntity = $this->Users->get($userId, [
-                'contain' => ['Genders', 'SpecialNeeds.SpecialNeedTypes']
+                'contain' => ['Genders', 'SpecialNeeds.SpecialNeedTypes', 'SpecialNeeds.SpecialNeedDifficulties']
             ]);
 
             if (!empty($studentEntity)) {
@@ -178,17 +196,19 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
+            $needsArray = [];
             if ($attr['entity']->has('special_needs') && !empty($attr['entity']->special_needs)) {
                 $specialNeeds = $attr['entity']->special_needs;
 
                 foreach ($specialNeeds as $key => $need) {
-                    $needsArray[] = $need->special_need_type->name;
+                    $needsArray[] = ['special_need' => $need->special_need_type->name, 'special_need_difficulty' => $need->special_need_difficulty->name];
                 }
-                $value = implode(', ', $needsArray);
             }
 
-            $attr['attr']['value'] = !empty($value)? $value: '';
-            $attr['type'] = 'readonly';
+            $attr['type'] = 'element';
+            $attr['data'] = $needsArray;
+            $attr['element'] = 'Examination.special_needs';
+
         }
 
         return $attr;
