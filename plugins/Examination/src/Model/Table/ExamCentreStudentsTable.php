@@ -32,6 +32,9 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['index', 'add']
+        ]);
         $this->toggle('add', false);
         $this->toggle('edit', false);
     }
@@ -61,6 +64,14 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Exam Centre Students', 'Exam Centres', $overviewUrl);
         $Navigation->addCrumb('Students');
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ',' . $entity->education_subject_id;
+            $entity->id = Security::hash($hashString, 'sha256');
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -152,5 +163,59 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         } else {
             return __('Private Candidate');
         }
+    }
+
+    public function findResults(Query $query, array $options) {
+        $academicPeriodId = $options['academic_period_id'];
+        $examinationId = $options['examination_id'];
+        $examinationCentreId = $options['examination_centre_id'];
+        $educationSubjectId = $options['education_subject_id'];
+
+        $Users = $this->Users;
+        $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
+
+        return $query
+            ->select([
+                $ItemResults->aliasField('id'),
+                $ItemResults->aliasField('marks'),
+                $ItemResults->aliasField('examination_grading_option_id'),
+                $ItemResults->aliasField('academic_period_id'),
+                $this->aliasField('registration_number'),
+                $this->aliasField('student_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('education_grade_id'),
+                $this->aliasField('total_mark'),
+                $Users->aliasField('openemis_no'),
+                $Users->aliasField('first_name'),
+                $Users->aliasField('middle_name'),
+                $Users->aliasField('third_name'),
+                $Users->aliasField('last_name'),
+                $Users->aliasField('preferred_name')
+            ])
+            ->matching('Users')
+            ->leftJoin(
+                [$ItemResults->alias() => $ItemResults->table()],
+                [
+                    $ItemResults->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
+                    $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
+                    $ItemResults->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                    $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id')
+                ]
+            )
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('examination_id') => $examinationId,
+                $this->aliasField('examination_centre_id') => $examinationCentreId,
+                $this->aliasField('education_subject_id') => $educationSubjectId
+            ])
+            ->group([
+                $this->aliasField('student_id'),
+                $this->aliasField('academic_period_id'),
+                $this->aliasField('examination_id')
+            ])
+            ->order([
+                $Users->aliasField('first_name'), $Users->aliasField('last_name')
+            ]);
     }
 }
