@@ -32,9 +32,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('OpenEmis.Section');
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'ExamResults' => ['index', 'add']
-        ]);
     }
 
     public function validationDefault(Validator $validator)
@@ -478,59 +475,5 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         };
 
         return $process;
-    }
-
-    public function findResults(Query $query, array $options) {
-        $academicPeriodId = $options['academic_period_id'];
-        $examinationId = $options['examination_id'];
-        $examinationCentreId = $options['examination_centre_id'];
-        $educationSubjectId = $options['education_subject_id'];
-
-        $Users = $this->Users;
-        $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
-
-        return $query
-            ->select([
-                $ItemResults->aliasField('id'),
-                $ItemResults->aliasField('marks'),
-                $ItemResults->aliasField('examination_grading_option_id'),
-                $ItemResults->aliasField('academic_period_id'),
-                $this->aliasField('registration_number'),
-                $this->aliasField('student_id'),
-                $this->aliasField('institution_id'),
-                $this->aliasField('education_grade_id'),
-                $this->aliasField('total_mark'),
-                $Users->aliasField('openemis_no'),
-                $Users->aliasField('first_name'),
-                $Users->aliasField('middle_name'),
-                $Users->aliasField('third_name'),
-                $Users->aliasField('last_name'),
-                $Users->aliasField('preferred_name')
-            ])
-            ->matching('Users')
-            ->leftJoin(
-                [$ItemResults->alias() => $ItemResults->table()],
-                [
-                    $ItemResults->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
-                    $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
-                    $ItemResults->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
-                    $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id')
-                ]
-            )
-            ->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('examination_id') => $examinationId,
-                $this->aliasField('examination_centre_id') => $examinationCentreId,
-                $this->aliasField('education_subject_id') => $educationSubjectId
-            ])
-            ->group([
-                $this->aliasField('student_id'),
-                $this->aliasField('academic_period_id'),
-                $this->aliasField('examination_id')
-            ])
-            ->order([
-                $Users->aliasField('first_name'), $Users->aliasField('last_name')
-            ]);
     }
 }
