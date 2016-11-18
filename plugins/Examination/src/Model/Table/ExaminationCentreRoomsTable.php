@@ -4,6 +4,7 @@ namespace Examination\Model\Table;
 use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Controller\Component;
 use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\Query;
@@ -47,6 +48,23 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $queryString = $request->query['queryString'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
+
+        $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+        $Navigation->substituteCrumb('Exam Centre Rooms', 'Exam Centres', $overviewUrl);
+        $Navigation->addCrumb('Rooms');
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -70,6 +88,10 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+
+        // Set the header of the page
+        $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+        $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Rooms'));
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
