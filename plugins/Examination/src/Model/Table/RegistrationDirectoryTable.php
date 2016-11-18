@@ -22,6 +22,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+        $this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id']);
 
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
@@ -32,6 +33,8 @@ class RegistrationDirectoryTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $query->contain(['SpecialNeeds.SpecialNeedTypes']);
+
         $search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
@@ -43,6 +46,7 @@ class RegistrationDirectoryTable extends ControllerActionTable {
     {
         $this->toggle('add', false);
 
+        $this->field('special_need');
         $this->field('first_name', ['visible' => false]);
         $this->field('middle_name', ['visible' => false]);
         $this->field('third_name', ['visible' => false]);
@@ -77,8 +81,13 @@ class RegistrationDirectoryTable extends ControllerActionTable {
     public function afterAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'index') {
-            $this->setFieldOrder(['openemis_no', 'name', 'date_of_birth', 'gender']);
+            $this->setFieldOrder(['openemis_no', 'name', 'date_of_birth', 'gender', 'special_need']);
         }
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['SpecialNeeds.SpecialNeedTypes']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -101,6 +110,8 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         ];
         $addBtn['url'] = $this->ControllerAction->setQueryString($params, ['user_id' => $entity->id]);
         $extra['toolbarButtons']['add'] = $addBtn;
+
+        $this->field('special_need', ['after' => 'identity_number']);
     }
 
     public function onGetDateOfBirth(Event $event, Entity $entity)
@@ -117,6 +128,21 @@ class RegistrationDirectoryTable extends ControllerActionTable {
         $value = '';
         if ($entity->has('gender')) {
             $value = $entity->gender->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetSpecialNeed(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('special_needs') && !empty($entity->special_needs)) {
+            $specialNeeds = $entity->special_needs;
+
+            foreach ($specialNeeds as $key => $need) {
+                $array[] = $need->special_need_type->name;
+            }
+            $value = implode(', ', $array);
         }
 
         return $value;
