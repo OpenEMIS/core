@@ -45,31 +45,29 @@ class ExaminationItemResultsTable extends AppTable
 
     private function getExamGrading(Entity $entity)
     {
-        if (!$entity->has('examination_grading_option_id') && $entity->has('marks') && $entity->marks > 0) {
-            $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
-            $examItemEntity = $ExaminationItems
-                ->find()
-                ->contain(['ExaminationGradingTypes.GradingOptions'])
-                ->where([
-                    $ExaminationItems->aliasField('examination_id') => $entity->examination_id,
-                    $ExaminationItems->aliasField('education_subject_id') => $entity->education_subject_id
-                ])
-                ->first();
+        $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
+        $examItemEntity = $ExaminationItems
+            ->find()
+            ->contain(['ExaminationGradingTypes.GradingOptions'])
+            ->where([
+                $ExaminationItems->aliasField('examination_id') => $entity->examination_id,
+                $ExaminationItems->aliasField('education_subject_id') => $entity->education_subject_id
+            ])
+            ->first();
 
-            if ($examItemEntity->has('examination_grading_type')) {
-                $resultType = $examItemEntity->examination_grading_type->result_type;
-                if ($resultType == 'MARKS') {
-                    if ($examItemEntity->examination_grading_type->has('grading_options') && !empty($examItemEntity->examination_grading_type->grading_options)) {
-                        foreach ($examItemEntity->examination_grading_type->grading_options as $key => $obj) {
-                            if ($entity->marks >= $obj->min && $entity->marks <= $obj->max) {
-                                $entity->examination_grading_option_id = $obj->id;
-                            }
+        if ($examItemEntity->has('examination_grading_type')) {
+            $resultType = $examItemEntity->examination_grading_type->result_type;
+            if ($resultType == 'MARKS') {
+                if ($examItemEntity->examination_grading_type->has('grading_options') && !empty($examItemEntity->examination_grading_type->grading_options)) {
+                    foreach ($examItemEntity->examination_grading_type->grading_options as $key => $obj) {
+                        if ($entity->marks >= $obj->min && $entity->marks <= $obj->max) {
+                            $entity->examination_grading_option_id = $obj->id;
                         }
                     }
-                    $entity->total_mark = round($entity->marks * $examItemEntity->weight, 2);
-                } else if ($resultType == 'GRADES') {
-                    $entity->total_mark = NULL;
                 }
+                $entity->total_mark = round($entity->marks * $examItemEntity->weight, 2);
+            } else if ($resultType == 'GRADES') {
+                $entity->total_mark = NULL;
             }
         }
     }
@@ -77,8 +75,8 @@ class ExaminationItemResultsTable extends AppTable
     private function setTotalMark(Entity $entity)
     {
         if ($entity->has('total_mark')) {
-            $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
-            $ExaminationCentreStudents->updateAll(['total_mark' => $entity->total_mark], [
+            $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
+            $ExamCentreStudents->updateAll(['total_mark' => $entity->total_mark], [
                 'examination_centre_id' => $entity->examination_centre_id,
                 'student_id' => $entity->student_id,
                 'education_subject_id' => $entity->education_subject_id,
