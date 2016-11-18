@@ -10,7 +10,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
     var models = {
         ExaminationItemsTable: 'Examination.ExaminationItems',
         ExaminationCentresTable: 'Examination.ExaminationCentres',
-        ExaminationCentreStudentsTable: 'Examination.ExaminationCentreStudents',
+        ExaminationCentreStudentsTable: 'Examination.ExamCentreStudents',
         ExaminationItemResultsTable: 'Examination.ExaminationItemResults',
     };    
 
