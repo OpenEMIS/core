@@ -106,7 +106,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         if ($query) {
             $userId = $query['user_id'];
             $studentEntity = $this->Users->get($userId, [
-                'contain' => ['Genders', 'SpecialNeeds.SpecialNeedTypes']
+                'contain' => ['Genders', 'SpecialNeeds.SpecialNeedTypes', 'SpecialNeeds.SpecialNeedDifficulties']
             ]);
 
             if (!empty($studentEntity)) {
@@ -181,17 +181,19 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
+            $needsArray = [];
             if ($attr['entity']->has('special_needs') && !empty($attr['entity']->special_needs)) {
                 $specialNeeds = $attr['entity']->special_needs;
 
                 foreach ($specialNeeds as $key => $need) {
-                    $needsArray[] = $need->special_need_type->name;
+                    $needsArray[] = ['special_need' => $need->special_need_type->name, 'special_need_difficulty' => $need->special_need_difficulty->name];
                 }
-                $value = implode(', ', $needsArray);
             }
 
-            $attr['attr']['value'] = !empty($value)? $value: '';
-            $attr['type'] = 'readonly';
+            $attr['type'] = 'element';
+            $attr['data'] = $needsArray;
+            $attr['element'] = 'Examination.special_needs';
+
         }
 
         return $attr;
