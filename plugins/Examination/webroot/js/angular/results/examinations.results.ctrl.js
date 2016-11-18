@@ -98,23 +98,21 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 this.api.sizeColumnsToFit();
             },
             onCellValueChanged: function(params) {
-                if (params.newValue != params.oldValue) {
-                    var institutionId = params.data.institution_id;
+                var institutionId = params.data.institution_id;
 
-                    if (angular.isUndefined(vm.results[params.data.student_id])) {
-                        vm.results[params.data.student_id] = {};
-                    }
-
-                    if (angular.isUndefined(vm.results[params.data.student_id][institutionId])) {
-                        vm.results[params.data.student_id][institutionId] = {marks: ''};
-                    }
-
-                    vm.results[params.data.student_id][institutionId]['marks'] = params.newValue;
-
-                    params.data.total_mark = ExaminationsResultsSvc.calculateTotal(params.data);
-                    // Important: to refresh the grid after data is modified
-                    vm.gridOptions.api.refreshView();
+                if (angular.isUndefined(vm.results[params.data.student_id])) {
+                    vm.results[params.data.student_id] = {};
                 }
+
+                if (angular.isUndefined(vm.results[params.data.student_id][institutionId])) {
+                    vm.results[params.data.student_id][institutionId] = {marks: ''};
+                }
+
+                vm.results[params.data.student_id][institutionId]['marks'] = params.newValue;
+
+                params.data.total_mark = ExaminationsResultsSvc.calculateTotal(params.data);
+                // Important: to refresh the grid after data is modified
+                vm.gridOptions.api.refreshView();
             },
             onGridReady: function() {
                 vm.onChangeSubject(academicPeriodId, examinationId, subject);
