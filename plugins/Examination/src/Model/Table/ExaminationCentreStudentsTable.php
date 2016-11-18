@@ -80,7 +80,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         ];
         $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'BulkStudentRegistration', 'add'];
         $button['type'] = 'button';
-        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['label'] = '<i class="fa kd-add-multiple"></i>';
         $button['attr'] = $toolbarAttr;
         $button['attr']['title'] = __('Bulk Add');
         $extra['toolbarButtons']['bulkAdd'] = $button;
@@ -389,6 +389,14 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     }
                     return $return;
                 });
+
+                if ($success) {
+                    $studentCount = $this->find()
+                        ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+                        ->group([$this->aliasField('student_id')])
+                        ->count();
+                    $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+                }
 
                 // auto assignment to a room
                 if ($autoAssignToRoom) {

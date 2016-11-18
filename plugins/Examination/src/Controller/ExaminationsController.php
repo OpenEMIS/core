@@ -62,6 +62,10 @@ class ExaminationsController extends AppController
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
         $this->set('contentHeader', $header);
+
+        $persona = false;
+        $event = new Event('Model.Navigation.breadcrumb', $this, [$this->request, $this->Navigation, $persona]);
+        $event = $model->eventManager()->dispatch($event);
     }
 
     public function getExamsTab()
