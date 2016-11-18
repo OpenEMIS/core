@@ -276,6 +276,7 @@ function getColumnDefs(action, subject, _results) {
 
                     var eSelect = document.createElement("select");
 
+                    var isAnswerValid = false;
                     angular.forEach(gradingOptions, function(obj, key) {
                         var eOption = document.createElement("option");
                         var labelText = obj.name;
@@ -285,9 +286,15 @@ function getColumnDefs(action, subject, _results) {
                         eOption.setAttribute("value", key);
                         eOption.innerHTML = labelText;
                         eSelect.appendChild(eOption);
+                        if (oldValue == obj.id) {
+                            isAnswerValid = true;
+                        }
                     });
 
-                    eSelect.value = params.value;
+                    // set selected value only when it is a valid option from gradingOptions list
+                    if (isAnswerValid) {
+                        eSelect.value = params.value;
+                    }
 
                     eSelect.addEventListener('change', function () {
                         var newValue = eSelect.value;
@@ -315,9 +322,12 @@ function getColumnDefs(action, subject, _results) {
                 cellRenderer: function(params) {
                     var cellValue = '';
                     if (params.value.length != 0 && params.value != 0) {
-                        cellValue = gradingOptions[params.value]['name'];
-                        if (gradingOptions[params.value]['code'].length > 0) {
-                            cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                        // show option code and name only when it is a valid option from gradingOptions list
+                        if (angular.isDefined(gradingOptions[params.value])) {
+                            cellValue = gradingOptions[params.value]['name'];
+                            if (gradingOptions[params.value]['code'].length > 0) {
+                                cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                            }
                         }
                     }
                     // var cellValue = (params.value.length != 0 && params.value != 0) ? gradingOptions[params.value]['name'] : '';
