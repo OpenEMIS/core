@@ -39,6 +39,14 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->toggle('edit', false);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
+        return $events;
+    }
+
     public function validationDefault(Validator $validator) {
         $validator = parent::validationDefault($validator);
         return $validator
@@ -47,12 +55,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
                 'provider' => 'table'
             ]);
-    }
-
-    public function implementedEvents() {
-        $events = parent::implementedEvents();
-        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-        return $events;
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
@@ -162,6 +164,24 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
             ->where([$ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId])
             ->toArray();
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+        if ($field == 'identity_number') {
+            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->action == 'index' || $this->action == 'view') {
+            $this->field('identity_number');
+        }
+    }
+    public function onGetIdentityNumber(Event $event, Entity $entity)
+    {
+        return $entity->user->identity_number;
     }
 
     public function onGetRoom(Event $event, Entity $entity)
