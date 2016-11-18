@@ -34,13 +34,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->addBehavior('OpenEmis.Section');
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
-        return $events;
-    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -64,6 +57,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
         return $events;
     }
 
