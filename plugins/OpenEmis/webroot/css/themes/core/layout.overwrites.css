@@ -1,5 +1,5 @@
 /*
-Core Overwrites: v.1.0.11
+Core Overwrites: v.1.0.12
 */
 
 
@@ -881,6 +881,8 @@ a,
 #workbench .list-group-item {
     border-left: 0;
     border-right: 0;
+    /* temp fixtd to add in the padding [vincent] */
+    padding: 10px;
 }
 
 #workbench .list-group-item:first-child {
