@@ -82,14 +82,14 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $button['type'] = 'button';
         $button['label'] = '<i class="fa kd-add-multiple"></i>';
         $button['attr'] = $toolbarAttr;
-        $button['attr']['title'] = __('Bulk Add');
+        $button['attr']['title'] = __('Bulk Register');
         $extra['toolbarButtons']['bulkAdd'] = $button;
 
          // single registration button
         if (isset($extra['toolbarButtons']['add']['url'])) {
             $extra['toolbarButtons']['add']['url']['action'] = 'RegistrationDirectory';
             $extra['toolbarButtons']['add']['url'][0] = 'index';
-            $extra['toolbarButtons']['add']['attr']['title'] = __('Single Registration');
+            $extra['toolbarButtons']['add']['attr']['title'] = __('Single Register');
         }
     }
 
