@@ -201,6 +201,7 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->Users->aliasField('last_name'),
                 $model->Users->aliasField('preferred_name'),
                 $model->Users->aliasField('date_of_birth'),
+                $model->Users->aliasField('identity_number'),
                 $model->Users->Genders->aliasField('name'),
                 $model->Institutions->aliasField('code'),
                 $model->Institutions->aliasField('name')
