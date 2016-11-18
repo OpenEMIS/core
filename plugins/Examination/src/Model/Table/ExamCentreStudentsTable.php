@@ -6,6 +6,8 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use Cake\Utility\Text;
 use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
@@ -44,10 +46,32 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ]);
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $queryString = $request->query['queryString'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
+
+        $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+        $Navigation->substituteCrumb('Exam Centre Students', 'Exam Centres', $overviewUrl);
+        $Navigation->addCrumb('Students');
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab();
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+
+        // Set the header of the page
+        $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+        $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Students'));
+
         $this->fields['total_mark']['visible'] = false;
         $this->fields['student_id']['visible'] = true;
         $this->fields['education_grade_id']['visible'] = false;
@@ -88,7 +112,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         ];
         $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutionAddStudents', 'add', 'queryString' => $this->request->query('queryString')];
         $button['type'] = 'button';
-        $button['label'] = '<i class="fa kd-add"></i>';
+        $button['label'] = '<i class="fa kd-add-multiple"></i>';
         $button['attr'] = $toolbarAttr;
         $button['attr']['title'] = __('Bulk Add');
         $extra['toolbarButtons']['bulkAdd'] = $button;
