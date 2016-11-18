@@ -114,7 +114,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $button['type'] = 'button';
         $button['label'] = '<i class="fa kd-add-multiple"></i>';
         $button['attr'] = $toolbarAttr;
-        $button['attr']['title'] = __('Bulk Add');
+        $button['attr']['title'] = __('Bulk Register');
         $extra['toolbarButtons']['bulkAdd'] = $button;
         $this->field('room');
         $this->setFieldOrder(['registration_number', 'student_id', 'institution_id', 'room']);
