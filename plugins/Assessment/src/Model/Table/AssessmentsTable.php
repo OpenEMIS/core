@@ -122,14 +122,17 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($this->action == 'edit')
-        {
-            $assessmentItems = $entity->assessment_items;
+        if ($this->action == 'edit') {
+            $savedAssessmentItems = $entity->assessment_items;
+
+            //check againts latest education setup whether there is any changes in grade sujects compared to the time when the assessment was setup.
+            $currentAssessmentItems = $this->AssessmentItems->populateAssessmentItemsArray($entity->education_grade_id);
+            $comparedAssessmentItems = $this->compareAssessmentItems($savedAssessmentItems, $currentAssessmentItems);
 
             //this is to sort array based on certain value on subarray, in this case based on education order value
-            usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
+            usort($comparedAssessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
-            $entity->assessment_items = $assessmentItems;
+            $entity->assessment_items = $comparedAssessmentItems;
         }
 
         $this->setupFields($entity);
@@ -150,16 +153,78 @@ class AssessmentsTable extends ControllerActionTable {
                 $requestData['errorMessage'] = $errorMessage;
             }
         }
-
     }
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        // pr($entity);
         $errors = $entity->errors();
         if (!empty($errors)) {
             if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
                 $this->Alert->error($requestData['errorMessage'], ['reset'=>true]);
+            }
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+        $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+        $AssessmentItemsResults = TableRegistry::get('Assessment.AssessmentItemResults');
+
+        $errors = $entity->errors();
+        if (!$errors) {
+            //during edit, before the remain and new subject updated, need to process the deleted subject first.
+            if ($entity->has('assessment_items')) {
+                foreach ($entity->assessment_items as $key => $value) {
+                    if ($value->status == 'deleted'){ //for deleted subject
+                        //remove from assessment items
+                        $this->AssessmentItems->deleteAll(['id' => $value->id]);
+
+                        //remove from assessment items grading types
+                        $AssessmentItemsGradingTypes->deleteAll([
+                            'education_subject_id' => $value->education_subject_id,
+                            'assessment_id' => $entity->id
+                        ]);
+
+                        //remove assessment results
+                        $AssessmentItemsResults->deleteAll([
+                            'assessment_id' => $entity->id,
+                            'education_subject_id' => $value->education_subject_id
+                        ]);
+
+                        //unset from entity so it wont be saved
+                        unset($entity->assessment_items[$key]);
+                    }
+                }
+
+                //check the period which ties to the assessment id, then loop and re-insert the newly added subject.
+                $assessmentPeriods = $AssessmentPeriods
+                                    ->find()
+                                    ->select([
+                                        'id' => $AssessmentPeriods->aliasField('id')
+                                    ])
+                                    ->where([
+                                        $AssessmentPeriods->aliasField('assessment_id') => $entity->id
+                                    ])
+                                    ->toArray();
+                
+                $defaultGradingType = $this->GradingTypes->find()->first()->id; //get the first record of grading type as default value.
+
+                foreach ($assessmentPeriods as $key => $index) { //loop through period.
+                    foreach ($entity->assessment_items as $key1 => $value) { 
+
+                        if ($value->status == 'new') { //loop through newly added subject
+                            $newEntity = $AssessmentItemsGradingTypes->newEntity([
+                                'assessment_id' => $entity->id,
+                                'education_subject_id' => $value->education_subject_id,
+                                'assessment_grading_type_id' => $defaultGradingType,
+                                'assessment_period_id' => $assessmentPeriods[$key]->id
+                            ]);
+                            
+                            $AssessmentItemsGradingTypes->save($newEntity); //insert new record
+                        }
+                    }
+                }
             }
         }
     }
@@ -327,5 +392,41 @@ class AssessmentsTable extends ControllerActionTable {
         }
 
         return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function compareAssessmentItems($savedAssessmentItems, $currentAssessmentItems)
+    {
+        $currentSubjects = [];
+        foreach ($currentAssessmentItems as $key => $obj) {
+            $currentSubjects[$obj['education_subject_id']]['status'] = 'new'; //mark all current subjects as new
+            $currentSubjects[$obj['education_subject_id']]['index'] = $key;
+        }
+        
+        $savedSubjects = [];
+        foreach ($savedAssessmentItems as $key => $obj) {
+            if (array_key_exists($obj->education_subject_id, $currentSubjects)) { 
+                $savedSubjects[$obj->education_subject_id]['status'] = 'remain'; //if can find saved on the current grade subject set, then mark it as remain
+                unset($currentSubjects[$obj->education_subject_id]); //unset current subject so it wont be added twice during combined process.
+            } else {
+                $savedSubjects[$obj->education_subject_id]['status'] = 'deleted'; //cannot find, that it means has been deleted.
+            }
+            $savedSubjects[$obj->education_subject_id]['index'] = $key;
+        }
+        
+        $comparedSubjects = $savedSubjects + $currentSubjects; //combined the saved and current.
+
+        //rebuild the assessment item
+        $comparedAssessmentItems = [];
+        foreach ($comparedSubjects as $key => $value) {
+            if ($value['status'] == 'remain' || $value['status'] == 'deleted') {
+                $comparedAssessmentItems[$key] = $savedAssessmentItems[$value['index']];
+            } else if ($value['status'] == 'new') {
+                $comparedAssessmentItems[$key] = new Entity($currentAssessmentItems[$value['index']]);
+            }
+
+            $comparedAssessmentItems[$key]->status = $value['status'];
+        }
+
+        return $comparedAssessmentItems;
     }
 }
