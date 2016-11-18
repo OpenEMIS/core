@@ -1,6 +1,8 @@
-<?php if ($ControllerAction['action'] == 'add') : ?>
+<?php if ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'view') : ?>
 <div class="input clearfix required">
-    <label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
+    <?php if ($ControllerAction['action'] == 'add') : ?>
+        <label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
+    <?php endif ?>
     <div class="input-form-wrapper">
         <div class="table-wrapper">
             <div class="table-in-view">
@@ -14,7 +16,6 @@
                             <tr>
                                 <td><?= $item['special_need'] ?></td>
                                 <td><?= $item['special_need_difficulty'] ?></td>
-                                <td></td>
                             </tr>
                         <?php endforeach ?>
                     </tbody>

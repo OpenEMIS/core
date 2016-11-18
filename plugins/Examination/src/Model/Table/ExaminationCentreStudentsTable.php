@@ -8,6 +8,8 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\I18n\Time;
+use Cake\Network\Request;
+use Cake\Controller\Component;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
@@ -55,6 +57,19 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             ->requirePresence('auto_assign_to_room');
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        if ($this->action == 'add') {
+            $Navigation->substituteCrumb('Registered Students', 'Single Student Registration');
+        }
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
@@ -95,6 +110,9 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // Set the header of the page
+        $this->controller->set('contentHeader', __('Examination') . ' - ' .__('Single Student Registration'));
+
         $query = $this->ControllerAction->getQueryString();
 
         // back button goes back to RegistrationDirectory
