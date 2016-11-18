@@ -80,7 +80,7 @@ class NotRegisteredStudentsTable extends AppTable  {
                 $this->aliasField('student_status_id') => $currentStatus,
                 $ExamCentreStudents->aliasField('id') . ' IS NULL'
             ])
-            ->order([$this->aliasField('institution_id'), $ClassStudents->aliasField('institution_class_id'), $this->aliasField('institution_id')]);
+            ->order([$this->aliasField('institution_id'), $ClassStudents->aliasField('institution_class_id')]);
 
         if ($selectedInstitution != -1) {
             $query->where([$this->aliasField('institution_id') => $selectedInstitution]);
@@ -116,7 +116,7 @@ class NotRegisteredStudentsTable extends AppTable  {
             'key' => 'InstitutionClasses.name',
             'field' => 'class_name',
             'type' => 'integer',
-            'label' => '',
+            'label' => __('Class'),
         ];
 
         $newFields[] = [

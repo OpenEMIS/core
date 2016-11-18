@@ -76,7 +76,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
             ->group([$this->aliasField('student_id')])
-            ->order([$this->aliasField('institution_id'), $this->aliasField('examination_centre_id')]);
+            ->order([$this->aliasField('institution_id'), $this->aliasField('examination_centre_id'), 'ExaminationCentreRooms.id']);
 
         if ($selectedExamCentre != -1) {
             $query->where([$this->aliasField('examination_centre_id') => $selectedExamCentre]);
@@ -88,23 +88,44 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $newFields = [];
 
         $newFields[] = [
-            'key' => 'RegisteredStudentsExaminationCentre.institution_id',
-            'field' => 'institution_id',
+            'key' => 'RegisteredStudentsExaminationCentre.academic_period_id',
+            'field' => 'academic_period_id',
             'type' => 'integer',
             'label' => '',
         ];
 
         $newFields[] = [
-            'key' => 'RegisteredStudentsExaminationCentre.education_grade_id',
-            'field' => 'education_grade_id',
+            'key' => 'RegisteredStudentsExaminationCentre.examination_id',
+            'field' => 'examination_id',
             'type' => 'integer',
             'label' => '',
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionClasses.name',
-            'field' => 'class_name',
+            'key' => 'RegisteredStudentsExaminationCentre.examination_centre_id',
+            'field' => 'examination_centre_id',
             'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'ExaminationCentreRooms.name',
+            'field' => 'room_name',
+            'type' => 'integer',
+            'label' => __('Examination Room'),
+        ];
+
+        $newFields[] = [
+            'key' => 'student_type',
+            'field' => 'student_type',
+            'type' => 'string',
+            'label' => __('Student Type')
+        ];
+
+        $newFields[] = [
+            'key' => 'RegisteredStudentsExaminationCentre.registration_number',
+            'field' => 'registration_number',
+            'type' => 'string',
             'label' => '',
         ];
 
@@ -172,54 +193,42 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'RegisteredStudentsExaminationCentre.academic_period_id',
-            'field' => 'academic_period_id',
+            'key' => 'RegisteredStudentsExaminationCentre.institution_id',
+            'field' => 'institution_id',
             'type' => 'integer',
             'label' => '',
         ];
 
         $newFields[] = [
-            'key' => 'RegisteredStudentsExaminationCentre.examination_id',
-            'field' => 'examination_id',
+            'key' => 'RegisteredStudentsExaminationCentre.education_grade_id',
+            'field' => 'education_grade_id',
             'type' => 'integer',
             'label' => '',
         ];
 
         $newFields[] = [
-            'key' => 'student_type',
-            'field' => 'student_type',
-            'type' => 'string',
-            'label' => __('Student Type')
-        ];
-
-        $newFields[] = [
-            'key' => 'RegisteredStudentsExaminationCentre.registration_number',
-            'field' => 'registration_number',
-            'type' => 'string',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'RegisteredStudentsExaminationCentre.examination_centre_id',
-            'field' => 'examination_centre_id',
+            'key' => 'InstitutionClasses.name',
+            'field' => 'class_name',
             'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'ExaminationCentreRooms.name',
-            'field' => 'room_name',
-            'type' => 'integer',
-            'label' => __('Examination Room'),
+            'label' => __('Class'),
         ];
 
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetExaminationId(Event $event, Entity $entity, array $attr)
     {
-        if ($entity->institution_id) {
-            return $entity->institution->code_name;
+        if ($entity->examination_id) {
+            return $entity->examination->code_name;
+        } else {
+            return '';
+        }
+    }
+
+    public function onExcelGetExaminationCentreId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->examination_centre_id) {
+            return $entity->examination_centre->code_name;
         } else {
             return '';
         }
@@ -229,7 +238,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $normal = 'Normal Candidate';
         $private = 'Private Candidate';
 
-        if ($entity->has('institution') && !empty($entity->institution)) {
+        if ($entity->institution_id) {
             return $normal;
         } else {
             return $private;
@@ -246,6 +255,24 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             }
 
             return implode(', ', $allSpecialNeeds);
+        } else {
+            return '';
+        }
+    }
+
+    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->institution_id) {
+            return $entity->institution->code_name;
+        } else {
+            return '';
+        }
+    }
+
+    public function onExcelGetEducationGradeId(Event $event, Entity $entity, array $attr)
+    {
+        if ($entity->education_grade_id) {
+            return $entity->education_grade->programme_grade_name;
         } else {
             return '';
         }
