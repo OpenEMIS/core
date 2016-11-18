@@ -282,6 +282,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                         'InstitutionExaminationStudents.student_id = '.$InstitutionStudents->aliasField('student_id')
                     ])
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
+                    ->leftJoinWith('Users.SpecialNeeds')
                     ->where([
                         $InstitutionStudents->aliasField('institution_id') => $institutionId,
                         $InstitutionStudents->aliasField('academic_period_id') => $academicPeriodId,
@@ -289,6 +290,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                         $InstitutionStudents->aliasField('education_grade_id') => $educationGradeId,
                         'InstitutionExaminationStudents.student_id IS NULL'
                     ])
+                    ->order(['SpecialNeeds.id' => 'desc'])
                     ->group($InstitutionStudents->aliasField('student_id'))
                     ->toArray();
             }

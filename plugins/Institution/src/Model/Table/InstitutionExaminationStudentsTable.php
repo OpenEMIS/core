@@ -426,6 +426,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         'InstitutionExaminationStudents.student_id = '.$ClassStudents->aliasField('student_id')
                     ])
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
+                    ->leftJoinWith('Users.SpecialNeeds')
                     ->where([
                         $ClassStudents->aliasField('institution_id') => $institutionId,
                         $ClassStudents->aliasField('academic_period_id') => $academicPeriodId,
@@ -433,6 +434,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         $ClassStudents->aliasField('student_status_id') => $enrolledStatus,
                         'InstitutionExaminationStudents.student_id IS NULL'
                     ])
+                    ->order(['SpecialNeeds.id' => 'DESC'])
                     ->group($ClassStudents->aliasField('student_id'))
                     ->toArray();
             }
