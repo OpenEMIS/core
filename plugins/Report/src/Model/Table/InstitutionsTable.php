@@ -140,10 +140,10 @@ class InstitutionsTable extends AppTable
         }
     }
 
-    public function onExcelGetIsAcademic(Event $event, Entity $entity) 
+    public function onExcelGetClassification(Event $event, Entity $entity)
     {
         $generalYesNo = $this->getSelectOptions('general.yesno');
-        return __($generalYesNo[$entity->is_academic]);
+        return __($generalYesNo[$entity->classification]);
     }
 
 	public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request) {
