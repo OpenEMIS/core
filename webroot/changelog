@@ -1,3 +1,9 @@
+v3.7.4
+- Users can add classrooms to exam centers
+- Users can assign invigilators to exam centers
+- User is able to enter the student exam registration number or allow system to auto generate it
+- System allows user to manage student's examination results
+
 v3.7.2
 - Directory page will show Advanced Search by default
 - System allows user to search for all users regardless of user's permission
