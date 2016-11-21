@@ -40,6 +40,7 @@ class StudentTransferTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+		$this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('Institution.ClassStudents');
 	}
@@ -110,13 +111,14 @@ class StudentTransferTable extends AppTable {
 		$this->ControllerAction->field('class');
 		$this->ControllerAction->field('next_academic_period_id');
 		$this->ControllerAction->field('next_education_grade_id');
+		$this->ControllerAction->field('area_id');
 		$this->ControllerAction->field('next_institution_id');
 		$this->ControllerAction->field('student_transfer_reason_id');
 		$this->ControllerAction->field('students');
 
 		$this->ControllerAction->setFieldOrder([
 			'from_academic_period_id', 'education_grade_id', 'class',
-			'next_academic_period_id', 'next_education_grade_id', 'next_institution_id', 'student_transfer_reason_id'
+			'next_academic_period_id', 'next_education_grade_id', 'area_id', 'next_institution_id', 'student_transfer_reason_id'
 		]);
     }
 
@@ -317,9 +319,10 @@ class StudentTransferTable extends AppTable {
 
 			$nextGradeOptions = $this->EducationGrades->getNextAvailableEducationGrades($selectedGrade);
 
-			$nextGradeId = $this->queryString('next_education_grade_id', $nextGradeOptions);
+            $nextGradeId = $request->query('next_education_grade_id');
 
 			if (is_null($nextPeriodId)) {
+                $nextGradeId = key($nextGradeOptions);
 				$this->advancedSelectOptions($nextGradeOptions, $nextGradeId);
 			} else {
 				$Institutions = $this->Institutions;
@@ -365,6 +368,49 @@ class StudentTransferTable extends AppTable {
     	return $attr;
     }
 
+    public function onUpdateFieldAreaId(Event $event, array $attr, $action, Request $request) {
+    	$nextPeriodId = $request->query('next_academic_period_id');
+		$nextGradeId = $request->query('next_education_grade_id');
+    	$areaOptions = [];
+
+    	if (!is_null($nextPeriodId) && !is_null($nextGradeId)) {
+    		$Grades = $this->Grades;
+    		$institutionId = $this->institutionId;
+
+    		$nextPeriodData = $this->AcademicPeriods->get($nextPeriodId);
+			if ($nextPeriodData->start_date instanceof Time) {
+				$nextPeriodStartDate = $nextPeriodData->start_date->format('Y-m-d');
+			} else {
+				$nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
+			}
+
+			$Areas = $this->Institutions->Areas;
+            $areaOptions = $Areas->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->innerJoinWith('Institutions.InstitutionGrades')
+                ->where(['InstitutionGrades.education_grade_id' => $nextGradeId,
+                    $this->Institutions->aliasField('id').' <> ' => $institutionId,
+                    'InstitutionGrades.start_date <=' => $nextPeriodStartDate,
+                    'OR' => [
+                            'InstitutionGrades.end_date IS NULL',
+                            'InstitutionGrades.end_date >=' => $nextPeriodStartDate
+                    ]
+                ])
+                ->order([$Areas->aliasField('order')])
+                ->toArray();
+    	}
+
+    	$attr['type'] = 'chosenSelect';
+    	$attr['attr']['multiple'] = false;
+    	$attr['select'] = true;
+    	$attr['options'] = $areaOptions;
+    	$attr['onChangeReload'] = true;
+
+    	return $attr;
+    }
+
     public function onUpdateFieldNextInstitutionId(Event $event, array $attr, $action, Request $request) {
 		$nextPeriodId = $request->query('next_academic_period_id');
 		$nextGradeId = $request->query('next_education_grade_id');
@@ -381,7 +427,7 @@ class StudentTransferTable extends AppTable {
 				$nextPeriodStartDate = date('Y-m-d', strtotime($nextPeriodData->start_date));
 			}
 
-			$institutionOptions = $this->Institutions
+			$institutionQuery = $this->Institutions
 				->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 				->join([
 					'table' => $Grades->table(),
@@ -397,8 +443,13 @@ class StudentTransferTable extends AppTable {
 					]
 				])
 				->where([$this->Institutions->aliasField('id <>') => $institutionId])
-				->order([$this->Institutions->aliasField('code')])
-				->toArray();
+				->order([$this->Institutions->aliasField('code')]);
+
+				if (!empty($request->data[$this->alias()]['area_id'])) {
+                    $institutionQuery->where([$this->Institutions->aliasField('area_id') => $request->data[$this->alias()]['area_id']]);
+                }
+
+                $institutionOptions = $institutionQuery->toArray();
     	}
 
     	$attr['attr']['label'] = __('Institution');
