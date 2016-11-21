@@ -245,12 +245,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     }
 
                     var resultType = subject.grading_type.result_type;
+                    var maxMark = subject.grading_type.max;
                     var isMarksType = (resultType == resultTypes.MARKS);
                     var isGradesType = (resultType == resultTypes.GRADES);
                 }
 
                 var allowEdit = (action == 'edit' && period.editable);
-                var headerLabel = period.name + " <span class='divider'></span> " + period.weight;
+                var headerLabel = period.name + " <span class='divider'></span> " + maxMark;
                 var headerName = allowEdit ? headerLabel + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : headerLabel;
 
                 var periodField = 'period_' + period.id;

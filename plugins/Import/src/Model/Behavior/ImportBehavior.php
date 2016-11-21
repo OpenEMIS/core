@@ -75,7 +75,8 @@ class ImportBehavior extends Behavior {
         'plugin' => '',
         'model' => '',
         'max_rows' => 2000,
-        'max_size' => 524288
+        'max_size' => 524288,
+        'backUrl' => []
     ];
     protected $rootFolder = 'import';
     private $_fileTypesMap = [
@@ -154,7 +155,9 @@ class ImportBehavior extends Behavior {
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
                 break;
         }
-        if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
+        if (!empty($this->config('backUrl'))) {
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
+        } else if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
             if ($this->_table->request->params['pass'][0] == 'add') {
                 $back = str_replace('Import', '', $this->_table->alias());
             } else  if ($this->_table->request->params['pass'][0] == 'results') {
@@ -445,6 +448,7 @@ class ImportBehavior extends Behavior {
                     $dataPassed[] = $tempPassedRecord->getArrayCopy();
                 }
 
+                // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
                 $isNew = $tableEntity->isNew();
                 $newEntity = $activeModel->save($tableEntity);
                 if ($newEntity) {
@@ -1136,6 +1140,9 @@ class ImportBehavior extends Behavior {
 
             $excelMappingObj = $mapping[$col];
             $foreignKey = $excelMappingObj->foreign_key;
+            $lookupPlugin = $excelMappingObj->lookup_plugin;
+            $lookupModel = $excelMappingObj->lookup_model;
+            $lookupColumn = $excelMappingObj->lookup_column;
             $columnName = $columns[$col];
             $originalRow[$col] = $originalValue;
             $val = $cellValue;
@@ -1188,7 +1195,7 @@ class ImportBehavior extends Behavior {
                     $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
                 }
             } elseif ($foreignKey == self::DIRECT_TABLE) {
-                $registryAlias = $excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model;
+                $registryAlias = $lookupPlugin . '.' . $lookupModel;
                 if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
                     $excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
                 } else {
@@ -1197,12 +1204,20 @@ class ImportBehavior extends Behavior {
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
-                    $record = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue]);
-                    // if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
-                    $record = $record->first();
+                    $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
+                    $params = [$lookupQuery, $excelLookupModel, $lookupColumn, $tempRow, $originalRow, $cellValue, $rowInvalidCodeCols, $columnName];
+                    $this->dispatchEvent($this->_table, $this->eventKey('onImportLookup'.$lookupModel.'BeforeQuery'), 'onImportLookup'.$lookupModel.'BeforeQuery', $params);
+                    $record = $lookupQuery->first();
                 } else {
-                    if ($activeModel->schema()->column($columnName) && !$activeModel->schema()->column($columnName)['null']) {
-                        $record = '';
+                    $columnAttr = $activeModel->schema()->column($columnName);
+                    // when blank and the field is not nullable, set cell value as default value setup in database
+                    if ($columnAttr && !$columnAttr['null']) {
+                        if (isset($columnAttr['default']) && strlen($columnAttr['default']) > 0) {
+                            $cellValue = $columnAttr['default'];
+                            $excludeValidation = true;
+                        } else {
+                            $record = '';
+                        }
                     } else {
                         $excludeValidation = true;
                     }
@@ -1214,7 +1229,10 @@ class ImportBehavior extends Behavior {
                     } else {
                         if (!empty($cellValue)) {
                             $rowPass = false;
-                            $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                            // allow to overwrite from lookup before query event
+                            if (!$rowInvalidCodeCols->offsetExists($columnName)) {
+                                $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                            }
                         } else {
                             $rowPass = false;
                             $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
