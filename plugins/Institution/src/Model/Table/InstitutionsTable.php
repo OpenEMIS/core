@@ -827,7 +827,7 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 
-	public function onUpdateFieldIClassification(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request) {
 
 		if ($action == 'add') {
 			$attr['select'] = false;
