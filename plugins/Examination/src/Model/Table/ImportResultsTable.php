@@ -32,11 +32,12 @@ class ImportResultsTable extends AppTable
         $events['Model.import.onImportPopulateExaminationCentresData'] = 'onImportPopulateExaminationCentresData';
         $events['Model.import.onImportPopulateEducationSubjectsData'] = 'onImportPopulateEducationSubjectsData';
         $events['Model.import.onImportPopulateUsersData'] = 'onImportPopulateUsersData';
-        $events['Model.import.onImportPopulateInstitutionsData'] = 'onImportPopulateInstitutionsData';
         $events['Model.import.onImportPopulateExaminationGradingOptionsData'] = 'onImportPopulateExaminationGradingOptionsData';
         $events['Model.import.onImportLookupExaminationsBeforeQuery'] = 'onImportLookupExaminationsBeforeQuery';
         $events['Model.import.onImportLookupExaminationCentresBeforeQuery'] = 'onImportLookupExaminationCentresBeforeQuery';
         $events['Model.import.onImportLookupEducationSubjectsBeforeQuery'] = 'onImportLookupEducationSubjectsBeforeQuery';
+        $events['Model.import.onImportLookupUsersBeforeQuery'] = 'onImportLookupUsersBeforeQuery';
+        $events['Model.import.onImportLookupExaminationGradingOptionsBeforeQuery'] = 'onImportLookupExaminationGradingOptionsBeforeQuery';
         return $events;
     }
 
@@ -119,7 +120,7 @@ class ImportResultsTable extends AppTable
         $modelData = $ExaminationCentreSubjects->find('all')
             ->select($selectFields)
             ->matching($lookedUpTable->alias())
-            ->group(['education_subject_id'])
+            ->group([$ExaminationCentreSubjects->aliasField('education_subject_id')])
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -138,29 +139,6 @@ class ImportResultsTable extends AppTable
     public function onImportPopulateUsersData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         unset($data[$columnOrder]);
-    }
-
-    public function onImportPopulateInstitutionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
-    {
-        $order = [$lookupModel.'.name', $lookupModel.'.code'];
-
-        $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
-        $selectFields = ['name', $lookupColumn];
-        $modelData = $lookedUpTable->find('all')
-            ->select($selectFields)
-            ->order($order);
-
-        $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
-        if (!empty($modelData)) {
-            foreach($modelData->toArray() as $row) {
-                $data[$columnOrder]['data'][] = [
-                    $row->name,
-                    $row->$lookupColumn
-                ];
-            }
-        }
     }
 
     public function onImportPopulateExaminationGradingOptionsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
@@ -194,7 +172,10 @@ class ImportResultsTable extends AppTable
         if ($tempRow->offsetExists('academic_period_id') && !empty($tempRow['academic_period_id'])) {
             $where = [$lookedUpTable->aliasField('academic_period_id') => $tempRow['academic_period_id']];
             $lookupQuery->where([$where]);
-            pr($lookupQuery->count());
+
+            if ($lookupQuery->count() == 0) {
+                $rowInvalidCodeCols[$columnName] = __('Selected value does not match with Academic Period');
+            }
         }
     }
 
@@ -207,8 +188,9 @@ class ImportResultsTable extends AppTable
                     $lookedUpTable->aliasField('examination_id') => $tempRow['examination_id']
                 ];
                 $lookupQuery->where([$where]);
+
                 if ($lookupQuery->count() == 0) {
-                    $rowInvalidCodeCols[$columnName] = __('Selected value not match');
+                    $rowInvalidCodeCols[$columnName] = __('Selected value does not match with Academic Period and Examination');
                 }
             }
         }
@@ -219,15 +201,92 @@ class ImportResultsTable extends AppTable
         if ($tempRow->offsetExists('academic_period_id') && $tempRow->offsetExists('examination_id') && $tempRow->offsetExists('examination_centre_id')) {
             if (!empty($tempRow['academic_period_id']) && !empty($tempRow['examination_id']) && !empty($tempRow['examination_centre_id'])) {
                 $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
-                $lookupQuery
-                    ->innerJoin([$ExaminationCentreSubjects->alias() => $ExaminationCentreSubjects->table()],[
-                        $ExaminationCentreSubjects->aliasField('education_subject_id = ') . $lookedUpTable->aliasField('id'),
+                // overwrite lookup query
+                $lookupQuery = $ExaminationCentreSubjects
+                    ->find()
+                    ->matching($lookedUpTable->alias(), function ($q) use ($lookupColumn, $cellValue) {
+                        return $q->where([$lookupColumn => $cellValue]);
+                    })
+                    ->where([
                         $ExaminationCentreSubjects->aliasField('academic_period_id') => $tempRow['academic_period_id'],
                         $ExaminationCentreSubjects->aliasField('examination_id') => $tempRow['examination_id'],
                         $ExaminationCentreSubjects->aliasField('examination_centre_id') => $tempRow['examination_centre_id']
                     ]);
+
                 if ($lookupQuery->count() == 0) {
-                    $rowInvalidCodeCols[$columnName] = __('Selected value not match');
+                    $rowInvalidCodeCols[$columnName] = __('Selected value does not match with Examination and Examination Centre');
+                }
+            }
+        }
+    }
+
+    public function onImportLookupUsersBeforeQuery(Event $event, Query $lookupQuery, $lookedUpTable, $lookupColumn, ArrayObject $tempRow, ArrayObject $originalRow, $cellValue, ArrayObject $rowInvalidCodeCols, $columnName)
+    {
+        if ($tempRow->offsetExists('academic_period_id') && $tempRow->offsetExists('examination_id') && $tempRow->offsetExists('examination_centre_id') && $tempRow->offsetExists('education_subject_id')) {
+            if (!empty($tempRow['academic_period_id']) && !empty($tempRow['examination_id']) && !empty($tempRow['examination_centre_id']) && !empty($tempRow['education_subject_id'])) {
+                $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
+                // overwrite lookup query
+                $lookupQuery = $ExaminationCentreStudents
+                    ->find()
+                    ->matching($lookedUpTable->alias(), function ($q) use ($lookupColumn, $cellValue) {
+                        return $q->where([$lookupColumn => $cellValue]);
+                    })
+                    ->where([
+                        $ExaminationCentreStudents->aliasField('academic_period_id') => $tempRow['academic_period_id'],
+                        $ExaminationCentreStudents->aliasField('examination_id') => $tempRow['examination_id'],
+                        $ExaminationCentreStudents->aliasField('examination_centre_id') => $tempRow['examination_centre_id'],
+                        $ExaminationCentreStudents->aliasField('education_subject_id') => $tempRow['education_subject_id']
+                    ]);
+
+                if ($lookupQuery->count() == 0) {
+                    $rowInvalidCodeCols[$columnName] = __('Selected value does not match with Examination Centre and Education Subject');
+                } else {
+                    $entity = $lookupQuery->first();
+                    $tempRow['institution_id'] = $entity->institution_id;
+                }
+            }
+        }
+    }
+
+    public function onImportLookupExaminationGradingOptionsBeforeQuery(Event $event, Query $lookupQuery, $lookedUpTable, $lookupColumn, ArrayObject $tempRow, ArrayObject $originalRow, $cellValue, ArrayObject $rowInvalidCodeCols, $columnName)
+    {
+        if ($tempRow->offsetExists('examination_id') && $tempRow->offsetExists('education_subject_id')) {
+            if (!empty($tempRow['examination_id']) && !empty($tempRow['education_subject_id'])) {
+                $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
+                $GradingTypes = TableRegistry::get('Examination.ExaminationGradingTypes');
+
+                $examinationItemResults = $ExaminationItems
+                    ->find()
+                    ->matching($GradingTypes->alias())
+                    ->where([
+                        $ExaminationItems->aliasField('examination_id') => $tempRow['examination_id'],
+                        $ExaminationItems->aliasField('education_subject_id') => $tempRow['education_subject_id']
+                    ])
+                    ->all();
+
+                if ($examinationItemResults->isEmpty()) {
+                    $rowInvalidCodeCols[$columnName] = __('Examination Grading Type is not configured');
+                } else {
+                    $examinationItemEntity = $examinationItemResults->first();
+                    $gradingTypeEntity = $examinationItemEntity->_matchingData[$GradingTypes->alias()];
+                    
+                    if ($gradingTypeEntity->result_type == 'MARKS') {
+                        if (strlen($tempRow['marks']) == 0) {
+                            $rowInvalidCodeCols['marks'] = __('This field cannot be left empty');
+                        } else {
+                            if ($tempRow['marks'] > $gradingTypeEntity->max) {
+                                $rowInvalidCodeCols['marks'] = __('This field cannot be more than ' . $gradingTypeEntity->max);
+                            }
+                        }
+
+                        if (!empty($cellValue)) {
+                            $rowInvalidCodeCols[$columnName] = __('This field is not applicable to Marks type');
+                        }
+                    } else if ($gradingTypeEntity->result_type == 'GRADES') {
+                        if (strlen($tempRow['marks']) > 0) {
+                            $rowInvalidCodeCols['marks'] = __('This field is not applicable to Grades type');
+                        }
+                    }
                 }
             }
         }
