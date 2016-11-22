@@ -966,19 +966,40 @@ class InstitutionRoomsTable extends AppTable {
 		return $query;
 	}
 
-	public function academicPeriodAfterSave(Event $event, Entity $academicPeriodEntity) {
+	public function academicPeriodAfterSave(Event $event, Entity $academicPeriodEntity)
+	{
+		$academicPeriodId = $academicPeriodEntity->id;
+
 		if (!$academicPeriodEntity->isNew()) {
 			$newStartDate = $academicPeriodEntity->start_date;
-			$originalArray = $academicPeriodEntity->extractOriginal(['start_date']);
+			$newEndDate = $academicPeriodEntity->end_date;
+			$originalArray = $academicPeriodEntity->extractOriginal(['start_date', 'end_date']);
 			$originalStartDate = $originalArray['start_date'];
+			$originalEndDate = $originalArray['end_date'];
 
-			// compare start date and end date
-			// pr('newStartDate');
-			// pr($newStartDate);
-			// pr('originalStartDate');
-			// pr($originalStartDate);
-			// pr($academicPeriodEntity);
-			// die;
+			if ($newStartDate > $originalStartDate) {
+				// if new start date is later than original start date, update start date
+				$this->query()
+					->update()
+					->set(['start_date' => $newStartDate])
+					->where([
+						'academic_period_id' => $academicPeriodId,
+						'start_date' . ' <= ' => $originalStartDate->format('Y-m-d')
+					])
+					->execute();
+			}
+
+			if ($newEndDate < $originalEndDate) {
+				// if new end date is earlier than original end date, update end date
+				$this->query()
+					->update()
+					->set(['end_date' => $newEndDate])
+					->where([
+						'academic_period_id' => $academicPeriodId,
+						'end_date' . ' >= ' => $originalEndDate->format('Y-m-d')
+					])
+					->execute();
+			}
 		}
 	}
 }
