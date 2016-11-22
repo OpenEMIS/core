@@ -35,7 +35,7 @@
         </table>
     </div>
 <?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
-    <div class="required">
+    <div class="input clearfix required">
         <label><?= isset($attr['label']) ? __($attr['label']) : __($attr['field']) ?></label>
         <div class="input-form-wrapper">
             <div class="table-wrapper">

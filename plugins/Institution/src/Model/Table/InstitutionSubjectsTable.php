@@ -57,6 +57,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'dependent' => true
         ]);
 
+        $this->belongsToMany('Rooms', [
+            'className' => 'Institution.InstitutionRooms',
+            'joinTable' => 'institution_subjects_rooms',
+            'foreignKey' => 'institution_subject_id',
+            'targetForeignKey' => 'institution_room_id',
+            'through' => 'Institution.InstitutionSubjectsRooms',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
         // this behavior restricts current user to see All Subjects or My Subjects
         $this->addBehavior('Security.InstitutionSubject');
 
@@ -126,8 +136,17 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'fieldNameKey' => 'teachers',
             'fieldName' => $this->alias() . '.teachers._ids',
             'placeholder' => $this->getMessage('Users.select_teacher'),
-            'valueWhenEmpty' => __('No Teacher Assigned'),
-            'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
+            'valueWhenEmpty' => '<span>&lt;'.__('No Teacher Assigned').'&gt;</span>',
+            'visible' => ['index' => true, 'view' => true, 'edit' => true]
+        ]);
+
+        $this->field('rooms', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'rooms',
+            'fieldName' => $this->alias() . '.rooms._ids',
+            'placeholder' => $this->getMessage('Users.select_room'),
+            'valueWhenEmpty' => '<span>&lt;'.__('No Room Allocated').'&gt;</span>',
+            'visible' => ['index' => true, 'view' => true, 'edit' => true]
         ]);
 
         $this->field('male_students', [
@@ -147,12 +166,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
 
         $this->setFieldOrder([
-            'name', 'education_subject_id', 'teachers', 'male_students', 'female_students','total_students',
+            'name', 'education_subject_id', 'teachers', 'rooms', 'male_students', 'female_students','total_students',
         ]);
 
         $academicPeriodOptions = $this->getAcademicPeriodOptions($extra['institution_id']);
-        if (empty($academicPeriodOptions)) {
-            $this->Alert->warning('InstitutionSubjects.noPeriods');
+        if (empty($academicPeriodOptions)) { //cant find programme which date range within available academic period
+            $this->Alert->warning('InstitutionSubjects.noProgrammes');
+            $extra['noProgrammes'] = true;
         }
 
         if (empty($this->request->query['academic_period_id'])) {
@@ -193,7 +213,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                     $Classes->aliasField('institution_id') => $institutionId
                                 ])
                                 ->toArray();
-        if (empty($classOptions)) {
+        if (empty($classOptions) && !isset($extra['noProgrammes'])) {
             $this->Alert->warning('Institutions.noClassRecords');
         }
         $selectedClassId = $this->queryString('class_id', $classOptions);
@@ -231,6 +251,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ];
         $extra['selectedClassId'] = $selectedClassId;
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        //to remove 'add' button if no class or programmes set
+        if (empty($classOptions) || isset($extra['noProgrammes'])) {
+            $this->toggle('add', false);
+        }
     }
 
     public function findByClasses(Query $query, array $options)
@@ -253,7 +278,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $query
         ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
-        ->contain(['Teachers'])
+        ->contain(['Teachers', 'Rooms'])
         ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
@@ -282,7 +307,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ]);
         }
         $this->setFieldOrder([
-            'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
+            'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'rooms', 'students',
         ]);
     }
 
@@ -291,6 +316,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $query->contain([
             'Classes',
             'Teachers',
+            'Rooms',
             'SubjectStudents' => [
                 'Users.Genders',
                 'ClassStudents.StudentStatuses'
@@ -324,6 +350,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->fields['name']['visible'] = false;
         $this->fields['teachers']['visible'] = false;
+        $this->fields['rooms']['visible'] = false;
         $this->fields['students']['visible'] = false;
         $this->fields['education_subject_id']['visible'] = false;
 
@@ -508,7 +535,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->setFieldOrder([
             'name', 'no_of_seats',
             'academic_period_id', 'education_subject_id',
-            'teachers', 'students',
+            'teachers', 'rooms', 'students',
         ]);
     }
 
@@ -518,6 +545,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'AcademicPeriods',
             'EducationSubjects',
             'Teachers',
+            'Rooms',
             'SubjectStaff',
             // 'SubjectStudents.Users.Genders',
             'SubjectStudents' => [
@@ -628,6 +656,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $collection = new Collection($students);
         $recordedStudentIds = (new Collection($collection->toArray()))->combine('student_id', 'status')->toArray();
         $teacherOptions = $this->getTeacherOptions($entity);
+        $roomOptions = $this->getRoomOptions($entity);
 
         /**
          * Check if the request is a page reload
@@ -711,6 +740,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         if (!empty($teacherOptions)) {
             $this->fields['teachers']['options'] = $teacherOptions;
+        }
+        if (!empty($roomOptions)) {
+            $this->fields['rooms']['options'] = $roomOptions;
         }
         $this->fields['students']['data'] = [
             'students' => $students,
@@ -993,6 +1025,23 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $options;
     }
 
+    protected function getRoomOptions($entity)
+    {
+        $options = [];
+
+        $rooms = $this->Rooms
+            ->find('inUse', ['institution_id' => $entity->institution_id, 'academic_period_id' => $entity->academic_period_id])
+            ->contain(['RoomTypes'])
+            ->order(['RoomTypes.order', $this->Rooms->aliasField('code'), $this->Rooms->aliasField('name')])
+            ->toArray();
+
+        foreach ($rooms as $key => $obj) {
+            $options[$obj->room_type->name][$obj->id] = $obj->code_name;
+        }
+
+        return $options;
+    }
+
     /**
      * Changed in PHPOE-1780 test fail re-work. major modification.
      * Previously, the grades where populated based on a selected classId.
@@ -1219,6 +1268,20 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
     }
 
+    public function onGetRooms(Event $event, Entity $entity)
+    {
+        if ($entity->has('rooms')) {
+            $resultArray = [];
+
+            foreach ($entity->rooms as $key => $obj) {
+                $resultArray[] = $obj->code_name;
+            }
+
+            if (!empty($resultArray)) {
+                return implode(', ', $resultArray);
+            }
+        }
+    }
 
 /******************************************************************************************************************
 **
