@@ -776,6 +776,12 @@ class NavigationComponent extends Component
 					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.Certifications',
 							'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
 				],
+				'Textbooks.Textbooks' => [
+                    'title' => 'Textbooks',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Textbook'],
+                    'selected' => ['Textbooks.Textbooks']
+                ],
 				'Assessments.Assessments' => [
 					'title' => 'Assessments',
 					'parent' => 'SystemSetup',
