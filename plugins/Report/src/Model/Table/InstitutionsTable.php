@@ -20,6 +20,10 @@ class InstitutionsTable extends AppTable
 	const NO_STUDENT = 1;
 	const NO_STAFF = 2;
 
+	// For Academic / Non-Academic Institution type
+	const ACADEMIC = 1;
+	const NON_ACADEMIC = 0;
+
 	public function initialize(array $config) {
 		$this->table('institutions');
 		parent::initialize($config);
@@ -49,6 +53,11 @@ class InstitutionsTable extends AppTable
 		$this->addBehavior('Report.InstitutionSecurity');
 
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
+
+        $this->classificationOptions = [
+			self::ACADEMIC => 'Academic Institution',
+			self::NON_ACADEMIC => 'Non-Academic Institution'
+		];
 	}
 
 	public function beforeAction(Event $event) {
@@ -142,8 +151,7 @@ class InstitutionsTable extends AppTable
 
     public function onExcelGetClassification(Event $event, Entity $entity)
     {
-        $generalYesNo = $this->getSelectOptions('general.yesno');
-        return __($generalYesNo[$entity->classification]);
+        return __($this->classificationOptions[$entity->classification]);
     }
 
 	public function onUpdateFieldInstitutionFilter(Event $event, array $attr, $action, Request $request) {
