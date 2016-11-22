@@ -374,4 +374,17 @@ class EducationGradesTable extends ControllerActionTable
 
 		return compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme');
 	}
+
+    public function getEducationGradesByProgrammes($programmeId) 
+    {
+        $gradeOptions = $this
+                        ->find('list')
+                        ->find('visible')
+                        ->contain(['EducationProgrammes'])
+                        ->where([$this->aliasField('education_programme_id') => $programmeId])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->aliasField('order') => 'ASC'])
+                        ->toArray();
+
+        return $gradeOptions;
+    } 
 }
