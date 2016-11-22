@@ -1271,7 +1271,7 @@ class ImportBehavior extends Behavior {
             } else if ($foreignKey == self::CUSTOM) { //foreign_key = 4
 
                 $params = [$tempRow, $cellValue];
-                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.$excelMappingObj->column_name.'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
+                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.ucfirst($excelMappingObj->column_name).'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
 
                 if ($event->result !== true) {
                     $rowInvalidCodeCols[$columnName] = __($event->result);
