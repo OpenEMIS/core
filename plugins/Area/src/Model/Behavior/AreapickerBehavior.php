@@ -120,16 +120,16 @@ class AreapickerBehavior extends Behavior {
 					$after = $field;
 					foreach ($list as $key => $area) {
 						if ($this->isCAv4()) {
-							$this->_table->ControllerAction->field($field.$key, [
-								'type' => 'disabled',
-								'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
+							$this->_table->field($field.$key, [
+								'type' => 'readonly',
+								'attr' => ['label' => __($area['level_name'])],
 								'value' => __($area['area_name']),
 								'after' => $after
 							]);
 						} else {
-							$this->_table->field($field.$key, [
-								'type' => 'readonly',
-								'attr' => ['label' => __($area['level_name'])],
+							$this->_table->ControllerAction->field($field.$key, [
+								'type' => 'disabled',
+								'attr' => ['label' => __($area['level_name']), 'value' => $area['area_name']],
 								'value' => __($area['area_name']),
 								'after' => $after
 							]);
