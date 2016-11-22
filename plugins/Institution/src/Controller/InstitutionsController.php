@@ -459,7 +459,7 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->model->action = $this->request->action;
 
-        $isAcademic = $this->Institutions->get($id)->is_academic;
+        $classification = $this->Institutions->get($id)->classification;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
         if (empty($currentPeriod)) {
@@ -470,7 +470,7 @@ class InstitutionsController extends AppController
         $highChartDatas = [];
 
         // only show student charts if institution is academic
-        if ($isAcademic) {
+        if ($classification) {
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
