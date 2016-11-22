@@ -598,7 +598,10 @@ trait MessagesTrait {
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
         ],
-
+        'Textbooks' => [
+            'noTextbooks' => 'No Textbooks'
+        ],
+        
         // Validation Messages
         'Institution' => [
             'Institutions' => [
