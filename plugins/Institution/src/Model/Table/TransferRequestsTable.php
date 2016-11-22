@@ -477,7 +477,7 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
     {
-        $today = Date::Now()->format('Y-m-d');
+        $today = Date::now();
         if ($action == 'add') {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -510,8 +510,8 @@ class TransferRequestsTable extends ControllerActionTable
                         'OR' => [
                             $InstitutionGrades->aliasField('end_date') . ' IS NULL',
                             // Previously as long as the programme end date is later than academicPeriodStartDate, institution will be in the list.
-                            // POCOR-3134 request to only displayed instituion with active grades (end-date is later than today-date)
-                            $InstitutionGrades->aliasField('end_date') . ' >=' => $today,
+                            // POCOR-3134 request to only displayed institution with active grades (end-date is later than today-date)
+                            $InstitutionGrades->aliasField('end_date') . ' >=' => $today->format('Y-m-d'),
                         ]
                     ]
                 ])
