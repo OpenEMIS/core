@@ -719,7 +719,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id'),
                         'ExaminationCentresInstitutions.examination_id' => $attr['examination_id']
                     ])
-                    ->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('is_academic') => 1])
+                    ->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('classification') => 1])
                     ->group([$this->Institutions->aliasField('id')]);
 
             if ($action == 'edit') {
