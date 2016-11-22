@@ -97,7 +97,7 @@ class AcademicPeriodsTable extends AppTable
 
              // Adding condition on updateAll(), only change the one which is not the current academic period.
             $where = [];
-            if ($entity->has('id')) {
+            if (!$entity->isNew()) {
                 $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
             }
             $this->updateAll(['current' => 0], $where);
