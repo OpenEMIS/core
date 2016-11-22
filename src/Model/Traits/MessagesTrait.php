@@ -573,6 +573,9 @@ trait MessagesTrait {
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
         ],
+        'InstitutionExaminations' => [
+            'noGrades' => 'There are no available grades set for this institution',
+        ],
         'InstitutionExaminationsUndoRegistration' => [
             'success' => 'Undo of student examination registration is successful.',
             'fail' => 'Undo of student examination registration is successful.',
