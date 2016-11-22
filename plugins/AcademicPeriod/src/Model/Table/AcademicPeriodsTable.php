@@ -424,11 +424,7 @@ class AcademicPeriodsTable extends AppTable
 
     public function getYearList($params = [])
     {
-<<<<<<< HEAD
         $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
-=======
-        $conditions = array_key_exists('conditons', $params) ? $params['conditions'] : [];
->>>>>>> 3ee21c150f05fa7ba758cd67060cac55c9d39725
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
 
