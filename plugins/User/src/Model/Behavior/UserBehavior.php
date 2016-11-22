@@ -269,8 +269,8 @@ class UserBehavior extends Behavior {
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $options['auto_search'] = false;
-        $options['auto_contain'] = false;
+        $extra['auto_search'] = false;
+        // $extra['auto_contain'] = false;
 
         $table = $query->repository()->table();
         if ($table != 'security_users') {
@@ -278,10 +278,10 @@ class UserBehavior extends Behavior {
 
             $this->_table->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
             $sortList = ['Users.openemis_no', 'Users.first_name'];
-            if (array_key_exists('sortWhitelist', $options)) {
-                $sortList = array_merge($options['sortWhitelist'], $sortList);
+            if (array_key_exists('sortWhitelist', $extra)) {
+                $sortList = array_merge($extra['sortWhitelist'], $sortList);
             }
-            $options['sortWhitelist'] = $sortList;
+            $extra['sortWhitelist'] = $sortList;
         }
     }
 
