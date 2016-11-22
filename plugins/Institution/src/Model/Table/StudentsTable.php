@@ -746,7 +746,10 @@ class StudentsTable extends ControllerActionTable
                                     $this->aliasField('student_id') => $entity->student_id,
                                     $this->aliasField('id <> ') => $entity->id,
                                 ])
-                                ->order(['created' => 'desc'])
+                                ->order([
+                                    'created' => 'desc',
+                                    'start_date' => 'desc'
+                                ])
                                 ->first();
 
             if ($prevInstitutionStudent) { //if has previous record.

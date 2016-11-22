@@ -60,9 +60,11 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
+        $this->field('total_mark', ['visible' => false]);
+        $this->field('registration_number', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'capacity', 'special_needs', 'institution_class_id', 'student_id'
+            'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_class_id', 'student_id'
         ]);
     }
 
@@ -230,7 +232,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                         $ClassStudents->aliasField('student_status_id') => $enrolledStatus,
                         'InstitutionExaminationStudents.student_id IS NOT NULL'
                     ])
-                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id'])
+                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id', 'registration_number' => 'InstitutionExaminationStudents.registration_number'])
                     ->autoFields(true)
                     ->group(['InstitutionExaminationStudents.student_id'])
                     ->toArray();
@@ -251,7 +253,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                     ->contain('Users.SpecialNeeds.SpecialNeedTypes')
                     ->where([$ClassStudents->aliasField('student_id').' IN ' => $studentIds])
                     ->group([$ClassStudents->aliasField('student_id')])
-                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id'])
+                    ->select(['examination_centre_id' => 'InstitutionExaminationStudents.examination_centre_id', 'registration_number' => 'InstitutionExaminationStudents.registration_number'])
                     ->autoFields(true)
                     ->toArray();
             }
@@ -310,8 +312,18 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
                 $entity->errors('student_id', 'No selected students');
                 if (!empty($examStudents)) {
                     $students = array_column($examStudents, 'student_id');
+
+                    $deleteStudentEntity = $this->find()
+                        ->where([$this->aliasField('student_id').' IN ' => $students, $this->aliasField('examination_id') => $examinationId])
+                        ->group([$this->aliasField('student_id')])
+                        ->toArray();
+
+                    foreach ($deleteStudentEntity as $deleteStudent) {
+                        $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
+                        $ExamCentreStudents->delete($deleteStudent);
+                    }
+
                     $examinationCentreId = array_unique(array_column($examStudents, 'examination_centre_id'));
-                    $this->deleteAll(['student_id IN ' => $students, 'examination_id' => $examinationId]);
                     foreach ($examinationCentreId as $centreId) {
                         $studentCount = $this->find()
                             ->where([$this->aliasField('examination_centre_id') => $centreId])
