@@ -94,7 +94,13 @@ class AcademicPeriodsTable extends AppTable
         if ($entity->current == 1) {
             $entity->editable = 1;
             $entity->visible = 1;
-            $this->updateAll(['current' => 0], []);
+
+             // Adding condition on updateAll(), only change the one which is not the current academic period.
+            $where = [];
+            if (!$entity->isNew()) {
+                $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
+            }
+            $this->updateAll(['current' => 0], $where);
         }
     }
 
@@ -418,7 +424,11 @@ class AcademicPeriodsTable extends AppTable
 
     public function getYearList($params = [])
     {
+<<<<<<< HEAD
         $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
+=======
+        $conditions = array_key_exists('conditons', $params) ? $params['conditions'] : [];
+>>>>>>> 3ee21c150f05fa7ba758cd67060cac55c9d39725
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
 
