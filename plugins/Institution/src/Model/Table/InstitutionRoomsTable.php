@@ -977,26 +977,26 @@ class InstitutionRoomsTable extends AppTable {
 			$originalStartDate = $originalArray['start_date'];
 			$originalEndDate = $originalArray['end_date'];
 
-			if ($newStartDate > $originalStartDate) {
+			if ($newStartDate >= $originalStartDate) {
 				// if new start date is later than original start date, update start date
 				$this->query()
 					->update()
 					->set(['start_date' => $newStartDate])
 					->where([
 						'academic_period_id' => $academicPeriodId,
-						'start_date' . ' <= ' => $originalStartDate->format('Y-m-d')
+						'start_date' . ' <= ' => $newStartDate->format('Y-m-d')
 					])
 					->execute();
 			}
 
-			if ($newEndDate < $originalEndDate) {
+			if ($newEndDate <= $originalEndDate) {
 				// if new end date is earlier than original end date, update end date
 				$this->query()
 					->update()
 					->set(['end_date' => $newEndDate])
 					->where([
 						'academic_period_id' => $academicPeriodId,
-						'end_date' . ' >= ' => $originalEndDate->format('Y-m-d')
+						'end_date' . ' >= ' => $newEndDate->format('Y-m-d')
 					])
 					->execute();
 			}
