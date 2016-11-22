@@ -245,7 +245,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $institutionsData = $InstitutionGradesTable
                     ->find()
                     ->matching('Institutions', function($q) {
-                        return $q->where(['Institutions.is_academic' => 1]);
+                        return $q->where(['Institutions.classification' => 1]);
                     })
                     ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                     ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
