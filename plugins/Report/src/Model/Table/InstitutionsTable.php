@@ -15,6 +15,8 @@ use Cake\Utility\Inflector;
 class InstitutionsTable extends AppTable  
 {
     use OptionsTrait;
+    private $classificationOptions = [];
+
 	// filter
 	const NO_FILTER = 0;
 	const NO_STUDENT = 1;
