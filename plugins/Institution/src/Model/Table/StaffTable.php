@@ -62,6 +62,10 @@ class StaffTable extends AppTable {
 			'pages' => ['index']
 		]);
 
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'StaffRoom' => ['index', 'add']
+        ]);
+
 		$this->addBehavior('HighChart', [
 	      	'number_of_staff' => [
         		'_function' => 'getNumberOfStaff',
