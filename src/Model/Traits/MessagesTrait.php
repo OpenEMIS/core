@@ -474,7 +474,7 @@ trait MessagesTrait {
             'noStudents' => 'No Available Students',
             'noInstitutions' => 'No Available Institutions',
             'noData' => 'There are no available Students for Transfer.',
-            'success' => 'Students are pending transfer approval.'
+            'success' => 'The selected students are pending for transfer approval.'
         ],
         'StaffPositionProfiles' => [
             'request' => 'Request for Change in Assignment has been submitted successfully.',
