@@ -1957,9 +1957,14 @@ class ControllerActionComponent extends Component {
         return base64_decode(strtr($input, '-_', '+/'));
     }
 
-    public function getQueryString($queryString = null)
+    public function getQueryString($queryString = null, $name = 'queryString')
     {
-        $query = $this->request->query('queryString');
+        $query = $this->request->query($name);
+
+        if (is_null($query)) {
+            return null;
+        }
+
         $query = $this->paramsDecode($query);
 
         if (is_null($queryString)) {
@@ -1971,15 +1976,15 @@ class ControllerActionComponent extends Component {
         }
     }
 
-    public function setQueryString($url, $params)
+    public function setQueryString($url, $params, $name = 'queryString')
     {
         if (is_array($url)) {
-            $url['queryString'] = $this->paramsEncode($params);
+            $url[$name] = $this->paramsEncode($params);
         } else if (is_string($url)) {
             if (strpos($url, '?')) {
-                $url .= '&queryString='.$this->paramsEncode($params);
+                $url .= '&'.$name.'='.$this->paramsEncode($params);
             } else {
-                $url .= '?queryString='.$this->paramsEncode($params);
+                $url .= '?'.$name.'='.$this->paramsEncode($params);
             }
         }
         return $url;

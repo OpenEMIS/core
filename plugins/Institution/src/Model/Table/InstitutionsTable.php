@@ -90,7 +90,16 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->belongsToMany('ExamCentres', [
+			'className' => 'Examination.ExaminationCentres',
+			'joinTable' => 'examination_centres_institutions',
+			'foreignKey' => 'institution_id',
+			'targetForeignKey' => 'examination_centre_id',
+			'through' => 'Examination.ExaminationCentresInstitutions',
+			'dependent' => true
+		]);
 		$this->hasMany('ExaminationCentres',				['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',

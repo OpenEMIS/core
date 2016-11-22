@@ -231,6 +231,7 @@ trait MessagesTrait {
             'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
             'noSubjectsInClass' => 'There are no subjects in the assigned grade',
             'noSubjectSelected' => 'There is no subject selected',
+            'noProgrammes' => 'There is no programme set for available Academic Period on this institution'
         ],
         'InstitutionFees' => [
             'fee_types' => 'Fee Types',
@@ -582,6 +583,22 @@ trait MessagesTrait {
             'noStudentSelected' => 'There are no students selected',
         ],
 
+        'ExaminationCentreStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration',
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'This student is not assigned to a room as there are no available rooms.',
+        ],
+
+        'LinkedInstitutionAddStudents' => [
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+        ],
+
+        'BulkStudentRegistration' => [
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+        ],
+
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -832,8 +849,8 @@ trait MessagesTrait {
                 ]
             ],
             'InstitutionExaminationStudents' => [
-                'available_capacity' => [
-                    'ruleAvailable' => 'Total students exceeded examination centre capacity'
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
                 ]
             ]
         ],
@@ -1381,12 +1398,21 @@ trait MessagesTrait {
                 ]
             ],
             'ExaminationCentres' => [
-                'total_capacity' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
-                ],
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
                 ],
+            ],
+            'ExaminationCentreRooms' => [
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name for this examination centre room'
+                ],
+                'size' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ],
+                'number_of_seats' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value',
+                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available'
+                ]
             ],
             'ExaminationItems' => [
                 'weight' => [
@@ -1422,6 +1448,25 @@ trait MessagesTrait {
                     'ruleNotMoreThanGradingTypeMax' => 'Grading Option max value cannot be more than Grading Type max value',
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'ExaminationCentreStudents' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ],
+                'student_id' => [
+                    'ruleUnique' => 'This student is already registered to the selected exam',
+                    'ruleNotInvigilator' => 'This student is an invigilator in this examination'
+                ]
+            ],
+            'BulkStudentRegistration' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ]
+            ],
+            'LinkedInstitutionAddStudents' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
                 ]
             ]
         ],
