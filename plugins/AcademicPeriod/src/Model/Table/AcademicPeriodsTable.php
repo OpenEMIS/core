@@ -149,7 +149,6 @@ class AcademicPeriodsTable extends AppTable {
         $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
 
         if (!empty($listeners)) {
-            pr('academic period : afterSave');
             $this->dispatchEventToModels('Model.AcademicPeriods.afterSave', [$entity], $broadcaster, $listeners);
         }
     }
