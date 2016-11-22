@@ -6,6 +6,15 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
+    <?php
+        $backUrl = [
+            'plugin' => $this->request->params['plugin'],
+            'controller' => $this->request->params['controller'],
+            'action' => 'ExamResults',
+            'index'
+        ];
+        echo $this->Html->link('<i class="fa kd-back"></i>', $backUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escape' => false, 'ng-show' => 'action == \'view\'']);
+    ?>
     <?php if ($_edit) : ?>
         <!-- Show buttons when action is view: -->
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Edit');?>" ng-show="action == 'view'" ng-click="ExaminationsResultsController.onEditClick()">
@@ -37,14 +46,14 @@ $this->start('panelBody');
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="{{subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(ExaminationsResultsController.academicPeriodId,ExaminationsResultsController.examinationId,subject)">
+                    <uib-tab heading="{{subject.code + ' - ' + subject.name}}" ng-repeat="subject in ExaminationsResultsController.subjects" ng-click="ExaminationsResultsController.onChangeSubject(ExaminationsResultsController.academicPeriodId,ExaminationsResultsController.examinationId,subject)">
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>
             </scrollable-tabset>
 
             <div id="examination-result-table" class="table-wrapper">
-                <div ng-if="ExaminationsResultsController.gridOptions" ag-grid="ExaminationsResultsController.gridOptions" class="ag-fresh ag-height-fixed"></div>
+                <div ng-if="ExaminationsResultsController.gridOptions" ag-grid="ExaminationsResultsController.gridOptions" class="ag-fresh"></div>
             </div>
         </div>
     </div>

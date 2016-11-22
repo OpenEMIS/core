@@ -102,6 +102,26 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
+	public static function checkNotInvigilator($check, array $globalData) {
+		$data = $globalData['data'];
+
+        $Table = TableRegistry::get('Examination.ExaminationCentresInvigilators');
+        $record = $Table
+        	->find()
+        	->where([
+        		$Table->aliasField('examination_id') => $data['examination_id'],
+        		$Table->aliasField('invigilator_id') => $check,
+        		$Table->aliasField('academic_period_id') => $data['academic_period_id']
+        	])
+        	->first();
+
+        if (!empty($record)) {
+        	return false;
+        } else {
+        	return true;
+        }
+    }
+
     public static function checkAuthorisedArea($check, array $globalData)
     {
     	$data = $globalData['data'];
@@ -809,27 +829,34 @@ class ValidationBehavior extends Behavior {
         return $count==0;
     }
 
-	public static function inAcademicPeriod($field, $academicFieldName, $globalData)
+	public static function inAcademicPeriod($field, $academicFieldName, $options = [], $globalData)
 	{
 		if (array_key_exists($academicFieldName, $globalData['data'])) {
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$periodObj = $AcademicPeriods
 					->findById($globalData['data'][$academicFieldName])
 					->first();
-			$startDate = strtotime($globalData['data']['start_date']);
-			$endDate = strtotime($globalData['data']['end_date']);
 
-			if (!empty($periodObj)) {
-				$academicPeriodStartDate = (!is_null($periodObj['start_date']))? $periodObj['start_date']->toUnixString(): null;
-				$academicPeriodEndDate = (!is_null($periodObj['end_date']))? $periodObj['end_date']->toUnixString(): null;
+			$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
+	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
 
-				$rangecheck = ($startDate >= $academicPeriodStartDate && $startDate <= $academicPeriodEndDate) &&
-				(is_null($academicPeriodEndDate) ||
-					(!is_null($academicPeriodEndDate) && ($endDate >= $academicPeriodStartDate && $endDate <= $academicPeriodEndDate))
-				)
-				;
-				return $rangecheck;
-			}
+	        if ($excludeFirstDay) {
+	        	$withFirstDay = Time::parse($periodObj->start_date);
+	        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
+	        } else {
+	        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
+	        }
+
+	        if ($excludeLastDay) {
+	        	$withLastDay = Time::parse($periodObj->end_date);
+	        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
+	        } else {
+	        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
+	        }
+
+	        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
+
+	        return ($checkDate >= $startDate && $checkDate <= $endDate);
 		}
 
 		return false;
@@ -1340,38 +1367,6 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
-	public static function checkDateWithinAcademicPeriod($field, $academicPeriod, $options = [], array $globalData) {
-		if (array_key_exists($academicPeriod, $globalData['data'])) {
-	        $academicPeriodId = $globalData['data'][$academicPeriod];
-
-	        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-	        $periodData = $AcademicPeriods->get($academicPeriodId);
-
-	        $excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
-	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
-
-	        if ($excludeFirstDay) {
-	        	$withFirstDay = Time::parse($periodData->start_date);
-	        	$startDate = $withFirstDay->modify('+1 day')->format('Y-m-d');
-	        } else {
-	        	$startDate = $periodData->start_date->format('Y-m-d');
-	        }
-
-	        if ($excludeLastDay) {
-	        	$withLastDay = Time::parse($periodData->end_date);
-	        	$endDate = $withLastDay->modify('-1 day')->format('Y-m-d');
-	        } else {
-	        	$endDate = $periodData->end_date->format('Y-m-d');
-	        }
-
-	        $effectiveDate = Time::parse($field)->format('Y-m-d');
-
-	        return ($effectiveDate >= $startDate && $effectiveDate <= $endDate);
-	    }
-
-	    return false;
-    }
-
 	public static function checkTimeRange($field, array $globalData) {
 		$systemTimeFormat = TableRegistry::get('Configuration.ConfigItems')->value('time_format');
 		$model = $globalData['providers']['table'];
@@ -1598,23 +1593,6 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
-	public static function checkAvailableCapacity($field, array $globalData)
-	{
-		$data = $globalData['data'];
-		if (isset($data['available_capacity'])) {
-			if (isset($data['examination_students']) && is_array($data['examination_students'])) {
-				$students = [];
-				foreach($data['examination_students'] as $student) {
-					if ($student['selected']) {
-						$students[] = $student['student_id'];
-					}
-				}
-				return count($students) <= $data['available_capacity'];
-			}
-		}
-		return false;
-	}
-
 	public static function checkPendingAdmissionExist($field, array $globalData)
 	{
 		$data = $globalData['data'];
@@ -1679,5 +1657,12 @@ class ValidationBehavior extends Behavior {
 		}
 
 		return true;
+	}
+
+	public static function validateRoomCapacity($field, array $globalData)
+	{
+		$totalSeats = $globalData['data']['number_of_seats'];
+		$currentSeats = count($globalData['data']['students']);
+		return $totalSeats >= $currentSeats;
 	}
 }
