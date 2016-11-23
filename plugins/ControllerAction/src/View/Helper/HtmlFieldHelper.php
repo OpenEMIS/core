@@ -501,6 +501,9 @@ class HtmlFieldHelper extends Helper {
 			if (isset($attr['defaultWidth'])) {
 				$defaultWidth = $attr['defaultWidth'];
 			}
+			if (isset($attr['defaultHeight'])) {
+				$defaultWidth = $attr['defaultHeight'];
+			}
 
 			$this->includes['jasny']['include'] = true;
 			$value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src,
