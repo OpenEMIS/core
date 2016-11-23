@@ -528,7 +528,7 @@ class StudentPromotionTable extends AppTable
                     $attr['select'] = false;
                     $options = [0 => $this->getMessage($this->aliasField('noAvailableGrades'))];
                 } else {
-                    $options = [0 => $gradeOptions[key($gradeOptions)]];
+                    $options = [key($gradeOptions) => $gradeOptions[key($gradeOptions)]];
                 }
 
                 $attr['type'] = 'select';
