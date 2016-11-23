@@ -546,6 +546,7 @@ trait MessagesTrait {
             'success' => 'is successfully imported.',
             'failed' => 'failed to import.',
             'partial_failed' => 'failed to import completely.',
+            'value_not_in_list' => 'Selected value is not in the list',
             'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
             'survey_not_found' => 'No identifiable survey found',
             'no_answers' => 'No record were found in the file imported',
