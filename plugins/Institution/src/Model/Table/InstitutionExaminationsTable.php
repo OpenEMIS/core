@@ -33,44 +33,34 @@ class InstitutionExaminationsTable extends ControllerActionTable {
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $institutionId = $this->Session->read('Institution.Institutions.id');
 
-        // only show examinations for the education programmes available in the insitution
+        // Academic Periods filter
+        $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+        $selectedPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
+        $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+
+        $where[$this->aliasField('academic_period_id')] = $selectedPeriod;
+        //End
+
+        // get available grades in institution
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $educationProgrammes = $InstitutionGrades->find('list', [
+        $educationGrades = $InstitutionGrades
+            ->find('list', [
                     'keyField' => 'education_grade_id',
                     'valueField' => 'education_grade_id'
-                ])
+            ])
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->toArray();
 
-        $query->where([$this->aliasField('education_grade_id IN') => $educationProgrammes]);
+        if (!empty($educationGrades)) {
+            $where[$this->aliasField('education_grade_id IN')] = $educationGrades;
 
-        // Academic Periods filter
-        $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-        if (is_null($this->request->query('academic_period_id'))) {
-            $this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
+        } else {
+            // if no active grades in the institution
+            $this->Alert->warning($this->aliasField('noGrades'));
+            $where[$this->aliasField('education_grade_id')] = -1;
         }
-        $selectedPeriod = $this->queryString('academic_period_id', $periodOptions);
 
-        $this->controller->set(compact('periodOptions', 'selectedPeriod'));
-
-        if (!empty($selectedPeriod)) {
-            $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
-
-            // Examination filter
-            $examinationOptions = $this
-                ->find('list')
-                ->where([$this->aliasField('academic_period_id') => $selectedPeriod,
-                    $this->aliasField('education_grade_id IN') => $educationProgrammes])
-                ->toArray();
-            $examinationOptions = ['-1' => __('All Examinations')] + $examinationOptions;
-            $selectedExamination = $this->queryString('examination_id', $examinationOptions);
-
-            $this->controller->set(compact('examinationOptions', 'selectedExamination'));
-
-            if ($selectedExamination != '-1') {
-                $query->where([$this->aliasField('id') => $selectedExamination]);
-            }
-        }
+        $query->where($where);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
