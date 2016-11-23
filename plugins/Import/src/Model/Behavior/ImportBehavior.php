@@ -1155,7 +1155,8 @@ class ImportBehavior extends Behavior {
                 continue;
             }
             if (!empty($val)) {
-                if($activeModel->schema()->column($columnName)['type'] == 'date') {// checking the main table schema data type
+                $columnAttr = $activeModel->schema()->column($columnName);
+                if($columnAttr['type'] == 'date') { // checking the main table schema data type
                     $originalRow[$col] = $val;
                     if (is_numeric($val)) {
                         // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
@@ -1174,6 +1175,16 @@ class ImportBehavior extends Behavior {
                     } catch (InvalidArgumentException $e) {
                         // pr($e->getMessage());
                     }
+                } else if($columnAttr['type'] == 'decimal') {
+                    $length = $columnAttr['length'];
+                    $precision = $columnAttr['precision'];
+                    if (!empty($precision)) {
+                        $pattern = '/^[0-9]+(\.[0-9]{1,'.$precision.'})?$/';
+                        $match = preg_match($pattern, $val);
+                        if (!$match) {
+                            $rowInvalidCodeCols[$columnName] = __('This field is not in valid format');
+                        }
+                    }
                 }
             }
             $translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
@@ -1188,7 +1199,7 @@ class ImportBehavior extends Behavior {
                         $val = $lookup[$col][$cellValue]['id'];
                     } else { // if the cell value not found in lookup
                         $rowPass = false;
-                        $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                        $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else { // if cell is empty
                     $rowPass = false;
@@ -1231,7 +1242,7 @@ class ImportBehavior extends Behavior {
                             $rowPass = false;
                             // allow to overwrite from lookup before query event
                             if (!$rowInvalidCodeCols->offsetExists($columnName)) {
-                                $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                                $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                             }
                         } else {
                             $rowPass = false;
@@ -1249,7 +1260,7 @@ class ImportBehavior extends Behavior {
                         $val = $recordId;
                     } else {
                         $rowPass = false;
-                        $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                        $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else {
                     if (!$isOptional) {
@@ -1260,7 +1271,7 @@ class ImportBehavior extends Behavior {
             } else if ($foreignKey == self::CUSTOM) { //foreign_key = 4
 
                 $params = [$tempRow, $cellValue];
-                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.$excelMappingObj->column_name.'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
+                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.ucfirst($excelMappingObj->column_name).'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
 
                 if ($event->result !== true) {
                     $rowInvalidCodeCols[$columnName] = __($event->result);
