@@ -273,6 +273,7 @@ class ImportResultsTable extends AppTable
                     ->all();
 
                 if ($examinationItemResults->isEmpty()) {
+                    // will never come to here unless data corrupted as user is not able to delete exam item after register a student to exam
                     $rowInvalidCodeCols['education_subject_id'] = __('Examination Item is not configured in the examination');
                     return false;
                 } else {
@@ -280,7 +281,8 @@ class ImportResultsTable extends AppTable
                     if ($examinationItemEntity->has('examination_grading_type')) {
                         $gradingTypeEntity = $examinationItemEntity->examination_grading_type;
                         if (empty($gradingTypeEntity->grading_options)) {
-                            $rowInvalidCodeCols['education_subject_id'] = __('Examination Grading Options is not configured');
+                            // exam item is linked to a grading type but no grading options is added
+                            $rowInvalidCodeCols['education_subject_id'] = __('Examination Grading Options is not configured for '.$examinationItemEntity->examination_grading_type->code_name);
                             return false;
                         } else {
                             if ($tempRow->offsetExists('marks') && $tempRow->offsetExists('examination_grading_option_id')) {
@@ -342,6 +344,7 @@ class ImportResultsTable extends AppTable
                             }
                         }
                     } else {
+                        // will never come to here unless orphan record in exam item
                         $rowInvalidCodeCols['education_subject_id'] = __('Examination Grading Type is not configured');
                         return false;
                     }
