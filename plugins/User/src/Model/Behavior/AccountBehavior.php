@@ -164,7 +164,15 @@ class AccountBehavior extends Behavior {
 		$loginUserId = $this->_table->Auth->user('id');
 		$id = $request->params['pass'][1];
 
-		if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAdmin)) {
+		$editUsername = 0;
+		if ($this->_table->registryAlias() == 'Institution.StudentAccount') {
+			$editUsername = $this->_table->AccessControl->check(['Institutions', 'StudentAccountUsername']);
+
+		} else if ($this->_table->registryAlias() == 'Institution.StaffAccount') {
+			$editUsername = $this->_table->AccessControl->check(['Institutions', 'StaffAccountUsername']);
+		}
+
+		if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || (!$isAdmin && !$editUsername))) {
 			$attr['type'] = 'readonly';
 		}
 
