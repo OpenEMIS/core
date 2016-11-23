@@ -37,6 +37,7 @@ class InstitutionExaminationsTable extends ControllerActionTable {
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
         $selectedPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+
         $where[$this->aliasField('academic_period_id')] = $selectedPeriod;
         //End
 
@@ -50,12 +51,13 @@ class InstitutionExaminationsTable extends ControllerActionTable {
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->toArray();
 
-        if (empty($educationGrades)) { // if no active grades in the institution
-            $where[$this->aliasField('education_grade_id')] = -1;
-            $this->Alert->warning($this->aliasField('noGrades'));
+        if (!empty($educationGrades)) {
+            $where[$this->aliasField('education_grade_id IN')] = $educationGrades;
 
         } else {
-            $where[$this->aliasField('education_grade_id IN')] = $educationGrades;
+            // if no active grades in the institution
+            $this->Alert->warning($this->aliasField('noGrades'));
+            $where[$this->aliasField('education_grade_id')] = -1;
         }
 
         $query->where($where);
