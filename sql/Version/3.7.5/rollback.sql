@@ -1,3 +1,14 @@
+-- POCOR-3468
+-- config_product_lists
+ALTER TABLE `config_product_lists`
+DROP COLUMN `file_content`,
+DROP COLUMN `file_name`,
+DROP COLUMN `deletable`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3468';
+
+
 -- POCOR-3312
 -- config items
 DELETE FROM `translations` WHERE `en` = 'There are no shifts configured for the selected academic period, will be using system configuration timing';
