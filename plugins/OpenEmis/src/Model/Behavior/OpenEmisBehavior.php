@@ -175,9 +175,9 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+    public function indexAfterAction(Event $event, Query $query, $resultSet, ArrayObject $extra)
     {
-        if ($resultSet->count() == 0) {
+        if (count($resultSet) == 0) {
             $this->_table->Alert->info('general.noData');
         }
         $extra['config']['form'] = ['class' => ''];

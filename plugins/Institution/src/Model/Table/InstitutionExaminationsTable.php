@@ -53,14 +53,13 @@ class InstitutionExaminationsTable extends ControllerActionTable {
 
         if (!empty($educationGrades)) {
             $where[$this->aliasField('education_grade_id IN')] = $educationGrades;
+            $query->where($where);
 
         } else {
             // if no active grades in the institution
             $this->Alert->warning($this->aliasField('noGrades'));
-            $where[$this->aliasField('education_grade_id')] = -1;
+            $event->stopPropagation();
         }
-
-        $query->where($where);
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
