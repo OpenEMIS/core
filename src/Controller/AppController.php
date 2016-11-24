@@ -96,6 +96,8 @@ class AppController extends Controller {
 			'theme' => 'core'
 		]);
 
+		$this->loadComponent('OpenEmis.ApplicationSwitcher');
+
 		// Angular initialization
 		$this->loadComponent('Angular.Angular', [
 			'app' => 'OE_Core',
@@ -132,49 +134,6 @@ class AppController extends Controller {
 		if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
-	}
-
-	public function onUpdateProductList(Event $event, array $productList)
-	{
-		$displayProducts = [];
-		$session = $this->request->session();
-		if (!$session->check('ConfigProductLists.list')) {
-			$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
-			$productListOptions = $ConfigProductLists-> find('list', [
-								    'keyField' => 'name',
-								    'valueField' => 'url'
-								])
-								-> toArray();
-
-	        $productListData = $productListOptions;
-	        $productListData[$this->_productName] = '';
-	        $productLists = array_diff_key($productList, $productListData);
-	        foreach ($productLists as $product => $value) {
-	            $data = [
-	                'name' => $product,
-	                'url' => '',
-	                'created_user_id' => 1
-	            ];
-	            $entity = $ConfigProductLists->newEntity($data);
-	            $ConfigProductLists->save($entity);
-	        }
-
-			foreach ($productList as $name => $item) {
-				if (!empty($productListOptions[$name])) {
-					$displayProducts[$name] = [
-						'name' => $item['name'],
-						'icon' => $item['icon'],
-						'url' => $productListOptions[$name]
-					];
-				}
-			}
-
-			$session->write('ConfigProductLists.list', $displayProducts);
-		} else {
-			$displayProducts = $session->read('ConfigProductLists.list');
-		}
-
-		return $displayProducts;
 	}
 
 	// Triggered from LocalizationComponent
