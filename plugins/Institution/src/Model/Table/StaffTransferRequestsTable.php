@@ -60,6 +60,15 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		parent::editAfterAction($event, $entity, $extra);
 
+        if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
+            $errors = $this->Session->read('Institution.StaffTransferRequests.errors');
+            $this->Alert->error('StaffTransferRequests.errorApproval');
+            foreach ($errors as $error) {
+                $this->Alert->error($error, ['type' => 'text']);
+            }
+            $this->Session->delete('Institution.StaffTransferRequests.errors');
+        }
+
 		$this->field('previous_institution_id', ['type' => 'readonly', 'after' => 'staff_id', 'attr' => ['value' => $entity->previous_institution->code_name]]);
 		$this->field('institution_position_id', ['type' => 'select', 'attr' => ['value' => $this->getEntityProperty($entity, 'institution_position_id')]]);
 		$this->field('staff_type_id', ['type' => 'select']);
@@ -251,17 +260,6 @@ class StaffTransferRequestsTable extends StaffTransfer {
 					$this->controller->redirect($url);
 				}
 			}
-		}
-	}
-
-	public function editBeforeAction(Event $event, $extra) {
-		if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
-			$errors = $this->Session->read('Institution.StaffTransferRequests.errors');
-			$this->Alert->error('StaffTransferRequests.errorApproval');
-			foreach ($errors as $error) {
-				$this->Alert->error($error, ['type' => 'text']);
-			}
-			$this->Session->delete('Institution.StaffTransferRequests.errors');
 		}
 	}
 
