@@ -44,4 +44,12 @@ class StudentAccountTable extends AppTable {
 			}
 	}
 
+	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+        $editStudentUsername = $this->AccessControl->check(['Institutions', 'StudentAccountUsername', 'edit']);
+
+        if ($editStudentUsername) {
+            $attr['type'] = 'string';
+            return $attr;
+        }
+    }
 }
