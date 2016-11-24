@@ -18,8 +18,6 @@ use Cake\Controller\Controller;
 use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\Core\Configure;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -98,6 +96,8 @@ class AppController extends Controller {
 			'theme' => 'core'
 		]);
 
+		$this->loadComponent('OpenEmis.ApplicationSwitcher');
+
 		// Angular initialization
 		$this->loadComponent('Angular.Angular', [
 			'app' => 'OE_Core',
@@ -134,86 +134,6 @@ class AppController extends Controller {
 		if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
-	}
-
-	public function onUpdateProductList(Event $event, array $productList)
-	{
-		$displayProducts = [];
-		$session = $this->request->session();
-		if (!$session->check('ConfigProductLists.list')) {
-			$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
-			$productListOptions = $ConfigProductLists->find()
-				->select([
-					$ConfigProductLists->aliasField('name'),
-					$ConfigProductLists->aliasField('url'),
-					$ConfigProductLists->aliasField('file_name'),
-					$ConfigProductLists->aliasField('file_content')
-				])
-				->toArray();
-
-	        $productListData = array_flip(array_column($productListOptions, 'name'));
-	        $productListData[$this->_productName] = '';
-	        $productLists = array_diff_key($productList, $productListData);
-	        foreach ($productLists as $product => $value) {
-	            $data = [
-	                'name' => $product,
-	                'url' => '',
-	                'deletable' => 0,
-	                'created_user_id' => 1
-	            ];
-	            $entity = $ConfigProductLists->newEntity($data);
-	            $ConfigProductLists->save($entity);
-	        }
-
-			$dir = new Folder(WWW_ROOT . 'img' . DS . 'product_list_logo', true);
-			$filesAndFolders = $dir->read();
-			$files = $filesAndFolders[1];
-
-			foreach ($productListOptions as $product) {
-				$name = $product['name'];
-				if (!empty($product['url'])) {
-					if (isset($productList[$name])) {
-						$displayProducts[$name] = [
-							'name' => $productList[$name]['name'],
-							'icon' => $productList[$name]['icon'],
-							'url' => $product['url']
-						];
-					} else {
-						$icon = 'kd-openemis';
-						$imagePath = '';
-						if (!empty($product['file_name'])) {
-							$imagePath = WWW_ROOT . 'img' . DS . 'product_list_logo' . DS . $product['file_name'];
-						}
-
-						if (!empty($product['file_name']) && !empty($product['file_content'])) {
-							if (!in_array($product['file_name'], $files)) {
-								$newImage = new File($imagePath, true);
-								$status = $newImage->write(stream_get_contents($product['file_content']));
-								if ($status) {
-									$icon = '';
-								} else {
-									$newImage->delete();
-								}
-							} else {
-								$icon = '';
-							}
-						}
-
-						$displayProducts[$name] = [
-							'name' => $name,
-							'icon' => $icon,
-							'file_name' => $product['file_name'],
-							'url' => $product['url']
-						];
-					}
-				}
-			}
-			$session->write('ConfigProductLists.list', $displayProducts);
-		} else {
-			$displayProducts = $session->read('ConfigProductLists.list');
-		}
-
-		return $displayProducts;
 	}
 
 	// Triggered from LocalizationComponent
