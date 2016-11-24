@@ -344,7 +344,8 @@ trait MessagesTrait {
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'StaffAbsences' => [
-            'noStaff' => 'No Available Staff'
+            'noStaff' => 'No Available Staff',
+            'noShift' => 'There are no shifts configured for the selected academic period, will be using system configuration timing.'
         ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
