@@ -40,10 +40,10 @@ class ApplicationSwitcherComponent extends Component {
                     $ConfigProductLists->aliasField('file_name'),
                     $ConfigProductLists->aliasField('file_content')
                 ])
+                ->hydrate(false)
                 ->toArray();
-
             $productListData = array_flip(array_column($productListOptions, 'name'));
-            $productListData[$this->_productName] = '';
+            $productListData[$this->controller->_productName] = '';
             $productLists = array_diff_key($productList, $productListData);
             foreach ($productLists as $product => $value) {
                 $data = [
