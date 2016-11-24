@@ -83,7 +83,7 @@ class AccountBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)  {
-		$this->_table->ControllerAction->field('username');
+		$this->_table->ControllerAction->field('username', ['entity' => $entity]);
 		$this->_table->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 
 		$this->afterActionCode($event, $entity);
@@ -160,18 +160,21 @@ class AccountBehavior extends Behavior {
 
 	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request)
 	{
+		$entity = $attr['entity'];
 		$isAdmin = $this->_table->AccessControl->isAdmin();
 		$loginUserId = $this->_table->Auth->user('id');
 		$id = $request->params['pass'][1];
 
 		$editUsername = 0;
-		if ($this->_table->registryAlias() == 'Institution.StudentAccount') {
-			$editUsername = $this->_table->AccessControl->check(['Institutions', 'StudentAccountUsername']);
+		if ($entity->is_student) {
+			$editUsername = $this->_table->AccessControl->check(['Institutions', 'StudentAccountUsername', 'edit']);
 
-		} else if ($this->_table->registryAlias() == 'Institution.StaffAccount') {
-			$editUsername = $this->_table->AccessControl->check(['Institutions', 'StaffAccountUsername']);
+		} else if ($entity->is_staff) {
+			$editUsername = $this->_table->AccessControl->check(['Institutions', 'StaffAccountUsername', 'edit']);
 		}
 
+		// super admin can change all usernames except own username
+		// restricted users need permission to change usernames
 		if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || (!$isAdmin && !$editUsername))) {
 			$attr['type'] = 'readonly';
 		}
