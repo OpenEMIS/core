@@ -839,7 +839,12 @@ class NavigationComponent extends Component
 					'parent' => 'SystemSetup',
 					'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit']
 				],
-
+				'Indexes.Indexes' => [
+					'title' => 'Indexes',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'Indexes'],
+					'selected' => ['Indexes.Indexes']
+				],
 			'Security' => [
 				'title' => 'Security',
 				'parent' => 'Administration',

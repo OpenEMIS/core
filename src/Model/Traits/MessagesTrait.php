@@ -1470,6 +1470,14 @@ trait MessagesTrait {
                 ]
             ]
         ],
+        'Indexes' => [
+            'TableHeader' => [
+                'Criteria',
+                'Operator',
+                'Threshold',
+                'Index'
+            ]
+        ],
         'Configuration' => [
         	'ConfigProductLists' => [
         		'name' => [
