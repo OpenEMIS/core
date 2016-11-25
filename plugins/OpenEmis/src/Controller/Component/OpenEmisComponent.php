@@ -5,10 +5,8 @@ use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Core\Configure;
-use OpenEmis\Model\Traits\ProductListsTrait;
 
 class OpenEmisComponent extends Component {
-	use ProductListsTrait;
 
 	private $controller;
 	protected $_defaultConfig = [
@@ -37,47 +35,10 @@ class OpenEmisComponent extends Component {
 		$this->controller = $this->_registry->getController();
 	}
 
-	private function onEvent($subject, $eventKey, $method) {
-		$eventMap = $subject->implementedEvents();
-		if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
-			if (method_exists($subject, $method) || $subject->behaviors()->hasMethod($method)) {
-				$subject->eventManager()->on($eventKey, [], [$subject, $method]);
-			}
-		}
-	}
-
-	private function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
-		$this->onEvent($subject, $eventKey, $method);
-		$event = new Event($eventKey, $this, $params);
-		$event = $subject->eventManager()->dispatch($event);
-		if(!is_null($method) && $autoOff) {
-			$this->offEvent($subject, $eventKey, $method);
-		}
-		return $event;
-	}
-
-	private function offEvent($subject, $eventKey, $method) {
-		$subject->eventManager()->off($eventKey, [$subject, $method]);
-	}
-
-	public function getProductList()
-	{
-		$productList = $this->productList;
-		$event = $this->dispatchEvent($this->controller, 'Controller.onUpdateProductList', 'onUpdateProductList', [$productList], true);
-
-		if ($event->result || is_array($event->result)) {
-			$productList = $event->result;
-		}
-
-		return $productList;
-	}
-
 	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
 	public function startup(Event $event) {
 		$controller = $this->controller;
 		$session = $this->request->session();
-
-		$displayProducts = $this->getProductList();
 
 		$theme = $this->getTheme();
 		$controller->set('theme', $theme);
@@ -85,8 +46,6 @@ class OpenEmisComponent extends Component {
 		$controller->set('headerMenu', $this->getHeaderMenu());
 		$controller->set('SystemVersion', $this->getCodeVersion());
 		$controller->set('_productName', $controller->_productName);
-		$controller->set('products', $displayProducts);
-		$controller->set('showProductList', !empty($displayProducts));
 
 		//Retriving the panel width size from session
 		if ($session->check('System.layout')) {

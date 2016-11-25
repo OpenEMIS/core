@@ -22,4 +22,12 @@ class StaffAccountTable extends AppTable {
 		return $validator;
 	}
 
+    public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+        $editStaffUsername = $this->AccessControl->check(['Institutions', 'StaffAccountUsername', 'edit']);
+
+        if ($editStaffUsername) {
+            $attr['type'] = 'string';
+            return $attr;
+        }
+    }
 }
