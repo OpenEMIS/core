@@ -28,6 +28,7 @@ use Cake\Validation\Validator;
 class FileUploadBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'name' => 'file_name',
+		'mime' => 'file_type',
 		'content' => 'file_content',
 		'size' => '1MB',
 		'contentEditable' => true,
@@ -142,6 +143,7 @@ class FileUploadBehavior extends Behavior {
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 
 		$fileNameField = $this->config('name');
+		$fileTypeField = $this->config('mime');
 		$fileContentField = $this->config('content');
 		$contentEditable = $this->config('contentEditable');
 		$fileContentFieldRules = $this->_table->validator()->field($fileContentField);
@@ -339,19 +341,23 @@ class FileUploadBehavior extends Behavior {
 				$pathInfo = pathinfo($file['name']);
 				$fileName = uniqid() . '.' . $pathInfo['extension'];
 			}
+			$fileType = $file['type'];
 			$fileContent = file_get_contents($file['tmp_name']);
 		} else {
 			$fileName = null;
+			$fileType = null;
 			$fileContent = null;
 		}
-		return ['fileName' => $fileName, 'fileContent' => $fileContent];
+		return ['fileName' => $fileName, 'fileType' => $fileType, 'fileContent' => $fileContent];
 	}
 
 	private function parseUploadInput($data, $nameContentArray) {
 		$fileNameField = $this->config('name');
+		$fileTypeField = $this->config('mime');
 		$fileContentField = $this->config('content');
 		$model = $this->_table;
 		$data[$model->alias()][$fileNameField] = $nameContentArray['fileName'];
+		$data[$model->alias()][$fileTypeField] = $nameContentArray['fileType'];
 		$data[$model->alias()][$fileContentField] = $nameContentArray['fileContent'];
 		return $data;
 	}
