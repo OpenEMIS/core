@@ -85,6 +85,14 @@ class ConfigProductListsTable extends ControllerActionTable {
         } else {
             $this->field('file_content', ['visible' => false]);
         }
+
+        $toolbarButtons = $extra['toolbarButtons'];
+
+        if (!$entity->deletable) {
+            if (isset($toolbarButtons['remove'])) {
+                unset($toolbarButtons['remove']);
+            }
+        }
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
