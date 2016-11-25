@@ -1,0 +1,291 @@
+<?php
+namespace Indexes\Model\Table;
+
+use ArrayObject;
+
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
+use Cake\Network\Request;
+
+use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\HtmlTrait;
+
+
+class IndexesTable extends ControllerActionTable
+{
+    use HtmlTrait;
+
+    private $criteriaTypes = [
+        'RESULT' => [
+            'name' => 'Results',
+            'model' => '',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
+        'BEHAVIOR' => [
+            'name' => 'Behavior',
+            'model' => '',
+            'operator' => [3 => '='],
+            'threshold' => ['type' => 'select', 'options' => [1,2,3]]
+        ],
+        'ABSENCE' => [
+            'name' => 'Absences',
+            'model' => '',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
+        'SPECIAL NEED' => [
+            'name' => 'Special Needs',
+            'model' => '',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
+        'STATUS' => [
+            'name' => 'Status',
+            'model' => '',
+            'operator' => [3 => '='],
+            'threshold' => ['type' => 'select', 'options' => [2,3,4]]
+        ],
+        // // 'Pre Primary',
+        'OVERAGE' => [
+            'name' => 'Overage',
+            'model' => '',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
+        'GENDER' => [
+            'name' => 'Genders',
+            'model' => '',
+            'operator' => [3 => '='],
+            'threshold' => ['type' => 'select', 'options' => [3,4,5]]
+        ],
+        'GUARDIAN' => [
+            'name' => 'Guardians',
+            'model' => '',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
+        // // 'Language'
+    ];
+
+
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+
+        $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->toggle('search', false);
+        $this->toggle('remove', false);
+    }
+
+    public function getCriteriasOptions()
+    {
+        $criteriaOptions = [];
+        foreach ($this->criteriaTypes as $key => $obj) {
+            $criteriaOptions [$key] = $obj['name'];
+        }
+
+        return $criteriaOptions;
+    }
+
+    public function getOperatorParams($criteriaType)
+    {
+        $operatorParams['label'] = false;
+        $operatorParams['type'] = 'select';
+        $operatorParams['options'] = $this->criteriaTypes[$criteriaType]['operator'];
+
+        return $operatorParams;
+    }
+
+    public function getThresholdParams($criteriaType)
+    {
+        $thresholdParams['label'] = false;
+        $thresholdParams['type'] = $this->criteriaTypes[$criteriaType]['threshold']['type'];
+
+        if (isset($this->criteriaTypes[$criteriaType]['threshold']['options'])) {
+            $thresholdParams['options'] = $this->criteriaTypes[$criteriaType]['threshold']['options'];
+        }
+
+        return $thresholdParams;
+    }
+
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        $tableHeaders = $this->getMessage('Indexes.TableHeader');
+        $tableCells = [];
+        $criteriaOptions = ['' => '-- '.__('Select Criteria').' --'] + $this->getCriteriasOptions();
+        $alias = $this->alias();
+        $fieldKey = 'indexes_criterias';
+
+        if ($action == 'view') {
+            $associated = $entity->extractOriginal([$fieldKey]);
+            if (!empty($associated[$fieldKey])) {
+                foreach ($associated[$fieldKey] as $i => $obj) {
+                    $rowData = [];
+                    $rowData[] = $this->criteriaTypes[$obj['criteria']]['name'];
+                    $rowData[] = $this->criteriaTypes[$obj['criteria']]['operator'][$obj['operator']];
+                    $rowData[] = $obj['threshold']; // will get form the FO or from the model related
+                    $rowData[] = $obj['index_value'];
+
+                    $tableCells[] = $rowData;
+                }
+            }
+
+        } else if ($action == 'add' || $action == 'edit') {
+            $tableHeaders[] = ''; // for delete column
+            $Form = $event->subject()->Form;
+            $Form->unlockField($alias.".".$fieldKey);
+
+            if ($this->request->is(['get'])) {
+                // to read from saved data
+                if (!array_key_exists($alias, $this->request->data)) {
+                    $this->request->data[$alias] = [$fieldKey => []];
+                } else {
+                    $this->request->data[$alias][$fieldKey] = [];
+                }
+
+                $associated = $entity->extractOriginal([$fieldKey]);
+                if (!empty($associated[$fieldKey])) {
+                    foreach ($associated[$fieldKey] as $key => $obj) {
+                        $this->request->data[$alias][$fieldKey][$key] = [
+                            'id' => $obj->id,
+                            'criteria' => $obj->criteria,
+                            'operator' => $obj->operator,
+                            'threshold' => $obj->threshold,
+                            'index_value' => $obj->index_value
+                        ];
+                    }
+                }
+            }
+
+            // refer to addEditOnAddTrainer for http post
+            if ($this->request->data("$alias.$fieldKey")) {
+                $associated = $this->request->data("$alias.$fieldKey");
+
+                foreach ($associated as $key => $obj) {
+                    $rowData = [];
+                    $criteriaType = $obj['criteria'];
+                    $operator = $obj['operator'];
+                    $threshold = $obj['threshold'];
+
+                    $cell = $criteriaOptions[$criteriaType];
+                    if (isset($obj['id'])) {
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $obj['id']]);
+                    }
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.criteria", ['value' => $criteriaType]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.operator", ['value' => $operator]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.threshold", ['value' => $threshold]);
+
+                    $rowData[] = $cell;
+                    $rowData[] = $Form->input("$alias.$fieldKey.$key.operator", $this->getOperatorParams($criteriaType));
+                    $rowData[] = $Form->input("$alias.$fieldKey.$key.threshold", $this->getThresholdParams($criteriaType));
+                    $rowData[] = $Form->input("$alias.$fieldKey.$key.index_value", ['type' => 'number', 'label' => false]);
+                    $rowData[] = $this->getDeleteButton();
+                    $tableCells[] = $rowData;
+                }
+            }
+        }
+
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+        $attr['criteriaOptions'] = $criteriaOptions;
+
+        return $event->subject()->renderElement('Indexes.Indexes/' . $fieldKey, ['attr' => $attr]);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('name',['sort' => false]);
+        $this->field('modified_user_id',['visible' => true]);
+        $this->field('modified',['visible' => true, 'sort' => false]);
+        $this->field('generated_on',['sort' => false]);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'IndexesCriterias' => [
+                'sort' => ['IndexesCriterias.criteria' => 'ASC', 'IndexesCriterias.id' => 'ASC']
+            ]
+        ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $fieldKey = 'indexes_criterias';
+        $undeletedList = [];
+        $originalEntityList = [];
+        $originalEntity = [];
+        $originalEntity = $entity->extractOriginal([$fieldKey]);
+
+        // get list of original entity
+        if (isset($originalEntity[$fieldKey])) {
+            foreach ($originalEntity[$fieldKey] as $key => $obj) {
+                $originalEntityList[$obj->id] = $obj->criteria;
+            }
+        }
+
+        // get the list of undeleted records, if all deleted, this list will be emtpy
+        if (isset($data[$this->alias()][$fieldKey])) {
+            foreach ($data[$this->alias()][$fieldKey] as $key => $obj) {
+                if (!empty($obj['id'])) {
+                    $undeletedList[$obj['id']] = $obj['criteria'];
+                }
+            }
+        }
+
+        // compare the original list and undeleted list, if not in undeleted list will be deleted.
+        if (!empty($originalEntityList)) {
+            foreach ($originalEntityList as $key => $obj) {
+                if (!array_key_exists($key, $undeletedList)) {
+                    $this->IndexesCriterias->delete($this->IndexesCriterias->get($key));
+                }
+            }
+        }
+    }
+
+    public function addEditOnAddCriteria(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $alias = $this->alias();
+        $fieldKey = 'indexes_criterias';
+
+        if (array_key_exists($alias, $data) && array_key_exists('criteria_type', $data[$alias])) {
+            $criteriaType = $data[$alias]['criteria_type'];
+
+            $data[$alias][$fieldKey][] = [
+                'criteria' => $criteriaType,
+                'operator' => '',
+                'threshold' => '',
+                'index_value' => ''
+            ];
+
+            unset($data[$alias]['criteria_type']);
+        }
+
+        //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+        $options['associated'] = [
+            'IndexesCriterias' => ['validate' => false]
+        ];
+    }
+
+    public function setupFields(Event $event, Entity $entity)
+    {
+        $this->field('generated_by',['visible' => false]);
+        $this->field('indexes_criterias', ['type' => 'custom_criterias']);
+
+        $this->setFieldOrder(['name', 'indexes_criterias']);
+    }
+}
