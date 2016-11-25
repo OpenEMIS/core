@@ -817,6 +817,12 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Infrastructure'],
 						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
 					],
+				'CustomReports.ReportTemplates' => [
+					'title' => 'Report Template',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'CustomReport'],
+					'selected' => ['CustomReports.ReportTemplates']
+				],
 				'Labels.index' => [
 					'title' => 'Labels',
 					'parent' => 'SystemSetup',
