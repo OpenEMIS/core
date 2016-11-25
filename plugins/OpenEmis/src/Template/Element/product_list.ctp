@@ -18,7 +18,18 @@ if (!isset($products)) {
 		<?php foreach ($products as $name => $item) : ?>
 			<div class="product-menu col-xs-4">
 				<?php
-				$link = '<i class="' . $item['icon'] . '"></i>';
+
+				$link = '';
+
+				if (isset($item['file_name']) && !empty($item['file_name'])) {
+					$fileName = $item['file_name'];
+					$link .= $this->Html->image('product_list_logo/'.$fileName, [
+							'style' => 'height:35px; width: 35px'
+						]);
+				} else {
+					$link .= '<i class="' . $item['icon'] . '"></i>';
+				}
+
 				$link .= '<span>' . $item['name'] . '</span>';
 				echo $this->Html->link($link, $item['url'], array('escape' => false));
 				?>

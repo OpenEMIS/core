@@ -22,7 +22,7 @@ class InstitutionsTable extends AppTable  {
 
 	public $shiftTypes = [];
 
-	private $isAcademicOptions = [];
+	private $classificationOptions = [];
 
 	CONST SINGLE_OWNER = 1;
 	CONST SINGLE_OCCUPIER = 2;
@@ -143,7 +143,7 @@ class InstitutionsTable extends AppTable  {
         	'Students' => ['index']
         ]);
 
-        $this->isAcademicOptions = [
+        $this->classificationOptions = [
 			self::ACADEMIC => 'Academic Institution',
 			self::NON_ACADEMIC => 'Non-Academic Institution'
 		];
@@ -620,7 +620,7 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'shift_section',
@@ -649,7 +649,7 @@ class InstitutionsTable extends AppTable  {
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'location_section',
@@ -678,7 +678,7 @@ class InstitutionsTable extends AppTable  {
 	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'location_section',
@@ -695,12 +695,12 @@ class InstitutionsTable extends AppTable  {
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
-		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+		$this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity)
 	{
-		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+		$this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
 
 	public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request) {
@@ -827,22 +827,22 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 
-	public function onUpdateFieldIsAcademic(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request) {
 
 		if ($action == 'add') {
 			$attr['select'] = false;
-			$attr['options'] = $this->isAcademicOptions;
+			$attr['options'] = $this->classificationOptions;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'disabled';
-			$attr['attr']['value'] = __($this->isAcademicOptions[$attr['entity']->is_academic]);
+			$attr['attr']['value'] = __($this->classificationOptions[$attr['entity']->classification]);
 		}
 		return $attr;
 	}
 
-	public function onGetIsAcademic(Event $event, Entity $entity)
+	public function onGetClassification(Event $event, Entity $entity)
 	{
-		$selectedIsAcademic = $entity->is_academic;
-		return __($this->isAcademicOptions[$selectedIsAcademic]);
+		$selectedClassification = $entity->classification;
+		return __($this->classificationOptions[$selectedClassification]);
 	}
 
 	/**
