@@ -155,6 +155,14 @@ class AcademicPeriodsTable extends AppTable
                 $this->triggerUpdateInstitutionShiftTypeShell($entity->id);
             }
         }
+
+        $broadcaster = $this;
+        $listeners = [];
+        $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
+
+        if (!empty($listeners)) {
+            $this->dispatchEventToModels('Model.AcademicPeriods.afterSave', [$entity], $broadcaster, $listeners);
+        }
     }
 
     public function beforeAction(Event $event)
@@ -416,7 +424,7 @@ class AcademicPeriodsTable extends AppTable
 
     public function getYearList($params = [])
     {
-        $conditions = array_key_exists('conditons', $params) ? $params['conditions'] : [];
+        $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
 
