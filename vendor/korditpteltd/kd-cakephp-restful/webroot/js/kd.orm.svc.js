@@ -247,6 +247,27 @@ angular.module('kd.orm.svc', [])
             return url;
         },
 
+        customURL: function(url, options={method: 'GET', headers: {'Content-Type': 'application/json'}}, data={}) {
+            var deferred = $q.defer();
+            var success = function(response) {
+                if (angular.isDefined(response.data.error)) {
+                    deferred.reject(response.data.error);
+                } else {
+                    deferred.resolve(response.data);
+                }
+            };
+
+            var error = function(error) {
+                deferred.reject(error);
+            };
+
+            options.url = url;
+            options.data = data;
+
+            var httpResponse = $http(options).then(success, error);
+            return deferred.promise;
+        },
+
         save: function(data) {
             this._method = 'POST';
             var settings = {
