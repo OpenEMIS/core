@@ -13,4 +13,4 @@ CREATE TABLE IF NOT EXISTS `report_templates` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains template for a specific report';
 
 INSERT INTO `report_templates` (`id`, `model`, `file_name`, `file_type`, `file_content`) VALUES
-(1, 'Institution.StudentResults', NULL, NULL, NULL);
+(1, 'Institution.AssessmentResults', NULL, NULL, NULL);

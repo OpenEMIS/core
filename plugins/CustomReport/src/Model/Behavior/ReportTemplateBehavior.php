@@ -4,10 +4,15 @@ namespace CustomReport\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\Network\Request;
 use Cake\Event\Event;
 
 class ReportTemplateBehavior extends Behavior
 {
+    private $moduleMapping = [
+        'Institution.AssessmentResults' => 'Institution -> Assessment Results'
+    ];
+
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
@@ -25,15 +30,8 @@ class ReportTemplateBehavior extends Behavior
 		$events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
         $events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction'];
+        $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction'];
 		return $events;
-    }
-
-    public function validationDefault(Validator $validator)
-    {
-        $validator = parent::validationDefault($validator);
-
-        return $validator
-            ->allowEmpty('file_content');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -48,10 +46,17 @@ class ReportTemplateBehavior extends Behavior
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         $model->field('file_content', [
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+            'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]
         ]);
 
         $model->setFieldOrder(['model', 'file_name', 'file_type', 'file_content']);
+    }
+
+    public function onGetModel(Event $event, Entity $entity)
+    {
+        $value = array_key_exists($entity->model, $this->moduleMapping) ? $this->moduleMapping[$entity->model] : $entity->model;
+
+        return $value;
     }
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -75,6 +80,45 @@ class ReportTemplateBehavior extends Behavior
         );
         // End
 
-        $model->field('file_content', ['visible' => ['view' => false, 'edit' => true]]);
+        $this->setupFields($entity, $extra);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity, $extra);
+    }
+
+    public function onUpdateFieldModel(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->model;
+            $attr['attr']['value'] = array_key_exists($entity->model, $this->moduleMapping) ? $this->moduleMapping[$entity->model] : $entity->model;
+        }
+
+        return $attr;
+    }
+
+    private function setupFields(Entity $entity, ArrayObject $extra)
+    {
+        $model = $this->_table;
+
+        $model->field('model', ['entity' => $entity]);
+        $model->field('file_content');
+
+        $model->setFieldOrder(['model' , 'file_content']);
+    }
+
+    public function checkIfHasTemplate($registryAlias=null)
+    {
+        $hasTemplate = false;
+
+        $model = $this->_table;
+        $entity = $model->find()->where([$model->aliasField('model') => $registryAlias])->first();
+        $hasTemplate = !empty($entity->file_content) ? true : false;
+
+        return $hasTemplate;
     }
 }
