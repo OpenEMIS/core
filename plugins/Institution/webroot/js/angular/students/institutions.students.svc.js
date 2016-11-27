@@ -190,26 +190,40 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     .page(pageParams.page)
                     .limit(pageParams.limit);
 
+                // Get url from user input
+                // var replaceURL = source;
+                var replaceURL = 'https://demo.openemis.org/identity/api/restful/Users.json?_contain=Genders&super_admin=0&first_name={first_name}&_limit={limit}&_page={page}';
+                var replacement = {
+                    "{page}": pageParams.page,
+                    "{limit}": pageParams.limit
+                }
+
                 var conditionsCount = 0;
 
                 if (options.hasOwnProperty('conditions')) {
                     for (var key in options['conditions']) {
                         if (typeof options['conditions'][key] == 'string') {
                             options['conditions'][key] = options['conditions'][key].trim();
-                            if (options['conditions'][key] !== '') {
-                                if (key != 'date_of_birth') {
-                                    params[key] = options['conditions'][key] + '_';
-                                } else {
-                                    params[key] = vm.formatDateReverse(options['conditions'][key]);
-                                }
-                                conditionsCount++;
+                            if (key != 'date_of_birth') {
+                                params[key] = options['conditions'][key] + '_';
+                            } else {
+                                params[key] = vm.formatDateReverse(options['conditions'][key]);
                             }
+                            var replaceKey = '{'+key+'}';
+                            replacement[replaceKey] = params[key];
+                            conditionsCount++;
                         }
                     }
                     if (Object.getOwnPropertyNames(params).length !== 0) {
                         Users.where(params);
                     }
                 }
+
+                console.log(replacement);
+                var str = replaceURL.replace(/{\w+}/g, function(all) {
+                   return replacement[all] || all;
+                });
+                console.log(str);
                 Users.contain(['Genders']);
                 var authorizationHeader = 'Bearer ' + token;
 
