@@ -2,6 +2,7 @@
 namespace CustomReport\Model\Table;
 
 use ArrayObject;
+use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class ReportTemplatesTable extends ControllerActionTable
@@ -22,5 +23,13 @@ class ReportTemplatesTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('remove', false);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->allowEmpty('file_content');
     }
 }
