@@ -129,6 +129,7 @@ class AccountBehavior extends Behavior {
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['ControllerAction.Model.onUpdateFieldUsername'] = 'onUpdateFieldUsername';
 		return $events;
 	}
 
@@ -158,8 +159,7 @@ class AccountBehavior extends Behavior {
 		}
 	}
 
-	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request)
-	{
+	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
 		$isAdmin = $this->_table->AccessControl->isAdmin();
 		$loginUserId = $this->_table->Auth->user('id');
 		$id = $request->params['pass'][1];
