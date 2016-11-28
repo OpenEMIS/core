@@ -192,10 +192,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                 // Get url from user input
                 // var replaceURL = source;
-                var replaceURL = 'https://demo.openemis.org/identity/api/restful/Users.json?_contain=Genders&super_admin=0&first_name={first_name}&_limit={limit}&_page={page}';
+                // var replaceURL = 'https://demo.openemis.org/identity/api/restful/Users.json?_contain=Genders&super_admin=0&first_name={first_name}_&last_name={last_name}_&identity_no&_limit={limit}&_page={page}';
+                var replaceURL = 'http://localhost:8080/identities/api/restful/Users.json?_contain=Genders&super_admin=0&_finder=Students[limit:{limit};page:{page};first_name:{first_name};last_name:{last_name};identity_number:{identity_number};date_of_birth:{date_of_birth}]';
                 var replacement = {
                     "{page}": pageParams.page,
-                    "{limit}": pageParams.limit
+                    "{limit}": pageParams.limit,
+                    "{first_name}": '',
+                    "{last_name}": '',
+                    "{identity_number}": '',
+                    "{date_of_birth}": ''
                 }
 
                 var conditionsCount = 0;
@@ -219,11 +224,10 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     }
                 }
 
-                console.log(replacement);
-                var str = replaceURL.replace(/{\w+}/g, function(all) {
-                   return replacement[all] || all;
+                var url = replaceURL.replace(/{\w+}/g, function(all) {
+                    return all in replacement ? replacement[all] : all;
                 });
-                console.log(str);
+
                 Users.contain(['Genders']);
                 var authorizationHeader = 'Bearer ' + token;
 
@@ -237,7 +241,14 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     }
                 };
 
-                return Users.ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
+                var opt = {
+                    method: 'GET',
+                    headers: {'Content-Type': 'application/json', 'Authorization': authorizationHeader}
+                }
+
+                return KdOrmSvc.customAjax(url, opt);
+
+                // return Users.ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
             }, function(error){
                 deferred.reject(error);
             })
