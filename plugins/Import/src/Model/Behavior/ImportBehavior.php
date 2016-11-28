@@ -332,6 +332,7 @@ class ImportBehavior extends Behavior {
             $importedUniqueCodes = new ArrayObject;
             $dataFailed = [];
             $dataPassed = [];
+            $extra = new ArrayObject(['lookup' => []]);
 
             $activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
             $activeModel->addBehavior('DefaultValidation');
@@ -383,7 +384,7 @@ class ImportBehavior extends Behavior {
 
                 $originalRow = new ArrayObject;
                 $checkCustomColumn = new ArrayObject;
-                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
+                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
                 $tempRow = $tempRow->getArrayCopy();
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
@@ -1110,7 +1111,7 @@ class ImportBehavior extends Behavior {
      * @param  ArrayObject  $rowInvalidCodeCols for holding error messages found on option field columns
      * @return boolean                          returns whether the row being checked pass option field columns check
      */
-    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra) {
         // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
         $sheet = $references['sheet'];
         $mapping = $references['mapping'];
@@ -1205,7 +1206,7 @@ class ImportBehavior extends Behavior {
                     $rowPass = false;
                     $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
                 }
-            } elseif ($foreignKey == self::DIRECT_TABLE) {
+            } else if ($foreignKey == self::DIRECT_TABLE) {
                 $registryAlias = $lookupPlugin . '.' . $lookupModel;
                 if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
                     $excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
@@ -1215,10 +1216,16 @@ class ImportBehavior extends Behavior {
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
-                    $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
-                    $params = [$lookupQuery, $excelLookupModel, $lookupColumn, $tempRow, $originalRow, $cellValue, $rowInvalidCodeCols, $columnName];
-                    $this->dispatchEvent($this->_table, $this->eventKey('onImportLookup'.$lookupModel.'BeforeQuery'), 'onImportLookup'.$lookupModel.'BeforeQuery', $params);
-                    $record = $lookupQuery->first();
+                    if (!isset($extra['lookup'][$excelLookupModel->alias()][$cellValue])) {
+                        $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
+                        $params = [$lookupQuery, $excelLookupModel, $lookupColumn, $tempRow, $originalRow, $cellValue, $rowInvalidCodeCols, $columnName];
+                        $this->dispatchEvent($this->_table, $this->eventKey('onImportLookup'.$lookupModel.'BeforeQuery'), 'onImportLookup'.$lookupModel.'BeforeQuery', $params);
+                        $record = $lookupQuery->first();
+
+                        $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
+                    } else {
+                        $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
+                    }
                 } else {
                     $columnAttr = $activeModel->schema()->column($columnName);
                     // when blank and the field is not nullable, set cell value as default value setup in database
@@ -1252,7 +1259,7 @@ class ImportBehavior extends Behavior {
                 } else {
                     $val = $cellValue;
                 }
-            } elseif ($foreignKey == self::NON_TABLE_LIST) {
+            } else if ($foreignKey == self::NON_TABLE_LIST) {
                 if (!empty($cellValue)) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
                     $recordId = $getIdEvent->result;
