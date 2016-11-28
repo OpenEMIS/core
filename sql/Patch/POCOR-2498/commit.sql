@@ -33,22 +33,8 @@ ALTER TABLE `indexes_criteria`
   ADD KEY `index_id` (`index_id`);
 
 
--- Table structure for table `student_behaviour_categories_classifications`
-CREATE TABLE IF NOT EXISTS `student_behaviour_categories_classifications` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `student_behaviour_classification_id` int(11) NOT NULL COMMENT 'links to student behaviour classifications',
-  `student_behaviour_category_id` int(11) NOT NULL COMMENT 'links to student behaviour categories'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-ALTER TABLE `student_behaviour_categories_classifications`
-  ADD PRIMARY KEY (`student_behaviour_classification_id`,`student_behaviour_category_id`),
-  ADD UNIQUE KEY `id` (`id`),
-  ADD KEY `student_behaviour_classification_id` (`student_behaviour_classification_id`),
-  ADD KEY `student_behaviour_category_id` (`student_behaviour_category_id`);
-
-
--- Table structure for table `student_behaviour_classifications`
-CREATE TABLE IF NOT EXISTS `student_behaviour_classifications` (
+-- Table structure for table `classifications`
+CREATE TABLE IF NOT EXISTS `classifications` (
   `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `name` varchar(50) NOT NULL,
   `order` int(3) NOT NULL,
@@ -63,6 +49,8 @@ CREATE TABLE IF NOT EXISTS `student_behaviour_classifications` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+-- Adding new column student_behaviour_categories
+ALTER TABLE `student_behaviour_categories` ADD `classification_id` INT(3) NOT NULL DEFAULT '0' COMMENT 'links to classification.id' AFTER `national_code`;
 
 
 

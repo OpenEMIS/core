@@ -1,6 +1,6 @@
 -- code here
-DROP TABLE student_behaviour_categories_classifications;
-DROP TABLE student_behaviour_classifications;
+ALTER TABLE `student_behaviour_categories` DROP `classification_id`;
+DROP TABLE classifications;
 DROP TABLE indexes_criteria;
 DROP TABLE indexes;
 
