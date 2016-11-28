@@ -453,7 +453,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     delete userRecord['created_user_id'];
                     userRecord['date_of_birth'] = vm.formatDate(userRecord['date_of_birth']);
                     userRecord['is_student'] = 1;
-                    vm.getGenderRecord(userRecord['gender']['code'])
+                    vm.getGenderRecord(userRecord['gender']['name'])
                     .then(function(genderRecord) {
                         if (genderRecord.data.length > 0) {
                             delete userRecord['gender'];
@@ -510,12 +510,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({defer: true});
     };
 
-    function getGenderRecord(code)
+    function getGenderRecord(name)
     {
         return Genders
             .select()
             .where({
-                'code': code
+                'name': name
             })
             .ajax({defer: true});
     };
