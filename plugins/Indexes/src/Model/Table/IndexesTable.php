@@ -26,7 +26,7 @@ class IndexesTable extends ControllerActionTable
         ],
         'BEHAVIOR' => [
             'name' => 'Behavior',
-            'model' => '',
+            'model' => 'Student.StudentBehaviourClassifications',
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'options' => [1,2,3]]
         ],
@@ -104,12 +104,22 @@ class IndexesTable extends ControllerActionTable
     {
         $thresholdParams['label'] = false;
         $thresholdParams['type'] = $this->criteriaTypes[$criteriaType]['threshold']['type'];
+        $model = $this->criteriaTypes[$criteriaType]['model'];
 
-        if (isset($this->criteriaTypes[$criteriaType]['threshold']['options'])) {
-            $thresholdParams['options'] = $this->criteriaTypes[$criteriaType]['threshold']['options'];
+        if ($thresholdParams['type'] == 'select') {
+            $thresholdParams['options'] = $this->getOptions($model);
         }
 
         return $thresholdParams;
+    }
+
+    public function getOptions($model)
+    {
+        $model = TableRegistry::get($model);
+        $options = [];
+        $options = $model->getStudentBehaviourClassificationsOptions();
+
+        return $options;
     }
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
