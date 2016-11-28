@@ -438,6 +438,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             var newUserRecord = {};
             var nationality = '';
             var identityType = '';
+            var genderName = '';
             vm.getExternalSourceAttributes()
             .then(function(attributes) {
                 var attr = attributes;
@@ -445,6 +446,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];
                 newUserRecord['date_of_birth'] = userRecord[attr['date_of_birth_mapping']];
                 newUserRecord['external_reference'] = userRecord[attr['external_reference_mapping']];
+                genderName = userRecord[attr['gender_mapping']];
                 // By auto generated
                 newUserRecord['openemis_no'] = userRecord['openemis_no'];
 
@@ -465,8 +467,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     identityType = userRecord[attr['identity_type_mapping']];
                 }
 
-
-                vm.getUserRecord(userRecord['openemis_no'])
+                vm.getUserRecord(newUserRecord['external_reference'])
                 .then(function(response) {
                     if (response.data.length > 0) {
                         userData = response.data[0];
@@ -479,25 +480,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             console.log(error);
                         });
                     } else {
-                        delete userRecord['id'];
-                        delete userRecord['username'];
-                        delete userRecord['password'];
-                        delete userRecord['last_login'];
-                        delete userRecord['address_area_id'];
-                        delete userRecord['birthplace_area_id'];
-                        delete userRecord['created'];
-                        delete userRecord['modified'];
-                        delete userRecord['modified_user_id'];
-                        delete userRecord['created_user_id'];
-                        userRecord['date_of_birth'] = vm.formatDate(userRecord['date_of_birth']);
-                        userRecord['is_student'] = 1;
-                        vm.getGenderRecord(userRecord['gender']['name'])
+                        
+                        newUserRecord['date_of_birth'] = vm.formatDate(newUserRecord['date_of_birth']);
+                        newUserRecord['is_student'] = 1;
+
+                        vm.getGenderRecord(genderName)
                         .then(function(genderRecord) {
-                            if (genderRecord.data.length > 0) {
-                                delete userRecord['gender'];
-                                var identitiesRecord = userRecord['identities'];
-                                delete userRecord['identities'];
-                                userRecord['gender_id'] = genderRecord.data[0].id;
+                                // var identitiesRecord = userRecord['identities'];
+                                // delete userRecord['identities'];
+                                newUserRecord['gender_id'] = genderRecord;
                                 StudentUser.reset();
                                 StudentUser.save(userRecord)
                                 .then(function(studentRecord) {
@@ -507,12 +498,16 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                         deferred.resolve(studentRecord.data);
                                     } else {
                                         var userId = userEntity.id;
-                                        vm.importIdentities(userId, identitiesRecord)
-                                        .then(function(res){
-                                            deferred.resolve([studentRecord.data, {}]);
-                                        }, function(error){
-                                            deferred.resolve([studentRecord.data, {}]);
-                                        });
+
+                                        // Import identity
+
+                                        // Import nationality
+                                        // vm.importIdentities(userId, identitiesRecord)
+                                        // .then(function(res){
+                                            // deferred.resolve([studentRecord.data, {}]);
+                                        // }, function(error){
+                                            // deferred.resolve([studentRecord.data, {}]);
+                                        // });
                                     }
                                 }, function(error) {
                                     deferred.reject(error);
@@ -531,21 +526,18 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     console.log(error);
                 });
             }, function(error) {
-
-            });
-            
+                deferred.reject(error);
+            });   
         }
-
-
         return deferred.promise;
     };
 
-    function getUserRecord(openemisNo)
+    function getUserRecord(externalRef)
     {
         return StudentUser
             .select()
             .where({
-                'openemis_no': openemisNo
+                'external_reference': externalRef
             })
             .contain(['Genders', 'Identities.IdentityTypes'])
             .find('enrolledInstitutionStudents')
@@ -554,12 +546,32 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getGenderRecord(name)
     {
-        return Genders
+        var deferred = $q.defer();
+        Genders
             .select()
             .where({
                 'name': name
             })
-            .ajax({defer: true});
+            .ajax()
+            .then(function(response) {
+                if (response.data.length > 0) {
+                    deferred.resolve(response.data[0].id);
+                } else {
+                    var data = {};
+                    data['name'] = name;
+                    data['code'] = name;
+                    Genders.reset();
+                    Genders.save(data)
+                    .then(function(res) {
+                        deferred.resolve(res.data.data.id);
+                    }, function(error) {
+                        deferred.reject(error);
+                    });
+                }
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     };
 
     function getGenders()
