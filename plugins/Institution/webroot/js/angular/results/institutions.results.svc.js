@@ -1,6 +1,6 @@
 angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc'])
 .service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc) {
-    const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
+    const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
         AssessmentsTable: 'Assessment.Assessments',
@@ -248,6 +248,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var maxMark = subject.grading_type.max;
                     var isMarksType = (resultType == resultTypes.MARKS);
                     var isGradesType = (resultType == resultTypes.GRADES);
+                    var isDurationType = (resultType == resultTypes.DURATION);
                 }
 
                 var allowEdit = (action == 'edit' && period.editable);
@@ -295,6 +296,16 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                     extra['period'] = period;
                     columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra, _results);
+                } else if (isDurationType) {
+                    if (subject.grading_type != null) {
+                        extra = {
+                            minMark: 0,
+                            passMark: subject.grading_type.pass_mark,
+                            maxMark: subject.grading_type.max
+                        };
+                    }
+
+                    columnDef = ResultsSvc.renderDuration(allowEdit, columnDef, extra, _results);
                 }
 
                 this.push(columnDef);
@@ -449,6 +460,80 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         return eCell;
                     },
                     suppressMenu: true
+                });
+            }
+
+            return cols;
+        },
+
+        renderDuration: function(allowEdit, cols, extra, _results) {
+            var minMark = extra.minMark;
+            var passMark = extra.passMark;
+            var maxMark = extra.maxMark;
+
+            // cols = angular.merge(cols, {
+                // filter: 'number',
+                // cellStyle: function(params) {
+                //     if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
+                //         return {color: '#CC5C5C'};
+                //     } else {
+                //         return {color: '#333'};
+                //     }
+                // },
+                // valueGetter: function(params) {
+                //     var value = params.data[params.colDef.field];
+
+                //     if (!isNaN(parseFloat(value))) {
+                //         return $filter('number')(value, 2);
+                //     } else {
+                //         return '';
+                //     }
+                // }
+            // });
+
+            var ResultsSvc = this;
+            if (allowEdit) {
+                cols = angular.merge(cols, {
+                    cellClass: 'oe-cell-highlight',
+                    cellRenderer: function(params) {
+                        var eCell = document.createElement('div');
+
+                        var minuteInput = document.createElement('input');
+                        minuteInput.setAttribute("id", "mins");
+                        minuteInput.setAttribute("type", "number");
+                        minuteInput.setAttribute("min", "0");
+                        minuteInput.setAttribute("style", "width: 50%; border: none; background-color: inherit; text-align: center;");
+
+                        var text = document.createElement('span');
+                        var colon = document.createTextNode(" : ");
+                        text.setAttribute("style", "font-weight:strong");
+                        text.appendChild(colon);
+
+                        var secondInput = document.createElement('input');
+                        secondInput.setAttribute("id", "secs");
+                        secondInput.setAttribute("type", "number");
+                        secondInput.setAttribute("min", "0");
+                        secondInput.setAttribute("max", "59");
+                        secondInput.setAttribute("style", "width: 50%; border: none; background-color: inherit; text-align: center;");
+
+                        eCell.appendChild(minuteInput);
+                        eCell.appendChild(text);
+                        eCell.appendChild(secondInput);
+
+                        return eCell;
+                    },
+                    suppressMenu: true,
+                    angularCompileRows: true
+                    // cellRendererParams: {},
+                    // newValueHandler: function(params) {
+                    //     var valueAsFloat = parseFloat(params.newValue);
+
+                    //     if (params.newValue.length > 0 && (isNaN(valueAsFloat) || (valueAsFloat < minMark || valueAsFloat > maxMark))) {
+                    //         params.data[params.colDef.field] = '';
+                    //     } else {
+                    //         params.data[params.colDef.field] = params.newValue;
+                    //     }
+                    // }
                 });
             }
 
