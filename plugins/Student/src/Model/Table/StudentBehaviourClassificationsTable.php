@@ -135,12 +135,13 @@ class StudentBehaviourClassificationsTable extends ControllerActionTable
         return $behaviourOptions;
     }
 
-    public function findStudentBehaviourClassificationsOptions(Query $query, array $options)
+    public function getStudentBehaviourClassificationsOptions()
     {
-        return $query
+        return $this
             ->find('list')
             ->find('visible')
             ->order([$this->aliasField('order')])
+            ->toArray()
         ;
     }
 }
