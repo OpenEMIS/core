@@ -1,4 +1,4 @@
-<?php if (!empty($periodOptions) || !empty($examinationOptions)) : ?>
+<?php if (!empty($periodOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -12,28 +12,14 @@
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
 
-                if (!empty($periodOptions)) {
-                    echo $this->Form->input('academic_period', array(
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $periodOptions,
-                        'default' => $selectedPeriod,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'academic_period_id'
-                    ));
-                }
-
-                if (!empty($examinationOptions)) {
-                    echo $this->Form->input('examination', array(
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $examinationOptions,
-                        'default' => $selectedExamination,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'examination_id',
-                        'data-named-group' => 'academic_period_id'
-                    ));
-                }
+                echo $this->Form->input('academic_period', array(
+                    'class' => 'form-control',
+                    'label' => false,
+                    'options' => $periodOptions,
+                    'default' => $selectedPeriod,
+                    'url' => $baseUrl,
+                    'data-named-key' => 'academic_period_id'
+                ));
             ?>
         </div>
     </div>
