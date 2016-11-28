@@ -192,21 +192,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (promisesObj[4] != undefined && promisesObj[4].hasOwnProperty('data')) {
                 StudentController.StudentSpecialNeedsOptions = promisesObj[4]['data'];
             }
-            var deferred = $q.defer();
             if (StudentController.hasExternalDataSource) {
-                InstitutionsStudentsSvc.getExternalDefaultIdentityType()
-                .then(function(externalIdentityType) {
-                    if (externalIdentityType.length > 0) {
-                        deferred.resolve(externalIdentityType[0].name);
-                    } else {
-                        deferred.reject('No External Identity Type');
-                    }
-                }, function(error) {
-                    StudentController.hasExternalDataSource = false;
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
-                    deferred.reject(error);
-                });
-                return deferred.promise;
+                return 'Identity Number';
             } else {
                 return StudentController.genderOptions;
             }
@@ -721,19 +708,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var endDate = $scope.endDate;
 
         if (!StudentController.createNewStudent) {
-            InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
-            .then(function(studentData){
-
-                if (StudentController.externalSearch) {
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
-                    StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
-                } else {
-                    var studentId = StudentController.selectedStudent;
-                    StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
-                }
-            }, function(error){
-                console.log(error);
-            });
+            if (StudentController.externalSearch) {
+                var studentData = StudentController.selectedStudentData;
+                var amendedStudentData = Object.assign({}, studentData);
+                amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDateReverse(amendedStudentData.date_of_birth);
+                StudentController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
+            } else {
+                var studentId = StudentController.selectedStudent;
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
+            }
         } else {
             console.log('postForm');
             if (StudentController.selectedStudentData != null) {

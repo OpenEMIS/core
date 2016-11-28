@@ -18,7 +18,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
         getDefaultIdentityType: getDefaultIdentityType,
-        getExternalDefaultIdentityType: getExternalDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
@@ -64,7 +63,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     };
 
     var externalModels = {
-        Users: 'Users',
         IdentityTypes: 'IdentityTypes'
 
     };
@@ -185,15 +183,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                 var params = {};
                 params['super_admin'] = 0;
-                Users.reset();
-                Users
-                    .page(pageParams.page)
-                    .limit(pageParams.limit);
 
                 // Get url from user input
-                // var replaceURL = source;
-                // var replaceURL = 'https://demo.openemis.org/identity/api/restful/Users.json?_contain=Genders&super_admin=0&first_name={first_name}_&last_name={last_name}_&identity_no&_limit={limit}&_page={page}';
-                var replaceURL = 'http://localhost:8080/identities/api/restful/Users.json?_contain=Genders&super_admin=0&_finder=Students[limit:{limit};page:{page};first_name:{first_name};last_name:{last_name};identity_number:{identity_number};date_of_birth:{date_of_birth}]';
+                var replaceURL = sourceUrl;
                 var replacement = {
                     "{page}": pageParams.page,
                     "{limit}": pageParams.limit,
@@ -210,7 +202,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         if (typeof options['conditions'][key] == 'string') {
                             options['conditions'][key] = options['conditions'][key].trim();
                             if (key != 'date_of_birth') {
-                                params[key] = options['conditions'][key] + '_';
+                                params[key] = options['conditions'][key];
                             } else {
                                 params[key] = vm.formatDateReverse(options['conditions'][key]);
                             }
@@ -219,16 +211,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             conditionsCount++;
                         }
                     }
-                    if (Object.getOwnPropertyNames(params).length !== 0) {
-                        Users.where(params);
-                    }
                 }
 
                 var url = replaceURL.replace(/{\w+}/g, function(all) {
                     return all in replacement ? replacement[all] : all;
                 });
 
-                Users.contain(['Genders']);
                 var authorizationHeader = 'Bearer ' + token;
 
                 var success = function(response, deferred) {
@@ -245,10 +233,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     method: 'GET',
                     headers: {'Content-Type': 'application/json', 'Authorization': authorizationHeader}
                 }
-
                 return KdOrmSvc.customAjax(url, opt);
-
-                // return Users.ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
             }, function(error){
                 deferred.reject(error);
             })
@@ -324,25 +309,13 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
         StudentUser.select();
         var settings = {success: success, defer: true};
-        if (externalSource != null && externalToken !=null) {
-            vm.initExternal(externalSource);
-            var authorizationHeader = 'Bearer ' + externalToken;
-            settings.authorizationHeader = authorizationHeader;
-            return Users
-                .contain(['Genders', 'Identities.IdentityTypes'])
-                .where({
-                    id: id
-                })
-                .ajax(settings);
-        } else {
-            return StudentUser
-                .contain(['Genders', 'Identities.IdentityTypes'])
-                .find('enrolledInstitutionStudents')
-                .where({
-                    id: id
-                })
-                .ajax(settings);
-        }
+        return StudentUser
+            .contain(['Genders', 'Identities.IdentityTypes'])
+            .find('enrolledInstitutionStudents')
+            .where({
+                id: id
+            })
+            .ajax(settings);
     };
 
     function importIdentities(userId, identitiesRecord)
@@ -591,46 +564,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return IdentityTypes
             .find('DefaultIdentityType')
             .ajax({success: success, defer: true});
-    };
-
-    function getExternalDefaultIdentityType() {
-        var vm = this;
-        var defer = $q.defer();
-
-        this.getExternalSourceUrl()
-        .then(function(sourceUrl) {
-            var source = sourceUrl.data;
-            if (source.length > 0) {
-                sourceUrl = source[0].value;
-            }
-            vm.getAccessToken()
-            .then(function(token){
-                var authorizationHeader = 'Bearer ' + token;
-                var success = function(response, deferred) {
-                    var defaultIdentityType = response.data.data;
-                    if (angular.isObject(defaultIdentityType) && defaultIdentityType.length > 0) {
-                        deferred.resolve(defaultIdentityType);
-                    } else {
-                        deferred.resolve(defaultIdentityType);
-                    }
-                };
-                vm.initExternal(sourceUrl);
-                return IdentityTypes
-                    .find('DefaultIdentityType')
-                    .ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
-            }, function (error) {
-                defer.reject(error);
-            })
-            .then(function(identityType) {
-                defer.resolve(identityType);
-            }, function(error) {
-                console.log(error);
-                defer.reject(error);
-            });
-        }, function(error) {
-            defer.reject(error);
-        });
-        return defer.promise;
     };
 
     function formatDateReverse(datetime) {
