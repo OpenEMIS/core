@@ -265,7 +265,7 @@ class DirectoriesTable extends AppTable {
 
 			switch ($userType) {
 				case self::STUDENT:
-					$this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+                    $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
 					$this->addBehavior('CustomField.Record', [
 						'model' => 'Student.Students',
 						'behavior' => 'Student',
@@ -392,6 +392,14 @@ class DirectoriesTable extends AppTable {
 					$this->request->query['user_type'] = $data[$this->alias()]['user_type'];
 				}
 			}
+
+            //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
+            $options['associated'] = [
+                'Identities' => ['validate' => false],
+                'Nationalities' => ['validate' => false],
+                'SpecialNeeds' => ['validate' => false],
+                'Contacts' => ['validate' => false]
+            ];
 		}
     }
 
