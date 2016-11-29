@@ -32,9 +32,11 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
 
-        $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => 'textbook_id']);
+        $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => ['textbook_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallBack' => true]);
 
         $this->setDeleteStrategy('restrict');
+
+        $this->EducationLevels = TableRegistry::get('Education.EducationLevels');
     }
 
     public function validationDefault(Validator $validator) {
@@ -276,6 +278,34 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            
+            $educationLevelOptions = $this->EducationLevels->getLevelOptions();
+
+            $attr['options'] = $educationLevelOptions;
+            $attr['onChangeReload'] = 'changeEducationLevel';
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeEducationLevel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        $request->query['programme'] = -1;
+        $request->query['grade'] = -1;
+        $request->query['subject'] = -1;
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
+                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+                }
+            }
+        }
+    }
+
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -376,6 +406,10 @@ class TextbooksTable extends ControllerActionTable {
             'select' => false,
             'entity' => $entity
         ]);
+        $this->field('education_level_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
         $this->field('education_programme_id', [
             'type' => 'select',
             'entity' => $entity
@@ -394,7 +428,7 @@ class TextbooksTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',
+            'academic_period_id', 'education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',
             'code', 'title', 'author', 'publisher', 'publisher' , 'year_published', 'isbn'
         ]);
     }
