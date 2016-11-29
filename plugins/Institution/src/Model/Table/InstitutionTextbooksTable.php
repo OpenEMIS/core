@@ -499,8 +499,20 @@ class InstitutionTextbooksTable extends ControllerActionTable
     {
         // $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
         $tableHeaders = [
-            __('Code') . "&nbsp;<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . __('Textbook ID is unique number assigned to each book within the school') . "'></i>", 
-            'Status', 'Condition', 'Comment', 'Student'];
+            __('Code') . "&nbsp;
+                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . 
+                            __('Textbook ID is unique number assigned to each book within the school') . 
+                        "'></i>",
+            __('Status') . "&nbsp;
+                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . 
+                            __('Available means physically book exists while Not Available means it is missing') . 
+                        "'></i>",
+            'Condition', 'Comment', 
+            __('Student') . "&nbsp;
+                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . 
+                            __('Each book can be optionally allocated to an individual student') . 
+                        "'></i>"
+        ];
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'textbooks_students';
