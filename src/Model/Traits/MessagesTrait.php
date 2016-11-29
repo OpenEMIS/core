@@ -1483,6 +1483,13 @@ trait MessagesTrait {
                 ]
             ]
         ],
+        'Textbook' => [
+            'Textbooks' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ]
+            ]
+        ],
         'Configuration' => [
         	'ConfigProductLists' => [
         		'name' => [
