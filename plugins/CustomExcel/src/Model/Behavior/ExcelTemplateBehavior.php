@@ -1,16 +1,17 @@
 <?php
-namespace CustomReport\Model\Behavior;
+namespace CustomExcel\Model\Behavior;
 
 use ArrayObject;
-use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class ReportTemplateBehavior extends Behavior
+class ExcelTemplateBehavior extends Behavior
 {
     private $moduleMapping = [
-        'Institution.AssessmentResults' => 'Institution -> Assessment Results'
+        'CustomExcel.AssessmentResults' => 'Institution -> Assessment Results'
     ];
 
 	public function initialize(array $config)
@@ -29,6 +30,7 @@ class ReportTemplateBehavior extends Behavior
 	{
 		$events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
+        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
         $events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction'];
         $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction'];
 		return $events;
@@ -49,19 +51,27 @@ class ReportTemplateBehavior extends Behavior
             'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]
         ]);
 
-        $model->setFieldOrder(['model', 'file_name', 'file_type', 'file_content']);
+        $model->setFieldOrder(['module', 'file_name', 'file_type', 'file_content']);
     }
 
-    public function onGetModel(Event $event, Entity $entity)
+    public function onGetModule(Event $event, Entity $entity)
     {
-        $value = array_key_exists($entity->model, $this->moduleMapping) ? $this->moduleMapping[$entity->model] : $entity->model;
+        $value = array_key_exists($entity->module, $this->moduleMapping) ? $this->moduleMapping[$entity->module] : $entity->module;
 
         return $value;
     }
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-    	$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $model = $this->_table;
+
+        $broadcaster = $model;
+        $listeners = [];
+        $listeners[] = TableRegistry::get('CustomExcel.AssessmentResults');
+
+        if (!empty($listeners)) {
+            $model->dispatchEventToModels('Model.ExcelTemplates.indexBeforeAction', [$extra], $broadcaster, $listeners);
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -94,8 +104,8 @@ class ReportTemplateBehavior extends Behavior
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
-            $attr['value'] = $entity->model;
-            $attr['attr']['value'] = array_key_exists($entity->model, $this->moduleMapping) ? $this->moduleMapping[$entity->model] : $entity->model;
+            $attr['value'] = $entity->module;
+            $attr['attr']['value'] = array_key_exists($entity->module, $this->moduleMapping) ? $this->moduleMapping[$entity->module] : $entity->module;
         }
 
         return $attr;
@@ -105,10 +115,10 @@ class ReportTemplateBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $model->field('model', ['entity' => $entity]);
+        $model->field('module', ['entity' => $entity]);
         $model->field('file_content');
 
-        $model->setFieldOrder(['model' , 'file_content']);
+        $model->setFieldOrder(['module' , 'file_content']);
     }
 
     public function checkIfHasTemplate($registryAlias=null)
@@ -116,7 +126,7 @@ class ReportTemplateBehavior extends Behavior
         $hasTemplate = false;
 
         $model = $this->_table;
-        $entity = $model->find()->where([$model->aliasField('model') => $registryAlias])->first();
+        $entity = $model->find()->where([$model->aliasField('module') => $registryAlias])->first();
         $hasTemplate = !empty($entity->file_content) ? true : false;
 
         return $hasTemplate;

@@ -1,9 +1,9 @@
 <?php
-namespace Institution\Model\Table;
+namespace CustomExcel\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 
-class AssessmentResultsTable extends ControllerActionTable
+class AssessmentResultsTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -30,6 +30,6 @@ class AssessmentResultsTable extends ControllerActionTable
             ]
         ]);
 
-        $this->addBehavior('CustomReport.CustomReport');
+        $this->addBehavior('CustomExcel.ExcelReport');
     }
 }
