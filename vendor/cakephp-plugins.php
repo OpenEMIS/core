@@ -9,6 +9,7 @@ return [
         'Angular' => $baseDir . '/plugins/Angular/',
         'Area' => $baseDir . '/plugins/Area/',
         'Assessment' => $baseDir . '/plugins/Assessment/',
+        'Textbook' => $baseDir . '/plugins/Textbook/',
         'Bake' => $baseDir . '/vendor/cakephp/bake/',
         'Cache' => $baseDir . '/plugins/Cache/',
         'Configuration' => $baseDir . '/plugins/Configuration/',
