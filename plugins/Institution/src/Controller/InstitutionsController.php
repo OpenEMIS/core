@@ -249,6 +249,8 @@ class InstitutionsController extends AppController
                 $session->write('Institution.Institutions.name', $name);
                 if ($action == 'view') {
                     $header = $name .' - '.__('Overview');
+                } elseif ($action == 'Results') {
+                    $header = $name .' - '.__('Assessments');
                 } else {
                     $header = $name .' - '.__(Inflector::humanize($action));
                 }
