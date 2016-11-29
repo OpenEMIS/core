@@ -29,7 +29,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         formatDate: formatDate,
         getUserRecord: getUserRecord,
         getGenderRecord: getGenderRecord,
-        importIdentities: importIdentities,
         getInternalIdentityTypes: getInternalIdentityTypes,
         addIdentityType: addIdentityType,
         setExternalSourceUrl: setExternalSourceUrl,
@@ -43,7 +42,14 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
         getSpecialNeedTypes: getSpecialNeedTypes,
-        getExternalSourceAttributes: getExternalSourceAttributes
+        getExternalSourceAttributes: getExternalSourceAttributes,
+        getNationalityRecord: getNationalityRecord,
+        getIdentityTypeRecord: getIdentityTypeRecord,
+        importMappingObj: importMappingObj,
+        addUserIdentity: addUserIdentity,
+        addUserNationality: addUserNationality
+
+
     };
 
     var models = {
@@ -57,6 +63,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
+        UserNationalities: 'User.UserNationalities',
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
@@ -325,63 +332,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .ajax(settings);
     };
 
-    function importIdentities(userId, identitiesRecord)
-    {
-        var deferred = $q.defer();
-        var vm = this;
-        vm.getInternalIdentityTypes()
-        .then(function(response) {
-            var data = response.data;
-            var promises = [];
-            for (var i = 0; i < identitiesRecord.length; i++) {
-                var identityTypeId = null;
-                for(var j = 0; j < data.length ; j++) {
-                    if (identitiesRecord[i].identity_type.name == data[j].name) {
-                        identityTypeId = data[j].id;
-                    }
-                }
-                if (identityTypeId != null) {
-                    promises.push(identityTypeId);
-                } else {
-                    promises.push(vm.addIdentityType(identitiesRecord[i].identity_type));
-                }
-            }
-            return $q.all(promises);
-        }, function(error) {
-            deferred.reject(error);
-        })
-        .then(function(identityTypeIds){
-            var promises = [];
-            for (var i = 0; i < identitiesRecord.length; i++) {
-                identitiesRecord[i].identity_type_id = identityTypeIds[i];
-                delete(identitiesRecord[i]['id'])
-                delete(identitiesRecord[i]['identity_type']);
-                delete(identitiesRecord[i]['created']);
-                delete(identitiesRecord[i]['modified']);
-                delete(identitiesRecord[i]['modified_user_id']);
-                delete(identitiesRecord[i]['created_user_id']);
-                identitiesRecord[i]['security_user_id'] = userId;
-                if (identitiesRecord[i]['issue_date'] != null) {
-                    identitiesRecord[i]['issue_date'] = vm.formatDate(identitiesRecord[i]['issue_date']);
-                }
-                if (identitiesRecord[i]['expiry_date'] != null) {
-                    identitiesRecord[i]['expiry_date'] = vm.formatDate(identitiesRecord[i]['expiry_date']);
-                }
-                promises.push(Identities.save(identitiesRecord[i]));
-            }
-            return $q.all(promises);
-        }, function(error) {
-            deferred.reject(error);
-        })
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error){
-            deferred.reject(error);
-        });
-
-        return deferred.promise;
-    };
-
     function addIdentityType(identityType)
     {
         var deferred = $q.defer();
@@ -439,6 +389,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             var nationality = '';
             var identityType = '';
             var genderName = '';
+            var identityNumber = '';
             vm.getExternalSourceAttributes()
             .then(function(attributes) {
                 var attr = attributes;
@@ -458,7 +409,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     newUserRecord['third_name'] = userRecord[attr['third_name_mapping']];
                 }
                 if (typeof userRecord[attr['identity_number_mapping']] != 'undefined') {
-                    newUserRecord['identity_number'] = userRecord[attr['identity_number_mapping']];
+                    identityNumber = userRecord[attr['identity_number_mapping']];
                 }
                 if (typeof userRecord[attr['nationality_mapping']] != 'undefined') {
                     nationality = userRecord[attr['nationality_mapping']];
@@ -480,17 +431,19 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             console.log(error);
                         });
                     } else {
-                        
+
                         newUserRecord['date_of_birth'] = vm.formatDate(newUserRecord['date_of_birth']);
                         newUserRecord['is_student'] = 1;
 
-                        vm.getGenderRecord(genderName)
-                        .then(function(genderRecord) {
+                        vm.importMappingObj(genderName, nationality, identityType)
+                        .then(function(promiseArr) {
                                 // var identitiesRecord = userRecord['identities'];
                                 // delete userRecord['identities'];
-                                newUserRecord['gender_id'] = genderRecord;
+                                newUserRecord['gender_id'] = promiseArr[0];
+                                newUserRecord['nationality_id'] = promiseArr[1];
+                                var identityTypeId = promiseArr[2];
                                 StudentUser.reset();
-                                StudentUser.save(userRecord)
+                                StudentUser.save(newUserRecord)
                                 .then(function(studentRecord) {
                                     var userEntity = studentRecord.data.data;
                                     var userEntityError = studentRecord.data.error;
@@ -498,16 +451,16 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                         deferred.resolve(studentRecord.data);
                                     } else {
                                         var userId = userEntity.id;
-
+                                        var promises = [];
                                         // Import identity
-
+                                        if (userEntity.identity_type_id != null && userEntity.identity_number != null && userEntity.identity_number != '') {
+                                            vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                        }
                                         // Import nationality
-                                        // vm.importIdentities(userId, identitiesRecord)
-                                        // .then(function(res){
-                                            // deferred.resolve([studentRecord.data, {}]);
-                                        // }, function(error){
-                                            // deferred.resolve([studentRecord.data, {}]);
-                                        // });
+                                        if (userEntity.nationality_id != null) {
+                                            var nationalityId = userEntity.nationality_id;
+                                            vm.addUserNationality(userId, nationalityId);
+                                        }
                                     }
                                 }, function(error) {
                                     deferred.reject(error);
@@ -527,7 +480,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 });
             }, function(error) {
                 deferred.reject(error);
-            });   
+            });
         }
         return deferred.promise;
     };
@@ -542,6 +495,107 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .contain(['Genders', 'Identities.IdentityTypes'])
             .find('enrolledInstitutionStudents')
             .ajax({defer: true});
+    };
+
+    function addUserNationality(userId, nationalityId)
+    {
+        var data = {};
+        data['security_user_id'] = userId;
+        data['nationality_id'] = nationalityId;
+        return UserNationalities
+            .save(data);
+    }
+
+    function addUserIdentity(userId, identityTypeId, identityNumber)
+    {
+        var data = {};
+        data['security_user_id'] = userId;
+        data['identity_type_id'] = identityTypeId;
+        data['number'] = identityNumber;
+        return Identities
+            .save(data);
+    }
+
+    function importMappingObj(genderName, nationalityName, identityTypeName)
+    {
+        var promises = [];
+        promises.push(this.getGenderRecord(genderName));
+        promises.push(this.getNationalityRecord(nationalityName));
+        promises.push(this.getIdentityTypeRecord(identityTypeName));
+        return $q.all(promises);
+
+    }
+
+    function getIdentityTypeRecord(name)
+    {
+        var deferred = $q.defer();
+
+        if (typeof name == 'undefined' || name == '') {
+            deferred.resolve(null);
+        } else {
+            IdentityTypes
+                .select()
+                .where({
+                    'name': name
+                })
+                .ajax()
+                .then(function(response) {
+                    if (response.data.length > 0) {
+                        deferred.resolve(response.data[0].id);
+                    } else {
+                        var data = {};
+                        data['name'] = name;
+                        data['visible'] = 1;
+                        data['editable'] = 1;
+                        IdentityTypes.reset();
+                        IdentityTypes.save(data)
+                        .then(function(res) {
+                            deferred.resolve(res.data.data.id);
+                        }, function(error) {
+                            deferred.reject(error);
+                        });
+                    }
+                }, function(error) {
+                    deferred.reject(error);
+                });
+        }
+
+        return deferred.promise;
+    }
+
+    function getNationalityRecord(name)
+    {
+        var deferred = $q.defer();
+        if (typeof name == 'undefined' || name == '') {
+            deferred.resolve(null);
+        } else {
+            Nationalities
+                .select()
+                .where({
+                    'name': name
+                })
+                .ajax()
+                .then(function(response) {
+                    if (response.data.length > 0) {
+                        deferred.resolve(response.data[0].id);
+                    } else {
+                        var data = {};
+                        data['name'] = name;
+                        data['visible'] = 1;
+                        data['editable'] = 1;
+                        Nationalities.reset();
+                        Nationalities.save(data)
+                        .then(function(res) {
+                            deferred.resolve(res.data.data.id);
+                        }, function(error) {
+                            deferred.reject(error);
+                        });
+                    }
+                }, function(error) {
+                    deferred.reject(error);
+                });
+        }
+        return deferred.promise;
     };
 
     function getGenderRecord(name)
