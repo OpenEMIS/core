@@ -35,9 +35,9 @@ class ReorderBehavior extends Behavior {
 			$ids = json_decode($request->data("ids"));
 
 			if (!empty($ids)) {
-				$originalOrder = $model->find('list')
+				$originalOrder = $model
+					->find('list', ['keyField' => $primaryKey, 'valueField' => $orderField])
 					->where([$model->aliasField($primaryKey).' IN ' => $ids])
-					->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
 					->order([$model->aliasField($orderField)])
 					->toArray();
 
