@@ -146,7 +146,7 @@ class DirectoriesController extends AppController {
 			if (!empty($id)) {
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
-				$header = $action == 'StudentResults' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
+				$header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
 				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $id]);
 			}
 		}
