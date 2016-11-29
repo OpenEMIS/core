@@ -365,7 +365,7 @@ class DirectoriesController extends AppController {
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
+			'Results' => ['text' => __('Assessments')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];

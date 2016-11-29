@@ -429,7 +429,7 @@ class NavigationComponent extends Component
 				],
 
 			'Institutions.Assessments.index' => [
-				'title' => 'Results',
+				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Assessments', 'Institutions.Results'],
 				'params' => ['plugin' => 'Institution'],
