@@ -1,11 +1,11 @@
 <?php
-namespace CustomReport\Model\Table;
+namespace CustomExcel\Model\Table;
 
 use ArrayObject;
 use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
-class ReportTemplatesTable extends ControllerActionTable
+class ExcelTemplatesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
@@ -19,7 +19,7 @@ class ReportTemplatesTable extends ControllerActionTable
 			'allowable_file_types' => 'document',
 			'useDefaultName' => true
 		]);
-        $this->addBehavior('CustomReport.ReportTemplate');
+        $this->addBehavior('CustomExcel.ExcelTemplate');
 
         $this->toggle('add', false);
         $this->toggle('remove', false);

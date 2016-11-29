@@ -1,5 +1,5 @@
 <?php
-namespace CustomReport\Controller;
+namespace CustomExcel\Controller;
 
 use ArrayObject;
 
@@ -9,23 +9,22 @@ use Cake\Event\Event;
 
 use App\Controller\AppController;
 
-class CustomReportsController extends AppController
+class CustomExcelsController extends AppController
 {
 	public function initialize()
 	{
         parent::initialize();
-        $this->loadComponent('CustomReport.CustomReport');
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
-        $this->Navigation->addCrumb('Custom Report', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
+        $this->Navigation->addCrumb('Custom Excel', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
         $this->Navigation->addCrumb($model->getHeader($model->alias));
 
-    	$header = __('Custom Report');
+    	$header = __('Custom Excel');
     	$header .= ' - ' . $model->getHeader($model->alias);
     	$this->set('contentHeader', $header);
     }
 
-    public function ReportTemplates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'CustomReport.ReportTemplates']); }
+    public function ExcelTemplates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'CustomExcel.ExcelTemplates']); }
 }
