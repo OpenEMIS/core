@@ -22,16 +22,18 @@ class EducationSubjectsTable extends ControllerActionTable {
 
     public function getEducationSubjectsByGrades($gradeId)
     {
-        $subjectOptions = $this
+        if ($gradeId) {
+            $subjectOptions = $this
                         ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
                         ->find('visible')
                         ->innerJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
                             'EducationGradesSubjects.education_subject_id = '.$this->aliasField('id'),
-                            'EducationGradesSubjects.education_grade_id = '.$gradeId
+                            'EducationGradesSubjects.education_grade_id' => $gradeId
                         ])
                         ->order([$this->aliasField('order') => 'ASC'])
                         ->toArray();
         
-        return $subjectOptions;
+            return $subjectOptions;
+        }
     } 
 }
