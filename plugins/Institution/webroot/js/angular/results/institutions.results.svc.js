@@ -631,7 +631,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     // if is GRADES type, set weight to empty so that will not be included when calculate total marks.
                                     if (resultTypeByPeriod == resultTypes.MARKS) {
                                         periodWeight = parseFloat(periodObj[parseInt(period.id)]['weight']);
-                                    } else if (resultTypeByPeriod == resultTypes.GRADES) {
+                                    } else if (resultTypeByPeriod == resultTypes.GRADES || resultTypeByPeriod == resultTypes.DURATION) {
                                         periodWeight = '';
                                     }
 
