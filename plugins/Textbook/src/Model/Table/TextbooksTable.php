@@ -2,6 +2,7 @@
 namespace Textbook\Model\Table;
 
 use ArrayObject;
+
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -30,6 +31,12 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('EducationProgrammes', ['className' => 'Education.EducationProgrammes']);
         $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
+
+        $this->belongsTo('PreviousTextbooks',   ['className' => 'Textbook.Textbooks', 'foreignKey' => 'previous_textbook_id']);
+
+        $this->hasMany('InstitutionTextbooks', ['className' => 'Institution.InstitutionTextbooks', 'foreignKey' => 'textbook_id']);
+
+        $this->setDeleteStrategy('restrict');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -182,6 +189,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->field('year', ['visible' => false]);
         $this->field('ISBN', ['visible' => false]);
         $this->field('provider', ['visible' => false]);
+        $this->field('previous_textbook_id', ['visible' => 'false']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -204,6 +212,11 @@ class TextbooksTable extends ControllerActionTable {
         }
 
         $query->where([$conditions]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('previous_textbook_id', ['visible' => 'false']);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -300,7 +313,7 @@ class TextbooksTable extends ControllerActionTable {
                 $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
             }
 
-            $attr['options'] = $subjectOptions;                
+            $attr['options'] = $subjectOptions;
         }
 
         return $attr;
@@ -308,9 +321,12 @@ class TextbooksTable extends ControllerActionTable {
 
     public function onUpdateFieldYear(Event $event, array $attr, $action, Request $request)
     {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $lowestYear = $ConfigItems->value('lowest_year');
+
         if ($action == 'add' || $action == 'edit') {
             $now = Time::now();
-            for ($i = $now->year; $i >= 1950; $i--) {
+            for ($i = $now->year; $i >= $lowestYear; $i--) {
                 $yearOptions[$i] = $i;
             }
 
@@ -343,10 +359,12 @@ class TextbooksTable extends ControllerActionTable {
             'type' => 'select',
             'entity' => $entity
         ]);
+
+        $this->field('previous_textbook_id', ['visible' => 'false']);
         
         $this->setFieldOrder([
             'academic_period_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',
-            'code', 'name', 'author', 'publisher', 'year', 'isbn', 'publisher' 
+            'code', 'title', 'author', 'publisher', 'year', 'isbn', 'publisher' 
         ]);
     }
 
@@ -361,5 +379,26 @@ class TextbooksTable extends ControllerActionTable {
         }
 
         return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function getTextbookOptions($academicPeriodId, $educationGradeId, $educationSubjectId)
+    {
+        return $this->find('visible')
+                    ->select([
+                        'textbook_id' => $this->aliasField('id'),
+                        'textbook_code_title' => $this->find()->func()->concat([
+                            $this->aliasField('code') => 'literal',
+                            " - ",
+                            $this->aliasField('title') => 'literal'
+                        ])
+                    ])
+                    ->find('list', ['keyField' => 'textbook_id', 'valueField' => 'textbook_code_title'])
+                    ->where([
+                        $this->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->aliasField('education_grade_id') => $educationGradeId,
+                        $this->aliasField('education_subject_id') => $educationSubjectId
+                    ])
+                    ->order([$this->aliasField('code') => 'ASC'])
+                    ->toArray();
     }
 }
