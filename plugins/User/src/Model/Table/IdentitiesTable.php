@@ -125,22 +125,31 @@ class IdentitiesTable extends ControllerActionTable
 
 	public function getLatestDefaultIdentityNo($userId)
 	{
-		$defaultIdentityType = $this->IdentityTypes->getDefaultValue();
+		$UserNationalityTable = TableRegistry::get('User.UserNationalities');
+		$identityType = $UserNationalityTable
+			->find()
+			->matching('NationalitiesLookUp')
+			->select('nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id')
+			->where([
+				'security_user_id' => $userId
+			])
+			->first();
+		$result = null;
 
-		$latestDefaultIdentityNo = NULL;
-		$latestDefaultIdentityNo = $this->find()
-										->select('number')
-										->where([
-											'identity_type_id' => $defaultIdentityType,
-											'security_user_id' => $userId
-										])
-										->order(['created DESC'])
-										->first();
+		if ($identityType) {
+			$result = $this
+				->find()
+				->where([
+					$this->aliasField('security_user_id') => $userId,
+					$this->aliasField('identity_type_id') => $identityType['identityTypeId'];
+				])
+				->first();
+		}
 
-		if (!empty($latestDefaultIdentityNo)) {
-			return $latestDefaultIdentityNo->number;
+		if (!empty($result)) {
+			return ['identity_type_id' => $result->identity_type_id, 'identity_no' => $result->number];
 		} else {
-			return null;
+			return ['identity_type_id' => null, 'identity_no' => null];
 		}
 	}
 }
