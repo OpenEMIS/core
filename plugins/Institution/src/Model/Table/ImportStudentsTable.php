@@ -158,8 +158,8 @@ class ImportStudentsTable extends AppTable {
             }
         }
     }
-    
-    public function onImportPopulateStudentsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+
+    public function onImportPopulateStudentUserData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
         unset($data[$columnOrder]);
     }
 

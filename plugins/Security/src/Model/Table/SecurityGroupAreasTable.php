@@ -27,8 +27,8 @@ class SecurityGroupAreasTable extends AppTable {
     	// check if security group id is dirty instead of new entity as the security group id is save
     	// on the institution entity marking the isNew flag false
         if ($entity->dirty('security_group_id')) {
-        	$isAcademic = $entity->is_academic;
-        	if ($isAcademic == $event->subject()->getNonAcademicConstant()) {
+        	$classification = $entity->classification;
+        	if ($classification == $event->subject()->getNonAcademicConstant()) {
         		$newSecurityGroupAreaRecord = [
         			'security_group_id' => $entity->security_group_id,
         			'area_id' => $entity->area_id

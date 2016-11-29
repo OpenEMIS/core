@@ -344,7 +344,8 @@ trait MessagesTrait {
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'StaffAbsences' => [
-            'noStaff' => 'No Available Staff'
+            'noStaff' => 'No Available Staff',
+            'noShift' => 'There are no shifts configured for the selected academic period, will be using system configuration timing.'
         ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
@@ -474,7 +475,7 @@ trait MessagesTrait {
             'noStudents' => 'No Available Students',
             'noInstitutions' => 'No Available Institutions',
             'noData' => 'There are no available Students for Transfer.',
-            'success' => 'Students have been transferred.'
+            'success' => 'The selected students are pending for transfer approval.'
         ],
         'StaffPositionProfiles' => [
             'request' => 'Request for Change in Assignment has been submitted successfully.',
@@ -572,6 +573,9 @@ trait MessagesTrait {
         ],
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
+        ],
+        'InstitutionExaminations' => [
+            'noGrades' => 'There are no available grades set for this institution',
         ],
         'InstitutionExaminationsUndoRegistration' => [
             'success' => 'Undo of student examination registration is successful.',
