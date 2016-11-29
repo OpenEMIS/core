@@ -106,6 +106,14 @@ ALTER TABLE `institution_textbooks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 
+-- POCOR-3583
+-- db_patches
+INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-3583', NOW());
+
+-- security_functions
+UPDATE `security_functions` SET `name` = 'Assessments' WHERE `id` IN (1015,2016,7015);
+
+
 -- 3.8.1
 UPDATE config_items SET value = '3.8.1' WHERE code = 'db_version';
 UPDATE db_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
