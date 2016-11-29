@@ -12,6 +12,7 @@
 
                 if (!empty($periodOptions)) {
                     echo $this->Form->input('academic_period_id', array(
+                        'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $periodOptions,
@@ -23,6 +24,7 @@
 
                 if (!empty($programmeOptions)) {
                     echo $this->Form->input('education_programme_id', array(
+                        'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $programmeOptions,
@@ -35,6 +37,7 @@
 
                 if (!empty($gradeOptions)) {
                     echo $this->Form->input('education_grade_id', array(
+                        'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $gradeOptions,
@@ -47,6 +50,7 @@
 
                 if (!empty($subjectOptions)) {
                     echo $this->Form->input('education_subject_id', array(
+                        'type' => 'select',
                         'class' => 'form-control',
                         'label' => false,
                         'options' => $subjectOptions,
