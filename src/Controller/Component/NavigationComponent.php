@@ -372,6 +372,13 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
+				'Institutions.Textbooks' => [
+					'title' => 'Textbooks',
+					'parent' => 'Institution.Academic',
+					'selected' => ['Institutions.Textbooks'],
+					'params' => ['plugin' => 'Institution']
+				],
+
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
