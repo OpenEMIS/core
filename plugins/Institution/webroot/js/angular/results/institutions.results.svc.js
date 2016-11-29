@@ -305,6 +305,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         };
                     }
 
+                    extra['period'] = period;
                     columnDef = ResultsSvc.renderDuration(allowEdit, columnDef, extra, _results);
                 }
 
@@ -470,34 +471,40 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
+            var periodId = extra.period.id;
 
-            // cols = angular.merge(cols, {
-                // filter: 'number',
-                // cellStyle: function(params) {
-                //     if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
-                //         return {color: '#CC5C5C'};
-                //     } else {
-                //         return {color: '#333'};
-                //     }
-                // },
-                // valueGetter: function(params) {
-                //     var value = params.data[params.colDef.field];
+            cols = angular.merge(cols, {
+                // filter: 'text',
+                cellStyle: function(params) {
+                    var value = params.data[params.colDef.field];
+                    var valueInSeconds = value * 60;
 
-                //     if (!isNaN(parseFloat(value))) {
-                //         return $filter('number')(value, 2);
-                //     } else {
-                //         return '';
-                //     }
-                // }
-            // });
+                    if (!isNaN(parseFloat(value)) && parseInt(valueInSeconds) > passMark) {
+                        return {color: '#CC5C5C'};
+                    } else {
+                        return {color: '#333'};
+                    }
+                },
+                valueGetter: function(params) {
+                    var value = params.data[params.colDef.field];
+
+                    if (!isNaN(parseFloat(value))) {
+                        var duration = value.replace(".", ":");
+                        return duration;
+                    } else {
+                        return '';
+                    }
+                }
+            });
 
             var ResultsSvc = this;
             if (allowEdit) {
                 cols = angular.merge(cols, {
                     cellClass: 'oe-cell-highlight',
                     cellRenderer: function(params) {
-                        var eCell = document.createElement('div');
+                        var studentId = params.data.student_id;
 
+                        var eCell = document.createElement('div');
                         var minuteInput = document.createElement('input');
                         minuteInput.setAttribute("id", "mins");
                         minuteInput.setAttribute("type", "number");
@@ -520,23 +527,44 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         eCell.appendChild(text);
                         eCell.appendChild(secondInput);
 
+                        eCell.addEventListener('change', function() {
+                            var minuteValue = minuteInput.value;
+                            var secondValue = secondInput.value;
+
+                            if (minuteValue.length > 0 && (isNaN(minuteValue) || (minuteValue < 0))) {
+                                minuteInput.value = '';
+                                secondInput.value = '';
+                            } else {
+                                minuteInput.value = minuteValue;
+                            }
+
+                            if (secondValue.length > 0 && (isNaN(secondValue) || (secondValue < 0 || secondValue > 59))) {
+                                minuteInput.value = '';
+                                secondInput.value = '';
+                            } else {
+                                secondInput.value = secondValue;
+                            }
+
+                            if (angular.isUndefined(_results[studentId])) {
+                                _results[studentId] = {};
+                            }
+
+                            if (angular.isUndefined(_results[studentId][periodId])) {
+                                _results[studentId][periodId] = {duration: ''};
+                            }
+
+                            var duration = minuteValue + '.' + secondValue;
+                            var durationAsFloat = parseFloat(duration);
+
+                            params.data[params.colDef.field] = durationAsFloat;
+                            _results[studentId][periodId]['duration'] = durationAsFloat;
+                        });
+
                         return eCell;
                     },
-                    suppressMenu: true,
-                    angularCompileRows: true
-                    // cellRendererParams: {},
-                    // newValueHandler: function(params) {
-                    //     var valueAsFloat = parseFloat(params.newValue);
-
-                    //     if (params.newValue.length > 0 && (isNaN(valueAsFloat) || (valueAsFloat < minMark || valueAsFloat > maxMark))) {
-                    //         params.data[params.colDef.field] = '';
-                    //     } else {
-                    //         params.data[params.colDef.field] = params.newValue;
-                    //     }
-                    // }
+                    suppressMenu: true
                 });
             }
-
             return cols;
         },
 
@@ -561,6 +589,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                         var isMarksType = true; // default to MARKS
                         var isGradesType = false;
+                        var isDurationType = false;
                         var resultType = null;
 
                         angular.forEach(subjectStudents, function(subjectStudent, key) {
@@ -572,6 +601,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                             isMarksType = (resultType == resultTypes.MARKS);
                             isGradesType = (resultType == resultTypes.GRADES);
+                            isDurationType = (resultType == resultTypes.DURATION);
 
                             if (studentId != currentStudentId) {
                                 if (studentId != null) {
@@ -612,6 +642,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             } else if (isGradesType) {
                                 if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
+                                }
+                            } else if (isDurationType) {
+                                var duration = parseFloat(subjectStudent.AssessmentItemResults.marks);
+                                if (!isNaN(duration)) {
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.marks;
                                 }
                             }
                         }, rowData);
@@ -703,6 +738,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     } else if (resultType == resultTypes.GRADES) {
                         if (obj.gradingOptionId != 0) {
                             gradingOptionId = obj.gradingOptionId;
+                        }
+                    } else if (resultType == resultTypes.DURATION) {
+                        if (!isNaN(obj.duration)) {
+                            marks = obj.duration;
+                            durationInSeconds = marks * 60;
+                            var gradingObj = this.getGrading(subject, durationInSeconds);
+                            gradingOptionId = gradingObj.id;
                         }
                     }
 
