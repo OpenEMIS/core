@@ -489,8 +489,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var value = params.data[params.colDef.field];
 
                     if (!isNaN(parseFloat(value))) {
-                        var duration = value.replace(".", ":");
-                        return duration;
+                        var duration = $filter('number')(value, 2);
+                        var formatDuration = String(duration).replace(".", " : ");
+                        return formatDuration;
                     } else {
                         return '';
                     }
@@ -509,6 +510,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         minuteInput.setAttribute("id", "mins");
                         minuteInput.setAttribute("type", "number");
                         minuteInput.setAttribute("min", "0");
+                        minuteInput.setAttribute("max", "9999");
                         minuteInput.setAttribute("style", "width: 50%; border: none; background-color: inherit; text-align: center;");
 
                         var text = document.createElement('span');
@@ -527,22 +529,29 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         eCell.appendChild(text);
                         eCell.appendChild(secondInput);
 
-                        eCell.addEventListener('change', function() {
-                            var minuteValue = minuteInput.value;
-                            var secondValue = secondInput.value;
+                        var oldValue = params.data[params.colDef.field];
+                        if (oldValue) {
+                            console.log(typeof(oldValue));
+                            var duration = String(oldValue).split(".");
+                            minuteInput.value = duration[0];
+                            secondInput.value = duration[1];
+                        }
 
-                            if (minuteValue.length > 0 && (isNaN(minuteValue) || (minuteValue < 0))) {
+                        eCell.addEventListener('change', function() {
+                            var minuteFloat = parseFloat(minuteInput.value);
+                            var secondFloat = parseFloat(secondInput.value);
+
+                            if (minuteInput.value.length > 0 && (isNaN(minuteFloat) || (minuteFloat < 0 || minuteFloat > 9999))) {
                                 minuteInput.value = '';
                                 secondInput.value = '';
-                            } else {
-                                minuteInput.value = minuteValue;
                             }
 
-                            if (secondValue.length > 0 && (isNaN(secondValue) || (secondValue < 0 || secondValue > 59))) {
+                            if (secondInput.value.length > 0 && (isNaN(secondFloat) || (secondFloat < 0 || secondFloat > 59 || secondInput.value.length > 2))) {
                                 minuteInput.value = '';
                                 secondInput.value = '';
-                            } else {
-                                secondInput.value = secondValue;
+                            } else if (secondInput.value.length == 1 && secondFloat < 10 ) {
+                                // for padding
+                                secondInput.value = '0' + secondInput.value;
                             }
 
                             if (angular.isUndefined(_results[studentId])) {
@@ -553,11 +562,10 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 _results[studentId][periodId] = {duration: ''};
                             }
 
-                            var duration = minuteValue + '.' + secondValue;
-                            var durationAsFloat = parseFloat(duration);
+                            var duration = minuteInput.value + '.' + secondInput.value;
 
-                            params.data[params.colDef.field] = durationAsFloat;
-                            _results[studentId][periodId]['duration'] = durationAsFloat;
+                            params.data[params.colDef.field] = duration;
+                            _results[studentId][periodId]['duration'] = duration;
                         });
 
                         return eCell;
@@ -740,8 +748,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             gradingOptionId = obj.gradingOptionId;
                         }
                     } else if (resultType == resultTypes.DURATION) {
-                        if (!isNaN(obj.duration)) {
-                            marks = obj.duration;
+                        if (!isNaN(parseFloat(obj.duration))) {
+                            marks = $filter('number')(obj.duration, 2);
                             durationInSeconds = marks * 60;
                             var gradingObj = this.getGrading(subject, durationInSeconds);
                             gradingOptionId = gradingObj.id;
