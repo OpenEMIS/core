@@ -392,7 +392,14 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             var identityNumber = '';
             vm.getExternalSourceAttributes()
             .then(function(attributes) {
-                var attr = attributes;
+                var attr = attributes.data;
+
+                // Mandatory information from the form
+                newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
+                newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
+                newUserRecord['start_date'] = userRecord['start_date'];
+
+
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
                 newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];
                 newUserRecord['date_of_birth'] = userRecord[attr['date_of_birth_mapping']];
@@ -437,37 +444,34 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                         vm.importMappingObj(genderName, nationality, identityType)
                         .then(function(promiseArr) {
-                                // var identitiesRecord = userRecord['identities'];
-                                // delete userRecord['identities'];
-                                newUserRecord['gender_id'] = promiseArr[0];
-                                newUserRecord['nationality_id'] = promiseArr[1];
-                                var identityTypeId = promiseArr[2];
-                                StudentUser.reset();
-                                StudentUser.save(newUserRecord)
-                                .then(function(studentRecord) {
-                                    var userEntity = studentRecord.data.data;
-                                    var userEntityError = studentRecord.data.error;
-                                    if (userEntityError.length > 0) {
-                                        deferred.resolve(studentRecord.data);
-                                    } else {
-                                        var userId = userEntity.id;
-                                        var promises = [];
-                                        // Import identity
-                                        if (userEntity.identity_type_id != null && userEntity.identity_number != null && userEntity.identity_number != '') {
-                                            vm.addUserIdentity(userId, identityTypeId, identityNumber);
-                                        }
-                                        // Import nationality
-                                        if (userEntity.nationality_id != null) {
-                                            var nationalityId = userEntity.nationality_id;
-                                            vm.addUserNationality(userId, nationalityId);
-                                        }
+                            newUserRecord['gender_id'] = promiseArr[0];
+                            newUserRecord['nationality_id'] = promiseArr[1];
+                            var identityTypeId = promiseArr[2];
+                            StudentUser.reset();
+                            StudentUser.save(newUserRecord)
+                            .then(function(studentRecord) {
+                                var userEntity = studentRecord.data.data;
+                                var userEntityError = studentRecord.data.error;
+                                if (userEntityError.length > 0) {
+                                    deferred.resolve(studentRecord.data);
+                                } else {
+                                    var userId = userEntity.id;
+                                    var promises = [];
+                                    // Import identity
+                                    if (identityTypeId != null && identityNumber != null && identityNumber != '') {
+                                        vm.addUserIdentity(userId, identityTypeId, identityNumber);
                                     }
-                                }, function(error) {
-                                    deferred.reject(error);
-                                    console.log(error);
-                                });
-                            }
-
+                                    // Import nationality
+                                    if (userEntity.nationality_id != null) {
+                                        var nationalityId = userEntity.nationality_id;
+                                        vm.addUserNationality(userId, nationalityId);
+                                    }
+                                    deferred.resolve([studentRecord.data, {}]);
+                                }
+                            }, function(error) {
+                                deferred.reject(error);
+                                console.log(error);
+                            });
                         }, function(error) {
                             deferred.reject(error);
                             console.log(error);
@@ -538,7 +542,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 .where({
                     'name': name
                 })
-                .ajax()
+                .ajax({defer: true})
                 .then(function(response) {
                     if (response.data.length > 0) {
                         deferred.resolve(response.data[0].id);
@@ -574,7 +578,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 .where({
                     'name': name
                 })
-                .ajax()
+                .ajax({defer: true})
                 .then(function(response) {
                     if (response.data.length > 0) {
                         deferred.resolve(response.data[0].id);
@@ -606,7 +610,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .where({
                 'name': name
             })
-            .ajax()
+            .ajax({defer: true})
             .then(function(response) {
                 if (response.data.length > 0) {
                     deferred.resolve(response.data[0].id);

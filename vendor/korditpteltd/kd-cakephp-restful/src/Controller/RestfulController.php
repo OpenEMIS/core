@@ -377,7 +377,9 @@ class RestfulController extends AppController
 
         } else {
             foreach ($data as $key => $value) {
-                $this->convertBinaryToBase64($table, $value);
+                if ($value instanceof Entity) {
+                    $this->convertBinaryToBase64($table, $value);
+                }
             }
         }
         return $data;

@@ -908,6 +908,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         // Step 4 - Add Student
         else {
+            if (StudentController.externalSearch) {
+                StudentController.getUniqueOpenEmisId();
+            }
             studentData = StudentController.selectedStudentData;
             StudentController.completeDisabled = false;
             if (studentData.hasOwnProperty('institution_students')) {
