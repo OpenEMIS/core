@@ -2,16 +2,18 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
-use App\Model\Traits\OptionsTrait;
 use Cake\I18n\Time;
 
-class StaffAbsencesTable extends AppTable {
+use App\Model\Traits\OptionsTrait;
+use App\Model\Table\ControllerActionTable;
+
+class StaffAbsencesTable extends ControllerActionTable {
 	use OptionsTrait;
 	private $_fieldOrder = [
 		'absence_type_id', 'academic_period_id', 'staff_id',
@@ -29,6 +31,7 @@ class StaffAbsencesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'staff_id']);
 		$this->belongsTo('StaffAbsenceReasons', ['className' => 'Institution.StaffAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
+		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Excel', [
 			'excludes' => [
@@ -65,6 +68,7 @@ class StaffAbsencesTable extends AppTable {
 				],
 				'ruleInAcademicPeriod' => [
 					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+					'last' => true,
 					'on' => 'create'
 				],
 				'ruleNoOverlappingAbsenceDate' => [
@@ -81,6 +85,7 @@ class StaffAbsencesTable extends AppTable {
 				],
 				'ruleInAcademicPeriod' => [
 					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+					'last' => true,
 					'on' => 'create'
 				]
 			])
@@ -113,6 +118,12 @@ class StaffAbsencesTable extends AppTable {
 			])
 			;
 		return $validator;
+	}
+
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+		return $events;
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -240,19 +251,19 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditBeforePatch(Event $event, $entity, $requestData, $patchOptions) {
+	public function addEditBeforePatch(Event $event, $entity, $requestData, $patchOptions, ArrayObject $extra) {
 		$absenceTypeId = $requestData[$this->alias()]['absence_type_id'];
 		if ($this->absenceCodeList[$absenceTypeId] == 'LATE') {
 			$requestData[$this->alias()]['end_date'] = $requestData[$this->alias()]['start_date'];
 		}
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
+	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
 		unset($this->request->query['period']);
 		unset($this->request->query['staff']);
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->request->query['staff'] = $entity->staff_id;
 		$this->request->query['full_day'] = $entity->full_day;
 		$this->request->data[$this->alias()]['full_day'] = $entity->full_day;
@@ -260,7 +271,7 @@ class StaffAbsencesTable extends AppTable {
 		$this->request->data[$this->alias()]['start_date'] = $entity->start_date;
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$tabElements = [
 			'Attendance' => [
 				'url' => ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffAttendances'],
@@ -275,13 +286,13 @@ class StaffAbsencesTable extends AppTable {
         $this->controller->set('selectedAction', 'Absence');
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->setFieldOrder($this->_fieldOrder);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('date');
-		$this->ControllerAction->field('absence_type_id', [
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('date');
+		$this->field('absence_type_id', [
 			'options' => $this->absenceList
 		]);
 
@@ -295,17 +306,37 @@ class StaffAbsencesTable extends AppTable {
 		$this->_fieldOrder = ['date', 'staff_id', 'absence_type_id', 'staff_absence_reason_id'];
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['auto_contain'] = false;
+        $extra['auto_search'] = false;
+
+        $query->contain(['Users', 'StaffAbsenceReasons', 'AbsenceTypes']);
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        }
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+    	$searchableFields[] = 'staff_id';
+    	// $searchableFields[] = 'absence_type_id';
+    	// $searchableFields[] = 'staff_absence_reason_id';
+    	// 'date', 'staff_id', 'absence_type_id', 'staff_absence_reason_id'
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		// Academic period not in use in view page
 		foreach ($this->_fieldOrder as $key => $value) {
 			if ($value == 'academic_period_id') {
 				unset($this->_fieldOrder[$key]);
 			}
 		}
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+		$this->setFieldOrder($this->_fieldOrder);
 
 		$absenceTypeOptions = $this->absenceList;
-		$this->ControllerAction->field('absence_type_id', [
+		$this->field('absence_type_id', [
 			'options' => $this->absenceList
 		]);
 
@@ -315,22 +346,35 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		list($periodOptions, $selectedPeriod, $newPeriodOptions) = array_values($this->_getSelectOptions());
-		$this->ControllerAction->field('academic_period_id', [
+		$this->field('academic_period_id', [
 			'options' => $newPeriodOptions
 		]);
-		$this->ControllerAction->field('staff_id', ['type' => 'select']);
+		$this->field('staff_id', ['type' => 'select']);
 		$absenceTypeOptions = $this->absenceList;
-		$this->ControllerAction->field('absence_type_id', [
+		$this->field('absence_type_id', [
+			'select' => false,
 			'options' => $this->absenceList
 		]);
 		$fullDayOptions = $this->getSelectOptions('general.yesno');
-		$this->ControllerAction->field('full_day', [
+		$this->field('full_day', [
 			'options' => $fullDayOptions
 		]);
 		// Start Date and End Date
 		if ($this->action == 'add') {
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+
+			$InstitutionShift = TableRegistry::get('Institution.InstitutionShifts');
+			$shiftTime = $InstitutionShift
+				->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
+				->toArray();
+
+			if (empty($shiftTime)) {
+				$this->Alert->warning($this->aliasField('noShift'));
+			}
+
 			$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$startDate = $AcademicPeriod->get($selectedPeriod)->start_date;
 			$endDate = $AcademicPeriod->get($selectedPeriod)->end_date;
@@ -360,8 +404,8 @@ class StaffAbsencesTable extends AppTable {
 				}
 			}
 
-			$this->ControllerAction->field('start_date', $dateAttr);
-			$this->ControllerAction->field('end_date', $dateAttr);
+			$this->field('start_date', $dateAttr);
+			$this->field('end_date', $dateAttr);
 
 			// To put restiction on the calendar date field
 			$this->fields['start_date']['date_options']['startDate'] = $startDate->format('d-m-Y');
@@ -392,13 +436,13 @@ class StaffAbsencesTable extends AppTable {
 
 
 		} else if ($this->action == 'edit') {
-			$this->ControllerAction->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
-			$this->ControllerAction->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
+			$this->field('start_date', ['value' => date('Y-m-d', strtotime($entity->start_date))]);
+			$this->field('end_date', ['value' => date('Y-m-d', strtotime($entity->end_date))]);
 		}
 		// End
-		$this->ControllerAction->field('start_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->start_time))]]);
-		$this->ControllerAction->field('end_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->end_time))]]);
-		$this->ControllerAction->field('staff_absence_reason_id', ['type' => 'select']);
+		$this->field('start_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->start_time))]]);
+		$this->field('end_time', ['type' => 'time', 'attr' => ['value' => date('h:i A', strtotime($entity->end_time))]]);
+		$this->field('staff_absence_reason_id', ['type' => 'select']);
 	}
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
@@ -626,15 +670,22 @@ class StaffAbsencesTable extends AppTable {
 							->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 							->toArray();
 
-						$shiftStartTimeArray = [];
-						$shiftEndTimeArray = [];
-						foreach ($shiftTime as $key => $value) {
-							$shiftStartTimeArray[$key] = $value->start_time;
-							$shiftEndTimeArray[$key] = $value->end_time;
-						}
+						if (!empty($shiftTime)) {
+							$shiftStartTimeArray = [];
+							$shiftEndTimeArray = [];
+							foreach ($shiftTime as $key => $value) {
+								$shiftStartTimeArray[$key] = $value->start_time;
+								$shiftEndTimeArray[$key] = $value->end_time;
+							}
 
-						$startTime = min($shiftStartTimeArray);
-						$endTime = max($shiftEndTimeArray);
+							$startTime = min($shiftStartTimeArray);
+							$endTime = max($shiftEndTimeArray);
+						} else {
+							$configTiming = $this->getConfigTiming();
+
+							$startTime = $configTiming['startTime'];
+							$endTime = $configTiming['endTime'];
+						}
 
 						$entity->start_time = date('h:i A', strtotime($startTime));
 						$entity->end_time = date('h:i A', strtotime($endTime));
@@ -662,15 +713,22 @@ class StaffAbsencesTable extends AppTable {
 							->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 							->toArray();
 
-						$shiftStartTimeArray = [];
-						$shiftEndTimeArray = [];
-						foreach ($shiftTime as $key => $value) {
-							$shiftStartTimeArray[$key] = $value->start_time;
-							$shiftEndTimeArray[$key] = $value->end_time;
-						}
+						if (!empty($shiftTime)) {
+							$shiftStartTimeArray = [];
+							$shiftEndTimeArray = [];
+							foreach ($shiftTime as $key => $value) {
+								$shiftStartTimeArray[$key] = $value->start_time;
+								$shiftEndTimeArray[$key] = $value->end_time;
+							}
 
-						$startTime = min($shiftStartTimeArray);
-						$endTime = max($shiftEndTimeArray);
+							$startTime = min($shiftStartTimeArray);
+							$endTime = max($shiftEndTimeArray);
+						} else {
+							$configTiming = $this->getConfigTiming();
+
+							$startTime = $configTiming['startTime'];
+							$endTime = $configTiming['endTime'];
+						}
 
 						$entity->start_time = date('h:i A', strtotime($startTime));
 						$entity->end_time = date('h:i A', strtotime($endTime));
@@ -680,7 +738,8 @@ class StaffAbsencesTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['period']);
 		unset($request->query['staff']);
@@ -697,15 +756,22 @@ class StaffAbsencesTable extends AppTable {
 						->find('shiftTime', ['academic_period_id' => $selectedPeriod, 'institution_id' => $institutionId])
 						->toArray();
 
-					$shiftStartTimeArray = [];
-					$shiftEndTimeArray = [];
-					foreach ($shiftTime as $key => $value) {
-						$shiftStartTimeArray[$key] = $value->start_time;
-						$shiftEndTimeArray[$key] = $value->end_time;
-					}
+					if (!empty($shiftTime)) {
+						$shiftStartTimeArray = [];
+						$shiftEndTimeArray = [];
+						foreach ($shiftTime as $key => $value) {
+							$shiftStartTimeArray[$key] = $value->start_time;
+							$shiftEndTimeArray[$key] = $value->end_time;
+						}
 
-					$startTime = min($shiftStartTimeArray);
-					$endTime = max($shiftEndTimeArray);
+						$startTime = min($shiftStartTimeArray);
+						$endTime = max($shiftEndTimeArray);
+					} else {
+						$configTiming = $this->getConfigTiming();
+
+						$startTime = $configTiming['startTime'];
+						$endTime = $configTiming['endTime'];
+					}
 
 					$entity->start_time = date('h:i A', strtotime($startTime));
 					$entity->end_time = date('h:i A', strtotime($endTime));
@@ -713,6 +779,7 @@ class StaffAbsencesTable extends AppTable {
 					$data[$this->alias()]['start_time'] = $entity->start_time;
 					$data[$this->alias()]['end_time'] = $entity->end_time;
 				}
+
 				$data[$this->alias()]['staff_id'] = '';
 			}
 		}
@@ -730,6 +797,24 @@ class StaffAbsencesTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	// to get the default timing from the system config.
+	public function getConfigTiming()
+	{
+		$ConfigItems = TableRegistry::get('Configuration.configItems');
+
+		$configStartTime = $ConfigItems->value('start_time');
+		$hourPerDay = $ConfigItems->value('hours_per_day');
+
+		$endTime = new time($configStartTime);
+		$endTime->addHour($hourPerDay);
+
+		$configTiming = [];
+		$configTiming['startTime'] = new time($configStartTime);
+		$configTiming['endTime'] = $endTime;
+
+		return $configTiming;
 	}
 
 	public function _getSelectOptions() {
