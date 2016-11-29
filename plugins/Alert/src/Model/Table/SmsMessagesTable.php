@@ -1,23 +1,27 @@
 <?php
 namespace Alert\Model\Table;
 
+use ArrayObject;
+
 use Cake\ORM\Entity;
+use Cake\Network\Request;
+use Cake\ORM\Query;
 use Cake\Event\Event;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class SmsMessagesTable extends AppTable  {
+class SmsMessagesTable extends ControllerActionTable  {
 	use OptionsTrait;
 
 	public function initialize(array $config) {
         parent::initialize($config);
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
 
-		$this->ControllerAction->setFieldOrder(['enabled', 'message']);
+		$this->setFieldOrder(['enabled', 'message']);
 	}
 
 	public function onGetEnabled(Event $event, Entity $entity) {
