@@ -244,7 +244,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function onGetTextbookId(Event $event, Entity $entity)
     {
-        return $entity->textbook->code . " - " . $entity->textbook->title;
+        if ($this->action == 'view') {
+            return $entity->textbook->code . " - " . $entity->textbook->title;
+        }
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -496,7 +498,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function onGetCustomTextbooksStudentsElement(Event $event, $action, $entity, $attr, $options=[])
     {
         // $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
-        $tableHeaders = ['Code', 'Status', 'Condition', 'Comment', 'Student'];
+        $tableHeaders = [
+            __('Code') . "&nbsp;<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . __('Textbook ID is unique number assigned to each book within the school') . "'></i>", 
+            'Status', 'Condition', 'Comment', 'Student'];
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'textbooks_students';
@@ -698,12 +702,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('comment', [
             'entity' => $entity
         ]);
-
-        if ($entity->institution_class_id) {
-            $institution_class_id = $entity->institution_class_id;
-        } else if ($this->request->query){ //if no class during edit, it means no student assigned, then must get from the querystring
-            $institution_class_id = $this->request->query['class'];
-        }
 
         $this->field('student_id', [
             'type' => 'chosenSelect',
