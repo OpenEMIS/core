@@ -444,7 +444,11 @@ class HtmlFieldHelper extends Helper {
 		$maxImageWidth = 60;
 
 		if ($action == 'index' || $action == 'view') {
-			$src = $data->photo_content;
+			$src = '';
+
+			if ($data->has($attr['field'])) {
+				$src = $data[$attr['field']];
+			}
 
 			if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {
 				$imageUrl = '';
@@ -463,6 +467,9 @@ class HtmlFieldHelper extends Helper {
 					</div>';
 			} else {
 				if (!empty($src)) {
+					if (is_resource($src)) {
+						$src = base64_encode(stream_get_contents($src));
+					}
 					$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
 				}
 			}
@@ -490,6 +497,13 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			header('Content-Type: image/jpeg');
+
+			if (isset($attr['defaultWidth'])) {
+				$defaultWidth = $attr['defaultWidth'];
+			}
+			if (isset($attr['defaultHeight'])) {
+				$defaultWidth = $attr['defaultHeight'];
+			}
 
 			$this->includes['jasny']['include'] = true;
 			$value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src,

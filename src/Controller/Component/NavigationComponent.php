@@ -392,7 +392,7 @@ class NavigationComponent extends Component
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.ImportStaff']
+				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.ImportStaff', 'Institutions.Staff']
 			],
 
 			'Institution.Attendance' => [
@@ -436,7 +436,7 @@ class NavigationComponent extends Component
 				],
 
 			'Institutions.Assessments.index' => [
-				'title' => 'Results',
+				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Assessments', 'Institutions.Results'],
 				'params' => ['plugin' => 'Institution'],

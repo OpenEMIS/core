@@ -2,6 +2,7 @@
 namespace Staff\Model\Entity;
 
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 
 class TrainingNeed extends Entity
 {
