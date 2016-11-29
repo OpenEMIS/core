@@ -19,4 +19,27 @@ class EducationSubjectsTable extends ControllerActionTable {
 		]);
         $this->setDeleteStrategy('restrict');
 	}
+
+    public function getEducationSubjectsByGrades($gradeId)
+    {
+        $subjectOptions = $this
+                        ->find('visible')
+                        ->select([
+                            'education_subject_id' => $this->aliasField('id'),
+                            'education_subject_name' => $this->find()->func()->concat([
+                                $this->aliasField('code') => 'literal',
+                                " - ",
+                                $this->aliasField('name') => 'literal'
+                            ])
+                        ])
+                        ->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_subject_name'])
+                        ->innerJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
+                            'EducationGradesSubjects.education_subject_id = '.$this->aliasField('id'),
+                            'EducationGradesSubjects.education_grade_id = '.$gradeId
+                        ])
+                        ->order([$this->aliasField('order') => 'ASC'])
+                        ->toArray();
+
+        return $subjectOptions;
+    } 
 }
