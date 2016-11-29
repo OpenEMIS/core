@@ -249,6 +249,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var isMarksType = (resultType == resultTypes.MARKS);
                     var isGradesType = (resultType == resultTypes.GRADES);
                     var isDurationType = (resultType == resultTypes.DURATION);
+
+                    if (isDurationType) {
+                        markAsFloat = parseFloat(maxMark);
+                        durationInMinutes = $filter('number')(markAsFloat/60, 2);
+                        maxMark = String(durationInMinutes).replace(".", " : ");
+                    }
                 }
 
                 var allowEdit = (action == 'edit' && period.editable);
