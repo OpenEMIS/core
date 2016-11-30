@@ -81,8 +81,8 @@ CREATE TABLE IF NOT EXISTS `institution_textbooks` (
   `id` int(11) NOT NULL,
   `code` varchar(100) COLLATE utf8mb4_bin NOT NULL,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `textbook_status_id` int(11) NOT NULL COMMENT 'link to links to textbook_statuses.id',
-  `textbook_condition_id` int(11) NOT NULL COMMENT 'link to links to textbook_conditions.id',
+  `textbook_status_id` int(11) NULL COMMENT 'link to links to textbook_statuses.id',
+  `textbook_condition_id` int(11) NULL COMMENT 'link to links to textbook_conditions.id',
   `institution_id` int(11) NOT NULL COMMENT 'link to links to institutions.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'link to links to academic_period.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
@@ -107,3 +107,10 @@ ALTER TABLE `institution_textbooks`
 
 ALTER TABLE `institution_textbooks`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+-- Labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+VALUES 
+('7c85c025-b6e3-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'student_id', 'Institutions -> Textbooks', 'Allocated To', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00'),
+('43653063-b6e5-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'textbook_condition_id', 'Institutions -> Textbooks', 'Condition', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00'), 
+('43653db8-b6e5-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'textbook_status_id', 'Institutions -> Textbooks', 'Status', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00');
