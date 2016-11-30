@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS `textbooks` (
 
 ALTER TABLE `textbooks`
   ADD PRIMARY KEY (`id`, `academic_period_id`),
-  ADD UNIQUE KEY `code` (`code`),
   ADD KEY `academic_period_id` (`academic_period_id`),
   ADD KEY `education_grade_id` (`education_grade_id`),
   ADD KEY `education_subject_id` (`education_subject_id`);
