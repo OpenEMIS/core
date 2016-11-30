@@ -5,28 +5,27 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3568', NOW());
 DROP TABLE IF EXISTS `textbooks`;
 CREATE TABLE IF NOT EXISTS `textbooks` (
   `id` int(11) NOT NULL,
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `author` varchar(100) COLLATE utf8mb4_unicode_ci NULL,
-  `publisher` varchar(100) COLLATE utf8mb4_unicode_ci NULL,
+  `author` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `publisher` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `year_published` int(4) NOT NULL,
-  `ISBN` varchar(100) COLLATE utf8mb4_unicode_ci NULL,
-  `provider` varchar(100) COLLATE utf8mb4_unicode_ci NULL,
+  `ISBN` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `expiry_date` date NULL,
   `visible` int(11) NOT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'link to links to academic_period.id',
-  `education_programme_id` int(11) NOT NULL COMMENT 'link to links to education_programmes.id',
   `education_grade_id` int(11) NOT NULL COMMENT 'link to links to education_grades.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'link to links to education_subjects.id',
-  `modified_user_id` int(11) NULL,
-  `modified` datetime NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE `textbooks`
   ADD PRIMARY KEY (`id`, `academic_period_id`),
+  ADD UNIQUE KEY `code` (`code`),
   ADD KEY `academic_period_id` (`academic_period_id`),
-  ADD KEY `education_programme_id` (`education_programme_id`),
   ADD KEY `education_grade_id` (`education_grade_id`),
   ADD KEY `education_subject_id` (`education_subject_id`);
 
@@ -70,6 +69,11 @@ ALTER TABLE `textbook_statuses`
 ALTER TABLE `textbook_statuses`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
+INSERT INTO `textbook_statuses` (`id`, `code`, `name`) 
+VALUES 
+(NULL, 'AVAILABLE', 'Available'), 
+(NULL, 'NOT_AVAILABLE', 'Not Available');
+
 
 -- Table structure for table `institution_textbooks`
 DROP TABLE IF EXISTS `institution_textbooks`;
@@ -81,7 +85,7 @@ CREATE TABLE IF NOT EXISTS `institution_textbooks` (
   `textbook_condition_id` int(11) NOT NULL COMMENT 'link to links to textbook_conditions.id',
   `institution_id` int(11) NOT NULL COMMENT 'link to links to institutions.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'link to links to academic_period.id',
-  `education_subject_id` int(11) DEFAULT NULL COMMENT 'links to education_subjects.id',
+  `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `student_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
   `textbook_id` int(11) NOT NULL COMMENT 'links to textbooks.id',
   `modified_user_id` int(11) DEFAULT NULL,

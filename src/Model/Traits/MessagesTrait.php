@@ -604,7 +604,10 @@ trait MessagesTrait {
         ],
         'Textbooks' => [
             'noTextbooks' => 'No Textbooks',
-            'cantAddTextbook' => 'Please select Class, Subject and Textbook before adding record'
+            'noProgrammes' => 'No Programmes',
+            'noGrades' => 'No Grades',
+            'noClassSubjectSelected' => 'Please select Class, Subject and Textbook before adding record',
+            'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed'
         ],
         'InstitutionTextbooks' => [
             'noTextbooks' => 'No Textbooks',

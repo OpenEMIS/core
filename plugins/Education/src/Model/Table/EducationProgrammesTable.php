@@ -305,10 +305,13 @@ class EducationProgrammesTable extends ControllerActionTable
 		$query->contain(['EducationNextProgrammes']);
 	}
 
-    public function getEducationProgrammesList(){
+    public function getEducationProgrammesList($educationLevelId){
         return $this->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
                     ->find('visible')
                     ->contain(['EducationCycles'])
+                    ->where([
+                        'EducationCycles.education_level_id' => $educationLevelId
+                    ])
                     ->order(['EducationCycles.order' => 'ASC', $this->aliasField('order') => 'ASC'])
                     ->toArray();
 	}
