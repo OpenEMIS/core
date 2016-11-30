@@ -270,6 +270,11 @@ class TextbooksTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) 
+    {
+        $entity->name = $entity->code . ' - ' . $entity->title;
+    }
+
     public function onGetEducationLevelId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
