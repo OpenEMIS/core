@@ -915,9 +915,20 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->getPrimaryKey($model);
+        $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+        $idKeys = [];
+        // May still be empty
+        if (!empty($ids)) {
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    $idKeys[$model->aliasField($key)] = $ids[$key];
+                }
+            } else {
+                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+            }
 
-        $idKey = $model->aliasField($primaryKey);
+        }
+
         $sessionKey = $model->registryAlias() . '.' . $primaryKey;
         $contain = [];
 
@@ -933,8 +944,8 @@ class ControllerActionComponent extends Component {
             }
         }
 
-        if ($model->exists([$idKey => $id])) {
-            $query = $model->find()->where([$idKey => $id])->contain($contain);
+        if ($model->exists($idKeys)) {
+            $query = $model->find()->where($idKeys)->contain($contain);
 
             // Event: viewEditBeforeQuery
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
@@ -1122,12 +1133,24 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->getPrimaryKey($model);
+        $primaryKey = $model->getPrimaryKey();
 
-        $idKey = $model->aliasField($primaryKey);
+        $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+        $idKeys = [];
+        // May still be empty
+        if (!empty($ids)) {
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    $idKeys[$model->aliasField($key)] = $ids[$key];
+                }
+            } else {
+                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+            }
 
-        if ($model->exists([$idKey => $id])) {
-            $query = $model->find()->where([$idKey => $id]);
+        }
+
+        if ($model->exists($idKeys)) {
+            $query = $model->find()->where($idKeys);
 
             // Event: viewEditBeforeQuery
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
@@ -1280,16 +1303,25 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->getPrimaryKey($model);
+        $idKeys = [];
+        // May still be empty
+        if (!empty($ids)) {
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    $idKeys[$model->aliasField($key)] = $ids[$key];
+                }
+            } else {
+                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+            }
 
-        $idKey = $model->aliasField($primaryKey);
+        }
 
         if ($request->is('get')) {
-            if ($model->exists([$idKey => $id])) {
+            if ($model->exists($idKeys)) {
 
                 if (is_array($model->primaryKey())) {
                     // For table with composite primary key
-                    $entity = $model->find()->where([$idKey => $id])->first();
+                    $entity = $model->find()->where($idKeys)->first();
                 } else {
                     $entity = $model->get($id);
                 }
@@ -1319,7 +1351,12 @@ class ControllerActionComponent extends Component {
                 // End Event
 
                 if ($this->deleteStrategy != 'restrict') {
-                    $query->find('list', $extra->getArrayCopy())->where([$idKey . ' <> ' => $id]);
+                    $notIdKeys = $idKeys;
+                    foreach ($notIdKeys as $key => $value) {
+                        $notIdKeys[$key.' <>'] = $value;
+                        unset($notIdKeys[$key]);
+                    }
+                    $query->find('list', $extra->getArrayCopy())->where($notIdKeys);
 
                     // Event: deleteUpdateCovertOptions
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');

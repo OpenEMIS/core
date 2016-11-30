@@ -285,7 +285,7 @@ class InstitutionsTable extends AppTable  {
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
-				'0' => $entity->id
+				'0' => $this->ControllerAction->paramsEncode(['id' => $entity->id])
 			]);
 		}
 

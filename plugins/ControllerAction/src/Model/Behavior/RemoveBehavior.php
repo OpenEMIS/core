@@ -54,7 +54,14 @@ class RemoveBehavior extends Behavior
             $cells = $extra['cells'];
 
             $model->fields = [];
-            $model->field('id', ['type' => 'hidden']);
+            $primaryKey = $model->primaryKey();
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    $model->field($key, ['type' => 'hidden']);
+                }
+            } else {
+                $model->field($primaryKey, ['type' => 'hidden']);
+            }
             $model->field('convert_from', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
             $model->field('convert_to', ['type' => 'select', 'options' => $convertOptions, 'attr' => ['required' => 'required']]);
             $model->field('apply_to', [
@@ -66,7 +73,15 @@ class RemoveBehavior extends Behavior
             $entity = $extra['entity'];
             $cells = $extra['cells'];
             $model->fields = [];
-            $model->field('id', ['type' => 'hidden']);
+            $primaryKey = $model->primaryKey();
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    $model->field($key, ['type' => 'hidden']);
+                }
+            } else {
+                $model->field($primaryKey, ['type' => 'hidden']);
+            }
+
             $model->field('to_be_deleted', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
             $model->field('associated_records', [
                 'type' => 'table',
@@ -90,7 +105,7 @@ class RemoveBehavior extends Behavior
             return $event->result;
         }
 
-        $primaryKey = $model->getPrimaryKey();
+        $primaryKey = $model->primaryKey();
         $result = true;
         $entity = null;
 
@@ -187,7 +202,6 @@ class RemoveBehavior extends Behavior
                     }
                 }
             }
-
             if (!empty($ids)) {
                 try {
                     $entity = $model->get($ids);
@@ -360,7 +374,14 @@ class RemoveBehavior extends Behavior
             }
         }
         $primaryKey = $model->primaryKey();
-        $id = $entity->$primaryKey;
+        $ids = [];
+        if (is_array($primaryKey)) {
+            foreach ($primaryKey as $key) {
+                $ids[$key] = $entity->$key;
+            }
+        } else {
+            $ids[$primaryKey] = $entity->$primaryKey;
+        }
         $associations = [];
         foreach ($model->associations() as $assoc) {
             if (in_array($assoc->dependent(), $dependent)) {
@@ -371,7 +392,19 @@ class RemoveBehavior extends Behavior
                         if ($assoc->type() == 'manyToMany') {
                             $assocTable = $assoc->junction();
                         }
-                        $conditions = [$assocTable->aliasField($assoc->foreignKey()) => $id];
+                        $bindingKey = $assoc->bindingKey();
+                        $foreignKey = $assoc->foreignKey();
+
+                        $conditions = [];
+
+                        if (is_array($foreignKey)) {
+                            foreach ($foreignKey as $index => $key) {
+                                $conditions[$assocTable->aliasField($key)] = $ids[$bindingKey[$index]];
+                            }
+                        } else {
+                            $conditions[$assocTable->aliasField($foreignKey)] = $ids[$bindingKey];
+                        }
+
                         $query = $assocTable->find()->where($conditions);
                         $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
 
