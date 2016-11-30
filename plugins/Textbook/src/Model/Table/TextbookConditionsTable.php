@@ -14,7 +14,7 @@ class TextbookConditionsTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
     }
 
-    public function getSelectOptions()
+    public function getTextbookConditionOptions()
     {
         return  $this
                 ->find('list')
