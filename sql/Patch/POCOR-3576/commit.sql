@@ -4,7 +4,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3576', NOW());
 -- excel_templates
 DROP TABLE IF EXISTS `excel_templates`;
 CREATE TABLE IF NOT EXISTS `excel_templates` (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `module` varchar(100) NOT NULL,
   `file_name` varchar(250) DEFAULT NULL,
   `file_type` varchar (255) DEFAULT NULL,

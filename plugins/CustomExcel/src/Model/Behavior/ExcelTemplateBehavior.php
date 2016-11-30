@@ -30,7 +30,6 @@ class ExcelTemplateBehavior extends Behavior
 	{
 		$events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
-        $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
         $events['ControllerAction.Model.view.afterAction'] = ['callable' => 'viewAfterAction'];
         $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction'];
 		return $events;
@@ -52,6 +51,8 @@ class ExcelTemplateBehavior extends Behavior
         ]);
 
         $model->setFieldOrder(['module', 'file_name', 'file_type', 'file_content']);
+
+        $this->initializeExcelTemplateData($extra);
     }
 
     public function onGetModule(Event $event, Entity $entity)
@@ -61,16 +62,18 @@ class ExcelTemplateBehavior extends Behavior
         return $value;
     }
 
-	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	public function initializeExcelTemplateData(ArrayObject $extra)
     {
         $model = $this->_table;
 
-        $broadcaster = $model;
-        $listeners = [];
-        $listeners[] = TableRegistry::get('CustomExcel.AssessmentResults');
+        if($model->action == 'index') {
+            $broadcaster = $model;
+            $listeners = [];
+            $listeners[] = TableRegistry::get('CustomExcel.AssessmentResults');
 
-        if (!empty($listeners)) {
-            $model->dispatchEventToModels('Model.ExcelTemplates.indexBeforeAction', [$extra], $broadcaster, $listeners);
+            if (!empty($listeners)) {
+                $model->dispatchEventToModels('Model.ExcelTemplates.initializeData', [$extra], $broadcaster, $listeners);
+            }
         }
     }
 
