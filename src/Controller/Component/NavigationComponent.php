@@ -539,7 +539,7 @@ class NavigationComponent extends Component
 			'Institutions.StudentUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Students.index',
-				'params' => ['plugin' => 'Institution', '1' => $studentId, 'id' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'id' => $id],
 				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
 					'Students.History', 'Students.GuardianUser']],
@@ -571,7 +571,7 @@ class NavigationComponent extends Component
 			'Institutions.StaffUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Staff.index',
-				'params' => ['plugin' => 'Institution', '1' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $id])],
 				'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
 					'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'Staff.Comments', 'Staff.History']
 			],
