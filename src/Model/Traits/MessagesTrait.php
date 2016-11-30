@@ -868,6 +868,11 @@ trait MessagesTrait {
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
                 ]
+            ],
+            'InstitutionTextbooks' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ]
             ]
         ],
         'User' => [
@@ -1491,7 +1496,7 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
                 ]
-            ]
+            ],
         ],
         'Configuration' => [
         	'ConfigProductLists' => [
