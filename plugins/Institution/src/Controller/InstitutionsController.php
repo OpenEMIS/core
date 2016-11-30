@@ -350,7 +350,8 @@ class InstitutionsController extends AppController
             $requestQuery = $this->request->query;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
-                    $persona = $model->get($params['pass'][1]);
+                    $ids = $this->ControllerAction->paramsDecode($params['pass'][1]);
+                    $persona = $model->get($ids);
                 }
             } else if (isset($requestQuery['user_id'][1])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
@@ -606,10 +607,10 @@ class InstitutionsController extends AppController
             $params = [];
             switch ($key) {
                 case $userRole.'User':
-                    $params = [$userId, 'id' => $id];
+                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
                     break;
                 case $userRole.'Account':
-                    $params = [$userId, 'id' => $id];
+                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
                     break;
                 case $userRole.'Surveys':
                     $params = ['user_id' => $userId];
