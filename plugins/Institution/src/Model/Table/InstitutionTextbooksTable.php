@@ -210,6 +210,14 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'data' => $data,
             'order' => 3
         ];
+
+        $this->field('comment', ['visible' => false]);
+        $this->field('textbook_status_id', ['visible' => false]);
+        $this->field('education_subject_id', ['visible' => false]);
+
+        $this->setFieldOrder([
+            'code', 'textbook_id', 'textbook_condition_id', 'student_id'
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -384,9 +392,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function onGetTextbookId(Event $event, Entity $entity)
     {
-        if ($this->action == 'view') {
-            return $entity->textbook->code_title;
-        }
+        return $entity->textbook->code_title;
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -743,8 +749,15 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . 
                             __('Available means physically book exists while Not Available means it is missing') . 
                         "'></i>",
-            'Condition', 'Comment', 
-            __('Student') . "&nbsp;
+            __('Condition') . "&nbsp;
+                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . 
+                            __('Condition of each available book') . 
+                        "'></i>",
+            __('Comment') . "&nbsp;
+                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . 
+                            __('Comments about each book regardless of availability') . 
+                        "'></i>", 
+            __('Allocated To') . "&nbsp;
                         <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' data-toggle='tooltip' data-placement='bottom' title='" . 
                             __('Each book can be optionally allocated to an individual student') . 
                         "'></i>"
