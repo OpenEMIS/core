@@ -40,9 +40,21 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->EducationGradeSubjects   = TableRegistry::get('Education.EducationGradeSubjects');
 
         $this->InstitutionSubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
-        $this->InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $this->InstitutionGrades            = TableRegistry::get('Institution.InstitutionGrades');
         $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
         $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+    }
+
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('code', [
+                'ruleUniqueCode' => [
+                    'rule' => ['validateUnique', ['scope' => ['academic_period_id', 'institution_id']]],
+                    'provider' => 'table'
+                ]
+            ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) 
@@ -270,6 +282,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $obj['education_grade_id'] = $entity->education_grade_id;
                         $obj['education_subject_id'] = $entity->education_subject_id;
                         $obj['textbook_id'] = $entity->textbook_id;
+                        $obj['counterNo'] = $key;
 
                         $newEntities[] = $obj;
                     }
@@ -279,6 +292,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         foreach ($newEntities as $key => $newEntity) {
                             $textbookStudentEntity = $this->newEntity($newEntity);
 
+                            if ($textbookStudentEntity->errors('code')) {
+                                $counterNo = $newEntity['counterNo'];
+                                $entity->errors("textbooks_students.$counterNo", ['code' => $textbookStudentEntity->errors('code')]);
+                            }
                             if (!$this->save($textbookStudentEntity)) {
                                 $return = false;
                             }
@@ -737,7 +754,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $fieldKey = 'textbooks_students';
         
         //generate textbook condition and status
-        $textbookConditionOptions = $this->TextbookConditions->getSelectOptions();
+        $textbookConditionOptions = $this->TextbookConditions->getTextbookConditionOptions();
         $textbookStatusOptions = $this->TextbookStatuses->getSelectOptions();
 
         if (!count($textbookConditionOptions) || !count($textbookStatusOptions)) { //if no condition / status created.
@@ -766,8 +783,21 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $student_id = $obj['student_id'];
 
                         $rowData = [];
-                        
-                        $rowData[] = $Form->input("$alias.$fieldKey.$key.code", ['label' => false]);
+
+                        //to insert error message if validation kicked in.
+                        $tempRowData = $Form->input("$alias.$fieldKey.$key.code", ['label' => false]);
+
+                        if ($entity->errors("textbooks_students.$key") && isset($entity->errors("textbooks_students.$key")['code'])) {
+
+                            $tempRowData .= "<ul class='error-message'>";
+                            foreach ($entity->errors("textbooks_students.$key")['code'] as $error) {
+                                $tempRowData .= __($error);
+                            }
+                            $tempRowData .= "</ul>";
+
+                        }   
+
+                        $rowData[] = $tempRowData;
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_status_id", ['type' => 'select', 'label' => false, 'options' => $textbookStatusOptions]);
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_condition_id", ['type' => 'select', 'label' => false, 'options' => $textbookConditionOptions]);
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.comment", ['type' => 'text', 'label' => false]);
@@ -795,26 +825,30 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             if ($data[$alias]['institution_class_id'] && $data[$alias]['education_subject_id'] && $data[$alias]['textbook_id']) {
 
-                // $textbookCode = $this->Textbooks->get($data[$alias]['textbook_id'], $data[$alias]['academic_period_id'])->code;
+                $textbookCode = $this
+                                ->Textbooks
+                                ->get([
+                                    'textbook_id' => $data[$alias]['textbook_id'],
+                                    'academic_period_id' => $data[$alias]['academic_period_id']
+                                ])->code;
 
-                $Textbook = $this->Textbooks
-                            ->find()
-                            ->where([
-                                $this->Textbooks->aliasField('id') => $data[$alias]['textbook_id'],
-                                $this->Textbooks->aliasField('academic_period_id') => $data[$alias]['academic_period_id'],
-                            ])
-                            ->toArray();
-
-                if (count($Textbook)) {
-                    $textbookCode = $Textbook[0]->code;
-                }
+                //count current counter on database
+                $textbookCounter = $this
+                                    ->find()
+                                    ->where([
+                                        $this->aliasField('textbook_id') => $data[$alias]['textbook_id'],
+                                        $this->aliasField('institution_id') => $this->institutionId,
+                                        $this->aliasField('academic_period_id') => $data[$alias]['academic_period_id']
+                                    ])
+                                    ->count();
                 
                 //generate code autonumber
                 if (!array_key_exists($fieldKey, $data[$alias])) { //no record
-                    $textbookStudentCounter = 1;
+                    $textbookStudentCounter = $textbookCounter + 1;
                 } else {
-                    $textbookStudentCounter = count($data[$alias][$fieldKey]) + 1;
+                    $textbookStudentCounter = $textbookCounter + count($data[$alias][$fieldKey]) + 1;
                 }
+
 
                 if ($textbookStudentCounter < 10) {
                     $zeroPrefix = '00';
