@@ -22,7 +22,7 @@ trait OptionsTrait {
 				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
 			],
 			'AssessmentGradingTypes' => [
-				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
+				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades'), 'DURATION' => ('Duration')]
 			],
 			'ExaminationGradingTypes' => [
 				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
