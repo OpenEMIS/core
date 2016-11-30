@@ -401,15 +401,17 @@ class AppTable extends Table {
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $primaryKey = $this->primaryKey();
         $id = null;
-        if (!is_array($primaryKey)) {
-            $id = $entity->$primaryKey;
-        } else {
-        	if ($entity->has('id')) {
-        		$id = $entity->id;
-        	} else {
-        		return $buttons;
-        	}
-        }
+    	$primaryKeyValue = [];
+    	if (is_array($primaryKey)) {
+    		foreach ($primaryKey as $key) {
+				$primaryKeyValue[$key] = $entity->$key;
+			}
+    	} else {
+    		$primaryKeyValue[$primaryKey] = $entity->$primaryKey;
+    	}
+		
+		$encodedKeys = $this->ControllerAction->paramsEncode($primaryKeyValue);
+		$id = $encodedKeys;
 
         if (array_key_exists('view', $buttons)) {
             $buttons['view']['url'][1] = $id;
