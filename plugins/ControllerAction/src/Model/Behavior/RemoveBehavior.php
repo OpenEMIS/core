@@ -396,9 +396,15 @@ class RemoveBehavior extends Behavior
                         $foreignKey = $assoc->foreignKey();
 
                         $conditions = [];
-                        foreach ($foreignKey as $index => $key) {
-                            $conditions[$assocTable->aliasField($key)] = $ids[$bindingKey[$index]];
+
+                        if (is_array($foreignKey)) {
+                            foreach ($foreignKey as $index => $key) {
+                                $conditions[$assocTable->aliasField($key)] = $ids[$bindingKey[$index]];
+                            }
+                        } else {
+                            $conditions[$assocTable->aliasField($foreignKey)] = $ids[$bindingKey];
                         }
+
                         $query = $assocTable->find()->where($conditions);
                         $event = $model->dispatchEvent('ControllerAction.Model.getAssociatedRecordConditions', [$query, $assocTable, $extra], $this);
 
