@@ -20,50 +20,42 @@ class IndexesTable extends ControllerActionTable
     private $criteriaTypes = [
         'RESULT' => [
             'name' => 'Results',
-            'model' => '',
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
         'BEHAVIOR' => [
             'name' => 'Behavior',
-            'model' => 'Student.StudentBehaviourClassifications',
             'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'options' => [1,2,3]]
+            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
         ],
-        'ABSENCE' => [
+        'Institution.InstitutionStudentAbsences' => [
             'name' => 'Absences',
-            'model' => '',
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
         'SPECIAL NEED' => [
             'name' => 'Special Needs',
-            'model' => '',
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
         'STATUS' => [
             'name' => 'Status',
-            'model' => '',
             'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'options' => [2,3,4]]
+            'threshold' => ['type' => 'select', 'lookupModel' => [2,3,4]]
         ],
         // // 'Pre Primary',
         'OVERAGE' => [
             'name' => 'Overage',
-            'model' => '',
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
         'GENDER' => [
             'name' => 'Genders',
-            'model' => '',
             'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'options' => [3,4,5]]
+            'threshold' => ['type' => 'select', 'lookupModel' => [3,4,5]]
         ],
         'GUARDIAN' => [
             'name' => 'Guardians',
-            'model' => '',
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
@@ -104,9 +96,9 @@ class IndexesTable extends ControllerActionTable
     {
         $thresholdParams['label'] = false;
         $thresholdParams['type'] = $this->criteriaTypes[$criteriaType]['threshold']['type'];
-        $model = $this->criteriaTypes[$criteriaType]['model'];
 
         if ($thresholdParams['type'] == 'select') {
+            $model = $this->criteriaTypes[$criteriaType]['threshold']['lookupModel'];
             $thresholdParams['options'] = $this->getOptions($model);
         }
 
@@ -297,5 +289,10 @@ class IndexesTable extends ControllerActionTable
         $this->field('indexes_criterias', ['type' => 'custom_criterias']);
 
         $this->setFieldOrder(['name', 'indexes_criterias']);
+    }
+
+    public function getCriteriasDetails($criteriaKey)
+    {
+        return $details = $this->criteriaTypes[$criteriaKey];
     }
 }

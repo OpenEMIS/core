@@ -435,6 +435,13 @@ class NavigationComponent extends Component
 				'params' => ['plugin' => 'Institution'],
 			],
 
+			'Institutions.InstitutionIndexes.index' => [
+				'title' => 'Indexes',
+				'parent' => 'Institutions.index',
+				'selected' => ['Institutions.InstitutionIndexes','Institutions.InstitutionStudentIndexes'],
+				'params' => ['plugin' => 'Institution'],
+			],
+
 				'Institutions.Examinations' => [
 					'title' => 'Examinations',
 					'parent' => 'Institutions.index',
