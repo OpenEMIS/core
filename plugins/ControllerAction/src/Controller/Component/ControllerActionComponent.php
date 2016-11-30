@@ -524,9 +524,7 @@ class ControllerActionComponent extends Component {
             if ($action != 'index') {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
-                    $primaryKey = $this->getPrimaryKey($model);
-                    $idKey = $model->aliasField($primaryKey);
-                    $sessionKey = $model->registryAlias() . '.' . $primaryKey;
+                    $sessionKey = $model->registryAlias() . '.primaryKey';
                     $extra['primaryKeyValue'] = $this->Session->read($sessionKey);
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
@@ -1867,7 +1865,7 @@ class ControllerActionComponent extends Component {
         return $this->triggerFrom;
     }
 
-    private function getIdKeys(Table $model, $ids)
+    public function getIdKeys(Table $model, $ids)
     {
         $primaryKey = $model->primaryKey();
         $idKeys = [];

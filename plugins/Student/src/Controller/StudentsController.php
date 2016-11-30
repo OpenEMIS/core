@@ -161,6 +161,7 @@ class StudentsController extends AppController {
 			}
 
 			$idKey = $this->ControllerAction->getPrimaryKey($model);
+			$primaryKey = $model->primaryKey();
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -176,10 +177,9 @@ class StudentsController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -196,10 +196,9 @@ class StudentsController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('student_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('student_id')] = $userId;
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
