@@ -717,7 +717,7 @@ class ControllerActionComponent extends Component {
             $modal['form'] = [
                 'model' => $this->model,
                 'formOptions' => ['type' => 'delete', 'url' => $this->url('remove')],
-                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
+                'fields' => ['primaryKey' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
             ];
 
             $modal['buttons'] = [
