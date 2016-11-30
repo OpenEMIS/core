@@ -57,8 +57,7 @@ class ExcelTemplateBehavior extends Behavior
 
     public function onGetModule(Event $event, Entity $entity)
     {
-        $value = array_key_exists($entity->module, $this->moduleMapping) ? $this->moduleMapping[$entity->module] : $entity->module;
-
+        $value = $this->getNameByModule($entity->module);
         return $value;
     }
 
@@ -69,7 +68,9 @@ class ExcelTemplateBehavior extends Behavior
         if($model->action == 'index') {
             $broadcaster = $model;
             $listeners = [];
-            $listeners[] = TableRegistry::get('CustomExcel.AssessmentResults');
+            foreach ($this->moduleMapping as $module => $moduleName) {
+                $listeners[] = TableRegistry::get($module);
+            }
 
             if (!empty($listeners)) {
                 $model->dispatchEventToModels('Model.ExcelTemplates.initializeData', [$extra], $broadcaster, $listeners);
@@ -101,14 +102,14 @@ class ExcelTemplateBehavior extends Behavior
         $this->setupFields($entity, $extra);
     }
 
-    public function onUpdateFieldModel(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldModule(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->module;
-            $attr['attr']['value'] = array_key_exists($entity->module, $this->moduleMapping) ? $this->moduleMapping[$entity->module] : $entity->module;
+            $attr['attr']['value'] = $this->getNameByModule($entity->module);
         }
 
         return $attr;
@@ -122,6 +123,11 @@ class ExcelTemplateBehavior extends Behavior
         $model->field('file_content');
 
         $model->setFieldOrder(['module' , 'file_content']);
+    }
+
+    public function getNameByModule($module)
+    {
+        return array_key_exists($module, $this->moduleMapping) ? $this->moduleMapping[$module] : $module;
     }
 
     public function checkIfHasTemplate($registryAlias=null)
