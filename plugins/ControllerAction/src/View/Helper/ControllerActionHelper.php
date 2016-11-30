@@ -320,21 +320,9 @@ class ControllerActionHelper extends Helper {
 			$value = $entity->$field;
 			$type = $attr['type'];
 
-			// if ($count != 6) {
-			// 	pr($field);
-			// 	$count++;
-			// } else {
-			// 	pr($field);
-			// 	$count++;
-			// }
-
-
-
 			if (is_null($table)) {
 				$table = TableRegistry::get($attr['className']);
 			}
-
-
 
 			// attach event for index columns
 			// EventManager->on is triggered at getTableHeader()
@@ -361,12 +349,6 @@ class ControllerActionHelper extends Helper {
 				} else {
 					$associatedObject = $table->ControllerAction->getAssociatedEntityArrayKey($field);
 				}
-				// pr($associatedObject);
-
-				// if ($count == 7) {
-				// 	pr($associatedObject);
-				// 	die;
-				// }
 
                 if ($entity->has($associatedObject) && $entity->$associatedObject instanceof Entity && $entity->$associatedObject->has('name')) {
                     $value = __($entity->$associatedObject->name);
@@ -395,9 +377,14 @@ class ControllerActionHelper extends Helper {
 
 		$primaryKeys = $table->primaryKey();
 		$primaryKeyValue = [];
-		foreach ($primaryKeys as $key) {
-			$primaryKeyValue[$key] = $entity->$key;
+		if (is_array($primaryKeys)) {
+			foreach ($primaryKeys as $key) {
+				$primaryKeyValue[$key] = $entity->$key;
+			}
+		} else {
+			$primaryKeyValue[$primaryKeys] = $entity->$primaryKeys;
 		}
+
 		$encodedKeys = $this->paramsEncode($primaryKeyValue);
 		$row[0] = [$row[0], ['data-row-id' => $encodedKeys]];
 		return $row;
