@@ -162,25 +162,26 @@ class RemoveBehavior extends Behavior
                         }
                     }
                 } else {
-                    if (!empty($request->data[$model->alias()][$key])) {
-                        $ids[$mode->aliasField($primaryKey)] = $request->data[$model->alias()][$primaryKey];
+                    if (!empty($request->data[$model->alias()][$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->alias()][$primaryKey];
                     } else {
                         $ids = [];
                     }
                 }
             } else {
+                $modalPrimaryKeys = $model->ControllerAction->paramsDecode($request->data['primaryKey']);
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
-                        if (!empty($request->data[$model->alias()][$key])) {
-                            $ids[$model->aliasField($key)] = $request->data[$key];
+                        if (!empty($modalPrimaryKeys[$key])) {
+                            $ids[$model->aliasField($key)] = $modalPrimaryKeys[$key];
                         } else {
                             $ids = [];
                             break;
                         }
                     }
                 } else {
-                    if (!empty($request->data[$model->alias()][$key])) {
-                        $ids[$mode->aliasField($primaryKey)] = $request->data[$primaryKey];
+                    if (!empty($modalPrimaryKeys[$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $modalPrimaryKeys[$primaryKey];
                     } else {
                         $ids = [];
                     }
