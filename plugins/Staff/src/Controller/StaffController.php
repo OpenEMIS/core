@@ -116,7 +116,7 @@ class StaffController extends AppController {
 				$header = $session->read('Staff.Staff.name');
 			}
 
-			$idKey = $this->ControllerAction->getPrimaryKey($model);
+			$primaryKey = $model->primaryKey();
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -132,10 +132,11 @@ class StaffController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
+
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -152,10 +153,11 @@ class StaffController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('staff_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('staff_id')] = $userId;
+
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
