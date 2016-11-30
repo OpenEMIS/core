@@ -76,7 +76,7 @@ class TextbooksTable extends ControllerActionTable {
         $levelOptions = $this->EducationLevels->getLevelOptions();
 
         if ($levelOptions) {
-            $levelOptions = array(-1 => __('All Education Levels')) + $levelOptions;
+            $levelOptions = array(-1 => __('Please Select Education Level')) + $levelOptions;
         }
 
         if ($request->query('level')) {
@@ -105,7 +105,7 @@ class TextbooksTable extends ControllerActionTable {
             $programmeOptions = $this->EducationProgrammes->getEducationProgrammesList($selectedLevel);
 
             if ($programmeOptions) {
-                $programmeOptions = array(-1 => __('All Education Programmes')) + $programmeOptions;
+                $programmeOptions = array(-1 => __('Please Select Education Programme')) + $programmeOptions;
             }
 
             if ($request->query('programme')) {
@@ -235,6 +235,14 @@ class TextbooksTable extends ControllerActionTable {
         if (array_key_exists('selectedPeriod', $extra)) {
             if ($extra['selectedPeriod']) {
                 $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+            }
+        }
+
+        if (array_key_exists('selectedProgramme', $extra)) {
+            if ($extra['selectedProgramme']) {
+                $query->innerJoinWith('EducationGrades.EducationProgrammes');
+                // pr($query);
+                $conditions[] = 'EducationProgrammes.id = ' . $extra['selectedProgramme'];
             }
         }
 
