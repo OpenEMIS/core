@@ -73,7 +73,7 @@ class ExcelTemplateBehavior extends Behavior
             }
 
             if (!empty($listeners)) {
-                $model->dispatchEventToModels('Model.ExcelTemplates.initializeData', [$extra], $broadcaster, $listeners);
+                $model->dispatchEventToModels('ExcelTemplates.Model.initializeData', [$extra], $broadcaster, $listeners);
             }
         }
     }

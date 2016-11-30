@@ -14,6 +14,7 @@ class CustomExcelsController extends AppController
 	public function initialize()
 	{
         parent::initialize();
+        $this->loadComponent('CustomExcel.ExcelReport');
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
@@ -26,5 +27,11 @@ class CustomExcelsController extends AppController
     	$this->set('contentHeader', $header);
     }
 
+    // CAv4
     public function ExcelTemplates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'CustomExcel.ExcelTemplates']); }
+    // End
+
+    // Custom Excel Report
+    public function AssessmentResults() { $this->ExcelReport->renderExcel(['alias' => __FUNCTION__, 'className' => 'CustomExcel.AssessmentResults']); }
+    // End
 }
