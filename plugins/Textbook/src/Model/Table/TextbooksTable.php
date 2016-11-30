@@ -225,7 +225,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->field('expiry_date', ['visible' => false]);
 
         $this->setFieldOrder([
-            'code', 'title', 'isbn', 'publisher'
+            'code', 'title', 'ISBN', 'publisher'
         ]);
     }
 
