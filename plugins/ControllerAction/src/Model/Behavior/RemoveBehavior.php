@@ -124,7 +124,6 @@ class RemoveBehavior extends Behavior
                 } else {
                     $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
                 }
-
             }
             if ($model->exists($idKeys)) {
                 $entity = $model->get($idKeys);

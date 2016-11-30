@@ -104,9 +104,9 @@ class AcademicPeriodsTable extends AppTable
         }
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $id)
+    public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
     {
-        $entity = $this->find()->select(['current'])->where([$this->aliasField($this->primaryKey()) => $id])->first();
+        $entity = $this->find()->select(['current'])->where($ids)->first();
 
         // die silently when a non super_admin wants to delete
         if (!$this->AccessControl->isAdmin()) {
