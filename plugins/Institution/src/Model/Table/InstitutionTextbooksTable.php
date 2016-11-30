@@ -224,12 +224,81 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $query->where([$conditions]);
     }
 
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'Users', 
+            'Textbooks', 
+            'EducationSubjects.EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
+        ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity) 
+    {
+        $this->setupFields($entity);
+
+        $this->field('textbooks_students', ['visible' => false]);
+
+        if ($entity->student_id) {
+            $studentClassGrade = $this->InstitutionSubjectStudents->getStudentClassGradeDetails($entity->academic_period_id, $this->institutionId, $entity->student_id, $entity->education_subject_id);
+            $entity->education_grade_id = $studentClassGrade[0]->education_grade_id;
+            $entity->institution_class_id = $studentClassGrade[0]->institution_class_id;
+        }
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        $process = function ($model, $entity) use ($data) {
+            $newEntities = [];
+
+            if (array_key_exists('textbooks_students', $data[$this->alias()])) {
+
+                $textbooks = $data[$this->alias()]['textbooks_students'];
+
+                if (count($textbooks)) {
+
+                    foreach ($textbooks as $key => $textbook) {
+                        $obj['code'] = $textbook['code'];
+                        $obj['comment'] = $textbook['comment'];
+                        $obj['textbook_status_id'] = $textbook['textbook_status_id'];
+                        $obj['textbook_condition_id'] = $textbook['textbook_condition_id'];
+                        
+                        $obj['student_id'] = $textbook['student_id'];
+
+                        $obj['institution_id'] = $entity->institution_id;
+                        $obj['academic_period_id'] = $entity->academic_period_id;
+                        $obj['education_grade_id'] = $entity->education_grade_id;
+                        $obj['education_subject_id'] = $entity->education_subject_id;
+                        $obj['textbook_id'] = $entity->textbook_id;
+
+                        $newEntities[] = $obj;
+                    }
+
+                    $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
+                        $return = true;
+                        foreach ($newEntities as $key => $newEntity) {
+                            $textbookStudentEntity = $this->newEntity($newEntity);
+
+                            if (!$this->save($textbookStudentEntity)) {
+                                $return = false;
+                            }
+                        }
+                        return $return;
+                    });
+                    return $success;
+                }
+            }
+        };
+        return $process;
+    }
+
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->student_id) { //retrieve student grade and class
             $studentClassGrade = $this->InstitutionSubjectStudents->getStudentClassGradeDetails($entity->academic_period_id, $this->institutionId, $entity->student_id, $entity->education_subject_id);
             $entity->education_grade_id = $studentClassGrade[0]->education_grade_id;
             $entity->institution_class_id = $studentClassGrade[0]->institution_class_id;
+            // pr($entity);
         } else { //if no student assigned to the book, then use the textbook details
             $entity->education_grade_id = $entity->textbook->education_grade_id;
             $entity->institution_class_id = '';
@@ -251,10 +320,55 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
     }
 
+    public function onGetAcademicPeriodId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->academic_period->name;
+        }
+    }
+
+    public function onGetEducationLevelId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
+        }
+    }
+
+    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->education_subject->education_grades[0]->education_programme->cycle_programme_name;
+        }
+    }
+
+    public function onGetEducationGradeId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->education_subject->education_grades[0]->name;
+        }
+    }
+
+    public function onGetInstitutionClassId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            // pr($entity);
+            if ($entity->institution_class_id) {
+                return $this->InstitutionClasses->get($entity->institution_class_id)->name;
+            }
+        }
+    }
+
+    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->education_subject->code_name;
+        }
+    }
+
     public function onGetTextbookId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            return $entity->textbook->code . " - " . $entity->textbook->title;
+            return $entity->textbook->code_title;
         }
     }
 
@@ -388,9 +502,15 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
                 list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
-                if ($selectedPeriod) {
-                    $gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $selectedPeriod);
+                $selectedProgramme = $request->query('programme');
+                $gradeOptions = [];
+                if ($selectedProgramme) {
+                    $gradeOptions = $this->EducationGrades->getEducationGradesByProgrammes($selectedProgramme);
                 }
+
+                $attr['options'] = $gradeOptions;
+                $attr['onChangeReload'] = 'changeEducationGrade';
+
                 $attr['options'] = $gradeOptions;
                 $attr['onChangeReload'] = 'changeEducationGrade';
 
@@ -555,7 +675,11 @@ class InstitutionTextbooksTable extends ControllerActionTable
             } else if ($action == 'edit') {
 
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $this->Textbooks->get($attr['entity']->textbook_id)->title;
+                $attr['attr']['value'] = $this->Textbooks
+                                                ->get([
+                                                    'textbook_id' => $attr['entity']->textbook_id,
+                                                    'academic_period_id' => $attr['entity']->academic_period_id,
+                                                ])->title;
                 $attr['value'] = $attr['entity']->textbook_id;
 
             }
@@ -646,7 +770,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.code", ['label' => false]);
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_status_id", ['type' => 'select', 'label' => false, 'options' => $textbookStatusOptions]);
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_condition_id", ['type' => 'select', 'label' => false, 'options' => $textbookConditionOptions]);
-                        $rowData[] = $Form->input("$alias.$fieldKey.$key.comment", ['label' => false]);
+                        $rowData[] = $Form->input("$alias.$fieldKey.$key.comment", ['type' => 'text', 'label' => false]);
                         $rowData[] = $Form->input("$alias.$fieldKey.$key.student_id", ['type' => 'select', 'label' => false, 'options' => $studentOptions]);
                        
                         $rowData[] = $this->getDeleteButton();
@@ -729,59 +853,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 
         }
         return $attr;
-    }
-
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query->contain([
-            'Users', 'Textbooks'
-        ]);
-    }
-
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-    {
-        $process = function ($model, $entity) use ($data) {
-            $newEntities = [];
-
-            if (array_key_exists('textbooks_students', $data[$this->alias()])) {
-
-                $textbooks = $data[$this->alias()]['textbooks_students'];
-
-                if (count($textbooks)) {
-
-                    foreach ($textbooks as $key => $textbook) {
-                        $obj['code'] = $textbook['code'];
-                        $obj['comment'] = $textbook['comment'];
-                        $obj['textbook_status_id'] = $textbook['textbook_status_id'];
-                        $obj['textbook_condition_id'] = $textbook['textbook_condition_id'];
-                        
-                        $obj['student_id'] = $textbook['student_id'];
-
-                        $obj['institution_id'] = $entity->institution_id;
-                        $obj['academic_period_id'] = $entity->academic_period_id;
-                        $obj['education_grade_id'] = $entity->education_grade_id;
-                        $obj['education_subject_id'] = $entity->education_subject_id;
-                        $obj['textbook_id'] = $entity->textbook_id;
-
-                        $newEntities[] = $obj;
-                    }
-
-                    $success = $this->connection()->transactional(function() use ($newEntities, $entity) {
-                        $return = true;
-                        foreach ($newEntities as $key => $newEntity) {
-                            $textbookStudentEntity = $this->newEntity($newEntity);
-
-                            if (!$this->save($textbookStudentEntity)) {
-                                $return = false;
-                            }
-                        }
-                        return $return;
-                    });
-                    return $success;
-                }
-            }
-        };
-        return $process;
     }
 
     private function setupFields(Entity $entity)
