@@ -235,6 +235,7 @@ class InstitutionsController extends AppController
             $id = 0;
             if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
                 $id = $this->request->pass[0];
+                $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {
                     return false;
@@ -463,6 +464,7 @@ class InstitutionsController extends AppController
 
     public function dashboard($id)
     {
+        $id = $this->ControllerAction->paramsDecode($id)['id'];
         $this->ControllerAction->model->action = $this->request->action;
 
         $classification = $this->Institutions->get($id)->classification;
