@@ -380,9 +380,14 @@ class InstitutionsController extends AppController
                     $primaryKey = $model->primaryKey();
                     $modelIds = $this->ControllerAction->paramsDecode($modelIds);
                     $params = [];
-                    foreach ($primaryKey as $key) {
-                        $params[$model->aliasField($key)] = $modelIds[$key];
+                    if (is_array($primaryKey)) {
+                        foreach ($primaryKey as $key) {
+                            $params[$model->aliasField($key)] = $modelIds[$key];
+                        }
+                    } else {
+                        $params[$primaryKey] = $modelIds[$primaryKey];
                     }
+
 
                     $exists = false;
 
