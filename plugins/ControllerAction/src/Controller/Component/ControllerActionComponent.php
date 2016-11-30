@@ -915,21 +915,9 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
-        $idKeys = [];
-        // May still be empty
-        if (!empty($ids)) {
-            if (is_array($primaryKey)) {
-                foreach ($primaryKey as $key) {
-                    $idKeys[$model->aliasField($key)] = $ids[$key];
-                }
-            } else {
-                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
-            }
+        $ids = $this->paramsDecode($id);
 
-        }
-
-        $sessionKey = $model->registryAlias() . '.' . $primaryKey;
+        $sessionKey = $model->registryAlias() . '.primaryKey';
         $contain = [];
 
         foreach ($model->associations() as $assoc) {
@@ -938,11 +926,13 @@ class ControllerActionComponent extends Component {
             }
         }
 
-        if (empty($id)) {
+        if (empty($ids)) {
             if ($this->Session->check($sessionKey)) {
-                $id = $this->Session->read($sessionKey);
+                $ids = $this->Session->read($sessionKey);
             }
         }
+
+        $idKeys = $this->getIdKeys($model, $ids);
 
         if ($model->exists($idKeys)) {
             $query = $model->find()->where($idKeys)->contain($contain);
@@ -972,7 +962,7 @@ class ControllerActionComponent extends Component {
             if ($event->isStopped()) { return $event->result; }
             // End Event
 
-            $this->Session->write($sessionKey, $id);
+            $this->Session->write($sessionKey, $ids);
             $modals = ['delete-modal' => $this->getModalOptions('remove')];
             $this->controller->set('data', $entity);
             $this->controller->set('modals', $modals);
@@ -1007,7 +997,7 @@ class ControllerActionComponent extends Component {
 
         $entity = $model->newEntity();
 
-    if ($request->is(['get'])) {
+        if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);
@@ -1133,21 +1123,8 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $model->getPrimaryKey();
-
-        $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
-        $idKeys = [];
-        // May still be empty
-        if (!empty($ids)) {
-            if (is_array($primaryKey)) {
-                foreach ($primaryKey as $key) {
-                    $idKeys[$model->aliasField($key)] = $ids[$key];
-                }
-            } else {
-                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
-            }
-
-        }
+        $ids = $this->paramsDecode($id);
+        $idKeys = $this->getIdKeys($model, $ids);
 
         if ($model->exists($idKeys)) {
             $query = $model->find()->where($idKeys);
@@ -1283,6 +1260,7 @@ class ControllerActionComponent extends Component {
     }
 
     public function remove($id=0) {
+        $ids = $this->paramsDecode($id);
         $request = $this->request;
         $model = $this->model;
         $settings = new ArrayObject([]);
@@ -1303,28 +1281,13 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $idKeys = [];
-        // May still be empty
-        if (!empty($ids)) {
-            if (is_array($primaryKey)) {
-                foreach ($primaryKey as $key) {
-                    $idKeys[$model->aliasField($key)] = $ids[$key];
-                }
-            } else {
-                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
-            }
+        $primaryKey = $model->primaryKey();
 
-        }
+        $idKeys = $this->getIdKeys($model, $ids);
 
         if ($request->is('get')) {
             if ($model->exists($idKeys)) {
-
-                if (is_array($model->primaryKey())) {
-                    // For table with composite primary key
-                    $entity = $model->find()->where($idKeys)->first();
-                } else {
-                    $entity = $model->get($id);
-                }
+                $entity = $model->get($idKeys);
 
                 $query = $model->find();
                 $extra = new ArrayObject([]);
@@ -1381,16 +1344,24 @@ class ControllerActionComponent extends Component {
                             }
                             if (!array_key_exists($assoc->alias(), $associations) && !in_array($assoc->alias(), $excludedModels)) {
                                 $count = 0;
-                                if($assoc->type() == 'oneToMany') {
-                                    $count = $assoc->find()
-                                    ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-                                    ->count();
-                                } else {
+                                $modelAssociationTable = $assoc;
+                                if ($assoc->type() == 'manyToMany') {
                                     $modelAssociationTable = $assoc->junction();
-                                    $count = $modelAssociationTable->find()
-                                        ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
-                                        ->count();
                                 }
+                                $bindingKey = $assoc->bindingKey();
+                                $foreignKey = $assoc->foreignKey();
+                                $conditions = [];
+                                if (is_array($foreignKey)) {
+                                    foreach ($foreignKey as $index => $key) {
+                                        $conditions[$modelAssociationTable->aliasField($key)] = $ids[$bindingKey[$index]];
+                                    }
+                                } else {
+                                    $conditions[$modelAssociationTable->aliasField($foreignKey)] = $ids[$bindingKey];
+                                }
+
+                                $count = $modelAssociationTable->find()
+                                    ->where($conditions)
+                                    ->count();
                                 $title = $this->Alert->getMessage($assoc->aliasField('title'));
                                 if ($title == '[Message Not Found]') {
                                     $title = $assoc->name();
@@ -1419,6 +1390,10 @@ class ControllerActionComponent extends Component {
                 $this->controller->set(compact('showFormButton'));
                 $this->controller->set('deleteStrategy', $this->deleteStrategy);
                 $this->controller->set('data', $entity);
+                if (!is_array($primaryKey)) {
+                    $primaryKey = [$primaryKey];
+                }
+                $this->controller->set('primaryKey', $primaryKey);
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
@@ -1426,21 +1401,32 @@ class ControllerActionComponent extends Component {
             }
         } else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
             $this->autoRender = false;
-            $id = $request->data[$primaryKey];
+            $ids = [];
+
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    $ids[$key] = $request->data[$key];
+                }
+            } else {
+                $ids[$primaryKey] = $request->data[$primaryKey];
+            }
+
             $deleteOptions = new ArrayObject([]);
             $extra = new ArrayObject(['excludedModels' => []]);
 
-            $process = function ($model, $id, $deleteOptions) {
-                $primaryKey = $this->getPrimaryKey($model);
-
-                $idKey = $model->aliasField($primaryKey);
-                if ($model->exists([$idKey => $id])) {
-                    if (is_array($model->primaryKey())) {
-                        // For table with composite primary key
-                        $entity = $model->find()->where([$idKey => $id])->first();
-                    } else {
-                        $entity = $model->get($id);
+            $process = function ($model, $ids, $deleteOptions) {
+                $primaryKey = $model->primaryKey();
+                $idKeys = [];
+                if (is_array($primaryKey)) {
+                    foreach($primaryKey as $key) {
+                        $idKeys[$model->aliasField($key)] = $ids[$key];
                     }
+                } else {
+                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                }
+
+                if ($model->exists($idKeys)) {
+                    $entity = $model->get($ids);
                     return $model->delete($entity, $deleteOptions->getArrayCopy());
                 } else {
                     // If id(to be deleted) cannot be found, return a successful deletion message
@@ -1449,7 +1435,7 @@ class ControllerActionComponent extends Component {
             };
 
             // Event: onBeforeDelete
-            $params = [$deleteOptions, $id, $extra];
+            $params = [$deleteOptions, $ids, $extra];
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeDelete', null, $params);
             if ($event->isStopped()) { return $event->result; }
@@ -1458,7 +1444,7 @@ class ControllerActionComponent extends Component {
             }
             // End Event
             if ($this->deleteStrategy == 'cascade' || $this->deleteStrategy == 'restrict') {
-                if ($process($model, $id, $deleteOptions)) {
+                if ($process($model, $ids, $deleteOptions)) {
                     $this->Alert->success('general.delete.success');
                 } else {
                     $this->Alert->error('general.delete.failed');
@@ -1879,6 +1865,22 @@ class ControllerActionComponent extends Component {
 
     public function getTriggerFrom() {
         return $this->triggerFrom;
+    }
+
+    private function getIdKeys(Table $model, $ids)
+    {
+        $primaryKey = $model->primaryKey();
+        $idKeys = [];
+        if (!empty($ids)) {
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    $idKeys[$model->aliasField($key)] = $ids[$key];
+                }
+            } else {
+                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+            }
+        }
+        return $idKeys;
     }
 
     private function getOrderValue($model, $field, $insert) {
