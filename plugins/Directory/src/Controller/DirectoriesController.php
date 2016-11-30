@@ -296,11 +296,11 @@ class DirectoriesController extends AppController {
 
 		$tabElements = [
 			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
 				'text' => __('Overview')
 			],
 			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
 				'text' => __('Account')
 			],
 			'Identities' => [
