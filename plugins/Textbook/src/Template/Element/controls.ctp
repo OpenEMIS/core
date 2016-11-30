@@ -1,4 +1,4 @@
-<?php if (!empty($periodOptions) || !empty($programmeOptions)) : ?>
+<?php if (!empty($periodOptions) || !empty($levelOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -22,6 +22,19 @@
                     ));
                 }
 
+                if (!empty($levelOptions)) {
+                    echo $this->Form->input('education_level_id', array(
+                        'type' => 'select',
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $levelOptions,
+                        'default' => $selectedLevel,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'level',
+                        'data-named-group' => 'period'
+                    ));
+                }
+
                 if (!empty($programmeOptions)) {
                     echo $this->Form->input('education_programme_id', array(
                         'type' => 'select',
@@ -31,7 +44,7 @@
                         'default' => $selectedProgramme,
                         'url' => $baseUrl,
                         'data-named-key' => 'programme',
-                        'data-named-group' => 'period'
+                        'data-named-group' => 'period, level'
                     ));
                 }
 
@@ -44,7 +57,7 @@
                         'default' => $selectedGrade,
                         'url' => $baseUrl,
                         'data-named-key' => 'grade',
-                        'data-named-group' => 'period,programme'
+                        'data-named-group' => 'period, level, programme'
                     ));
                 }
 
@@ -57,7 +70,7 @@
                         'default' => $selectedSubject,
                         'url' => $baseUrl,
                         'data-named-key' => 'subject',
-                        'data-named-group' => 'period,programme,grade'
+                        'data-named-group' => 'period, level, programme, grade'
                     ));
                 }
             ?>
