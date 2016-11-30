@@ -253,7 +253,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     if (isDurationType) {
                         markAsFloat = parseFloat(maxMark);
                         durationInMinutes = $filter('number')(markAsFloat/60, 2);
-                        maxMark = String(durationInMinutes).replace(".", " : ");
+                        maxMark = durationInMinutes.replace(".", " : ");
                     }
                 }
 
@@ -480,7 +480,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var periodId = extra.period.id;
 
             cols = angular.merge(cols, {
-                // filter: 'text',
                 cellStyle: function(params) {
                     var value = params.data[params.colDef.field];
                     var valueInSeconds = value * 60;
@@ -496,7 +495,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                     if (!isNaN(parseFloat(value))) {
                         var duration = $filter('number')(value, 2);
-                        var formatDuration = String(duration).replace(".", " : ");
+                        var formatDuration = duration.replace(".", " : ");
                         return formatDuration;
                     } else {
                         return '';
@@ -504,7 +503,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 }
             });
 
-            var ResultsSvc = this;
             if (allowEdit) {
                 cols = angular.merge(cols, {
                     cellClass: 'oe-cell-highlight',
@@ -516,12 +514,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         minuteInput.setAttribute("id", "mins");
                         minuteInput.setAttribute("type", "number");
                         minuteInput.setAttribute("min", "0");
-                        minuteInput.setAttribute("max", "9999");
-                        minuteInput.setAttribute("style", "width: 50%; border: none; background-color: inherit; text-align: center;");
+                        minuteInput.setAttribute("max", "999");
+                        minuteInput.setAttribute("class", "ag-grid-duration");
 
                         var text = document.createElement('span');
                         var colon = document.createTextNode(" : ");
-                        text.setAttribute("style", "font-weight:strong");
                         text.appendChild(colon);
 
                         var secondInput = document.createElement('input');
@@ -529,7 +526,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         secondInput.setAttribute("type", "number");
                         secondInput.setAttribute("min", "0");
                         secondInput.setAttribute("max", "59");
-                        secondInput.setAttribute("style", "width: 50%; border: none; background-color: inherit; text-align: center;");
+                        secondInput.setAttribute("class", "ag-grid-duration");
 
                         eCell.appendChild(minuteInput);
                         eCell.appendChild(text);
@@ -537,28 +534,59 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                         var oldValue = params.data[params.colDef.field];
                         if (oldValue) {
-                            console.log(typeof(oldValue));
                             var duration = String(oldValue).split(".");
                             minuteInput.value = duration[0];
                             secondInput.value = duration[1];
                         }
 
                         eCell.addEventListener('change', function() {
-                            var minuteFloat = parseFloat(minuteInput.value);
-                            var secondFloat = parseFloat(secondInput.value);
+                            var minuteInt = parseInt(minuteInput.value);
+                            var secondInt = parseInt(secondInput.value);
 
-                            if (minuteInput.value.length > 0 && (isNaN(minuteFloat) || (minuteFloat < 0 || minuteFloat > 9999))) {
-                                minuteInput.value = '';
-                                secondInput.value = '';
-                            }
+                            // Second Input
+                            var secondValue = 0;
+                            var minuteQuotient = '';
+                            if (secondInput.value.length > 0) {
+                                if (!isNaN(secondInt) && secondInt >= 0) {
 
-                            if (secondInput.value.length > 0 && (isNaN(secondFloat) || (secondFloat < 0 || secondFloat > 59 || secondInput.value.length > 2))) {
-                                minuteInput.value = '';
-                                secondInput.value = '';
-                            } else if (secondInput.value.length == 1 && secondFloat < 10 ) {
-                                // for padding
-                                secondInput.value = '0' + secondInput.value;
+                                    if (secondInt > 59) {
+                                        // truncate input to 4 digits
+                                        if (secondInt.toString().length > 4) {
+                                            secondInt = $filter('limitTo')(secondInt, 4);
+                                        }
+
+                                        // logic to derive the minutes and seconds if seconds is more than 59
+                                        minuteQuotient = Math.floor(secondInt/60);
+                                        secondValue = secondInt % 60;
+
+                                    } else {
+                                        secondValue = secondInt;
+                                    }
+
+                                    // for padding single digits
+                                    if (secondValue.toString().length == 1 && secondValue != 0) {
+                                        secondValue = '0' + secondValue;
+                                    }
+                                }
+
+                                secondInput.value = secondValue;
                             }
+                            // End
+
+                            // Minute Input
+                            if (minuteInput.value.length > 0) {
+                                if (!isNaN(minuteInt) && minuteInt >= 0) {
+                                    if (minuteInt.toString().length > 3) {
+                                        // truncate input to 3 digits
+                                        minuteInt = $filter('limitTo')(minuteInt, 3);
+                                    }
+                                } else {
+                                    minuteInt = 0;
+                                }
+
+                                minuteInput.value = !isNaN(minuteQuotient)? (minuteInt + minuteQuotient): minuteQuotient;
+                            }
+                            // End
 
                             if (angular.isUndefined(_results[studentId])) {
                                 _results[studentId] = {};
@@ -756,7 +784,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     } else if (resultType == resultTypes.DURATION) {
                         if (!isNaN(parseFloat(obj.duration))) {
                             marks = $filter('number')(obj.duration, 2);
-                            durationInSeconds = marks * 60;
+
+                            durationInSeconds = parseFloat(obj.duration) * 60;
                             var gradingObj = this.getGrading(subject, durationInSeconds);
                             gradingOptionId = gradingObj.id;
                         }
