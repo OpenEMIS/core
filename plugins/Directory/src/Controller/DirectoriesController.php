@@ -172,7 +172,6 @@ class DirectoriesController extends AppController {
 			if ($session->check('Directory.Directories.name')) {
 				$header = $session->read('Directory.Directories.name');
 			}
-			$idKey = $this->ControllerAction->getPrimaryKey($model);
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -186,11 +185,10 @@ class DirectoriesController extends AppController {
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
-
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -207,10 +205,10 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('staff_id') => $userId
-					]);
+					$ids = $this->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('staff_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -227,10 +225,10 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('student_id') => $userId
-					]);
+					$ids = $this->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('student_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page

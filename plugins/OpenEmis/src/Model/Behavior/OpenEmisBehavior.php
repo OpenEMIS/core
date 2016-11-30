@@ -135,13 +135,24 @@ class OpenEmisBehavior extends Behavior {
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
                 $isNotRestrictOperation = $model->actions('remove') != 'restrict';
-                $idKey = $model->getPrimaryKey();
-                $primaryKey = $entity->$idKey;
+                $primaryKey = $model->primaryKey();
+
+                $ids = [];
+                if (is_array($primaryKey)) {
+                    foreach ($primaryKey as $key) {
+                        $ids[$key] = $entity->$key;
+                    }
+                } else {
+                    $ids[$primaryKey] = $entity->$primaryKey;
+                }
+
+                $encodedIds = $model->ControllerAction->paramsEncode($ids);
+
                 if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
                     if (array_key_exists('remove', $toolbarButtons)) {
-                        $toolbarButtons['remove']['attr']['field-value'] = $primaryKey;
+                        $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
                     }
                 }
 
@@ -154,7 +165,7 @@ class OpenEmisBehavior extends Behavior {
                         }
                     }
                     if ($determineShow) {
-                        $toolbarButtons['download']['url'][] = $primaryKey;
+                        $toolbarButtons['download']['url'][] = $encodedIds;
                     } else {
                         $toolbarButtons->offsetUnset('download'); // removes download button
                     }
