@@ -380,7 +380,7 @@ class RemoveBehavior extends Behavior
                 $ids[$key] = $entity->$key;
             }
         } else {
-            $ids[$key] = $entity->$key;
+            $ids[$primaryKey] = $entity->$primaryKey;
         }
         $associations = [];
         foreach ($model->associations() as $assoc) {
