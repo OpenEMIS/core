@@ -26,9 +26,8 @@ class ViewBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->getPrimaryKey();
-		$idKey = $model->aliasField($primaryKey);
-		$sessionKey = $model->registryAlias() . '.' . $primaryKey;
+		$primaryKey = $model->primaryKey();
+		$sessionKey = $model->registryAlias() . '.primaryKey';
 		$contain = [];
 
 		foreach ($model->associations() as $assoc) {
@@ -37,18 +36,33 @@ class ViewBehavior extends Behavior {
 			}
 		}
 
-		$id = $model->paramsPass(0);
-		if (empty($id)) {
+		$ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+		$idKeys = [];
+		if (empty($ids)) {
 			if ($model->Session->check($sessionKey)) {
-				$id = $model->Session->read($sessionKey);
-			} else if (!empty($model->ControllerAction->getQueryString('id'))) {
-				$id = $model->ControllerAction->getQueryString('id');
+				$ids = $model->ControllerAction->paramsDecode($model->Session->read($sessionKey));
+			} else if (!empty($model->ControllerAction->getQueryString())) {
+				$ids = $model->ControllerAction->getQueryString();
 			}
 		}
+		// May still be empty
+		if (!empty($ids)) {
+			if (is_array($primaryKey)) {
+				foreach ($primaryKey as $key) {
+					$idKeys[$model->aliasField($key)] = $ids[$key];
+				}
+			} else {
+				$idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+			}
+			
+		}
+
 
 		$entity = false;
-		if ($model->exists([$idKey => $id])) {
-			$query = $model->find()->where([$idKey => $id])->contain($contain);
+
+		// need to change this part
+		if ($model->exists([$idKeys])) {
+			$query = $model->find()->where($idKeys)->contain($contain);
 
 			$event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
 			$event = $model->dispatchEvent('ControllerAction.Model.viewEdit.beforeQuery', [$query, $extra], $this);
@@ -62,9 +76,8 @@ class ViewBehavior extends Behavior {
 			$mainEvent->stopPropagation();
 			return $event->result;
 		}
-
 		if (!empty($entity)) {
-			$model->Session->write($sessionKey, $id);
+			$model->Session->write($sessionKey, $ids);
 			$model->controller->set('data', $entity);
 		} else {
 			$mainEvent->stopPropagation();

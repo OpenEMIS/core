@@ -67,7 +67,7 @@ class OpenEmisBehavior extends Behavior {
             $modal['form'] = [
                 'model' => $model,
                 'formOptions' => ['type' => 'delete', 'url' => $model->url('remove')],
-                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
+                'fields' => ['primaryKey' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
             ];
 
             $modal['buttons'] = [
