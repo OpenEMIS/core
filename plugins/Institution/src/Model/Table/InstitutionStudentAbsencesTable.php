@@ -43,6 +43,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			'pages' => ['index']
 		]);
 
+		$this->addBehavior('Indexes.Indexes');
+
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
@@ -694,5 +696,15 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		// End
 
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
+	}
+
+	public function totalAbsences($studentId)
+	{
+		return $absenceCount = $this
+			->find()
+			->where([
+				$this->aliasField('student_id') => $studentId
+			])
+			->count();
 	}
 }
