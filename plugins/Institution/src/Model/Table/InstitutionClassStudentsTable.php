@@ -402,7 +402,8 @@ class InstitutionClassStudentsTable extends AppTable {
                         $printedResult = $result['grade_code'] . ' - ' . $result['grade_name'];
                         break;
                     case 'DURATION':
-                        $printedResult = ' '.$result['marks'];
+                        $duration = number_format($result['marks'], 2, ':', '');
+                        $printedResult = ' '.$duration;
                         break;
                 }
             }
