@@ -151,7 +151,7 @@ class RemoveBehavior extends Behavior
             return $entity;
         } else if ($request->is('delete')) {
             $ids = [];
-            if ($model->actions('remove') == 'restrict')) {
+            if ($model->actions('remove') == 'restrict') {
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
                         if (!empty($request->data[$model->alias()][$key])) {

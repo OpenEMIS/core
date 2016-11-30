@@ -223,6 +223,10 @@ class TextbooksTable extends ControllerActionTable {
         $this->field('author', ['visible' => false]);
         $this->field('year_published', ['visible' => false]);
         $this->field('expiry_date', ['visible' => false]);
+
+        $this->setFieldOrder([
+            'code', 'title', 'isbn', 'publisher'
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -249,6 +253,11 @@ class TextbooksTable extends ControllerActionTable {
         $query->where([$conditions]);
     }
 
+    public function viewAfterAction(Event $event, Entity $entity) 
+    {
+        $this->setupFields($entity);
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
@@ -261,11 +270,24 @@ class TextbooksTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
+    public function onGetEducationLevelId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
+        }
+    }
+
+    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    {
+        if ($this->action == 'view') {
+            return $entity->education_subject->education_grades[0]->education_programme->cycle_programme_name;
+        }
+    }
+
     public function onGetEducationSubjectId(Event $event, Entity $entity)
     {
         if ($this->action == 'view') {
-            $educationSubject = $this->EducationSubjects->get($entity->education_subject_id);
-            return $educationSubject->code . ' - ' . $educationSubject->name;
+            return $entity->education_subject->code_name;
         }
     }
 
