@@ -485,9 +485,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var valueInSeconds = value * 60;
 
                     if (!isNaN(parseFloat(value)) && parseInt(valueInSeconds) > passMark) {
-                        return {color: '#CC5C5C'};
+                        return {color: '#CC5C5C', direction: 'ltr'};
                     } else {
-                        return {color: '#333'};
+                        return {color: '#333', direction: 'ltr'};
                     }
                 },
                 valueGetter: function(params) {
@@ -510,12 +510,15 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         var studentId = params.data.student_id;
 
                         var eCell = document.createElement('div');
+                        eCell.setAttribute("class", "ag-grid-dir-ltr");
+
                         var minuteInput = document.createElement('input');
                         minuteInput.setAttribute("id", "mins");
                         minuteInput.setAttribute("type", "number");
                         minuteInput.setAttribute("min", "0");
                         minuteInput.setAttribute("max", "999");
                         minuteInput.setAttribute("class", "ag-grid-duration");
+                        minuteInput.setAttribute("lang", "en");
 
                         var text = document.createElement('span');
                         var colon = document.createTextNode(" : ");
@@ -527,6 +530,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         secondInput.setAttribute("min", "0");
                         secondInput.setAttribute("max", "59");
                         secondInput.setAttribute("class", "ag-grid-duration");
+                        secondInput.setAttribute("lang", "en");
 
                         eCell.appendChild(minuteInput);
                         eCell.appendChild(text);
@@ -543,36 +547,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             var minuteInt = parseInt(minuteInput.value);
                             var secondInt = parseInt(secondInput.value);
 
-                            // Second Input
-                            var secondValue = 0;
-                            var minuteQuotient = '';
-                            if (secondInput.value.length > 0) {
-                                if (!isNaN(secondInt) && secondInt >= 0) {
-
-                                    if (secondInt > 59) {
-                                        // truncate input to 4 digits
-                                        if (secondInt.toString().length > 4) {
-                                            secondInt = $filter('limitTo')(secondInt, 4);
-                                        }
-
-                                        // logic to derive the minutes and seconds if seconds is more than 59
-                                        minuteQuotient = Math.floor(secondInt/60);
-                                        secondValue = secondInt % 60;
-
-                                    } else {
-                                        secondValue = secondInt;
-                                    }
-
-                                    // for padding single digits
-                                    if (secondValue.toString().length == 1 && secondValue != 0) {
-                                        secondValue = '0' + secondValue;
-                                    }
-                                }
-
-                                secondInput.value = secondValue;
-                            }
-                            // End
-
                             // Minute Input
                             if (minuteInput.value.length > 0) {
                                 if (!isNaN(minuteInt) && minuteInt >= 0) {
@@ -583,8 +557,38 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 } else {
                                     minuteInt = 0;
                                 }
+                                minuteInput.value = minuteInt;
+                            }
+                            // End
 
-                                minuteInput.value = !isNaN(minuteQuotient)? (minuteInt + minuteQuotient): minuteQuotient;
+                            // Second Input
+                            if (secondInput.value.length > 0) {
+                                var secondValue = 0;
+
+                                if (!isNaN(secondInt) && secondInt >= 0) {
+
+                                    if (secondInt > 59) {
+                                        // truncate input to 4 digits
+                                        if (secondInt.toString().length > 4) {
+                                            secondInt = $filter('limitTo')(secondInt, 4);
+                                        }
+
+                                        // logic to derive the minutes and seconds if seconds is more than 59
+                                        var minuteQuotient = Math.floor(secondInt/60);
+                                        secondValue = secondInt % 60;
+                                        minuteInput.value = !isNaN(minuteInt)? (minuteInt + minuteQuotient): minuteQuotient;
+
+                                    } else {
+                                        secondValue = secondInt;
+                                    }
+
+                                    // for padding single digits
+                                    if (secondValue.toString().length == 1) {
+                                        secondValue = '0' + secondValue;
+                                    }
+                                }
+
+                                secondInput.value = secondValue;
                             }
                             // End
 

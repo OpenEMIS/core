@@ -14,6 +14,10 @@ $this->start('toolbar');
         background-color: inherit;
         text-align: center;
     }
+
+    .ag-grid-dir-ltr {
+        direction: ltr !important;
+    }
 </style>
 
     <?php
