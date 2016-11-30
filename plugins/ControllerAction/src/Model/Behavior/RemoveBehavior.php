@@ -98,10 +98,21 @@ class RemoveBehavior extends Behavior
             // Logic for restrict delete
             $entity = $model->newEntity();
             $controller = $model->controller;
-            $id = $model->paramsPass(0);
-            $idKey = $model->aliasField($primaryKey);
-            if ($model->exists([$idKey => $id])) {
-                $entity = $model->get($id);
+            $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+            $idKeys = [];
+            // May still be empty
+            if (!empty($ids)) {
+                if (is_array($primaryKey)) {
+                    foreach ($primaryKey as $key) {
+                        $idKeys[$model->aliasField($key)] = $ids[$key];
+                    }
+                } else {
+                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                }
+
+            }
+            if ($model->exists($idKeys)) {
+                $entity = $model->get($idKeys);
 
                 $query = $model->find();
                 $event = $model->dispatchEvent('ControllerAction.Model.delete.onInitialize', [$entity, $query, $extra], $this);
@@ -139,26 +150,47 @@ class RemoveBehavior extends Behavior
             }
             return $entity;
         } else if ($request->is('delete')) {
-            $id = null;
-            if ($model->actions('remove') == 'restrict' && !empty($request->data[$model->alias()][$primaryKey])) {
-                $id = $request->data[$model->alias()][$primaryKey];
-            } elseif (!empty($request->data[$primaryKey])) {
-                $id = $request->data[$primaryKey];
+            $ids = [];
+            if ($model->actions('remove') == 'restrict') {
+                if (is_array($primaryKey)) {
+                    foreach ($primaryKey as $key) {
+                        if (!empty($request->data[$model->alias()][$key])) {
+                            $ids[$model->aliasField($key)] = $request->data[$model->alias()][$key];
+                        } else {
+                            $ids = [];
+                            break;
+                        }
+                    }
+                } else {
+                    if (!empty($request->data[$model->alias()][$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $request->data[$model->alias()][$primaryKey];
+                    } else {
+                        $ids = [];
+                    }
+                }
+            } else {
+                $modalPrimaryKeys = $model->ControllerAction->paramsDecode($request->data['primaryKey']);
+                if (is_array($primaryKey)) {
+                    foreach ($primaryKey as $key) {
+                        if (!empty($modalPrimaryKeys[$key])) {
+                            $ids[$model->aliasField($key)] = $modalPrimaryKeys[$key];
+                        } else {
+                            $ids = [];
+                            break;
+                        }
+                    }
+                } else {
+                    if (!empty($modalPrimaryKeys[$primaryKey])) {
+                        $ids[$model->aliasField($primaryKey)] = $modalPrimaryKeys[$primaryKey];
+                    } else {
+                        $ids = [];
+                    }
+                }
             }
 
-            if (!empty($id)) {
+            if (!empty($ids)) {
                 try {
-                    if (is_array($model->primaryKey())) {
-                        $entity = null;
-                        if (in_array('id', $model->schema()->columns())) {
-                            $entity = $model->find()->where([$model->aliasField('id') => $id])->first();
-                        }
-                        if (empty($entity)) {
-                            throw new RecordNotFoundException();
-                        }
-                    } else {
-                        $entity = $model->get($id);
-                    }
+                    $entity = $model->get($ids);
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($extra['redirect']);
