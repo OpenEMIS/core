@@ -374,24 +374,26 @@ class InstitutionsController extends AppController
                 }
 
                 if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
+                    $modelIds = $this->request->pass[1]; // id of the sub model
+                    $primaryKey = $model->primaryKey();
+                    $modelIds = $this->ControllerAction->paramsDecode($modelIds);
+                    $params = [];
+                    foreach ($primaryKey as $key) {
+                        $params[$model->aliasField($key)] = $modelIds[$key];
+                    }
+
                     $exists = false;
 
                     if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
-                        $exists = $model->exists([
-                            $model->aliasField($model->primaryKey()) => $modelId,
-                            $model->aliasField('previous_institution_id') => $institutionId
-                        ]);
+                        $params[$model->aliasField('previous_institution_id')] = $institutionId;
+                        $exists = $model->exists($params);
                     } else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
-                        $exists = $model->exists([
-                            $model->aliasField($model->primaryKey()) => $modelId,
-                            'OR' => [ //logic to check institution_id or location_institution_id equal to $institutionId
-                                $model->aliasField('institution_id') => $institutionId,
-                                $model->aliasField('location_institution_id') => $institutionId
-                            ]
-                        ]);
+                        $params['OR'] = [
+                            $model->aliasField('institution_id') => $institutionId,
+                            $model->aliasField('location_institution_id') => $institutionId
+                        ];
+                        $exists = $model->exists($params);
                     } else {
-                        $primaryKey = $this->ControllerAction->getPrimaryKey($model);
                         $checkExists = function($model, $params) {
                             return $model->exists($params);
                         };
@@ -400,7 +402,8 @@ class InstitutionsController extends AppController
                         if (is_callable($event->result)) {
                             $checkExists = $event->result;
                         }
-                        $exists = $checkExists($model, [$primaryKey => $modelId, 'institution_id' => $institutionId]);
+                        $params[$model->aliasField('institution_id')] = $institutionId;
+                        $exists = $checkExists($model, $params);
                     }
 
                     /**
