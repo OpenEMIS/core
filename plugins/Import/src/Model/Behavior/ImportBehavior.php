@@ -1220,8 +1220,6 @@ class ImportBehavior extends Behavior {
                         $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
                     } else {
                         $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
-                        $params = [$lookupQuery, $excelLookupModel, $lookupColumn, $tempRow, $originalRow, $cellValue, $rowInvalidCodeCols, $columnName];
-                        $this->dispatchEvent($this->_table, $this->eventKey('onImportLookup'.$lookupModel.'BeforeQuery'), 'onImportLookup'.$lookupModel.'BeforeQuery', $params);
                         $record = $lookupQuery->first();
 
                         $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
