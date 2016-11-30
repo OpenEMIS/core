@@ -124,9 +124,9 @@ class InstitutionsController extends AppController
 
         $url = $this->ControllerAction->url('index');
 
-        $ReportTemplates = TableRegistry::get('CustomReport.ReportTemplates');
-        $AssessmentResults = TableRegistry::get('Institution.AssessmentResults');
-        $hasTemplate = $ReportTemplates->checkIfHasTemplate($AssessmentResults->registryAlias());
+        $ExcelTemplates = TableRegistry::get('CustomExcel.ExcelTemplates');
+        $AssessmentResults = TableRegistry::get('CustomExcel.AssessmentResults');
+        $hasTemplate = $ExcelTemplates->checkIfHasTemplate($AssessmentResults->registryAlias());
 
         if ($hasTemplate) {
             $url['plugin'] = 'Institution';
