@@ -129,10 +129,9 @@ class InstitutionsController extends AppController
         $hasTemplate = $ExcelTemplates->checkIfHasTemplate($AssessmentResults->registryAlias());
 
         if ($hasTemplate) {
-            $url['plugin'] = 'Institution';
-            $url['controller'] = 'Institutions';
+            $url['plugin'] = 'CustomExcel';
+            $url['controller'] = 'CustomExcels';
             $url['action'] = 'AssessmentResults';
-            $url[0] = 'excel';
         } else {
             $url['plugin'] = 'Institution';
             $url['controller'] = 'Institutions';

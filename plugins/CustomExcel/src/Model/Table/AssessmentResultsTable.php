@@ -1,6 +1,9 @@
 <?php
 namespace CustomExcel\Model\Table;
 
+use ArrayObject;
+use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
 use App\Model\Table\AppTable;
 
 class AssessmentResultsTable extends AppTable
@@ -30,6 +33,52 @@ class AssessmentResultsTable extends AppTable
             ]
         ]);
 
-        $this->addBehavior('CustomExcel.ExcelReport');
+        $this->addBehavior('CustomExcel.ExcelReport', [
+            'variables' => [
+                'Institutions',
+                'Assessments',
+                'InstitutionClasses'
+            ]
+        ]);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
+        return $events;
+    }
+
+    public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $entity = $Institutions->get($params['institution_id'], [
+                'contain' => ['Areas', 'AreaAdministratives']
+            ]);
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseAssessments(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $params)) {
+            $Assessments = TableRegistry::get('Assessment.Assessments');
+            $entity = $Assessments->get($params['assessment_id'], [
+                'contain' => ['AcademicPeriods', 'EducationGrades']
+            ]);
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('class_id', $params)) {
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $entity = $InstitutionClasses->get($params['class_id']);
+            return $entity->toArray();
+        }
     }
 }
