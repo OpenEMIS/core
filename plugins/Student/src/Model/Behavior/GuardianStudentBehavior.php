@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Student\Model\Behavior;
 
 use ArrayObject;
@@ -19,7 +19,7 @@ class GuardianStudentBehavior extends Behavior {
 
 	public function beforeFind(Event $event, Query $query, $options) {
 		$session = $this->_table->request->session();
-		
+
 		if ($session->check('Students.security_user_id')) {
 			$student_user_id = $session->read('Students.security_user_id');
 		} else {
@@ -46,7 +46,7 @@ class GuardianStudentBehavior extends Behavior {
 			'ControllerAction.Model.onUpdateFieldGuardianRelationId' => 'onUpdateFieldGuardianRelationId',
 			'ControllerAction.Model.onUpdateFieldGuardianEducationLevelId' => 'onUpdateFieldGuardianEducationLevelId',
 			'Model.custom.onUpdateActionButtons' => 'onUpdateActionButtons',
-			
+
 		];
 
 		$events = array_merge($events,$newEvents);
@@ -57,11 +57,11 @@ class GuardianStudentBehavior extends Behavior {
 		// to set field order and other stuff
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function() use ($id, $options) {
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+		$process = function() use ($ids, $options) {
 			// must also delete security roles here
 
-			$entity = $this->associatedModel->get($id);
+			$entity = $this->associatedModel->get($ids);
 			$guardianUserId = $entity->guardian_user_id;
 
 			$remainingAssociatedCount = $this->associatedModel
@@ -73,7 +73,7 @@ class GuardianStudentBehavior extends Behavior {
 				$newAssociated = $this->associatedModel->newEntity(['guardian_user_id' => $guardianUserId]);
 				$this->associatedModel->save($newAssociated);
 			}
-			
+
 			return $this->associatedModel->delete($entity, $options->getArrayCopy());
 		};
 		return $process;
@@ -106,7 +106,7 @@ class GuardianStudentBehavior extends Behavior {
 
 			$this->_table->ControllerAction->field('guardian_relation_id', ['fieldName' => $associationString.'guardian_relation_id']);
 			$this->_table->ControllerAction->field('guardian_education_level_id', ['fieldName' => $associationString.'guardian_education_level_id']);
-			$this->_table->ControllerAction->field('search',['type' => 'autocomplete', 
+			$this->_table->ControllerAction->field('search',['type' => 'autocomplete',
 														     'placeholder' => 'openEMIS ID or Name',
 														     'url' => '/Students/Guardians/autoCompleteUserList',
 														     'length' => 3 ]);
@@ -114,7 +114,7 @@ class GuardianStudentBehavior extends Behavior {
 			$this->_table->ControllerAction->setFieldOrder([
 					'guardian_relation_id', 'guardian_education_level_id'
 				, 'search'
-				]);	
+				]);
 		}
 	}
 
@@ -161,7 +161,7 @@ class GuardianStudentBehavior extends Behavior {
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		// that function removes the session and makes it redirect to 
+		// that function removes the session and makes it redirect to
 		// index without any named params
 		// else the 'new' url param will cause it to add it with previous settings (from institution site student / staff)
 		$action = $this->_table->ControllerAction->buttons['index']['url'];
