@@ -409,6 +409,7 @@ class InstitutionsController extends AppController
 
                     // replaced 'action' => $alias to 'action' => $model->alias, since only the name changes but not url
                     if (!$exists && !$isDownload) {
+                        pr('asd');die;
                         $this->Alert->warning('general.notExists');
                         return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias]);
                     }
