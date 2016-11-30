@@ -66,14 +66,12 @@ class RegisteredStudentsBehavior extends Behavior {
         $toolbarButtonsArray['back']['url'] = $model->url('view');
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
-
-        $primaryKey = $model->getPrimaryKey();
-        $idKey = $model->aliasField($primaryKey);
-        $id = $model->paramsPass(0);
+        $ids = $mode->ControllerAction->paramsDecode($model->paramsPass(0));
+        $idKey = $model->ControllerAction->getIdKeys($model, $ids);
         $entity = false;
 
-        if ($model->exists([$idKey => $id])) {
-            $query = $model->find()->where([$idKey => $id]);
+        if ($model->exists($idKey)) {
+            $query = $model->find()->where($idKey);
 
             $query
                 ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'], true)

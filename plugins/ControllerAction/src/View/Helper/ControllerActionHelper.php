@@ -233,39 +233,6 @@ class ControllerActionHelper extends Helper {
         return base64_decode(strtr($input, '-_', '+/'));
     }
 
-    public function getQueryString($queryString = null, $name = 'queryString')
-    {
-        $query = $this->request->query($name);
-
-        if (is_null($query)) {
-            return null;
-        }
-
-        $query = $this->paramsDecode($query);
-
-        if (is_null($queryString)) {
-            return $query;
-        } else if (!isset($query[$queryString])) {
-            return null;
-        } else {
-            return $query[$queryString];
-        }
-    }
-
-    public function setQueryString($url, $params, $name = 'queryString')
-    {
-        if (is_array($url)) {
-            $url[$name] = $this->paramsEncode($params);
-        } else if (is_string($url)) {
-            if (strpos($url, '?')) {
-                $url .= '&'.$name.'='.$this->paramsEncode($params);
-            } else {
-                $url .= '?'.$name.'='.$this->paramsEncode($params);
-            }
-        }
-        return $url;
-    }
-
     public function paramsDecode($params)
     {
         $paramArr = explode('.', $params);

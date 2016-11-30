@@ -37,7 +37,7 @@ class EditBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->getPrimaryKey();
+		$primaryKey = $model->primaryKey();
 
 		$ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
 		$idKeys = [];
