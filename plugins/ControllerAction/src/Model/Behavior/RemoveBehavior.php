@@ -231,6 +231,7 @@ class RemoveBehavior extends Behavior
         $request = $model->request;
         $extra['config']['form'] = ['type' => 'DELETE'];
         $extra['options'] = [
+            'keyField' => $model->primaryKey(),
             'valueField' => 'name'
         ];
 
