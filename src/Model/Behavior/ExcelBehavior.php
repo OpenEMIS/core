@@ -75,7 +75,7 @@ class ExcelBehavior extends Behavior {
     }
 
     public function excel($id=0) {
-        $ids = $this->_table->ControllerAction->paramsDecode($id);
+        $ids = empty($id) ? [] : $this->_table->ControllerAction->paramsDecode($id);
         $this->generateXLXS($ids);
     }
 
@@ -92,7 +92,7 @@ class ExcelBehavior extends Behavior {
         if (isset($pass[0])) {
             $id = $pass[0];
         }
-        $ids = $this->_table->ControllerAction->paramsDecode($id);
+        $ids = empty($id) ? [] : $this->_table->ControllerAction->paramsDecode($id);
         $this->generateXLXS($ids);
     }
 
