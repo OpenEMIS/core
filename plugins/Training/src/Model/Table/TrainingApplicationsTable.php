@@ -151,6 +151,7 @@ class TrainingApplicationsTable extends ControllerActionTable
     public function findWorkbench(Query $query, array $options)
     {
         $controller = $options['_controller'];
+        $controller->loadComponent('ControllerAction.ControllerAction');
         $controller->loadComponent('AccessControl');
         $session = $controller->request->session();
 
@@ -212,7 +213,7 @@ class TrainingApplicationsTable extends ControllerActionTable
                             'controller' => 'Trainings',
                             'action' => 'Applications',
                             'view',
-                            $row->id
+                            $controller->ControllerAction->paramsEncode(['id' => $row->id])
                         ];
                     }
 
