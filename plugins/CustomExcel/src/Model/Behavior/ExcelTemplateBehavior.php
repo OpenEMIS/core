@@ -39,18 +39,13 @@ class ExcelTemplateBehavior extends Behavior
     {
         $model = $this->_table;
         $model->field('file_name', [
-            'type' => 'hidden',
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-        ]);
-        $model->field('file_type', [
-            'type' => 'hidden',
-            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
+            'visible' => ['index' => true, 'view' => true, 'edit' => true, 'add' => true]
         ]);
         $model->field('file_content', [
             'visible' => ['index' => false, 'view' => false, 'edit' => true, 'add' => true]
         ]);
 
-        $model->setFieldOrder(['module', 'file_name', 'file_type', 'file_content']);
+        $model->setFieldOrder(['module', 'file_name', 'file_content']);
 
         $this->initializeExcelTemplateData($extra);
     }
@@ -102,6 +97,15 @@ class ExcelTemplateBehavior extends Behavior
         $this->setupFields($entity, $extra);
     }
 
+    public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $attr['type'] = 'hidden';
+        }
+
+        return $attr;
+    }
+
     public function onUpdateFieldModule(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
@@ -120,6 +124,7 @@ class ExcelTemplateBehavior extends Behavior
         $model = $this->_table;
 
         $model->field('module', ['entity' => $entity]);
+        $model->field('file_name');
         $model->field('file_content');
 
         $model->setFieldOrder(['module' , 'file_content']);
