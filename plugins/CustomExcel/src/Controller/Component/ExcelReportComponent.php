@@ -34,5 +34,5 @@ class ExcelReportComponent extends Component
 		$extra = new ArrayObject([]);
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onGetExcelTemplateVars', [$extra], $this->controller);
 		if ($event->isStopped()) { return $event->result; }
-	}	
+	}
 }

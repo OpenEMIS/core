@@ -198,16 +198,8 @@ class ExcelReportBehavior extends Behavior
         $variables = $this->config('variables');
 
         $variableValues = [];
-        foreach ($variables as $key => $value) {
-            if (is_array($value)) {
-                $var = $key;
-                $options = $value;
-            } else {
-                $var = $value;
-                $options = [];
-            }
-            
-            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $options, $extra], $this);
+        foreach ($variables as $var) {            
+            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
             if ($event->isStopped()) { return $event->result; }
             if ($event->result) {
                 $variableValues[$var] = $event->result;
@@ -231,17 +223,23 @@ class ExcelReportBehavior extends Behavior
     
     private function replaceCell($search)
     {
-        if (strlen($search) > 0) {
-            $format = '${%s}';
-            $key = '';
-            $replace = sprintf($format, $key);
+        $format = '${%s}';
+        $strArray = explode('${', $search);
+        array_shift($strArray); // first element will not contain the placeholder
 
-            $value = Hash::get($this->vars, $key);
-            $replaced = str_replace($replace, $value, $search);
+        foreach ($strArray as $key => $str) {
+            $pos = strpos($str, '}');
 
-            return $replaced;
-        } else {
-            return $search;
+            if ($pos === false) {
+                // placeholder not found
+            } else {
+                $placeholder = substr($str, 0, $pos);
+                $replace = sprintf($format, $placeholder);
+                $value = Hash::get($this->vars, $placeholder);
+                $search = str_replace($replace, $value, $search);
+            }
         }
+
+        return $search;
     }
 }
