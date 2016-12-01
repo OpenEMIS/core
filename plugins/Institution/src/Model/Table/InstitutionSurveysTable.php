@@ -485,7 +485,7 @@ class InstitutionSurveysTable extends AppTable {
 						'controller' => 'Institutions',
 						'action' => 'Surveys',
 						'view',
-						$row->id,
+						$controller->ControllerAction->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 
