@@ -482,9 +482,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             cols = angular.merge(cols, {
                 cellStyle: function(params) {
                     var value = params.data[params.colDef.field];
-                    var valueInSeconds = value * 60;
+                    var duration = String(value).split(".");
+                    var minInSeconds = parseInt(duration[0]) * 60;
+                    var seconds = parseInt(duration[1]);
+                    var totalSeconds = minInSeconds + seconds;
 
-                    if (!isNaN(parseFloat(value)) && parseInt(valueInSeconds) > passMark) {
+                    if (!isNaN(parseFloat(value)) && totalSeconds > passMark) {
                         return {color: '#CC5C5C', direction: 'ltr'};
                     } else {
                         return {color: '#333', direction: 'ltr'};
@@ -494,9 +497,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var value = params.data[params.colDef.field];
 
                     if (!isNaN(parseFloat(value))) {
-                        var duration = $filter('number')(value, 2);
-                        var formatDuration = duration.replace(".", " : ");
-                        return formatDuration;
+                        var duration = String(value).replace(".", " : ");
+                        return duration;
                     } else {
                         return '';
                     }
@@ -600,10 +602,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 _results[studentId][periodId] = {duration: ''};
                             }
 
-                            var duration = minuteInput.value + '.' + secondInput.value;
+                            var durationAsFloat = '';
+                            if (minuteInput.value.length > 0 || secondInput.value.length > 0) {
+                                var duration = minuteInput.value + '.' + secondInput.value;
+                                durationAsFloat = $filter('number')(duration, 2);
+                            }
 
-                            params.data[params.colDef.field] = duration;
-                            _results[studentId][periodId]['duration'] = duration;
+                            params.data[params.colDef.field] = durationAsFloat;
+                            _results[studentId][periodId]['duration'] = durationAsFloat;
                         });
 
                         return eCell;
