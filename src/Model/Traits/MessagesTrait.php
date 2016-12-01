@@ -871,7 +871,7 @@ trait MessagesTrait {
             ],
             'InstitutionTextbooks' => [
                 'code' => [
-                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                    'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ]
         ],

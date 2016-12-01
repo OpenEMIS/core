@@ -121,7 +121,7 @@ class StudentsController extends AppController {
 				$entity = $this->StudentUser->get($id);
 				$name = $entity->name;
 				$header = $action == 'Results' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
 			}
 		}
 
