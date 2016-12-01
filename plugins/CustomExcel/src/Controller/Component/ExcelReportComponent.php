@@ -25,4 +25,14 @@ class ExcelReportComponent extends Component
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onRenderExcelTemplate', [$extra], $this->controller);
 		if ($event->isStopped()) { return $event->result; }
 	}
+
+	public function viewVars($params=[])
+	{
+		$className = $params['className'];
+		$model = TableRegistry::get($className);
+
+		$extra = new ArrayObject([]);
+		$event = $model->dispatchEvent('ExcelTemplates.Model.onGetExcelTemplateVars', [$extra], $this->controller);
+		if ($event->isStopped()) { return $event->result; }
+	}	
 }

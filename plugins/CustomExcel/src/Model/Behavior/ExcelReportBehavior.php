@@ -9,6 +9,7 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\Utility\Hash;
 use Cake\Log\Log;
 
 use PHPExcel_IOFactory;
@@ -43,6 +44,7 @@ class ExcelReportBehavior extends Behavior
 		$events = parent::implementedEvents();
         $events['ExcelTemplates.Model.initializeData'] = 'initializeExcelTemplateData';
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
+        $events['ExcelTemplates.Model.onGetExcelTemplateVars'] = 'onGetExcelTemplateVars';
 		return $events;
     }
 
@@ -67,6 +69,16 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
+    public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
+    {
+        $controller = $event->subject();
+        $params = $this->getParams($controller);
+        $this->vars = $this->getVars($params, $extra);
+
+        pr($this->vars);
+        die;
+    }
+
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
         $controller = $event->subject();
@@ -74,10 +86,103 @@ class ExcelReportBehavior extends Behavior
         $this->vars = $this->getVars($params, $extra);
 
         // to-do
-        // $this->loadExcelTemplate();
-        // $this->generateExcel();
-        // $this->saveExcel();
-        // $this->downloadExcel();
+        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
+        $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
+        $extra['download'] = true;
+
+        $filepath = $extra['path'] . $extra['file'];
+        $extra['file_path'] = $extra['path'] . $extra['file'];
+
+        $objPHPExcel = $this->loadExcelTemplate($extra);
+        $this->generateExcel($objPHPExcel, $extra);
+        $this->saveExcel($objPHPExcel, $filepath);
+
+        if ($extra['download']) {
+            $this->downloadExcel($filepath);
+        }
+    }
+
+    public function loadExcelTemplate(ArrayObject $extra)
+    {
+        $model = $this->_table;
+
+        $ExcelTemplates = TableRegistry::get('CustomExcel.ExcelTemplates');
+        $results = $ExcelTemplates->find()->where([$ExcelTemplates->aliasField('module') => $model->registryAlias()]);
+
+        if ($results->isEmpty()) {
+            $objPHPExcel = new \PHPExcel();
+        } else {
+            // Read from excel template attachment then create as temporary file in server so that can read back the same file and read as PHPExcel object
+            $entity = $results->first();
+
+            if ($entity->has('file_name')) {
+                $pathInfo = pathinfo($entity->file_name);
+                $filename = $this->config('filename') . '_Template_' . date('Ymd') . 'T' . date('His') . '.' . $pathInfo['extension'];
+                $file = $this->getFile($entity->file_content);
+
+                // Create a temporary file
+                $filepath = $extra['path'] . DS . $filename;
+
+                $excelTemplate = new File($filepath, true, 0777);
+                $excelTemplate->write($file);
+                $excelTemplate->close();
+                // End create a temporary file
+
+                try {
+                    // Read back from same temporary file
+                    $inputFileType = PHPExcel_IOFactory::identify($filepath);
+                    $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+                    $objPHPExcel = $objReader->load($filepath);
+                    // End read back from same temporary file
+                } catch(Exception $e) {
+                    Log::write('debug', $e->getMessage());
+                }
+            }
+        }
+
+        return $objPHPExcel;
+    }
+
+    public function generateExcel($objPHPExcel, ArrayObject $extra)
+    {
+        $sheet = $objPHPExcel->getSheet(0);
+        $cells = $sheet->getCellCollection();
+
+        // Loop through all cell and replace placeholder with variables value
+        foreach ($cells as $cellCoordinate) {
+            $objCell = $sheet->getCell($cellCoordinate);
+            if (is_object($objCell->getValue())) {
+                $cellValue = $objCell->getValue()->getPlainText();
+            } else {
+                $cellValue = $objCell->getValue();
+            }
+
+            $replacedValue = $this->replaceCell($cellValue);
+            $sheet->setCellValue($cellCoordinate, $replacedValue);
+        }
+        // End loop through all cell and replace placeholder with variables value
+    }
+
+    public function saveExcel($objPHPExcel, $filepath)
+    {
+        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        $objWriter->save($filepath);
+    }
+
+    public function downloadExcel($filepath)
+    {
+        $filename = basename($filepath);
+
+        header("Pragma: public", true);
+        header("Expires: 0"); // set expiration time
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Content-Type: application/force-download");
+        header("Content-Type: application/octet-stream");
+        header("Content-Type: application/download");
+        header("Content-Disposition: attachment; filename=".$filename);
+        header("Content-Transfer-Encoding: binary");
+        header("Content-Length: ".filesize($filepath));
+        echo file_get_contents($filepath);
     }
 
     public function getParams($controller)
@@ -110,5 +215,33 @@ class ExcelReportBehavior extends Behavior
         }
 
         return $variableValues;
+    }
+
+    private function getFile($phpResourceFile)
+    {
+        $file = ''; 
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192); 
+        } 
+        fclose($phpResourceFile);
+
+        return $file;
+    }
+
+    
+    private function replaceCell($search)
+    {
+        if (strlen($search) > 0) {
+            $format = '${%s}';
+            $key = '';
+            $replace = sprintf($format, $key);
+
+            $value = Hash::get($this->vars, $key);
+            $replaced = str_replace($replace, $value, $search);
+
+            return $replaced;
+        } else {
+            return $search;
+        }
     }
 }
