@@ -607,7 +607,8 @@ trait MessagesTrait {
             'noProgrammes' => 'No Programmes',
             'noGrades' => 'No Grades',
             'noClassSubjectSelected' => 'Please select Class, Subject and Textbook before adding record',
-            'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed'
+            'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
+            'noTextbookStudent' => 'Please add physical textbook to be added'
         ],
         'InstitutionTextbooks' => [
             'noTextbooks' => 'No Textbooks',
