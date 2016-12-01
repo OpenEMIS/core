@@ -6,6 +6,20 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
 ?>
+
+<style type='text/css'>
+    .ag-grid-duration {
+        width: 50%;
+        border: none;
+        background-color: inherit;
+        text-align: center;
+    }
+
+    .ag-grid-dir-ltr {
+        direction: ltr !important;
+    }
+</style>
+
     <?php
         $backUrl = [
             'plugin' => $this->request->params['plugin'],
