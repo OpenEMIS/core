@@ -70,7 +70,6 @@ class ExcelReportBehavior extends Behavior
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
         $controller = $event->subject();
-        $controller = $event->subject();
         $params = $this->getParams($controller);
         $this->vars = $this->getVars($params, $extra);
 
@@ -84,12 +83,6 @@ class ExcelReportBehavior extends Behavior
     public function getParams($controller)
     {
         $params = $controller->request->query;
-        $session = $controller->request->session();
-
-        if ($session->check('Institution.Institutions.id')) {
-            $params['institution_id'] = $session->read('Institution.Institutions.id'); 
-        }
-
         return $params;
     }
 
@@ -98,9 +91,18 @@ class ExcelReportBehavior extends Behavior
         $model = $this->_table;
 
         $variables = $this->config('variables');
+
         $variableValues = [];
-        foreach ($variables as $var) {
-            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $extra], $this);
+        foreach ($variables as $key => $value) {
+            if (is_array($value)) {
+                $var = $key;
+                $options = $value;
+            } else {
+                $var = $value;
+                $options = [];
+            }
+            
+            $event = $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateInitialise'.$var, [$params, $options, $extra], $this);
             if ($event->isStopped()) { return $event->result; }
             if ($event->result) {
                 $variableValues[$var] = $event->result;

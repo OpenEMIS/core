@@ -31,7 +31,5 @@ class CustomExcelsController extends AppController
     public function ExcelTemplates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'CustomExcel.ExcelTemplates']); }
     // End
 
-    // Custom Excel Report
-    public function AssessmentResults() { $this->ExcelReport->renderExcel(['alias' => __FUNCTION__, 'className' => 'CustomExcel.AssessmentResults']); }
-    // End
+    public function export($model) { $this->ExcelReport->renderExcel(['className' => "$this->plugin.$model"]); }
 }

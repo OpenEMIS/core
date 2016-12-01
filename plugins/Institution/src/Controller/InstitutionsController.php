@@ -131,7 +131,8 @@ class InstitutionsController extends AppController
         if ($hasTemplate) {
             $url['plugin'] = 'CustomExcel';
             $url['controller'] = 'CustomExcels';
-            $url['action'] = 'AssessmentResults';
+            $url['action'] = 'export';
+            $url[0] = 'AssessmentResults';
         } else {
             $url['plugin'] = 'Institution';
             $url['controller'] = 'Institutions';

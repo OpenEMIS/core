@@ -35,8 +35,12 @@ class AssessmentResultsTable extends AppTable
 
         $this->addBehavior('CustomExcel.ExcelReport', [
             'variables' => [
-                'Institutions',
-                'Assessments',
+                'Assessments' => [
+                    'contain' => ['AcademicPeriods', 'EducationGrades']
+                ],
+                'Institutions' => [
+                    'contain' => ['Areas', 'AreaAdministratives']
+                ],
                 'InstitutionClasses'
             ]
         ]);
@@ -45,39 +49,37 @@ class AssessmentResultsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
         return $events;
     }
 
-    public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('institution_id', $params)) {
-            $Institutions = TableRegistry::get('Institution.Institutions');
-            $entity = $Institutions->get($params['institution_id'], [
-                'contain' => ['Areas', 'AreaAdministratives']
-            ]);
-            return $entity->toArray();
-        }
-    }
-
-    public function onExcelTemplateInitialiseAssessments(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseAssessments(Event $event, array $params, array $options, ArrayObject $extra)
     {
         if (array_key_exists('assessment_id', $params)) {
             $Assessments = TableRegistry::get('Assessment.Assessments');
-            $entity = $Assessments->get($params['assessment_id'], [
-                'contain' => ['AcademicPeriods', 'EducationGrades']
-            ]);
+            $entity = $Assessments->get($params['assessment_id'], $options);
+
             return $entity->toArray();
         }
     }
 
-    public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, ArrayObject $extra)
+    public function onExcelTemplateInitialiseInstitutions(Event $event, array $params, array $options, ArrayObject $extra)
+    {
+        if (array_key_exists('institution_id', $params)) {
+            $Institutions = TableRegistry::get('Institution.Institutions');
+            $entity = $Institutions->get($params['institution_id'], $options);
+
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionClasses(Event $event, array $params, array $options, ArrayObject $extra)
     {
         if (array_key_exists('class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $entity = $InstitutionClasses->get($params['class_id']);
+            $entity = $InstitutionClasses->get($params['class_id'], $options);
             return $entity->toArray();
         }
     }
