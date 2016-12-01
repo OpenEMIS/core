@@ -605,7 +605,7 @@ class InstitutionsTable extends AppTable  {
 			if ($data->count() == 1 && !$addAccess) {
 				$entity = $data->first();
 				$event->stopPropagation();
-				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $entity->id];
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $entity->id])];
 				return $this->controller->redirect($action);
 			}
 		}

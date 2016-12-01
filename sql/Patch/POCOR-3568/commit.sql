@@ -5,7 +5,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3568', NOW());
 DROP TABLE IF EXISTS `textbooks`;
 CREATE TABLE IF NOT EXISTS `textbooks` (
   `id` int(11) NOT NULL,
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NULL,
   `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `author` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `publisher` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -54,6 +54,13 @@ ALTER TABLE `textbook_conditions`
 ALTER TABLE `textbook_conditions`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
+INSERT INTO `textbook_conditions` (`id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+VALUES
+(1, 'New', 1, 1, 1, 0, '', '', NULL, NULL, 2, '2016-11-29 20:51:21'),
+(2, 'Good', 2, 1, 1, 1, '', '', NULL, NULL, 2, '2016-11-29 20:51:35'),
+(3, 'Poor', 3, 1, 1, 0, '', '', NULL, NULL, 2, '2016-11-29 20:51:44'),
+(4, 'N/A', 4, 1, 1, 0, '', '', NULL, NULL, 2, '2016-11-29 20:52:00');
+
 
 -- Table structure for table `Textbook_statuses`
 DROP TABLE IF EXISTS `textbook_statuses`;
@@ -78,7 +85,7 @@ VALUES
 DROP TABLE IF EXISTS `institution_textbooks`;
 CREATE TABLE IF NOT EXISTS `institution_textbooks` (
   `id` int(11) NOT NULL,
-  `code` varchar(100) COLLATE utf8mb4_bin NOT NULL,
+  `code` varchar(100) COLLATE utf8mb4_unicode_ci NULL,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `textbook_status_id` int(11) NULL COMMENT 'link to links to textbook_statuses.id',
   `textbook_condition_id` int(11) NULL COMMENT 'link to links to textbook_conditions.id',
