@@ -21,7 +21,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' =>'institution_id']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' =>'student_id']);
 
-        // $this->hasMany('StudentIndexesCriterias', ['className' => 'Indexes.StudentIndexesCriterias']);
         $this->hasMany('StudentIndexesCriterias', ['className' => 'Institution.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('add', false);
@@ -43,6 +42,75 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $this->field('academic_period_id',['visible' => false]);
         $this->field('average_index',['visible' => false]);
         $this->field('student_id');
+
+        // back buttons
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $toolbarButtonsArray['back']['type'] = 'button';
+        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
+        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
+        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
+        $toolbarButtonsArray['back']['url']['plugin'] = 'Institution';
+        $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
+        $toolbarButtonsArray['back']['url']['action'] = 'InstitutionIndexes';
+        $toolbarButtonsArray['back']['url'][0] = 'index';
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // end back buttons
+
+        // element control
+        $session = $this->request->session();
+
+        $institutionId = $session->read('Institution.Institutions.id');
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+
+        $selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
+        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
+            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+            'callable' => function($id) use ($Classes, $institutionId) {
+                return $Classes->find()
+                    ->where([
+                        $Classes->aliasField('institution_id') => $institutionId,
+                        $Classes->aliasField('academic_period_id') => $id
+                    ])
+                    ->count();
+            }
+        ]);
+        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        $classOptions = $Classes->getClassOptions($selectedAcademicPeriodId, $institutionId);
+        if (!empty($classOptions)) {
+            $classOptions = [0 => 'All Classes'] + $classOptions;
+        }
+
+        $selectedClassId = $this->queryString('class_id', $classOptions);
+
+
+
+
+
+
+
+
+        $extra['elements']['control'] = [
+            'name' => 'Institution.Indexes/controls',
+            'data' => [
+                'academicPeriodOptions'=>$academicPeriodOptions,
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
+                'classOptions'=>$classOptions,
+                'selectedGrade'=>$selectedEducationGradeId,
+            ],
+            'options' => [],
+            'order' => 3
+        ];
+        pr($extra);die;
+        // end element control
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -60,18 +128,16 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
     public function institutionStudentAbsencesAfterSaveOrDelete(Event $event, Entity $institutionStudentAbsencesEntity)
     {
-// pr($institutionStudentAbsencesEntity);
         $criteriaModel = $institutionStudentAbsencesEntity->source();
         $academicPeriodId = $institutionStudentAbsencesEntity->academic_period_id;
         $institutionId = $institutionStudentAbsencesEntity->institution_id;
         $studentId = $institutionStudentAbsencesEntity->student_id;
-// pr($academicPeriodId);
+
         $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
-        $totalAbsence = $InstitutionStudentAbsences->totalAbsences($studentId);
-// pr($totalAbsence);
-// die;
+        $totalAbsence = $InstitutionStudentAbsences->getTotalDays($institutionId, $studentId);
+
         $indexesCriteriaResults = $IndexesCriterias->find()
             ->where([$IndexesCriterias->aliasField('criteria') => $criteriaModel])
             ->all();
@@ -93,15 +159,12 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
                 if ($operator == 2) {
                     if ($totalAbsence > $threshold) {
-// pr('here');
                         $value = $indexesCriteriaData->index_value;
                     } else {
-// pr('there');
                         $value = 0;
                     }
                 }
-// pr($value);
-// die;
+
                 $results = $this->find()
                     ->where([
                         $this->aliasField('academic_period_id') => $academicPeriodId,
@@ -129,9 +192,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     'indexes_criteria_id' => $indexesCriteriaData->id
                 ];
 
-// pr('------');
-// pr($value);
-// die;
                 if (!$entity->isNew()) {
                     $studentIndexesCriteriaResults = $this->StudentIndexesCriterias->find()
                         ->where([
@@ -155,5 +215,57 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $this->save($entity);
             }
         }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $academicPeriodId = $entity->academic_period_id;
+        $institutionId = $entity->institution_id;
+        $studentId = $entity->student_id;
+
+        $StudentIndexesCriterias = TableRegistry::get('Institution.StudentIndexesCriterias');
+
+        $InstitutionStudentIndexesData = $this->find()
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('student_id') => $studentId,
+            ])
+            ->all();
+
+        if (!$InstitutionStudentIndexesData->isEmpty()) {
+            foreach ($InstitutionStudentIndexesData as $key => $obj) {
+                $InstitutionStudentIndexesid = $obj->id;
+
+                $StudentIndexesCriteriasResults = $StudentIndexesCriterias->find()
+                    ->where([$StudentIndexesCriterias->aliasField('institution_student_index_id') => $InstitutionStudentIndexesid])
+                    ->all();
+
+                $indexTotal = [];
+                foreach ($StudentIndexesCriteriasResults as $key => $obj) {
+                    $indexTotal [$obj->institution_student_index_id] = !empty($indexTotal [$obj->institution_student_index_id]) ? $indexTotal [$obj->institution_student_index_id] : 0;
+                    $indexTotal [$obj->institution_student_index_id] = $indexTotal [$obj->institution_student_index_id] + $obj->value;
+                }
+
+                foreach ($indexTotal as $key => $obj) {
+                    $this->query()
+                        ->update()
+                        ->set(['total_index' => $obj])
+                        ->where([
+                            'id' => $key
+                        ])
+                        ->execute();
+                }
+            }
+        }
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        unset($buttons['edit']);//remove edit action from the action button
+        unset($buttons['remove']);// remove delete action from the action button
+
+        return $buttons;
     }
 }

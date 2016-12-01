@@ -213,6 +213,9 @@ trait MessagesTrait {
             'multiGrade' => 'Multi Grade',
             'noShift' => 'There are no shifts configured for the selected academic period'
         ],
+        'InstitutionStudentIndexes' => [
+            'noClasses' => 'No Classes'
+        ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
             'noClasses' => 'No Classes',

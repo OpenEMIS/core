@@ -698,13 +698,24 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
 	}
 
-	public function totalAbsences($studentId)
+	public function getTotalDays($institutionId, $studentId)
 	{
-		return $absenceCount = $this
+		$absenceResults = $this
 			->find()
 			->where([
+				$this->aliasField('institution_id') => $institutionId,
 				$this->aliasField('student_id') => $studentId
 			])
-			->count();
+			->all();
+
+		$absenceDay = 0;
+		foreach ($absenceResults as $key => $obj) {
+			$endDate = $obj->end_date;
+			$startDate = $obj->start_date;
+			$interval = $endDate->diff($startDate);
+			$absenceDay = $absenceDay + $interval->days + 1;
+		}
+
+		return $absenceDay;
 	}
 }
