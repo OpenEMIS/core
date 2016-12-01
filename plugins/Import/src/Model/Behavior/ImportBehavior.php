@@ -332,6 +332,7 @@ class ImportBehavior extends Behavior {
             $importedUniqueCodes = new ArrayObject;
             $dataFailed = [];
             $dataPassed = [];
+            $extra = new ArrayObject(['lookup' => []]);
 
             $activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
             $activeModel->addBehavior('DefaultValidation');
@@ -383,7 +384,7 @@ class ImportBehavior extends Behavior {
 
                 $originalRow = new ArrayObject;
                 $checkCustomColumn = new ArrayObject;
-                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
+                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
                 $tempRow = $tempRow->getArrayCopy();
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
@@ -1110,7 +1111,7 @@ class ImportBehavior extends Behavior {
      * @param  ArrayObject  $rowInvalidCodeCols for holding error messages found on option field columns
      * @return boolean                          returns whether the row being checked pass option field columns check
      */
-    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra) {
         // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
         $sheet = $references['sheet'];
         $mapping = $references['mapping'];
@@ -1155,7 +1156,8 @@ class ImportBehavior extends Behavior {
                 continue;
             }
             if (!empty($val)) {
-                if($activeModel->schema()->column($columnName)['type'] == 'date') {// checking the main table schema data type
+                $columnAttr = $activeModel->schema()->column($columnName);
+                if($columnAttr['type'] == 'date') { // checking the main table schema data type
                     $originalRow[$col] = $val;
                     if (is_numeric($val)) {
                         // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
@@ -1174,6 +1176,16 @@ class ImportBehavior extends Behavior {
                     } catch (InvalidArgumentException $e) {
                         // pr($e->getMessage());
                     }
+                } else if($columnAttr['type'] == 'decimal') {
+                    $length = $columnAttr['length'];
+                    $precision = $columnAttr['precision'];
+                    if (!empty($precision)) {
+                        $pattern = '/^[0-9]+(\.[0-9]{1,'.$precision.'})?$/';
+                        $match = preg_match($pattern, $val);
+                        if (!$match) {
+                            $rowInvalidCodeCols[$columnName] = __('This field is not in valid format');
+                        }
+                    }
                 }
             }
             $translatedCol = $this->getExcelLabel($activeModel->alias(), $columnName);
@@ -1188,13 +1200,13 @@ class ImportBehavior extends Behavior {
                         $val = $lookup[$col][$cellValue]['id'];
                     } else { // if the cell value not found in lookup
                         $rowPass = false;
-                        $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                        $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else { // if cell is empty
                     $rowPass = false;
                     $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
                 }
-            } elseif ($foreignKey == self::DIRECT_TABLE) {
+            } else if ($foreignKey == self::DIRECT_TABLE) {
                 $registryAlias = $lookupPlugin . '.' . $lookupModel;
                 if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
                     $excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
@@ -1204,10 +1216,14 @@ class ImportBehavior extends Behavior {
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
-                    $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
-                    $params = [$lookupQuery, $excelLookupModel, $lookupColumn, $tempRow, $originalRow, $cellValue, $rowInvalidCodeCols, $columnName];
-                    $this->dispatchEvent($this->_table, $this->eventKey('onImportLookup'.$lookupModel.'BeforeQuery'), 'onImportLookup'.$lookupModel.'BeforeQuery', $params);
-                    $record = $lookupQuery->first();
+                    if (isset($extra['lookup'][$excelLookupModel->alias()][$cellValue])) {
+                        $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
+                    } else {
+                        $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
+                        $record = $lookupQuery->first();
+
+                        $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
+                    }
                 } else {
                     $columnAttr = $activeModel->schema()->column($columnName);
                     // when blank and the field is not nullable, set cell value as default value setup in database
@@ -1231,7 +1247,7 @@ class ImportBehavior extends Behavior {
                             $rowPass = false;
                             // allow to overwrite from lookup before query event
                             if (!$rowInvalidCodeCols->offsetExists($columnName)) {
-                                $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                                $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                             }
                         } else {
                             $rowPass = false;
@@ -1241,7 +1257,7 @@ class ImportBehavior extends Behavior {
                 } else {
                     $val = $cellValue;
                 }
-            } elseif ($foreignKey == self::NON_TABLE_LIST) {
+            } else if ($foreignKey == self::NON_TABLE_LIST) {
                 if (!empty($cellValue)) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
                     $recordId = $getIdEvent->result;
@@ -1249,7 +1265,7 @@ class ImportBehavior extends Behavior {
                         $val = $recordId;
                     } else {
                         $rowPass = false;
-                        $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                        $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else {
                     if (!$isOptional) {
@@ -1260,7 +1276,7 @@ class ImportBehavior extends Behavior {
             } else if ($foreignKey == self::CUSTOM) { //foreign_key = 4
 
                 $params = [$tempRow, $cellValue];
-                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.$excelMappingObj->column_name.'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
+                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.ucfirst($excelMappingObj->column_name).'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
 
                 if ($event->result !== true) {
                     $rowInvalidCodeCols[$columnName] = __($event->result);
