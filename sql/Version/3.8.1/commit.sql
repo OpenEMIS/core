@@ -120,7 +120,8 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `cod
 VALUES
 ('7c85c025-b6e3-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'student_id', 'Institutions -> Textbooks', 'Allocated To', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00'),
 ('43653063-b6e5-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'textbook_condition_id', 'Institutions -> Textbooks', 'Condition', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00'),
-('43653db8-b6e5-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'textbook_status_id', 'Institutions -> Textbooks', 'Status', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00');
+('43653db8-b6e5-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'textbook_status_id', 'Institutions -> Textbooks', 'Status', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00'),
+('4497d103-b794-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'code', 'Institutions -> Textbooks', 'Textbook ID', NULL, NULL, '1', NULL, NULL, '1', '2016-12-01 00:00:00');
 
 
 -- POCOR-3583
