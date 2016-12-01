@@ -75,7 +75,8 @@ class ExcelBehavior extends Behavior {
     }
 
     public function excel($id=0) {
-        $this->generateXLXS(['id' => $id]);
+        $ids = $this->_table->ControllerAction->paramsDecode($id);
+        $this->generateXLXS($ids);
     }
 
     public function excelV4(Event $mainEvent, ArrayObject $extra)
@@ -91,7 +92,8 @@ class ExcelBehavior extends Behavior {
         if (isset($pass[0])) {
             $id = $pass[0];
         }
-        $this->generateXLXS(['id' => $id]);
+        $ids = $this->_table->ControllerAction->paramsDecode($id);
+        $this->generateXLXS($ids);
     }
 
     private function eventKey($key) {
