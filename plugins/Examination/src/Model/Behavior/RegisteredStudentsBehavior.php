@@ -66,7 +66,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $toolbarButtonsArray['back']['url'] = $model->url('view');
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
-        $ids = $mode->ControllerAction->paramsDecode($model->paramsPass(0));
+        $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
         $idKey = $model->ControllerAction->getIdKeys($model, $ids);
         $entity = false;
 
@@ -192,6 +192,8 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->aliasField('academic_period_id'),
                 $model->aliasField('examination_id'),
                 $model->aliasField('registration_number'),
+                $model->aliasField('examination_centre_id'),
+                $model->aliasField('education_subject_id'),
                 $model->Users->aliasField('openemis_no'),
                 $model->Users->aliasField('first_name'),
                 $model->Users->aliasField('middle_name'),
