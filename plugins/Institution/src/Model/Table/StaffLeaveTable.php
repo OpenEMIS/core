@@ -212,7 +212,7 @@ class StaffLeaveTable extends ControllerActionTable
 						'controller' => 'Institutions',
 						'action' => 'StaffLeave',
 						'view',
-						$row->id,
+						$controller->ControllerAction->paramsEncode(['id' => $row->id]),
 						'user_id' => $row->staff_id,
 						'institution_id' => $row->institution_id
 					];
