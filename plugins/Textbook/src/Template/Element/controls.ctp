@@ -48,19 +48,6 @@
                     ));
                 }
 
-                if (!empty($gradeOptions)) {
-                    echo $this->Form->input('education_grade_id', array(
-                        'type' => 'select',
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $gradeOptions,
-                        'default' => $selectedGrade,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'grade',
-                        'data-named-group' => 'period, level, programme'
-                    ));
-                }
-
                 if (!empty($subjectOptions)) {
                     echo $this->Form->input('education_subject_id', array(
                         'type' => 'select',
