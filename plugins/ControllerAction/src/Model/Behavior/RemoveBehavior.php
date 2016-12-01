@@ -29,7 +29,7 @@ class RemoveBehavior extends Behavior
         $model = $this->_table;
         $request = $model->request;
         if (($model->actions('remove') == 'transfer') && $request->is('delete') && $extra['result'] == true) {
-            $convertFrom = $entity->id;
+            $convertFrom = $model->ControllerAction->getIdKeys($model, $entity, false);
             $convertTo = $entity->convert_to;
 
             foreach ($model->associations() as $assoc) {
@@ -114,17 +114,7 @@ class RemoveBehavior extends Behavior
             $entity = $model->newEntity();
             $controller = $model->controller;
             $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
-            $idKeys = [];
-            // May still be empty
-            if (!empty($ids)) {
-                if (is_array($primaryKey)) {
-                    foreach ($primaryKey as $key) {
-                        $idKeys[$model->aliasField($key)] = $ids[$key];
-                    }
-                } else {
-                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
-                }
-            }
+            $idKeys = $model->ControllerAction->getIdKeys($model, $ids);
             if ($model->exists($idKeys)) {
                 $entity = $model->get($idKeys);
 
@@ -241,7 +231,6 @@ class RemoveBehavior extends Behavior
         $request = $model->request;
         $extra['config']['form'] = ['type' => 'DELETE'];
         $extra['options'] = [
-            'keyField' => 'id',
             'valueField' => 'name'
         ];
 
@@ -251,16 +240,14 @@ class RemoveBehavior extends Behavior
             return $event->result;
         }
 
-        $primaryKey = $model->primaryKey();
-        $idKey = $model->aliasField($primaryKey);
-
         $result = true;
         $entity = $model->newEntity();
 
         if ($request->is('get')) {
             $id = $model->paramsPass(0);
-            if ($model->exists([$idKey => $id])) {
-                $entity = $model->get($id);
+            $idKeys = $model->ControllerAction->getIdKeys($model, $ids);
+            if ($model->exists($idKeys)) {
+                $entity = $model->get($idKeys);
 
                 $query = $model->find();
                 $event = $model->dispatchEvent('ControllerAction.Model.transfer.onInitialize', [$entity, $query, $extra], $this);
@@ -269,9 +256,24 @@ class RemoveBehavior extends Behavior
                     return $event->result;
                 }
 
-                $convertOptions = $query->find('list', $extra['options'])
-                                ->where([$idKey . ' <> ' => $id])
-                                ->toArray();
+                $notIdKeys = [];
+
+                foreach ($idKeys as $key => $value) {
+                    $notIdKeys[$key.' <>'] = $value;
+                }
+
+                $convertOptionsList = $query->find()
+                    ->where($notIdKeys)
+                    ->toArray();
+
+                $convertOptions = [];
+                $primaryKey = $model->primaryKey();
+
+                foreach ($convertOptions as $value) {
+                    $keysToEncode = $model->ControllerAction->getIdKeys($model, $value, false);
+                    $encodedKey = $model->ControllerAction->paramsEncode($keysToEncode);
+                    $convertOptions[$encodedKey] = $value->$extra['options']['valueField'];
+                }
 
                 if (empty($convertOptions)) {
                     $convertOptions[''] = __('No Available Options');
@@ -296,22 +298,24 @@ class RemoveBehavior extends Behavior
                 return $event->result;
             }
 
+            // Need to review the following code
             if (empty($entity) || empty($entity->id)) {
                 $mainEvent->stopPropagation();
                 return $model->controller->redirect($model->url('index', 'QUERY'));
             }
             return $entity;
         } else if ($request->is('delete')) {
-            $id = $request->data($model->aliasField($primaryKey));
-            if (!empty($id)) {
+            $primaryKey = $model->primaryKey();
+            $idKeys = $model->ControllerAction->getIdKeys($model, $request->data($this->alias()));
+            if (!empty($idKeys)) {
                 try {
-                    $entity = $model->get($id);
+                    $entity = $model->get($idKeys);
                 } catch (RecordNotFoundException $exception) { // to handle concurrent deletes
                     $mainEvent->stopPropagation();
                     return $model->controller->redirect($model->url('index', 'QUERY'));
                 }
 
-                $convertTo = $request->data($model->aliasField('convert_to'));
+                $convertTo = $model->ControllerAction->paramsDecode($request->data($model->aliasField('convert_to')));
                 $entity->convert_to = $convertTo;
                 $doDelete = true;
 
@@ -445,9 +449,32 @@ class RemoveBehavior extends Behavior
 
     private function updateHasManyAssociations($association, $from, $to)
     {
+        $bindingKey = $association->bindingKey();
+        $foreignKey = $association->foreignKey();
+
+        $fromConditions = [];
+
+        if (is_array($foreignKey)) {
+            foreach ($foreignKey as $index => $key) {
+                $fromConditions[$key] = $from[$bindingKey[$index]];
+            }
+        } else {
+            $fromConditions[$foreignKey] = $from[$bindingKey];
+        }
+
+        $toConditions = [];
+
+        if (is_array($foreignKey)) {
+            foreach ($foreignKey as $index => $key) {
+                $toConditions[$key] = $to[$bindingKey[$index]];
+            }
+        } else {
+            $toConditions[$foreignKey] = $to[$bindingKey];
+        }
+
         $association->updateAll(
-            [$association->foreignKey() => $to],
-            [$association->foreignKey() => $from]
+            [$toConditions],
+            [$fromConditions]
         );
     }
 
@@ -455,40 +482,67 @@ class RemoveBehavior extends Behavior
     {
         $modelAssociationTable = $association->junction();
 
+        $bindingKey = $association->bindingKey();
         $foreignKey = $association->foreignKey();
+
+        $toConditions = [];
+
+        if (is_array($foreignKey)) {
+            foreach ($foreignKey as $index => $key) {
+                $toConditions[$key] = $to[$bindingKey[$index]];
+            }
+        } else {
+            $toConditions[$foreignKey] = $to[$bindingKey];
+        }
+
+        $fromConditions = [];
+
+        if (is_array($foreignKey)) {
+            foreach ($foreignKey as $index => $key) {
+                $fromConditions[$key] = $from[$bindingKey[$index]];
+            }
+        } else {
+            $fromConditions[$foreignKey] = $from[$bindingKey];
+        }
+
         $targetForeignKey = $association->targetForeignKey();
 
         // List of the target foreign keys for subqueries
         $targetForeignKeys = $modelAssociationTable->find()
-            ->select(['target' => $modelAssociationTable->aliasField($association->targetForeignKey())])
-            ->where([
-                $modelAssociationTable->aliasField($association->foreignKey()) => $to
-            ]);
+            ->select($targetForeignKey)
+            ->where($toConditions);
 
         $notUpdateQuery = $modelAssociationTable->query()
-            ->select(['target_foreign_key' => 'TargetTable.target'])
+            ->select($targetForeignKey)
             ->from(['TargetTable' => $targetForeignKeys]);
 
         if (!empty($notUpdateQuery)) {
             $condition = [];
 
+            $targetForeignKeyString = '';
+            if (is_array($targetForeignKey)) {
+                $targetForeignKeyString = '('. impode(', ', $targetForeignKey) . ')';
+            } else {
+                $targetForeignKeyString = $targetForeignKey;
+            }
+
+            $notCondition = $fromConditions;
+            $notCondition[$association->targetForeignKey().' IN '] = $notUpdateQuery;
+
             $condition = [
-                $association->foreignKey() => $from,
-                'NOT' => [
-                    $association->foreignKey() => $from,
-                    $association->targetForeignKey().' IN ' => $notUpdateQuery
-                ]
+                $fromConditions,
+                'NOT' => $notCondition
             ];
 
             // Update all transfer records
             $modelAssociationTable->updateAll(
-                [$association->foreignKey() => $to],
+                $toConditions,
                 $condition
             );
 
             // Delete orphan records
             $modelAssociationTable->deleteAll(
-                [$association->foreignKey() => $from]
+                $fromConditions
             );
         }
     }

@@ -1865,17 +1865,25 @@ class ControllerActionComponent extends Component {
         return $this->triggerFrom;
     }
 
-    public function getIdKeys(Table $model, $ids)
+    public function getIdKeys(Table $model, $ids, $addAlias = true)
     {
         $primaryKey = $model->primaryKey();
         $idKeys = [];
         if (!empty($ids)) {
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
-                    $idKeys[$model->aliasField($key)] = $ids[$key];
+                    if ($addAlias) {
+                        $idKeys[$model->aliasField($key)] = $ids[$key];
+                    } else {
+                        $idKeys[$key] = $ids[$key];
+                    }
                 }
             } else {
-                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                if ($addAlias) {
+                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                } else {
+                    $idKeys[$primaryKey] = $ids[$primaryKey];
+                }
             }
         }
         return $idKeys;

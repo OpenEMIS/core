@@ -40,18 +40,7 @@ class EditBehavior extends Behavior {
 		$primaryKey = $model->primaryKey();
 
 		$ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
-		$idKeys = [];
-		// May still be empty
-		if (!empty($ids)) {
-			if (is_array($primaryKey)) {
-				foreach ($primaryKey as $key) {
-					$idKeys[$model->aliasField($key)] = $ids[$key];
-				}
-			} else {
-				$idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
-			}
-
-		}
+		$idKeys = $model->ControllerAction->getIdKeys($model, $ids);
 
 		$entity = false;
 
