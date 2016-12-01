@@ -399,6 +399,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
 		$controller->loadComponent('AccessControl');
+		$controller->loadComponent('ControllerAction.ControllerAction');
 
 		$session = $controller->request->session();
 		$AccessControl = $controller->AccessControl;
@@ -462,7 +463,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 						'controller' => 'Institutions',
 						'action' => 'StaffTransferApprovals',
 						'edit',
-						$row->id,
+						$controller->ControllerAction->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->previous_institution_id
 					];
 
