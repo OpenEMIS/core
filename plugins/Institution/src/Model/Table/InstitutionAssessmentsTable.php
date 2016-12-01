@@ -312,7 +312,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
                 'controller' => $this->controller->name,
                 'action' => 'Results',
                 'class_id' => $entity->institution_class_id,
-                'assessment_id' => $entity->assessment_id
+                'assessment_id' => $entity->assessment_id,
+                'institution_id' => $entity->institution_id
             ];
         }
         unset($buttons['edit']);//remove edit action from the action button
