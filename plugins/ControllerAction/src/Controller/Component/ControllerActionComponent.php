@@ -1501,45 +1501,98 @@ class ControllerActionComponent extends Component {
                         $transferProcess = function($associations, $transferFrom, $transferTo, $model) {
                             foreach ($associations as $assoc) {
                                 if ($assoc->type() == 'oneToMany') {
+                                    $bindingKey = $assoc->bindingKey();
+                                    $foreignKey = $assoc->foreignKey();
+
+                                    $fromConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $fromConditions[$key] = $transferFrom[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $fromConditions[$foreignKey] = $transferFrom[$bindingKey];
+                                    }
+
+                                    $toConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $toConditions[$key] = $transferTo[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $toConditions[$foreignKey] = $transferTo[$bindingKey];
+                                    }
+
                                     $assoc->updateAll(
-                                        [$assoc->foreignKey() => $transferTo],
-                                        [$assoc->foreignKey() => $transferFrom]
+                                        [$toConditions],
+                                        [$fromConditions]
                                     );
 
                                 } else if ($assoc->type() == 'manyToMany') {
                                     $modelAssociationTable = $assoc->junction();
 
+                                    $bindingKey = $association->bindingKey();
+                                    $foreignKey = $association->foreignKey();
+
+                                    $toConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $toConditions[$key] = $transferTo[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $toConditions[$foreignKey] = $transferTo[$bindingKey];
+                                    }
+
+                                    $fromConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $fromConditions[$key] = $transferFrom[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $fromConditions[$foreignKey] = $transferFrom[$bindingKey];
+                                    }
+
+                                    $targetForeignKey = $association->targetForeignKey();
+
                                     // List of the target foreign keys for subqueries
                                     $targetForeignKeys = $modelAssociationTable->find()
-                                        ->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
-                                        ->where([
-                                            $modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
-                                        ]);
+                                        ->select($targetForeignKey)
+                                        ->where($toConditions);
 
                                     $notUpdateQuery = $modelAssociationTable->query()
-                                        ->select(['target_foreign_key' => 'TargetTable.target'])
+                                        ->select($targetForeignKey)
                                         ->from(['TargetTable' => $targetForeignKeys]);
 
                                     if (!empty($notUpdateQuery)) {
                                         $condition = [];
 
+                                        $targetForeignKeyString = '';
+                                        if (is_array($targetForeignKey)) {
+                                            $targetForeignKeyString = '('. impode(', ', $targetForeignKey) . ')';
+                                        } else {
+                                            $targetForeignKeyString = $targetForeignKey;
+                                        }
+
+                                        $notCondition = $fromConditions;
+                                        $notCondition[$association->targetForeignKey().' IN '] = $notUpdateQuery;
+
                                         $condition = [
-                                            $assoc->foreignKey() => $transferFrom,
-                                            'NOT' => [
-                                                $assoc->foreignKey() => $transferFrom,
-                                                $assoc->targetForeignKey().' IN ' => $notUpdateQuery
-                                            ]
+                                            $fromConditions,
+                                            'NOT' => $notCondition
                                         ];
 
                                         // Update all transfer records
                                         $modelAssociationTable->updateAll(
-                                            [$assoc->foreignKey() => $transferTo],
+                                            $toConditions,
                                             $condition
                                         );
 
                                         // Delete orphan records
                                         $modelAssociationTable->deleteAll(
-                                            [$assoc->foreignKey() => $transferFrom]
+                                            $fromConditions
                                         );
                                     }
                                 }
