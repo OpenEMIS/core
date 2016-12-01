@@ -1,6 +1,6 @@
 angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc'])
 .service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc) {
-    const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
+    const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
         AssessmentsTable: 'Assessment.Assessments',
@@ -248,6 +248,13 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var maxMark = subject.grading_type.max;
                     var isMarksType = (resultType == resultTypes.MARKS);
                     var isGradesType = (resultType == resultTypes.GRADES);
+                    var isDurationType = (resultType == resultTypes.DURATION);
+
+                    if (isDurationType) {
+                        markAsFloat = parseFloat(maxMark);
+                        durationInMinutes = $filter('number')(markAsFloat/60, 2);
+                        maxMark = durationInMinutes.replace(".", " : ");
+                    }
                 }
 
                 var allowEdit = (action == 'edit' && period.editable);
@@ -295,6 +302,17 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                     extra['period'] = period;
                     columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra, _results);
+                } else if (isDurationType) {
+                    if (subject.grading_type != null) {
+                        extra = {
+                            minMark: 0,
+                            passMark: subject.grading_type.pass_mark,
+                            maxMark: subject.grading_type.max
+                        };
+                    }
+
+                    extra['period'] = period;
+                    columnDef = ResultsSvc.renderDuration(allowEdit, columnDef, extra, _results);
                 }
 
                 this.push(columnDef);
@@ -455,6 +473,147 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return cols;
         },
 
+        renderDuration: function(allowEdit, cols, extra, _results) {
+            var minMark = extra.minMark;
+            var passMark = extra.passMark;
+            var maxMark = extra.maxMark;
+            var periodId = extra.period.id;
+
+            cols = angular.merge(cols, {
+                cellStyle: function(params) {
+                    var value = params.data[params.colDef.field];
+                    var valueInSeconds = value * 60;
+
+                    if (!isNaN(parseFloat(value)) && parseInt(valueInSeconds) > passMark) {
+                        return {color: '#CC5C5C', direction: 'ltr'};
+                    } else {
+                        return {color: '#333', direction: 'ltr'};
+                    }
+                },
+                valueGetter: function(params) {
+                    var value = params.data[params.colDef.field];
+
+                    if (!isNaN(parseFloat(value))) {
+                        var duration = $filter('number')(value, 2);
+                        var formatDuration = duration.replace(".", " : ");
+                        return formatDuration;
+                    } else {
+                        return '';
+                    }
+                }
+            });
+
+            if (allowEdit) {
+                cols = angular.merge(cols, {
+                    cellClass: 'oe-cell-highlight',
+                    cellRenderer: function(params) {
+                        var studentId = params.data.student_id;
+
+                        var eCell = document.createElement('div');
+                        eCell.setAttribute("class", "ag-grid-dir-ltr");
+
+                        var minuteInput = document.createElement('input');
+                        minuteInput.setAttribute("id", "mins");
+                        minuteInput.setAttribute("type", "number");
+                        minuteInput.setAttribute("min", "0");
+                        minuteInput.setAttribute("max", "999");
+                        minuteInput.setAttribute("class", "ag-grid-duration");
+                        minuteInput.setAttribute("lang", "en");
+
+                        var text = document.createElement('span');
+                        var colon = document.createTextNode(" : ");
+                        text.appendChild(colon);
+
+                        var secondInput = document.createElement('input');
+                        secondInput.setAttribute("id", "secs");
+                        secondInput.setAttribute("type", "number");
+                        secondInput.setAttribute("min", "0");
+                        secondInput.setAttribute("max", "59");
+                        secondInput.setAttribute("class", "ag-grid-duration");
+                        secondInput.setAttribute("lang", "en");
+
+                        eCell.appendChild(minuteInput);
+                        eCell.appendChild(text);
+                        eCell.appendChild(secondInput);
+
+                        var oldValue = params.data[params.colDef.field];
+                        if (oldValue) {
+                            var duration = String(oldValue).split(".");
+                            minuteInput.value = duration[0];
+                            secondInput.value = duration[1];
+                        }
+
+                        eCell.addEventListener('change', function() {
+                            var minuteInt = parseInt(minuteInput.value);
+                            var secondInt = parseInt(secondInput.value);
+
+                            // Minute Input
+                            if (minuteInput.value.length > 0) {
+                                if (!isNaN(minuteInt) && minuteInt >= 0) {
+                                    if (minuteInt.toString().length > 3) {
+                                        // truncate input to 3 digits
+                                        minuteInt = $filter('limitTo')(minuteInt, 3);
+                                    }
+                                } else {
+                                    minuteInt = 0;
+                                }
+                                minuteInput.value = minuteInt;
+                            }
+                            // End
+
+                            // Second Input
+                            if (secondInput.value.length > 0) {
+                                var secondValue = 0;
+
+                                if (!isNaN(secondInt) && secondInt >= 0) {
+
+                                    if (secondInt > 59) {
+                                        // truncate input to 4 digits
+                                        if (secondInt.toString().length > 4) {
+                                            secondInt = $filter('limitTo')(secondInt, 4);
+                                        }
+
+                                        // logic to derive the minutes and seconds if seconds is more than 59
+                                        var minuteQuotient = Math.floor(secondInt/60);
+                                        secondValue = secondInt % 60;
+                                        minuteInput.value = !isNaN(minuteInt)? (minuteInt + minuteQuotient): minuteQuotient;
+
+                                    } else {
+                                        secondValue = secondInt;
+                                    }
+
+                                    // for padding single digits
+                                    if (secondValue.toString().length == 1) {
+                                        secondValue = '0' + secondValue;
+                                    }
+                                }
+
+                                secondInput.value = secondValue;
+                            }
+                            // End
+
+                            if (angular.isUndefined(_results[studentId])) {
+                                _results[studentId] = {};
+                            }
+
+                            if (angular.isUndefined(_results[studentId][periodId])) {
+                                _results[studentId][periodId] = {duration: ''};
+                            }
+
+                            var duration = minuteInput.value + '.' + secondInput.value;
+
+                            params.data[params.colDef.field] = duration;
+                            _results[studentId][periodId]['duration'] = duration;
+                        });
+
+                        return eCell;
+                    },
+                    suppressMenu: true
+                });
+            }
+            return cols;
+        },
+
         getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
@@ -476,6 +635,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                         var isMarksType = true; // default to MARKS
                         var isGradesType = false;
+                        var isDurationType = false;
                         var resultType = null;
 
                         angular.forEach(subjectStudents, function(subjectStudent, key) {
@@ -487,6 +647,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                             isMarksType = (resultType == resultTypes.MARKS);
                             isGradesType = (resultType == resultTypes.GRADES);
+                            isDurationType = (resultType == resultTypes.DURATION);
 
                             if (studentId != currentStudentId) {
                                 if (studentId != null) {
@@ -508,7 +669,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     // if is GRADES type, set weight to empty so that will not be included when calculate total marks.
                                     if (resultTypeByPeriod == resultTypes.MARKS) {
                                         periodWeight = parseFloat(periodObj[parseInt(period.id)]['weight']);
-                                    } else if (resultTypeByPeriod == resultTypes.GRADES) {
+                                    } else if (resultTypeByPeriod == resultTypes.GRADES || resultTypeByPeriod == resultTypes.DURATION) {
                                         periodWeight = '';
                                     }
 
@@ -527,6 +688,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             } else if (isGradesType) {
                                 if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
+                                }
+                            } else if (isDurationType) {
+                                var duration = parseFloat(subjectStudent.AssessmentItemResults.marks);
+                                if (!isNaN(duration)) {
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.marks;
                                 }
                             }
                         }, rowData);
@@ -618,6 +784,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     } else if (resultType == resultTypes.GRADES) {
                         if (obj.gradingOptionId != 0) {
                             gradingOptionId = obj.gradingOptionId;
+                        }
+                    } else if (resultType == resultTypes.DURATION) {
+                        if (!isNaN(parseFloat(obj.duration))) {
+                            marks = $filter('number')(obj.duration, 2);
+
+                            durationInSeconds = parseFloat(obj.duration) * 60;
+                            var gradingObj = this.getGrading(subject, durationInSeconds);
+                            gradingOptionId = gradingObj.id;
                         }
                     }
 
