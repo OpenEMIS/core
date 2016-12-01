@@ -28,7 +28,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->belongsTo('Textbooks', ['className' => 'Textbook.Textbooks', 'foreignKey' => ['textbook_id', 'academic_period_id']]);
         $this->belongsTo('TextbookStatuses', ['className' => 'Textbook.TextbookStatuses']);
         $this->belongsTo('TextbookConditions', ['className' => 'Textbook.TextbookConditions']);
-        
+
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
@@ -331,6 +331,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
                     // die;
                     return $success;
                 }
+            } else { //if no textbook student added and user try to save
+                $entity->errors('textbooks_students', __('There are no textbook added'));
+                $this->Alert->error('Textbooks.noTextbookStudent', ['reset'=>true]);
             }
         };
         return $process;
@@ -362,6 +365,22 @@ class InstitutionTextbooksTable extends ControllerActionTable
         } else {
             $this->field('textbooks_students', ['visible' => false]);
         }
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $entity->name = $entity->code;
+
+        //manually add condition during restrict delete
+        $PreviousInstitutionTextbooks = $this
+                                        ->find()
+                                        ->where([
+                                            $this->aliasField('id') => $entity->id,
+                                            $this->aliasField('academic_period_id <> ') => $entity->academic_period_id
+                                        ])
+                                        ->count();
+                                        
+        $extra['associatedRecords'][] = ['model' => 'InstitutionTextbooks', 'count' => $PreviousInstitutionTextbooks];
     }
 
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
