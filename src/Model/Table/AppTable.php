@@ -404,12 +404,12 @@ class AppTable extends Table {
     	$primaryKeyValue = [];
     	if (is_array($primaryKey)) {
     		foreach ($primaryKey as $key) {
-				$primaryKeyValue[$key] = $entity->$key;
+				$primaryKeyValue[$key] = $entity->getOriginal($key);
 			}
     	} else {
-    		$primaryKeyValue[$primaryKey] = $entity->$primaryKey;
+    		$primaryKeyValue[$primaryKey] = $entity->getOriginal($primaryKey);
     	}
-		
+
 		$encodedKeys = $this->ControllerAction->paramsEncode($primaryKeyValue);
 		$id = $encodedKeys;
 
