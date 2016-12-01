@@ -69,7 +69,7 @@ class ConfigItemsTable extends AppTable {
 
 		$pass = $this->request->param('pass');
 		if (is_array($pass) && !empty($pass)) {
-			$id = $pass[0];
+			$id = $this->ControllerAction->paramsDecode($pass[0]);
 			$entity = $this->get($id);
 		}
 		if (isset($entity)) {
@@ -131,8 +131,8 @@ class ConfigItemsTable extends AppTable {
 		if (in_array($action, ['edit', 'add'])) {
 			$pass = $request->param('pass');
 			if (!empty($pass)) {
-				$id = $pass[0];
-				$entity = $this->get($id);
+				$ids = $this->ControllerAction->paramsDecode($pass[0]);
+				$entity = $this->get($ids);
 
 
 				if ($entity->field_type == 'Dropdown') {
