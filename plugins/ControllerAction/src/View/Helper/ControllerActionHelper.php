@@ -341,7 +341,6 @@ class ControllerActionHelper extends Helper {
 				$row[] = $value;
 			}
 		}
-
 		$primaryKeys = $table->primaryKey();
 		$primaryKeyValue = [];
 		if (is_array($primaryKeys)) {
@@ -354,6 +353,7 @@ class ControllerActionHelper extends Helper {
 
 		$encodedKeys = $this->paramsEncode($primaryKeyValue);
 		$row[0] = [$row[0], ['data-row-id' => $encodedKeys]];
+
 		return $row;
 	}
 

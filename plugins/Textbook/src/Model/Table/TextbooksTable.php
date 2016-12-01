@@ -130,48 +130,9 @@ class TextbooksTable extends ControllerActionTable {
             $data['selectedProgramme'] = $selectedProgramme;
         }
 
-        //education grades filter
-        if ($selectedPeriod && $selectedLevel && $selectedProgramme) {
-
-            $gradeOptions = $this->EducationGrades->getEducationGradesByProgrammes($selectedProgramme);
-
-            if ($gradeOptions) {
-                $gradeOptions = array(-1 => __('All Education Grade')) + $gradeOptions;
-            }
-
-            if ($request->query('grade')) {
-                $selectedGrade = $request->query('grade');
-            } else {
-                $selectedGrade = -1;
-            }
-
-            $this->advancedSelectOptions($gradeOptions, $selectedGrade, [
-                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
-                'callable' => function($id) use ($selectedPeriod) {
-                    $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
-
-                    if ($id > 0) {
-                        $conditions[] = $this->aliasField('education_grade_id = ') . $id;
-                    }
-
-                    return $this
-                            ->find()
-                            ->where([
-                                $conditions
-                            ])
-                            ->count();
-                }
-            ]);
-
-            $extra['selectedGrade'] = $selectedGrade;
-            $data['gradeOptions'] = $gradeOptions;
-            $data['selectedGrade'] = $selectedGrade;
-        }
-
         //education subjects filter
-
-        if ($selectedPeriod && $selectedProgramme && $selectedGrade) {
-            $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
+        if ($selectedPeriod && $selectedProgramme) {
+            $subjectOptions = $this->EducationSubjects->getEducationSubjecsList($selectedProgramme);
 
             if ($subjectOptions) {
                 $subjectOptions = array(-1 => __('All Education Subject')) + $subjectOptions;
@@ -185,12 +146,8 @@ class TextbooksTable extends ControllerActionTable {
 
             $this->advancedSelectOptions($subjectOptions, $selectedSubject, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
-                'callable' => function($id) use ($selectedPeriod, $selectedGrade) {
+                'callable' => function($id) use ($selectedPeriod) {
                     $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
-
-                    if ($selectedGrade > 0) {
-                        $conditions[] = $this->aliasField('education_grade_id = ') . $selectedGrade;
-                    }
 
                     if ($id > 0) {
                         $conditions[] = $this->aliasField('education_subject_id = ') . $id;
@@ -225,7 +182,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->field('expiry_date', ['visible' => false]);
 
         $this->setFieldOrder([
-            'code', 'title', 'isbn', 'publisher'
+            'code', 'title', 'ISBN', 'publisher'
         ]);
     }
 
