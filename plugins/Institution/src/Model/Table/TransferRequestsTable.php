@@ -158,7 +158,7 @@ class TransferRequestsTable extends ControllerActionTable
                 $backBtn = $extra['toolbarButtons']['back'];
                 $backBtn['url']['action'] = 'StudentUser';
                 $backBtn['url'][0] = 'view';
-                $backBtn['url'][1] = $params['user_id'];
+                $backBtn['url'][1] = $this->ControllerAction->paramsEncode(['id' => $params['user_id']]);
                 $backBtn['url']['id'] = $params['student_id'];
                 $extra['toolbarButtons']['back'] = $backBtn;
 
