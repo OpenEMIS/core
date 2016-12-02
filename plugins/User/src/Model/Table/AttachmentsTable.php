@@ -129,7 +129,7 @@ class AttachmentsTable extends AppTable {
 		$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
 		$buttons['download']['attr'] = $indexAttr;
 		$buttons['download']['url']['action'] = $this->alias.'/download';
-		$buttons['download']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $entity->id]);
+		$buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
 
 		return $buttons;
 	}

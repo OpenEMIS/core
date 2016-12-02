@@ -181,7 +181,7 @@ class PermissionsTable extends AppTable
 			}
 			$this->Alert->success('general.edit.success');
 
-			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), 'index', $this->ControllerAction->paramsEncode(['id' => $roleId])], $params);
+			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), 'index', $this->paramsEncode(['id' => $roleId])], $params);
 			return $this->controller->redirect($action);
 		} else {
 			$module = $this->request->query('module');
