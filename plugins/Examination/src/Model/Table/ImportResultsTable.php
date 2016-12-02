@@ -188,11 +188,24 @@ class ImportResultsTable extends AppTable
                                         $rowInvalidCodeCols['marks'] = __('This field cannot be left empty');
                                         $validationPass = false;
                                     } else {
+                                        // check without precision
+                                        $pattern = '/^[0-9]*(\.[0-9]+)?$/';
+                                        $match = preg_match($pattern, $marksCell);
+                                        if (!$match) {
+                                            $rowInvalidCodeCols['marks'] = __('This field is not in valid format');
+                                            $validationPass = false;
+                                        }
+
+                                        // round to 2 decimal places
+                                        $marksCell = round($marksCell, 2);
+
                                         if ($marksCell > $gradingTypeEntity->max) {
                                             // marks entered cannot be more than the maximum mark configured
                                             $rowInvalidCodeCols['marks'] = __('This field cannot be more than ' . $gradingTypeEntity->max);
                                             $validationPass = false;
                                         }
+
+                                        $tempRow['marks'] = $marksCell;
                                     }
 
                                     if (strlen($gradingOptionIdCell) > 0) {
