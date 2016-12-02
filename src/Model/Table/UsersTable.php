@@ -59,7 +59,7 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('is_guardian', ['visible' => false]);
 		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
-		$userId = $this->Auth->user('id');
+		$userId = $this->paramsEncode(['id' => $this->Auth->user('id')]);
 		if ($userId != $this->request->pass[0] && $this->action != 'password') { // stop user from navigating to other profiles
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
