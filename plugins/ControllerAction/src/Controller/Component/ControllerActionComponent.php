@@ -913,7 +913,7 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $ids = $this->paramsDecode($id);
+        $ids = !empty($id) ? $this->paramsDecode($id) : $id;
 
         $sessionKey = $model->registryAlias() . '.primaryKey';
         $contain = [];

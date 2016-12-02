@@ -240,7 +240,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'transfer_status_header', 'created', 'transfer_status', 'requested_on', 
+			'transfer_status_header', 'created', 'transfer_status', 'requested_on',
 			'existing_information_header', 'student', 'previous_institution_id', 'academic_period_id', 'education_grade_id',
 			'new_information_header', 'institution_id', 'new_education_grade_id', 'institution_class',
 			'status', 'start_date', 'end_date',
@@ -403,7 +403,7 @@ class TransferApprovalsTable extends AppTable {
 				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
 				$request->data[$this->alias()]['end_date'] = $endDate;
 			}
-			
+
 			if (!is_null($endDate)) {
 				$periodEndDate = $endDate->copy()->subDay();
 			}
@@ -530,6 +530,7 @@ class TransferApprovalsTable extends AppTable {
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
 		$controller->loadComponent('AccessControl');
+		$controller->loadComponent('ControllerAction.ControllerAction');
 
 		$session = $controller->request->session();
 		$AccessControl = $controller->AccessControl;
@@ -593,7 +594,7 @@ class TransferApprovalsTable extends AppTable {
 						'controller' => 'Dashboard',
 						'action' => 'TransferApprovals',
 						'edit',
-						$row->id
+						$controller->ControllerAction->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {
