@@ -177,7 +177,7 @@ class DropoutRequestsTable extends AppTable {
 			$Students = TableRegistry::get('Institution.StudentUser');
 			$toolbarButtons['back']['url']['action'] = $Students->alias();
 			$toolbarButtons['back']['url'][0] = 'view';
-			$toolbarButtons['back']['url'][1] = $this->Session->read('Student.Students.id');
+			$toolbarButtons['back']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $this->Session->read('Student.Students.id')]);
 		}
 	}
 
