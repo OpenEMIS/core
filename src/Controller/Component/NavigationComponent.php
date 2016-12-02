@@ -301,7 +301,7 @@ class NavigationComponent extends Component
 				'title' => 'Dashboard',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.dashboard'],
-				'params' => ['plugin' => 'Institution', 0 => $id]
+				'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 			],
 
 			'Institution.General' => [
