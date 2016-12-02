@@ -36,27 +36,17 @@ class ViewBehavior extends Behavior {
 			}
 		}
 
-		$ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
-		$idKeys = [];
+		$ids = empty($model->paramsPass(0)) ? [] : $model->ControllerAction->paramsDecode($model->paramsPass(0));
+
 		if (empty($ids)) {
 			if ($model->Session->check($sessionKey)) {
-				$ids = $model->ControllerAction->paramsDecode($model->Session->read($sessionKey));
+				$ids = $model->Session->read($sessionKey);
 			} else if (!empty($model->ControllerAction->getQueryString())) {
 				$ids = $model->ControllerAction->getQueryString();
 			}
 		}
-		// May still be empty
-		if (!empty($ids)) {
-			if (is_array($primaryKey)) {
-				foreach ($primaryKey as $key) {
-					$idKeys[$model->aliasField($key)] = $ids[$key];
-				}
-			} else {
-				$idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
-			}
-			
-		}
 
+		$idKeys = $model->ControllerAction->getIdKeys($model, $ids);
 
 		$entity = false;
 

@@ -72,9 +72,11 @@ use Cake\Controller\Exception\SecurityException;
 use Cake\Log\Log;
 
 use ControllerAction\Model\Traits\ControllerActionV4Trait;
+use ControllerAction\Model\Traits\SecurityTrait;
 
 class ControllerActionComponent extends Component {
     use ControllerActionV4Trait; // extended functionality from v4
+    use SecurityTrait;
 
     private $plugin;
     private $controller;
@@ -913,7 +915,7 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $ids = $this->paramsDecode($id);
+        $ids = !empty($id) ? $this->paramsDecode($id) : $id;
 
         $sessionKey = $model->registryAlias() . '.primaryKey';
         $contain = [];
@@ -1302,7 +1304,7 @@ class ControllerActionComponent extends Component {
                     $label['tableLabel'] = 'Associated Records';
                 }
 
-                $extra['keyField'] = 'id';
+                $extra['keyField'] = $model->primaryKey();
                 $extra['valueField'] = 'name';
 
                 // Event: deleteOnInitialize
@@ -1317,14 +1319,19 @@ class ControllerActionComponent extends Component {
                         $notIdKeys[$key.' <>'] = $value;
                         unset($notIdKeys[$key]);
                     }
-                    $query->find('list', $extra->getArrayCopy())->where($notIdKeys);
+                    $query->find()->where($notIdKeys);
 
                     // Event: deleteUpdateCovertOptions
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
                     $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onGetConvertOptions', null, [$entity, $query]);
                     if ($event->isStopped()) { return $event->result; }
 
-                    $convertOptions = $query->toArray();
+                    foreach ($convertOptions as $value) {
+                        $keysToEncode = $model->getIdKeys($model, $value, false);
+                        $encodedKey = $model->paramsEncode($keysToEncode);
+                        $convertOptions[$encodedKey] = $value->$extra['valueField'];
+                    }
+
                     if (empty($convertOptions)) {
                         $convertOptions[''] = __('No Available Options');
                     }
@@ -1397,17 +1404,9 @@ class ControllerActionComponent extends Component {
                 $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             }
-        } else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
+        } else if ($request->is('delete')) {
             $this->autoRender = false;
-            $ids = [];
-
-            if (is_array($primaryKey)) {
-                foreach ($primaryKey as $key) {
-                    $ids[$key] = $request->data[$key];
-                }
-            } else {
-                $ids[$primaryKey] = $request->data[$primaryKey];
-            }
+            $ids = $this->getIdKeys($model, $request->data, false);
 
             $deleteOptions = new ArrayObject([]);
             $extra = new ArrayObject(['excludedModels' => []]);
@@ -1449,8 +1448,8 @@ class ControllerActionComponent extends Component {
                 }
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             } else {
-                $transferFrom = $this->request->data('id');
-                $transferTo = $this->request->data('transfer_to');
+                $transferFrom = $this->getIdKeys($model, $request->data, false);
+                $transferTo = $this->paramsDecode($this->request->data('transfer_to'));
 
                 // Checking of association for delete transfer, if the association count is 0,
                 // it means that no record is associated with it and it is safe to delete the record
@@ -1495,51 +1494,104 @@ class ControllerActionComponent extends Component {
                     }
 
                     if ($process($model, $transferFrom, $deleteOptions)) {
-                        $id = $request->data[$primaryKey];
+                        $ids = $this->getIdKeys($model, $request->data, false);
                         $transferOptions = new ArrayObject([]);
 
                         $transferProcess = function($associations, $transferFrom, $transferTo, $model) {
                             foreach ($associations as $assoc) {
                                 if ($assoc->type() == 'oneToMany') {
+                                    $bindingKey = $assoc->bindingKey();
+                                    $foreignKey = $assoc->foreignKey();
+
+                                    $fromConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $fromConditions[$key] = $transferFrom[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $fromConditions[$foreignKey] = $transferFrom[$bindingKey];
+                                    }
+
+                                    $toConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $toConditions[$key] = $transferTo[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $toConditions[$foreignKey] = $transferTo[$bindingKey];
+                                    }
+
                                     $assoc->updateAll(
-                                        [$assoc->foreignKey() => $transferTo],
-                                        [$assoc->foreignKey() => $transferFrom]
+                                        [$toConditions],
+                                        [$fromConditions]
                                     );
 
                                 } else if ($assoc->type() == 'manyToMany') {
                                     $modelAssociationTable = $assoc->junction();
 
+                                    $bindingKey = $association->bindingKey();
+                                    $foreignKey = $association->foreignKey();
+
+                                    $toConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $toConditions[$key] = $transferTo[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $toConditions[$foreignKey] = $transferTo[$bindingKey];
+                                    }
+
+                                    $fromConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $fromConditions[$key] = $transferFrom[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $fromConditions[$foreignKey] = $transferFrom[$bindingKey];
+                                    }
+
+                                    $targetForeignKey = $association->targetForeignKey();
+
                                     // List of the target foreign keys for subqueries
                                     $targetForeignKeys = $modelAssociationTable->find()
-                                        ->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
-                                        ->where([
-                                            $modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
-                                        ]);
+                                        ->select($targetForeignKey)
+                                        ->where($toConditions);
 
                                     $notUpdateQuery = $modelAssociationTable->query()
-                                        ->select(['target_foreign_key' => 'TargetTable.target'])
+                                        ->select($targetForeignKey)
                                         ->from(['TargetTable' => $targetForeignKeys]);
 
                                     if (!empty($notUpdateQuery)) {
                                         $condition = [];
 
+                                        $targetForeignKeyString = '';
+                                        if (is_array($targetForeignKey)) {
+                                            $targetForeignKeyString = '('. impode(', ', $targetForeignKey) . ')';
+                                        } else {
+                                            $targetForeignKeyString = $targetForeignKey;
+                                        }
+
+                                        $notCondition = $fromConditions;
+                                        $notCondition[$association->targetForeignKey().' IN '] = $notUpdateQuery;
+
                                         $condition = [
-                                            $assoc->foreignKey() => $transferFrom,
-                                            'NOT' => [
-                                                $assoc->foreignKey() => $transferFrom,
-                                                $assoc->targetForeignKey().' IN ' => $notUpdateQuery
-                                            ]
+                                            $fromConditions,
+                                            'NOT' => $notCondition
                                         ];
 
                                         // Update all transfer records
                                         $modelAssociationTable->updateAll(
-                                            [$assoc->foreignKey() => $transferTo],
+                                            $toConditions,
                                             $condition
                                         );
 
                                         // Delete orphan records
                                         $modelAssociationTable->deleteAll(
-                                            [$assoc->foreignKey() => $transferFrom]
+                                            $fromConditions
                                         );
                                     }
                                 }
@@ -1547,7 +1599,7 @@ class ControllerActionComponent extends Component {
                         };
 
                         // Event: onDeleteTransfer
-                        $params = [$transferOptions, $id];
+                        $params = [$transferOptions, $ids];
                         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onDeleteTransfer');
                         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onDeleteTransfer', null, $params);
                         if ($event->isStopped()) { return $event->result; }
@@ -1865,17 +1917,25 @@ class ControllerActionComponent extends Component {
         return $this->triggerFrom;
     }
 
-    public function getIdKeys(Table $model, $ids)
+    public function getIdKeys(Table $model, $ids, $addAlias = true)
     {
         $primaryKey = $model->primaryKey();
         $idKeys = [];
         if (!empty($ids)) {
             if (is_array($primaryKey)) {
                 foreach ($primaryKey as $key) {
-                    $idKeys[$model->aliasField($key)] = $ids[$key];
+                    if ($addAlias) {
+                        $idKeys[$model->aliasField($key)] = $ids[$key];
+                    } else {
+                        $idKeys[$key] = $ids[$key];
+                    }
                 }
             } else {
-                $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                if ($addAlias) {
+                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                } else {
+                    $idKeys[$primaryKey] = $ids[$primaryKey];
+                }
             }
         }
         return $idKeys;
@@ -1977,90 +2037,5 @@ class ControllerActionComponent extends Component {
             }
         }
         return $found;
-    }
-
-    public function urlsafeB64Encode($input)
-    {
-        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
-    }
-
-    public function urlsafeB64Decode($input)
-    {
-        $remainder = strlen($input) % 4;
-        if ($remainder) {
-            $padlen = 4 - $remainder;
-            $input .= str_repeat('=', $padlen);
-        }
-        return base64_decode(strtr($input, '-_', '+/'));
-    }
-
-    public function getQueryString($queryString = null, $name = 'queryString')
-    {
-        $query = $this->request->query($name);
-
-        if (is_null($query)) {
-            return null;
-        }
-
-        $query = $this->paramsDecode($query);
-
-        if (is_null($queryString)) {
-            return $query;
-        } else if (!isset($query[$queryString])) {
-            return null;
-        } else {
-            return $query[$queryString];
-        }
-    }
-
-    public function setQueryString($url, $params, $name = 'queryString')
-    {
-        if (is_array($url)) {
-            $url[$name] = $this->paramsEncode($params);
-        } else if (is_string($url)) {
-            if (strpos($url, '?')) {
-                $url .= '&'.$name.'='.$this->paramsEncode($params);
-            } else {
-                $url .= '?'.$name.'='.$this->paramsEncode($params);
-            }
-        }
-        return $url;
-    }
-
-    public function paramsDecode($params)
-    {
-        $paramArr = explode('.', $params);
-        if (count($paramArr) != 2) {
-            throw new SecurityException('Wrong number of segments');
-        }
-        list($payload, $signature) = $paramArr;
-        $payload = $this->urlsafeB64Decode($payload);
-        $signature = $this->urlsafeB64Decode($signature);
-
-        $payload = json_decode($payload, true);
-        $sessionId = Security::hash('session_id', 'sha256');
-        if (!isset($payload[$sessionId])) {
-            throw new SecurityException('No session id in payload');
-        } else {
-            $checkPayload = $payload;
-            $checkPayload[$sessionId] = session_id();
-            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256');
-            if ($signature !== $checkSignature) {
-                throw new SecurityException('Query String has been tampered');
-            }
-        }
-        unset($payload[$sessionId]);
-        return $payload;
-    }
-
-    public function paramsEncode($params = [])
-    {
-        $sessionId = Security::hash('session_id', 'sha256');
-        $params[$sessionId] = session_id();
-        $jsonParam = json_encode($params);
-        $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256');
-        $base64Signature = $this->urlsafeB64Encode($signature);
-        return "$base64Param.$base64Signature";
     }
 }

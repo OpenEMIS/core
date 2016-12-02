@@ -88,6 +88,7 @@ class AppTable extends Table {
 		$this->addBehavior('Modification');
 
         $this->addBehavior('TrackDelete');
+        $this->addBehavior('ControllerAction.Security');
 	}
 
 	public function validationDefault(Validator $validator) {
