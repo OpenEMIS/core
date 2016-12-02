@@ -37,9 +37,19 @@ class EditBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->primaryKey();
+		$ids = empty($model->paramsPass(0)) ? [] : $model->ControllerAction->paramsDecode($model->paramsPass(0));
+		$sessionKey = $model->registryAlias() . '.primaryKey';
 
-		$ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+		if (empty($ids)) {
+			if ($model->Session->check($sessionKey)) {
+				$ids = $model->Session->read($sessionKey);
+			} else if (!empty($model->ControllerAction->getQueryString())) {
+				// Query string logic not implemented yet, will require to check if the query string contains the primary key
+				$primaryKey = $model->primaryKey();
+				$ids = $model->ControllerAction->getQueryString($primaryKey);
+			}
+		}
+
 		$idKeys = $model->ControllerAction->getIdKeys($model, $ids);
 
 		$entity = false;

@@ -81,7 +81,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$StaffTable = TableRegistry::get('Institution.Staff');
 			$url = $this->url('view');
 			$url['action'] = 'Staff';
-			$url[1] = $entity['institution_staff_id'];
+			$url[1] = $this->ControllerAction->paramsEncode(['id' => $entity['institution_staff_id']]);
 			$event->stopPropagation();
 			$this->Session->write('Institution.StaffPositionProfiles.addSuccessful', true);
 			return $this->controller->redirect($url);
@@ -530,7 +530,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$staffTableViewUrl[1] = $institutionStaffId;
 				$this->Session->write('Institution.StaffPositionProfiles.viewBackUrl', $staffTableViewUrl);
 				$url = $this->url('view');
-				$url[1] = $addOperation->id;
+				$url[1] = $this->ControllerAction->paramsEncode(['id' => $addOperation->id]);
 			}
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
