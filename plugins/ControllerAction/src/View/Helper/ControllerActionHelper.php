@@ -250,7 +250,7 @@ class ControllerActionHelper extends Helper {
         } else {
             $checkPayload = $payload;
             $checkPayload[$sessionId] = session_id();
-            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256');
+            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
             if ($signature !== $checkSignature) {
                 throw new SecurityException('Query String has been tampered');
             }
@@ -265,7 +265,7 @@ class ControllerActionHelper extends Helper {
         $params[$sessionId] = session_id();
         $jsonParam = json_encode($params);
         $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256');
+        $signature = Security::hash($jsonParam, 'sha256', true);
         $base64Signature = $this->urlsafeB64Encode($signature);
         return "$base64Param.$base64Signature";
     }
