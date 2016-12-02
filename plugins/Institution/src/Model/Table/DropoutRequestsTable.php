@@ -29,7 +29,7 @@ class DropoutRequestsTable extends AppTable {
     	$action = $this->ControllerAction->url('add');
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
-		$action[1] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
+		$action[1] = $this->paramsEncode(['id' => $studentId]);
 		$action['id'] = $this->Session->read($this->registryAlias().'.id');
 
     	$event->stopPropagation();
@@ -65,7 +65,7 @@ class DropoutRequestsTable extends AppTable {
     	$action = $this->ControllerAction->url('edit');
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
-		$action[1] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
+		$action[1] = $this->paramsEncode(['id' => $studentId]);
 		$action['id'] = $this->Session->read($this->registryAlias().'.id');
     	$event->stopPropagation();
     	$this->Session->delete($this->registryAlias().'.id');
@@ -178,7 +178,7 @@ class DropoutRequestsTable extends AppTable {
 			$Students = TableRegistry::get('Institution.StudentUser');
 			$toolbarButtons['back']['url']['action'] = $Students->alias();
 			$toolbarButtons['back']['url'][0] = 'view';
-			$toolbarButtons['back']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
+			$toolbarButtons['back']['url'][1] = $this->paramsEncode(['id' => $studentId]);
 		}
 	}
 
