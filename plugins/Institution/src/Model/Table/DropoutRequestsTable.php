@@ -174,10 +174,11 @@ class DropoutRequestsTable extends AppTable {
 
    	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if ($action == 'add' || $action == 'edit') {
+			$studentId = $this->Session->read('Student.Students.id');
 			$Students = TableRegistry::get('Institution.StudentUser');
 			$toolbarButtons['back']['url']['action'] = $Students->alias();
 			$toolbarButtons['back']['url'][0] = 'view';
-			$toolbarButtons['back']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $this->Session->read('Student.Students.id')]);
+			$toolbarButtons['back']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
 		}
 	}
 
