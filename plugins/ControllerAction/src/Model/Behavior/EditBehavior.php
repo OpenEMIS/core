@@ -37,7 +37,7 @@ class EditBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$ids = empty($model->paramsPass(0)) ? [] : $model->ControllerAction->paramsDecode($model->paramsPass(0));
+		$ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
 		$sessionKey = $model->registryAlias() . '.primaryKey';
 
 		if (empty($ids)) {
@@ -50,7 +50,7 @@ class EditBehavior extends Behavior {
 			}
 		}
 
-		$idKeys = $model->ControllerAction->getIdKeys($model, $ids);
+		$idKeys = $model->getIdKeys($model, $ids);
 
 		$entity = false;
 

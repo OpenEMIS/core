@@ -61,7 +61,7 @@ class StudentBehavioursTable extends AppTable {
 				'controller' => 'Institutions',
 				'action' => 'StudentUser',
 				'view',
-				$this->ControllerAction->paramsEncode(['id' => $entity->student->id])
+				$this->paramsEncode(['id' => $entity->student->id])
 			]);
 		} else {
 			return $entity->student->openemis_no;

@@ -146,7 +146,7 @@ class OpenEmisBehavior extends Behavior {
                     $ids[$primaryKey] = $entity->$primaryKey;
                 }
 
-                $encodedIds = $model->ControllerAction->paramsEncode($ids);
+                $encodedIds = $model->paramsEncode($ids);
 
                 if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
