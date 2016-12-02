@@ -16,7 +16,7 @@ class StudentSurveysTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_student_surveys');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -277,7 +277,7 @@ class StudentSurveysTable extends AppTable {
 			$this->request->query['status'] = $results->status_id;
 
 			$url = $this->ControllerAction->url('view');
-			$url[1] = $results->id;
+			$url[1] = $this->ControllerAction->paramsEncode(['id' => $results->id]);
 
 			if ($currentAction == 'index') {
 				return $this->controller->redirect($url);
