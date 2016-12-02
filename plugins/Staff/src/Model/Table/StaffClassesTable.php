@@ -27,7 +27,7 @@ class StaffClassesTable extends ControllerActionTable {
 
         /*
             note that in DirectoriesController
-            if ($model instanceof \Staff\Model\Table\StaffClassesTable) { 
+            if ($model instanceof \Staff\Model\Table\StaffClassesTable) {
             $this->toggle('add', false);
          */
 		$this->toggle('edit', false);
@@ -42,7 +42,7 @@ class StaffClassesTable extends ControllerActionTable {
 		$this->field('male_students', []);
 		$this->field('female_students', []);
         $this->field('total_students', []);
-		
+
 		$this->setFieldOrder([
 			'academic_period_id',
 			'institution_id',
@@ -60,21 +60,21 @@ class StaffClassesTable extends ControllerActionTable {
 		]);
 	}
 
-    public function onGetMaleStudents(Event $event, Entity $entity) 
+    public function onGetMaleStudents(Event $event, Entity $entity)
     {
         if (!isset($this->InstitutionClassStudents)) $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $count = $this->InstitutionClassStudents->getMaleCountByClass($entity->id);
         return $count.' ';
     }
 
-    public function onGetFemaleStudents(Event $event, Entity $entity) 
+    public function onGetFemaleStudents(Event $event, Entity $entity)
     {
         if (!isset($this->InstitutionClassStudents)) $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $count = $this->InstitutionClassStudents->getFemaleCountByClass($entity->id);
         return $count.' ';
     }
 
-    public function onGetTotalStudents(Event $event, Entity $entity) 
+    public function onGetTotalStudents(Event $event, Entity $entity)
     {
         if (!isset($this->InstitutionClassStudents)) $this->InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $count = $this->InstitutionClassStudents->getMaleCountByClass($entity->id) + $this->InstitutionClassStudents->getFemaleCountByClass($entity->id);
@@ -86,17 +86,18 @@ class StaffClassesTable extends ControllerActionTable {
 		if (array_key_exists('view', $buttons)) {
 			$institutionId = $entity->institution->id;
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'Classes',
-				'view', $entity->id,
+				'view',
+                $this->ControllerAction->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
 		}
 		return $buttons;
 	}
-	
+
 	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
 		$options = ['type' => 'staff'];
 		$tabElements = $this->controller->getCareerTabElements($options);
@@ -144,7 +145,7 @@ class StaffClassesTable extends ControllerActionTable {
             'label' => __('Classes'),
             'type' => 'element',
             'element' => 'Institution.Classes/classes',
-            'data' => [ 
+            'data' => [
                 'classes' => $classOptions
             ],
         ]);
@@ -156,7 +157,7 @@ class StaffClassesTable extends ControllerActionTable {
         if (
             array_key_exists($this->alias(), $this->request->data)
              && array_key_exists('academic_period_id', $this->request->data[$this->alias()])
-             && !empty($this->request->data[$this->alias()]['academic_period_id'])) 
+             && !empty($this->request->data[$this->alias()]['academic_period_id']))
         {
             $classOptions = $this->find()
                 ->contain(['Users' => function ($q) {
@@ -174,7 +175,7 @@ class StaffClassesTable extends ControllerActionTable {
         return $classOptions;
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) 
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         $classOptions = $this->getClassOptions();
         // this 'save' does not redirect, need to re-extract the $classOptions after saving is done
@@ -183,7 +184,7 @@ class StaffClassesTable extends ControllerActionTable {
     }
 
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra) 
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
         $extra['redirect'] = false;
         $classOptions = (array_key_exists('classOptions', $extra))? $extra['classOptions']: [];
@@ -196,7 +197,7 @@ class StaffClassesTable extends ControllerActionTable {
             } else {
                 $selectedClasses = [];
             }
-            
+
             $staffId = $entity->staff_id;
             foreach ($classOptions as $key => $value) {
                 $staffWasIn = false;
@@ -233,7 +234,7 @@ class StaffClassesTable extends ControllerActionTable {
         return $process;
     }
 
-    public function onGetFormButtons(Event $event, ArrayObject $buttons) 
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         if ($this->action == 'add') {
             if (array_key_exists('classes', $this->fields) && empty($this->fields['classes']['data']['classes'])) {
