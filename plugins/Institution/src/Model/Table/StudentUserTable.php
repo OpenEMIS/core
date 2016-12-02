@@ -326,7 +326,7 @@ class StudentUserTable extends ControllerActionTable
 
 				if (!empty($transferRequest)) {
 					$transferButton['url'][0] = 'view';
-					$transferButton['url'][1] = $transferRequest->id;
+					$transferButton['url'][1] = $this->ControllerAction->paramsEncode(['id' => $transferRequest->id]);
 				}
 
 				$toolbarButtons['transfer'] = $transferButton;
