@@ -1,4 +1,4 @@
-<?php if (!empty($periodOptions)) : ?>
+<?php if (!empty($periodOptions) && !empty($gradeOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -35,19 +35,17 @@
                     ));
                 }
 
-                if (!empty($subjectOptions)) {
-                    echo $this->Form->input('education_subject_id', array(
-                        'type' => 'select',
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $subjectOptions,
-                        'default' => $selectedSubject,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'subject',
-                        'data-named-group' => 'period,grade'
-                    ));
-                }
-
+                echo $this->Form->input('education_subject_id', array(
+                    'type' => 'select',
+                    'class' => 'form-control',
+                    'label' => false,
+                    'options' => $subjectOptions,
+                    'default' => $selectedSubject,
+                    'url' => $baseUrl,
+                    'data-named-key' => 'subject',
+                    'data-named-group' => 'period,grade'
+                ));
+                
                 if (!empty($textbookOptions)) {
                     echo $this->Form->input('textbook_id', array(
                         'class' => 'form-control',
