@@ -184,7 +184,7 @@ class StudentsController extends AppController {
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
-					if (!$exists) {
+					if (!$model->exists($idKey)) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
@@ -203,7 +203,7 @@ class StudentsController extends AppController {
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
-					if (!$exists) {
+					if (!$model->exists($idKey)) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
