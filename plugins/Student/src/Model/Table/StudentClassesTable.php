@@ -66,7 +66,7 @@ class StudentClassesTable extends ControllerActionTable {
 				'controller' => 'Institutions',
 				'action' => 'Classes',
 				'view',
-				$this->ControllerAction->paramsEncode(['id' => $entity->institution_class->id]),
+				$this->paramsEncode(['id' => $entity->institution_class->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
