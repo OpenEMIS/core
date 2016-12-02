@@ -90,7 +90,7 @@ class InstitutionContactsTable extends ControllerActionTable {
             $id = $this->Session->read('Institution.Institutions.id');
             if ($passId != $id) {
                 $url = $this->url('view');
-                $url[1] = $this->ControllerAction->paramsEncode(['id' => $id]);
+                $url[1] = $this->paramsEncode(['id' => $id]);
                 $this->controller->redirect($url);
             }
         }

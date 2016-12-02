@@ -78,7 +78,7 @@ class IndividualPromotionTable extends ControllerActionTable
                 'controller' => 'Institutions',
                 'action' => 'StudentUser',
                 '0' => 'view',
-                '1' => $this->ControllerAction->paramsEncode(['id' => $params['user_id']]),
+                '1' => $this->paramsEncode(['id' => $params['user_id']]),
                 'id' => $params['student_id']
             ];
             // back/cancel button
@@ -492,7 +492,7 @@ class IndividualPromotionTable extends ControllerActionTable
             'controller' => 'Institutions',
             'action' => 'StudentUser',
             '0' => 'view',
-            '1' => $this->ControllerAction->paramsEncode(['id' => $currentEntity->student_id]),
+            '1' => $this->paramsEncode(['id' => $currentEntity->student_id]),
             'id' => $currentEntity->id
         ];
 

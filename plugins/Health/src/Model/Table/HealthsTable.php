@@ -34,7 +34,7 @@ class HealthsTable extends AppTable {
 		if ($data->count() == 1) {
 			$entity = $data->first();
 			$action = $this->ControllerAction->url('view');
-			$action[1] = $this->ControllerAction->paramsEncode(['id' => $entity->id]);
+			$action[1] = $this->paramsEncode(['id' => $entity->id]);
 			$event->stopPropagation();
 			return $this->controller->redirect($action);
 		}
