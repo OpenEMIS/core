@@ -375,7 +375,7 @@ class NavigationComponent extends Component
 				'Institutions.Textbooks' => [
 					'title' => 'Textbooks',
 					'parent' => 'Institution.Academic',
-					'selected' => ['Institutions.Textbooks'],
+					'selected' => ['Institutions.Textbooks', 'Institutions.ImportTextbooks'],
 					'params' => ['plugin' => 'Institution']
 				],
 

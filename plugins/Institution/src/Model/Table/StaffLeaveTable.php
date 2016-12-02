@@ -168,7 +168,6 @@ class StaffLeaveTable extends ControllerActionTable
 	public function findWorkbench(Query $query, array $options)
 	{
 		$controller = $options['_controller'];
-		$controller->loadComponent('ControllerAction.ControllerAction');
 		$session = $controller->request->session();
 
 		$userId = $session->read('Auth.User.id');
@@ -213,7 +212,7 @@ class StaffLeaveTable extends ControllerActionTable
 						'controller' => 'Institutions',
 						'action' => 'StaffLeave',
 						'view',
-						$controller->ControllerAction->paramsEncode(['id' => $row->id]),
+						$this->paramsEncode(['id' => $row->id]),
 						'user_id' => $row->staff_id,
 						'institution_id' => $row->institution_id
 					];
