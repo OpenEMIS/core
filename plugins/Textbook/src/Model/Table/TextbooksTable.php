@@ -76,7 +76,7 @@ class TextbooksTable extends ControllerActionTable {
         $levelOptions = $this->EducationLevels->getLevelOptions();
 
         if ($levelOptions) {
-            $levelOptions = array(-1 => __('Please Select Education Level')) + $levelOptions;
+            $levelOptions = array(-1 => __('-- Select Education Level --')) + $levelOptions;
         }
 
         if ($request->query('level')) {
@@ -104,10 +104,8 @@ class TextbooksTable extends ControllerActionTable {
 
             $programmeOptions = $this->EducationProgrammes->getEducationProgrammesList($selectedLevel);
 
-            if ($programmeOptions) {
-                $programmeOptions = array(-1 => __('Please Select Education Programme')) + $programmeOptions;
-            }
-
+            $programmeOptions = array(-1 => __('-- Please Select Education Programme --')) + $programmeOptions;
+            
             if ($request->query('programme')) {
                 $selectedProgramme = $request->query('programme');
             } else {
@@ -132,34 +130,23 @@ class TextbooksTable extends ControllerActionTable {
 
         //education subjects filter
         if ($selectedPeriod && $selectedProgramme) {
-            $subjectOptions = $this->EducationSubjects->getEducationSubjecsList($selectedProgramme);
-
-            if ($subjectOptions) {
-                $subjectOptions = array(-1 => __('All Education Subject')) + $subjectOptions;
+            $gradeSubjects = $this->EducationGrades->find('GradeSubjectsByProgramme', ['education_programme_id' => $selectedProgramme])->all();
+            $subjectOptions = [];
+            foreach ($gradeSubjects as $grade) {
+                foreach ($grade->education_subjects as $subject) {
+                    $key = $grade->id . '-' . $subject->id;
+                    $subjectOptions[$key] = $grade->name . ' - ' . $subject->name;
+                }
             }
 
+            $subjectOptions = array(-1 => __('-- All Education Subject --')) + $subjectOptions;
+            
             if ($request->query('subject')) {
                 $selectedSubject = $request->query('subject');
             } else {
                 $selectedSubject = -1;
             }
 
-            $this->advancedSelectOptions($subjectOptions, $selectedSubject, [
-                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
-                'callable' => function($id) use ($selectedPeriod) {
-                    $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
-
-                    if ($id > 0) {
-                        $conditions[] = $this->aliasField('education_subject_id = ') . $id;
-                    }
-
-                    return $this->find()
-                                ->where([
-                                    $conditions
-                                ])
-                                ->count();
-                }
-            ]);
             $extra['selectedSubject'] = $selectedSubject;
             $data['subjectOptions'] = $subjectOptions;
             $data['selectedSubject'] = $selectedSubject;
@@ -210,8 +197,10 @@ class TextbooksTable extends ControllerActionTable {
         }
 
         if (array_key_exists('selectedSubject', $extra)) {
-            if ($extra['selectedSubject'] > 0) {
-                $conditions[] = $this->aliasField('education_subject_id = ') . $extra['selectedSubject'];
+            if ($extra['selectedSubject'] && $extra['selectedSubject'] > 0) {
+                $gradeSubject = explode('-', $extra['selectedSubject']);
+                $conditions[] = $this->aliasField('education_grade_id = ') . $gradeSubject[0];
+                $conditions[] = $this->aliasField('education_subject_id = ') . $gradeSubject[1];
             }
         }
 
@@ -505,20 +494,18 @@ class TextbooksTable extends ControllerActionTable {
 
     public function getTextbookOptions($academicPeriodId, $educationGradeId, $educationSubjectId)
     {
-        return $this->find('visible')
-                    ->select([
-                        'textbook_id' => $this->aliasField('id'),
-                        'textbook_code_title' => $this->find()->func()->concat([
-                            $this->aliasField('code') => 'literal',
-                            " - ",
-                            $this->aliasField('title') => 'literal'
-                        ])
-                    ])
-                    ->find('list', ['keyField' => 'textbook_id', 'valueField' => 'textbook_code_title'])
+        $todayDate = Time::now()->format('Y-m-d');
+
+        return  $this->find('visible')
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_title'])
                     ->where([
                         $this->aliasField('academic_period_id') => $academicPeriodId,
                         $this->aliasField('education_grade_id') => $educationGradeId,
-                        $this->aliasField('education_subject_id') => $educationSubjectId
+                        $this->aliasField('education_subject_id') => $educationSubjectId,
+                        'OR' => [
+                            [$this->aliasField('expiry_date') .' IS NULL'],
+                            [$this->aliasField('expiry_date') .' > ' . "'$todayDate'"]
+                        ]
                     ])
                     ->order([$this->aliasField('code') => 'ASC'])
                     ->toArray();
