@@ -36,11 +36,11 @@ class ViewBehavior extends Behavior {
 			}
 		}
 
-		$ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+		$ids = empty($model->paramsPass(0)) ? [] : $model->ControllerAction->paramsDecode($model->paramsPass(0));
 
 		if (empty($ids)) {
 			if ($model->Session->check($sessionKey)) {
-				$ids = $model->ControllerAction->paramsDecode($model->Session->read($sessionKey));
+				$ids = $model->Session->read($sessionKey);
 			} else if (!empty($model->ControllerAction->getQueryString())) {
 				$ids = $model->ControllerAction->getQueryString();
 			}
