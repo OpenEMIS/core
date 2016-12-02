@@ -40,6 +40,17 @@ class ImportTextbooksTable extends AppTable
         }
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'TextbookStatuses') {
+            return __('Status');
+        } else if ($field == 'TextbookConditions') {
+            return __('Condition');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function onImportPopulateTextbooksData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);

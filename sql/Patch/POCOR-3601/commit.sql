@@ -2,7 +2,7 @@
 INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-3601', NOW());
 
 INSERT INTO `import_mapping` (`model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) VALUES
-('Institution.InstitutionTextbooks', 'textbook_id', 'Id', 1, 2, 'Textbook', 'Textbooks', 'id'),
+('Institution.InstitutionTextbooks', 'textbook_id', NULL, 1, 2, 'Textbook', 'Textbooks', 'id'),
 ('Institution.InstitutionTextbooks', 'student_id', 'OpenEMIS ID', 2, 2, 'Security', 'Users', 'openemis_no'),
 ('Institution.InstitutionTextbooks', 'code', NULL, 3, 0, NULL, NULL, NULL),
 ('Institution.InstitutionTextbooks', 'textbook_status_id', 'Code', 4, 2, 'Textbook', 'TextbookStatuses', 'code'),
