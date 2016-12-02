@@ -592,6 +592,7 @@ class StudentAdmissionTable extends AppTable {
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
 		$controller->loadComponent('AccessControl');
+        $controller->loadComponent('ControllerAction.ControllerAction');
 
 		$session = $controller->request->session();
 		$AccessControl = $controller->AccessControl;
