@@ -1664,19 +1664,31 @@ class ControllerActionComponent extends Component {
             $primaryKey = $model->primaryKey();
             $orderField = $this->orderField;
 
-            $ids = json_decode($request->data("ids"));
+            $encodedIds = json_decode($request->data("ids"));
+
+            $ids = [];
+            $idKeys = [];
+
+            foreach ($encodedIds as $id) {
+                $ids[] = $this->paramsDecode($id);
+                $idKeys[] = $model->getIdKeys($model, $this->paramsDecode($id));
+            }
+
             if (!empty($ids)) {
-                $originalOrder = $model->find('list')
-                    ->where([$model->aliasField($primaryKey).' IN ' => $ids])
-                    ->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+                $originalOrder = $model
+                    ->find()
+                    ->select($primaryKey)
+                    ->select($orderField)
+                    ->where(['OR' => $idKeys])
                     ->order([$model->aliasField($orderField)])
+                    ->hydrate(false)
                     ->toArray();
 
                 $originalOrder = array_reverse($originalOrder);
 
-                foreach ($ids as $order => $id) {
+                foreach ($ids as $id) {
                     $orderValue = array_pop($originalOrder);
-                    $model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+                    $model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
                 }
             }
         }
