@@ -280,7 +280,7 @@ class SecurityGroupUsersTable extends AppTable {
                         Log::write('debug', $regionBasedAssigneeOptions);
                         // End
 
-                        $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;                  
+                        $assigneeOptions = $schoolBasedAssigneeOptions + $regionBasedAssigneeOptions;
                     }
                 } else {
                     $where = [$SecurityGroupUsers->aliasField('security_role_id IN ') => $stepRoles];
@@ -291,7 +291,7 @@ class SecurityGroupUsersTable extends AppTable {
                     Log::write('debug', $assigneeQuery->sql());
 
                     $assigneeOptions = $assigneeQuery->toArray();
-                }                
+                }
             }
         }
 
