@@ -301,7 +301,7 @@ class NavigationComponent extends Component
 				'title' => 'Dashboard',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.dashboard'],
-				'params' => ['plugin' => 'Institution', 0 => $id]
+				'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 			],
 
 			'Institution.General' => [
@@ -314,14 +314,14 @@ class NavigationComponent extends Component
 					'title' => 'Overview',
 					'parent' => 'Institution.General',
 					'selected' => ['Institutions.view', 'Institutions.edit'],
-					'params' => ['plugin' => 'Institution']
+					'params' => ['plugin' => 'Institution', $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 				],
 
 				'Institutions.Contacts.view' => [
 					'title' => 'Contacts',
 					'parent' => 'Institution.General',
 					'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
-					'params' => ['plugin' => 'Institution', 0 => $id]
+					'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 				],
 
 				'Institutions.Attachments.index' => [
