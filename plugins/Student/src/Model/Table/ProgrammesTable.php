@@ -75,7 +75,8 @@ class ProgrammesTable extends ControllerActionTable
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'Students',
-				'view', $entity->id,
+				'view',
+				$this->ControllerAction->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;
@@ -89,7 +90,8 @@ class ProgrammesTable extends ControllerActionTable
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'Students',
-				'edit', $entity->id,
+				'edit',
+				$this->ControllerAction->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['edit']['url'] = $url;
