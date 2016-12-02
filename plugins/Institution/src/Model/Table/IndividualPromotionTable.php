@@ -492,7 +492,7 @@ class IndividualPromotionTable extends ControllerActionTable
             'controller' => 'Institutions',
             'action' => 'StudentUser',
             '0' => 'view',
-            '1' => $currentEntity->student_id,
+            '1' => $this->ControllerAction->paramsEncode(['id' => $currentEntity->student_id]),
             'id' => $currentEntity->id
         ];
 
