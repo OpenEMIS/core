@@ -156,6 +156,7 @@ class ControllerActionComponent extends Component {
                 foreach ($this->models as $name => $attr) {
                     if (strtolower($action) === strtolower($name)) { // model class found
                         $this->debug(__METHOD__, ': ' . $name . ' found');
+                        $this->debug(__METHOD__, ': ControllerAction v3 has been deprecated, please convert '. $name . ' to v4');
                         $currentAction = 'index';
                         if (!empty($this->paramsPass)) {
                             $currentAction = array_shift($this->paramsPass);
