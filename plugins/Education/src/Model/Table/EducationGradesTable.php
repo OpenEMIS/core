@@ -388,4 +388,16 @@ class EducationGradesTable extends ControllerActionTable
 
         return $gradeOptions;
     } 
+
+    public function findGradeSubjectsByProgramme(Query $query, $options)
+    {
+    	$educationProgrammeId = $options['education_programme_id'];
+    	$query
+    		->find('visible')
+    		->contain(['EducationSubjects'])
+    		->where([$this->aliasField('education_programme_id') => $educationProgrammeId])
+    		->order([$this->aliasField('order')]);
+
+    	return $query;
+    }
 }
