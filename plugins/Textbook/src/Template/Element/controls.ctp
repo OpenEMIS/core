@@ -35,31 +35,28 @@
                     ));
                 }
 
-                if (!empty($programmeOptions)) {
-                    echo $this->Form->input('education_programme_id', array(
-                        'type' => 'select',
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $programmeOptions,
-                        'default' => $selectedProgramme,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'programme',
-                        'data-named-group' => 'period, level'
-                    ));
-                }
+                
+                echo $this->Form->input('education_programme_id', array(
+                    'type' => 'select',
+                    'class' => 'form-control',
+                    'label' => false,
+                    'options' => $programmeOptions,
+                    'default' => $selectedProgramme,
+                    'url' => $baseUrl,
+                    'data-named-key' => 'programme',
+                    'data-named-group' => 'period, level'
+                ));
 
-                if (!empty($subjectOptions)) {
-                    echo $this->Form->input('education_subject_id', array(
-                        'type' => 'select',
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $subjectOptions,
-                        'default' => $selectedSubject,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'subject',
-                        'data-named-group' => 'period, level, programme, grade'
-                    ));
-                }
+                echo $this->Form->input('education_subject_id', array(
+                    'type' => 'select',
+                    'class' => 'form-control',
+                    'label' => false,
+                    'options' => $subjectOptions,
+                    'default' => $selectedSubject,
+                    'url' => $baseUrl,
+                    'data-named-key' => 'subject',
+                    'data-named-group' => 'period, level, programme, grade'
+                ));
             ?>
         </div>
     </div>
