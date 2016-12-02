@@ -173,7 +173,7 @@ class StudentSurveysTable extends AppTable {
 
 		if (!is_null($entity)) {
 			$tabElements['StudentSurveys']['url'][0] = 'view';
-			$tabElements['StudentSurveys']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $entity->id]);
+			$tabElements['StudentSurveys']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
 		}
 
 		$this->controller->set('tabElements', $tabElements);
@@ -277,7 +277,7 @@ class StudentSurveysTable extends AppTable {
 			$this->request->query['status'] = $results->status_id;
 
 			$url = $this->ControllerAction->url('view');
-			$url[1] = $this->ControllerAction->paramsEncode(['id' => $results->id]);
+			$url[1] = $this->paramsEncode(['id' => $results->id]);
 
 			if ($currentAction == 'index') {
 				return $this->controller->redirect($url);
