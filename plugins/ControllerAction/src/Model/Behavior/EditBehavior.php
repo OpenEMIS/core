@@ -50,7 +50,7 @@ class EditBehavior extends Behavior {
 			}
 		}
 
-		$idKeys = $model->ControllerAction->getIdKeys($model, $ids);
+		$idKeys = $model->getIdKeys($model, $ids);
 
 		$entity = false;
 
