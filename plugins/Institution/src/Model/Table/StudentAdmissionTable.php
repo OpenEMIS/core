@@ -592,7 +592,6 @@ class StudentAdmissionTable extends AppTable {
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
 		$controller->loadComponent('AccessControl');
-        $controller->loadComponent('ControllerAction.ControllerAction');
 
 		$session = $controller->request->session();
 		$AccessControl = $controller->AccessControl;
@@ -647,13 +646,13 @@ class StudentAdmissionTable extends AppTable {
 			->where($where)
 			->order([$this->aliasField('created') => 'DESC'])
 			->formatResults(function (ResultSetInterface $results) {
-				return $results->map(function ($row) {
+                return $results->map(function ($row) {
 					$url = [
 						'plugin' => false,
 						'controller' => 'Dashboard',
 						'action' => 'StudentAdmission',
 						'edit',
-						$controller->ControllerAction->paramsEncode(['id' => $row->id])
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {
