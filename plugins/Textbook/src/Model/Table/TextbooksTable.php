@@ -221,6 +221,7 @@ class TextbooksTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
+            'AcademicPeriods',
             'EducationSubjects.EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems'
         ]);
     }
@@ -258,11 +259,17 @@ class TextbooksTable extends ControllerActionTable {
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
             $attr['options'] = $periodOptions;
             $attr['default'] = $selectedPeriod;
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->academic_period_id;
+            $attr['attr']['value'] = $entity->academic_period->name;
         }
         return $attr;
     }
