@@ -86,7 +86,7 @@ class InstitutionContactsTable extends ControllerActionTable {
 
         // prevent users from manually accessing other insitution's pages
         if (isset($this->request->pass[1])) {
-            $passId = $this->ControllerAction->paramsDecode($this->request->pass[1])['id'];
+            $passId = $this->paramsDecode($this->request->pass[1])['id'];
             $id = $this->Session->read('Institution.Institutions.id');
             if ($passId != $id) {
                 $url = $this->url('view');

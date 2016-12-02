@@ -87,7 +87,7 @@ class PermissionsTable extends AppTable
 			$event->stopPropagation();
 			return $this->controller->redirect(['action' => 'Roles']);
 		}
-		$roleId = $this->ControllerAction->paramsDecode($this->request->pass[1])['id'];
+		$roleId = $this->paramsDecode($this->request->pass[1])['id'];
 		if (! $this->checkRolesHierarchy($roleId)) {
 			$action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
 			$event->stopPropagation();
@@ -161,7 +161,7 @@ class PermissionsTable extends AppTable
 
 	public function edit($roleId=0)
 	{
-		$roleId = $this->ControllerAction->paramsDecode($roleId)['id'];
+		$roleId = $this->paramsDecode($roleId)['id'];
 		$request = $this->request;
 		$params = $this->ControllerAction->paramsQuery();
 

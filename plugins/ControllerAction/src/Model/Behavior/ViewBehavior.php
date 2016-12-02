@@ -36,7 +36,7 @@ class ViewBehavior extends Behavior {
 			}
 		}
 
-		$ids = empty($model->paramsPass(0)) ? [] : $model->ControllerAction->paramsDecode($model->paramsPass(0));
+		$ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
 
 		if (empty($ids)) {
 			if ($model->Session->check($sessionKey)) {

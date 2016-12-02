@@ -66,7 +66,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $toolbarButtonsArray['back']['url'] = $model->url('view');
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // End
-        $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+        $ids = $model->paramsDecode($model->paramsPass(0));
         $idKey = $model->ControllerAction->getIdKeys($model, $ids);
         $entity = false;
 
