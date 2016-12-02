@@ -46,17 +46,16 @@
                     'data-named-group' => 'period,grade'
                 ));
                 
-                if (!empty($textbookOptions)) {
-                    echo $this->Form->input('textbook_id', array(
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $textbookOptions,
-                        'default' => $selectedTextbook,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'textbook',
-                        'data-named-group' => 'period,grade,subject'
-                    ));
-                }
+                echo $this->Form->input('textbook_id', array(
+                    'class' => 'form-control',
+                    'label' => false,
+                    'options' => $textbookOptions,
+                    'default' => $selectedTextbook,
+                    'url' => $baseUrl,
+                    'data-named-key' => 'textbook',
+                    'data-named-group' => 'period,grade,subject'
+                ));
+                
             ?>
         </div>
     </div>

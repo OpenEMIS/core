@@ -27,17 +27,12 @@ class InstitutionTextbooksTable extends AppTable  {
             'pages' => false
         ]);
         $this->addBehavior('Report.ReportList');
-        // $this->addBehavior('Report.CustomFieldList', [
-        //     'model' => 'Textbook.Textbooks',
-        //     'formFilterClass' => null,
-        //     'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-        //     'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
-        // ]);
     }
 
     public function beforeAction(Event $event) 
     {
         $this->fields = [];
+        $this->ControllerAction->field('academic_period_id', ['select' => false]);
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
     }
@@ -47,27 +42,43 @@ class InstitutionTextbooksTable extends AppTable  {
         return $attr;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) 
     {
-        // $query->where([$this->aliasField('is_staff') => 1]);
+        $attr['options'] = $this->AcademicPeriods->getYearList();
+        $attr['default'] = $this->AcademicPeriods->getCurrent();
+        return $attr;
     }
 
-    // public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
-    // {
-    //     $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-    //     $identity = $IdentityType->getDefaultEntity();
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    {
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+
+        if ($academicPeriodId!=0) {
+            $query->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ]);
+        }
+
+        $query->contain('Textbooks');
+        pr($query);
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    {
+        pr($fields);
         
-    //     foreach ($fields as $key => $field) { 
-    //         //get the value from the table, but change the label to become default identity type.
-    //         if ($field['field'] == 'identity_number') { 
-    //             $fields[$key] = [
-    //                 'key' => 'Staff.identity_number',
-    //                 'field' => 'identity_number',
-    //                 'type' => 'string',
-    //                 'label' => __($identity->name)
-    //             ];
-    //             break;
-    //         }
-    //     }
-    // }
+        foreach ($fields as $key => $field) { 
+            //get the value from the table, but change the label to become default identity type.
+            if ($field['field'] == 'textbook_id') { 
+                $fields[$key] = [
+                    'key' => 'Textbooks.title',
+                    'field' => 'textbook_id',
+                    'type' => 'string',
+                    'label' => 'Textbook'
+                ];
+                break;
+            }
+        }
+    }
 }
