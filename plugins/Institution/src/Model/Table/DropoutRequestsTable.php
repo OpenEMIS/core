@@ -25,12 +25,13 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-    	$id = $this->Session->read('Student.Students.id');
+    	$studentId = $this->Session->read('Student.Students.id');
     	$action = $this->ControllerAction->url('add');
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
-		$action[1] = $id;
+		$action[1] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
 		$action['id'] = $this->Session->read($this->registryAlias().'.id');
+
     	$event->stopPropagation();
     	$this->Session->delete($this->registryAlias().'.id');
     	return $this->controller->redirect($action);
@@ -60,11 +61,11 @@ class DropoutRequestsTable extends AppTable {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		$id = $this->Session->read('Student.Students.id');
+		$studentId = $this->Session->read('Student.Students.id');
     	$action = $this->ControllerAction->url('edit');
 		$action['action'] = 'StudentUser';
 		$action[0] = 'view';
-		$action[1] = $id;
+		$action[1] = $this->ControllerAction->paramsEncode(['id' => $studentId]);
 		$action['id'] = $this->Session->read($this->registryAlias().'.id');
     	$event->stopPropagation();
     	$this->Session->delete($this->registryAlias().'.id');
