@@ -139,12 +139,11 @@ class DirectoriesController extends AppController {
 		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-				$id = $this->request->pass[0];
+				$id = $this->ControllerAction->paramsDecode($this->request->pass[0]);
 			} else if ($session->check('Directory.Directories.id')) {
 				$id = $session->read('Directory.Directories.id');
 			}
 			if (!empty($id)) {
-				$id = $this->ControllerAction->paramsDecode($id);
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
 				$header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
