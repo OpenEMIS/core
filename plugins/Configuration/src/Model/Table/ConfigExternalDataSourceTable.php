@@ -43,7 +43,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
 
         if ($this->action == 'index') {
             $url = $this->url('view');
-            $url[1] = $this->ControllerAction->paramsEncode(['id' => $this->id]);
+            $url[1] = $this->paramsEncode(['id' => $this->id]);
             $this->controller->redirect($url);
         } else if ($this->action == 'view') {
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
