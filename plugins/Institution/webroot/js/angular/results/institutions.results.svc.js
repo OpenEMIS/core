@@ -482,9 +482,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             cols = angular.merge(cols, {
                 cellStyle: function(params) {
                     var value = params.data[params.colDef.field];
-                    var valueInSeconds = value * 60;
+                    var duration = String(value).split(".");
+                    var minInSeconds = parseInt(duration[0]) * 60;
+                    var seconds = parseInt(duration[1]);
+                    var totalSeconds = minInSeconds + seconds;
 
-                    if (!isNaN(parseFloat(value)) && parseInt(valueInSeconds) > passMark) {
+                    if (!isNaN(parseFloat(value)) && totalSeconds > passMark) {
                         return {color: '#CC5C5C', direction: 'ltr'};
                     } else {
                         return {color: '#333', direction: 'ltr'};
@@ -494,9 +497,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     var value = params.data[params.colDef.field];
 
                     if (!isNaN(parseFloat(value))) {
-                        var duration = $filter('number')(value, 2);
-                        var formatDuration = duration.replace(".", " : ");
-                        return formatDuration;
+                        var duration = String(value).replace(".", " : ");
+                        return duration;
                     } else {
                         return '';
                     }
@@ -549,46 +551,26 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                             // Minute Input
                             if (minuteInput.value.length > 0) {
-                                if (!isNaN(minuteInt) && minuteInt >= 0) {
-                                    if (minuteInt.toString().length > 3) {
-                                        // truncate input to 3 digits
-                                        minuteInt = $filter('limitTo')(minuteInt, 3);
-                                    }
+                                if (isNaN(minuteInt) || (minuteInt < 0 || minuteInt > 999)) {
+                                    minuteInput.value = '';
+                                    secondInput.value = '';
                                 } else {
-                                    minuteInt = 0;
+                                    minuteInput.value = minuteInt;
                                 }
-                                minuteInput.value = minuteInt;
                             }
                             // End
 
                             // Second Input
                             if (secondInput.value.length > 0) {
-                                var secondValue = 0;
-
-                                if (!isNaN(secondInt) && secondInt >= 0) {
-
-                                    if (secondInt > 59) {
-                                        // truncate input to 4 digits
-                                        if (secondInt.toString().length > 4) {
-                                            secondInt = $filter('limitTo')(secondInt, 4);
-                                        }
-
-                                        // logic to derive the minutes and seconds if seconds is more than 59
-                                        var minuteQuotient = Math.floor(secondInt/60);
-                                        secondValue = secondInt % 60;
-                                        minuteInput.value = !isNaN(minuteInt)? (minuteInt + minuteQuotient): minuteQuotient;
-
-                                    } else {
-                                        secondValue = secondInt;
-                                    }
-
-                                    // for padding single digits
-                                    if (secondValue.toString().length == 1) {
-                                        secondValue = '0' + secondValue;
-                                    }
+                                if (isNaN(secondInt) || (secondInt < 0 || secondInt > 59)) {
+                                    minuteInput.value = '';
+                                    secondInput.value = '';
+                                } else if (secondInput.value.length == 1) {
+                                    // for padding
+                                    secondInput.value = '0' + secondInt;
+                                } else {
+                                    secondInput.value = secondInt;
                                 }
-
-                                secondInput.value = secondValue;
                             }
                             // End
 
@@ -600,10 +582,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 _results[studentId][periodId] = {duration: ''};
                             }
 
-                            var duration = minuteInput.value + '.' + secondInput.value;
+                            var durationAsFloat = '';
+                            if (minuteInput.value.length > 0 || secondInput.value.length > 0) {
+                                var duration = minuteInput.value + '.' + secondInput.value;
+                                durationAsFloat = $filter('number')(duration, 2);
+                            }
 
-                            params.data[params.colDef.field] = duration;
-                            _results[studentId][periodId]['duration'] = duration;
+                            params.data[params.colDef.field] = durationAsFloat;
+                            _results[studentId][periodId]['duration'] = durationAsFloat;
                         });
 
                         return eCell;

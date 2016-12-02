@@ -36,29 +36,4 @@ class EducationSubjectsTable extends ControllerActionTable {
             return $subjectOptions;
         }
     }
-
-    public function getEducationSubjecsList($educationProgrammeId) //get grade - subject options
-    {
-        return  $this
-                ->find('visible')
-                ->innerJoinWith('EducationGrades')
-                ->innerJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
-                    'EducationGradesSubjects.education_subject_id' => $this->aliasField('id'),
-                    'EducationGradesSubjects.education_grade_id' => 'EducationGrades.id',
-                ])
-                ->where([
-                    'EducationGrades.education_programme_id' => $educationProgrammeId
-                ])
-                ->select([
-                    'education_subject_id' => $this->aliasField('id'),
-                    'education_grade_subject' => $this->find()->func()->concat([
-                        'EducationGrades.name' => 'literal',
-                        " - ",
-                        $this->aliasField('name') => 'literal'
-                    ])
-                ])
-                ->find('list', ['keyField' => 'education_subject_id', 'valueField' => 'education_grade_subject'])
-                ->order(['EducationGrades.order' => 'ASC', $this->aliasField('order') => 'ASC'])
-                ->toArray();
-    }
 }
