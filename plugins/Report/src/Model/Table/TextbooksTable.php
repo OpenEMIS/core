@@ -23,17 +23,12 @@ class TextbooksTable extends AppTable  {
             'pages' => false
         ]);
         $this->addBehavior('Report.ReportList');
-        // $this->addBehavior('Report.CustomFieldList', [
-        //     'model' => 'Textbook.Textbooks',
-        //     'formFilterClass' => null,
-        //     'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
-        //     'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
-        // ]);
     }
 
     public function beforeAction(Event $event) 
     {
         $this->fields = [];
+        $this->ControllerAction->field('academic_period_id', ['select' => false]);
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('format');
     }
@@ -43,9 +38,23 @@ class TextbooksTable extends AppTable  {
         return $attr;
     }
 
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) 
+    {
+        $attr['options'] = $this->AcademicPeriods->getYearList();
+        $attr['default'] = $this->AcademicPeriods->getCurrent();
+        return $attr;
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
-        // $query->where([$this->aliasField('is_staff') => 1]);
+        $requestData = json_decode($settings['process']['params']);
+        $academicPeriodId = $requestData->academic_period_id;
+
+        if ($academicPeriodId!=0) {
+            $query->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ]);
+        }
     }
 
     // public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
