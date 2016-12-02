@@ -245,6 +245,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
             }
         }
 
+        $conditions[] = $this->aliasField('institution_id = ') . $this->institutionId;
+        
         $query->where([$conditions]);
     }
 
