@@ -3,6 +3,7 @@ namespace ControllerAction\Model\Traits;
 
 use Cake\Utility\Security;
 use Cake\Controller\Exception\SecurityException;
+use Cake\ORM\Table;
 
 trait SecurityTrait {
     public function urlsafeB64Encode($input)
@@ -88,5 +89,29 @@ trait SecurityTrait {
         $signature = Security::hash($jsonParam, 'sha256', true);
         $base64Signature = $this->urlsafeB64Encode($signature);
         return "$base64Param.$base64Signature";
+    }
+
+    public function getIdKeys(Table $model, $ids, $addAlias = true)
+    {
+        $primaryKey = $model->primaryKey();
+        $idKeys = [];
+        if (!empty($ids)) {
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    if ($addAlias) {
+                        $idKeys[$model->aliasField($key)] = $ids[$key];
+                    } else {
+                        $idKeys[$key] = $ids[$key];
+                    }
+                }
+            } else {
+                if ($addAlias) {
+                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                } else {
+                    $idKeys[$primaryKey] = $ids[$primaryKey];
+                }
+            }
+        }
+        return $idKeys;
     }
 }
