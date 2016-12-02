@@ -252,7 +252,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         if ($this->action == 'view' || $this->action == 'edit') {
             $examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
-            $this->request->params['pass'][1] = $examCentreId;
+            $this->request->params['pass'][1] = $this->ControllerAction->paramsEncode(['id' => $examCentreId]);
             $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'ExamCentres', 'index'];
             $this->examCentreName = $this->get($examCentreId)->name;
         }
