@@ -12,10 +12,9 @@ CREATE TABLE IF NOT EXISTS `textbooks` (
   `year_published` int(4) NOT NULL,
   `ISBN` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `expiry_date` date NULL,
-  `visible` int(11) NOT NULL,
-  `academic_period_id` int(11) NOT NULL COMMENT 'link to links to academic_period.id',
-  `education_grade_id` int(11) NOT NULL COMMENT 'link to links to education_grades.id',
-  `education_subject_id` int(11) NOT NULL COMMENT 'link to links to education_subjects.id',
+  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_period.id',
+  `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
+  `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -87,10 +86,10 @@ CREATE TABLE IF NOT EXISTS `institution_textbooks` (
   `id` int(11) NOT NULL,
   `code` varchar(100) COLLATE utf8mb4_unicode_ci NULL,
   `comment` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `textbook_status_id` int(11) NULL COMMENT 'link to links to textbook_statuses.id',
-  `textbook_condition_id` int(11) NULL COMMENT 'link to links to textbook_conditions.id',
-  `institution_id` int(11) NOT NULL COMMENT 'link to links to institutions.id',
-  `academic_period_id` int(11) NOT NULL COMMENT 'link to links to academic_period.id',
+  `textbook_status_id` int(11) NULL COMMENT 'links to textbook_statuses.id',
+  `textbook_condition_id` int(11) NULL COMMENT 'links to textbook_conditions.id',
+  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_period.id',
   `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
   `student_id` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
   `textbook_id` int(11) NOT NULL COMMENT 'links to textbooks.id',
@@ -121,3 +120,16 @@ VALUES
 ('43653063-b6e5-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'textbook_condition_id', 'Institutions -> Textbooks', 'Condition', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00'), 
 ('43653db8-b6e5-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'textbook_status_id', 'Institutions -> Textbooks', 'Status', NULL, NULL, '1', NULL, NULL, '1', '2016-11-30 00:00:00'),
 ('4497d103-b794-11e6-a3e3-525400b263eb', 'InstitutionTextbooks', 'code', 'Institutions -> Textbooks', 'Textbook ID', NULL, NULL, '1', NULL, NULL, '1', '2016-12-01 00:00:00');
+
+-- security_functions
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+VALUES 
+(5055, 'Textbooks', 'Textbooks', 'Administration', 'Textbooks', 5000, 'Textbooks.index|Textbooks.view', 'Textbooks.edit', 'Textbooks.add', 'Textbooks.remove', NULL, 5055, 1, NULL, NULL, NULL, 1, '2016-11-18 09:51:29'),
+(1051, 'Textbooks', 'Institutions', 'Institutions', 'Academic', 1000, 'Textbooks.index|Textbooks.view', 'Textbooks.edit', 'Textbooks.add', 'Textbooks.remove', NULL, 1051, 1, NULL, NULL, NULL, 1, '2016-11-18 09:51:29'),
+(6010, 'Textbooks', 'Reports', 'Reports', 'Reports', -1, 'Textbooks.index', NULL, 'Textbooks.add', NULL, 'Textbooks.download', 6003, 1, NULL, NULL, NULL, 1, '2016-12-02 00:00:00');
+
+-- re-arrange order
+UPDATE `security_functions`
+SET `order` = `order` + 1
+WHERE `id` BETWEEN 6000 AND 7000
+AND `order` >= 6003;
