@@ -160,7 +160,6 @@ class TextbooksTable extends ControllerActionTable {
         ];
 
         //hide fields on the index page.
-        $this->field('visible', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
         $this->field('education_subject_id', ['visible' => false]);
@@ -425,6 +424,12 @@ class TextbooksTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onUpdateFieldExpiryDate(Event $event, array $attr, $action, Request $request)
+    {   
+        $attr['default_date'] = false;
+        return $attr;
+    }
+
     public function onUpdateFieldYearPublished(Event $event, array $attr, $action, Request $request)
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
@@ -472,10 +477,13 @@ class TextbooksTable extends ControllerActionTable {
             'type' => 'select',
             'entity' => $entity
         ]);
+        $this->field('expiry_date', [
+            'entity' => $entity
+        ]);
 
         $this->setFieldOrder([
             'academic_period_id', 'education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',
-            'code', 'title', 'author', 'publisher' , 'year_published', 'isbn'
+            'code', 'title', 'author', 'publisher' , 'year_published', 'ISBN', 'expiry_date'
         ]);
     }
 
@@ -496,18 +504,18 @@ class TextbooksTable extends ControllerActionTable {
     {
         $todayDate = Time::now()->format('Y-m-d');
 
-        return  $this->find('visible')
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_title'])
-                    ->where([
-                        $this->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->aliasField('education_grade_id') => $educationGradeId,
-                        $this->aliasField('education_subject_id') => $educationSubjectId,
-                        'OR' => [
-                            [$this->aliasField('expiry_date') .' IS NULL'],
-                            [$this->aliasField('expiry_date') .' > ' . "'$todayDate'"]
-                        ]
-                    ])
-                    ->order([$this->aliasField('code') => 'ASC'])
-                    ->toArray();
+        return  $this
+                ->find('list', ['keyField' => 'id', 'valueField' => 'code_title'])
+                ->where([
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('education_grade_id') => $educationGradeId,
+                    $this->aliasField('education_subject_id') => $educationSubjectId,
+                    'OR' => [
+                        [$this->aliasField('expiry_date') .' IS NULL'],
+                        [$this->aliasField('expiry_date') .' > ' . "'$todayDate'"]
+                    ]
+                ])
+                ->order([$this->aliasField('code') => 'ASC'])
+                ->toArray();
     }
 }
