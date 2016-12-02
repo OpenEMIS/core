@@ -421,7 +421,6 @@ class TrainingNeedsTable extends ControllerActionTable
 	public function findWorkbench(Query $query, array $options)
 	{
 		$controller = $options['_controller'];
-		$controller->loadComponent('ControllerAction.ControllerAction');
 		$session = $controller->request->session();
 
 		$userId = $session->read('Auth.User.id');
@@ -462,7 +461,7 @@ class TrainingNeedsTable extends ControllerActionTable
 						'controller' => 'Staff',
 						'action' => 'TrainingNeeds',
 						'view',
-						$controller->ControllerAction->paramsEncode(['id' => $row->id])
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {

@@ -45,6 +45,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
 
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportTextbooks']);
     }
 
     public function validationDefault(Validator $validator) {

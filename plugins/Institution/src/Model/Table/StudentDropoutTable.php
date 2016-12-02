@@ -377,7 +377,6 @@ class StudentDropoutTable extends AppTable {
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
 		$controller->loadComponent('AccessControl');
-		$controller->loadComponent('ControllerAction.ControllerAction');
 
 		$session = $controller->request->session();
 		$AccessControl = $controller->AccessControl;
@@ -435,7 +434,7 @@ class StudentDropoutTable extends AppTable {
 						'controller' => 'Dashboard',
 						'action' => $this->alias(),
 						'edit',
-						$controller->ControllerAction->paramsEncode(['id' => $row->id])
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {
