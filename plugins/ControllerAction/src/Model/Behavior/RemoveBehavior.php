@@ -113,7 +113,7 @@ class RemoveBehavior extends Behavior
             // Logic for restrict delete
             $entity = $model->newEntity();
             $controller = $model->controller;
-            $ids = $model->ControllerAction->paramsDecode($model->paramsPass(0));
+            $ids = $model->paramsDecode($model->paramsPass(0));
             $idKeys = $model->ControllerAction->getIdKeys($model, $ids);
             if ($model->exists($idKeys)) {
                 $entity = $model->get($idKeys);
@@ -173,7 +173,7 @@ class RemoveBehavior extends Behavior
                     }
                 }
             } else {
-                $modalPrimaryKeys = $model->ControllerAction->paramsDecode($request->data['primaryKey']);
+                $modalPrimaryKeys = $model->paramsDecode($request->data['primaryKey']);
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
                         if (!empty($modalPrimaryKeys[$key])) {
@@ -272,7 +272,7 @@ class RemoveBehavior extends Behavior
 
                 foreach ($convertOptions as $value) {
                     $keysToEncode = $model->ControllerAction->getIdKeys($model, $value, false);
-                    $encodedKey = $model->ControllerAction->paramsEncode($keysToEncode);
+                    $encodedKey = $model->paramsEncode($keysToEncode);
                     $convertOptions[$encodedKey] = $value->$extra['options']['valueField'];
                 }
 
@@ -316,7 +316,7 @@ class RemoveBehavior extends Behavior
                     return $model->controller->redirect($model->url('index', 'QUERY'));
                 }
 
-                $convertTo = $model->ControllerAction->paramsDecode($request->data($model->aliasField('convert_to')));
+                $convertTo = $model->paramsDecode($request->data($model->aliasField('convert_to')));
                 $entity->convert_to = $convertTo;
                 $doDelete = true;
 
