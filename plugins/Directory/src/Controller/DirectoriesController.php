@@ -144,6 +144,7 @@ class DirectoriesController extends AppController {
 				$id = $session->read('Directory.Directories.id');
 			}
 			if (!empty($id)) {
+				$id = $this->ControllerAction->paramsDecode($id);
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
 				$header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');

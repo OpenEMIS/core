@@ -26,7 +26,7 @@ class ViewBehavior extends Behavior {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->primaryKey();
+
 		$sessionKey = $model->registryAlias() . '.primaryKey';
 		$contain = [];
 
@@ -42,7 +42,9 @@ class ViewBehavior extends Behavior {
 			if ($model->Session->check($sessionKey)) {
 				$ids = $model->Session->read($sessionKey);
 			} else if (!empty($model->ControllerAction->getQueryString())) {
-				$ids = $model->ControllerAction->getQueryString();
+				// Query string logic not implemented yet, will require to check if the query string contains the primary key
+				$primaryKey = $model->primaryKey();
+				$ids = $model->ControllerAction->getQueryString($primaryKey);
 			}
 		}
 

@@ -119,7 +119,7 @@ class TransferRequestsTable extends ControllerActionTable
                     'controller' => $urlParams['controller'],
                     'action' => $action,
                     '0' => 'edit',
-                    '1' => $entity->id
+                    '1' => $this->ControllerAction->paramsEncode(['id' => $entity->id])
                 ]);
             }
         }
@@ -199,7 +199,7 @@ class TransferRequestsTable extends ControllerActionTable
     {
         $extra['redirect']['action'] = 'StudentUser';
         $extra['redirect'][0] = 'view';
-        $extra['redirect'][1] = $entity->student_id;
+        $extra['redirect'][1] = $this->ControllerAction->paramsEncode(['id' => $entity->student_id]);
         $extra['redirect']['id'] = $extra['params']['student_id'];
     }
 

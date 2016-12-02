@@ -57,7 +57,8 @@ class PositionsTable extends ControllerActionTable {
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'Staff',
-				'view', $entity->id,
+				'view',
+				$this->ControllerAction->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
