@@ -191,7 +191,7 @@ class RenderFileBehavior extends RenderBehavior {
         $uploadNewFile = true;
         if ($session->check($sessionKey)) {
             $parseFileData = $session->read($sessionKey);
-            
+
             if (array_key_exists('fileContent', $parseFileData)) {
                 // upload new file
                 $customValue['text_value'] = $parseFileData['fileName'];
@@ -260,11 +260,11 @@ class RenderFileBehavior extends RenderBehavior {
 
     public function downloadFile($id) {
         $model = $this->_table->CustomFieldValues;
-        $primaryKey = $model->primaryKey();
-        $idKey = $model->aliasField($primaryKey);
-        
-        if ($model->exists([$idKey => $id])) {
-            $data = $model->get($id);
+        $ids = $model->ControllerAction->paramsDecode($id);
+        $idKey = $model->ControllerAction->getIdKeys($model, $ids);
+
+        if ($model->exists($idKey)) {
+            $data = $model->get($ids);
             $fileName = $data->{$this->config('name')};
             $pathInfo = pathinfo($fileName);
 
