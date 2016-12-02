@@ -33,6 +33,8 @@ trait SecurityTrait {
 
         if (is_null($queryString)) {
             return $query;
+        } else if (is_array($queryString)) {
+            return array_intersect_key($query, array_flip($queryString));
         } else if (!isset($query[$queryString])) {
             return null;
         } else {
