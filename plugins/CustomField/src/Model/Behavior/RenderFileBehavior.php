@@ -261,7 +261,7 @@ class RenderFileBehavior extends RenderBehavior {
     public function downloadFile($id) {
         $model = $this->_table->CustomFieldValues;
         $ids = $model->paramsDecode($id);
-        $idKey = $model->ControllerAction->getIdKeys($model, $ids);
+        $idKey = $model->getIdKeys($model, $ids);
 
         if ($model->exists($idKey)) {
             $data = $model->get($ids);
