@@ -100,12 +100,12 @@ class TextbooksTable extends ControllerActionTable {
         $data['selectedLevel'] = $selectedLevel;
 
         // education programmes filter
-        if ($selectedPeriod && $selectedLevel) { 
+        if ($selectedPeriod && $selectedLevel) {
 
             $programmeOptions = $this->EducationProgrammes->getEducationProgrammesList($selectedLevel);
 
             $programmeOptions = array(-1 => __('-- Please Select Education Programme --')) + $programmeOptions;
-            
+
             if ($request->query('programme')) {
                 $selectedProgramme = $request->query('programme');
             } else {
@@ -115,7 +115,7 @@ class TextbooksTable extends ControllerActionTable {
             $this->advancedSelectOptions($programmeOptions, $selectedProgramme, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
                 'callable' => function($id) use ($selectedPeriod) {
-                    
+
                     if ($id > 0) {
                         return count($this->EducationGrades->getEducationGradesByProgrammes($id));
                     } else {
@@ -140,7 +140,7 @@ class TextbooksTable extends ControllerActionTable {
             }
 
             $subjectOptions = array(-1 => __('-- All Education Subject --')) + $subjectOptions;
-            
+
             if ($request->query('subject')) {
                 $selectedSubject = $request->query('subject');
             } else {
@@ -174,39 +174,46 @@ class TextbooksTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //filter
-        if (array_key_exists('selectedPeriod', $extra)) {
-            if ($extra['selectedPeriod']) {
-                $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+        $hasSearchKey = $this->request->session()->read($this->registryAlias().'.search.key');
+
+        $conditions = [];
+
+        if (!$hasSearchKey) {
+            //filter
+            if (array_key_exists('selectedPeriod', $extra)) {
+                if ($extra['selectedPeriod']) {
+                    $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                }
             }
+
+            if (array_key_exists('selectedProgramme', $extra)) {
+                if ($extra['selectedProgramme']) {
+                    $query->innerJoinWith('EducationGrades.EducationProgrammes');
+                    // pr($query);
+                    $conditions[] = 'EducationProgrammes.id = ' . $extra['selectedProgramme'];
+                }
+            }
+
+            if (array_key_exists('selectedGrade', $extra)) {
+                if ($extra['selectedGrade'] > 0) {
+                    $conditions[] = $this->aliasField('education_grade_id = ') . $extra['selectedGrade'];
+                }
+            }
+
+            if (array_key_exists('selectedSubject', $extra)) {
+                if ($extra['selectedSubject'] && $extra['selectedSubject'] > 0) {
+                    $gradeSubject = explode('-', $extra['selectedSubject']);
+                    $conditions[] = $this->aliasField('education_grade_id = ') . $gradeSubject[0];
+                    $conditions[] = $this->aliasField('education_subject_id = ') . $gradeSubject[1];
+                }
+            }
+
+            $query->where([$conditions]);
         }
 
-        if (array_key_exists('selectedProgramme', $extra)) {
-            if ($extra['selectedProgramme']) {
-                $query->innerJoinWith('EducationGrades.EducationProgrammes');
-                // pr($query);
-                $conditions[] = 'EducationProgrammes.id = ' . $extra['selectedProgramme'];
-            }
-        }
-
-        if (array_key_exists('selectedGrade', $extra)) {
-            if ($extra['selectedGrade'] > 0) {
-                $conditions[] = $this->aliasField('education_grade_id = ') . $extra['selectedGrade'];
-            }
-        }
-
-        if (array_key_exists('selectedSubject', $extra)) {
-            if ($extra['selectedSubject'] && $extra['selectedSubject'] > 0) {
-                $gradeSubject = explode('-', $extra['selectedSubject']);
-                $conditions[] = $this->aliasField('education_grade_id = ') . $gradeSubject[0];
-                $conditions[] = $this->aliasField('education_subject_id = ') . $gradeSubject[1];
-            }
-        }
-
-        $query->where([$conditions]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity) 
+    public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->setupFields($entity);
     }
@@ -223,7 +230,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->setupFields($entity);
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) 
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $entity->name = $entity->code . ' - ' . $entity->title;
     }
@@ -265,14 +272,14 @@ class TextbooksTable extends ControllerActionTable {
         if ($action == 'add' || $action == 'edit') {
 
             if ($action == 'add') {
-            
+
                 $educationLevelOptions = $this->EducationLevels->getLevelOptions();
 
                 $attr['options'] = $educationLevelOptions;
                 $attr['onChangeReload'] = 'changeEducationLevel';
 
             } else if ($action == 'edit') {
-                
+
                 $attr['type'] = 'readonly';
                 $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->system_level_name;
                 $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->education_cycle->education_level->id;
@@ -320,7 +327,7 @@ class TextbooksTable extends ControllerActionTable {
                 $attr['attr']['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->cycle_programme_name;
                 $attr['value'] = $attr['entity']->education_subject->education_grades[0]->education_programme->id;
             }
-            
+
         }
         return $attr;
     }
@@ -425,7 +432,7 @@ class TextbooksTable extends ControllerActionTable {
     }
 
     public function onUpdateFieldExpiryDate(Event $event, array $attr, $action, Request $request)
-    {   
+    {
         $attr['default_date'] = false;
         return $attr;
     }
