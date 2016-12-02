@@ -31,7 +31,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
-		parent::beforeAction($event, $extra);		
+		parent::beforeAction($event, $extra);
 		$toolbarButtons = $extra['toolbarButtons'];
 
 		if ($this->action != 'index') {
@@ -173,7 +173,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			} else {
 				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 			}
-			
+
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
 			$positionConditions = [];
@@ -211,7 +211,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			$attr['options'] = $options;
 			return $attr;
 		}
-		
+
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
@@ -279,6 +279,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
 		$controller->loadComponent('AccessControl');
+		$controller->loadComponent('ControllerAction.ControllerAction');
 
 		$session = $controller->request->session();
 		$AccessControl = $controller->AccessControl;
@@ -342,7 +343,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 						'controller' => 'Institutions',
 						'action' => 'StaffTransferRequests',
 						'edit',
-						$row->id,
+						$controller->ControllerAction->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 
