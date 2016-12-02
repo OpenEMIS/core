@@ -780,7 +780,7 @@ class StaffTable extends AppTable {
 		if (isset($buttons['view'])) {
 			$url = $this->ControllerAction->url('view');
 			$url['action'] = 'StaffUser';
-			$url[1] = $this->ControllerAction->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
+			$url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
 			$url['id'] = $entity->id;
 			$buttons['view']['url'] = $url;
 		}

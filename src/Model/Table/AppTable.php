@@ -411,7 +411,7 @@ class AppTable extends Table {
     		$primaryKeyValue[$primaryKey] = $entity->getOriginal($primaryKey);
     	}
 
-		$encodedKeys = $this->ControllerAction->paramsEncode($primaryKeyValue);
+		$encodedKeys = $this->paramsEncode($primaryKeyValue);
 		$id = $encodedKeys;
 
         if (array_key_exists('view', $buttons)) {

@@ -647,7 +647,7 @@ class StudentFeesTable extends ControllerActionTable {
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
                 'add',
-                $this->ControllerAction->paramsEncode(['id' => $entity->id])
+                $this->paramsEncode(['id' => $entity->id])
             ];
         }
 

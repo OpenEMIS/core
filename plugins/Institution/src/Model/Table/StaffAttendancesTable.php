@@ -358,7 +358,7 @@ class StaffAttendancesTable extends AppTable {
 			'controller' => 'Institutions',
 			'action' => 'StaffUser',
 			'view',
-			$this->ControllerAction->paramsEncode(['id' => $entity->user->id])
+			$this->paramsEncode(['id' => $entity->user->id])
 		]);
 		if ($timeError) {
 			$startTime = __('Must be within shift timing, from') . ' ' . date('h:i A', $startTimestamp);

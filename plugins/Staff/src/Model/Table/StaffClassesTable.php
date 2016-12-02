@@ -90,7 +90,7 @@ class StaffClassesTable extends ControllerActionTable {
 				'controller' => 'Institutions',
 				'action' => 'Classes',
 				'view',
-                $this->ControllerAction->paramsEncode(['id' => $entity->id]),
+                $this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;

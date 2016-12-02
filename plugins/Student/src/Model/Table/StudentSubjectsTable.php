@@ -53,7 +53,7 @@ class StudentSubjectsTable extends ControllerActionTable {
                 'controller' => 'Institutions',
                 'action' => 'Subjects',
                 'view',
-                $this->ControllerAction->paramsEncode(['id' => $entity->institution_subject->id]),
+                $this->paramsEncode(['id' => $entity->institution_subject->id]),
                 'institution_id' => $institutionId,
             ];
             $buttons['view']['url'] = $url;
