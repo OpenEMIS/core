@@ -527,7 +527,7 @@ class ControllerActionComponent extends Component {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
                     $sessionKey = $model->registryAlias() . '.primaryKey';
-                    $extra['primaryKeyValue'] = $this->Session->read($sessionKey);
+                    $extra['primaryKeyValue'] = $this->paramsEncode($this->Session->read($sessionKey));
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
                             $pass = [$extra['primaryKeyValue']];
@@ -1622,6 +1622,7 @@ class ControllerActionComponent extends Component {
     }
 
     public function download($id) {
+        $ids = $this->paramsDecode($id);
         $fileUpload = $this->model->behaviors()->get('FileUpload');
         $name = '';
         if (!empty($fileUpload)) {
@@ -1629,7 +1630,7 @@ class ControllerActionComponent extends Component {
             $content = $fileUpload->config('content');
         }
 
-        $data = $this->model->get($id);
+        $data = $this->model->get($ids);
         $fileName = $data->$name;
         $pathInfo = pathinfo($fileName);
 
@@ -1915,30 +1916,6 @@ class ControllerActionComponent extends Component {
 
     public function getTriggerFrom() {
         return $this->triggerFrom;
-    }
-
-    public function getIdKeys(Table $model, $ids, $addAlias = true)
-    {
-        $primaryKey = $model->primaryKey();
-        $idKeys = [];
-        if (!empty($ids)) {
-            if (is_array($primaryKey)) {
-                foreach ($primaryKey as $key) {
-                    if ($addAlias) {
-                        $idKeys[$model->aliasField($key)] = $ids[$key];
-                    } else {
-                        $idKeys[$key] = $ids[$key];
-                    }
-                }
-            } else {
-                if ($addAlias) {
-                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
-                } else {
-                    $idKeys[$primaryKey] = $ids[$primaryKey];
-                }
-            }
-        }
-        return $idKeys;
     }
 
     private function getOrderValue($model, $field, $insert) {

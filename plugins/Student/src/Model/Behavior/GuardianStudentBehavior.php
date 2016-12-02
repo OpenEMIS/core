@@ -179,14 +179,16 @@ class GuardianStudentBehavior extends Behavior {
 		$buttons = $this->_table->onUpdateActionButtons($event, $entity, $buttons);
 		if (isset($entity->guardian_students)) {
 			if (array_key_exists(0, $entity->guardian_students)) {
+				$guardianId = $entity->guardian_students[0]->guardian_user_id;
+
 				if (array_key_exists('view', $buttons)) {
-					$buttons['view']['url'][1] = $entity->guardian_students[0]->guardian_user_id;
+					$buttons['view']['url'][1] = $this->_table->ControllerAction->paramsEncode(['id' => $guardianId]);
 				}
 				if (array_key_exists('edit', $buttons)) {
-					$buttons['edit']['url'][1] = $entity->guardian_students[0]->guardian_user_id;
+					$buttons['edit']['url'][1] = $this->_table->ControllerAction->paramsEncode(['id' => $guardianId]);
 				}
 				if (array_key_exists('remove', $buttons)) {
-					$buttons['remove']['attr']['field-value'] = $entity->guardian_students[0]->id;
+					$buttons['remove']['attr']['field-value'] = $this->_table->ControllerAction->paramsEncode(['id' => $entity->guardian_students[0]->id]);
 				}
 			}
 		}

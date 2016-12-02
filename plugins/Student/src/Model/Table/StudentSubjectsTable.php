@@ -23,7 +23,7 @@ class StudentSubjectsTable extends ControllerActionTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -49,10 +49,11 @@ class StudentSubjectsTable extends ControllerActionTable {
         if (array_key_exists('view', $buttons)) {
             $institutionId = $entity->institution_class->institution_id;
             $url = [
-                'plugin' => 'Institution', 
-                'controller' => 'Institutions', 
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
                 'action' => 'Subjects',
-                'view', $entity->institution_subject->id,
+                'view',
+                $this->ControllerAction->paramsEncode(['id' => $entity->institution_subject->id]),
                 'institution_id' => $institutionId,
             ];
             $buttons['view']['url'] = $url;
