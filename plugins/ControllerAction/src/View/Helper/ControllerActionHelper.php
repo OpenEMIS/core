@@ -11,7 +11,10 @@ use Cake\I18n\I18n;
 use Cake\ORM\Table;
 use Cake\Utility\Security;
 
+use ControllerAction\Model\Traits\SecurityTrait;
+
 class ControllerActionHelper extends Helper {
+	use SecurityTrait;
 	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
 	public function getColumnLetter($columnNumber) {
@@ -217,58 +220,6 @@ class ControllerActionHelper extends Helper {
 		}
 		return $tableHeaders;
 	}
-
-    public function urlsafeB64Encode($input)
-    {
-        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
-    }
-
-    public function urlsafeB64Decode($input)
-    {
-        $remainder = strlen($input) % 4;
-        if ($remainder) {
-            $padlen = 4 - $remainder;
-            $input .= str_repeat('=', $padlen);
-        }
-        return base64_decode(strtr($input, '-_', '+/'));
-    }
-
-    public function paramsDecode($params)
-    {
-        $paramArr = explode('.', $params);
-        if (count($paramArr) != 2) {
-            throw new SecurityException('Wrong number of segments');
-        }
-        list($payload, $signature) = $paramArr;
-        $payload = $this->urlsafeB64Decode($payload);
-        $signature = $this->urlsafeB64Decode($signature);
-
-        $payload = json_decode($payload, true);
-        $sessionId = Security::hash('session_id', 'sha256');
-        if (!isset($payload[$sessionId])) {
-            throw new SecurityException('No session id in payload');
-        } else {
-            $checkPayload = $payload;
-            $checkPayload[$sessionId] = session_id();
-            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256', true);
-            if ($signature !== $checkSignature) {
-                throw new SecurityException('Query String has been tampered');
-            }
-        }
-        unset($payload[$sessionId]);
-        return $payload;
-    }
-
-    public function paramsEncode($params = [])
-    {
-        $sessionId = Security::hash('session_id', 'sha256');
-        $params[$sessionId] = session_id();
-        $jsonParam = json_encode($params);
-        $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256', true);
-        $base64Signature = $this->urlsafeB64Encode($signature);
-        return "$base64Param.$base64Signature";
-    }
 
 	public function getTableRow(Entity $entity, array $fields, $searchableFields = []) {
 		$row = [];
