@@ -410,7 +410,7 @@ class StudentUserTable extends ControllerActionTable
 
 				if (!empty($dropoutRequest)) {
 					$dropoutButton['url'][0] = 'edit';
-					$dropoutButton['url'][1] = $dropoutRequest->institution_student_dropout_id;
+					$dropoutButton['url'][1] = $this->ControllerAction->paramsEncode(['id' => $dropoutRequest->institution_student_dropout_id]);
 				}
 				$toolbarButtons['dropout'] = $dropoutButton;
 			}
