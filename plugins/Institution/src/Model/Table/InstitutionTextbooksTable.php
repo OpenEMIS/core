@@ -93,7 +93,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $selectedPeriod);
 
             if ($gradeOptions) {
-                $gradeOptions = array(-1 => __('All Education Grade')) + $gradeOptions;
+                $gradeOptions = array(-1 => __('-- Select Education Grade --')) + $gradeOptions;
             }
 
             if ($request->query('grade')) {
@@ -137,10 +137,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
         if ($selectedPeriod && $selectedGrade) {
             $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
 
-            if ($subjectOptions) {
-                $subjectOptions = array(-1 => __('All Education Subject')) + $subjectOptions;
-            }
-
+            $subjectOptions = array(-1 => __('-- Select Education Subject --')) + $subjectOptions;
+            
             if ($request->query('subject')) {
                 $selectedSubject = $request->query('subject');
             } else {
@@ -174,9 +172,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $textbookOptions = $this->Textbooks->getTextbookOptions($selectedPeriod, $selectedGrade, $selectedSubject);
 
             if ($textbookOptions) {
-                $textbookOptions = array(-1 => __('All Textbooks')) + $textbookOptions;
+                $textbookOptions = array(-1 => __('-- Select Textbooks --')) + $textbookOptions;
             }
-
+            
             if ($request->query('textbook')) {
                 $selectedTextbook = $request->query('textbook');
             } else {
@@ -268,13 +266,16 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        $textbookCode = $this
+        $textbookCode = '';
+        if ($data[$this->alias()]['textbook_id'] && $data[$this->alias()]['academic_period_id']) {
+            $textbookCode = $this
                         ->Textbooks
                         ->get([
                             'textbook_id' => $data[$this->alias()]['textbook_id'],
                             'academic_period_id' => $data[$this->alias()]['academic_period_id']
                         ])->code;
-        // pr($textbookCode);
+        // pr($textbookCode); 
+        }
 
         $process = function ($model, $entity) use ($data, $textbookCode) {
             $newEntities = [];
@@ -875,7 +876,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
     {
         $alias = $this->alias();
         $fieldKey = 'textbooks_students';
-
+        
         if ($data['submit'] == 'addTextbooksStudents') { //during the add books, need to ensure that class and subject has value.
 
             if ($data[$alias]['institution_class_id'] && $data[$alias]['education_subject_id'] && $data[$alias]['textbook_id']) {
