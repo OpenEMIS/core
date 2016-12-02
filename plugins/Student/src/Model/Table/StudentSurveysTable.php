@@ -173,7 +173,7 @@ class StudentSurveysTable extends AppTable {
 
 		if (!is_null($entity)) {
 			$tabElements['StudentSurveys']['url'][0] = 'view';
-			$tabElements['StudentSurveys']['url'][1] = $entity->id;
+			$tabElements['StudentSurveys']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $entity->id]);
 		}
 
 		$this->controller->set('tabElements', $tabElements);
