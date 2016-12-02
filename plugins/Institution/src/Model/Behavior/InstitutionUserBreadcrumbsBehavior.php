@@ -40,7 +40,7 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
 		if ($this->_table->alias() == $splitTitle[0].'User') {
 			$Navigation->addCrumb($persona->name);
 		} else {
-			$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $splitTitle[0].'User', 'view', $model->ControllerAction->paramsEncode(['id' => $persona->id])]);
+			$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $splitTitle[0].'User', 'view', $model->ControllerAction->paramsEncode(['id' => $persona->id])];
 			$Navigation->addCrumb($persona->name, $url);
 			$Navigation->addCrumb($crumbTitle);
 		}

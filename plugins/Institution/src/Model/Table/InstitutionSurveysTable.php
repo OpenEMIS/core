@@ -447,6 +447,7 @@ class InstitutionSurveysTable extends AppTable {
 
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
+		$controller->loadComponent('ControllerAction.ControllerAction');
 		$session = $controller->request->session();
 
 		$userId = $session->read('Auth.User.id');
@@ -485,7 +486,7 @@ class InstitutionSurveysTable extends AppTable {
 						'controller' => 'Institutions',
 						'action' => 'Surveys',
 						'view',
-						$row->id,
+						$controller->ControllerAction->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 
