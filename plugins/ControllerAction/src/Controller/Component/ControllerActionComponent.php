@@ -525,7 +525,7 @@ class ControllerActionComponent extends Component {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
                     $sessionKey = $model->registryAlias() . '.primaryKey';
-                    $extra['primaryKeyValue'] = $this->Session->read($sessionKey);
+                    $extra['primaryKeyValue'] = $this->paramsEncode($this->Session->read($sessionKey));
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
                             $pass = [$extra['primaryKeyValue']];
