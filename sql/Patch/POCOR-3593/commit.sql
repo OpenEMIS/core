@@ -8,6 +8,8 @@ ADD COLUMN `nationality_id` INT NULL AFTER `date_of_death`,
 ADD COLUMN `identity_type_id` INT NULL AFTER `nationality_id`,
 ADD COLUMN `external_reference` VARCHAR(50) NULL AFTER `identity_number`;
 
+INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES ('102', 'external_data_source_type', 'Custom', 'Custom', '3', '1');
+
 INSERT INTO `external_data_source_attributes` (`id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id`) VALUES (uuid(), 'OpenEMIS Identity', 'first_name_mapping', 'First Name Mapping', 'first_name', NOW(), '2');
 INSERT INTO `external_data_source_attributes` (`id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id`) VALUES (uuid(), 'OpenEMIS Identity', 'middle_name_mapping', 'Middle Name Mapping', 'middle_name', NOW(), '2');
 INSERT INTO `external_data_source_attributes` (`id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id`) VALUES (uuid(), 'OpenEMIS Identity', 'third_name_mapping', 'Third Name Mapping', 'third_name', NOW(), '2');
