@@ -3,9 +3,11 @@ namespace Configuration\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
+use Firebase\JWT\JWT;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable {
     public $id;
@@ -15,7 +17,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $this->table('config_items');
         parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
-        $this->addBehavior('Configuration.ExternalDataSource');
+        // $this->addBehavior('Configuration.ExternalDataSource');
         $this->toggle('remove', false);
 
         $externalDataSourceRecord = $this
@@ -25,6 +27,24 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $id = $externalDataSourceRecord->id;
         $this->id = $id;
         $this->externalDataSourceType = $externalDataSourceRecord->value;
+    }
+
+    public function editOnInitialize(Event $event)
+    {
+        $newKey = openssl_pkey_new([
+            "digest_alg" => "sha256",
+            "private_key_bits" => 4096,
+            "private_key_type" => OPENSSL_KEYTYPE_RSA
+        ]);
+
+        $res = openssl_pkey_new();
+
+        openssl_pkey_export($res, $privKey);
+
+        $pubKey = openssl_pkey_get_details($res);
+        $pubKey = $pubKey["key"];
+        $this->request->data[$this->alias()]['private_key'] = $privKey;
+        $this->request->data[$this->alias()]['public_key'] = $pubKey;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -70,6 +90,54 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             }
         }
         return $attr;
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $value = $entity->value;
+
+        switch($value) {
+            case 'OpenEMIS Identity':
+                $this->field('url');
+                $this->field('token_uri', ['type' => 'hidden']);
+                $this->field('record_uri', ['type' => 'hidden']);
+                $this->field('client_id');
+                $this->field('first_name_mapping', ['type' => 'hidden']);
+                $this->field('middle_name_mapping', ['type' => 'hidden']);
+                $this->field('third_name_mapping', ['type' => 'hidden']);
+                $this->field('last_name_mapping', ['type' => 'hidden']);
+                $this->field('date_of_birth_mapping', ['type' => 'hidden']);
+                $this->field('external_reference_mapping', ['type' => 'hidden']);
+                $this->field('gender_mapping', ['type' => 'hidden']);
+                $this->field('identity_type_mapping', ['type' => 'hidden']);
+                $this->field('identity_number_mapping', ['type' => 'hidden']);
+                $this->field('nationality_mapping', ['type' => 'hidden']);
+                
+                break;
+
+            case 'Custom':
+                $this->field('token_uri');
+                $this->field('record_uri');
+                $this->field('client_id');
+                $this->field('first_name_mapping');
+                $this->field('middle_name_mapping');
+                $this->field('third_name_mapping');
+                $this->field('last_name_mapping');
+                $this->field('date_of_birth_mapping');
+                $this->field('external_reference_mapping');
+                $this->field('gender_mapping');
+                $this->field('identity_type_mapping');
+                $this->field('identity_number_mapping');
+                $this->field('nationality_mapping');
+                break;
+
+            default:
+
+                break;
+        }
+
+        $this->field('private_key', ['type' => 'hidden']);
+        $this->field('public_key', ['type' => 'text', 'attr' => ['readonly' => 'readonly']]);
     }
 
 }
