@@ -129,7 +129,7 @@ class IdentitiesTable extends ControllerActionTable
 		$identityType = $UserNationalityTable
 			->find()
 			->matching('NationalitiesLookUp')
-			->select('nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id')
+			->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
 			->where([
 				'security_user_id' => $userId
 			])
@@ -141,7 +141,7 @@ class IdentitiesTable extends ControllerActionTable
 				->find()
 				->where([
 					$this->aliasField('security_user_id') => $userId,
-					$this->aliasField('identity_type_id') => $identityType['identityTypeId'];
+					$this->aliasField('identity_type_id') => $identityType['identityTypeId']
 				])
 				->first();
 		}
