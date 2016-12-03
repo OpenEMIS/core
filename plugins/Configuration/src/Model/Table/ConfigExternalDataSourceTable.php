@@ -29,7 +29,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $this->externalDataSourceType = $externalDataSourceRecord->value;
     }
 
-    public function editOnInitialize(Event $event)
+    public function editOnInitialize(Event $event, Entity $entity)
     {
         $newKey = openssl_pkey_new([
             "digest_alg" => "sha256",
@@ -43,8 +43,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
 
         $pubKey = openssl_pkey_get_details($res);
         $pubKey = $pubKey["key"];
-        $this->request->data[$this->alias()]['private_key'] = $privKey;
         $this->request->data[$this->alias()]['public_key'] = $pubKey;
+        $this->request->session()->write($this->registryAlias().'.privateKey', $privKey);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -90,6 +90,23 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             }
         }
         return $attr;
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
+    {
+        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
+        $fields = [
+            'url', 'token_uri', 'record_uri', 'client_id', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
+            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping'
+        ];
+
+        foreach ($fields as $field) {
+            if ($entity->has($field)) {
+                $ExternalDataSourceAttributes->newEntity();
+                $ExternalDataSourceAttributes->save();
+            }
+        }
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
