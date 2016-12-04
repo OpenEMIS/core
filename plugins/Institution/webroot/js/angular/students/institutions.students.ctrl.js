@@ -295,11 +295,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName : "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,
@@ -327,11 +328,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultExternalIdentityTypeName))? StudentController.defaultExternalIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,

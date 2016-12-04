@@ -84,10 +84,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label><?= __('Filter') ?></label>
                 </div>
                 <div class="text">
-                    <label><?= __('OpenEMIS ID')?></label>
-                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
                     <label><?= __('First Name') ?></label>
                     <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
@@ -128,10 +124,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="filter-label">
                     <i class="fa fa-filter"></i>
                     <label><?= __('Filter') ?></label>
-                </div>
-                <div class="text">
-                    <label><?= __('OpenEMIS ID')?></label>
-                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
                     <label><?= __('First Name') ?></label>
