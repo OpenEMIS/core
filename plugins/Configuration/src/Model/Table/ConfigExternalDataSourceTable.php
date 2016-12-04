@@ -92,19 +92,30 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
+    {
+        $requestData[$this->alias()]['private_key'] = $this->request->session()->read($this->registryAlias().'.privateKey');
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
     {
         $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
         $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
         $fields = [
-            'url', 'token_uri', 'record_uri', 'client_id', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
-            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping'
+            'url', 'token_uri', 'record_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
+            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'private_key', 'public_key'
         ];
 
         foreach ($fields as $field) {
             if ($entity->has($field)) {
-                $ExternalDataSourceAttributes->newEntity();
-                $ExternalDataSourceAttributes->save();
+                $data = [
+                    'external_data_source_type' => $entity->value,
+                    'attribute_field' => $field,
+                    'attribute_name' => $field,
+                    'value' => $entity->$field
+                ];
+                $newEntity = $ExternalDataSourceAttributes->newEntity($data);
+                $ExternalDataSourceAttributes->save($newEntity);
             }
         }
     }
@@ -119,6 +130,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('token_uri', ['type' => 'hidden']);
                 $this->field('record_uri', ['type' => 'hidden']);
                 $this->field('client_id');
+                $this->field('scope', ['type' => 'hidden']);
                 $this->field('first_name_mapping', ['type' => 'hidden']);
                 $this->field('middle_name_mapping', ['type' => 'hidden']);
                 $this->field('third_name_mapping', ['type' => 'hidden']);
@@ -136,6 +148,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('token_uri');
                 $this->field('record_uri');
                 $this->field('client_id');
+                $this->field('scope');
                 $this->field('first_name_mapping');
                 $this->field('middle_name_mapping');
                 $this->field('third_name_mapping');
