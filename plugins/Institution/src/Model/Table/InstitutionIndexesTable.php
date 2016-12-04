@@ -12,13 +12,14 @@ use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
 
-
 class InstitutionIndexesTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
         $this->table('indexes');
         parent::initialize($config);
+
+        $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('search', false);
         $this->toggle('add', false);
@@ -36,9 +37,16 @@ class InstitutionIndexesTable extends ControllerActionTable
     public function setupFields(Event $event, Entity $entity)
     {
         $this->field('generated_by',['visible' => false]);
-        $this->field('indexes_criterias', ['type' => 'custom_criterias']);
 
-        $this->setFieldOrder(['name', 'indexes_criterias']);
+        $this->setFieldOrder(['name']);
+    }
+
+    public function onGetTotalIndex(Event $event, Entity $entity)
+    {
+        $indexId = $entity->id;
+        $indexTotal = $this->IndexesCriterias->getTotalIndex($indexId);
+
+        return $indexTotal;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

@@ -25,6 +25,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('search', false);
+        $this->toggle('view', false);
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
     }
 
     public function implementedEvents()
@@ -67,8 +70,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $session = $this->request->session();
 
         $institutionId = $session->read('Institution.Institutions.id');
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
 
         $selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
@@ -90,13 +94,18 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         }
 
         $selectedClassId = $this->queryString('class_id', $classOptions);
-
-
-
-
-
-
-
+        $this->advancedSelectOptions($classOptions, $selectedClassId, [
+            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noStudents')),
+            'callable' => function($id) use ($InstitutionClassStudents) {
+                return $InstitutionClassStudents
+                    ->find()
+                    ->where([
+                        $InstitutionClassStudents->aliasField('institution_class_id') => $id
+                    ])
+                    ->count();
+            }
+        ]);
+        $extra['selectedClass'] = $selectedClassId;
 
         $extra['elements']['control'] = [
             'name' => 'Institution.Indexes/controls',
@@ -104,21 +113,41 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 'academicPeriodOptions'=>$academicPeriodOptions,
                 'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
                 'classOptions'=>$classOptions,
-                'selectedGrade'=>$selectedEducationGradeId,
+                'selectedClass'=>$selectedClassId,
             ],
             'options' => [],
             'order' => 3
         ];
-        pr($extra);die;
         // end element control
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->query;
+        $session = $this->request->session();
 
-        return $query = $query
-            ->where([$this->aliasField('index_id') => $requestQuery['index_id']]);
+        $institutionId = $session->read('Institution.Institutions.id');
+        $academicPeriodId = $extra['selectedAcademicPeriodId'];
+        $classId = $extra['selectedClass'];
+
+        $conditions = [
+            $this->aliasField('index_id') => $requestQuery['index_id'],
+            $this->aliasField('academic_period_id') => $academicPeriodId
+        ];
+
+        if ($classId > 0) {
+            $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $studentList = $InstitutionClassStudents->getStudentsList($academicPeriodId, $institutionId, $classId);
+
+            $conditions = [
+                $this->aliasField('index_id') => $requestQuery['index_id'],
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('student_id') . ' IN ' => $studentList
+            ];
+        }
+
+        return $query->where([$conditions]);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -129,14 +158,23 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     public function institutionStudentAbsencesAfterSaveOrDelete(Event $event, Entity $institutionStudentAbsencesEntity)
     {
         $criteriaModel = $institutionStudentAbsencesEntity->source();
-        $academicPeriodId = $institutionStudentAbsencesEntity->academic_period_id;
+        $startDate = $institutionStudentAbsencesEntity->start_date;
+        $endDate = $institutionStudentAbsencesEntity->end_date;
+
+        if (isset($institutionStudentAbsencesEntity->academic_period_id)) {
+            $academicPeriodId = $institutionStudentAbsencesEntity->academic_period_id;
+        } else {
+            // afterDelete $institutionStudentAbsencesEntity doesnt have academicPeriodId
+            $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
+        }
+
         $institutionId = $institutionStudentAbsencesEntity->institution_id;
         $studentId = $institutionStudentAbsencesEntity->student_id;
 
         $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
 
-        $totalAbsence = $InstitutionStudentAbsences->getTotalDays($institutionId, $studentId);
+        $totalAbsence = $InstitutionStudentAbsences->calculateValueIndex($institutionId, $studentId);
 
         $indexesCriteriaResults = $IndexesCriterias->find()
             ->where([$IndexesCriterias->aliasField('criteria') => $criteriaModel])
@@ -258,14 +296,5 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 }
             }
         }
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        unset($buttons['edit']);//remove edit action from the action button
-        unset($buttons['remove']);// remove delete action from the action button
-
-        return $buttons;
     }
 }

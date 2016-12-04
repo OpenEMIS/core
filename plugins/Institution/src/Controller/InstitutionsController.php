@@ -105,6 +105,7 @@ class InstitutionsController extends AppController
     public function StaffAbsences()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     public function InstitutionIndexes()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIndexes']); }
+    public function StudentIndexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
     public function InstitutionStudentIndexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
 
     // End
@@ -634,6 +635,7 @@ class InstitutionsController extends AppController
             'Results' => ['text' => __('Results')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
+            'StudentIndexes' => ['text' => __('Indexes')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -643,6 +645,9 @@ class InstitutionsController extends AppController
             if ($key == 'Programmes') {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            } elseif ($key == 'StudentIndexes') {
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);

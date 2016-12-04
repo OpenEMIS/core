@@ -21,4 +21,20 @@ class IndexesCriteriasTable extends ControllerActionTable
 
         $this->setDeleteStrategy('restrict');
     }
+
+    public function getTotalIndex($indexId)
+    {
+        $indexCriteriasResults = $this->find()
+            ->where([$this->aliasField('index_id') => $indexId])
+            ->toArray();
+
+        $indexTotal = 0;
+        if (!empty($indexCriteriasResults)) {
+            foreach ($indexCriteriasResults as $key => $obj) {
+                $indexTotal = $indexTotal + $obj->index_value;
+            }
+        }
+
+        return !empty($indexTotal) ? $indexTotal : ' 0';
+    }
 }
