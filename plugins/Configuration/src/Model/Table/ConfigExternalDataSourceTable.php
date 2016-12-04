@@ -7,7 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
-use Firebase\JWT\JWT;
+use Cake\Utility\Inflector;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable {
     public $id;
@@ -58,8 +58,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $this->field('default_value', ['visible' => ['view'=>true]]);
         $this->field('type', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
         $this->field('label', ['visible' => ['view'=>true, 'edit'=>true], 'type' => 'readonly']);
-        $this->field('value', ['visible' => true]);
-
 
         if ($this->action == 'index') {
             $url = $this->url('view');
@@ -71,11 +69,76 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         }
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('value', ['visible' => true]);
+        if ($entity->value != 'None') {
+            $this->field('attributes', ['type' => 'custom_external_source']);
+        }
+    }
+
+    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = []) 
+    {
+        $tableHeaders = [__('Attribute Name'), __('Value')];
+        $tableCells = [];
+        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $attributes = $ExternalDataSourceAttributes
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->where([
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $entity->value
+            ])
+            ->order('attribute_field')
+            ->toArray();
+        if (isset($attributes['private_key'])) {
+            unset($attributes['private_key']);
+        }
+
+        if ($entity->value == 'OpenEMIS Identity') {
+            $newAttributes = [];
+            $newAttributes['client_id'] = $attributes['client_id'];
+            $newAttributes['url'] = $attributes['url'];
+            $attributes = $newAttributes;
+        }
+
+        if ($action == 'view') {
+            foreach ($attributes as $key => $obj) {
+                $rowData = [];
+                $rowData[] = __(Inflector::humanize($key));
+                $rowData[] = $obj;
+                $tableCells[] = $rowData;
+            }
+        }
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+
+        return $event->subject()->renderElement('Configuration.external_data_source', ['attr' => $attr]);
+    }
+
     public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
         if (in_array($action, ['edit', 'add'])) {
             $id = $this->id;
             if (!empty($id)) {
                 $entity = $this->get($id);
+                $value = $entity->value;
+                if (isset($request->data[$this->alias()]['value'])) {
+                    $value = $request->data[$this->alias()]['value'];
+                }
+                $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+                $attributes = $ExternalDataSourceAttributes
+                    ->find('list', [
+                        'keyField' => 'attribute_field',
+                        'valueField' => 'value'
+                    ])
+                    ->where([
+                        $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $value
+                    ])
+                    ->toArray();
+                foreach ($attributes as $key => $value) {
+                    $request->data[$this->alias()][$key] = $value;
+                }
                 if ($entity->field_type == 'Dropdown') {
                     $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
                     $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
@@ -94,7 +157,25 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
     {
-        $requestData[$this->alias()]['private_key'] = $this->request->session()->read($this->registryAlias().'.privateKey');
+        if ($requestData[$this->alias()]['value'] == 'OpenEMIS Identity') {
+            $url = rtrim(trim($requestData[$this->alias()]['url']), "/");
+            $requestData[$this->alias()]['url'] = $url;
+            $requestData[$this->alias()]['scope'] = 'Student';
+            $requestData[$this->alias()]['first_name_mapping'] = 'first_name';
+            $requestData[$this->alias()]['middle_name_mapping'] = 'middle_name';
+            $requestData[$this->alias()]['third_name_mapping'] = 'third_name';
+            $requestData[$this->alias()]['last_name_mapping'] = 'last_name';
+            $requestData[$this->alias()]['date_of_birth_mapping'] = 'date_of_birth';
+            $requestData[$this->alias()]['identity_type_mapping'] = 'identity_type_name';
+            $requestData[$this->alias()]['identity_number_mapping'] = 'identity_number';
+            $requestData[$this->alias()]['nationality_mapping'] = 'nationality_name';
+            $requestData[$this->alias()]['token_uri'] = $url .'/api/users/token';
+            $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]';
+        }
+        if (empty($requestData[$this->alias()]['private_key'])) {
+            $requestData[$this->alias()]['private_key'] = $this->request->session()->read($this->registryAlias().'.privateKey');
+        }
+        
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
@@ -105,6 +186,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             'url', 'token_uri', 'record_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
             'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'private_key', 'public_key'
         ];
+
 
         foreach ($fields as $field) {
             if ($entity->has($field)) {
@@ -123,6 +205,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $value = $entity->value;
+        $this->field('value', ['visible' => true]);
 
         switch($value) {
             case 'OpenEMIS Identity':
@@ -166,8 +249,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 break;
         }
 
-        $this->field('private_key', ['type' => 'hidden']);
-        $this->field('public_key', ['type' => 'text', 'attr' => ['readonly' => 'readonly']]);
+        $this->field('private_key', ['type' => 'text']);
+        $this->field('public_key', ['type' => 'text']);
     }
 
 }

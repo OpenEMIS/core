@@ -244,7 +244,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         }
                     }
                 }
-                console.log(replaceURL);
                 var url = replaceURL.replace(/{\w+}/g, function(all) {
                     return all in replacement ? replacement[all] : all;
                 });
@@ -447,7 +446,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 .then(function(response) {
                     if (response.data.length > 0) {
                         userData = response.data[0];
-                        modifiedUser = {id: userData.id, is_student: 1};
+                        modifiedUser = userData;
+                        delete modifiedUser['openemis_no'];
+                        modifiedUser['is_student'] = 1;
+                        modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
+                        modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
+                        modifiedUser['start_date'] = userRecord['start_date'];
                         StudentUser.save(modifiedUser)
                         .then(function(response) {
                             deferred.resolve([response.data, userData]);
