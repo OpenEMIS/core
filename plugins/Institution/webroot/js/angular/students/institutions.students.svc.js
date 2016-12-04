@@ -9,6 +9,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     var externalSource = null;
     var externalToken = null;
     var institutionId = null;
+    var externalDataSourceMapping = {};
 
     var service = {
         init: init,
@@ -47,7 +48,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getIdentityTypeRecord: getIdentityTypeRecord,
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
-        addUserNationality: addUserNationality
+        addUserNationality: addUserNationality,
+        getExternalSourceMapping: getExternalSourceMapping
     };
 
     var models = {
@@ -93,9 +95,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         externalToken = null;
     }
 
+    function getExternalSourceMapping()
+    {
+        return this.externalSourceMapping;
+    }
+
     function getAccessToken()
     {
         var deferred = $q.defer();
+        var vm = this;
         this.init(angular.baseUrl);
         ConfigItems
         .select()
@@ -117,6 +125,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 for(var i = 0; i < data.length; i++) {
                     externalDataSourceObject[data[i].attribute_field] = data[i].value;
                 }
+                delete externalDataSourceObject.private_key;
+                delete externalDataSourceObject.public_key;
+                vm.externalSourceMapping = externalDataSourceObject;
                 if (externalDataSourceObject.hasOwnProperty('token_uri')) {
                     var tokenUri = externalDataSourceObject.token_uri;
 
@@ -124,14 +135,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         delete externalDataSourceObject.token_uri;
                         delete externalDataSourceObject.record_uri;
                         delete externalDataSourceObject.redirect_uri;
-                        var postData = 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer';
+                        
                         var url = angular.baseUrl + '/Configurations/generateServerAuthorisationToken?external_data_source_type=' + externalDataSourceType;
                         $http({
                             method: 'GET',
                             url: url,
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
                         }).then(function (jwt) {
-                            postData = postData + '&assertion=' + jwt;
+                            var postData = 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer';
+                            postData = postData + '&assertion=' + jwt.data;
                             $http({
                                 method: 'POST',
                                 url: tokenUri,
@@ -184,6 +196,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
         this.getExternalSourceUrl()
         .then(function(sourceUrl) {
+            console.log(sourceUrl);
             var source = sourceUrl.data;
             vm.getAccessToken()
             .then(function(token){
@@ -192,8 +205,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     sourceUrl = source[0].value;
                     externalSource = sourceUrl;
                     externalToken = token;
+                } else {
+                    sourceUrl = source.record_uri;
                 }
-                vm.initExternal(sourceUrl);
                 var pageParams = {
                     limit: options['endRow'] - options['startRow'],
                     page: options['endRow'] / (options['endRow'] - options['startRow']),
@@ -230,7 +244,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         }
                     }
                 }
-
+                console.log(replaceURL);
                 var url = replaceURL.replace(/{\w+}/g, function(all) {
                     return all in replacement ? replacement[all] : all;
                 });
@@ -688,13 +702,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     }
 
     function formatDate(datetime) {
-        datetime = new Date(datetime);
-
-        var yyyy = datetime.getFullYear().toString();
-        var mm = (datetime.getMonth()+1).toString(); // getMonth() is zero-based
-        var dd  = datetime.getDate().toString();
-
-        return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0])  + '-' +   yyyy; // padding
+        return this.formatDateReverse(datetime);
     };
 
     function getAcademicPeriods() {

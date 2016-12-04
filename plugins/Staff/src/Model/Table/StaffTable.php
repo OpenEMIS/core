@@ -73,6 +73,8 @@ class StaffTable extends AppTable {
 			'through' => 'Institution.Staff',
 			'dependent' => true
 		]);
+		$model->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		// class should never cascade delete
 		$model->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
