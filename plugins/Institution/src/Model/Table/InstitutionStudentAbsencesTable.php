@@ -698,7 +698,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
 	}
 
-	public function getTotalDays($institutionId, $studentId)
+	public function calculateValueIndex($institutionId, $studentId)
 	{
 		$absenceResults = $this
 			->find()

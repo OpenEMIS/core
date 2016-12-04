@@ -214,7 +214,8 @@ trait MessagesTrait {
             'noShift' => 'There are no shifts configured for the selected academic period'
         ],
         'InstitutionStudentIndexes' => [
-            'noClasses' => 'No Classes'
+            'noClasses' => 'No Classes',
+            'noStudents' => 'No Students'
         ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
