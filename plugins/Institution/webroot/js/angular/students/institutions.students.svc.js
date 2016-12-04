@@ -48,8 +48,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality
-
-
     };
 
     var models = {
@@ -126,18 +124,24 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         delete externalDataSourceObject.token_uri;
                         delete externalDataSourceObject.record_uri;
                         delete externalDataSourceObject.redirect_uri;
-                        var postData = 'grant_type=refresh_token';
-                        var log = [];
-                        angular.forEach(externalDataSourceObject, function(value, key) {
-                          postData = postData + '&' + key + '=' + value;
-                        }, log);
+                        var postData = 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer';
+                        var url = angular.baseUrl + '/Configurations/generateServerAuthorisationToken?external_data_source_type=' + externalDataSourceType;
                         $http({
-                            method: 'POST',
-                            url: tokenUri,
-                            data: postData,
+                            method: 'GET',
+                            url: url,
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-                        }).then(function(res) {
-                            deferred.resolve(res.data.access_token);
+                        }).then(function (jwt) {
+                            postData = postData + '&assertion=' + jwt;
+                            $http({
+                                method: 'POST',
+                                url: tokenUri,
+                                data: postData,
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                            }).then(function(res) {
+                                deferred.resolve(res.data.access_token);
+                            }, function(error) {
+                                deferred.reject(error);
+                            });
                         }, function(error) {
                             deferred.reject(error);
                         });
