@@ -489,7 +489,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             StudentController.appendName(studentRecords[key], mapping.middle_name_mapping);
             StudentController.appendName(studentRecords[key], mapping.third_name_mapping);
             StudentController.appendName(studentRecords[key], mapping.last_name_mapping);
-            console.log(studentRecords[key]);
         }
 
         var lastRow = totalRowCount;
