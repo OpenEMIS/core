@@ -417,6 +417,9 @@ class ControllerActionBehavior extends Behavior
                 if ($field === $assoc->foreignKey()) {
                     $model = $assoc;
                     break;
+                } else if (is_array($assoc->foreignKey()) && in_array($field, $assoc->foreignKey())) {
+                    $model = $assoc;
+                    break;
                 }
             }
         }
