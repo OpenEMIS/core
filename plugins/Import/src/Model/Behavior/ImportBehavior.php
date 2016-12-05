@@ -18,6 +18,7 @@ use Cake\Routing\Router;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
 use PHPExcel_Worksheet;
+use PHPExcel_Style_NumberFormat;
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -621,6 +622,16 @@ class ImportBehavior extends Behavior {
     public function setImportDataTemplate( $objPHPExcel, $dataSheetName, $header ) {
 
         $objPHPExcel->setActiveSheetIndex(0);
+        // column_name in import_mapping that have date format, after the humanize
+        // to compare, to know that the column are date format.
+        $description = ' ( DD/MM/YYYY )';
+        $dateHeader = [
+            __('Date Closed') . $description,
+            __('Date Opened') . $description,
+            __('Start Date') . $description,
+            __('End Date') . $description,
+            __('Date Of Birth') . $description
+        ];
 
         $this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName );
 
@@ -631,6 +642,12 @@ class ImportBehavior extends Behavior {
             $activeSheet->setCellValue( $alpha . "2", $value);
             if (strlen($value)<50) {
                 $activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
+                // if the $value is in $dateHeader array, it is a date format.
+                if (in_array($value, $dateHeader)) {
+                    $activeSheet->getStyle( $alpha )
+                        ->getNumberFormat()
+                        ->setFormatCode('dd/mm/yyyy');
+                }
             } else {
                 $activeSheet->getColumnDimension( $alpha )->setWidth(35);
                 $currentRowHeight = $this->suggestRowHeight( strlen($value), $currentRowHeight );
@@ -1162,6 +1179,11 @@ class ImportBehavior extends Behavior {
                     if (is_numeric($val)) {
                         // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
                         $val = date('d/m/Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
+                    } else {
+                        // if invalid date, the invalid date will be keep and not converted to the correct date.
+                        // if not equal 0, the wrong date will converted to the correct one. (3/13/2016 => 3/1/2017)
+                        // 0 will make the tooltip displayed the invalid date error message
+                        $val = 0;
                     }
 
                     // converts val to Date object so that this field will pass 'validDate' check since
