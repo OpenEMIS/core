@@ -135,7 +135,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         delete externalDataSourceObject.token_uri;
                         delete externalDataSourceObject.record_uri;
                         delete externalDataSourceObject.redirect_uri;
-                        
+
                         var url = angular.baseUrl + '/Configurations/generateServerAuthorisationToken?external_data_source_type=' + externalDataSourceType;
                         $http({
                             method: 'GET',
@@ -701,8 +701,13 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     };
 
     function formatDateReverse(datetime) {
-        var dateArr = datetime.split('-');
-        return dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0];
+        if (datetime !== undefined && datetime != '') {
+            var dateArr = datetime.split('-');
+            return dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0];
+        } else {
+            return '';
+        }
+
     }
 
     function formatDate(datetime) {

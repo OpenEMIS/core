@@ -362,7 +362,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     };
 
     function clearInternalSearchFilters() {
-        StudentController.internalFilterOpenemisNo = '';
         StudentController.internalFilterFirstName = '';
         StudentController.internalFilterLastName = '';
         StudentController.internalFilterIdentityNumber = '';
