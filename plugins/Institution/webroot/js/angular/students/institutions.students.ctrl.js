@@ -60,6 +60,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changeNationality = changeNationality;
     StudentController.changeIdentityType = changeIdentityType;
     StudentController.processStudentRecord = processStudentRecord;
+    StudentController.processExternalStudentRecord = processExternalStudentRecord;
     StudentController.createNewInternalDatasource = createNewInternalDatasource;
     StudentController.createNewExternalDatasource = createNewExternalDatasource;
     StudentController.insertStudentData = insertStudentData;
@@ -192,21 +193,8 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (promisesObj[4] != undefined && promisesObj[4].hasOwnProperty('data')) {
                 StudentController.StudentSpecialNeedsOptions = promisesObj[4]['data'];
             }
-            var deferred = $q.defer();
             if (StudentController.hasExternalDataSource) {
-                InstitutionsStudentsSvc.getExternalDefaultIdentityType()
-                .then(function(externalIdentityType) {
-                    if (externalIdentityType.length > 0) {
-                        deferred.resolve(externalIdentityType[0].name);
-                    } else {
-                        deferred.reject('No External Identity Type');
-                    }
-                }, function(error) {
-                    StudentController.hasExternalDataSource = false;
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
-                    deferred.reject(error);
-                });
-                return deferred.promise;
+                return 'Identity Number';
             } else {
                 return StudentController.genderOptions;
             }
@@ -307,11 +295,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName : "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,
@@ -339,11 +328,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultExternalIdentityTypeName))? StudentController.defaultExternalIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,
@@ -455,7 +445,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         var studentRecords = response.data;
                         var totalRowCount = response.total;
                         StudentController.initialLoad = false;
-                        return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
+                        return StudentController.processExternalStudentRecord(studentRecords, params, totalRowCount);
                     }, function(error) {
                         console.log(error);
                         var status = error.status;
@@ -468,7 +458,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         }
                         var studentRecords = [];
                         InstitutionsStudentsSvc.init(angular.baseUrl);
-                        return StudentController.processStudentRecord(studentRecords, params, 0);
+                        return StudentController.processExternalStudentRecord(studentRecords, params, 0);
                     })
                     .finally(function(res) {
                         InstitutionsStudentsSvc.init(angular.baseUrl);
@@ -482,6 +472,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         gridObj.api.setDatasource(dataSource);
         gridObj.api.sizeColumnsToFit();
+    }
+
+    function processExternalStudentRecord(studentRecords, params, totalRowCount) {
+        for(var key in studentRecords) {
+            var mapping = InstitutionsStudentsSvc.getExternalSourceMapping();
+            studentRecords[key]['institution_name'] = '-';
+            studentRecords[key]['academic_period_name'] = '-';
+            studentRecords[key]['education_grade_name'] = '-';
+            studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key][mapping.date_of_birth_mapping]);
+            studentRecords[key]['gender_name'] = studentRecords[key][mapping.gender_mapping];
+            studentRecords[key]['gender'] = {'name': studentRecords[key][mapping.gender_mapping]};
+            studentRecords[key]['identity_number'] = studentRecords[key][mapping.identity_number_mapping];
+            studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
+            studentRecords[key]['name'] = '';
+            if (studentRecords[key].hasOwnProperty(mapping.first_name_mapping)) {
+                studentRecords[key]['name'] = studentRecords[key][mapping.first_name_mapping];
+            }
+            StudentController.appendName(studentRecords[key], mapping.middle_name_mapping);
+            StudentController.appendName(studentRecords[key], mapping.third_name_mapping);
+            StudentController.appendName(studentRecords[key], mapping.last_name_mapping);
+        }
+
+        var lastRow = totalRowCount;
+        StudentController.rowsThisPage = studentRecords;
+
+        params.successCallback(StudentController.rowsThisPage, lastRow);
+        StudentController.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return studentRecords;
     }
 
     function processStudentRecord(studentRecords, params, totalRowCount) {
@@ -721,19 +740,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var endDate = $scope.endDate;
 
         if (!StudentController.createNewStudent) {
-            InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
-            .then(function(studentData){
-
-                if (StudentController.externalSearch) {
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
-                    StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
-                } else {
-                    var studentId = StudentController.selectedStudent;
-                    StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
-                }
-            }, function(error){
-                console.log(error);
-            });
+            if (StudentController.externalSearch) {
+                var studentData = StudentController.selectedStudentData;
+                var amendedStudentData = Object.assign({}, studentData);
+                amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDateReverse(amendedStudentData.date_of_birth);
+                StudentController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
+            } else {
+                var studentId = StudentController.selectedStudent;
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
+            }
         } else {
             console.log('postForm');
             if (StudentController.selectedStudentData != null) {
@@ -925,6 +940,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         // Step 4 - Add Student
         else {
+            if (StudentController.externalSearch) {
+                StudentController.getUniqueOpenEmisId();
+            }
             studentData = StudentController.selectedStudentData;
             StudentController.completeDisabled = false;
             if (studentData.hasOwnProperty('institution_students')) {
