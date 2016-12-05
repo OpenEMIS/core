@@ -190,20 +190,20 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function($model, $id, $options) {
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+		$process = function($model, $ids, $options) {
 			// classes are not to be deleted (cascade delete is not set and need to change id)
 			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 			$InstitutionClasses->updateAll(
 					['staff_id' => 0],
-					['staff_id' => $id]
+					$ids
 				);
 
-			$userQuery = $model->find()->where([$this->aliasField('id') => $id])->first();
+			$userQuery = $model->find()->where($ids)->first();
 
 			if (!empty($userQuery)) {
 				if ($userQuery->is_student || $userQuery->is_guardian) {
-					$model->updateAll(['is_staff' => 0], [$model->primaryKey() => $id]);
+					$model->updateAll(['is_staff' => 0], $ids);
 				} else {
 					$model->delete($userQuery);
 				}

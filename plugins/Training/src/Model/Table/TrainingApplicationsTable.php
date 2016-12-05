@@ -212,7 +212,7 @@ class TrainingApplicationsTable extends ControllerActionTable
                             'controller' => 'Trainings',
                             'action' => 'Applications',
                             'view',
-                            $row->id
+                            $this->paramsEncode(['id' => $row->id])
                         ];
                     }
 
