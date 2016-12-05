@@ -29,24 +29,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $this->externalDataSourceType = $externalDataSourceRecord->value;
     }
 
-    public function editOnInitialize(Event $event, Entity $entity)
-    {
-        $newKey = openssl_pkey_new([
-            "digest_alg" => "sha256",
-            "private_key_bits" => 4096,
-            "private_key_type" => OPENSSL_KEYTYPE_RSA
-        ]);
-
-        $res = openssl_pkey_new();
-
-        openssl_pkey_export($res, $privKey);
-
-        $pubKey = openssl_pkey_get_details($res);
-        $pubKey = $pubKey["key"];
-        $this->request->data[$this->alias()]['public_key'] = $pubKey;
-        $this->request->session()->write($this->registryAlias().'.privateKey', $privKey);
-    }
-
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('visible', ['visible' => false]);
@@ -174,7 +156,20 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]';
         }
         if (empty($requestData[$this->alias()]['private_key'])) {
-            $requestData[$this->alias()]['private_key'] = $this->request->session()->read($this->registryAlias().'.privateKey');
+            $newKey = openssl_pkey_new([
+                "digest_alg" => "sha256",
+                "private_key_bits" => 4096,
+                "private_key_type" => OPENSSL_KEYTYPE_RSA
+            ]);
+
+            $res = openssl_pkey_new();
+
+            openssl_pkey_export($res, $privKey);
+
+            $pubKey = openssl_pkey_get_details($res);
+            $pubKey = $pubKey["key"];
+            $requestData[$this->alias()]['private_key'] = $privKey;
+            $requestData[$this->alias()]['public_key'] = $pubKey;
         }
 
     }
