@@ -484,6 +484,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             studentRecords[key]['gender_name'] = studentRecords[key][mapping.gender_mapping];
             studentRecords[key]['gender'] = {'name': studentRecords[key][mapping.gender_mapping]};
             studentRecords[key]['identity_number'] = studentRecords[key][mapping.identity_number_mapping];
+            studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
             studentRecords[key]['name'] = '';
             if (studentRecords[key].hasOwnProperty(mapping.first_name_mapping)) {
                 studentRecords[key]['name'] = studentRecords[key][mapping.first_name_mapping];
