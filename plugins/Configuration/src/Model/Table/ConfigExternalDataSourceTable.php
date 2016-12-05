@@ -77,7 +77,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         }
     }
 
-    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = []) 
+    public function onGetCustomExternalSourceElement(Event $event, $action, Entity $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Attribute Name'), __('Value')];
         $tableCells = [];
@@ -100,6 +100,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $newAttributes = [];
             $newAttributes['client_id'] = $attributes['client_id'];
             $newAttributes['url'] = $attributes['url'];
+            $newAttributes['public_key'] = $attributes['public_key'];
             $attributes = $newAttributes;
         }
 
@@ -175,7 +176,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         if (empty($requestData[$this->alias()]['private_key'])) {
             $requestData[$this->alias()]['private_key'] = $this->request->session()->read($this->registryAlias().'.privateKey');
         }
-        
+
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $patchOption, ArrayObject $extra)
@@ -224,7 +225,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_type_mapping', ['type' => 'hidden']);
                 $this->field('identity_number_mapping', ['type' => 'hidden']);
                 $this->field('nationality_mapping', ['type' => 'hidden']);
-                
+
                 break;
 
             case 'Custom':
