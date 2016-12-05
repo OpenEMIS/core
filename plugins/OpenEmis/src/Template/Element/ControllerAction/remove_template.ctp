@@ -15,12 +15,14 @@ $this->start('panelBody');
 	$formOptions['type'] = 'delete';
 	$this->Form->templates($template);
 	echo $this->Form->create($data, $formOptions);
-	echo $this->Form->hidden('id');
+	foreach ($primaryKey as $key) {
+		echo $this->Form->hidden($key);
+	}
 	echo $this->Form->input('name', ['label' => __($label['nameLabel']), 'readonly']);
 	if ($deleteStrategy == 'transfer') {
 		echo $this->HtmlField->secureSelect('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
 	}
-	
+
 	$tableData = [];
 	foreach ($associations as $row) {
 		$tableData[] = [__($row['model']), $row['count']];
