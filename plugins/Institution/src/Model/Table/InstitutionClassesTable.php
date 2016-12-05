@@ -153,7 +153,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (array_key_exists($this->alias(), $this->request->data)) {
             $selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
         } else if ($this->action == 'edit' && isset($this->request->pass[1])) {
-            $id = $this->request->pass[1];
+            $id = $this->paramsDecode($this->request->pass[1]);
             if ($this->exists($id)) {
                 $selectedAcademicPeriodId = $this->get($id)->academic_period_id;
             }

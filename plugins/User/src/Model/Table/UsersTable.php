@@ -585,7 +585,7 @@ class UsersTable extends AppTable {
 			$actions = ['view', 'edit'];
 			foreach ($actions as $action) {
 				if (array_key_exists($action, $buttons)) {
-					$buttons[$action]['url'][1] = $entity->security_user_id;
+					$buttons[$action]['url'][1] = $this->paramsEncode(['id' => $entity->security_user_id]);
 				}
 			}
 			if (array_key_exists('remove', $buttons)) {
