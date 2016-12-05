@@ -46,7 +46,7 @@ class StudentDropoutTable extends AppTable {
         $this->removePendingDropout($student->student_id, $student->institution_id);
     }
 
-	protected function removePendingDropout($studentId, $institutionId) 
+	protected function removePendingDropout($studentId, $institutionId)
     {
         //could not include grade / academic period because not always valid. (promotion/graduation/repeat and dropout can be done on different grade / academic period)
         $conditions = [
@@ -54,14 +54,14 @@ class StudentDropoutTable extends AppTable {
             'institution_id' => $institutionId,
             'status' => 0, //pending status
         ];
-        
+
         $entity = $this
                 ->find()
                 ->where(
                     $conditions
                 )
                 ->first();
-        
+
         if (!empty($entity)) {
             $this->delete($entity);
         }
@@ -434,7 +434,7 @@ class StudentDropoutTable extends AppTable {
 						'controller' => 'Dashboard',
 						'action' => $this->alias(),
 						'edit',
-						$row->id
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {
