@@ -94,10 +94,10 @@ class UndoBehavior extends Behavior {
         }
 	}
 
-	protected function updateStudentStatus($code, $id, $conditions) 
+	protected function updateStudentStatus($undoStatus, $id, $conditions) 
     {
-		$status = $this->statuses[$code];
-        $entity = '';
+        $enrolledStatus = $this->statuses['CURRENT'];
+		$entity = '';
         
         if ($id) {
             $entity = $this->model->get($id);
@@ -108,7 +108,36 @@ class UndoBehavior extends Behavior {
         }
 
         if (!empty($entity)) {
-            $entity->student_status_id = $status;
+            if ($undoStatus == 'TRANSFERRED') { //for undo transfer, need to re-update end_date according to transfer request on admission table
+
+                $studentAdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+
+                $studentAdmission = $studentAdmissionTable
+                                    ->find()
+                                    ->where([
+                                        $studentAdmissionTable->aliasField('student_id') => $entity->student_id,
+                                        $studentAdmissionTable->aliasField('status') => 1, //approved
+                                        $studentAdmissionTable->aliasField('academic_period_id') => $entity->academic_period_id,
+                                        $studentAdmissionTable->aliasField('education_grade_id') => $entity->education_grade_id,
+                                        $studentAdmissionTable->aliasField('previous_institution_id') => $entity->institution_id,
+                                    ])
+                                    ->first();
+
+                if (!empty($studentAdmission)) {
+                    $endDate = $studentAdmission->end_date;
+                    $entity->end_date = $endDate;
+                }
+            } else if ($undoStatus == 'DROPOUT') { //undo dropout, since there is no previous end_date stored, then put back the end date of the academic period.
+                
+                $academicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+                $academicPeriod = $academicPeriodTable->get($entity->academic_period_id);
+
+                if (!empty($academicPeriod)) {
+                    $endDate = $academicPeriod->end_date;
+                    $entity->end_date = $endDate;
+                }
+            }
+            $entity->student_status_id = $enrolledStatus;
             $this->model->save($entity);
         }
 	}

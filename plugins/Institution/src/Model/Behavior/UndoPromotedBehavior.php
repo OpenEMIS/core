@@ -54,7 +54,7 @@ class UndoPromotedBehavior extends UndoBehavior {
 							'student_id' => $studentId
 						];
 					}
-					$this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
+					$this->updateStudentStatus('PROMOTED', $whereId, $whereConditions);
 				}
 			}
 		}

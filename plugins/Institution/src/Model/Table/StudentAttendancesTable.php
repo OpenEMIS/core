@@ -348,7 +348,7 @@ class StudentAttendancesTable extends AppTable {
 			'controller' => 'Institutions',
 			'action' => 'StudentUser',
 			'view',
-			$entity->user->id
+			$this->paramsEncode(['id' => $entity->user->id])
 		]);
 
 		if ($timeError) {
