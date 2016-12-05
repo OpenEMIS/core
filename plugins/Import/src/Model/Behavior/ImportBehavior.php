@@ -623,12 +623,13 @@ class ImportBehavior extends Behavior {
         $objPHPExcel->setActiveSheetIndex(0);
         // column_name in import_mapping that have date format, after the humanize
         // to compare, to know that the column are date format.
+        $description = ' ( DD/MM/YYYY )';
         $dateHeader = [
-            __('Date Closed'),
-            __('Date Opened'),
-            __('Start Date'),
-            __('End Date'),
-            __('Date Of Birth')
+            __('Date Closed') . $description,
+            __('Date Opened') . $description,
+            __('Start Date') . $description,
+            __('End Date') . $description,
+            __('Date Of Birth') . $description
         ];
 
         $this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName );
