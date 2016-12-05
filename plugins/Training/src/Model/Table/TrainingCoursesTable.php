@@ -310,7 +310,7 @@ class TrainingCoursesTable extends ControllerActionTable
 						'controller' => 'Trainings',
 						'action' => 'Courses',
 						'view',
-						$row->id
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {

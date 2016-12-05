@@ -903,7 +903,7 @@ class InstitutionRoomsTable extends AppTable
 		$url = $this->ControllerAction->url('edit');
 		unset($url['type']);
 		unset($url['edit_type']);
-		$url[1] = $newEntity->id;
+		$url[1] = $this->paramsEncode(['id' => $newEntity->id]);
 		return $this->controller->redirect($url);
 	}
 

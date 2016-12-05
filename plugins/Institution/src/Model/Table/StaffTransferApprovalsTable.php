@@ -462,7 +462,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 						'controller' => 'Institutions',
 						'action' => 'StaffTransferApprovals',
 						'edit',
-						$row->id,
+						$this->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->previous_institution_id
 					];
 

@@ -14,6 +14,7 @@ class ReportsController extends AppController {
 			'Institutions'	=> ['className' => 'Report.Institutions', 'actions' => ['index', 'add']],
 			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
 			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
+            'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
 			'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
@@ -66,6 +67,11 @@ class ReportsController extends AppController {
 				'Report.StaffContacts' => __('Contacts'),
 				'Report.StaffQualifications' => __('Qualifications')
 			];
+        } else if ($module == 'Textbooks') {
+            $options = [
+                'Report.Textbooks' => __('Textbooks'),
+                'Report.InstitutionTextbooks' => __('Institution Textbooks')
+            ];
 		} else if ($module == 'Surveys') {
 			$options = [
 				'Report.Surveys' => __('Institutions')

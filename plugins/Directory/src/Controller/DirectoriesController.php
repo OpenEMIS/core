@@ -139,15 +139,15 @@ class DirectoriesController extends AppController {
 		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-				$id = $this->request->pass[0];
+				$id = $this->ControllerAction->paramsDecode($this->request->pass[0]);
 			} else if ($session->check('Directory.Directories.id')) {
 				$id = $session->read('Directory.Directories.id');
 			}
 			if (!empty($id)) {
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
-				$header = $action == 'StudentResults' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $id]);
+				$header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
 			}
 		}
 
@@ -172,7 +172,6 @@ class DirectoriesController extends AppController {
 			if ($session->check('Directory.Directories.name')) {
 				$header = $session->read('Directory.Directories.name');
 			}
-			$idKey = $this->ControllerAction->getPrimaryKey($model);
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -186,11 +185,10 @@ class DirectoriesController extends AppController {
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
-
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -207,10 +205,10 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('staff_id') => $userId
-					]);
+					$ids = $this->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('staff_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -227,10 +225,10 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('student_id') => $userId
-					]);
+					$ids = $this->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('student_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -298,11 +296,11 @@ class DirectoriesController extends AppController {
 
 		$tabElements = [
 			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
 				'text' => __('Overview')
 			],
 			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
 				'text' => __('Account')
 			],
 			'Identities' => [
@@ -365,7 +363,7 @@ class DirectoriesController extends AppController {
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
+			'Results' => ['text' => __('Assessments')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];

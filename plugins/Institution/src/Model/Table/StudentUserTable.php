@@ -214,7 +214,7 @@ class StudentUserTable extends ControllerActionTable
 			$isStudentEnrolled = $StudentTable->checkEnrolledInInstitution($studentId, $studentEntity->institution_id); // PHPOE-1897
 			$isAllowedByClass = $this->checkClassPermission($studentId, $userId); // POCOR-3010
 			if (isset($extra['toolbarButtons']['edit']['url'])) {
-				$extra['toolbarButtons']['edit']['url'][1] = $studentId;
+				$extra['toolbarButtons']['edit']['url'][1] = $this->paramsEncode(['id' => $studentId]);
 			}
 			if (!$isStudentEnrolled || !$isAllowedByClass) {
 				$this->toggle('edit', false);
@@ -326,7 +326,7 @@ class StudentUserTable extends ControllerActionTable
 
 				if (!empty($transferRequest)) {
 					$transferButton['url'][0] = 'view';
-					$transferButton['url'][1] = $transferRequest->id;
+					$transferButton['url'][1] = $this->paramsEncode(['id' => $transferRequest->id]);
 				}
 
 				$toolbarButtons['transfer'] = $transferButton;
@@ -410,7 +410,7 @@ class StudentUserTable extends ControllerActionTable
 
 				if (!empty($dropoutRequest)) {
 					$dropoutButton['url'][0] = 'edit';
-					$dropoutButton['url'][1] = $dropoutRequest->institution_student_dropout_id;
+					$dropoutButton['url'][1] = $this->paramsEncode(['id' => $dropoutRequest->institution_student_dropout_id]);
 				}
 				$toolbarButtons['dropout'] = $dropoutButton;
 			}
@@ -491,7 +491,7 @@ class StudentUserTable extends ControllerActionTable
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
+			'Results' => ['text' => __('Assessments')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];

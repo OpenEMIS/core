@@ -35,7 +35,7 @@ class FieldOptionComponent extends Component
         'Statuses' => ['className' => 'Institution.Statuses', 'parent' => 'Institution'],
         'Types' => ['className' => 'Institution.Types', 'parent' => 'Institution'],
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
-
+        'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
         'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],

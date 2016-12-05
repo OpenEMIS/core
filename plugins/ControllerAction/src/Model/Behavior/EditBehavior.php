@@ -30,23 +30,32 @@ class EditBehavior extends Behavior {
 		if ($event->result instanceof Table) {
 			$model = $event->result;
 		}
-		
+
 		$event = $model->dispatchEvent('ControllerAction.Model.edit.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 		if ($event->result instanceof Table) {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->getPrimaryKey();
-		
-		$idKey = $model->aliasField($primaryKey);
+		$ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+		$sessionKey = $model->registryAlias() . '.primaryKey';
 
-		$id = $model->paramsPass(0);
+		if (empty($ids)) {
+			if ($model->Session->check($sessionKey)) {
+				$ids = $model->Session->read($sessionKey);
+			} else if (!empty($model->ControllerAction->getQueryString())) {
+				// Query string logic not implemented yet, will require to check if the query string contains the primary key
+				$primaryKey = $model->primaryKey();
+				$ids = $model->ControllerAction->getQueryString($primaryKey);
+			}
+		}
+
+		$idKeys = $model->getIdKeys($model, $ids);
 
 		$entity = false;
 
-		if ($model->exists([$idKey => $id])) {
-			$query = $model->find()->where([$idKey => $id]);
+		if ($model->exists($idKeys)) {
+			$query = $model->find()->where($idKeys);
 
 			$event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
 			$event = $model->dispatchEvent('ControllerAction.Model.viewEdit.beforeQuery', [$query, $extra], $this);
@@ -75,10 +84,10 @@ class EditBehavior extends Behavior {
 				if ($submit == 'save') {
 					$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforePatch', $params, $this);
 					if ($event->isStopped()) { return $event->result; }
-					
+
 					$event = $model->dispatchEvent('ControllerAction.Model.edit.beforePatch', $params, $this);
 					if ($event->isStopped()) { return $event->result; }
-					
+
 					$patchOptionsArray = $patchOptions->getArrayCopy();
 					$request->data = $requestData->getArrayCopy();
 					if ($extra['patchEntity']) {
@@ -125,7 +134,7 @@ class EditBehavior extends Behavior {
 					$method = 'edit' . ucfirst($methodKey);
 					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
-					
+
 					$patchOptionsArray = $patchOptions->getArrayCopy();
 					$request->data = $requestData->getArrayCopy();
 					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
@@ -136,7 +145,7 @@ class EditBehavior extends Behavior {
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
-		
+
 		$event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 
