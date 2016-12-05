@@ -919,7 +919,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
     }
 
-    private function getSubjectOptions($selectedClassId, $listOnly=false)
+    public function getSubjectOptions($selectedClassId, $listOnly=false)
     {
         $Grade = $this->InstitutionClassGrades;
         $gradeOptions = $Grade->find('list', [
@@ -961,7 +961,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
         if (empty($data)) {
             // $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
-            $this->Alert->warning('Institution.Institutions.noSubjectsInClass');
+            // $this->Alert->warning('Institution.Institutions.noSubjectsInClass');
         }
         return $data;
     }
