@@ -67,7 +67,7 @@ class OpenEmisBehavior extends Behavior {
             $modal['form'] = [
                 'model' => $model,
                 'formOptions' => ['type' => 'delete', 'url' => $model->url('remove')],
-                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
+                'fields' => ['primaryKey' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
             ];
 
             $modal['buttons'] = [
@@ -135,13 +135,24 @@ class OpenEmisBehavior extends Behavior {
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
                 $isNotRestrictOperation = $model->actions('remove') != 'restrict';
-                $idKey = $model->getPrimaryKey();
-                $primaryKey = $entity->$idKey;
+                $primaryKey = $model->primaryKey();
+
+                $ids = [];
+                if (is_array($primaryKey)) {
+                    foreach ($primaryKey as $key) {
+                        $ids[$key] = $entity->$key;
+                    }
+                } else {
+                    $ids[$primaryKey] = $entity->$primaryKey;
+                }
+
+                $encodedIds = $model->paramsEncode($ids);
+
                 if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
                     if (array_key_exists('remove', $toolbarButtons)) {
-                        $toolbarButtons['remove']['attr']['field-value'] = $primaryKey;
+                        $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
                     }
                 }
 
@@ -154,7 +165,7 @@ class OpenEmisBehavior extends Behavior {
                         }
                     }
                     if ($determineShow) {
-                        $toolbarButtons['download']['url'][] = $primaryKey;
+                        $toolbarButtons['download']['url'][] = $encodedIds;
                     } else {
                         $toolbarButtons->offsetUnset('download'); // removes download button
                     }
@@ -175,9 +186,9 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+    public function indexAfterAction(Event $event, Query $query, $resultSet, ArrayObject $extra)
     {
-        if ($resultSet->count() == 0) {
+        if (count($resultSet) == 0) {
             $this->_table->Alert->info('general.noData');
         }
         $extra['config']['form'] = ['class' => ''];

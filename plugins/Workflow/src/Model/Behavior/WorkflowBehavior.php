@@ -688,14 +688,12 @@ class WorkflowBehavior extends Behavior {
 	public function getRecord() {
 		$ControllerAction = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 		$model = $this->_table;
-		$id = current($ControllerAction->paramsPass());
 
-		$primaryKey = $ControllerAction->getPrimaryKey($model);
-		$idKey = $model->aliasField($primaryKey);
+		$ids = $ControllerAction->paramsDecode(current($ControllerAction->paramsPass()));
+		$idKey = $ControllerAction->getIdKeys($model, $ids);
 
-		if ($model->exists([$idKey => $id])) {
-			$entity = $model->find()->contain(['Statuses'])->where([$idKey => $id])->first();
-
+		if ($model->exists($idKey)) {
+			$entity = $model->get($idKey, ['contain' => ['Statuses']]);
 			return $entity;
 		} else {
 			return null;

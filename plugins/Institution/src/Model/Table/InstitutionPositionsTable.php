@@ -527,7 +527,7 @@ class InstitutionPositionsTable extends ControllerActionTable {
 						'controller' => 'Institutions',
 						'action' => 'Positions',
 						'view',
-						$row->id,
+						$this->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 
