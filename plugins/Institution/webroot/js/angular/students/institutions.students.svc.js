@@ -37,7 +37,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateReverse: formatDateReverse,
         getAddNewStudentConfig: getAddNewStudentConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
@@ -236,7 +235,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                             if (key != 'date_of_birth') {
                                 params[key] = options['conditions'][key];
                             } else {
-                                params[key] = vm.formatDateReverse(options['conditions'][key]);
+                                params[key] = vm.formatDate(options['conditions'][key]);
                             }
                             var replaceKey = '{'+key+'}';
                             replacement[replaceKey] = params[key];
@@ -299,7 +298,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                     if (options['conditions'][key] !== '') {
                         if (key == 'date_of_birth') {
-                            options['conditions'][key] = vm.formatDateReverse(options['conditions'][key]);
+                            options['conditions'][key] = vm.formatDate(options['conditions'][key]);
                         }
                         params[key] = options['conditions'][key];
                         conditionsCount++;
@@ -700,18 +699,13 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
 
-    function formatDateReverse(datetime) {
+    function formatDate(datetime) {
         if (datetime !== undefined && datetime != '') {
             var dateArr = datetime.split('-');
             return dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0];
         } else {
             return '';
         }
-
-    }
-
-    function formatDate(datetime) {
-        return this.formatDateReverse(datetime);
     };
 
     function getAcademicPeriods() {

@@ -660,30 +660,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }, log);
     }
 
-    $scope.formatDateReverse = function(datetime) {
-        datetime = new Date(datetime);
-
-        var yyyy = datetime.getFullYear().toString();
-        var mm = (datetime.getMonth()+1).toString(); // getMonth() is zero-based
-        var dd  = datetime.getDate().toString();
-
-        return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + yyyy; // padding
-    }
-
-
-
     function onChangeAcademicPeriod() {
         AlertSvc.reset($scope);
 
         if (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
             $scope.endDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date);
-            StudentController.startDate = $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date);
+            StudentController.startDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date);
         }
 
         var startDatePicker = angular.element(document.getElementById('Students_start_date'));
-        startDatePicker.datepicker("setStartDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date));
-        startDatePicker.datepicker("setEndDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.end_date));
-        startDatePicker.datepicker("setDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setStartDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setEndDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date));
+        startDatePicker.datepicker("setDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date));
 
         StudentController.educationGradeOptions = null;
         InstitutionsStudentsSvc.getEducationGrades({
@@ -742,7 +730,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (StudentController.externalSearch) {
                 var studentData = StudentController.selectedStudentData;
                 var amendedStudentData = Object.assign({}, studentData);
-                amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDateReverse(amendedStudentData.date_of_birth);
+                amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDate(amendedStudentData.date_of_birth);
                 StudentController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
             } else {
                 var studentId = StudentController.selectedStudent;
