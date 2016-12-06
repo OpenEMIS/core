@@ -100,8 +100,6 @@ class WorkflowBehavior extends Behavior {
 		foreach($this->workflowEvents as $event) {
 			$events[$event['value']] = $event['method'];
 		}
-		$events['Model.SecurityGroupUsers.afterSave'] = 'securityGroupUserAfterSave';
-		$events['Model.SecurityGroupUsers.afterDelete'] = 'securityGroupUserAfterDelete';
 		$events['Model.WorkflowSteps.afterSave'] = 'workflowStepAfterSave';
 		return $events;
 	}
@@ -140,17 +138,6 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function securityGroupUserAfterSave(Event $event, Entity $securityGroupUserEntity) {
-		// only update workflow assignee if the user is added to the group or the role of the user has changed
-		if ($securityGroupUserEntity->isNew() || $securityGroupUserEntity->dirty('security_role_id')) {
-			$model = $this->_table;
-			$id = 0;
-			$statusId = 0;
-			$groupId = $securityGroupUserEntity->security_group_id;
-			$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId, $groupId);
-		}
-	}
-
 	private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
 		$args = '';
 		$args .= !is_null($id) ? ' '.$id : '';
@@ -171,18 +158,7 @@ class WorkflowBehavior extends Behavior {
         }
     }
 
-	public function securityGroupUserAfterDelete(Event $event, Entity $securityGroupUserEntity) {
-		$model = $this->_table;
-		$id = 0;
-		$statusId = 0;
-		$groupId = 0;
-		$userId = $securityGroupUserEntity->security_user_id;
-		$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId, $groupId, $userId);
-	}
-
 	public function workflowStepAfterSave(Event $event, Entity $workflowStepEntity) {
-		$model = $this->_table;
-
 		$id = 0;
 		$statusId = $workflowStepEntity->id;
 		$WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');

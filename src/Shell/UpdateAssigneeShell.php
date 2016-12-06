@@ -23,19 +23,15 @@ class UpdateAssigneeShell extends Shell {
  		if (empty($this->args[0])) {
  			$workflowModelResults = $this->WorkflowModels->find()->all();
 
- 			foreach ($workflowModelResults as $workflowModelEntity) {
- 				$this->autoAssignAssignee($workflowModelEntity);
- 			}
- 		} else {
- 			$triggeredModel = $this->args[0];
  			$id = !empty($this->args[1]) ? $this->args[1] : 0;
  			$statusId = !empty($this->args[2]) ? $this->args[2] : 0;
 	 		$groupId = !empty($this->args[3]) ? $this->args[3] : 0;
 	 		$userId = !empty($this->args[4]) ? $this->args[4] : 0;
 	 		$roleId = !empty($this->args[5]) ? $this->args[5] : 0;
 
-	 		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $triggeredModel])->first();
-	 		$this->autoAssignAssignee($workflowModelEntity, $id, $statusId, $groupId, $userId, $roleId);
+ 			foreach ($workflowModelResults as $workflowModelEntity) {
+ 				$this->autoAssignAssignee($workflowModelEntity, $id, $statusId, $groupId, $userId, $roleId);
+ 			}
  		}
 	}
 
