@@ -52,6 +52,9 @@ class UpdateAssigneeShell extends Shell {
 			} else if (!empty($statusId)) {
 				// only update records by status when user change security roles of a step
 				$where[$model->aliasField('status_id')] = $statusId;
+			} else if (!empty($userId)) {
+				// only update records by status when user is deleted
+				$where[$model->aliasField('assignee_id')] = $userId;
 			} else {
 				$where[$model->aliasField('assignee_id')] = 0;
 			}
