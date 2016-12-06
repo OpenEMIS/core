@@ -87,8 +87,8 @@ class SurveyFormsTable extends CustomFormsTable {
 		unset($this->fields['custom_filters']);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$surveyForm = $this->get($id);
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+		$surveyForm = $this->get($ids);
 		$customModule = $this->CustomModules
 			->find()
 			->where([

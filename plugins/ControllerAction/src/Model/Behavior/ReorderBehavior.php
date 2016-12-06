@@ -32,20 +32,31 @@ class ReorderBehavior extends Behavior {
 			$primaryKey = $model->primaryKey();
 			$orderField = $this->config('orderField');
 
-			$ids = json_decode($request->data("ids"));
+			$encodedIds = json_decode($request->data("ids"));
+
+			$ids = [];
+			$idKeys = [];
+
+			foreach ($encodedIds as $id) {
+				$ids[] = $model->paramsDecode($id);
+				$idKeys[] = $model->getIdKeys($model, $model->paramsDecode($id));
+			}
 
 			if (!empty($ids)) {
 				$originalOrder = $model
-					->find('list', ['keyField' => $primaryKey, 'valueField' => $orderField])
-					->where([$model->aliasField($primaryKey).' IN ' => $ids])
+					->find()
+					->select($primaryKey)
+					->select($orderField)
+					->where(['OR' => $idKeys])
 					->order([$model->aliasField($orderField)])
+					->hydrate(false)
 					->toArray();
 
 				$originalOrder = array_reverse($originalOrder);
 
-				foreach ($ids as $order => $id) {
+				foreach ($ids as $id) {
 					$orderValue = array_pop($originalOrder);
-					$model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+					$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
 				}
 			}
 		}

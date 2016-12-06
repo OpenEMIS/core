@@ -59,7 +59,7 @@ class UndoDropoutBehavior extends UndoBehavior {
                         ];
                     }
                     
-                    $this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
+                    $this->updateStudentStatus('DROPOUT', $whereId, $whereConditions);
 
                     //update dropout request (institution_student_dropout) to undo status.
                     $conditions = [

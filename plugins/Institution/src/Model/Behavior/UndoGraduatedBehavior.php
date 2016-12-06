@@ -54,7 +54,7 @@ class UndoGraduatedBehavior extends UndoBehavior {
     						'student_id' => $studentId
     					];
                     }
-					$this->updateStudentStatus('CURRENT', $whereId, $whereConditions);
+					$this->updateStudentStatus('GRADUATED', $whereId, $whereConditions);
 				}
 			}
 		}

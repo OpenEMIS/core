@@ -281,11 +281,12 @@ class InstitutionRubricsTable extends AppTable {
 		$this->_fieldOrder = ['status', 'rubric_template_id', 'academic_period_id', 'education_grade_id', 'institution_class_id', 'institution_subject_id', 'staff_id', 'rubric_sections'];
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$rubricRecord = $this->get($id);
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+		$rubricRecord = $this->get($ids);
 
 		if ($rubricRecord->status == 2) {
-			$entity = $this->newEntity(['id' => $id, 'status' => 1], ['validate' => false]);
+			$ids['status'] = 1;
+			$entity = $this->newEntity($ids, ['validate' => false]);
 			if ($this->save($entity)) {
 				$this->Alert->success('InstitutionRubricAnswers.reject.success');
 			} else {
@@ -428,7 +429,7 @@ class InstitutionRubricsTable extends AppTable {
 													$this->aliasField('staff_id') => $staffId
 												])
 												->all();
-											
+
 											if ($results->isEmpty()) {
 												// Insert New Rubric if not found
 												$data = [
