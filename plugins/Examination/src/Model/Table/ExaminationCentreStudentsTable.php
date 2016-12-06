@@ -224,9 +224,9 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         }
 
         if ($repeatStudent) {
-            return 'Yes';
+            return __('Yes');
         } else {
-            return 'No';
+            return __('No');
         }
     }
 
@@ -266,9 +266,9 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         }
 
         if ($Admission) {
-            return 'Yes';
+            return __('Yes');
         } else {
-            return 'No';
+            return __('No');
         }
     }
 
