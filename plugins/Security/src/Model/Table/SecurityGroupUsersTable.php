@@ -32,7 +32,8 @@ class SecurityGroupUsersTable extends AppTable {
             $id = 0;
             $statusId = 0;
             $groupId = $entity->security_group_id;
-            $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId);
+            $userId = $entity->security_user_id;
+            $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
         }
 	}
 
