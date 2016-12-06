@@ -25,26 +25,6 @@ class SecurityGroupUsersTable extends AppTable {
         ]);
 	}
 
-    private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
-        $args = '';
-        $args .= !is_null($id) ? ' '.$id : '';
-        $args .= !is_null($statusId) ? ' '.$statusId : '';
-        $args .= !is_null($groupId) ? ' '.$groupId : '';
-        $args .= !is_null($userId) ? ' '.$userId : '';
-        $args .= !is_null($roleId) ? ' '.$roleId : '';
-
-        $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateAssignee '.$registryAlias.$args;
-        $logs = ROOT . DS . 'logs' . DS . 'UpdateAssignee.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-
-        try {
-            $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
-        } catch(\Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception when update assignee : '. $ex);
-        }
-    }
-
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         // only update workflow assignee if the user is added to the group or the role of the user has changed
         if ($entity->isNew() || $entity->dirty('security_role_id')) {
@@ -64,6 +44,26 @@ class SecurityGroupUsersTable extends AppTable {
         $userId = $entity->security_user_id;
         $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
 	}
+
+    private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
+        $args = '';
+        $args .= !is_null($id) ? ' '.$id : '';
+        $args .= !is_null($statusId) ? ' '.$statusId : '';
+        $args .= !is_null($groupId) ? ' '.$groupId : '';
+        $args .= !is_null($userId) ? ' '.$userId : '';
+        $args .= !is_null($roleId) ? ' '.$roleId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateAssignee '.$registryAlias.$args;
+        $logs = ROOT . DS . 'logs' . DS . 'UpdateAssignee.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when update assignee : '. $ex);
+        }
+    }
 
 	public function insertSecurityRoleForInstitution($data) {
 		$institutionId = (array_key_exists('institution_id', $data))? $data['institution_id']: null;
