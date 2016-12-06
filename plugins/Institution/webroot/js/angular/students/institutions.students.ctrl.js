@@ -193,30 +193,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (promisesObj[4] != undefined && promisesObj[4].hasOwnProperty('data')) {
                 StudentController.StudentSpecialNeedsOptions = promisesObj[4]['data'];
             }
-            if (StudentController.hasExternalDataSource) {
-                return 'Identity Number';
-            } else {
-                return StudentController.genderOptions;
-            }
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
             AlertSvc.warning($scope, error);
-        })
-        .then(function(arr) {
-            if (StudentController.hasExternalDataSource) {
-                externalIdentityType = arr;
-                StudentController.defaultExternalIdentityTypeName = externalIdentityType;
-                InstitutionsStudentsSvc.init(angular.baseUrl);
-                return true;
-            } else {
-                return true;
-            }
-        }, function(error) {
-            StudentController.hasExternalDataSource = false;
-            InstitutionsStudentsSvc.init(angular.baseUrl);
-            console.log('Error connecting to external source');
-            AlertSvc.warning($scope, 'Error connecting to external source');
         })
         .finally(function(result) {
             $scope.initGrid();
@@ -386,7 +366,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         startRow: params.startRow,
                         endRow: params.endRow,
                         conditions: {
-                            openemis_no: StudentController.internalFilterOpenemisNo,
                             first_name: StudentController.internalFilterFirstName,
                             last_name: StudentController.internalFilterLastName,
                             identity_number: StudentController.internalFilterIdentityNumber,
@@ -432,7 +411,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             startRow: params.startRow,
                             endRow: params.endRow,
                             conditions: {
-                                openemis_no: StudentController.internalFilterOpenemisNo,
                                 first_name: StudentController.internalFilterFirstName,
                                 last_name: StudentController.internalFilterLastName,
                                 identity_number: StudentController.internalFilterIdentityNumber,
