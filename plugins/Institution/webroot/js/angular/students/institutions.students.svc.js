@@ -27,7 +27,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         postEnrolledStudent: postEnrolledStudent,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
+        makeDate: makeDate,
         formatDate: formatDate,
+        formatDateForSaving: formatDateForSaving,
         getUserRecord: getUserRecord,
         getGenderRecord: getGenderRecord,
         getInternalIdentityTypes: getInternalIdentityTypes,
@@ -67,11 +69,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
         SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
-    };
-
-    var externalModels = {
-        IdentityTypes: 'IdentityTypes'
-
     };
 
     return service;
@@ -377,6 +374,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var vm = this;
         if (externalSource == null) {
             userRecord['username'] = userRecord['openemis_no'];
+            userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date'])
             delete userRecord['gender'];
             if (userRecord['nationality_id'] != '' && userRecord['nationality_id'] != undefined) {
                 userRecord['nationalities'] = [{
@@ -413,7 +411,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 // Mandatory information from the form
                 newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
                 newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
-                newUserRecord['start_date'] = userRecord['start_date'];
+                newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
 
 
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
@@ -460,7 +458,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         });
                     } else {
 
-                        newUserRecord['date_of_birth'] = vm.formatDate(newUserRecord['date_of_birth']);
+                        newUserRecord['date_of_birth'] = vm.formatDateForSaving(newUserRecord['date_of_birth']);
                         newUserRecord['is_student'] = 1;
 
                         vm.importMappingObj(genderName, nationality, identityType)
@@ -672,6 +670,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         data['student_transfer_reason_id'] = 0;
         data['type'] = 1;
         data['status'] = 0;
+        data['start_date'] = this.formatDateForSaving(data['start_date']);
+        data['end_date'] = this.formatDateForSaving(data['end_date']);
         data['institution_class_id'] = data['class'];
         return StudentRecords.save(data)
     };
@@ -699,10 +699,48 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
 
+    function makeDate(datetime) {
+        // Only get the date part, we do not require the time portion
+        if (datetime.indexOf('T') > -1) {
+            datetime = datetime.split('T')[0];
+        }
+        // Logic to handle external datasource giving the datetime in this format 2005-07-08T11:22:33+0800
+        if (datetime !== undefined && datetime != '' && datetime.indexOf('-') > -1) {
+            var date = datetime.split('-');
+            if (date[0].length == 4) {
+                // To fix timezone offset issue between server and client machine
+                var offset = new Date(Date.parse(datetime)).getTimezoneOffset() * 60000;
+                date = new Date(Date.parse(datetime) + offset);
+            } else {
+                date = new Date(date[2], date[1]-1, date[0]);
+            }
+            return date;
+        } else {
+            return null;
+        }
+    }
+
     function formatDate(datetime) {
-        if (datetime !== undefined && datetime != '') {
-            var dateArr = datetime.split('-');
-            return dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0];
+        var date = this.makeDate(datetime);
+        if (date != null) {
+            var yyyy = date.getFullYear().toString();
+            var mm = (date.getMonth()+1).toString(); // getMonth() is zero-based
+            var dd  = date.getDate().toString();
+
+            return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0])  + '-' +   yyyy;
+        } else {
+            return '';
+        }
+    };
+
+    function formatDateForSaving(datetime) {
+        var date = this.makeDate(datetime);
+        if (date != null) {
+            var yyyy = date.getFullYear().toString();
+            var mm = (date.getMonth()+1).toString(); // getMonth() is zero-based
+            var dd  = date.getDate().toString();
+
+            return yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]);
         } else {
             return '';
         }
