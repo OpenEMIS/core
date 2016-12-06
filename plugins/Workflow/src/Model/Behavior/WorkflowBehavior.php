@@ -141,14 +141,14 @@ class WorkflowBehavior extends Behavior {
 	}
 
 	public function securityGroupUserAfterSave(Event $event, Entity $securityGroupUserEntity) {
-		$model = $this->_table;
-		$id = 0;
-		$statusId = 0;
-		$groupId = $securityGroupUserEntity->security_group_id;
-		$userId = $securityGroupUserEntity->security_user_id;
-		$roleId = $securityGroupUserEntity->security_role_id;
-
-		$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId, $groupId, $userId, $roleId);
+		// only update workflow assignee if the user is added to the group or the role of the user has changed
+		if ($securityGroupUserEntity->isNew() || $securityGroupUserEntity->dirty('security_role_id')) {
+			$model = $this->_table;
+			$id = 0;
+			$statusId = 0;
+			$groupId = $securityGroupUserEntity->security_group_id;
+			$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId, $groupId);
+		}
 	}
 
 	private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
@@ -173,52 +173,11 @@ class WorkflowBehavior extends Behavior {
 
 	public function securityGroupUserAfterDelete(Event $event, Entity $securityGroupUserEntity) {
 		$model = $this->_table;
-
-		$workflowModelEntity = $this->WorkflowModels->find()->where([$this->WorkflowModels->aliasField('model') => $this->config('model')])->first();
-		$isSchoolBased = $workflowModelEntity->is_school_based;
-		$groupId = $securityGroupUserEntity->security_group_id;
+		$id = 0;
+		$statusId = 0;
+		$groupId = 0;
 		$userId = $securityGroupUserEntity->security_user_id;
-		$roleId = $securityGroupUserEntity->security_role_id;
-
-		$notDoneRecords = $model
-			->find()
-			->contain(['Assignees'])
-			->matching('Statuses', function ($q) {
-				return $q->where(['Statuses.category <> ' => self::DONE]);
-			})
-			->where([$model->aliasField('assignee_id') => $userId])
-			->all();
-
-		Log::write('debug', $workflowModelEntity->name. ' - Not Done Records:');
-		Log::write('debug', $notDoneRecords);
-
-		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		foreach ($notDoneRecords as $key => $notDoneEntity) {
-			$stepId = $notDoneEntity->status_id;
-			$category = $notDoneEntity->_matchingData['Statuses']->category;
-			$createdUserId = $notDoneEntity->created_user_id;
-
-			$params = [
-				'is_school_based' => $isSchoolBased,
-				'workflow_step_id' => $stepId,
-				'category' => $category,
-				'created_user_id' => $createdUserId
-			];
-
-			if ($notDoneEntity->has('institution_id')) {
-				$params['institution_id'] = $notDoneEntity->institution_id;
-			}
-
-			$assigneeId = $SecurityGroupUsers->getFirstAssignee($params);
-			Log::write('debug', 'Affected Record Id: ' . $notDoneEntity->id . '; Assignee Id: ' . $assigneeId);
-
-			$model->updateAll(
-				['assignee_id' => $assigneeId],
-				['id' => $notDoneEntity->id]
-			);
-
-			$this->WorkflowTransitions->trackChanges($workflowModelEntity, $notDoneEntity, $assigneeId);
-		}
+		$this->triggerUpdateAssigneeShell($this->config('model'), $id, $statusId, $groupId, $userId);
 	}
 
 	public function workflowStepAfterSave(Event $event, Entity $workflowStepEntity) {
