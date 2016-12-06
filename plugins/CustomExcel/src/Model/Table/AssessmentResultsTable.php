@@ -36,6 +36,9 @@ class AssessmentResultsTable extends AppTable
         $this->addBehavior('CustomExcel.ExcelReport', [
             'variables' => [
                 'Assessments',
+                'AssessmentItems',
+                'AssessmentPeriods',
+                'ClassStudents',
                 'Institutions',
                 'InstitutionClasses'
             ]
@@ -46,8 +49,11 @@ class AssessmentResultsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassStudents'] = 'onExcelTemplateInitialiseClassStudents';
         return $events;
     }
 
@@ -58,8 +64,30 @@ class AssessmentResultsTable extends AppTable
             $entity = $Assessments->get($params['assessment_id'], [
                 'contain' => ['AcademicPeriods', 'EducationGrades']
             ]);
-
             return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseAssessmentItems(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $params)) {
+            $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
+            $results = $AssessmentItems->find()
+                ->contain(['EducationSubjects'])
+                ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
+                ->all();
+            return $results->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $params)) {
+            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $results = $AssessmentPeriods->find()
+                ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
+                ->all();
+            return $results->toArray();
         }
     }
 
@@ -80,6 +108,21 @@ class AssessmentResultsTable extends AppTable
         if (array_key_exists('class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['class_id']);
+            return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('class_id', $params)) {
+            $entity = $this->find()
+                ->contain([
+                    'Users' => [
+                        'BirthplaceAreas', 'Nationalities'
+                    ]
+                ])
+                ->where([$this->aliasField('institution_class_id') => $params['class_id']])
+                ->all();
             return $entity->toArray();
         }
     }
