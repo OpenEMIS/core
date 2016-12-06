@@ -9,8 +9,12 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\I18n\I18n;
 use Cake\ORM\Table;
+use Cake\Utility\Security;
+
+use ControllerAction\Model\Traits\SecurityTrait;
 
 class ControllerActionHelper extends Helper {
+	use SecurityTrait;
 	public $helpers = ['Html', 'ControllerAction.HtmlField', 'Form', 'Paginator', 'Label', 'Url'];
 
 	public function getColumnLetter($columnNumber) {
@@ -228,7 +232,7 @@ class ControllerActionHelper extends Helper {
 		$table = null;
 		// For XSS
 		$this->escapeHtmlSpecialCharacters($entity);
-
+		$count = 0;
 		foreach ($fields as $field => $attr) {
 			$model = $attr['model'];
 			$value = $entity->$field;
@@ -245,8 +249,8 @@ class ControllerActionHelper extends Helper {
 
 			$event = new Event($eventKey, $this, [$entity]);
 			$event = $table->eventManager()->dispatch($event);
-			// end attach event
 
+			// end attach event
 			$associatedFound = false;
 			if (strlen($event->result) > 0) {
 				$allowedTranslation = ['string','text'];//array that will be translate
@@ -270,6 +274,8 @@ class ControllerActionHelper extends Helper {
                 }
 			}
 
+
+
 			if (!$associatedFound) {
 				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
 			}
@@ -286,7 +292,19 @@ class ControllerActionHelper extends Helper {
 				$row[] = $value;
 			}
 		}
-		$row[0] = [$row[0], ['data-row-id' => $entity->id]];
+		$primaryKeys = $table->primaryKey();
+		$primaryKeyValue = [];
+		if (is_array($primaryKeys)) {
+			foreach ($primaryKeys as $key) {
+				$primaryKeyValue[$key] = $entity->$key;
+			}
+		} else {
+			$primaryKeyValue[$primaryKeys] = $entity->$primaryKeys;
+		}
+
+		$encodedKeys = $this->paramsEncode($primaryKeyValue);
+		$row[0] = [$row[0], ['data-row-id' => $encodedKeys]];
+
 		return $row;
 	}
 
