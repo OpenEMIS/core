@@ -157,8 +157,7 @@ class ExcelReportBehavior extends Behavior
                 $cellValue = $objCell->getValue();
             }
 
-            $replacedValue = $this->replaceCell($cellValue);
-            $sheet->setCellValue($cellCoordinate, $replacedValue);
+            $this->replaceCell($sheet, $objCell, $cellValue);
         }
         // End loop through all cell and replace placeholder with variables value
     }
@@ -219,27 +218,132 @@ class ExcelReportBehavior extends Behavior
 
         return $file;
     }
-
     
-    private function replaceCell($search)
+    private function replaceCell($sheet, $objCell, $search)
     {
         $format = '${%s}';
-        $strArray = explode('${', $search);
-        array_shift($strArray); // first element will not contain the placeholder
 
+        if (strlen($search) > 0) {
+            $rowArray = explode('${repeat-rows:', $search);
+            array_shift($rowArray); // first element will not contain the placeholder
+            $columnArray = explode('${repeat-columns:', $search);
+            array_shift($columnArray); // first element will not contain the placeholder
+            $strArray = explode('${', $search);
+            array_shift($strArray); // first element will not contain the placeholder
+
+            if (sizeof($rowArray) > 0) {
+                $this->replaceRow($sheet, $objCell, $search, $format, $rowArray);
+            } else if (sizeof($columnArray) > 0) {
+                $this->replaceColumn($sheet, $objCell, $search, $format, $columnArray);
+            } else {
+                $this->replaceString($sheet, $objCell, $search, $format, $strArray);
+            }
+        }
+    }
+
+    private function replaceRow($sheet, $objCell, $search, $format, $rowArray)
+    {
+        foreach ($rowArray as $key => $str) {
+            $filterPos = strpos($str, '|');
+            $pos = strpos($str, '}');
+
+            if ($pos === false) {
+                // closing of placeholder not found
+            } else {
+                if ($filterPos === false) {
+                    // filter not found
+                    $placeholderStr = substr($str, 0, $pos);
+                    $filterStr = '';
+                } else {
+                    $placeholderStr = substr($str, 0, $filterPos);
+                    $filterStr = substr($str, $filterPos + 1, $pos);
+                }
+
+                $placeholder = $this->formatPlaceholder($placeholderStr);
+                $replace = sprintf($format, $placeholder);
+                $data = Hash::extract($this->vars, $placeholder);
+
+                $columnValue = $objCell->getColumn();
+                $rowValue = $objCell->getRow();
+                $cellCoordinate = $objCell->getCoordinate();
+                $cellStyle = $objCell->getStyle($cellCoordinate);
+
+                foreach ($data as $key => $value) {
+                    $newCellCoordinate = $columnValue.$rowValue;
+                    $sheet->setCellValue($newCellCoordinate, $value);
+                    $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
+                    $rowValue++;
+                }
+            }
+        }
+    }
+
+    private function replaceColumn($sheet, $objCell, $search, $format, $columnArray)
+    {
+        foreach ($columnArray as $key => $str) {
+            $filterPos = strpos($str, '|');
+            $pos = strpos($str, '}');
+
+            if ($pos === false) {
+                // closing of placeholder not found
+            } else {
+                if ($filterPos === false) {
+                    // filter not found
+                    $placeholderStr = substr($str, 0, $pos);
+                    $filterStr = '';
+                } else {
+                    $placeholderStr = substr($str, 0, $filterPos);
+                    $filterStr = substr($str, $filterPos + 1, $pos);
+                }
+
+                $placeholder = $this->formatPlaceholder($placeholderStr);
+                $replace = sprintf($format, $placeholder);
+                $data = Hash::extract($this->vars, $placeholder);
+
+                $columnIndex = $objCell->columnIndexFromString($objCell->getColumn());
+                $rowValue = $objCell->getRow();
+                $cellCoordinate = $objCell->getCoordinate();
+                $cellStyle = $objCell->getStyle($cellCoordinate);
+
+                foreach ($data as $key => $value) {
+                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $newCellCoordinate = $columnValue.$rowValue;
+                    $sheet->setCellValue($newCellCoordinate, $value);
+                    $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
+                    $columnIndex++;
+                }
+            }
+        }
+    }
+
+    private function replaceString($sheet, $objCell, $search, $format, $strArray)
+    {
         foreach ($strArray as $key => $str) {
             $pos = strpos($str, '}');
 
             if ($pos === false) {
-                // placeholder not found
+                // closing of placeholder not found
             } else {
                 $placeholder = substr($str, 0, $pos);
                 $replace = sprintf($format, $placeholder);
                 $value = Hash::get($this->vars, $placeholder);
-                $search = str_replace($replace, $value, $search);
+
+                if (!is_null($value)) {
+                    $search = str_replace($replace, $value, $search);
+                }
             }
         }
 
-        return $search;
+        $cellCoordinate = $objCell->getCoordinate();
+        $sheet->setCellValue($cellCoordinate, $search);
+    }
+
+    private function formatPlaceholder($str)
+    {
+        $placeholderArray = explode('.', $str);
+        array_splice($placeholderArray, 1, 0, array('{n}'));
+        $placeholder = implode(".", $placeholderArray);
+
+        return $placeholder;
     }
 }
