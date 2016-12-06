@@ -105,17 +105,19 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 
 	public function onGetStaffId(Event $event, Entity $entity)
 	{
-		if ($this->action == 'view') {
-			return $event->subject()->Html->link($entity->staff->name_with_id , [
-				'plugin' => 'Institution',
-				'controller' => 'Institutions',
-				'action' => 'StaffUser',
-				'view',
-				$entity->staff->id
-			]);
-		} else {
-			return $entity->staff->name_with_id;
-		}
+        if ($entity->staff) {
+            if ($this->action == 'view') {
+                return $event->subject()->Html->link($entity->staff->name_with_id , [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'StaffUser',
+                    'view',
+                    $entity->staff->id
+                ]);
+            } else {
+                return $entity->staff->name_with_id;
+            }
+        }
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
