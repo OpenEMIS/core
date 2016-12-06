@@ -192,7 +192,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
         this.getExternalSourceUrl()
         .then(function(sourceUrl) {
-            console.log(sourceUrl);
             var source = sourceUrl.data;
             vm.getAccessToken()
             .then(function(token){
