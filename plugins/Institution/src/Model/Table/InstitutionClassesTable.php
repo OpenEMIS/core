@@ -1011,6 +1011,12 @@ class InstitutionClassesTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
+        if ($entity->has('education_grades')) { //build grades array to cater for multi grade class
+            foreach ($entity->education_grades as $key => $value) {
+                $educationGrades[] = $value->id;
+            }
+        }
+
         $InstitutionStudentsTable = $this->Institutions->Students;
         $userData = $InstitutionStudentsTable->find()
             ->contain(['Users' => ['Genders'], 'StudentStatuses', 'EducationGrades'])
@@ -1019,11 +1025,11 @@ class InstitutionClassesTable extends ControllerActionTable
                 $InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id,
                 $InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
                 //this is to ensure that student is enrolled and have the correct education grade accordingly.
-                $InstitutionStudentsTable->aliasField('education_grade_id') => $entity->education_grades[0]->id,
+                $InstitutionStudentsTable->aliasField('education_grade_id IN ') => $educationGrades,
                 $InstitutionStudentsTable->aliasField('student_status_id') => $enrolled
             ])
             ->first();
-
+        
         if ($userData) {
             $data = [
                 'id' => $this->getExistingRecordId($id, $entity),
