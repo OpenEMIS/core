@@ -12,13 +12,12 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Restful\Controller\AppController;
-use Cake\I18n\I18n;
 
 class RestfulController extends AppController
 {
     private $_debug = false;
     private $model = null;
-    private $controllerAction = null;
+    protected $controllerAction = null;
 
     public function initialize()
     {
@@ -29,7 +28,6 @@ class RestfulController extends AppController
             'unauthorizedRedirect' => false
         ]);
         $this->Auth->allow('token');
-        $this->Auth->allow('translate');
     }
 
     public function token()
@@ -299,6 +297,23 @@ class RestfulController extends AppController
         }
     }
 
+    private function formatData(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        foreach ($entity->visibleProperties() as $property) {
+            $method = $schema->columnType($property);
+            if (method_exists($this, $method)) {
+                $entity->$property = $this->$method($entity->property);
+            }
+        }
+    }
+
+    private function binary($attribute)
+    {
+        return base64_encode($attribute);
+    }
+
     private function convertBinaryToBase64(Table $table, Entity $entity)
     {
         $table = $this->model;
@@ -363,15 +378,18 @@ class RestfulController extends AppController
     public function options()
     {
         $this->autoRender = false;
-        $supportedMethods = ['GET', 'POST', 'PUT', 'DELETE'];
-        $headers = getallheaders();
+        $supportedMethods = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
+        $allowedHeaders = ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'ControllerAction'];
+        $header = $this->response->header();
+        $origin = isset($header['Origin']) ? $header['Origin'] : [];
 
-        header('Access-Control-Allow-Origin: ' . $headers['Origin']);
-        header('Access-Control-Allow-Methods: ' . implode(', ', $supportedMethods));
-        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, ControllerAction');
-        header('Content-Type: text/html; charset=utf-8');
+        $this->response->cors($this->request, $origin, $supportedMethods, $allowedHeaders);
 
-        Log::write('debug', getallheaders());
+        // Default it should be UTF-8 and text/html and the following need not be set
+        $this->response->charset('UTF-8');
+        $this->response->type('html');
+
+        Log::write('debug', $this->response->header());
 
         /*
         OPTIONS /cors HTTP/1.1
@@ -442,6 +460,7 @@ class RestfulController extends AppController
             $entity = $target->newEntity($this->request->data);
             $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
+            $this->formatData($entity);
             $this->set([
                 'data' => $entity,
                 'error' => $entity->errors(),
