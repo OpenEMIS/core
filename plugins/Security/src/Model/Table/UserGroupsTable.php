@@ -28,7 +28,8 @@ class UserGroupsTable extends AppTable {
 			'foreignKey' => 'security_group_id',
 			'targetForeignKey' => 'security_user_id',
 			'through' => 'Security.SecurityGroupUsers',
-			'dependent' => true
+			'dependent' => true,
+			'saveStrategy' => 'append'
 		]);
 
 		$this->belongsToMany('Areas', [
@@ -679,56 +680,26 @@ class UserGroupsTable extends AppTable {
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
-
-		// The association can be added if it is an add action
-		if ($this->action == 'add') {
-			$newOptions['associated'] = [
-				'Areas' => ['validate' => false],
-				'Institutions',
-				'Users'
-			];
-		}
-		// For edit function, the user role is save from the edit after save logic as users cannot be save properly using associated method
-		else {
-			$newOptions['associated'] = [
-				'Areas' => ['validate' => false],
-				'Institutions'
-			];
-		}
+		$newOptions['associated'] = [
+			'Areas' => ['validate' => false],
+			'Institutions',
+			'Users'
+		];
 
 		$arrayOptions = $options->getArrayCopy();
 		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
 		$options->exchangeArray($arrayOptions);
 	}
 
-	// same logic also in SystemGroups, may consider moving it into a behavior
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// users can't save properly using associated method
-		// until we find a better solution, saving of users for groups will be done in afterSave as of now
-		$id = $entity->id;
-		$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$GroupUsers->deleteAll(['security_group_id' => $id]);
-
-		if ($entity->has('users')) {
-			$users = $entity->users;
-			if (!empty($users)) {
-				foreach ($users as $user) {
-					$query = $GroupUsers->find()->where([
-						$GroupUsers->aliasField('security_user_id') => $user['_joinData']['security_user_id'],
-						$GroupUsers->aliasField('security_role_id') => $user['_joinData']['security_role_id'],
-						$GroupUsers->aliasField('security_group_id') => $id
-					]);
-
-					if ($query->count() == 0) {
-						$newEntity = $GroupUsers->newEntity([
-							'security_user_id' => $user['_joinData']['security_user_id'],
-							'security_role_id' => $user['_joinData']['security_role_id'],
-							'security_group_id' => $id
-						]);
-
-						$GroupUsers->save($newEntity);
-					}
-				}
+		// manually remove users from entity object when users are deleted from the screen
+		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+		$userIds = array_column($data[$this->alias()]['users'], 'id');
+		$originalUsers = $entity->extractOriginal(['users'])['users'];
+		foreach ($originalUsers as $key => $user) {
+			if (!in_array($user['id'], $userIds)) {
+				$SecurityGroupUsers->delete($user['_joinData']);
+				unset($entity->users[$key]);
 			}
 		}
 	}
