@@ -10,10 +10,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
-use Cake\I18n\Date;
-use Cake\I18n\Time;
-use Cake\I18n\FrozenDate;
-use Cake\I18n\FrozenTime;
 use Cake\Utility\Inflector;
 use Restful\Controller\AppController;
 
@@ -21,7 +17,7 @@ class RestfulController extends AppController
 {
     private $_debug = false;
     private $model = null;
-    private $controllerAction = null;
+    protected $controllerAction = null;
 
     public function initialize()
     {
@@ -301,56 +297,50 @@ class RestfulController extends AppController
         }
     }
 
+    private function formatData(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        foreach ($entity->visibleProperties() as $property) {
+            $method = $schema->columnType($property);
+            if (method_exists($this, $method)) {
+                $entity->$property = $this->$method($entity->property);
+            }
+        }
+    }
+
+    private function binary($attribute)
+    {
+        return base64_encode($attribute);
+    }
+
     private function convertBinaryToBase64(Table $table, Entity $entity)
     {
+        $table = $this->model;
+        $schema = $table->schema();
+
         foreach ($entity->visibleProperties() as $property) {
-            if ($entity->$property instanceof Entity) {
-                $source = $entity->$property->source();
-                $entityTable = TableRegistry::get($source);
-                $this->convertBinaryToBase64($entityTable, $entity->$property);
-            } else {
-                if ($property == 'password') {
-                    $entity->unsetProperty($property);
+            if (in_array($schema->columnType($property), ['datetime', 'date'])) {
+                if (!empty($entity->$property)) {
+                    $entity->$property = $entity->$property->format('Y-m-d');
+                } else {
+                    $entity->$property = '1970-01-01';
                 }
-                $columnType = $table->schema()->columnType($property);
-                $method = 'format'. ucfirst($columnType);
-                if (method_exists($this, $method)) {
-                    $entity->$property = $this->$method($entity->$property);
-                }
-                $eventKey = 'Restful.Model.onRender'.ucfirst($columnType);
-                $table->dispatchEvent($eventKey, [$entity, $property], $this);
             }
-
-            // $eventKey = 'Restful.Model.onRender' . Inflector::camelize($property);
-            // $event = $table->dispatchEvent($eventKey, [$entity], $this);
-            // if ($event->result) {
-            //     $entity->$property = $event->result;
-            // }
+            if ($entity->$property instanceof Entity) {
+                $this->convertBinaryToBase64($table, $entity->$property);
+            } else if (is_resource($entity->$property)) {
+                $entity->$property = base64_encode(stream_get_contents($entity->$property));
+            } else if ($property == 'password') { // removing password from entity so that the value will not be exposed
+                $entity->unsetProperty($property);
+            } else {
+                $eventKey = 'Restful.Model.onRender' . Inflector::camelize($property);
+                $event = $table->dispatchEvent($eventKey, [$entity], $this);
+                if ($event->result) {
+                    $entity->$property = $event->result;
+                }
+            }
         }
-    }
-
-    private function formatBinary($attribute)
-    {
-        if (is_resource($attribute)) {
-            return base64_encode(stream_get_contents($attribute));
-        } else {
-            return base64_encode(urlencode($attribute));
-        }
-    }
-
-    private function formatDatetime($attribute)
-    {
-        return $this->formatDate($attribute);
-    }
-
-    private function formatDate($attribute)
-    {
-        if ($attribute instanceof Date || $attribute instanceof Time || $attribute instanceof FrozenDate || $attribute instanceof FrozenTime) {
-            $attribute = $attribute->format('Y-m-d');
-        } else if ($attribute == '0000-00-00') {
-            $attribute = '1970-01-01';
-        }
-        return $attribute;
     }
 
     private function convertBase64ToBinary(Entity $entity)
@@ -362,7 +352,6 @@ class RestfulController extends AppController
         foreach ($columns as $column) {
             $attr = $schema->column($column);
             if ($attr['type'] == 'binary' && $entity->has($column)) {
-                // This line may have to be remove
                 $value = urldecode($entity->$column);
                 $entity->$column = base64_decode($value);
             }
@@ -377,9 +366,7 @@ class RestfulController extends AppController
 
         } else {
             foreach ($data as $key => $value) {
-                if ($value instanceof Entity) {
-                    $this->convertBinaryToBase64($table, $value);
-                }
+                $this->convertBinaryToBase64($table, $value);
             }
         }
         return $data;
@@ -391,15 +378,18 @@ class RestfulController extends AppController
     public function options()
     {
         $this->autoRender = false;
-        $supportedMethods = ['GET', 'POST', 'PUT', 'DELETE'];
-        $headers = getallheaders();
+        $supportedMethods = ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'];
+        $allowedHeaders = ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'ControllerAction'];
+        $header = $this->response->header();
+        $origin = isset($header['Origin']) ? $header['Origin'] : [];
 
-        header('Access-Control-Allow-Origin: ' . $headers['Origin']);
-        header('Access-Control-Allow-Methods: ' . implode(', ', $supportedMethods));
-        header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, ControllerAction');
-        header('Content-Type: text/html; charset=utf-8');
+        $this->response->cors($this->request, $origin, $supportedMethods, $allowedHeaders);
 
-        Log::write('debug', getallheaders());
+        // Default it should be UTF-8 and text/html and the following need not be set
+        $this->response->charset('UTF-8');
+        $this->response->type('html');
+
+        Log::write('debug', $this->response->header());
 
         /*
         OPTIONS /cors HTTP/1.1
@@ -470,7 +460,7 @@ class RestfulController extends AppController
             $entity = $target->newEntity($this->request->data);
             $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
-            $this->convertBinaryToBase64($target, $entity);
+            $this->formatData($entity);
             $this->set([
                 'data' => $entity,
                 'error' => $entity->errors(),
