@@ -75,6 +75,7 @@ class AssessmentResultsTable extends AppTable
             $results = $AssessmentItems->find()
                 ->contain(['EducationSubjects'])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
+                ->hydrate(false)
                 ->all();
             return $results->toArray();
         }
@@ -86,8 +87,25 @@ class AssessmentResultsTable extends AppTable
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
             $results = $AssessmentPeriods->find()
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
+                ->hydrate(false)
                 ->all();
             return $results->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('class_id', $params)) {
+            $entity = $this->find()
+                ->contain([
+                    'Users' => [
+                        'BirthplaceAreas', 'Nationalities'
+                    ]
+                ])
+                ->where([$this->aliasField('institution_class_id') => $params['class_id']])
+                ->hydrate(false)
+                ->all();
+            return $entity->toArray();
         }
     }
 
@@ -108,21 +126,6 @@ class AssessmentResultsTable extends AppTable
         if (array_key_exists('class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['class_id']);
-            return $entity->toArray();
-        }
-    }
-
-    public function onExcelTemplateInitialiseClassStudents(Event $event, array $params, ArrayObject $extra)
-    {
-        if (array_key_exists('class_id', $params)) {
-            $entity = $this->find()
-                ->contain([
-                    'Users' => [
-                        'BirthplaceAreas', 'Nationalities'
-                    ]
-                ])
-                ->where([$this->aliasField('institution_class_id') => $params['class_id']])
-                ->all();
             return $entity->toArray();
         }
     }
