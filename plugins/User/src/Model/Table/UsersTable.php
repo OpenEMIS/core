@@ -367,15 +367,9 @@ class UsersTable extends AppTable {
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
 
-		if (array_key_exists('model', $options)) {
-			switch ($options['model']) {
-				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
-					$prefix = explode(",", $prefix);
-					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
-					break;
-			}
-		}
+		$prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
+		$prefix = explode(",", $prefix);
+		$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
 		$latest = $this->find()
 			->order($this->aliasField('id').' DESC')
