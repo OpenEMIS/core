@@ -91,7 +91,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             foreach ($attributes as $key => $obj) {
                 $rowData = [];
                 $rowData[] = __(Inflector::humanize($key));
-                $rowData[] = $obj;
+                $rowData[] = nl2br($obj);
                 $tableCells[] = $rowData;
             }
         }
