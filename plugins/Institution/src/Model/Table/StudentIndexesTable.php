@@ -105,6 +105,7 @@ class StudentIndexesTable extends ControllerActionTable
         $indexId = $entity->index->id;
         $institutionId = $entity->institution->id;
         $studentId = $entity->user->id;
+        $institutionStudentIndexId = $this->paramsPass(0);
 
         if ($action == 'view') {
             $indexesCriteriasResults = $indexesCriterias->find()
@@ -115,11 +116,37 @@ class StudentIndexesTable extends ControllerActionTable
             if (!$indexesCriteriasResults->isEmpty()) {
                 foreach ($indexesCriteriasResults as $i => $obj) {
                     $criteriaKey = $obj->criteria;
+                    $indexesCriteriaId = $obj->id;
+                    $operator = $obj->operator; // need this as an operator to do the red font
+                    $threshold = $obj->threshold; // need this as an operator to do the red font
 
-                    $value = '0';
-                    $criteriaModel = TableRegistry::get($criteriaKey);
-                    if (method_exists($criteriaModel, 'calculateValueIndex')) {
-                        $value = $criteriaModel->calculateValueIndex($institutionId, $studentId);
+                    $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriaId);
+
+                    // to get the red highlighted font
+                    switch ($operator) {
+                    case 1: // '<'
+                        if ($value < $threshold) {
+                            $indexValue = '<div style="color : red">'.$obj->index_value.'</div>';
+                        } else {
+                            $indexValue = $obj->index_value;
+                        }
+                        break;
+
+                     case 2: // '>'
+                        if ($value > $threshold) {
+                            $indexValue = '<div style="color : red">'.$obj->index_value.'</div>';
+                        } else {
+                            $indexValue = $obj->index_value;
+                        }
+                        break;
+
+                        // case 3: // '='
+                        //  if ($absenceDay == $threshold) {
+                        //      $valueIndex = $absenceDay;
+                        //  } else {
+                        //      $valueIndex = 0;
+                        //  }
+                        //  break;
                     }
 
                     $rowData = [];
@@ -127,7 +154,9 @@ class StudentIndexesTable extends ControllerActionTable
                     $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['operator'][$obj->operator];
                     $rowData[] = $obj->threshold;
                     $rowData[] = $value;
-                    $rowData[] = $obj->index_value;
+                    // $rowData[] = $obj->index_value;
+                    $rowData[] = $indexValue; // need this as an operator to do the red font
+
 
                     $tableCells[] = $rowData;
                 }
@@ -138,14 +167,5 @@ class StudentIndexesTable extends ControllerActionTable
         $attr['tableCells'] = $tableCells;
 
         return $event->subject()->renderElement('Indexes.Indexes/' . $fieldKey, ['attr' => $attr]);
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        unset($buttons['edit']);//remove edit action from the action button
-        unset($buttons['remove']);// remove delete action from the action button
-
-        return $buttons;
     }
 }
