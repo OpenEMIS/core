@@ -1180,7 +1180,7 @@ class ImportBehavior extends Behavior {
                     $originalRow[$col] = $val;
                     if (is_numeric($val)) {
                         // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
-                        // this date_default_timezone_set('UTC') is to revert the timezone bcak to the timezone used by excel which is UTC.
+                        // this date_default_timezone_set('UTC') is to revert the timezone back to the timezone used by excel which is UTC.
                         date_default_timezone_set('UTC');
                         $val = date('d/m/Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
                     } else {
