@@ -8,6 +8,7 @@ use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Cake\Utility\Security;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable {
     public $id;
@@ -120,6 +121,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                     ])
                     ->toArray();
                 foreach ($attributes as $key => $value) {
+                    if ($key == 'private_key') {
+                        $value = Security::decrypt($privKey, Security::salt());
+                    }
                     $request->data[$this->alias()][$key] = $value;
                 }
                 if ($entity->field_type == 'Dropdown') {
@@ -168,7 +172,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
 
             $pubKey = openssl_pkey_get_details($res);
             $pubKey = $pubKey["key"];
-            $requestData[$this->alias()]['private_key'] = $privKey;
+            $requestData[$this->alias()]['private_key'] = Security::encrypt($privKey, Security::salt());
             $requestData[$this->alias()]['public_key'] = $pubKey;
         }
 
