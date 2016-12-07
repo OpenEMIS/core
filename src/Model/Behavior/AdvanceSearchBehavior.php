@@ -18,7 +18,7 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'display_country' => true,
 		'exclude' => ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'],
-        'include' => ['openemis_no'], //to include field that is inside the database table
+        'include' => [], //to include field that is from the database table
         'customFields' => [],
         'order' => [],
         'showOnLoad' => 0
