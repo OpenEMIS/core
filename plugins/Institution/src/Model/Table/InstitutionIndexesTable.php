@@ -23,13 +23,15 @@ class InstitutionIndexesTable extends ControllerActionTable
 
         $this->toggle('search', false);
         $this->toggle('add', false);
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name',['sort' => false]);
         $this->field('average_index',['sort' => false]);
-        $this->field('total_index',['sort' => false]);
+        $this->field('total_risk_index',['sort' => false]);
 
         $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
     }
@@ -41,7 +43,7 @@ class InstitutionIndexesTable extends ControllerActionTable
         $this->setFieldOrder(['name']);
     }
 
-    public function onGetTotalIndex(Event $event, Entity $entity)
+    public function onGetTotalRiskIndex(Event $event, Entity $entity)
     {
         $indexId = $entity->id;
         $indexTotal = $this->IndexesCriterias->getTotalIndex($indexId);
@@ -59,8 +61,7 @@ class InstitutionIndexesTable extends ControllerActionTable
                 'index_id' => $entity->id,
             ];
         }
-        unset($buttons['edit']);//remove edit action from the action button
-        unset($buttons['remove']);// remove delete action from the action button
+
         return $buttons;
     }
 }

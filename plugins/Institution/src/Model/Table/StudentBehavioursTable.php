@@ -22,7 +22,7 @@ class StudentBehavioursTable extends AppTable {
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
-
+		// $this->addBehavior('Indexes.Indexes');
 	}
 
 	public function implementedEvents() {
