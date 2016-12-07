@@ -8,6 +8,7 @@ use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 use Firebase\JWT\JWT;
 use Cake\I18n\Time;
+use Cake\Utility\Security;
 
 class ConfigurationsController extends AppController {
     public function initialize()
@@ -48,8 +49,8 @@ class ConfigurationsController extends AppController {
                 $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $externalDataSourceType
             ])
             ->toArray();
-        
-        $privateKey = $records['private_key'];
+
+        $privateKey = Security::decrypt($records['private_key'], Security::salt());
         $exp = intval(Time::now()->toUnixString()) + 3600;
         $iat = Time::now()->toUnixString();
 
