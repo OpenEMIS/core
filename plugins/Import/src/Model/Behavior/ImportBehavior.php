@@ -1165,6 +1165,8 @@ class ImportBehavior extends Behavior {
             $originalRow[$col] = $originalValue;
             $val = $cellValue;
 
+            $datePattern = "/(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}/";
+
             // skip a record column which has value defined earlier before this function is called
             // example; openemis_no
             // but if the value is 0, it will still proceed
@@ -1178,12 +1180,20 @@ class ImportBehavior extends Behavior {
                     $originalRow[$col] = $val;
                     if (is_numeric($val)) {
                         // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
+                        // this date_default_timezone_set('UTC') is to revert the timezone back to the timezone used by excel which is UTC.
+                        date_default_timezone_set('UTC');
                         $val = date('d/m/Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
                     } else {
-                        // if invalid date, the invalid date will be keep and not converted to the correct date.
-                        // if not equal 0, the wrong date will converted to the correct one. (3/13/2016 => 3/1/2017)
-                        // 0 will make the tooltip displayed the invalid date error message
-                        $val = 0;
+                        if (preg_match($datePattern, $val)) {
+                            $dateObject = new DateTime();
+                            $split = explode('/', $val);
+                            $dateObject->setDate($split[2], $split[1], $split[0]);
+                            $val = $dateObject->format('d/m/Y');
+                        } else {
+                            // if user input string without the correct date format
+                            // 0 will make the tooltip displayed the invalid date error message
+                            $val = '0';
+                        }
                     }
 
                     // converts val to Date object so that this field will pass 'validDate' check since
