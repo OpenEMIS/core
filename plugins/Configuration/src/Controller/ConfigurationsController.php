@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Firebase\JWT\JWT;
 use Cake\I18n\Time;
 use Cake\Utility\Security;
+use Cake\Core\Configure;
 
 class ConfigurationsController extends AppController {
     public function initialize()
@@ -50,7 +51,7 @@ class ConfigurationsController extends AppController {
             ])
             ->toArray();
 
-        $privateKey = Security::decrypt($records['private_key'], Security::salt());
+        $privateKey = Security::decrypt($records['private_key'], Configure::read('Application.key'));
         $exp = intval(Time::now()->toUnixString()) + 3600;
         $iat = Time::now()->toUnixString();
 

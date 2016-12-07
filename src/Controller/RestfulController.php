@@ -11,6 +11,7 @@ use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Network\Request;
+use Cake\Core\Configure;
 use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController
@@ -50,6 +51,7 @@ class RestfulController extends BaseController
                 'fields' => [
                     'username' => 'id'
                 ],
+                'key' => Configure::read('Application.key'),
                 'queryDatasource' => true
             ]
         ]);

@@ -7,6 +7,7 @@ use ArrayObject;
 use Cake\Routing\Router;
 use Firebase\JWT\JWT;
 use Cake\Utility\Security;
+use Cake\Core\Configure;
 
 class UsersController extends AppController
 {
@@ -148,7 +149,7 @@ class UsersController extends AppController
                     'sub' => $user['id'],
                     'exp' =>  time() + 10800
                 ],
-                Security::salt());
+                Configure::read('Application.key'));
     }
 
     public function afterIdentify(Event $event, $user)
