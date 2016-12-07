@@ -41,7 +41,6 @@ class DirectoriesTable extends AppTable {
 		$this->addBehavior('User.AdvancedContactNumberSearch');
 		$this->addBehavior('User.AdvancedPositionSearch');
 		$this->addBehavior('User.AdvancedSpecificNameTypeSearch');
-		$this->addBehavior('User.AdvancedOpenEmisSearch');
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
