@@ -23,7 +23,7 @@ class IndexesTable extends ControllerActionTable
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
-        'BEHAVIOR' => [
+        'Institution.StudentBehaviours' => [
             'name' => 'Behavior',
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']

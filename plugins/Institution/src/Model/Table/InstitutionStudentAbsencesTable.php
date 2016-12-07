@@ -49,6 +49,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
 
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        return $events;
+    }
+
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
@@ -698,8 +705,11 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
 	}
 
-	public function calculateValueIndex($institutionId, $studentId)
+	public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
 	{
+		$institutionId = $params['institution_id'];
+		$studentId = $params['student_id'];
+
 		$absenceResults = $this
 			->find()
 			->where([
@@ -716,6 +726,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$absenceDay = $absenceDay + $interval->days + 1;
 		}
 
-		return $absenceDay;
+		return $valueIndex = $absenceDay;
 	}
 }
