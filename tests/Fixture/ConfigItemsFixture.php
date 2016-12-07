@@ -348,40 +348,6 @@ class ConfigItemsFixture extends TestFixture
             'created' => '1970-01-01 00:00:00'
         ],
         [
-            'id' => '28',
-            'name' => 'Student Prefix',
-            'code' => 'student_prefix',
-            'type' => 'Auto Generated OpenEMIS ID',
-            'label' => 'Student Prefix',
-            'value' => 'STUD,1',
-            'default_value' => ',0',
-            'editable' => '1',
-            'visible' => '1',
-            'field_type' => '',
-            'option_type' => '',
-            'modified_user_id' => '1',
-            'modified' => '2015-09-17 05:38:25',
-            'created_user_id' => '1',
-            'created' => '1970-01-01 00:00:00'
-        ],
-        [
-            'id' => '30',
-            'name' => 'Staff Prefix',
-            'code' => 'staff_prefix',
-            'type' => 'Auto Generated OpenEMIS ID',
-            'label' => 'Staff Prefix',
-            'value' => 'STAFF,1',
-            'default_value' => ',0',
-            'editable' => '1',
-            'visible' => '1',
-            'field_type' => '',
-            'option_type' => '',
-            'modified_user_id' => '1',
-            'modified' => '2015-09-17 05:38:08',
-            'created_user_id' => '1',
-            'created' => '1970-01-01 00:00:00'
-        ],
-        [
             'id' => '35',
             'name' => 'Institution Code',
             'code' => 'institution_code',
@@ -1147,23 +1113,6 @@ class ConfigItemsFixture extends TestFixture
             'created' => '1970-01-01 00:00:00'
         ],
         [
-            'id' => '115',
-            'name' => 'Guardian Prefix',
-            'code' => 'guardian_prefix',
-            'type' => 'Auto Generated OpenEMIS ID',
-            'label' => 'Guardian Prefix',
-            'value' => 'GUAR,1',
-            'default_value' => ',0',
-            'editable' => '1',
-            'visible' => '1',
-            'field_type' => '',
-            'option_type' => '',
-            'modified_user_id' => '1',
-            'modified' => '2015-09-17 05:38:51',
-            'created_user_id' => '1',
-            'created' => '1970-01-01 00:00:00'
-        ],
-        [
             'id' => '116',
             'name' => 'Url',
             'code' => 'support_url',
@@ -1367,6 +1316,40 @@ class ConfigItemsFixture extends TestFixture
             'modified' => '2014-04-24 12:58:00',
             'created_user_id' => '1',
             'created' => '2013-08-20 14:46:02'
-        ]
+        ],
+        [
+            'id' => '1002',
+            'name' => 'Type',
+            'code' => 'external_data_source_type',
+            'type' => 'External Data Source',
+            'label' => 'Type',
+            'value' => 'None',
+            'default_value' => 'None',
+            'editable' => '1',
+            'visible' => '1',
+            'field_type' => 'Dropdown',
+            'option_type' => 'external_data_source_type',
+            'modified_user_id' => '1',
+            'modified' => '2014-04-24 12:58:00',
+            'created_user_id' => '1',
+            'created' => '2013-08-20 14:46:02'
+        ],
+        [
+            'id' => '1003',
+            'name' => 'OpenEMIS ID Prefix',
+            'code' => 'openemis_id_prefix',
+            'type' => 'Auto Generated OpenEMIS ID',
+            'label' => 'OpenEMIS ID Prefix',
+            'value' => ',0',
+            'default_value' => ',0',
+            'editable' => '1',
+            'visible' => '1',
+            'field_type' => '',
+            'option_type' => '',
+            'modified_user_id' => '1',
+            'modified' => '2015-09-17 05:38:51',
+            'created_user_id' => '1',
+            'created' => '1970-01-01 00:00:00'
+        ],
     ];
 }
