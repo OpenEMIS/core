@@ -90,7 +90,7 @@ class ConfigItemsTable extends AppTable {
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (is_array($data[$this->alias()]['value'])) {
-			if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
+			if ($entity->code == 'openemis_id_prefix') {
 				$value = $data[$this->alias()]['value']['prefix'];
 				if (isset($data[$this->alias()]['value']['enable'])) {
 					$value .= ','.$data[$this->alias()]['value']['enable'];
@@ -186,7 +186,7 @@ class ConfigItemsTable extends AppTable {
 					} else if ($entity->code == 'training_credit_hour') {
 						$attr['type'] = 'integer';
 						$attr['attr'] = ['min' => 0];
-					} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
+					} else if ($entity->code == 'openemis_id_prefix') {
 						$attr['type'] = 'element';
 						$attr['element'] = 'Configurations/with_prefix';
 						$attr['data'] = [];
@@ -268,7 +268,7 @@ class ConfigItemsTable extends AppTable {
 				}
 			}
 
-		} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
+		} else if ($entity->code == 'openemis_id_prefix') {
 			$exp = explode(',', $entity->$valueField);
 			if (!$exp[1]) {
 				return __('Disabled');
