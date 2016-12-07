@@ -440,11 +440,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "v1.0.3",
+            "version": "1.0.3.1",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "c4285d4d0ab8f9dfcd4ff8ac43e2f42c10b99f29"
+                "reference": "3e6704bc0549274dde1016c518a74f4f19bf64cb"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.0",
@@ -478,7 +478,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2016-10-18 02:37:33"
+            "time": "2016-11-18 09:27:16"
         },
         {
             "name": "mk-j/php_xlsxwriter",
