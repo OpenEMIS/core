@@ -23,6 +23,7 @@ class ExcelReportBehavior extends Behavior
     ];
 
     private $vars = [];
+    private $suppressAutoInsertNewRow = false;
 
 	public function initialize(array $config)
 	{
@@ -243,76 +244,65 @@ class ExcelReportBehavior extends Behavior
 
     private function replaceRow($sheet, $objCell, $search, $format, $rowArray)
     {
-        foreach ($rowArray as $key => $str) {
-            $filterPos = strpos($str, '|');
-            $pos = strpos($str, '}');
+        $str = current($rowArray);
+        list($placeholderStr, $filterStr) = $this->splitPlaceholder($str);
 
-            if ($pos === false) {
-                // closing of placeholder not found
-            } else {
-                if ($filterPos === false) {
-                    // filter not found
-                    $placeholderStr = substr($str, 0, $pos);
-                    $filterStr = '';
-                } else {
-                    $placeholderStr = substr($str, 0, $filterPos);
-                    $filterStr = substr($str, $filterPos + 1, $pos);
-                }
+        $placeholder = $this->formatPlaceholder($placeholderStr);
+        $data = Hash::extract($this->vars, $placeholder);
 
-                $placeholder = $this->formatPlaceholder($placeholderStr);
-                $replace = sprintf($format, $placeholder);
-                $data = Hash::extract($this->vars, $placeholder);
+        $columnValue = $objCell->getColumn();
+        $rowValue = $objCell->getRow();
+        $cellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($cellCoordinate);
 
-                $columnValue = $objCell->getColumn();
-                $rowValue = $objCell->getRow();
-                $cellCoordinate = $objCell->getCoordinate();
-                $cellStyle = $objCell->getStyle($cellCoordinate);
-
-                foreach ($data as $key => $value) {
-                    $newCellCoordinate = $columnValue.$rowValue;
-                    $sheet->setCellValue($newCellCoordinate, $value);
-                    $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
-                    $rowValue++;
+        foreach ($data as $key => $value) {
+            if (!empty($filterStr)) {
+                list($dataType, $dataFormat) = explode(':', $filterStr , 2);
+                switch ($dataType) {
+                    case 'date':
+                        $value = $value->format($dataFormat);
+                        break;
                 }
             }
+
+            $newCellCoordinate = $columnValue.$rowValue;
+            $sheet->setCellValue($newCellCoordinate, $value);
+            $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
+            $rowValue++;
+            
+            if (!$this->suppressAutoInsertNewRow) {
+                $sheet->insertNewRowBefore($rowValue);
+            }
+        }
+
+        // only insert new row for the first column which have repeat-rows
+        if ($this->suppressAutoInsertNewRow == false) {
+            $this->suppressAutoInsertNewRow = true;
         }
     }
 
     private function replaceColumn($sheet, $objCell, $search, $format, $columnArray)
     {
-        foreach ($columnArray as $key => $str) {
-            $filterPos = strpos($str, '|');
-            $pos = strpos($str, '}');
+        $str = current($columnArray);
+        list($placeholderStr, $filterStr) = $this->splitPlaceholder($str);
 
-            if ($pos === false) {
-                // closing of placeholder not found
-            } else {
-                if ($filterPos === false) {
-                    // filter not found
-                    $placeholderStr = substr($str, 0, $pos);
-                    $filterStr = '';
-                } else {
-                    $placeholderStr = substr($str, 0, $filterPos);
-                    $filterStr = substr($str, $filterPos + 1, $pos);
-                }
+        $placeholder = $this->formatPlaceholder($placeholderStr);
+        $data = Hash::extract($this->vars, $placeholder);
 
-                $placeholder = $this->formatPlaceholder($placeholderStr);
-                $replace = sprintf($format, $placeholder);
-                $data = Hash::extract($this->vars, $placeholder);
+        // columnIndexFromString(): Column index start from 1
+        $columnIndex = $objCell->columnIndexFromString($objCell->getColumn());
+        $rowValue = $objCell->getRow();
+        $cellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($cellCoordinate);
 
-                $columnIndex = $objCell->columnIndexFromString($objCell->getColumn());
-                $rowValue = $objCell->getRow();
-                $cellCoordinate = $objCell->getCoordinate();
-                $cellStyle = $objCell->getStyle($cellCoordinate);
+        foreach ($data as $key => $value) {
+            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
 
-                foreach ($data as $key => $value) {
-                    $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-                    $newCellCoordinate = $columnValue.$rowValue;
-                    $sheet->setCellValue($newCellCoordinate, $value);
-                    $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
-                    $columnIndex++;
-                }
-            }
+            $newCellCoordinate = $columnValue.$rowValue;
+            $sheet->setCellValue($newCellCoordinate, $value);
+            $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
+            $columnIndex++;
         }
     }
 
@@ -336,6 +326,30 @@ class ExcelReportBehavior extends Behavior
 
         $cellCoordinate = $objCell->getCoordinate();
         $sheet->setCellValue($cellCoordinate, $search);
+    }
+
+    private function splitPlaceholder($str)
+    {
+        $pos = strpos($str, '}');
+
+        $placeholderStr = '';
+        $filterStr = '';
+
+        if ($pos === false) {
+            // closing of placeholder not found
+        } else {
+            $placeholderStr = substr($str, 0, $pos);
+
+            $placeholderArray = explode('|', $placeholderStr);
+            if (sizeof($placeholderArray) == 1) {
+                $placeholderStr = $placeholderArray[0];
+            } else if (sizeof($placeholderArray) == 2) {
+                $placeholderStr = $placeholderArray[0];
+                $filterStr = $placeholderArray[1];
+            }
+        }
+
+        return [$placeholderStr, $filterStr];
     }
 
     private function formatPlaceholder($str)
