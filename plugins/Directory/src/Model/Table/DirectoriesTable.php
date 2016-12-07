@@ -34,6 +34,8 @@ class DirectoriesTable extends AppTable {
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		$this->addBehavior('User.User');
 		$this->addBehavior('Security.UserCascade'); // for cascade delete on user related tables
@@ -56,11 +58,6 @@ class DirectoriesTable extends AppTable {
 			]
 		]);
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportUsers']);
-		// $this->addBehavior('Excel', [
-		// 	'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian'],
-		// 	'filename' => 'Students',
-		// 	'pages' => ['view']
-		// ]);
 
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
 	}

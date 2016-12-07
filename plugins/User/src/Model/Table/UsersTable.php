@@ -657,8 +657,15 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function updateIdentityNumber($userId, $identityNo)
+	public function updateIdentityNumber($userId, $identity)
 	{
-		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);
+		$identityTypeId = $identity['identity_type_id'];
+		$identityNo = $identity['identity_no'];
+		$this->updateAll([
+			'identity_number' => $identityNo,
+			'identity_type_id' => $identityTypeId
+		], [
+			'id' => $userId
+		]);
 	}
 }

@@ -6,6 +6,10 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
+use Firebase\JWT\JWT;
+use Cake\I18n\Time;
+use Cake\Utility\Security;
+use Cake\Core\Configure;
 
 class ConfigurationsController extends AppController {
     public function initialize()
@@ -31,5 +35,35 @@ class ConfigurationsController extends AppController {
     public function ExternalDataSource()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']); }
     public function CustomValidation()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigCustomValidation']); }
     public function AdministrativeBoundaries()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']); }
+
+    public function generateServerAuthorisationToken()
+    {
+        $externalDataSourceType = $this->request->query('external_data_source_type');
+        $this->autoRender = false;
+        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $records = $ExternalDataSourceAttributes
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->where([
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $externalDataSourceType
+            ])
+            ->toArray();
+
+        $privateKey = Security::decrypt($records['private_key'], Configure::read('Application.key'));
+        $exp = intval(Time::now()->toUnixString()) + 3600;
+        $iat = Time::now()->toUnixString();
+
+        $payload = [
+            'iss' => $records['client_id'],
+            'scope' => $records['scope'],
+            'aud' => $records['token_uri'],
+            'exp' => $exp,
+            'iat' => $iat
+        ];
+
+        echo JWT::encode($payload, $privateKey, 'RS256');
+    }
 
 }

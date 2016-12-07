@@ -2,6 +2,7 @@
 #################################################
 datasource.php
 test_datasource.php
+app_extra.php
 tmp
 tmp/*
 tmp/Bake*
