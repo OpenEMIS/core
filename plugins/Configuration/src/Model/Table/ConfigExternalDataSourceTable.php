@@ -9,6 +9,7 @@ use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
+use Cake\Core\Configure;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable {
     public $id;
@@ -122,7 +123,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                     ->toArray();
                 foreach ($attributes as $key => $value) {
                     if ($key == 'private_key') {
-                        $value = Security::decrypt($privKey, Security::salt());
+                        $value = Security::decrypt($this->urlsafeB64Decode($value), Configure::read('Application.key'));
                     }
                     $request->data[$this->alias()][$key] = $value;
                 }
@@ -172,7 +173,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
 
             $pubKey = openssl_pkey_get_details($res);
             $pubKey = $pubKey["key"];
-            $requestData[$this->alias()]['private_key'] = Security::encrypt($privKey, Security::salt());
+            $requestData[$this->alias()]['private_key'] = $this->urlsafeB64Encode(Security::encrypt($privKey, Configure::read('Application.key')));
             $requestData[$this->alias()]['public_key'] = $pubKey;
         }
 
@@ -186,7 +187,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             'url', 'token_uri', 'record_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
             'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'private_key', 'public_key'
         ];
-
 
         foreach ($fields as $field) {
             if ($entity->has($field)) {
