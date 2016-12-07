@@ -32,6 +32,28 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable {
 		}
 	}
 
+	public function findAttributes(Query $query, array $options = [])
+	{
+		$ConfigItemTable = TableRegistry::get('ConfigItems');
+		$externalSourceType = $ConfigItemTable
+			->find()
+			->select([$ConfigItemTable->aliasField('value')])
+			->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])
+			->first();
+
+		$externalSourceType = $externalSourceType['value'];
+
+		return $query
+			->find('list', [
+				'keyField' => 'attribute_field',
+				'valueField' => 'value'
+			])
+			->select([$this->aliasField('value'), $this->aliasField('attribute_field')])
+			->where([
+				$this->aliasField('external_data_source_type') => $externalSourceType
+			]);
+	}
+
 	public function findUri(Query $query, array $options = [])
 	{
 		$ConfigItemTable = TableRegistry::get('ConfigItems');

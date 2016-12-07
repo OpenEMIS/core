@@ -20,7 +20,7 @@ class GendersTable extends AppTable {
 		// $this->hasMany('CensusSanitations', ['className' => 'User.CensusSanitations']);
 		// $this->hasMany('CensusGraduates', ['className' => 'User.CensusGraduates']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Students' => ['index']
+        	'Students' => ['index', 'add']
         ]);
 	}
 
