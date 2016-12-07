@@ -51,7 +51,7 @@ class ConfigurationsController extends AppController {
             ])
             ->toArray();
 
-        $privateKey = Security::decrypt($records['private_key'], Configure::read('Application.key'));
+        $privateKey = Security::decrypt($this->ControllerAction->urlsafeB64Decode($records['private_key']), Configure::read('Application.key'));
         $exp = intval(Time::now()->toUnixString()) + 3600;
         $iat = Time::now()->toUnixString();
 
