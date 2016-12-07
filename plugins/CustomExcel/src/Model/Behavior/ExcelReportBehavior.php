@@ -10,6 +10,7 @@ use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Utility\Hash;
+use Cake\Collection\Collection;
 use Cake\Log\Log;
 
 use PHPExcel_IOFactory;
@@ -24,6 +25,7 @@ class ExcelReportBehavior extends Behavior
 
     private $vars = [];
     private $suppressAutoInsertNewRow = false;
+    private $mapParams = [];
 
 	public function initialize(array $config)
 	{
@@ -257,9 +259,10 @@ class ExcelReportBehavior extends Behavior
 
         foreach ($data as $key => $value) {
             if (!empty($filterStr)) {
-                list($dataType, $dataFormat) = explode(':', $filterStr , 2);
+                list($dataType, $attr) = explode(':', $filterStr , 2);
                 switch ($dataType) {
                     case 'date':
+                        $dataFormat = $attr;
                         $value = $value->format($dataFormat);
                         break;
                 }
@@ -292,16 +295,50 @@ class ExcelReportBehavior extends Behavior
         // columnIndexFromString(): Column index start from 1
         $columnIndex = $objCell->columnIndexFromString($objCell->getColumn());
         $rowValue = $objCell->getRow();
-        $cellCoordinate = $objCell->getCoordinate();
-        $cellStyle = $objCell->getStyle($cellCoordinate);
+        $placeholderCellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($placeholderCellCoordinate);
 
         foreach ($data as $key => $value) {
             // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
             $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
 
-            $newCellCoordinate = $columnValue.$rowValue;
-            $sheet->setCellValue($newCellCoordinate, $value);
-            $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
+            $cellCoordinate = $columnValue.$rowValue;
+            $sheet->setCellValue($cellCoordinate, $value);
+            $sheet->duplicateStyle($cellStyle, $cellCoordinate);
+
+            if (!empty($filterStr)) {
+                list($dataType, $attr) = explode(':', $filterStr , 2);
+                switch ($dataType) {
+                    case 'children':
+                        $nestedPlaceholderStr = $attr;
+                        $nestedPlaceholder = $this->formatPlaceholder($nestedPlaceholderStr);
+                        $nestedData = Hash::extract($this->vars, $nestedPlaceholder);
+
+                        $nestedColumnIndex = $columnIndex;
+                        $nestedRowValue = $rowValue + 1;
+                        foreach ($nestedData as $nestedKey => $nestedValue) {
+                            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                            $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+
+                            $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
+                            $sheet->setCellValue($nestedCellCoordinate, $nestedValue);
+                            $sheet->duplicateStyle($cellStyle, $nestedCellCoordinate);
+
+                            $nestedColumnIndex++;
+                        }
+
+                        if ($nestedColumnIndex > $columnIndex) {
+                            $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
+
+                            $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rowValue;
+                            $sheet->mergeCells($mergeRange);
+
+                            $columnIndex = $nestedColumnIndex-1;
+                        }
+                        break;
+                }
+            }
+
             $columnIndex++;
         }
     }
