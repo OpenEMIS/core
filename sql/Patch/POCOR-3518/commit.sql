@@ -7,5 +7,5 @@ SELECT * FROM `config_items` WHERE `code` = 'student_prefix' OR `code` = 'staff_
 
 DELETE FROM `config_items` WHERE `code` = 'student_prefix' OR `code` = 'staff_prefix' OR `code` = 'guardian_prefix';
 
-INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES ('OpenEMIS ID Prefix', 'openemis_id_prefix', 'Auto Generated OpenEMIS ID', 'OpenEMIS ID Prefix', ',0', ',0', '1', '1', '', '', NULL, NULL, '1', NOW());
+INSERT INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+VALUES ('1003', 'OpenEMIS ID Prefix', 'openemis_id_prefix', 'Auto Generated OpenEMIS ID', 'OpenEMIS ID Prefix', ',0', ',0', '1', '1', '', '', NULL, NULL, '1', NOW());
