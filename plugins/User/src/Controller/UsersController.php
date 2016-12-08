@@ -148,8 +148,7 @@ class UsersController extends AppController
         return JWT::encode([
                     'sub' => $user['id'],
                     'exp' =>  time() + 10800
-                ],
-                Configure::read('Application.key'));
+                ], Configure::read('Application.private.key'), 'RS256');
     }
 
     public function afterIdentify(Event $event, $user)

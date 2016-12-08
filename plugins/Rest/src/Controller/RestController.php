@@ -62,7 +62,8 @@ class RestController extends AppController
 	                'fields' => [
 	                    'username' => 'id'
 	                ],
-                    'key' => Configure::read('Application.key'),
+                    'allowedAlgs' => ['RS256'],
+                    'key' => Configure::read('Application.public.key'),
 	                'queryDatasource' => true
 	            ]
 	        ]);
@@ -76,7 +77,7 @@ class RestController extends AppController
 	        $header = $this->request->header('authorization');
 	        if ($header) {
 	            $token = str_ireplace('bearer ', '', $header);
-	            $payload = JWT::decode($token, Configure::read('Application.key'), ['HS256']);
+	            $payload = JWT::decode($token, Configure::read('Application.private.key'), ['RS256']);
 	            $currentTimeStamp = (new Time)->toUnixString();
 	            $exp = $payload->exp;
 	            if ($exp < $currentTimeStamp) {
