@@ -80,7 +80,7 @@ try {
     Configure::load('app_extra', 'default');
     Configure::load('datasource', 'default');
 
-    if (!Configure::read('Application.key')) {
+    if (!Configure::read('Application.private.key') || !Configure::read('Application.public.key')) {
         throw new Exception('Could not load application key, please contact administrator to have the key set up for your application.');
     }
 } catch (\Exception $e) {

@@ -123,7 +123,14 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                     ->toArray();
                 foreach ($attributes as $key => $value) {
                     if ($key == 'private_key') {
-                        $value = Security::decrypt($this->urlsafeB64Decode($value), Configure::read('Application.key'));
+                        $keyAndSecret = explode('.', $value);
+                        if (count($keyAndSecret) == 2) {
+                            list($privateKey, $secret) = $keyAndSecret;
+                            $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+                            $value = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+                        } else {
+                            $value = '';
+                        }
                     }
                     $request->data[$this->alias()][$key] = $value;
                 }
@@ -157,13 +164,13 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['identity_type_mapping'] = 'identity_type_name';
             $requestData[$this->alias()]['identity_number_mapping'] = 'identity_number';
             $requestData[$this->alias()]['nationality_mapping'] = 'nationality_name';
-            $requestData[$this->alias()]['token_uri'] = $url .'/api/users/token';
+            $requestData[$this->alias()]['token_uri'] = $url .'/api/oauth/token';
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]';
         }
         if (empty($requestData[$this->alias()]['private_key'])) {
             $newKey = openssl_pkey_new([
                 "digest_alg" => "sha256",
-                "private_key_bits" => 4096,
+                "private_key_bits" => 1024,
                 "private_key_type" => OPENSSL_KEYTYPE_RSA
             ]);
 
@@ -173,8 +180,19 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
 
             $pubKey = openssl_pkey_get_details($res);
             $pubKey = $pubKey["key"];
-            $requestData[$this->alias()]['private_key'] = $this->urlsafeB64Encode(Security::encrypt($privKey, Configure::read('Application.key')));
+            $protectedKey = Security::hash(microtime(true), 'sha256', true);
+            $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
+            $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
+            $protectedKey = $this->urlsafeB64Encode($key);
+            $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
             $requestData[$this->alias()]['public_key'] = $pubKey;
+        } else {
+            $privKey = $requestData[$this->alias()]['private_key'];
+            $protectedKey = Security::hash(microtime(true), 'sha256', true);
+            $privateKey = $this->urlsafeB64Encode(Security::encrypt($privKey, $protectedKey));
+            $status = openssl_public_encrypt($protectedKey, $key, Configure::read('Application.public.key'));
+            $protectedKey = $this->urlsafeB64Encode($key);
+            $requestData[$this->alias()]['private_key'] = $privateKey. '.' .$protectedKey;
         }
 
     }
@@ -187,7 +205,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             'url', 'token_uri', 'record_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
             'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'private_key', 'public_key'
         ];
-
         foreach ($fields as $field) {
             if ($entity->has($field)) {
                 $data = [

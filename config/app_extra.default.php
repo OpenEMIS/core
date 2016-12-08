@@ -18,9 +18,14 @@ return [
 	],
 
 
-	// You may generate your own sha256 key value or use an online sha256 generator to generate your key e.g. http://www.xorbin.com/tools/sha256-hash-calculator
 	'Application' => [
-		'key' => 'e0dbb83e2a4f13046ab70a8a9e7254965eb9b97e31485428b02317bb24032fbc'
+		// Generate a private and public key pair using the command line by executing "openssl genrsa -out private.key 1024" and "openssl rsa -in private.key -pubout -out public.key"
+		'private' => [
+			'key' => $privateKey
+		],
+		'public' => [
+			'key' => $publicKey
+		]
 	],
 ];
 
