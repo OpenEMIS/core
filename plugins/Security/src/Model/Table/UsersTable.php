@@ -205,7 +205,7 @@ class UsersTable extends AppTable {
 					'plugin' => $this->controller->plugin,
 					'controller' => $this->controller->name,
 					'view',
-					$obj->group_id
+					$this->paramsEncode(['id' => $obj->group_id])
 				];
 				if (!empty($groupEntity->institution)) {
 					$url['action'] = 'SystemGroups';
