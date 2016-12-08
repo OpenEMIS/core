@@ -289,7 +289,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			'controller' => 'Institutions',
 			'action' => 'Staff',
 			'0' => 'view',
-			'1' => $this->paramsEncode(['id' => $entity->institution_staff_id]);
+			'1' => $this->paramsEncode(['id' => $entity->institution_staff_id])
 		];
 
 		// To investigate
