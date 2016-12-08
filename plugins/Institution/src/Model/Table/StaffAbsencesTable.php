@@ -228,7 +228,7 @@ class StaffAbsencesTable extends ControllerActionTable {
 					'controller' => 'Institutions',
 					'action' => 'StaffUser',
 					'view',
-					$entity->user->id
+					$this->paramsEncode(['id' => $entity->user->id])
 				]);
 			} else {
 				return $entity->user->name_with_id;

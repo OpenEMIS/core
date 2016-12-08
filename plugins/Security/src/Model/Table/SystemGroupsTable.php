@@ -177,7 +177,7 @@ class SystemGroupsTable extends AppTable {
 						'plugin' => 'Directory',
 						'controller' => 'Directories',
 						'action' => 'view',
-						$obj->id
+						$this->paramsEncode(['id' => $obj->id])
 					]);
 					$rowData[] = $obj->name;
 					$roleId = $obj->_joinData->security_role_id;
