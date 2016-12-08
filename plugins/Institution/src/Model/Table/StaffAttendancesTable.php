@@ -607,7 +607,7 @@ class StaffAttendancesTable extends AppTable {
 					'controller' => $this->controller->name,
 					'action' => $StaffAbsences->alias(),
 					'view',
-					$this->paramsEncode(['id' => $entity->StaffAbsences['id']]);
+					$this->paramsEncode(['id' => $entity->StaffAbsences['id']])
 				]);
 			}
 		}
