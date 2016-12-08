@@ -1,4 +1,15 @@
 <?php
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
+
+$privateKeyPath = CONFIG . 'private.key';
+$publicKeyPath = CONFIG . 'public.key';
+
+$privateKeyFile = new File($privateKeyPath);
+$publicKeyFile = new File($publicKeyPath);
+$privateKey = $privateKeyFile->read();
+$publicKey = $publicKeyFile->read();
+
 return [
 	'Error' => [
 		// Application specific error handler
