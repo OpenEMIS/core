@@ -56,7 +56,9 @@ class ConfigurationsController extends AppController {
         if (count($keyAndSecret) == 2) {
             list($privateKey, $secret) = $keyAndSecret;
             $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
-            $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+            if ($secret) {
+                $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+            }
         }
         $exp = intval(Time::now()->toUnixString()) + 3600;
         $iat = Time::now()->toUnixString();
