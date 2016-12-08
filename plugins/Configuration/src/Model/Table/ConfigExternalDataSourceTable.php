@@ -127,7 +127,11 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                         if (count($keyAndSecret) == 2) {
                             list($privateKey, $secret) = $keyAndSecret;
                             $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
-                            $value = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+                            if ($secret) {
+                                $value = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+                            } else {
+                                $value = '';
+                            }
                         } else {
                             $value = '';
                         }
