@@ -203,7 +203,7 @@ class TrainingApplicationsTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffTrainingApplications',
                             'view',
-                            $row->id,
+                            $this->paramsEncode(['id' => $row->id]),
                             'institution_id' => $row->institution_id
                         ];
                     } else {
