@@ -99,7 +99,7 @@ class InstitutionRubricsTable extends AppTable {
 								'controller' => $this->controller->name,
 								'action' => 'RubricAnswers',
 								'edit',
-								$entity->id,
+								$this->paramsEncode(['id' => $entity->id]),
 								'status' => $status,
 								'section' => $rubricSectionId
 							]);
