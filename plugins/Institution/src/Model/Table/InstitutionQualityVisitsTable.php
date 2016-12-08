@@ -49,7 +49,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->allowEmpty('file_content');
 	}
@@ -111,7 +111,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 				'controller' => 'Institutions',
 				'action' => 'StaffUser',
 				'view',
-				$entity->staff->id
+				$this->paramsEncode(['id' => $entity->staff->id])
 			]);
 		} else {
 			return $entity->staff->name_with_id;
