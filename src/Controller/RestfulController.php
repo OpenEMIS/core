@@ -51,7 +51,8 @@ class RestfulController extends BaseController
                 'fields' => [
                     'username' => 'id'
                 ],
-                'key' => Configure::read('Application.key'),
+                'allowedAlgs' => ['RS256'],
+                'key' => Configure::read('Application.public.key'),
                 'queryDatasource' => true
             ]
         ]);
