@@ -760,7 +760,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         return $entity;
     }
-    
+
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
@@ -778,7 +778,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $assocTable->aliasField('status') => 1
             ]);
         }
-        
+
     }
 
 /******************************************************************************************************************
@@ -1248,7 +1248,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $value->id
+                            $this->paramsEncode(['id' => $value->id])
                         ]);
                         break;
 
