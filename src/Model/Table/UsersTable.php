@@ -62,7 +62,7 @@ class UsersTable extends AppTable {
 		$userId = $this->paramsEncode(['id' => $this->Auth->user('id')]);
 		if ($userId != $this->request->pass[0] && $this->action != 'password') { // stop user from navigating to other profiles
 			$event->stopPropagation();
-			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
+			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $this->paramsEncode(['id' => $userId])]);
 		}
 
 		$tabElements = $this->controller->getUserTabElements();
