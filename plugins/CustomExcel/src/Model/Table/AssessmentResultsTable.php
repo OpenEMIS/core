@@ -37,6 +37,8 @@ class AssessmentResultsTable extends AppTable
             'variables' => [
                 'Assessments',
                 'AssessmentItems',
+                'AssessmentItemsGradingTypes',
+                'AssessmentItemResults',
                 'AssessmentPeriods',
                 'ClassStudents',
                 'Institutions',
@@ -50,6 +52,8 @@ class AssessmentResultsTable extends AppTable
         $events = parent::implementedEvents();
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseAssessmentItemsGradingTypes';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
@@ -81,6 +85,44 @@ class AssessmentResultsTable extends AppTable
         }
     }
 
+    public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
+            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $results = $AssessmentItemResults->find()
+                ->innerJoin(
+                    [$this->alias() => $this->table()],
+                    [
+                        $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
+                        $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+                        $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
+                        $this->aliasField('institution_class_id') => $params['class_id']
+                    ]
+                )
+                ->contain(['AssessmentGradingOptions'])
+                ->where([
+                    $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id']
+                ])
+                ->hydrate(false)
+                ->all();
+            return $results->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $params)) {
+            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $results = $AssessmentItemsGradingTypes->find()
+                ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
+                ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
+                ->hydrate(false)
+                ->all();
+            return $results->toArray();
+        }
+    }
+
     public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('assessment_id', $params)) {
@@ -103,7 +145,8 @@ class AssessmentResultsTable extends AppTable
                     ]
                 ])
                 ->where([$this->aliasField('institution_class_id') => $params['class_id']])
-                ->hydrate(false)
+                ->order(['Users.first_name', 'Users.last_name'])
+                // ->hydrate(false)
                 ->all();
             return $entity->toArray();
         }

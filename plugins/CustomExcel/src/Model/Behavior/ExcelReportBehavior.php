@@ -25,7 +25,6 @@ class ExcelReportBehavior extends Behavior
 
     private $vars = [];
     private $suppressAutoInsertNewRow = false;
-    private $mapParams = [];
 
 	public function initialize(array $config)
 	{
@@ -77,8 +76,8 @@ class ExcelReportBehavior extends Behavior
         $controller = $event->subject();
         $params = $this->getParams($controller);
         $this->vars = $this->getVars($params, $extra);
-
-        pr($this->vars);
+        $results = Hash::flatten($this->vars);
+        pr($results);
         die;
     }
 
@@ -293,10 +292,12 @@ class ExcelReportBehavior extends Behavior
         $data = Hash::extract($this->vars, $placeholder);
 
         // columnIndexFromString(): Column index start from 1
-        $columnIndex = $objCell->columnIndexFromString($objCell->getColumn());
+        $columnValue = $objCell->getColumn();
+        $columnIndex = $objCell->columnIndexFromString($columnValue);
         $rowValue = $objCell->getRow();
         $placeholderCellCoordinate = $objCell->getCoordinate();
         $cellStyle = $objCell->getStyle($placeholderCellCoordinate);
+        $columnWidth = $sheet->getColumnDimension($columnValue)->getWidth();
 
         foreach ($data as $key => $value) {
             // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
@@ -305,6 +306,9 @@ class ExcelReportBehavior extends Behavior
             $cellCoordinate = $columnValue.$rowValue;
             $sheet->setCellValue($cellCoordinate, $value);
             $sheet->duplicateStyle($cellStyle, $cellCoordinate);
+            // set column width to follow placeholder
+            $sheet->getColumnDimension($columnValue)->setAutoSize(false);
+            $sheet->getColumnDimension($columnValue)->setWidth($columnWidth);
 
             if (!empty($filterStr)) {
                 list($dataType, $attr) = explode(':', $filterStr , 2);
@@ -315,6 +319,7 @@ class ExcelReportBehavior extends Behavior
                         $nestedData = Hash::extract($this->vars, $nestedPlaceholder);
 
                         $nestedColumnIndex = $columnIndex;
+                        // always output children to the immediate next row
                         $nestedRowValue = $rowValue + 1;
                         foreach ($nestedData as $nestedKey => $nestedValue) {
                             // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
@@ -323,10 +328,14 @@ class ExcelReportBehavior extends Behavior
                             $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
                             $sheet->setCellValue($nestedCellCoordinate, $nestedValue);
                             $sheet->duplicateStyle($cellStyle, $nestedCellCoordinate);
+                            // set nested column width to follow placeholder
+                            $sheet->getColumnDimension($nestedColumnValue)->setAutoSize(false);
+                            $sheet->getColumnDimension($nestedColumnValue)->setWidth($columnWidth);
 
                             $nestedColumnIndex++;
                         }
 
+                        // merge parent cell following number of columns occupied by children
                         if ($nestedColumnIndex > $columnIndex) {
                             $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
 
