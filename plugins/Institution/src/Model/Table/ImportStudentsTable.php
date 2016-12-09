@@ -241,7 +241,7 @@ class ImportStudentsTable extends AppTable {
         }
         $tempRow['institution_id'] = $this->institutionId;
 
-        // from string to datetimeobject
+        // from string to dateObject
         $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['start_date']);
         $tempRow['start_date'] = $formattedDate;
 
