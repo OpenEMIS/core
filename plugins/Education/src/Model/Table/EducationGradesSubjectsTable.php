@@ -102,7 +102,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
 
     public function onGetEducationProgrammeId(Event $event, Entity $entity)
     {
-        return $entity->education_grade->education_programme->cycle_programme_name;
+        return $entity->education_grade->education_programme->name;
     }
 
 
@@ -200,13 +200,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
             if ($action == 'edit') {
                 $programmeName = '';
                 if ($attr['entity']->has('education_grade') && $attr['entity']->education_grade->has('education_programme')) {
-                    $programmeName = $attr['entity']->education_grade->education_programme->cycle_programme_name;
+                    $programmeName = $attr['entity']->education_grade->education_programme->name;
                 }
 
             } else {
                 $programmeId = !is_null($this->request->query('programme')) ? $this->request->query('programme') : $attr['defaultProgramme'];
                 $programmeQuery = $this->EducationGrades->EducationProgrammes->get($programmeId);
-                $programmeName = $programmeQuery->cycle_programme_name;
+                $programmeName = $programmeQuery->name;
             }
 
             $attr['attr']['value'] = $programmeName;
