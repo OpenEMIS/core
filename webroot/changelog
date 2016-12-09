@@ -1,6 +1,8 @@
 v3.8.1
 - Added Textbook Import feature
 - Added Textbook Report feature
+- Implmented a new option called "Time" for Grading Type in Assessment module
+- Implemented Textbook management module
 
 v3.7.5
 - System now allows additional products to be added to the application switcher list
