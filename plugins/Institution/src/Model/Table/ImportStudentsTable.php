@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use ArrayObject;
+use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -172,7 +173,7 @@ class ImportStudentsTable extends AppTable {
             $academicPeriodCodeLabel = $this->getExcelLabel('Imports', 'period_code');
             $classNameLabel = $this->getExcelLabel($lookupModel, 'name');
             $classCodeLabel = $this->getExcelLabel('Imports', 'institution_classes_code');
-            
+
             // unset($data[$sheetName]);
             $sheetName = $this->getExcelLabel('Imports', $lookupModel);
             $data[$columnOrder]['sheetName'] = $sheetName;
@@ -240,6 +241,10 @@ class ImportStudentsTable extends AppTable {
         }
         $tempRow['institution_id'] = $this->institutionId;
 
+        // from string to dateObject
+        $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['start_date']);
+        $tempRow['start_date'] = $formattedDate;
+
         if (empty($tempRow['start_date'])) {
             $rowInvalidCodeCols['start_date'] = __('No start date specified');
             return false;
@@ -250,7 +255,7 @@ class ImportStudentsTable extends AppTable {
 
         //check the level of academic period chosen for "year"
         $academicPeriodLevel = $this->getAcademicPeriodLevel($tempRow['academic_period_id']);
-        
+
         if (count($academicPeriodLevel)>0) {
             if ($academicPeriodLevel[0]['academic_period_level_id']!=1) { //if the level is not year
                 $rowInvalidCodeCols['academic_period_id'] = __('Academic period must be in year level');
