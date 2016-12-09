@@ -12,6 +12,9 @@ use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
 class EducationGradesSubjectsTable extends ControllerActionTable {
+    private $defaultProgramme;
+    private $defaultGrade;
+
 	public function initialize(array $config)
     {
 		parent::initialize($config);
@@ -34,6 +37,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
+        // populate 'to be deleted' field for removeBehavior
         if ($this->action == 'remove') {
             $entity = $extra['entity'];
             $subject = $this->EducationSubjects->get($entity->education_subject_id);
@@ -41,18 +45,12 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
             $entity->name = $subjectName;
         }
 
+        // visible field is not used for now
         $this->field('visible', ['visible' => 'hidden']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        //Add controls filter to index page
-        $toolbarElements = [
-            ['name' => 'Education.controls', 'data' => [], 'options' => []]
-        ];
-
-        $this->controller->set('toolbarElements', $toolbarElements);
-
         $this->field('code');
         $this->field('education_grade_id', ['visible' => 'hidden']);
         $this->setFieldOrder(['code', 'education_subject_id', 'hours_required']);
@@ -60,6 +58,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // Add controls filter to index page
         list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme, $gradeOptions, $selectedGrade) = array_values($this->_getSelectOptions());
         $extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => [], 'options' => [], 'order' => 1];
         $this->controller->set(compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme', 'gradeOptions', 'selectedGrade'));
@@ -72,12 +71,12 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('code');
-        $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id',  'hours_required']);
+        $this->field('education_programme_id');
+        $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'hours_required']);
     }
 
-    public function onGetCode(Event $event, Entity $entity)
-    {
-        return $entity->education_subject->code;
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $query->contain(['EducationGrades.EducationProgrammes', 'EducationSubjects']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -85,15 +84,39 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $this->field('code', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('education_subject_id', ['type' => 'readonly', 'entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'readonly', 'entity' => $entity]);
-        $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id',  'hours_required']);
+        $this->field('education_programme_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'hours_required']);
     }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->_getSelectOptions();
+
+        $this->field('education_programme_id', ['type' => 'readonly']);
+        $this->field('education_grade_id', ['type' => 'readonly']);
+        $this->field('education_subject_id');
+        $this->setFieldOrder(['education_programme_id', 'education_grade_id', 'education_subject_id',  'hours_required']);
+    }
+
+    public function onGetCode(Event $event, Entity $entity)
+    {
+        return $entity->education_subject->code;
+    }
+
+    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    {
+        return $entity->education_grade->education_programme->cycle_programme_name;
+    }
+
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
-            $subjectId = $attr['entity']->education_subject_id;
-            $subjectQuery = $this->EducationSubjects->get($subjectId);
-            $subjectCode = $subjectQuery->code;
+            $subjectCode = '';
+            if ($attr['entity']->has('education_subject')) {
+                $subjectCode = $attr['entity']->education_subject->code;
+            }
+
             $attr['attr']['value'] = $subjectCode;
             return $attr;
         }
@@ -104,20 +127,92 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
     {
         if ($action == 'edit') {
             $subjectId = $attr['entity']->education_subject_id;
-            $subjectQuery = $this->EducationSubjects->get($subjectId);
-            $subjectName = $subjectQuery->name;
+
+            $subjectName = '';
+            if ($attr['entity']->has('education_subject')) {
+                $subjectName = $attr['entity']->education_subject->name;
+            }
+
             $attr['attr']['value'] = $subjectName;
+            $attr['value'] = $subjectId;
+            return $attr;
+
+        } else if ($action == 'add') {
+            $gradeId = !is_null($this->request->query('grade')) ? $this->request->query('grade') : $this->defaultGrade;
+
+            $existingSubjectsInGrade = $this
+                ->find('list', [
+                    'keyField' =>'education_subject_id',
+                    'valueField' => 'education_subject_id'
+                ])
+                ->where([$this->aliasField('education_grade_id') => $gradeId])
+                ->toArray();
+
+            $subjectQuery = $this->EducationSubjects
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->find('visible')
+                ->find('order');
+
+            // only show subjects that have not been added in the grade
+            if (!empty($existingSubjectsInGrade)) {
+                $subjectQuery->where([$this->EducationSubjects->aliasField('id NOT IN') => $existingSubjectsInGrade]);
+            }
+
+            $subjectOptions = $subjectQuery->toArray();
+
+            if (!empty($subjectOptions)) {
+                $subjectOptions = ['' => '-- ' . __('Add Subject') . ' --'] + $subjectOptions;
+            }
+
+            $attr['type'] = 'chosenSelect';
+            $attr['attr']['multiple'] = false;
+            $attr['options'] = $subjectOptions;
             return $attr;
         }
+
     }
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'edit') {
-            $gradeId = $attr['entity']->education_grade_id;
-            $gradeQuery = $this->EducationGrades->get($gradeId);
-            $gradeName = $gradeQuery->name;
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'edit') {
+                $gradeId = $attr['entity']->education_grade_id;
+
+                $gradeName = '';
+                if ($attr['entity']->has('education_grade')) {
+                    $gradeName = $attr['entity']->education_grade->code_name;
+                }
+            } else {
+                $gradeId = !is_null($this->request->query('grade')) ? $this->request->query('grade') : $this->defaultGrade;
+                $gradeQuery = $this->EducationGrades->get($gradeId);
+                $gradeName = $gradeQuery->code_name;
+            }
+
             $attr['attr']['value'] = $gradeName;
+            $attr['value'] = $gradeId;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'edit') {
+                $programmeName = '';
+                if ($attr['entity']->has('education_grade') && $attr['entity']->education_grade->has('education_programme')) {
+                    $programmeName = $attr['entity']->education_grade->education_programme->cycle_programme_name;
+                }
+
+            } else {
+                $programmeId = !is_null($this->request->query('programme')) ? $this->request->query('programme') : $this->defaultProgramme;
+                $programmeQuery = $this->EducationGrades->EducationProgrammes->get($programmeId);
+                $programmeName = $programmeQuery->cycle_programme_name;
+            }
+
+            $attr['attr']['value'] = $programmeName;
             return $attr;
         }
     }
@@ -128,26 +223,14 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $subjectId = $entity->education_subject_id;
 
         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $institutionSubjectsList = $InstitutionSubjects
-            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+        $associatedInstitutionSubjectsCount = $InstitutionSubjects->find()
+            ->matching('ClassSubjects.InstitutionClasses.ClassGrades')
             ->where([
-                $InstitutionSubjects->aliasField('education_subject_id') => $subjectId
-            ])
-            ->toArray();
-
-        $associatedClassCount = 0;
-        if (!empty($institutionSubjectsList)) {
-            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-            $associatedClassCount = $InstitutionClasses->find()
-            ->matching('ClassGrades')
-            ->matching('ClassSubjects')
-            ->where([
-                'ClassGrades.education_grade_id' => $gradeId,
-                'ClassSubjects.institution_subject_id IN' => $institutionSubjectsList
+                $InstitutionSubjects->aliasField('education_subject_id') => $subjectId,
+                'ClassGrades.education_grade_id' => $gradeId
             ])
             ->count();
-        }
-        $extra['associatedRecords'][] = ['model' => 'InstitutionClass', 'count' => $associatedClassCount];
+        $extra['associatedRecords'][] = ['model' => 'InstitutionSubjects', 'count' => $associatedInstitutionSubjectsCount];
 
         $SubjectStudents = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $associatedSubjectStudentsCount = $SubjectStudents->find()
@@ -188,24 +271,20 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
                 $EducationCycles->aliasField('order'),
                 $EducationProgrammes->aliasField('order')
             ])
-            ->where([
-                $EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'
-            ])
+            ->where([$EducationProgrammes->aliasField('education_cycle_id') . ' IN (' .  $cycleIds . ')'])
             ->toArray();
         $selectedProgramme = !is_null($this->request->query('programme')) ? $this->request->query('programme') : key($programmeOptions);
+        $this->defaultProgramme = key($programmeOptions);
 
         $EducationGrades = $this->EducationGrades;
         $gradeOptions = $EducationGrades
             ->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
             ->find('visible')
-            ->order([
-                $EducationGrades->aliasField('order')
-            ])
-            ->where([
-                $EducationGrades->aliasField('education_programme_id') => $selectedProgramme
-            ])
+            ->order([$EducationGrades->aliasField('order')])
+            ->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
             ->toArray();
         $selectedGrade = !is_null($this->request->query('grade')) ? $this->request->query('grade') : key($gradeOptions);
+        $this->defaultGrade = key($gradeOptions);
 
         return compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme', 'gradeOptions', 'selectedGrade');
     }
