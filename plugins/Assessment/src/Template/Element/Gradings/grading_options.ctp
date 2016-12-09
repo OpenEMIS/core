@@ -38,7 +38,7 @@
 								<?php
 									$thClass = (isset($attr['fields'][$formField]['required']) && $attr['fields'][$formField]['required']) ? 'required' : '';
 								?>
-									<th class="<?= $thClass ?>"><label class="table-header-label"><?= Inflector::humanize($formField) ?></label></th>
+									<th class="<?= $thClass ?>"><label class="table-header-label"><?= __(Inflector::humanize($formField)) ?></label></th>
 									<th></th>
 								<?php endif; ?>
 							<?php endforeach;?>
@@ -65,6 +65,11 @@
 							<?php
 								// iterate each field in a row
 								foreach ($attr['formFields'] as $i):
+
+									if ($i == 'description') { //override the type of text to string to avoid multiline input
+										$attr['fields'][$i]['type'] = 'string';
+									}
+
 									$field = $attr['fields'][$i];
 									$fieldErrors = $record->errors($field['field']);
 									if ($fieldErrors) {
@@ -74,14 +79,15 @@
 										$tdClass = '';
 										$fieldClass = '';
 									}
-									$fieldAttributes = isset($field['attr']) ? $field['attr'] : [];
-									$options = array_merge([
-													'label'=>false,
-													'name'=>'AssessmentGradingTypes[grading_options]['.$key.']['.$field['field'].']',
-													'class'=>$fieldClass,
-													'value'=>$record->$field['field']
-												],
-												$fieldAttributes);
+
+						$fieldAttributes = isset($field['attr']) ? $field['attr'] : [];
+						$options = array_merge([
+										'label'=>false,
+										'name'=>'AssessmentGradingTypes[grading_options]['.$key.']['.$field['field'].']',
+										'class'=>$fieldClass,
+										'value'=>$record->$field['field']
+									],
+									$fieldAttributes);
 							?>
 								<?php if ($field['type']!='hidden') : ?>
 
@@ -148,7 +154,7 @@
 			<thead>
 				<tr>
 					<?php foreach ($attr['formFields'] as $formField) : ?>
-						<th><?= Inflector::humanize(str_replace('_id', '', $formField)) ?></th>
+						<th><?= __(Inflector::humanize(str_replace('_id', '', $formField))) ?></th>
 					<?php endforeach;?>
 				</tr>
 			</thead>
