@@ -386,6 +386,7 @@ class ImportBehavior extends Behavior {
 
                 $originalRow = new ArrayObject;
                 $checkCustomColumn = new ArrayObject;
+                $extra['entityValidate'] = true;
                 $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
                 $tempRow = $tempRow->getArrayCopy();
