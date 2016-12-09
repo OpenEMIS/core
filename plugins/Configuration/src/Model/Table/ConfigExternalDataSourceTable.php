@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use Cake\Core\Configure;
+use Cake\Validation\Validator;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable {
     public $id;
@@ -29,6 +30,23 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $id = $externalDataSourceRecord->id;
         $this->id = $id;
         $this->externalDataSourceType = $externalDataSourceRecord->value;
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->requirePresence('client_id')
+            ->requirePresence('first_name_mapping')
+            ->requirePresence('last_name_mapping')
+            ->requirePresence('gender_mapping');
+    }
+
+    public function validationOpenEMISIdentity(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator->requirePresence('url');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -170,6 +188,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['nationality_mapping'] = 'nationality_name';
             $requestData[$this->alias()]['token_uri'] = $url .'/api/oauth/token';
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]';
+            $requestData[$this->alias()]['user_endpoint_uri'] = '';
+            $patchOption['validate'] = 'OpenEMISIdentity';
         }
         if (empty($requestData[$this->alias()]['private_key'])) {
             $newKey = openssl_pkey_new([
@@ -245,7 +265,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_type_mapping', ['type' => 'hidden']);
                 $this->field('identity_number_mapping', ['type' => 'hidden']);
                 $this->field('nationality_mapping', ['type' => 'hidden']);
-
+                $this->field('user_endpoint_uri', ['type' => 'hidden']);
                 break;
 
             case 'Custom':
@@ -263,6 +283,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_type_mapping');
                 $this->field('identity_number_mapping');
                 $this->field('nationality_mapping');
+                $this->field('user_endpoint_uri');
                 break;
 
             default:
