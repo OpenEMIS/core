@@ -234,7 +234,8 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
             ->matching('InstitutionClasses.ClassGrades')
             ->where([
                 $SubjectStudents->aliasField('education_subject_id') => $subjectId,
-                'ClassGrades.education_grade_id' => $gradeId
+                'ClassGrades.education_grade_id' => $gradeId,
+                $SubjectStudents->aliasField('status') => 1,
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'InstitutionSubjectStudents', 'count' => $associatedSubjectStudentsCount];
