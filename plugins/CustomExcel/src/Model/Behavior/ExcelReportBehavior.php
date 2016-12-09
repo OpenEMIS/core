@@ -23,6 +23,13 @@ class ExcelReportBehavior extends Behavior
         'subfolder' => 'customexcel'
     ];
 
+    private $advancedTypes = [
+        'row' => '${"repeatRows":',
+        'column' => '${"repeatColumns":',
+        'match' => '${"match":'
+    ];
+    private $suppressAutoInsertNewRow = false;
+
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
@@ -154,14 +161,16 @@ class ExcelReportBehavior extends Behavior
         foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
             $cells = $objWorksheet->getCellCollection();
 
-            // $placeholder = new ArrayObject([]);
             $extra['placeholder'] = [];
             foreach ($cells as $cellCoordinate) {
-                // if is basic placeholder then replace first, else added into $placeholder to process later
                 $this->extractPlaceholder($objWorksheet, $cellCoordinate, $extra);
             }
-            // pr($extra['placeholder']);
+
+            $this->processAdvancedPlaceholder($objWorksheet, $extra);
         }
+
+        // to force the first sheet active
+        $objPHPExcel->setActiveSheetIndex(0);
     }
 
     public function saveExcel($objPHPExcel, $filepath)
@@ -227,6 +236,36 @@ class ExcelReportBehavior extends Behavior
         return $file;
     }
 
+    private function isBasicType($str)
+    {
+        foreach ($this->advancedTypes as $function => $value) {
+            $pos = strpos($str, $value);
+            if ($pos !== false) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function jsonToArray($str)
+    {
+        $pos = strpos($str, '$');
+        $json = substr($str, $pos+1, strlen($str));
+        $jsonArray = json_decode($json, true);
+
+        return $jsonArray;
+    }
+
+    private function formatPlaceholder($str)
+    {
+        $placeholderArray = explode('.', $str);
+        array_splice($placeholderArray, 1, 0, array('{n}'));
+        $placeholder = implode(".", $placeholderArray);
+
+        return $placeholder;
+    }
+
     private function extractPlaceholder($objWorksheet, $cellCoordinate, $extra)
     {
         $objCell = $objWorksheet->getCell($cellCoordinate);
@@ -241,6 +280,7 @@ class ExcelReportBehavior extends Behavior
             $pos = strpos($cellValue, '${');
 
             if ($pos !== false) {
+                // if is basic placeholder then replace first, else added into $placeholder to process later
                 if ($this->isBasicType($cellValue)) {
                     $this->string($objWorksheet, $objCell, $cellValue, $extra);
                 } else {
@@ -250,17 +290,18 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function isBasicType($str)
+    private function processAdvancedPlaceholder($objWorksheet, $extra)
     {
-        $advancedTypes = ['${"repeatRows":', '${"repeatColumns":', '${"map":'];
-        foreach ($advancedTypes as $key => $value) {
-            $pos = strpos($str, $value);
-            if ($pos !== false) {
-                return false;
+        foreach ($extra['placeholder'] as $cellCoordinate => $cellValue) {
+            $objCell = $objWorksheet->getCell($cellCoordinate);
+
+            foreach ($this->advancedTypes as $function => $keyword) {
+                $pos = strpos($cellValue, $keyword);
+                if ($pos !== false) {
+                    $this->$function($objWorksheet, $objCell, $cellValue, $extra);
+                }
             }
         }
-
-        return true;
     }
 
     private function string($objWorksheet, $objCell, $search, $extra)
@@ -287,5 +328,54 @@ class ExcelReportBehavior extends Behavior
 
         $cellCoordinate = $objCell->getCoordinate();
         $objWorksheet->setCellValue($cellCoordinate, $search);
+    }
+
+    private function row($objWorksheet, $objCell, $cellValue, $extra)
+    {
+        $jsonArray = $this->jsonToArray($cellValue);
+        $rowArray = array_key_exists('repeatRows', $jsonArray) ? $jsonArray['repeatRows'] : [];
+        $placeholderStr = isset($rowArray['displayValue']) ? $rowArray['displayValue'] : '';
+        $displayType = isset($rowArray['type']) ? $rowArray['type'] : null;
+        $displayFormat = isset($rowArray['format']) ? $rowArray['format'] : null;
+
+        $placeholder = $this->formatPlaceholder($placeholderStr);
+        $data = !empty($placeholder) ? Hash::extract($extra['vars'], $placeholder) : [];
+
+        $cellColumnValue = $objCell->getColumn();
+        $cellRowValue = $objCell->getRow();
+        $cellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($cellCoordinate);
+
+        $rowValue = $cellRowValue;
+        foreach ($data as $key => $value) {
+            if (!$this->suppressAutoInsertNewRow && $rowValue != $cellRowValue) {
+                $objWorksheet->insertNewRowBefore($rowValue);
+            }
+
+            $displayValue = $value;
+            switch ($displayType) {
+                case 'date':
+                    $displayValue = !is_null($displayFormat) ? $displayValue->format($displayFormat) : $displayValue;
+                    break;
+            }
+
+            $newCellCoordinate = $cellColumnValue.$rowValue;
+            $objWorksheet->setCellValue($newCellCoordinate, $displayValue);
+            $objWorksheet->duplicateStyle($cellStyle, $newCellCoordinate);
+            $rowValue++;
+        }
+
+        // only insert new row for the first column which have repeat-rows
+        if ($this->suppressAutoInsertNewRow == false) {
+            $this->suppressAutoInsertNewRow = true;
+        }
+    }
+
+    private function column($objWorksheet, $objCell, $cellValue, $extra)
+    {
+    }
+
+    private function match($objWorksheet, $objCell, $cellValue, $extra)
+    {
     }
 }
