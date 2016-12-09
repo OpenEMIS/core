@@ -23,9 +23,6 @@ class ExcelReportBehavior extends Behavior
         'subfolder' => 'customexcel'
     ];
 
-    private $vars = [];
-    private $suppressAutoInsertNewRow = false;
-
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
@@ -75,8 +72,9 @@ class ExcelReportBehavior extends Behavior
     {
         $controller = $event->subject();
         $params = $this->getParams($controller);
-        $this->vars = $this->getVars($params, $extra);
-        $results = Hash::flatten($this->vars);
+        $vars = $this->getVars($params, $extra);
+
+        $results = Hash::flatten($vars);
         pr($results);
         die;
     }
@@ -85,9 +83,8 @@ class ExcelReportBehavior extends Behavior
     {
         $controller = $event->subject();
         $params = $this->getParams($controller);
-        $this->vars = $this->getVars($params, $extra);
+        $extra['vars'] = $this->getVars($params, $extra);
 
-        // to-do
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
         $extra['download'] = true;
@@ -99,8 +96,15 @@ class ExcelReportBehavior extends Behavior
         $this->generateExcel($objPHPExcel, $extra);
         $this->saveExcel($objPHPExcel, $filepath);
 
+        if ($extra->offsetExists('tmp_file_path')) {
+            // delete temporary excel file after save
+            $this->deleteFile($extra['tmp_file_path']);
+        }
+
         if ($extra['download']) {
             $this->downloadExcel($filepath);
+            // delete excel file after download
+            $this->deleteFile($filepath);
         }
     }
 
@@ -124,12 +128,12 @@ class ExcelReportBehavior extends Behavior
 
                 // Create a temporary file
                 $filepath = $extra['path'] . DS . $filename;
+                $extra['tmp_file_path'] = $filepath;
 
                 $excelTemplate = new File($filepath, true, 0777);
                 $excelTemplate->write($file);
                 $excelTemplate->close();
                 // End create a temporary file
-
                 try {
                     // Read back from same temporary file
                     $inputFileType = PHPExcel_IOFactory::identify($filepath);
@@ -147,21 +151,17 @@ class ExcelReportBehavior extends Behavior
 
     public function generateExcel($objPHPExcel, ArrayObject $extra)
     {
-        $sheet = $objPHPExcel->getSheet(0);
-        $cells = $sheet->getCellCollection();
+        foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
+            $cells = $objWorksheet->getCellCollection();
 
-        // Loop through all cell and replace placeholder with variables value
-        foreach ($cells as $cellCoordinate) {
-            $objCell = $sheet->getCell($cellCoordinate);
-            if (is_object($objCell->getValue())) {
-                $cellValue = $objCell->getValue()->getPlainText();
-            } else {
-                $cellValue = $objCell->getValue();
+            // $placeholder = new ArrayObject([]);
+            $extra['placeholder'] = [];
+            foreach ($cells as $cellCoordinate) {
+                // if is basic placeholder then replace first, else added into $placeholder to process later
+                $this->extractPlaceholder($objWorksheet, $cellCoordinate, $extra);
             }
-
-            $this->replaceCell($sheet, $objCell, $cellValue);
+            // pr($extra['placeholder']);
         }
-        // End loop through all cell and replace placeholder with variables value
     }
 
     public function saveExcel($objPHPExcel, $filepath)
@@ -184,6 +184,12 @@ class ExcelReportBehavior extends Behavior
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($filepath));
         echo file_get_contents($filepath);
+    }
+
+    public function deleteFile($filepath)
+    {
+        $file = new File($filepath);
+        $file->delete();
     }
 
     public function getParams($controller)
@@ -220,149 +226,58 @@ class ExcelReportBehavior extends Behavior
 
         return $file;
     }
-    
-    private function replaceCell($sheet, $objCell, $search)
+
+    private function extractPlaceholder($objWorksheet, $cellCoordinate, $extra)
+    {
+        $objCell = $objWorksheet->getCell($cellCoordinate);
+
+        if (is_object($objCell->getValue())) {
+            $cellValue = $objCell->getValue()->getPlainText();
+        } else {
+            $cellValue = $objCell->getValue();
+        }
+
+        if (strlen($cellValue) > 0) {
+            $pos = strpos($cellValue, '${');
+
+            if ($pos !== false) {
+                if ($this->isBasicType($cellValue)) {
+                    $this->string($objWorksheet, $objCell, $cellValue, $extra);
+                } else {
+                    $extra['placeholder'][$cellCoordinate] = $cellValue;
+                }
+            }
+        }
+    }
+
+    private function isBasicType($str)
+    {
+        $advancedTypes = ['${"repeatRows":', '${"repeatColumns":', '${"map":'];
+        foreach ($advancedTypes as $key => $value) {
+            $pos = strpos($str, $value);
+            if ($pos !== false) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function string($objWorksheet, $objCell, $search, $extra)
     {
         $format = '${%s}';
+        $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
 
-        if (strlen($search) > 0) {
-            $rowArray = explode('${repeat-rows:', $search);
-            array_shift($rowArray); // first element will not contain the placeholder
-            $columnArray = explode('${repeat-columns:', $search);
-            array_shift($columnArray); // first element will not contain the placeholder
-            $strArray = explode('${', $search);
-            array_shift($strArray); // first element will not contain the placeholder
+        $strArray = explode('${', $search);
+        array_shift($strArray); // first element will not contain the placeholder
 
-            if (sizeof($rowArray) > 0) {
-                $this->replaceRow($sheet, $objCell, $search, $format, $rowArray);
-            } else if (sizeof($columnArray) > 0) {
-                $this->replaceColumn($sheet, $objCell, $search, $format, $columnArray);
-            } else {
-                $this->replaceString($sheet, $objCell, $search, $format, $strArray);
-            }
-        }
-    }
-
-    private function replaceRow($sheet, $objCell, $search, $format, $rowArray)
-    {
-        $str = current($rowArray);
-        list($placeholderStr, $filterStr) = $this->splitPlaceholder($str);
-
-        $placeholder = $this->formatPlaceholder($placeholderStr);
-        $data = Hash::extract($this->vars, $placeholder);
-
-        $columnValue = $objCell->getColumn();
-        $rowValue = $objCell->getRow();
-        $cellCoordinate = $objCell->getCoordinate();
-        $cellStyle = $objCell->getStyle($cellCoordinate);
-
-        foreach ($data as $key => $value) {
-            if (!empty($filterStr)) {
-                list($dataType, $attr) = explode(':', $filterStr , 2);
-                switch ($dataType) {
-                    case 'date':
-                        $dataFormat = $attr;
-                        $value = $value->format($dataFormat);
-                        break;
-                }
-            }
-
-            $newCellCoordinate = $columnValue.$rowValue;
-            $sheet->setCellValue($newCellCoordinate, $value);
-            $sheet->duplicateStyle($cellStyle, $newCellCoordinate);
-            $rowValue++;
-            
-            if (!$this->suppressAutoInsertNewRow) {
-                $sheet->insertNewRowBefore($rowValue);
-            }
-        }
-
-        // only insert new row for the first column which have repeat-rows
-        if ($this->suppressAutoInsertNewRow == false) {
-            $this->suppressAutoInsertNewRow = true;
-        }
-    }
-
-    private function replaceColumn($sheet, $objCell, $search, $format, $columnArray)
-    {
-        $str = current($columnArray);
-        list($placeholderStr, $filterStr) = $this->splitPlaceholder($str);
-
-        $placeholder = $this->formatPlaceholder($placeholderStr);
-        $data = Hash::extract($this->vars, $placeholder);
-
-        // columnIndexFromString(): Column index start from 1
-        $columnValue = $objCell->getColumn();
-        $columnIndex = $objCell->columnIndexFromString($columnValue);
-        $rowValue = $objCell->getRow();
-        $placeholderCellCoordinate = $objCell->getCoordinate();
-        $cellStyle = $objCell->getStyle($placeholderCellCoordinate);
-        $columnWidth = $sheet->getColumnDimension($columnValue)->getWidth();
-
-        foreach ($data as $key => $value) {
-            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-
-            $cellCoordinate = $columnValue.$rowValue;
-            $sheet->setCellValue($cellCoordinate, $value);
-            $sheet->duplicateStyle($cellStyle, $cellCoordinate);
-            // set column width to follow placeholder
-            $sheet->getColumnDimension($columnValue)->setAutoSize(false);
-            $sheet->getColumnDimension($columnValue)->setWidth($columnWidth);
-
-            if (!empty($filterStr)) {
-                list($dataType, $attr) = explode(':', $filterStr , 2);
-                switch ($dataType) {
-                    case 'children':
-                        $nestedPlaceholderStr = $attr;
-                        $nestedPlaceholder = $this->formatPlaceholder($nestedPlaceholderStr);
-                        $nestedData = Hash::extract($this->vars, $nestedPlaceholder);
-
-                        $nestedColumnIndex = $columnIndex;
-                        // always output children to the immediate next row
-                        $nestedRowValue = $rowValue + 1;
-                        foreach ($nestedData as $nestedKey => $nestedValue) {
-                            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                            $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
-
-                            $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-                            $sheet->setCellValue($nestedCellCoordinate, $nestedValue);
-                            $sheet->duplicateStyle($cellStyle, $nestedCellCoordinate);
-                            // set nested column width to follow placeholder
-                            $sheet->getColumnDimension($nestedColumnValue)->setAutoSize(false);
-                            $sheet->getColumnDimension($nestedColumnValue)->setWidth($columnWidth);
-
-                            $nestedColumnIndex++;
-                        }
-
-                        // merge parent cell following number of columns occupied by children
-                        if ($nestedColumnIndex > $columnIndex) {
-                            $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
-
-                            $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rowValue;
-                            $sheet->mergeCells($mergeRange);
-
-                            $columnIndex = $nestedColumnIndex-1;
-                        }
-                        break;
-                }
-            }
-
-            $columnIndex++;
-        }
-    }
-
-    private function replaceString($sheet, $objCell, $search, $format, $strArray)
-    {
         foreach ($strArray as $key => $str) {
             $pos = strpos($str, '}');
 
-            if ($pos === false) {
-                // closing of placeholder not found
-            } else {
+            if ($pos !== false) {
                 $placeholder = substr($str, 0, $pos);
                 $replace = sprintf($format, $placeholder);
-                $value = Hash::get($this->vars, $placeholder);
+                $value = Hash::get($vars, $placeholder);
 
                 if (!is_null($value)) {
                     $search = str_replace($replace, $value, $search);
@@ -371,39 +286,6 @@ class ExcelReportBehavior extends Behavior
         }
 
         $cellCoordinate = $objCell->getCoordinate();
-        $sheet->setCellValue($cellCoordinate, $search);
-    }
-
-    private function splitPlaceholder($str)
-    {
-        $pos = strpos($str, '}');
-
-        $placeholderStr = '';
-        $filterStr = '';
-
-        if ($pos === false) {
-            // closing of placeholder not found
-        } else {
-            $placeholderStr = substr($str, 0, $pos);
-
-            $placeholderArray = explode('|', $placeholderStr);
-            if (sizeof($placeholderArray) == 1) {
-                $placeholderStr = $placeholderArray[0];
-            } else if (sizeof($placeholderArray) == 2) {
-                $placeholderStr = $placeholderArray[0];
-                $filterStr = $placeholderArray[1];
-            }
-        }
-
-        return [$placeholderStr, $filterStr];
-    }
-
-    private function formatPlaceholder($str)
-    {
-        $placeholderArray = explode('.', $str);
-        array_splice($placeholderArray, 1, 0, array('{n}'));
-        $placeholder = implode(".", $placeholderArray);
-
-        return $placeholder;
+        $objWorksheet->setCellValue($cellCoordinate, $search);
     }
 }
