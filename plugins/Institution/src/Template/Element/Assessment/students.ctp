@@ -35,7 +35,7 @@
 										'controller' => 'Institutions',
 										'action' => 'StudentUser',
 										'view',
-										$student->_matchingData['Users']->id
+										$this->ControllerAction->paramsEncode(['id' => $student->_matchingData['Users']->id])
 									]); ?>
 								</td>
 								<td><?= $student->_matchingData['Users']->name; ?></td>
