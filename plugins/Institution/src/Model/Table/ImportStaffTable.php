@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
+use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -299,6 +300,10 @@ class ImportStaffTable extends AppTable
             return false;
         }
         $tempRow['institution_id'] = $this->_institution->id;
+
+        // from string to dateObject
+        $formattedDate = Date::createFromFormat('d/m/Y', $tempRow['start_date']);
+        $tempRow['start_date'] = $formattedDate;
 
         if (empty($tempRow['start_date'])) {
             $rowInvalidCodeCols['start_date'] = __('No start date specified');
