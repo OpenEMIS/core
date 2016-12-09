@@ -1190,34 +1190,24 @@ class ImportBehavior extends Behavior {
             if (!empty($val)) {
                 $columnAttr = $activeModel->schema()->column($columnName);
                 if ($columnAttr['type'] == 'date') { // checking the main table schema data type
-
-// pr($val);
-// die;
                     $originalRow[$col] = $val;
 
                     if (!empty($val) && preg_match($datePattern, $val)) {
                         $split = explode('/', $val);
                         $dateObject = new Date();
                         $dateObject->setDate($split[2], $split[1], $split[0]);
-// pr($dateObject->format('d/m/Y'));
-// die;
+
                         // compare the date input and new formatted date to cater (31/02/2016 changed to 02/03/2016)
                         if ($val != $dateObject->format('d/m/Y')) {
-                            $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date aaaaa');
+                            $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
                             $rowPass = false;
                             $extra['entityValidate'] = false;
                         } else {
                             $originalRow[$col] = $dateObject->format('d/m/Y');
-
-                        // $formattedDate = Date::createFromFormat('d/m/Y', $val);
-                        // $val = $formattedDate;
-                        // // follow date format as required on the template
-                        // $originalRow[$col] = $val->format('d/m/Y');
-
                         }
                     } else {
                         // string input without the correct format (not dd/mm/yyyy)
-                        $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date bbbbb');
+                        $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
                         $rowPass = false;
                         $extra['entityValidate'] = false;
                     }
