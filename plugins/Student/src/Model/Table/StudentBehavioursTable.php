@@ -33,7 +33,8 @@ class StudentBehavioursTable extends AppTable {
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentBehaviours',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;
