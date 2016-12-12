@@ -34,8 +34,8 @@ class ConfigurationsController extends AppController {
     {
         $externalDataSourceType = $this->request->query('external_data_source_type');
         $this->autoRender = false;
-        $ConfigExternalDataSource = TableRegistry::get('Configuration.ConfigExternalDataSource');
-        echo $ConfigExternalDataSource->generateServerAuthorisationToken($externalDataSourceType);
+        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        echo $ExternalDataSourceAttributes->generateServerAuthorisationToken($externalDataSourceType);
     }
 
 }
