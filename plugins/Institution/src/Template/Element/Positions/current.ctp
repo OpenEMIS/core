@@ -1,4 +1,4 @@
-<?php 
+<?php
 	echo $this->Html->script('ControllerAction.../plugins/jasny/js/jasny-bootstrap.min', ['block' => true]);
 ?>
 
@@ -18,18 +18,18 @@
 					<th><?= $this->Label->get('InstitutionStaff.fte'); ?></th>
 				</tr>
 			</thead>
-	
+
 			<tbody data-link="row">
-				<?php 
+				<?php
 				// pr($ControllerAction['buttons']);die;
 				// if $current is 0, we need to add an empty row so that the table header and table footer columns will have separator lines; else the lines will not show up.
 				// Probably due to the existence of <tfoot> element.
-				if (count($attr['data'])>0): 
+				if (count($attr['data'])>0):
 				?>
 					<?php foreach ($attr['data'] as $i => $obj) : ?>
 						<?php if (!is_object($obj->user)): ?>
 							<tr><td>There is an error with this user data. User might have been deleted from users table.</td></tr>
-							<?php else: 
+							<?php else:
 									$link = '';
 							?>
 							<tr>
@@ -38,7 +38,7 @@
 										'controller' => 'Institutions',
 										'action' => 'StaffUser',
 										'view',
-										$obj->user->id
+										$this->ControllerAction->paramsEncode(['id' => $obj->user->id])
 									]) ?>
 								</td>
 								<td><?= $obj->user->name ?></td>
@@ -48,13 +48,13 @@
 						<?php endif; ?>
 					<?php endforeach ?>
 
-				<?php 
+				<?php
 				// Need to add an empty row so that an empty table will not look ugly without columns separator lines
-				else: 
+				else:
 				?>
-				
+
 				<tr></tr>
-				
+
 				<?php endif; ?>
 			</tbody>
 			<tfoot>

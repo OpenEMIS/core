@@ -63,6 +63,8 @@ class MapController extends AppController {
 		    						;
 	    			$count = $bufferArray->count();
 	    			foreach ($buffer as $key => $value) {
+	    				$value['id'] = $this->ControllerAction->paramsEncode(['id' => $value['id']]);
+	    				$buffer[$key] = $value;
 						$bufferArray->offsetSet(($count + $key), $value);
 	    			}
 	    			unset($buffer);
@@ -91,6 +93,11 @@ class MapController extends AppController {
 								->where($condition)
 								->execute()
 	    						->fetchAll('assoc');
+
+	    		foreach ($buffer as $key => $value) {
+    				$value['id'] = $this->ControllerAction->paramsEncode(['id' => $value['id']]);
+    				$buffer[$key] = $value;
+    			}
 				$institutionByType->offsetSet($id, new ArrayObject($buffer));
 				$institutionTypeTotal[$id] = count($buffer);
 				$totalInstitutions = $totalInstitutions + count($buffer);
