@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Configuration\Model\Behavior;
 
 use ArrayObject;
@@ -22,6 +22,8 @@ class DataSynchronisationBehavior extends Behavior {
 	private $countryMapping = null;
 	private $identityTypeMapping = null;
 	private $identityNameMapping = null;
+	private $userEndpoint = null;
+	private $authEndpoint = null;
 
 	public function initialize() {
 		parent::initialize();
@@ -55,6 +57,8 @@ class DataSynchronisationBehavior extends Behavior {
 			$this->countryMapping = $this->attributes['nationality_mapping'];
 			$this->identityTypeMapping = $this->attributes['identity_type_mapping'];
 			$this->identityNameMapping = $this->attributes['identity_mapping'];
+			$this->authEndpoint = $this->attributes['token_uri'];
+			$this->userEndpoint = $this->attributes['user_endpoint_uri'];
 		}
 
 	}
@@ -66,7 +70,7 @@ class DataSynchronisationBehavior extends Behavior {
 		return $events;
 	}
 
-	public function pull(Event $mainEvent, ArrayObject $extra) 
+	public function pull(Event $mainEvent, ArrayObject $extra)
 	{
 
 	}
@@ -76,7 +80,12 @@ class DataSynchronisationBehavior extends Behavior {
 		$http = new Client();
 		$externalReference = $entity->getOriginal('external_reference');
 		$placeHolder = '{external_reference}';
-
+		$url = str_replace($placeHolder, $externalReference, $this->userEndpoint);
+		// $data = [
+		// 	'grant_type' => '',
+		// 	'assertion' =>
+		// ];
+		$accessToken = $http->post($this->authEndpoint, []);
 
 	}
 }

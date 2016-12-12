@@ -11,6 +11,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use Cake\Core\Configure;
 use Cake\Validation\Validator;
+use Cake\Core\Configure;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable {
     public $id;
@@ -170,6 +171,41 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             }
         }
         return $attr;
+    }
+
+    public generateServerAuthorisationToken($externalDataSourceType)
+    {
+        $records = $this
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->where([
+                $this->aliasField('external_data_source_type') => $externalDataSourceType
+            ])
+            ->toArray();
+
+        $keyAndSecret = explode('.', $records['private_key']);
+        $privateKey = '';
+        if (count($keyAndSecret) == 2) {
+            list($privateKey, $secret) = $keyAndSecret;
+            $secret = openssl_private_decrypt($this->ControllerAction->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+            if ($secret) {
+                $privateKey = Security::decrypt($this->ControllerAction->urlsafeB64Decode($privateKey), $protectedKey);
+            }
+        }
+        $exp = intval(Time::now()->toUnixString()) + 3600;
+        $iat = Time::now()->toUnixString();
+
+        $payload = [
+            'iss' => $records['client_id'],
+            'scope' => $records['scope'],
+            'aud' => $records['token_uri'],
+            'exp' => $exp,
+            'iat' => $iat
+        ];
+
+        return JWT::encode($payload, $privateKey, 'RS256');
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOption, ArrayObject $extra)
