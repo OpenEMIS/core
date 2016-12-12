@@ -610,6 +610,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
         } else if ($action == 'edit') {
+            $examCentreId = $this->paramsDecode($this->paramsPass(0))['id'];
 
             if (!$entity->isNew()) {
                 $tableHeaders[] = ''; // for delete column
@@ -654,7 +655,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
                         $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.academic_period_id", ['value' => $joinData['academic_period_id']]);
                         $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.examination_id", ['value' => $joinData['examination_id']]);
-                        $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.examination_centre_id", ['value' => $this->paramsPass(0)]);
+                        $cell .= $Form->hidden("$alias.$fieldKey.$key._joinData.examination_centre_id", ['value' => $examCentreId]);
 
                         $rowData[] = $openemisId;
                         $rowData[] = $cell;
@@ -723,7 +724,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                     ->group([$this->Institutions->aliasField('id')]);
 
             if ($action == 'edit') {
-                $options = $options->orWhere(['ExaminationCentresInstitutions.examination_centre_id' => $this->paramsPass(0)]);
+                $examCentreId = $this->paramsDecode($this->paramsPass(0))['id'];
+                $options = $options->orWhere(['ExaminationCentresInstitutions.examination_centre_id' => $examCentreId]);
             }
 
             $institutions = [];
