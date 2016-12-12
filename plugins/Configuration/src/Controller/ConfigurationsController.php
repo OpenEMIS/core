@@ -9,7 +9,6 @@ use Cake\ORM\TableRegistry;
 use Firebase\JWT\JWT;
 use Cake\I18n\Time;
 use Cake\Utility\Security;
-use Cake\Core\Configure;
 
 class ConfigurationsController extends AppController {
     public function initialize()
@@ -40,38 +39,8 @@ class ConfigurationsController extends AppController {
     {
         $externalDataSourceType = $this->request->query('external_data_source_type');
         $this->autoRender = false;
-        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        $records = $ExternalDataSourceAttributes
-            ->find('list', [
-                'keyField' => 'attribute_field',
-                'valueField' => 'value'
-            ])
-            ->where([
-                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $externalDataSourceType
-            ])
-            ->toArray();
-
-        $keyAndSecret = explode('.', $records['private_key']);
-        $privateKey = '';
-        if (count($keyAndSecret) == 2) {
-            list($privateKey, $secret) = $keyAndSecret;
-            $secret = openssl_private_decrypt($this->ControllerAction->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
-            if ($secret) {
-                $privateKey = Security::decrypt($this->ControllerAction->urlsafeB64Decode($privateKey), $protectedKey);
-            }
-        }
-        $exp = intval(Time::now()->toUnixString()) + 3600;
-        $iat = Time::now()->toUnixString();
-
-        $payload = [
-            'iss' => $records['client_id'],
-            'scope' => $records['scope'],
-            'aud' => $records['token_uri'],
-            'exp' => $exp,
-            'iat' => $iat
-        ];
-
-        echo JWT::encode($payload, $privateKey, 'RS256');
+        $ConfigExternalDataSource = TableRegistry::get('Configuration.ConfigExternalDataSource');
+        return $ConfigExternalDataSource->generateServerAuthorisationToken($externalDataSourceType);
     }
 
 }
