@@ -11,7 +11,8 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use Cake\Core\Configure;
 use Cake\Validation\Validator;
-use Cake\Core\Configure;
+use Cake\i18n\Time;
+use Firebase\JWT\JWT;
 
 class ConfigExternalDataSourceTable extends ControllerActionTable {
     public $id;
@@ -173,15 +174,16 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         return $attr;
     }
 
-    public generateServerAuthorisationToken($externalDataSourceType)
+    public function generateServerAuthorisationToken($externalDataSourceType)
     {
-        $records = $this
+        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $records = $ExternalDataSourceAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
             ])
             ->where([
-                $this->aliasField('external_data_source_type') => $externalDataSourceType
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type') => $externalDataSourceType
             ])
             ->toArray();
 
@@ -189,9 +191,9 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $privateKey = '';
         if (count($keyAndSecret) == 2) {
             list($privateKey, $secret) = $keyAndSecret;
-            $secret = openssl_private_decrypt($this->ControllerAction->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+            $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
             if ($secret) {
-                $privateKey = Security::decrypt($this->ControllerAction->urlsafeB64Decode($privateKey), $protectedKey);
+                $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
             }
         }
         $exp = intval(Time::now()->toUnixString()) + 3600;
