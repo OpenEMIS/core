@@ -76,7 +76,7 @@ class StaffAppraisalsTable extends ControllerActionTable
 
         if (!empty($this->paramsPass(0))) {
 
-            $staffAppraisalId = $this->paramsPass(0);
+            $staffAppraisalId = $this->paramsDecode($this->paramsPass(0));
 
             $loginUserId = $this->Auth->user('id');
             $createdUserId = $this->get($staffAppraisalId)->created_user_id;
