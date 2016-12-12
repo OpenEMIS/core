@@ -266,6 +266,14 @@ class ExcelReportBehavior extends Behavior
         return $placeholder;
     }
 
+    private function formatFilter($filterStr, $filterValue)
+    {
+        $filterArray = explode(".", $filterStr);
+        $filterKey = $filterArray[1];
+
+        return "[".$filterKey."=".$filterValue."]"; 
+    }
+
     private function extractPlaceholder($objWorksheet, $cellCoordinate, $extra)
     {
         $objCell = $objWorksheet->getCell($cellCoordinate);
@@ -441,5 +449,92 @@ class ExcelReportBehavior extends Behavior
 
     private function match($objWorksheet, $objCell, $cellValue, $extra)
     {
+        $jsonArray = $this->jsonToArray($cellValue);
+        $matchArray = array_key_exists('match', $jsonArray) ? $jsonArray['match'] : [];
+        $rowsArray = array_key_exists('rows', $matchArray) ? $matchArray['rows'] : [];
+
+        $rowPlaceholderStr = array_key_exists('mapFrom', $rowsArray) ? $rowsArray['mapFrom'] : '';
+        $rowFilterStr = array_key_exists('mapTo', $rowsArray) ? $rowsArray['mapTo'] : '';
+        $rowPlaceholder = $this->formatPlaceholder($rowPlaceholderStr);
+        $rowData = Hash::extract($extra['vars'], $rowPlaceholder);
+
+        // columnIndexFromString(): Column index start from 1
+        $cellColumnValue = $objCell->getColumn();
+        $cellColumnIndex = $objCell->columnIndexFromString($cellColumnValue);
+        $cellRowValue = $objCell->getRow();
+        $cellCellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($cellCellCoordinate);
+
+        if (!empty($rowsArray)) {
+            foreach ($rowData as $rowKey => $rowValue) {
+                $columnIndex = $cellColumnIndex;
+                $filterStr = $this->formatFilter($rowFilterStr, $rowValue);
+                $this->matchColumns($objWorksheet, $objCell, $matchArray, $columnIndex, $cellRowValue, $cellStyle, $filterStr, $extra);
+
+                $cellRowValue++;
+            }
+        } else {
+            $columnIndex = $cellColumnIndex;
+            $this->matchColumns($objWorksheet, $objCell, $matchArray, $columnIndex, $cellRowValue, $cellStyle, null, $extra);
+        }
+    }
+
+    private function matchColumns($objWorksheet, $objCell, $matchArray, &$columnIndex, &$cellRowValue, $cellStyle, $filter=null, ArrayObject $extra)
+    {
+        $displayType = isset($matchArray['type']) ? $matchArray['type'] : null;
+        $displayFormat = isset($matchArray['format']) ? $matchArray['format'] : null;
+
+        $columnsArray = array_key_exists('columns', $matchArray) ? $matchArray['columns'] : [];
+        $nestedColumnsArray = isset($columnsArray['children']['columns']) ? $columnsArray['children']['columns'] : [];
+
+        $columnPlaceholderStr = array_key_exists('mapFrom', $columnsArray) ? $columnsArray['mapFrom'] : '';
+        $columnFilterStr = array_key_exists('mapTo', $columnsArray) ? $columnsArray['mapTo'] : '';
+        $columnPlaceholder = $this->formatPlaceholder($columnPlaceholderStr);
+        $columnData = Hash::extract($extra['vars'], $columnPlaceholder);
+
+        $nestedPlaceholderStr = array_key_exists('mapFrom', $nestedColumnsArray) ? $nestedColumnsArray['mapFrom'] : '';
+        $nestedFilterStr = array_key_exists('mapTo', $nestedColumnsArray) ? $nestedColumnsArray['mapTo'] : '';
+        $nestedPlaceholder = $this->formatPlaceholder($nestedPlaceholderStr);
+        $nestedData = Hash::extract($extra['vars'], $nestedPlaceholder);
+
+        foreach ($columnData as $columnKey => $columnValue) {
+            $columnFilter = $this->formatFilter($columnFilterStr, $columnValue);
+
+            foreach ($nestedData as $nestedKey => $nestedValue) {
+                $nestedFilter = $this->formatFilter($nestedFilterStr, $nestedValue);
+
+                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                $nestedColumnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $nestedCellCoordinate = $nestedColumnValue.$cellRowValue;
+
+                $matchPlaceholderStr = isset($matchArray['displayValue']) ? $matchArray['displayValue'] : '';
+                $matchPlaceholder = $this->formatPlaceholder($matchPlaceholderStr);
+                $matchField = isset($matchArray['displayField']) ? $matchArray['displayField'] : '';
+                if (!is_null($filter)) {
+                    $matchPlaceholder .= $filter;
+                }
+                $matchPlaceholder .= $columnFilter;
+                $matchPlaceholder .= $nestedFilter;
+                $matchPlaceholder .= ".".$matchField;
+
+                $matchData = Hash::extract($extra['vars'], $matchPlaceholder);
+                $matchValue = !empty($matchData) ? current($matchData) : '';
+
+                switch ($displayType) {
+                    case 'number':
+                        // set to two decimal places
+                        if (!is_null($displayFormat)) {
+                            $formatting = number_format(0, $displayFormat);
+                            $objWorksheet->getStyle($nestedCellCoordinate)->getNumberFormat()->setFormatCode($formatting);
+                        }
+                        break;
+                }
+
+                $objWorksheet->setCellValue($nestedCellCoordinate, $matchValue);
+                $objWorksheet->duplicateStyle($cellStyle, $nestedCellCoordinate);
+
+                $columnIndex++;
+            }
+        }
     }
 }
