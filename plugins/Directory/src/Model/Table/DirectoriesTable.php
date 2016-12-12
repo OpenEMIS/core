@@ -44,11 +44,18 @@ class DirectoriesTable extends AppTable {
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
-            'user_type', 'first_name', 'middle_name', 'third_name', 'last_name',
-            'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
+            'user_type', 'first_name', 'middle_name', 'third_name', 'last_name', 
+            'openemis_no', 'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
-        $this->addBehavior('AdvanceSearch', ['order' => $advancedSearchFieldOrder, 'showOnLoad' => 1, 'customFields' => ['user_type']]);
+        $this->addBehavior('AdvanceSearch', [
+        	'include' =>[
+        		'openemis_no'
+        	],
+        	'order' => $advancedSearchFieldOrder, 
+        	'showOnLoad' => 1, 
+        	'customFields' => ['user_type']
+        ]);
 
 		$this->addBehavior('HighChart', [
 			'user_gender' => [
