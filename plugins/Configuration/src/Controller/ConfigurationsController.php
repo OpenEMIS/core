@@ -3,12 +3,7 @@ namespace Configuration\Controller;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
-use Firebase\JWT\JWT;
-use Cake\I18n\Time;
-use Cake\Utility\Security;
 
 class ConfigurationsController extends AppController {
     public function initialize()
@@ -40,7 +35,7 @@ class ConfigurationsController extends AppController {
         $externalDataSourceType = $this->request->query('external_data_source_type');
         $this->autoRender = false;
         $ConfigExternalDataSource = TableRegistry::get('Configuration.ConfigExternalDataSource');
-        return $ConfigExternalDataSource->generateServerAuthorisationToken($externalDataSourceType);
+        echo $ConfigExternalDataSource->generateServerAuthorisationToken($externalDataSourceType);
     }
 
 }
