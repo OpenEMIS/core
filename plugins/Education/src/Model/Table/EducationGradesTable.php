@@ -154,7 +154,8 @@ class EducationGradesTable extends ControllerActionTable
 
 		$this->controller->set('toolbarElements', $toolbarElements);
 
-		$this->_fieldOrder = ['visible', 'name', 'code', 'education_programme_id'];
+		$this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
+		$this->_fieldOrder = ['visible', 'name', 'code', 'education_programme_id', 'subjects'];
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -165,9 +166,67 @@ class EducationGradesTable extends ControllerActionTable
 		$query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
 	}
 
+	public function viewBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
+		$this->_fieldOrder[] = 'subjects';
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$query->contain(['EducationSubjects']);
+	}
+
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('education_programme_id');
+	}
+
+	public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[])
+	{
+		if ($action == 'index') {
+			$EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
+			$value = $EducationGradesSubjects
+				->findByEducationGradeId($entity->id)
+				->where([$EducationGradesSubjects->aliasField('visible') => 1])
+				->count();
+			$attr['value'] = $value;
+		} else if ($action == 'view') {
+			$tableHeaders = [__('Name'), __('Code'), __('Hours Required')];
+			$tableCells = [];
+
+			$EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
+			$gradeSubjectData = $EducationGradesSubjects
+				->findByEducationGradeId($entity->id)
+				->find('list', ['keyField' =>  'education_subject_id', 'valueField' => 'id'])
+				->where([$EducationGradesSubjects->aliasField('visible') => 1])
+				->toArray();
+
+			$educationSubjects = $entity->extractOriginal(['education_subjects']);
+			foreach ($educationSubjects['education_subjects'] as $key => $obj) {
+				if ($obj->_joinData->visible == 1) {
+					$gradeSubjectId = $gradeSubjectData[$obj->id];
+
+					$rowData = [];
+					// link subject to GradeSubjects
+					$rowData[] = $event->subject()->Html->link(__($obj->name), [
+                        'plugin' => 'Education',
+                        'controller' => 'Educations',
+                        'action' => 'GradeSubjects',
+                        '0' => 'view',
+                        '1' => $this->paramsEncode(['id' => $gradeSubjectId])
+                    ]);
+					$rowData[] = $obj->code;
+					$rowData[] = $obj->_joinData->hours_required;
+					$tableCells[] = $rowData;
+				}
+			}
+
+			$attr['tableHeaders'] = $tableHeaders;
+	    	$attr['tableCells'] = $tableCells;
+		}
+
+		return $event->subject()->renderElement('Education.subjects', ['attr' => $attr]);
 	}
 
 	public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
