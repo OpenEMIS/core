@@ -18,6 +18,7 @@ class AdvanceSearchBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'display_country' => true,
 		'exclude' => ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'],
+        'include' => [], //to include field that is from the database table
         'customFields' => [],
         'order' => [],
         'showOnLoad' => 0
@@ -63,9 +64,13 @@ class AdvanceSearchBehavior extends Behavior {
 			$fields = $this->_table->schema()->columns();
             $customFields = $this->config('customFields');
             $fields = array_merge($fields, $customFields);
+
 			$requestData = $this->_table->request->data;
 			$advanceSearchData = isset($requestData['AdvanceSearch']) ? $requestData['AdvanceSearch'] : [];
 			$advanceSearchModelData = isset($advanceSearchData[$this->_table->alias()]) ? $advanceSearchData[$this->_table->alias()] : [];
+            $searchables = new ArrayObject();
+            $includedFields = new ArrayObject(); //new type of advance search, field from the database table.
+
 			foreach ($fields as $key) {
 				if (!in_array($key , $this->config('exclude'))) {
 
@@ -111,10 +116,18 @@ class AdvanceSearchBehavior extends Behavior {
 						}
 					}
 				}
-			}
+
+                if (in_array($key , $this->config('include'))) {
+                    $label = Inflector::humanize($key);
+                    $includedFields[$key] = [
+                        'label' => __($label),
+                        'value' => (isset($advanceSearchModelData['tableField']) && isset($advanceSearchModelData['tableField'][$key])) ? $advanceSearchModelData['tableField'][$key] : '',
+                    ];
+                }
+			}   
 
             if (array_key_exists('belongsTo', $advanceSearchModelData)) {
-				foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
+                foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
 					if (!empty($value) && $advancedSearch == false) {
 						$advancedSearch = true;
 					}
@@ -122,25 +135,32 @@ class AdvanceSearchBehavior extends Behavior {
 			}
 
 			if (array_key_exists('hasMany', $advanceSearchModelData)) {
-				foreach ($advanceSearchModelData['hasMany'] as $field => $value) {
+                foreach ($advanceSearchModelData['hasMany'] as $field => $value) {
 					if (strlen($value) > 0 && $advancedSearch == false) {
 						$advancedSearch = true;
 					}
 				}
 			}
 
+            if (array_key_exists('tableField', $advanceSearchModelData)) {
+                foreach ($advanceSearchModelData['tableField'] as $field => $value) {
+                    if (strlen($value) > 0 && $advancedSearch == false) {
+                        $advancedSearch = true;
+                    }
+                }
+            }
+
 			if (!empty($advanceSearchModelData['isSearch']) ) {
 				$advancedSearch = true;
 			}
 
-			$searchables = new ArrayObject();
-	        // trigger events for additional searchable fields
+			// trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
             $showOnLoad = $this->config('showOnLoad');
             if($this->isCAv4()) {
                 $this->_table->controller->viewVars['advanced_search'] = [
                     'name' => 'advanced_search',
-                    'data' => compact('filters', 'searchables', 'advancedSearch', 'showOnLoad'),
+                    'data' => compact('filters', 'searchables', 'includedFields', 'advancedSearch', 'showOnLoad'),
                     'options' => [],
                     'order' => 0
                 ];
@@ -149,7 +169,7 @@ class AdvanceSearchBehavior extends Behavior {
             // adding of the indexElement
             $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
                 'name' => 'advanced_search',
-                'data' => compact('filters', 'searchables', 'advancedSearch', 'showOnLoad'),
+                'data' => compact('filters', 'searchables', 'includedFields', 'advancedSearch', 'showOnLoad'),
                 'options' => [],
                 'order' => 0
             ];
@@ -164,7 +184,7 @@ class AdvanceSearchBehavior extends Behavior {
 
             $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
 	            'name' => 'advanced_search',
-	            'data' => compact('filters', 'searchables', 'order', 'advancedSearch', 'showOnLoad'),
+	            'data' => compact('filters', 'searchables', 'includedFields', 'order', 'advancedSearch', 'showOnLoad'),
 	            'options' => [],
 	            'order' => 0
 	        ];
@@ -197,6 +217,9 @@ class AdvanceSearchBehavior extends Behavior {
 				if ($model->Session->check($alias.'.advanceSearch.hasMany')) {
 					 $model->Session->delete($alias.'.advanceSearch.hasMany');
 				}
+                if ($model->Session->check($alias.'.advanceSearch.tableField')) {
+                     $model->Session->delete($alias.'.advanceSearch.tableField');
+                }
 				// clear fields value
 				if (array_key_exists('belongsTo', $request->data['AdvanceSearch'][$alias])) {
 					foreach ($request->data['AdvanceSearch'][$alias]['belongsTo'] as $key=>$value) {
@@ -208,6 +231,11 @@ class AdvanceSearchBehavior extends Behavior {
 						$request->data['AdvanceSearch'][$alias]['hasMany'][$key] = '';
 					}
 				}
+                if (array_key_exists('tableField', $request->data['AdvanceSearch'][$alias])) {
+                    foreach ($request->data['AdvanceSearch'][$alias]['tableField'] as $key=>$value) {
+                        $request->data['AdvanceSearch'][$alias]['tableField'][$key] = '';
+                    }
+                }
 				$request->data['AdvanceSearch'][$alias]['isSearch'] = false;
 			}
 		}
@@ -216,12 +244,14 @@ class AdvanceSearchBehavior extends Behavior {
 
 	public function advancedSearchQuery(Request $request, Query $query) {
 		$conditions = [];
+        $tableFieldConditions = [];
 
 		$model = $this->_table;
 		$alias = $model->alias();
 
 		$advancedSearchBelongsTo = $model->Session->check($alias.'.advanceSearch.belongsTo') ? $model->Session->read($alias.'.advanceSearch.belongsTo') : [];
 		$advancedSearchHasMany = $model->Session->check($alias.'.advanceSearch.hasMany') ? $model->Session->read($alias.'.advanceSearch.hasMany') : [];
+        $advancedSearchTableField = $model->Session->check($alias.'.advanceSearch.tableField') ? $model->Session->read($alias.'.advanceSearch.tableField') : [];
 
 		if ($request->is(['post', 'put'])) {
 			if (isset($request->data['AdvanceSearch']) && isset($request->data['AdvanceSearch'][$alias])) {
@@ -231,6 +261,9 @@ class AdvanceSearchBehavior extends Behavior {
 				if (isset($request->data['AdvanceSearch'][$alias]['hasMany'])) {
 					$advancedSearchHasMany = $request->data['AdvanceSearch'][$alias]['hasMany'];
 				}
+                if (isset($request->data['AdvanceSearch'][$alias]['tableField'])) {
+                    $advancedSearchTableField = $request->data['AdvanceSearch'][$alias]['tableField'];
+                }
 				$model->Session->write($alias.'.advanceSearch', $request->data['AdvanceSearch'][$alias]);
 			}
 		}
@@ -281,7 +314,13 @@ class AdvanceSearchBehavior extends Behavior {
 	        // trigger events for additional searchable fields
 	        $model->dispatchEvent('AdvanceSearch.onBuildQuery', [$query, $advancedSearchHasMany], $this);
 	    }
-
+        if (!empty($advancedSearchTableField)) { //condition that comes from its own field on the database table.
+            foreach ($advancedSearchTableField as $key => $value) {
+                $query->where([
+                    $model->aliasField("$key LIKE ") => $value . '%'
+                ]);
+            }
+        }
         return $query;
 	}
 
