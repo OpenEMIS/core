@@ -1250,6 +1250,13 @@ trait MessagesTrait {
                 ]
             ]
         ],
+        'Education' => [
+            'EducationGradesSubjects' => [
+                'hours_required' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ]
+            ]
+        ],
         'Localization' => [
             'Translations' => [
                 'en' => [
