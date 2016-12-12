@@ -373,6 +373,70 @@ class ExcelReportBehavior extends Behavior
 
     private function column($objWorksheet, $objCell, $cellValue, $extra)
     {
+        $jsonArray = $this->jsonToArray($cellValue);
+        $columnArray = array_key_exists('repeatColumns', $jsonArray) ? $jsonArray['repeatColumns'] : [];
+        $placeholderStr = isset($columnArray['displayValue']) ? $columnArray['displayValue'] : '';
+        $nestedColumn = isset($columnArray['children']) ? $columnArray['children'] : [];
+
+        $placeholder = $this->formatPlaceholder($placeholderStr);
+        $data = !empty($placeholder) ? Hash::extract($extra['vars'], $placeholder) : [];
+
+        // columnIndexFromString(): Column index start from 1
+        $cellColumnValue = $objCell->getColumn();
+        $cellColumnIndex = $objCell->columnIndexFromString($cellColumnValue);
+        $cellColumnWidth = $objWorksheet->getColumnDimension($cellColumnValue)->getWidth();
+        $cellRowValue = $objCell->getRow();
+        $cellCoordinate = $objCell->getCoordinate();
+        $cellStyle = $objCell->getStyle($cellCoordinate);
+
+        $columnIndex = $cellColumnIndex;
+        foreach ($data as $key => $value) {
+            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+            $newCellCoordinate = $columnValue.$cellRowValue;
+
+            $objWorksheet->setCellValue($newCellCoordinate, $value);
+            $objWorksheet->duplicateStyle($cellStyle, $newCellCoordinate);
+            // set column width to follow placeholder
+            $objWorksheet->getColumnDimension($columnValue)->setAutoSize(false);
+            $objWorksheet->getColumnDimension($columnValue)->setWidth($cellColumnWidth);
+
+            if (!empty($nestedColumn)) {
+                $nestedColumnArray = array_key_exists('repeatColumns', $nestedColumn) ? $nestedColumn['repeatColumns'] : [];
+                $nestedPlaceholderStr = isset($nestedColumnArray['displayValue']) ? $nestedColumnArray['displayValue'] : '';
+
+                $nestedPlaceholder = $this->formatPlaceholder($nestedPlaceholderStr);
+                $nestedData = !empty($nestedPlaceholder) ? Hash::extract($extra['vars'], $nestedPlaceholder) : [];
+
+                $nestedColumnIndex = $columnIndex;
+                // always output children to the immediate next row
+                $nestedRowValue = $cellRowValue + 1;
+                foreach ($nestedData as $nestedKey => $nestedValue) {
+                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                    $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+
+                    $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
+                    $objWorksheet->setCellValue($nestedCellCoordinate, $nestedValue);
+                    $objWorksheet->duplicateStyle($cellStyle, $nestedCellCoordinate);
+                    // set nested column width to follow placeholder
+                    $objWorksheet->getColumnDimension($nestedColumnValue)->setAutoSize(false);
+                    $objWorksheet->getColumnDimension($nestedColumnValue)->setWidth($cellColumnWidth);
+
+                    $nestedColumnIndex++;
+                }
+
+                // merge parent cell following number of columns occupied by children
+                if ($nestedColumnIndex > $columnIndex) {
+                    $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
+
+                    $mergeRange = $newCellCoordinate.":".$rangeColumnValue.$cellRowValue;
+                    $objWorksheet->mergeCells($mergeRange);
+
+                    $columnIndex = $nestedColumnIndex-1;
+                }
+            }
+            $columnIndex++;
+        }
     }
 
     private function match($objWorksheet, $objCell, $cellValue, $extra)
