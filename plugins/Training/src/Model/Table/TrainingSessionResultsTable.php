@@ -232,7 +232,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					'plugin' => 'Directory',
 					'controller' => 'Directories',
 					'action' => 'view',
-					$traineeObj->id
+					$this->paramsEncode(['id' => $traineeObj->id])
 				]);
 				$rowData[] = $traineeObj->name;
 				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';

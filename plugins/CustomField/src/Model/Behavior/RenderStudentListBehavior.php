@@ -34,7 +34,7 @@ class RenderStudentListBehavior extends RenderBehavior {
         $fieldKey = $attr['attr']['fieldKey'];
         $formKey = $attr['attr']['formKey'];
         $fieldId = $customField->id;
-        
+
         $form = $event->subject()->Form;
         $fieldPrefix = $attr['model'] . '.institution_student_surveys.' . $fieldId;
         $unlockFields = [];
@@ -186,7 +186,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                                     'controller' => 'Institutions',
                                     'action' => 'StudentUser',
                                     'view',
-                                    $student->user->id
+                                    $model->paramsEncode(['id' => $student->user->id])
                                 ]);
                                 $rowData[] = $student->user->name;
                             } else if ($action == 'edit') {
@@ -393,7 +393,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                         ])
                         ->toArray();
                 }
-                
+
                 if (!empty($surveyIds)) {
                     $StudentSurveyAnswers->deleteAll([
                         $StudentSurveyAnswers->aliasField('institution_student_survey_id IN ') => $surveyIds
