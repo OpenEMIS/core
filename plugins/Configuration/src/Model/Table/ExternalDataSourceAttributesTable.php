@@ -5,6 +5,10 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\i18n\Time;
+use Firebase\JWT\JWT;
+use Cake\Utility\Security;
+use Cake\Core\Configure;
 
 class ExternalDataSourceAttributesTable extends ControllerActionTable {
 	public function initialize(array $config) {
@@ -53,6 +57,41 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable {
 				$this->aliasField('external_data_source_type') => $externalSourceType
 			]);
 	}
+
+    public function generateServerAuthorisationToken($externalDataSourceType)
+    {
+        $records = $this
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->where([
+                $this->aliasField('external_data_source_type') => $externalDataSourceType
+            ])
+            ->toArray();
+
+        $keyAndSecret = explode('.', $records['private_key']);
+        $privateKey = '';
+        if (count($keyAndSecret) == 2) {
+            list($privateKey, $secret) = $keyAndSecret;
+            $secret = openssl_private_decrypt($this->urlsafeB64Decode($secret), $protectedKey, Configure::read('Application.private.key'));
+            if ($secret) {
+                $privateKey = Security::decrypt($this->urlsafeB64Decode($privateKey), $protectedKey);
+            }
+        }
+        $exp = intval(Time::now()->toUnixString()) + 3600;
+        $iat = Time::now()->toUnixString();
+
+        $payload = [
+            'iss' => $records['client_id'],
+            'scope' => $records['scope'],
+            'aud' => $records['token_uri'],
+            'exp' => $exp,
+            'iat' => $iat
+        ];
+
+        return JWT::encode($payload, $privateKey, 'RS256');
+    }
 
 	public function findUri(Query $query, array $options = [])
 	{
