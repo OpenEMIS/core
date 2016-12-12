@@ -23,13 +23,17 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.NotRegisteredStudents');
+
+        $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'index' || $this->action == 'view') {
             $this->field('identity_number', ['after' => 'date_of_birth']);
-            $this->setFieldOrder('openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number');
+            $this->field('repeated');
+            $this->field('transferred');
+            $this->setFieldOrder('openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number', 'repeated', 'transferred');
         }
     }
 
@@ -51,6 +55,16 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
     public function onGetIdentityNumber(Event $event, Entity $entity)
     {
         return $entity->user->identity_number;
+    }
+
+    public function onGetRepeated(Event $event, Entity $entity)
+    {
+        return $this->ExaminationCentreStudents->onGetRepeated($event, $entity);
+    }
+
+    public function onGetTransferred(Event $event, Entity $entity)
+    {
+        return $this->ExaminationCentreStudents->onGetTransferred($event, $entity);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
