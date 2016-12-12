@@ -49,7 +49,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->allowEmpty('file_content');
 	}
