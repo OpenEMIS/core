@@ -32,16 +32,18 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         return $validator;
     }
 
+    private function setupFields(Entity $entity)
+    {
+        $this->field('code', ['entity' => $entity]);
+        $this->field('education_subject_id', ['entity' => $entity]);
+        $this->field('education_grade_id', ['entity' => $entity]);
+        $this->field('education_programme_id', ['entity' => $entity]);
+        $this->field('education_level_id', ['entity' => $entity]);
+        $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'education_level_id', 'hours_required']);
+    }
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        // populate 'to be deleted' field for removeBehavior
-        if ($this->action == 'remove') {
-            $entity = $extra['entity'];
-            $subject = $this->EducationSubjects->get($entity->education_subject_id);
-            $subjectName = $subject->code_name;
-            $entity->name = $subjectName;
-        }
-
         // visible field is not used for now
         $this->field('visible', ['visible' => 'hidden']);
     }
@@ -65,34 +67,28 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $extra['auto_contain_fields'] = ['EducationSubjects' => ['code']];
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('code');
-        $this->field('education_programme_id');
-        $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'hours_required']);
+        $this->setupFields($entity);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $query->contain(['EducationGrades.EducationProgrammes', 'EducationSubjects']);
+        $query->contain(['EducationGrades.EducationProgrammes.EducationCycles.EducationLevels', 'EducationSubjects']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('code', ['type' => 'readonly', 'entity' => $entity]);
-        $this->field('education_subject_id', ['type' => 'readonly', 'entity' => $entity]);
-        $this->field('education_grade_id', ['type' => 'readonly', 'entity' => $entity]);
-        $this->field('education_programme_id', ['type' => 'readonly', 'entity' => $entity]);
-        $this->setFieldOrder(['code', 'education_subject_id', 'education_grade_id', 'education_programme_id', 'hours_required']);
+        $this->setupFields($entity);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        list(, , $programmeOptions, $selectedProgramme, $gradeOptions, $selectedGrade) = array_values($this->_getSelectOptions());
-
-        $this->field('education_programme_id', ['type' => 'readonly', 'defaultProgramme' => $selectedProgramme]);
-        $this->field('education_grade_id', ['type' => 'readonly', 'defaultGrade' => $selectedGrade]);
-        $this->field('education_subject_id', ['defaultGrade' => $selectedGrade]);
-        $this->setFieldOrder(['education_programme_id', 'education_grade_id', 'education_subject_id',  'hours_required']);
+        list($levelOptions, $selectedLevel, $programmeOptions, $selectedProgramme, $gradeOptions, $selectedGrade) = array_values($this->_getSelectOptions());
+        $this->field('education_level_id', ['selectedLevel' => $selectedLevel]);
+        $this->field('education_programme_id', ['selectedProgramme' => $selectedProgramme]);
+        $this->field('education_grade_id', ['selectedGrade' => $selectedGrade]);
+        $this->field('education_subject_id', ['selectedGrade' => $selectedGrade]);
+        $this->setFieldOrder(['education_level_id', 'education_programme_id', 'education_grade_id', 'education_subject_id',  'hours_required']);
     }
 
     public function onGetCode(Event $event, Entity $entity)
@@ -100,11 +96,20 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         return $entity->education_subject->code;
     }
 
-    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    public function onGetEducationGradeId(Event $event, Entity $entity)
     {
-        return $entity->education_grade->education_programme->name;
+        return $entity->education_grade->code_name;
     }
 
+    public function onGetEducationProgrammeId(Event $event, Entity $entity)
+    {
+        return $entity->education_grade->education_programme->cycle_programme_name;
+    }
+
+    public function onGetEducationLevelId(Event $event, Entity $entity)
+    {
+        return $entity->education_grade->education_programme->education_cycle->education_level->system_level_name;
+    }
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
@@ -114,28 +119,28 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
                 $subjectCode = $attr['entity']->education_subject->code;
             }
 
+            $attr['type'] = 'readonly';
             $attr['attr']['value'] = $subjectCode;
             return $attr;
         }
-
     }
 
     public function onUpdateFieldEducationSubjectId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $subjectId = $attr['entity']->education_subject_id;
-
             $subjectName = '';
             if ($attr['entity']->has('education_subject')) {
                 $subjectName = $attr['entity']->education_subject->name;
             }
 
+            $attr['type'] = 'readonly';
             $attr['attr']['value'] = $subjectName;
             $attr['value'] = $subjectId;
             return $attr;
 
         } else if ($action == 'add') {
-            $gradeId = !is_null($this->request->query('grade')) ? $this->request->query('grade') : $attr['defaultGrade'];
+            $gradeId = $attr['selectedGrade'];
 
             $existingSubjectsInGrade = $this
                 ->find('list', [
@@ -182,12 +187,14 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
                 if ($attr['entity']->has('education_grade')) {
                     $gradeName = $attr['entity']->education_grade->code_name;
                 }
+
             } else {
-                $gradeId = !is_null($this->request->query('grade')) ? $this->request->query('grade') : $attr['defaultGrade'];
+                $gradeId = $attr['selectedGrade'];
                 $gradeQuery = $this->EducationGrades->get($gradeId);
                 $gradeName = $gradeQuery->code_name;
             }
 
+            $attr['type'] = 'readonly';
             $attr['attr']['value'] = $gradeName;
             $attr['value'] = $gradeId;
             return $attr;
@@ -200,22 +207,48 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
             if ($action == 'edit') {
                 $programmeName = '';
                 if ($attr['entity']->has('education_grade') && $attr['entity']->education_grade->has('education_programme')) {
-                    $programmeName = $attr['entity']->education_grade->education_programme->name;
+                    $programmeName = $attr['entity']->education_grade->education_programme->cycle_programme_name;
                 }
 
             } else {
-                $programmeId = !is_null($this->request->query('programme')) ? $this->request->query('programme') : $attr['defaultProgramme'];
+                $programmeId = $attr['selectedProgramme'];
                 $programmeQuery = $this->EducationGrades->EducationProgrammes->get($programmeId);
-                $programmeName = $programmeQuery->name;
+                $programmeName = $programmeQuery->cycle_programme_name;
             }
 
+            $attr['type'] = 'readonly';
             $attr['attr']['value'] = $programmeName;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'edit') {
+                $levelName = '';
+                if ($attr['entity']->has('education_grade') && $attr['entity']->education_grade->has('education_programme') && $attr['entity']->education_grade->education_programme->has('education_cycle') && $attr['entity']->education_grade->education_programme->education_cycle->has('education_level')) {
+                    $levelName = $attr['entity']->education_grade->education_programme->education_cycle->education_level->system_level_name;
+                }
+
+            } else {
+                $levelId = $attr['selectedLevel'];
+                $levelQuery = $this->EducationGrades->EducationProgrammes->EducationCycles->EducationLevels->get($levelId);
+                $levelName = $levelQuery->system_level_name;
+            }
+
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $levelName;
             return $attr;
         }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
+        // populate 'to be deleted' field
+        $subject = $this->EducationSubjects->get($entity->education_subject_id);
+        $entity->name = $subject->code_name;
+
         $gradeId = $entity->education_grade_id;
         $subjectId = $entity->education_subject_id;
 
@@ -275,7 +308,7 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
 
         $EducationGrades = $this->EducationGrades;
         $gradeOptions = $EducationGrades
-            ->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
             ->find('visible')
             ->order([$EducationGrades->aliasField('order')])
             ->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
