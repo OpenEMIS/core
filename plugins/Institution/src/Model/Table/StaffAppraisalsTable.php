@@ -233,7 +233,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $attr['value'] = $dateAttr['from'];
             }
         } else if ($action == 'edit') {
-            $staffAppraisalId = $this->paramsPass(0);
+            $staffAppraisalId = $this->paramsDecode($this->paramsPass(0));
             $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
             $fromDate = $this->get($staffAppraisalId)->from;
         }
@@ -274,7 +274,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                 $attr['value'] = $dateAttr['to'];
             }
         } else if ($action == 'edit') {
-            $staffAppraisalId = $this->paramsPass(0);
+            $staffAppraisalId = $this->paramsDecode($this->paramsPass(0));
             $academicPeriodId = !empty($requestData[$this->alias()]['academic_period_id']) ? $requestData[$this->alias()]['academic_period_id'] : $this->get($staffAppraisalId)->academic_period_id;
             $toDate = $this->get($staffAppraisalId)->to;
         }
