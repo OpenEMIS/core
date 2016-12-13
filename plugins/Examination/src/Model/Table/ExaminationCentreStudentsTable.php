@@ -266,7 +266,10 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         }
 
         if ($Admission) {
-            return __('Yes');
+            $tooltipMessage = 'To register exam on the current school, please un-register student from the previous one.';
+            return  "Yes<div class='tooltip-desc' style='display: inline-block;'>
+                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" .  __($tooltipMessage) . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
+                    </div>";
         } else {
             return __('No');
         }

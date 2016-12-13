@@ -32,8 +32,7 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         if ($this->action == 'index' || $this->action == 'view') {
             $this->field('identity_number', ['after' => 'date_of_birth']);
             $this->field('repeated');
-            $this->field('transferred');
-            $this->setFieldOrder('openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number', 'repeated', 'transferred');
+            $this->setFieldOrder('openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number', 'repeated');
         }
     }
 
@@ -60,11 +59,6 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
     public function onGetRepeated(Event $event, Entity $entity)
     {
         return $this->ExaminationCentreStudents->onGetRepeated($event, $entity);
-    }
-
-    public function onGetTransferred(Event $event, Entity $entity)
-    {
-        return $this->ExaminationCentreStudents->onGetTransferred($event, $entity);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
