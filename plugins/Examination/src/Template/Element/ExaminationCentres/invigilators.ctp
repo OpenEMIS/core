@@ -14,7 +14,7 @@
 			    'controller' => $this->request->params['controller'],
 			    'action' => $this->request->params['action'],
 			    'ajaxInvigilatorAutocomplete',
-			    $attr['examination_id']
+			    $this->ControllerAction->paramsEncode(['examination_id' => $attr['examination_id']])
 			]);
 			$alias = $ControllerAction['table']->alias();
 
