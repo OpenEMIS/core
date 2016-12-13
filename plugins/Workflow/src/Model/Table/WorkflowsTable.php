@@ -186,7 +186,7 @@ class WorkflowsTable extends AppTable {
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$paramsPass = $this->ControllerAction->paramsPass();
-		$workflowId = current($paramsPass);
+		$workflowId = $this->paramsDecode(current($paramsPass));
 		$selectedModel = $this->get($workflowId)->workflow_model_id;
 		$this->addAssociation($selectedModel);
 
@@ -508,7 +508,7 @@ class WorkflowsTable extends AppTable {
 
 			if ($action == 'edit') {
 				$paramsPass = $this->ControllerAction->paramsPass();
-				$workflowId = current($paramsPass);
+				$workflowId = $this->paramsDecode(current($paramsPass))['id'];
 				$filterQuery->where([
 					$this->WorkflowsFilters->aliasField('workflow_id <> ') => $workflowId
 				]);
