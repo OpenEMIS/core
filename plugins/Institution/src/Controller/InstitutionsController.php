@@ -65,7 +65,8 @@ class InstitutionsController extends AppController
             'ImportStudentAttendances'  => ['className' => 'Institution.ImportStudentAttendances', 'actions' => ['add']],
             'ImportInstitutionSurveys'  => ['className' => 'Institution.ImportInstitutionSurveys', 'actions' => ['add']],
             'ImportStudents'            => ['className' => 'Institution.ImportStudents', 'actions' => ['add']],
-            'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']]
+            'ImportStaff'               => ['className' => 'Institution.ImportStaff', 'actions' => ['add']],
+            'ImportTextbooks'           => ['className' => 'Institution.ImportTextbooks', 'actions' => ['add']]
         ];
 
         $this->loadComponent('Institution.InstitutionAccessControl');
@@ -104,6 +105,7 @@ class InstitutionsController extends AppController
     public function StaffAppraisals()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']); }
     public function Programmes()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']); }
     public function StaffAbsences()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
+    public function Textbooks()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
     // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     // End
 
@@ -200,7 +202,7 @@ class InstitutionsController extends AppController
             $crumb = Inflector::humanize(Inflector::underscore($modelAlias));
             $header = $name . ' - ' . __($crumb);
             $this->Navigation->removeCrumb(Inflector::humanize(Inflector::underscore($model->alias())));
-            $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $id]);
+            $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $userType, 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
             $this->Navigation->addCrumb($crumb);
             $this->set('contentHeader', $header);
         }
@@ -249,6 +251,7 @@ class InstitutionsController extends AppController
             $id = 0;
             if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
                 $id = $this->request->pass[0];
+                $id = $this->ControllerAction->paramsDecode($id)['id'];
                 $this->checkInstitutionAccess($id, $event);
                 if ($event->isStopped()) {
                     return false;
@@ -264,10 +267,12 @@ class InstitutionsController extends AppController
                 $session->write('Institution.Institutions.name', $name);
                 if ($action == 'view') {
                     $header = $name .' - '.__('Overview');
+                } elseif ($action == 'Results') {
+                    $header = $name .' - '.__('Assessments');
                 } else {
                     $header = $name .' - '.__(Inflector::humanize($action));
                 }
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $id]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
             }
@@ -346,7 +351,7 @@ class InstitutionsController extends AppController
 
                     // Breadcrumb
                     $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students']);
-                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $studentId]);
+                    $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
                     $this->Navigation->addCrumb($studentModels[$alias]);
 
                     // header name
@@ -361,7 +366,8 @@ class InstitutionsController extends AppController
             $requestQuery = $this->request->query;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
-                    $persona = $model->get($params['pass'][1]);
+                    $ids = $this->ControllerAction->paramsDecode($params['pass'][1]);
+                    $persona = $model->get($ids);
                 }
             } else if (isset($requestQuery['user_id'][1])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
@@ -386,24 +392,31 @@ class InstitutionsController extends AppController
                 }
 
                 if (count($this->request->pass) > 1) {
-                    $modelId = $this->request->pass[1]; // id of the sub model
+                    $modelIds = $this->request->pass[1]; // id of the sub model
+                    $primaryKey = $model->primaryKey();
+                    $modelIds = $this->ControllerAction->paramsDecode($modelIds);
+                    $params = [];
+                    if (is_array($primaryKey)) {
+                        foreach ($primaryKey as $key) {
+                            $params[$model->aliasField($key)] = $modelIds[$key];
+                        }
+                    } else {
+                        $params[$primaryKey] = $modelIds[$primaryKey];
+                    }
+
+
                     $exists = false;
 
                     if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
-                        $exists = $model->exists([
-                            $model->aliasField($model->primaryKey()) => $modelId,
-                            $model->aliasField('previous_institution_id') => $institutionId
-                        ]);
+                        $params[$model->aliasField('previous_institution_id')] = $institutionId;
+                        $exists = $model->exists($params);
                     } else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
-                        $exists = $model->exists([
-                            $model->aliasField($model->primaryKey()) => $modelId,
-                            'OR' => [ //logic to check institution_id or location_institution_id equal to $institutionId
-                                $model->aliasField('institution_id') => $institutionId,
-                                $model->aliasField('location_institution_id') => $institutionId
-                            ]
-                        ]);
+                        $params['OR'] = [
+                            $model->aliasField('institution_id') => $institutionId,
+                            $model->aliasField('location_institution_id') => $institutionId
+                        ];
+                        $exists = $model->exists($params);
                     } else {
-                        $primaryKey = $this->ControllerAction->getPrimaryKey($model);
                         $checkExists = function($model, $params) {
                             return $model->exists($params);
                         };
@@ -412,7 +425,8 @@ class InstitutionsController extends AppController
                         if (is_callable($event->result)) {
                             $checkExists = $event->result;
                         }
-                        $exists = $checkExists($model, [$primaryKey => $modelId, 'institution_id' => $institutionId]);
+                        $params[$model->aliasField('institution_id')] = $institutionId;
+                        $exists = $checkExists($model, $params);
                     }
 
                     /**
@@ -472,6 +486,7 @@ class InstitutionsController extends AppController
 
     public function dashboard($id)
     {
+        $id = $this->ControllerAction->paramsDecode($id)['id'];
         $this->ControllerAction->model->action = $this->request->action;
 
         $classification = $this->Institutions->get($id)->classification;
@@ -613,10 +628,10 @@ class InstitutionsController extends AppController
             $params = [];
             switch ($key) {
                 case $userRole.'User':
-                    $params = [$userId, 'id' => $id];
+                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
                     break;
                 case $userRole.'Account':
-                    $params = [$userId, 'id' => $id];
+                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
                     break;
                 case $userRole.'Surveys':
                     $params = ['user_id' => $userId];
@@ -643,7 +658,7 @@ class InstitutionsController extends AppController
             'Subjects' => ['text' => __('Subjects')],
             'Absences' => ['text' => __('Absences')],
             'Behaviours' => ['text' => __('Behaviours')],
-            'Results' => ['text' => __('Results')],
+            'Results' => ['text' => __('Assessments')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
         ];

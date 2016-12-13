@@ -18,7 +18,7 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->model('Users');
 		$this->ControllerAction->models = [
 			'Users' 				=> ['className' => 'Users'],
-			'Account' 				=> ['className' => 'UserAccounts'],
+			'Account' 				=> ['className' => 'UserAccounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
@@ -76,7 +76,7 @@ class PreferencesController extends AppController {
 
 	public function index() {
 		$userId = $this->Auth->user('id');
-		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Users', 'view', $userId]);
+		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])]);
 	}
 
 	public function getUserTabElements() {
@@ -86,11 +86,11 @@ class PreferencesController extends AppController {
 		$userId = $this->Auth->user('id');
 		$tabElements = [
 			'General' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $userId],
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
 				'text' => __('General')
 			],
 			'Account' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Account', 'view', $userId],
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Account', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
 				'text' => __('Account')
 			],
 			'Contacts' => [

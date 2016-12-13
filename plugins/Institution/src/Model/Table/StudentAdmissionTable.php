@@ -139,11 +139,11 @@ class StudentAdmissionTable extends AppTable {
         $this->removePendingAdmission($student->student_id, $student->institution_id);
 	}
 
-    protected function removePendingAdmission($studentId, $institutionId) 
+    protected function removePendingAdmission($studentId, $institutionId)
     {
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $statusList = $StudentStatuses->findCodeList();
-        
+
         //remove pending transfer request.
         //could not include grade / academic period because not always valid. (promotion/graduation/repeat and transfer/admission can be done on different grade / academic period)
         $conditions = [
@@ -152,18 +152,18 @@ class StudentAdmissionTable extends AppTable {
             'status' => 0, //pending status
             'type' => 2 //transfer
         ];
-        
+
         $entity = $this
                 ->find()
                 ->where(
                     $conditions
                 )
                 ->first();
-        
+
         if (!empty($entity)) {
             $this->delete($entity);
         }
-        
+
         //remove pending admission request.
         //no institution_id because in the pending admission, the value will be (0)
         $conditions = [
@@ -171,14 +171,14 @@ class StudentAdmissionTable extends AppTable {
             'status' => 0, //pending status
             'type' => 1 //admission
         ];
-        
+
         $entity = $this
                 ->find()
                 ->where(
                     $conditions
                 )
                 ->first();
-        
+
         if (!empty($entity)) {
             $this->delete($entity);
         }
@@ -333,7 +333,7 @@ class StudentAdmissionTable extends AppTable {
 					'controller' => $urlParams['controller'],
 					'action' => $action,
 					'0' => 'edit',
-					'1' => $entity->id
+					'1' => $this->paramsEncode(['id' => $entity->id])
 				]);
 			}
 		}
@@ -646,13 +646,13 @@ class StudentAdmissionTable extends AppTable {
 			->where($where)
 			->order([$this->aliasField('created') => 'DESC'])
 			->formatResults(function (ResultSetInterface $results) {
-				return $results->map(function ($row) {
+                return $results->map(function ($row) {
 					$url = [
 						'plugin' => false,
 						'controller' => 'Dashboard',
 						'action' => 'StudentAdmission',
 						'edit',
-						$row->id
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {
