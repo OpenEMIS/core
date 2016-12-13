@@ -620,7 +620,7 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
-        
+
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -1497,7 +1497,6 @@ trait MessagesTrait {
                 ]
             ]
         ],
-<<<<<<< HEAD
         'Indexes' => [
             'TableHeader' => [
                 'Criteria',
@@ -1505,14 +1504,13 @@ trait MessagesTrait {
                 'Threshold',
                 'Index'
             ]
-=======
+        ],
         'Textbook' => [
             'Textbooks' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
                 ]
             ],
->>>>>>> a837ceaf949c94fe4b455a8849551f531e347731
         ],
         'Configuration' => [
         	'ConfigProductLists' => [
