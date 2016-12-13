@@ -171,13 +171,22 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		}
 	}
 
-    public function getStudentList($period, $class, $subject)
+    public function getEnrolledStudentBySubject($period, $class, $subject)
     {
+    	$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+		$enrolled = $StudentStatuses->getIdByCode('CURRENT');
+
         $Users = $this->Users;
 
         $students = $this
                     ->find()
                     ->matching('Users')
+                    ->matching('EducationSubjects.EducationGrades.InstitutionStudents', function($q) use ($enrolled) {
+                        return $q->where([
+                        	'InstitutionStudents.student_status_id' => $enrolled,
+                        	'InstitutionStudents.student_id = ' . $this->aliasField('student_id')
+                        ]);
+                    })
                     ->where([
                         $this->aliasField('academic_period_id') => $period,
                         $this->aliasField('institution_class_id') => $class,
