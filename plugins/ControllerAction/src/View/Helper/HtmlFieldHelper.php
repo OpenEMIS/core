@@ -22,7 +22,7 @@ class HtmlFieldHelper extends Helper {
 
 	public $table = null;
 
-	public $helpers = ['Html', 'Form', 'Url', 'Number'];
+	public $helpers = ['ControllerAction', 'Html', 'Form', 'Url', 'Number'];
 
 	public $includes = [
 		'datepicker' => [
@@ -822,7 +822,8 @@ class HtmlFieldHelper extends Helper {
 			// $buttons = $buttons['buttons'];
 			// $action = $buttons['download']['url'];
 			$request = $this->request;
-			$action = ['action' => $request->action, 'download', $data->{$table->primaryKey()}];
+			$ids = $this->ControllerAction->getIdKeys($table, $data, false);
+			$action = ['action' => $request->action, 'download', $this->ControllerAction->paramsEncode($ids)];
 			$value = $this->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;
