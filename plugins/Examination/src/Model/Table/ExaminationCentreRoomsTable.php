@@ -141,7 +141,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
                 ->order(['Users.first_name']);
 
         if ($this->action == 'edit') {
-            $list = $list->orWhere(['ExaminationCentreRoomStudents.examination_centre_room_id' => $this->paramsPass(0)]);
+            $examCentreRoomId = $this->paramsDecode($this->paramsPass(0))['id'];
+            $list = $list->orWhere(['ExaminationCentreRoomStudents.examination_centre_room_id' => $examCentreRoomId]);
         }
         $options = [];
         $studentDetails = [];
@@ -193,7 +194,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     {
         $this->field('invigilators', ['type' => 'element', 'element' => 'Examination.exam_centre_room_invigilators', 'data' => $entity]);
         $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
-        $examinationCentreRoomStudentList = $ExaminationCentreRoomStudents->findByExaminationCentreRoomId($this->paramsPass(0))
+        $examCentreRoomId = $this->paramsDecode($this->paramsPass(0))['id'];
+        $examinationCentreRoomStudentList = $ExaminationCentreRoomStudents->findByExaminationCentreRoomId($examCentreRoomId)
             ->find('list', [
                 'keyField' => 'student_id',
                 'valueField' => 'registration_no'
@@ -343,7 +345,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
                 ->order(['Invigilators.first_name']);
 
         if ($this->action == 'edit') {
-            $list = $list->orWhere(['ExaminationCentreRoomsInvigilators.examination_centre_room_id' => $this->paramsPass(0)]);
+            $examCentreRoomId = $this->paramsDecode($this->paramsPass(0))['id'];
+            $list = $list->orWhere(['ExaminationCentreRoomsInvigilators.examination_centre_room_id' => $examCentreRoomId]);
         }
         $options = [];
         $studentDetails = [];
