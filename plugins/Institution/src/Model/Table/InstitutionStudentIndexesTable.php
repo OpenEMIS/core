@@ -35,6 +35,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentAbsences.afterSave'] = 'afterSaveOrDelete';
         $events['Model.InstitutionStudentAbsences.afterDelete'] = 'afterSaveOrDelete';
+        $events['Model.StudentBehaviours.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.StudentBehaviours.afterDelete'] = 'afterSaveOrDelete';
         return $events;
     }
 
@@ -65,6 +67,27 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end back buttons
+
+        // generate buttons
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $toolbarButtonsArray['generate']['type'] = 'button';
+        $toolbarButtonsArray['generate']['label'] = '<i class="fa fa-refresh"></i>';
+        $toolbarButtonsArray['generate']['attr'] = $toolbarAttr;
+        $toolbarButtonsArray['generate']['attr']['title'] = __('Generate');
+        // URL not defined yet yet
+        $toolbarButtonsArray['generate']['url']['plugin'] = 'Indexes';
+        $toolbarButtonsArray['generate']['url']['controller'] = 'Indexes';
+        $toolbarButtonsArray['generate']['url']['action'] = 'Indexes';
+        $toolbarButtonsArray['generate']['url'][0] = 'generate';
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // end generate buttons
 
         // element control
         $session = $this->request->session();
@@ -167,10 +190,19 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         if (isset($afterSaveOrDeleteEntity->academic_period_id)) {
             $academicPeriodId = $afterSaveOrDeleteEntity->academic_period_id;
         } else {
-            // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId
-            $startDate = $afterSaveOrDeleteEntity->start_date;
-            $endDate = $afterSaveOrDeleteEntity->end_date;
-            $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
+            // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, by model also have different date
+            switch ($criteriaTable->alias()) {
+            case 'InstitutionStudentAbsences': // have start date and end date
+                $startDate = $afterSaveOrDeleteEntity->start_date;
+                $endDate = $afterSaveOrDeleteEntity->end_date;
+                $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
+                break;
+
+            case 'StudentBehaviours': // have date of behaviours
+                $dateOfBehaviour = $afterSaveOrDeleteEntity->date_of_behaviour;
+                $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($dateOfBehaviour);
+                break;
+            }
         }
 
         // to get the indexes criteria to get the value on the student_indexes_criterias
@@ -194,7 +226,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     return $event->result;
                 }
 
-                $valueIndex = $event->result;
+                $valueIndexData = $event->result;
 
                 $institutionStudentIndexesResults = $this->find()
                     ->where([
@@ -217,6 +249,17 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         'student_id' => $studentId,
                         'index_id' => $indexId
                     ]);
+                }
+
+                if ($indexesCriteriaData->operator == 3) {
+                    // value index is an array valueIndex[threshold] = value
+                    if (array_key_exists($indexesCriteriaData->threshold, $valueIndexData)) {
+                        $valueIndex = 'True';
+                    } else {
+                        $valueIndex = 'False';
+                    }
+                } else {
+                    $valueIndex = $valueIndexData;
                 }
 
                 // saving association to student_indexes_criterias
@@ -275,12 +318,13 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     ->all();
 
                 $indexTotal = [];
+                // to get the total of the index of the student
                 foreach ($StudentIndexesCriteriasResults as $key => $studentIndexesCriteriasObj) {
                     if (!empty($studentIndexesCriteriasObj->value)) {
                         $value = $studentIndexesCriteriasObj->value;
                         $indexesCriteriaId = $studentIndexesCriteriasObj->indexes_criteria_id;
 
-                        $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId);
+                        $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId);
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = !empty($indexTotal[$studentIndexesCriteriasObj->institution_student_index_id]) ? $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] : 0 ;
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] + $indexValue;
                     }
