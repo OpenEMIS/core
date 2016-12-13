@@ -18,11 +18,11 @@ class IndexesTable extends ControllerActionTable
     use HtmlTrait;
 
     private $criteriaTypes = [
-        'RESULT' => [
-            'name' => 'Results',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
-        ],
+        // 'RESULT' => [
+        //     'name' => 'Results',
+        //     'operator' => [1 => '<', 2 => '>'],
+        //     'threshold' => ['type' => 'number']
+        // ],
         'Institution.StudentBehaviours' => [
             'name' => 'Behavior',
             'operator' => [3 => '='],
@@ -33,32 +33,32 @@ class IndexesTable extends ControllerActionTable
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
-        'SPECIAL NEED' => [
-            'name' => 'Special Needs',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
-        ],
-        'STATUS' => [
-            'name' => 'Status',
-            'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'lookupModel' => [2,3,4]]
-        ],
-        // // 'Pre Primary',
-        'OVERAGE' => [
-            'name' => 'Overage',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
-        ],
-        'GENDER' => [
-            'name' => 'Genders',
-            'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'lookupModel' => [3,4,5]]
-        ],
-        'GUARDIAN' => [
-            'name' => 'Guardians',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
-        ],
+        // 'SPECIAL NEED' => [
+        //     'name' => 'Special Needs',
+        //     'operator' => [1 => '<', 2 => '>'],
+        //     'threshold' => ['type' => 'number']
+        // ],
+        // 'STATUS' => [
+        //     'name' => 'Status',
+        //     'operator' => [3 => '='],
+        //     'threshold' => ['type' => 'select', 'lookupModel' => [2,3,4]]
+        // ],
+        // // // 'Pre Primary',
+        // 'OVERAGE' => [
+        //     'name' => 'Overage',
+        //     'operator' => [1 => '<', 2 => '>'],
+        //     'threshold' => ['type' => 'number']
+        // ],
+        // 'GENDER' => [
+        //     'name' => 'Genders',
+        //     'operator' => [3 => '='],
+        //     'threshold' => ['type' => 'select', 'lookupModel' => [3,4,5]]
+        // ],
+        // 'GUARDIAN' => [
+        //     'name' => 'Guardians',
+        //     'operator' => [1 => '<', 2 => '>'],
+        //     'threshold' => ['type' => 'number']
+        // ],
         // // 'Language'
     ];
 
@@ -71,6 +71,25 @@ class IndexesTable extends ControllerActionTable
 
         $this->toggle('search', false);
         $this->toggle('remove', false);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.generate'] = 'generate';
+        return $events;
+    }
+
+    public function generate(Event $event, ArrayObject $extra)
+    {
+        pr('generate ()');
+        pr('Page still in development');
+        // pr($extra);
+        // die;
+
+        // pr($this->getCriteriasOptions());
+        die;
+
     }
 
     public function getCriteriasOptions()
@@ -126,10 +145,19 @@ class IndexesTable extends ControllerActionTable
             $associated = $entity->extractOriginal([$fieldKey]);
             if (!empty($associated[$fieldKey])) {
                 foreach ($associated[$fieldKey] as $i => $obj) {
+                    if ($obj['operator'] == 3) {
+                        // '=' the threshold is a string
+                        $lookupModel = TableRegistry::get($this->criteriaTypes[$obj['criteria']]['threshold']['lookupModel']);
+                        $thresholdData = $lookupModel->get($obj['threshold'])->name;
+                    } else {
+                        // '<' and '>' the threshold is a numeric
+                        $thresholdData = $obj['threshold'];
+                    }
+
                     $rowData = [];
                     $rowData[] = $this->criteriaTypes[$obj['criteria']]['name'];
                     $rowData[] = $this->criteriaTypes[$obj['criteria']]['operator'][$obj['operator']];
-                    $rowData[] = $obj['threshold']; // will get form the FO or from the model related
+                    $rowData[] = $thresholdData; // will get form the FO or from the model related
                     $rowData[] = $obj['index_value'];
 
                     $tableCells[] = $rowData;
@@ -218,6 +246,28 @@ class IndexesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
+
+        // generate buttons
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $toolbarButtonsArray['generate']['type'] = 'button';
+        $toolbarButtonsArray['generate']['label'] = '<i class="fa fa-refresh"></i>';
+        $toolbarButtonsArray['generate']['attr'] = $toolbarAttr;
+        $toolbarButtonsArray['generate']['attr']['title'] = __('Generate');
+        // // URL not defined yet yet
+        // $toolbarButtonsArray['generate']['url']['plugin'] = 'Institution';
+        // $toolbarButtonsArray['generate']['url']['controller'] = 'Institutions';
+        // $toolbarButtonsArray['generate']['url']['action'] = 'InstitutionIndexes';
+        $toolbarButtonsArray['generate']['url'][0] = 'generate';
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // end generate buttons
+
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)

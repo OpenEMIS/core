@@ -22,7 +22,7 @@ class StudentBehavioursTable extends AppTable {
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
-		// $this->addBehavior('Indexes.Indexes');
+		$this->addBehavior('Indexes.Indexes');
 	}
 
 	public function implementedEvents() {
@@ -30,6 +30,7 @@ class StudentBehavioursTable extends AppTable {
 		$newEvent = [
 			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
 		];
+		$events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
@@ -385,5 +386,38 @@ class StudentBehavioursTable extends AppTable {
 			$attr['type'] = 'readonly';
 		}
 		return $attr;
+	}
+
+	public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+	{
+		$institutionId = $params['institution_id'];
+		$studentId = $params['student_id'];
+
+		$valueIndex = $this->getValueIndex($institutionId, $studentId);
+
+		return $valueIndex;
+	}
+
+	public function getValueIndex($institutionId, $studentId)
+	{
+		$Classifications = TableRegistry::get('Student.Classifications');
+
+		$behaviourResults = $this
+			->find()
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId
+			])
+			->all();
+
+		$getValueIndex = [];
+		foreach ($behaviourResults as $key => $behaviourResultsObj) {
+			$studentBehaviourCategoryId = $behaviourResultsObj->student_behaviour_category_id;
+			$classificationId = $this->StudentBehaviourCategories->get($studentBehaviourCategoryId)->classification_id;
+			$getValueIndex[$classificationId] = !empty($getValueIndex[$classificationId]) ? $getValueIndex[$classificationId] : 0;
+			$getValueIndex[$classificationId] = $getValueIndex[$classificationId] + 1;
+		}
+
+		return $getValueIndex;
 	}
 }
