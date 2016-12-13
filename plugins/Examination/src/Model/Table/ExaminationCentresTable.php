@@ -723,19 +723,42 @@ class ExaminationCentresTable extends ControllerActionTable {
                 if (array_key_exists('special_need_type_id', $requestData[$alias]) && !empty($requestData[$alias]['special_need_type_id'])) {
                     $specialNeedTypeId = $requestData[$alias]['special_need_type_id'];
 
-                    try {
-                        $obj = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes->get($specialNeedTypeId);
+                    if ($specialNeedTypeId > 0) {
+                        try {
+                            $obj = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes->get($specialNeedTypeId);
 
-                        $selectedSpecialNeeds[] = [
-                            'examination_id' => $entity->examination_id,
-                            'academic_period_id' => $entity->academic_period_id,
-                            'special_need_type_id' => $entity->special_need_type_id,
-                            'name' => $obj->name
-                        ];
+                            $selectedSpecialNeeds[] = [
+                                'examination_id' => $entity->examination_id,
+                                'academic_period_id' => $entity->academic_period_id,
+                                'special_need_type_id' => $entity->special_need_type_id,
+                                'name' => $obj->name
+                            ];
 
-                        $requestData[$alias]['special_need_type_id'] = '';
-                    } catch (RecordNotFoundException $ex) {
-                        Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
+                            $requestData[$alias]['special_need_type_id'] = '';
+                        } catch (RecordNotFoundException $ex) {
+                            Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
+                        }
+
+                    } else {
+                        $specialNeedIds = array_column($selectedSpecialNeeds, 'special_need_type_id');
+                        foreach ($specialNeedsOptions as $key => $obj) {
+                            if (in_array($key, $specialNeedIds)) {
+                                continue;
+                            }
+
+                            try {
+                                $selectedSpecialNeeds[] = [
+                                    'examination_id' => $entity->examination_id,
+                                    'academic_period_id' => $entity->academic_period_id,
+                                    'special_need_type_id' => $key,
+                                    'name' => $obj
+                                ];
+
+                                $requestData[$alias]['special_need_type_id'] = '';
+                            } catch (RecordNotFoundException $ex) {
+                                Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
+                            }
+                        }
                     }
                 }
             }
@@ -763,7 +786,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
 
-            $specialNeedsOptions = ['' => "-- ".__('Add Special Needs') ." --"] + $specialNeedsOptions;
+            $specialNeedsOptions = ['' => "-- ".__('Select Special Needs') ." --", '-1' => __('Add all Special Needs')] + $specialNeedsOptions;
             $attr['options'] = $specialNeedsOptions;
         }
 
