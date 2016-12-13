@@ -828,4 +828,21 @@ class AcademicPeriodsTable extends AppTable
 
         return $academicPeriodId;
     }
+
+    public function getAcademicPeriodIdByDate($date)
+    {
+        // get the academic period id from date
+        $date = $date->format('Y-m-d');
+
+        $academicPeriod = $this->find()
+            ->where([
+                $this->aliasField('start_date') . ' <= ' => $date,
+                $this->aliasField('end_date') . ' >= ' => $date,
+            ])
+            ->first();
+
+        $academicPeriodId = $academicPeriod->id;
+
+        return $academicPeriodId;
+    }
 }

@@ -140,21 +140,29 @@ class StudentIndexesTable extends ControllerActionTable
                         }
                         break;
 
-                        // case 3: // '='
-                        //  if ($absenceDay == $threshold) {
-                        //      $valueIndex = $absenceDay;
-                        //  } else {
-                        //      $valueIndex = 0;
-                        //  }
-                        //  break;
+                    case 3: // '='
+                        $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaKey);
+                        $lookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
+                        $criteriaModel = TableRegistry::get($criteriaKey);
+                        $threshold = $lookupModel->get($threshold)->name;
+
+                        if ($value == 'True') {
+                            // to get total number of behaviour
+                            $getValueIndex = $criteriaModel->getValueIndex($institutionId, $studentId);
+                            $totalBehaviour = $getValueIndex[$obj->threshold];
+
+                            $indexValue = '<div style="color : red">' . $obj->index_value . ' ( ' . $totalBehaviour . ' )' . '</div>';
+                        } else {
+                            $indexValue = $obj->index_value;
+                        }
+                        break;
                     }
 
                     $rowData = [];
                     $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['name'];
                     $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['operator'][$obj->operator];
-                    $rowData[] = $obj->threshold;
+                    $rowData[] = $threshold;
                     $rowData[] = $value;
-                    // $rowData[] = $obj->index_value;
                     $rowData[] = $indexValue; // need this as an operator to do the red font
 
 

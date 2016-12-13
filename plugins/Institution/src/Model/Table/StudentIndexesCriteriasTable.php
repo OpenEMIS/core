@@ -37,7 +37,7 @@ class StudentIndexesCriteriasTable extends AppTable
         return $value;
     }
 
-    public function getIndexValue($value, $indexesCriteriaId)
+    public function getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId)
     {
         $IndexesCriteriasData = $this->IndexesCriterias->get($indexesCriteriaId);
         $operator = $IndexesCriteriasData->operator;
@@ -61,15 +61,20 @@ class StudentIndexesCriteriasTable extends AppTable
             }
             break;
 
-            // case 3: // '='
-            //  if ($absenceDay == $threshold) {
-            //      $valueIndex = $absenceDay;
-            //  } else {
-            //      $valueIndex = 0;
-            //  }
-            //  break;
-        }
-        return $indexValue;
+        case 3: // '='
+            $criteriaModel = TableRegistry::get($IndexesCriteriasData->criteria);
 
+            $valueIndex = $criteriaModel->getValueIndex($institutionId, $studentId);
+
+            if (array_key_exists($threshold, $valueIndex)) {
+                $indexValue = 0;
+                $indexValue = ($valueIndex[$threshold]) * ($IndexesCriteriasData->index_value);
+            } else {
+                $indexValue = 0;
+            }
+            break;
+        }
+
+        return $indexValue;
     }
 }
