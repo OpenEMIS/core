@@ -113,7 +113,17 @@ class RemoveBehavior extends Behavior
             // Logic for restrict delete
             $entity = $model->newEntity();
             $controller = $model->controller;
-            $ids = $model->paramsDecode($model->paramsPass(0));
+            $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+            $sessionKey = $model->registryAlias() . '.primaryKey';
+            if (empty($ids)) {
+                if ($model->Session->check($sessionKey)) {
+                    $ids = $model->Session->read($sessionKey);
+                } else if (!empty($model->ControllerAction->getQueryString())) {
+                    // Query string logic not implemented yet, will require to check if the query string contains the primary key
+                    $primaryKey = $model->primaryKey();
+                    $ids = $model->ControllerAction->getQueryString($primaryKey);
+                }
+            }
             $idKeys = $model->getIdKeys($model, $ids);
             if ($model->exists($idKeys)) {
                 $entity = $model->get($idKeys);
@@ -245,7 +255,7 @@ class RemoveBehavior extends Behavior
         $entity = $model->newEntity();
 
         if ($request->is('get')) {
-            $id = $model->paramsPass(0);
+            $ids = $model->paramsDecode($model->paramsPass(0));
             $idKeys = $model->getIdKeys($model, $ids);
             if ($model->exists($idKeys)) {
                 $entity = $model->get($idKeys);
