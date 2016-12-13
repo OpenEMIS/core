@@ -189,7 +189,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         if ($this->request->is(['ajax'])) {
             $term = $this->request->query['term'];
             $search = sprintf('%s%%', $term);
-            $examinationId = $this->paramsPass(0);
+            $examinationId = $this->paramsDecode($this->paramsPass(0))['examination_id'];
             $data = [];
             $Users = $this->Invigilators;
             $list = $Users
@@ -401,7 +401,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
             $this->fields['institution_id']['visible'] = true;
             $this->fields['institution_id']['type'] = 'hidden';
-            $this->field('invigilators', ['type' => 'custom_invigilators']);
             // to add logic for edit
 
             if ($this->action == 'add') {
@@ -456,6 +455,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->fields['linked_institutions_section']['visible'] = true;
                 $this->fields['invigilators_section']['visible'] = true;
                 $this->fields['exam_centre_info_section']['visible'] = true;
+                $this->field('invigilators', ['type' => 'custom_invigilators']);
 
                 // field order
                 $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'special_need_types', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators', 'subjects_section', 'subjects']);
