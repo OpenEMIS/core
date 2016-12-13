@@ -301,7 +301,7 @@ class NavigationComponent extends Component
 				'title' => 'Dashboard',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.dashboard'],
-				'params' => ['plugin' => 'Institution', 0 => $id]
+				'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 			],
 
 			'Institution.General' => [
@@ -314,14 +314,14 @@ class NavigationComponent extends Component
 					'title' => 'Overview',
 					'parent' => 'Institution.General',
 					'selected' => ['Institutions.view', 'Institutions.edit'],
-					'params' => ['plugin' => 'Institution']
+					'params' => ['plugin' => 'Institution', $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 				],
 
 				'Institutions.Contacts.view' => [
 					'title' => 'Contacts',
 					'parent' => 'Institution.General',
 					'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
-					'params' => ['plugin' => 'Institution', 0 => $id]
+					'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 				],
 
 				'Institutions.Attachments.index' => [
@@ -369,6 +369,13 @@ class NavigationComponent extends Component
 					'title' => 'Subjects',
 					'parent' => 'Institution.Academic',
 					'selected' => ['Institutions.Subjects'],
+					'params' => ['plugin' => 'Institution']
+				],
+
+				'Institutions.Textbooks' => [
+					'title' => 'Textbooks',
+					'parent' => 'Institution.Academic',
+					'selected' => ['Institutions.Textbooks', 'Institutions.ImportTextbooks'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -429,7 +436,7 @@ class NavigationComponent extends Component
 				],
 
 			'Institutions.Assessments.index' => [
-				'title' => 'Results',
+				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Assessments', 'Institutions.Results'],
 				'params' => ['plugin' => 'Institution'],
@@ -539,7 +546,7 @@ class NavigationComponent extends Component
 			'Institutions.StudentUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Students.index',
-				'params' => ['plugin' => 'Institution', '1' => $studentId, 'id' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'id' => $id],
 				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
 					'Students.History', 'Students.GuardianUser']],
@@ -571,7 +578,7 @@ class NavigationComponent extends Component
 			'Institutions.StaffUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Staff.index',
-				'params' => ['plugin' => 'Institution', '1' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $id])],
 				'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
 					'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'Staff.Comments', 'Staff.History']
 			],
@@ -721,6 +728,11 @@ class NavigationComponent extends Component
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
 			],
+            'Reports.Textbooks' => [
+                'title' => 'Textbooks',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
 			'Reports.Examinations' => [
 				'title' => 'Examinations',
 				'parent' => 'Reports',
@@ -783,6 +795,12 @@ class NavigationComponent extends Component
 					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.Certifications',
 							'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
 				],
+				'Textbooks.Textbooks' => [
+                    'title' => 'Textbooks',
+                    'parent' => 'SystemSetup',
+                    'params' => ['plugin' => 'Textbook'],
+                    'selected' => ['Textbooks.Textbooks']
+                ],
 				'Assessments.Assessments' => [
 					'title' => 'Assessments',
 					'parent' => 'SystemSetup',
