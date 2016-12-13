@@ -53,14 +53,16 @@ $this->start('toolbar');
 $this->end();
 
 $this->start('panelBody');
-$session = $this->request->session();
-$institutionId = $session->read('Institution.Institutions.id');
+$paramsQuery = $this->ControllerAction->getQueryString();
+$classId = $paramsQuery['class_id'];
+$assessmentId = $paramsQuery['assessment_id'];
+$institutionId = $paramsQuery['institution_id'];
 ?>
     <div class="alert {{class}}" ng-hide="message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
 
-    <div ng-init="institution_id=<?= $institutionId; ?>">
+    <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>">
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">

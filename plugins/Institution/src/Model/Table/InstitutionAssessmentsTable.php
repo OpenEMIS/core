@@ -28,6 +28,9 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             'pages' => ['index'],
             'orientation' => 'landscape'
         ]);
+
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
     }
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
@@ -307,17 +310,19 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view']['url'])) {
-            $buttons['view']['url'] = [
+            $url = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
-                'action' => 'Results',
+                'action' => 'Results'
+            ];
+
+            $buttons['view']['url'] = $this->setQueryString($url, [
                 'class_id' => $entity->institution_class_id,
                 'assessment_id' => $entity->assessment_id,
                 'institution_id' => $entity->institution_id
-            ];
+            ]);
         }
-        unset($buttons['edit']);//remove edit action from the action button
-        unset($buttons['remove']);// remove delete action from the action button
+
         return $buttons;
     }
 }
