@@ -760,7 +760,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         return $entity;
     }
-    
+
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
@@ -778,7 +778,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $assocTable->aliasField('status') => 1
             ]);
         }
-        
+
     }
 
 /******************************************************************************************************************
@@ -919,7 +919,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
     }
 
-    private function getSubjectOptions($selectedClassId, $listOnly=false)
+    public function getSubjectOptions($selectedClassId, $listOnly=false)
     {
         $Grade = $this->InstitutionClassGrades;
         $gradeOptions = $Grade->find('list', [
@@ -961,7 +961,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
         if (empty($data)) {
             // $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
-            $this->Alert->warning('Institution.Institutions.noSubjectsInClass');
+            // $this->Alert->warning('Institution.Institutions.noSubjectsInClass');
         }
         return $data;
     }
@@ -1248,7 +1248,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $value->id
+                            $this->paramsEncode(['id' => $value->id])
                         ]);
                         break;
 

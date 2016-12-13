@@ -226,6 +226,7 @@ Plugin::load('Student', ['routes' => true, 'autoload' => true]);
 Plugin::load('Staff', ['routes' => true, 'autoload' => true]);
 Plugin::load('Education', ['routes' => true, 'autoload' => true]);
 Plugin::load('Assessment', ['routes' => true, 'autoload' => true]);
+Plugin::load('Textbook', ['routes' => true, 'autoload' => true]);
 Plugin::load('Security', ['routes' => true, 'autoload' => true]);
 Plugin::load('Survey', ['routes' => true, 'autoload' => true]);
 Plugin::load('Rest', ['routes' => true, 'autoload' => true]);
