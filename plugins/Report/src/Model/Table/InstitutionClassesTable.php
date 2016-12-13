@@ -21,7 +21,13 @@ class InstitutionClassesTable extends AppTable  {
 		$this->belongsTo('InstitutionShifts', 		['className' => 'Institution.InstitutionShifts',	'foreignKey' => 'institution_shift_id']);
 		$this->belongsTo('Institutions', 			['className' => 'Institution.Institutions', 		'foreignKey' => 'institution_id']);
 
-        $this->hasMany('InstitutionClassGrades',    ['className' => 'Institution.InstitutionClassGrades']);
+        $this->belongsToMany('EducationGrades', [
+            'className' => 'Education.EducationGrades',
+            'through' => 'Institution.InstitutionClassGrades',
+            'foreignKey' => 'institution_class_id',
+            'targetForeignKey' => 'education_grade_id',
+            'dependent' => true
+        ]);
         
 		$this->addBehavior('Excel', ['excludes' => ['class_number']]);
 		$this->addBehavior('Report.ReportList');
@@ -47,43 +53,27 @@ class InstitutionClassesTable extends AppTable  {
 
     public function onExcelGetInstitutionShiftId(Event $event, Entity $entity) 
     {
-        $shiftOptions = TableRegistry::get('Institutions.ShiftOptions');
-        
-        return $shiftOptions->get($entity->institution_shift->shift_option_id)->name;
+        return $entity->institution_shift->shift_option->name;
     }
 
-    public function onExcelGetEducationGrade(Event $event, Entity $entity) 
+    public function onExcelGetEducationGrades(Event $event, Entity $entity) 
     {
-        //seek for education grade for single or multi grade class
-        $query = $this
-                ->find()
-                ->contain('InstitutionClassGrades.EducationGrades')
-                ->where([
-                    $this->aliasfield('id') => $entity->id
-                ])
-                ->toArray();
-
         $classGrades = [];
-
-        foreach ($query as $key => $value) {
-            $institutionClassGrades = $value['institution_class_grades'];
-            if ($institutionClassGrades) {
-                foreach ($institutionClassGrades as $index => $val) {
-                    $educationGrades = $val['education_grade'];
-                    if ($educationGrades) {
-                        $classGrades[] = $educationGrades->name;
-                    }
-                }
-            }
+        if ($entity->education_grades) {
+           foreach ($entity->education_grades as $key => $value) {
+                $classGrades[] = $value->name;
+            } 
         }
-
-        return implode(', ',$classGrades); //display as comma seperated
+        
+        return implode(', ', $classGrades); //display as comma seperated
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
     {
         $query
         ->contain('Institutions.Areas')
+        ->contain('EducationGrades')
+        ->contain('InstitutionShifts.ShiftOptions')
         ->select([
             'area_name' => 'Areas.name', 
             'area_code' => 'Areas.code'
@@ -93,8 +83,8 @@ class InstitutionClassesTable extends AppTable  {
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {   
         $extraField[] = [
-            'key' => 'EducationGrades.education_grade',
-            'field' => 'education_grade',
+            'key' => 'Education.education_grades',
+            'field' => 'education_grades',
             'type' => 'string',
             'label' => ''
         ];
