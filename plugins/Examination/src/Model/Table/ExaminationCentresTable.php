@@ -93,6 +93,8 @@ class ExaminationCentresTable extends ControllerActionTable {
         $validator = parent::validationDefault($validator);
         $validator
             ->requirePresence('create_as', 'create')
+            ->requirePresence('academic_period_id')
+            ->requirePresence('examination_id')
             ->requirePresence('code')
             ->requirePresence('name')
             ->add('code', 'ruleUnique', [
