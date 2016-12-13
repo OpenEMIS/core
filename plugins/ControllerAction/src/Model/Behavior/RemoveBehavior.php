@@ -245,7 +245,7 @@ class RemoveBehavior extends Behavior
         $entity = $model->newEntity();
 
         if ($request->is('get')) {
-            $id = $model->paramsPass(0);
+            $ids = $model->paramsDecode($model->paramsPass(0));
             $idKeys = $model->getIdKeys($model, $ids);
             if ($model->exists($idKeys)) {
                 $entity = $model->get($idKeys);
