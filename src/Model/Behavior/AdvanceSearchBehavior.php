@@ -76,8 +76,9 @@ class AdvanceSearchBehavior extends Behavior {
 
 					$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
 
+                    $label = $labels->getLabel($this->_table->alias(), $key, $language);
+
 					if ($this->isForeignKey($key)) {
-						$label = $labels->getLabel($this->_table->alias(), $key, $language);
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
 
 						$filters[$key] = [
@@ -118,9 +119,8 @@ class AdvanceSearchBehavior extends Behavior {
 				}
 
                 if (in_array($key , $this->config('include'))) {
-                    $label = Inflector::humanize($key);
                     $includedFields[$key] = [
-                        'label' => __($label),
+                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
                         'value' => (isset($advanceSearchModelData['tableField']) && isset($advanceSearchModelData['tableField'][$key])) ? $advanceSearchModelData['tableField'][$key] : '',
                     ];
                 }
