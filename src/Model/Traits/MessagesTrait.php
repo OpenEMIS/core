@@ -551,6 +551,7 @@ trait MessagesTrait {
             'success' => 'is successfully imported.',
             'failed' => 'failed to import.',
             'partial_failed' => 'failed to import completely.',
+            'value_not_in_list' => 'Selected value is not in the list',
             'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
             'survey_not_found' => 'No identifiable survey found',
             'no_answers' => 'No record were found in the file imported',
@@ -578,6 +579,9 @@ trait MessagesTrait {
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
         ],
+        'InstitutionExaminations' => [
+            'noGrades' => 'There are no available grades set for this institution',
+        ],
         'InstitutionExaminationsUndoRegistration' => [
             'success' => 'Undo of student examination registration is successful.',
             'fail' => 'Undo of student examination registration is successful.',
@@ -603,7 +607,20 @@ trait MessagesTrait {
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
         ],
-
+        'Textbooks' => [
+            'noTextbooks' => 'No Textbooks',
+            'noProgrammes' => 'No Programmes',
+            'noGrades' => 'No Grades',
+            'noClassSubjectSelected' => 'Please select Class, Subject and Textbook before adding record',
+            'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
+            'noTextbookStudent' => 'Please add physical textbook to be added'
+        ],
+        'InstitutionTextbooks' => [
+            'noTextbooks' => 'No Textbooks',
+            'noClasses' => 'No Classes',
+            'noRecords' => 'No Records'
+        ],
+        
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -856,6 +873,11 @@ trait MessagesTrait {
             'InstitutionExaminationStudents' => [
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
+                ]
+            ],
+            'InstitutionTextbooks' => [
+                'code' => [
+                    'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ]
         ],
@@ -1475,6 +1497,7 @@ trait MessagesTrait {
                 ]
             ]
         ],
+<<<<<<< HEAD
         'Indexes' => [
             'TableHeader' => [
                 'Criteria',
@@ -1482,6 +1505,14 @@ trait MessagesTrait {
                 'Threshold',
                 'Index'
             ]
+=======
+        'Textbook' => [
+            'Textbooks' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ]
+            ],
+>>>>>>> a837ceaf949c94fe4b455a8849551f531e347731
         ],
         'Configuration' => [
         	'ConfigProductLists' => [

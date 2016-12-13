@@ -32,7 +32,7 @@ class StaffBehavioursTable extends AppTable {
 				'controller' => 'Institutions',
 				'action' => 'StaffUser',
 				'view',
-				$entity->staff->id
+				$this->paramsEncode(['id' => $entity->staff->id])
 			]);
 		} else {
 			return $entity->staff->openemis_no;
