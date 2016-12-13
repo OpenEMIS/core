@@ -204,7 +204,7 @@ class VisitRequestsTable extends ControllerActionTable
 						'controller' => 'Institutions',
 						'action' => 'VisitRequests',
 						'view',
-						$row->id,
+						$this->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 
