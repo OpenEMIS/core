@@ -32,12 +32,10 @@
             'onchange' => "$('#reload').val('AddExamCentreSpecialNeeds').click();"
         ]);
     ?>
-    <div class="table-wrapper">
-        <div class="table-responsive">
-            <table class="table table-curved table-input">
-                <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
-                <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
-            </table>
-        </div>
+    <div class="table-responsive">
+        <table class="table table-curved table-input">
+            <thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+            <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+        </table>
     </div>
 <?php endif ?>
