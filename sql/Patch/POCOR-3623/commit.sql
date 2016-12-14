@@ -11,7 +11,7 @@ WHERE NOT EXISTS (
 	SELECT 1
     FROM `security_users` SU
     WHERE UI.`security_user_id` = SU.`id`
-)
+);
 
 -- delete user_identities
 DELETE FROM `user_identities`
