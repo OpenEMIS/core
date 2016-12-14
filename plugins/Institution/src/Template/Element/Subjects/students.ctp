@@ -26,7 +26,7 @@
 						<th><?= $this->Label->get('Users.name'); ?></th>
 						<th><?= $this->Label->get('Users.gender_id'); ?></th>
 						<th><?= __('Student Status') ?></th>
-						<?php 
+						<?php
 
 						if ($action!='view') {
 							echo '<th class="cell-delete"></th>';
@@ -36,8 +36,8 @@
 				</thead>
 
 				<tbody>
-				<?php 
-				foreach($attr['data']['students'] as $i => $obj) : 
+				<?php
+				foreach($attr['data']['students'] as $i => $obj) :
 					// pr($obj);die;
 					if ($obj->status == 0) continue;
 
@@ -53,7 +53,7 @@
 							$userData = $obj->user;
 						} else {
 							/**
-							 * @todo 
+							 * @todo
 							 */
 							$userData = false;
 						}
@@ -79,19 +79,19 @@
 						<td><?= $userData['name'] ?></td>
 						<td><?= $userData['gender']['name'] ?></td>
 						<td><?= $obj->student_status ?></td>
-						<td> 
+						<td>
 							<?php //if ($attr['data']['isHistoryRecord']): ?>
-							
+
 							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
 								<?= __('<i class="fa fa-close"></i> Remove') ?>
 							</button>
-							
+
 							<?php //else:?>
-							
+
 							<!-- <button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);$('#reload').val('add').click();">
 								<?= __('<i class="fa fa-close"></i> Remove') ?>
 							</button> -->
-							
+
 							<?php //endif;?>
 						</td>
 					</tr>
@@ -105,7 +105,7 @@
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$obj->student_user_id
+									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id])
 								]) ?>
 						</td>
 						<td><?= $obj->student_name ?></td>
@@ -116,7 +116,7 @@
 				<?php endif;?>
 
 			<?php endforeach ?>
-					
+
 				</tbody>
 			</table>
 		</div>
