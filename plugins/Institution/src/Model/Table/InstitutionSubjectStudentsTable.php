@@ -181,10 +181,9 @@ class InstitutionSubjectStudentsTable extends AppTable {
         $students = $this
                     ->find()
                     ->matching('Users')
-                    ->matching('EducationSubjects.EducationGrades.InstitutionStudents', function($q) use ($enrolled) {
+                    ->matching('ClassStudents', function($q) use ($enrolled) {
                         return $q->where([
-                        	'InstitutionStudents.student_status_id' => $enrolled,
-                        	'InstitutionStudents.student_id = ' . $this->aliasField('student_id')
+                        	'ClassStudents.student_status_id' => $enrolled
                         ]);
                     })
                     ->where([
@@ -200,9 +199,8 @@ class InstitutionSubjectStudentsTable extends AppTable {
                         $Users->aliasField('third_name'),
                         $Users->aliasField('last_name'),
                         $Users->aliasField('preferred_name')
-                    ])
-                    ->toArray();
-
+                    ])->toArray();
+        
         $studentList = [];
         foreach ($students as $key => $value) {
             $studentList[$value->student_id] = $value->_matchingData['Users']['name_with_id'];
