@@ -408,7 +408,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->field('subjects_section', ['type' => 'section', 'title' => __('Subjects'), 'visible' => false]);
         $this->field('exam_centre_info_section', ['type' => 'section', 'title' => __('Examination Centre Information'), 'visible' => false]);
         $this->field('invigilators_section', ['type' => 'section', 'title' => __('Invigilators'), 'visible' => false]);
-        $this->field('special_needs_section', ['type' => 'section', 'title' => __('Special Needs'), 'visible' => false]);
+        $this->field('special_needs_section', ['type' => 'section', 'title' => __('Special Need Types'), 'visible' => false]);
         if ($this->action == 'edit' || $this->action == 'add') {
             $this->field('academic_period_id', ['entity' => $entity]);
             $this->field('examination_id', ['entity' => $entity]);
@@ -673,7 +673,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function onGetCustomExamCentreSpecialNeedsElement(Event $event, $action, $entity, $attr, $options=[])
     {
         $requestData = $this->request->data;
-        $tableHeaders = [__('Special Needs')];
+        $tableHeaders = [__('Special Need Type')];
         $tableCells = [];
         $alias = $this->alias();
         $fieldKey = 'examination_centre_special_needs';
@@ -700,6 +700,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             $Form = $event->subject()->Form;
             $Form->unlockField('ExaminationCentres.examination_centre_special_needs');
 
+            $selectedSpecialNeeds = [];
             if ($this->request->is(['get'])) {
                 $associated = $entity->extractOriginal([$fieldKey]);
                 if (!empty($associated[$fieldKey])) {
@@ -742,7 +743,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     } else {
                         $specialNeedIds = array_column($selectedSpecialNeeds, 'special_need_type_id');
                         foreach ($specialNeedsOptions as $key => $obj) {
-                            if (in_array($key, $specialNeedIds)) {
+                            if (!empty($specialNeedIds) && in_array($key, $specialNeedIds)) {
                                 continue;
                             }
 
@@ -776,9 +777,12 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.special_need_type_id", ['value' => $specialNeedTypeId]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.name", ['value' => $name]);
 
+                    // reload special needs options when an item is deleted
+                    $attrDelete = ['onclick' => "jsTable.doRemove(this);$('#reload').val('delete').click();"];
+
                     $rowData = [];
                     $rowData[] = $cell;
-                    $rowData[] = $this->getDeleteButton();
+                    $rowData[] = $this->getDeleteButton($attrDelete);
                     $tableCells[] = $rowData;
 
                     // remove selected option from dropdown list
@@ -786,7 +790,12 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
 
-            $specialNeedsOptions = ['' => "-- ".__('Select Special Needs') ." --", '-1' => __('Add all Special Needs')] + $specialNeedsOptions;
+            // add all special needs option
+            if (!empty($specialNeedsOptions)) {
+                $specialNeedsOptions = ['-1' => __('Add all Special Need Types')] + $specialNeedsOptions;
+            }
+
+            $specialNeedsOptions = ['' => "-- ".__('Select Special Need Type') ." --"] + $specialNeedsOptions;
             $attr['options'] = $specialNeedsOptions;
         }
 
