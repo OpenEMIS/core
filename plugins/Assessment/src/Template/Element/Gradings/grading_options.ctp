@@ -66,10 +66,6 @@
 								// iterate each field in a row
 								foreach ($attr['formFields'] as $i):
 
-									if ($i == 'description') { //override the type of text to string to avoid multiline input
-										$attr['fields'][$i]['type'] = 'string';
-									}
-
 									$field = $attr['fields'][$i];
 									$fieldErrors = $record->errors($field['field']);
 									if ($fieldErrors) {
