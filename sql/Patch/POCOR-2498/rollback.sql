@@ -1,4 +1,5 @@
 -- code here
+ALTER TABLE `student_behaviours` DROP `academic_period_id`;
 ALTER TABLE `student_behaviour_categories` DROP `classification_id`;
 DROP TABLE student_indexes_criterias;
 DROP TABLE institution_student_indexes;

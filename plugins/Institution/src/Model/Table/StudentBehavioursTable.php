@@ -2,23 +2,29 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class StudentBehavioursTable extends AppTable {
+class StudentBehavioursTable extends AppTable
+{
 	use OptionsTrait;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 
 		$this->belongsTo('Students', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
@@ -33,6 +39,18 @@ class StudentBehavioursTable extends AppTable {
 		$events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	public function validationDefault(Validator $validator)
+	{
+		$validator = parent::validationDefault($validator);
+		return $validator
+			->add('date_of_behaviour', [
+				'ruleInAcademicPeriod' => [
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+				]
+			])
+		;
 	}
 
 	// Jeff: is this validation still necessary? perhaps it is already handled by onUpdateFieldAcademicPeriod date_options
@@ -83,6 +101,7 @@ class StudentBehavioursTable extends AppTable {
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
+		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
@@ -94,11 +113,10 @@ class StudentBehavioursTable extends AppTable {
 		$this->controller->set('toolbarElements', $toolbarElements);
 
 		// Setup period options
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// $periodOptions = ['0' => __('All Periods')];
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptions = $this->AcademicPeriods->getList();
 		if (empty($this->request->query['academic_period_id'])) {
-			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
 
 		$Classes = TableRegistry::get('Institution.InstitutionClasses');
@@ -163,11 +181,24 @@ class StudentBehavioursTable extends AppTable {
 	// 	$this->request->data[$this->alias()]['date_of_behaviour'] = $entity->date_of_behaviour;
 	// }
 
+	public function editOnInitialize(Event $event, Entity $entity)
+	{
+		$academicPeriodId = $entity->academic_period_id;
+		$periodEntity = $this->AcademicPeriods->get($academicPeriodId);
+		$dateOptions = [
+			'startDate' => $periodEntity->start_date->format('d-m-Y'),
+			'endDate' => $periodEntity->end_date->format('d-m-Y')
+		];
+		$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
+		$this->fields['date_of_behaviour']['date_options']['todayBtn'] = false;
+	}
+
 	public function editBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Students']);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('academic_period_id');
 		$this->fields['student_id']['attr']['value'] = $entity->student->name_with_id;
 
 		// PHPOE-1916
@@ -235,14 +266,13 @@ class StudentBehavioursTable extends AppTable {
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, $request) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		$Classes = TableRegistry::get('Institution.InstitutionClasses');
 
 		if ($action == 'add') {
 			$attr['select'] = false;
 			$periodOptions = ['0' => __('-- Select --')];
-			$periodOptions = $periodOptions + $AcademicPeriod->getList(['isEditable'=>true]);
+			$periodOptions = $periodOptions + $this->AcademicPeriods->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
@@ -265,14 +295,18 @@ class StudentBehavioursTable extends AppTable {
 
 			//set start and end dates for date of behaviour based on chosen academic period
 			if (!empty($selectedPeriod)) {
-				$periodEntity = $AcademicPeriod->get($selectedPeriod);
+				$periodEntity = $this->AcademicPeriods->get($selectedPeriod);
 				$dateOptions = [
 					'startDate' => $periodEntity->start_date->format('d-m-Y'),
 					'endDate' => $periodEntity->end_date->format('d-m-Y')
 				];
 				$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
+				$this->fields['date_of_behaviour']['date_options']['todayBtn'] = false;
 			}
+		} elseif ($action == 'edit') {
+			$attr['type'] = 'hidden';
 		}
+
 		return $attr;
 	}
 
@@ -329,6 +363,7 @@ class StudentBehavioursTable extends AppTable {
 	// Start PHPOE-1897
 
 	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 		$this->request->data[$this->alias()]['student_id'] = $entity->student_id;
 	}
 

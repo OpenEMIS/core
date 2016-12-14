@@ -92,11 +92,18 @@ ALTER TABLE `student_indexes_criterias`
     ADD KEY `institution_student_index_id` (`institution_student_index_id`),
     ADD KEY `indexes_criteria_id` (`indexes_criteria_id`);
 
+-- Student behaviours
+ALTER TABLE `student_behaviours`
+    ADD `academic_period_id` INT(11) DEFAULT NULL COMMENT 'links to academic_periods.id' AFTER `time_of_behaviour`,
+    ADD KEY `academic_period_id` (`academic_period_id`);
 
-
-
-
-
+UPDATE `student_behaviours`
+    SET `academic_period_id` = (
+        SELECT `id` FROM `academic_periods`
+        WHERE `start_date` <= `student_behaviours`.`date_of_behaviour`
+        AND `end_date` >= `student_behaviours`.`date_of_behaviour`
+    )
+    WHERE `academic_period_id` = 0;
 
 
 
