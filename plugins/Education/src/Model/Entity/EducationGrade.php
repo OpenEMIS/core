@@ -9,7 +9,7 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 
 class EducationGrade extends Entity
 {
-	protected $_virtual = ['programme_name', 'programme_grade_name', 'programme_order'];
+	protected $_virtual = ['programme_name', 'programme_grade_name', 'programme_order', 'code_name'];
 
 	protected function _getProgrammeGradeName() {
 		$name = '';
@@ -52,4 +52,7 @@ class EducationGrade extends Entity
 		return $name;
 	}
 
+	protected function _getCodeName() {
+    	return $this->code . ' - ' . $this->name;
+	}
 }
