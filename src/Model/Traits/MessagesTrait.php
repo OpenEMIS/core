@@ -426,7 +426,10 @@ trait MessagesTrait {
         ],
         'StudentBehaviours' => [
             'noClasses' => 'No Classes',
-            'noStudents' => 'No Students'
+            'noStudents' => 'No Students',
+            'date_of_behaviour' => [
+                'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+            ],
         ],
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',

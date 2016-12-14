@@ -191,18 +191,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $academicPeriodId = $afterSaveOrDeleteEntity->academic_period_id;
         } else {
             // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, by model also have different date
-            switch ($criteriaTable->alias()) {
-            case 'InstitutionStudentAbsences': // have start date and end date
-                $startDate = $afterSaveOrDeleteEntity->start_date;
-                $endDate = $afterSaveOrDeleteEntity->end_date;
-                $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
-                break;
-
-            case 'StudentBehaviours': // have date of behaviours
-                $dateOfBehaviour = $afterSaveOrDeleteEntity->date_of_behaviour;
-                $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($dateOfBehaviour);
-                break;
-            }
+            $academicPeriodId = $this->getAcademicPeriodIdAfterDelete($criteriaTable, $afterSaveOrDeleteEntity);
         }
 
         // to get the indexes criteria to get the value on the student_indexes_criterias
@@ -213,6 +202,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         if (!$indexesCriteriaResults->isEmpty()) {
             foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
                 $indexId = $indexesCriteriaData->index_id;
+                $threshold = $indexesCriteriaData->threshold;
+                $operator = $indexesCriteriaData->operator;
 
                 $params = new ArrayObject([
                     'institution_id' => $institutionId,
@@ -251,15 +242,32 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     ]);
                 }
 
-                if ($indexesCriteriaData->operator == 3) {
-                    // value index is an array valueIndex[threshold] = value
-                    if (array_key_exists($indexesCriteriaData->threshold, $valueIndexData)) {
-                        $valueIndex = 'True';
-                    } else {
-                        $valueIndex = 'False';
-                    }
-                } else {
-                    $valueIndex = $valueIndexData;
+                // if the condition fulfilled then the value will be saved as its value, if not saved as 0
+                switch ($operator) {
+                    case 1: // '<'
+                        if($valueIndexData < $threshold){
+                            $valueIndex = $valueIndexData;
+                        } else {
+                            $valueIndex = 0;
+                        }
+                        break;
+
+                    case 2: // '>'
+                        if($valueIndexData > $threshold){
+                            $valueIndex = $valueIndexData;
+                        } else {
+                            $valueIndex = 0;
+                        }
+                        break;
+
+                    case 3: // '='
+                        // value index is an array (valueIndex[threshold] = value)
+                        if (array_key_exists($threshold, $valueIndexData)) {
+                            $valueIndex = 'True';
+                        } else {
+                            $valueIndex = 0;
+                        }
+                        break;
                 }
 
                 // saving association to student_indexes_criterias
@@ -341,5 +349,24 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 }
             }
         }
+    }
+
+    public function getAcademicPeriodIdAfterDelete($criteriaTable, $afterSaveOrDeleteEntity)
+    {
+        // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
+        switch ($criteriaTable->alias()) {
+        case 'InstitutionStudentAbsences': // have start date and end date
+            $startDate = $afterSaveOrDeleteEntity->start_date;
+            $endDate = $afterSaveOrDeleteEntity->end_date;
+            $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
+            break;
+
+        case 'StudentBehaviours': // have date of behaviours
+            $dateOfBehaviour = $afterSaveOrDeleteEntity->date_of_behaviour;
+            $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($dateOfBehaviour);
+            break;
+        }
+
+        return $academicPeriodId;
     }
 }

@@ -17,7 +17,7 @@ class IndexesCriteriasTable extends ControllerActionTable
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->hasMany('StudentIndexesCriteria', ['className' => 'Indexes.StudentIndexesCriteria']);
+        $this->hasMany('StudentIndexesCriterias', ['className' => 'Indexes.StudentIndexesCriterias']);
 
         $this->setDeleteStrategy('restrict');
     }

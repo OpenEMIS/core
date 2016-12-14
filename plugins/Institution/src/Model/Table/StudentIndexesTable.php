@@ -96,7 +96,7 @@ class StudentIndexesTable extends ControllerActionTable
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $indexesCriterias = TableRegistry::get('Indexes.indexesCriterias');
+        $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $tableHeaders = $this->getMessage('Indexes.TableHeader');
         array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
         $tableCells = [];
@@ -105,69 +105,56 @@ class StudentIndexesTable extends ControllerActionTable
         $indexId = $entity->index->id;
         $institutionId = $entity->institution->id;
         $studentId = $entity->user->id;
-        $institutionStudentIndexId = $this->paramsPass(0);
+
+        $institutionStudentIndexId = $this->paramsDecode($this->paramsPass(0))['id']; // paramsPass(0) after the hash of Id
 
         if ($action == 'view') {
-            $indexesCriteriasResults = $indexesCriterias->find()
-                ->where([$indexesCriterias->aliasField('index_id') => $indexId])
-                ->order(['criteria'])
+            $StudentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
+                ->contain(['IndexesCriterias'])
+                ->where([
+                    $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
+                    $this->StudentIndexesCriterias->aliasField('value') . ' <> ' => 0
+                ])
+                ->order(['criteria','threshold'])
                 ->all();
 
-            if (!$indexesCriteriasResults->isEmpty()) {
-                foreach ($indexesCriteriasResults as $i => $obj) {
-                    $criteriaKey = $obj->criteria;
-                    $indexesCriteriaId = $obj->id;
-                    $operator = $obj->operator; // need this as an operator to do the red font
-                    $threshold = $obj->threshold; // need this as an operator to do the red font
+            foreach ($StudentIndexesCriteriasResults as $key => $obj) {
+                $indexesCriteriasId = $obj->indexes_criteria->id;
 
-                    $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriaId);
+                $criteriaKey = $obj->indexes_criteria->criteria;
+                $operator = $obj->indexes_criteria->operator;
+                $threshold = $obj->indexes_criteria->threshold;
 
-                    // to get the red highlighted font
-                    switch ($operator) {
-                    case 1: // '<'
-                        if ($value < $threshold) {
-                            $indexValue = '<div style="color : red">'.$obj->index_value.'</div>';
-                        } else {
-                            $indexValue = $obj->index_value;
-                        }
-                        break;
+                $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriasId);
 
-                     case 2: // '>'
-                        if ($value > $threshold) {
-                            $indexValue = '<div style="color : red">'.$obj->index_value.'</div>';
-                        } else {
-                            $indexValue = $obj->index_value;
-                        }
-                        break;
+                if ($value == 'True') {
+                    // Comparison like behaviour
+                    // for threshold name
+                    $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaKey);
+                    $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
+                    $CriteriaModel = TableRegistry::get($criteriaKey);
+                    $thresholdName = $LookupModel->get($threshold)->name;
 
-                    case 3: // '='
-                        $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaKey);
-                        $lookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
-                        $criteriaModel = TableRegistry::get($criteriaKey);
-                        $threshold = $lookupModel->get($threshold)->name;
+                    // to get total number of behaviour
+                    $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId);
+                    $totalBehaviour = $getValueIndex[$threshold];
+                    $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . ' ( x' . $totalBehaviour . ' )' . '</div>';
 
-                        if ($value == 'True') {
-                            // to get total number of behaviour
-                            $getValueIndex = $criteriaModel->getValueIndex($institutionId, $studentId);
-                            $totalBehaviour = $getValueIndex[$obj->threshold];
-
-                            $indexValue = '<div style="color : red">' . $obj->index_value . ' ( ' . $totalBehaviour . ' )' . '</div>';
-                        } else {
-                            $indexValue = $obj->index_value;
-                        }
-                        break;
-                    }
-
-                    $rowData = [];
-                    $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['name'];
-                    $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['operator'][$obj->operator];
-                    $rowData[] = $threshold;
-                    $rowData[] = $value;
-                    $rowData[] = $indexValue; // need this as an operator to do the red font
-
-
-                    $tableCells[] = $rowData;
+                    $threshold = $thresholdName;
+                } else {
+                    // numeric value come here (absence quantity, results)
+                    $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
                 }
+
+                // to put in the table
+                $rowData = [];
+                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['name'];
+                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['operator'][$operator];
+                $rowData[] = $threshold;
+                $rowData[] = $value;
+                $rowData[] = $indexValue; // need this as an operator to do the red font
+
+                $tableCells [] = $rowData;
             }
         }
 
