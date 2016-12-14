@@ -755,11 +755,12 @@ class ExaminationCentresTable extends ControllerActionTable {
                                     'name' => $obj
                                 ];
 
-                                $requestData[$alias]['special_need_type_id'] = '';
                             } catch (RecordNotFoundException $ex) {
                                 Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
                             }
                         }
+
+                        $requestData[$alias]['special_need_type_id'] = '';
                     }
                 }
             }
