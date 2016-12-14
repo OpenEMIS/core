@@ -408,11 +408,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->field('subjects_section', ['type' => 'section', 'title' => __('Subjects'), 'visible' => false]);
         $this->field('exam_centre_info_section', ['type' => 'section', 'title' => __('Examination Centre Information'), 'visible' => false]);
         $this->field('invigilators_section', ['type' => 'section', 'title' => __('Invigilators'), 'visible' => false]);
-        $this->field('special_needs_section', ['type' => 'section', 'title' => __('Special Need Types'), 'visible' => false]);
+        $this->field('special_needs_section', ['type' => 'section', 'title' => __('Special Need Accommodations'), 'visible' => false]);
         if ($this->action == 'edit' || $this->action == 'add') {
             $this->field('academic_period_id', ['entity' => $entity]);
             $this->field('examination_id', ['entity' => $entity]);
-            $this->field('special_need_types', ['type' => 'custom_exam_centre_special_needs']);
+            $this->field('special_need_type_id', ['type' => 'custom_exam_centre_special_needs']);
 
             $this->field('subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
             $this->field('create_as', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('create_as')), 'entity' => $entity]);
@@ -443,7 +443,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->fields['special_needs_section']['visible'] = true;
 
                 // field order
-                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'institution_type', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_types', 'subjects_section', 'subjects']);
+                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'institution_type', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id', 'subjects_section', 'subjects']);
             } else if ($this->action == 'edit') {
                 $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
                 $this->fields['name']['visible'] = true;
@@ -478,11 +478,11 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->field('invigilators', ['type' => 'custom_invigilators']);
 
                 // field order
-                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website',  'special_needs_section', 'special_need_types', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators', 'subjects_section', 'subjects']);
+                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website',  'special_needs_section', 'special_need_type_id', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators', 'subjects_section', 'subjects']);
             }
         } else if ($this->action == 'view') {
             $this->fields['area_id'] = array_merge($this->fields['area_id'], ['visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
-            $this->field('special_need_types', ['type' => 'custom_exam_centre_special_needs']);
+            $this->field('special_need_type_id', ['type' => 'custom_exam_centre_special_needs']);
             $this->field('subjects', [
                 'type' => 'element',
                 'element' => 'Examination.exam_centre_subjects'
@@ -506,7 +506,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             // $this->fields['invigilators_section']['visible'] = true;
             // $this->fields['exam_centre_info_section']['visible'] = true;
 
-            $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'examination_id', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website',  'special_needs_section', 'special_need_types', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators', 'subjects_section', 'subjects']);
+            $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'examination_id', 'total_registered', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website',  'special_needs_section', 'special_need_type_id', 'linked_institutions_section', 'linked_institutions', 'invigilators_section', 'invigilators', 'subjects_section', 'subjects']);
         }
     }
 
@@ -670,6 +670,50 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $event->subject()->renderElement('Examination.ExaminationCentres/' . $fieldKey, ['attr' => $attr]);
     }
 
+    public function addEditOnSelectSpecialNeedType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $ADD_ALL = -1;
+        $fieldKey = 'examination_centre_special_needs';
+
+        $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
+        $allSpecialNeeds = $SpecialNeedTypesTable->getVisibleNeedTypes();
+        $id = $data[$this->alias()]['special_need_type_id'];
+
+        if (empty($data[$this->alias()][$fieldKey])) {
+            $data[$this->alias()][$fieldKey] = [];
+        }
+
+        if ($id == $ADD_ALL) {
+            $selectedNeeds = array_column($data[$this->alias()][$fieldKey], 'special_need_type_id');
+            foreach ($allSpecialNeeds as $key => $obj) {
+                if (!empty($selectedNeeds) && in_array($key, $selectedNeeds)) {
+                    continue;
+                }
+
+                $data[$this->alias()][$fieldKey][] = [
+                    'special_need_type_id' => $key,
+                    'name' => $obj
+                ];
+            }
+            $data[$this->alias()]['special_need_type_id'] = '';
+
+        } else if ($id > 0) {
+            try {
+                $obj = $SpecialNeedTypesTable->get($id);
+
+                $data[$this->alias()][$fieldKey][] = [
+                    'special_need_type_id' => $id,
+                    'name' => $obj->name
+                ];
+
+                $data[$this->alias()]['special_need_type_id'] = '';
+
+            } catch (RecordNotFoundException $ex) {
+                Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
+            }
+        }
+    }
+
     public function onGetCustomExamCentreSpecialNeedsElement(Event $event, $action, $entity, $attr, $options=[])
     {
         $requestData = $this->request->data;
@@ -691,10 +735,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         } else if ($action == 'edit') {
             // options for special needs types
             $SpecialNeedTypesTable = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes;
-            $specialNeedsOptions = $SpecialNeedTypesTable
-                ->find('list')
-                ->find('order')
-                ->toArray();
+            $specialNeedsOptions = $SpecialNeedTypesTable->getVisibleNeedTypes();
 
             $tableHeaders[] = ''; // for delete column
             $Form = $event->subject()->Form;
@@ -705,9 +746,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $associated = $entity->extractOriginal([$fieldKey]);
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
-                        $selectedSpecialNeeds[] = [ // put into request data
-                            'examination_id' => $obj->examination_id,
-                            'academic_period_id' => $obj->academic_period_id,
+                        $selectedSpecialNeeds[] = [
                             'special_need_type_id' => $obj->special_need_type_id,
                             'name' => $obj->special_need_type->name
                         ];
@@ -718,49 +757,6 @@ class ExaminationCentresTable extends ControllerActionTable {
                 if (array_key_exists($fieldKey, $requestData[$alias])) {
                     foreach ($requestData[$alias][$fieldKey] as $key => $obj) {
                         $selectedSpecialNeeds[] = $obj;
-                    }
-                }
-
-                if (array_key_exists('special_need_type_id', $requestData[$alias]) && !empty($requestData[$alias]['special_need_type_id'])) {
-                    $specialNeedTypeId = $requestData[$alias]['special_need_type_id'];
-
-                    if ($specialNeedTypeId > 0) {
-                        try {
-                            $obj = $this->ExaminationCentreSpecialNeeds->SpecialNeedTypes->get($specialNeedTypeId);
-
-                            $selectedSpecialNeeds[] = [
-                                'examination_id' => $entity->examination_id,
-                                'academic_period_id' => $entity->academic_period_id,
-                                'special_need_type_id' => $entity->special_need_type_id,
-                                'name' => $obj->name
-                            ];
-
-                            $requestData[$alias]['special_need_type_id'] = '';
-                        } catch (RecordNotFoundException $ex) {
-                            Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
-                        }
-
-                    } else {
-                        $specialNeedIds = array_column($selectedSpecialNeeds, 'special_need_type_id');
-                        foreach ($specialNeedsOptions as $key => $obj) {
-                            if (!empty($specialNeedIds) && in_array($key, $specialNeedIds)) {
-                                continue;
-                            }
-
-                            try {
-                                $selectedSpecialNeeds[] = [
-                                    'examination_id' => $entity->examination_id,
-                                    'academic_period_id' => $entity->academic_period_id,
-                                    'special_need_type_id' => $key,
-                                    'name' => $obj
-                                ];
-
-                            } catch (RecordNotFoundException $ex) {
-                                Log::write('debug', __METHOD__ . ': Record not found for special need type id: ' . $id);
-                            }
-                        }
-
-                        $requestData[$alias]['special_need_type_id'] = '';
                     }
                 }
             }
@@ -791,18 +787,13 @@ class ExaminationCentresTable extends ControllerActionTable {
                 }
             }
 
-            // add all special needs option
-            if (!empty($specialNeedsOptions)) {
-                $specialNeedsOptions = ['-1' => __('Add all Special Need Types')] + $specialNeedsOptions;
-            }
-
-            $specialNeedsOptions = ['' => "-- ".__('Select Special Need Type') ." --"] + $specialNeedsOptions;
             $attr['options'] = $specialNeedsOptions;
+            $attr['addAll'] = true;
         }
 
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
-        return $event->subject()->renderElement('Examination.exam_centre_special_needs', ['attr' => $attr]);
+        return $event->subject()->renderElement('../ControllerAction/table_with_dropdown', ['attr' => $attr]);
     }
 
     public function onGetName(Event $event, Entity $entity)
