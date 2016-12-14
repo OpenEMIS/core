@@ -1,3 +1,12 @@
+-- POCOR-3539
+-- translations
+DELETE FROM `translations` WHERE `en` = 'Student has been transferred to';
+DELETE FROM `translations` WHERE `en` = 'after registration';
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3539';
+
+
 -- POCOR-2944
 -- update institution_quality_visits
 ALTER TABLE `institution_quality_visits` CHANGE `institution_subject_id` `institution_subject_id` INT(11) NOT NULL COMMENT 'links to institution_subjects.id';
