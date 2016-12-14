@@ -74,7 +74,7 @@ trait RestfulV1Trait {
             $table = $extra['table'];
             $finders = $this->decode($value);
             foreach ($finders as $name => $options) {
-                $options['_controller'] = $this;
+                $options['_controller'] = $this->controller;
                 $finderFunction = 'find' . ucfirst($name);
                 if (method_exists($table, $finderFunction) || $table->behaviors()->hasMethod($finderFunction)) {
                     $query->find($name, $options);
