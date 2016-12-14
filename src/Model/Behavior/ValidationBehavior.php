@@ -837,26 +837,28 @@ class ValidationBehavior extends Behavior {
 					->findById($globalData['data'][$academicFieldName])
 					->first();
 
-			$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
-	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
+			if (!empty($periodObj)) {
+				$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
+		        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
 
-	        if ($excludeFirstDay) {
-	        	$withFirstDay = Time::parse($periodObj->start_date);
-	        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
-	        } else {
-	        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
-	        }
+		        if ($excludeFirstDay) {
+		        	$withFirstDay = Time::parse($periodObj->start_date);
+		        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
+		        } else {
+		        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
+		        }
 
-	        if ($excludeLastDay) {
-	        	$withLastDay = Time::parse($periodObj->end_date);
-	        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
-	        } else {
-	        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
-	        }
+		        if ($excludeLastDay) {
+		        	$withLastDay = Time::parse($periodObj->end_date);
+		        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
+		        } else {
+		        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
+		        }
 
-	        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
+		        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
 
-	        return ($checkDate >= $startDate && $checkDate <= $endDate);
+		        return ($checkDate >= $startDate && $checkDate <= $endDate);
+			}
 		}
 
 		return false;
