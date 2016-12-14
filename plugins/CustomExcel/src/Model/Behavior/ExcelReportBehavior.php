@@ -23,10 +23,11 @@ class ExcelReportBehavior extends Behavior
         'subfolder' => 'customexcel'
     ];
 
+    // function name and keyword pairs
     private $advancedTypes = [
-        'row' => '${"repeatRows":',
-        'column' => '${"repeatColumns":',
-        'match' => '${"match":'
+        'row' => 'repeatRows',
+        'column' => 'repeatColumns',
+        'match' => 'match'
     ];
     private $suppressAutoInsertNewRow = false;
 
@@ -77,8 +78,8 @@ class ExcelReportBehavior extends Behavior
 
     public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
     {
-        $controller = $event->subject();
-        $params = $this->getParams($controller);
+        $model = $this->_table;
+        $params = $model->getQueryString();
         $vars = $this->getVars($params, $extra);
 
         $results = Hash::flatten($vars);
@@ -88,8 +89,8 @@ class ExcelReportBehavior extends Behavior
 
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
-        $controller = $event->subject();
-        $params = $this->getParams($controller);
+        $model = $this->_table;
+        $params = $model->getQueryString();
         $extra['vars'] = $this->getVars($params, $extra);
 
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
@@ -159,14 +160,12 @@ class ExcelReportBehavior extends Behavior
     public function generateExcel($objPHPExcel, ArrayObject $extra)
     {
         foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
-            $cells = $objWorksheet->getCellCollection();
+            $extra['placeholders'] = [];
+            $this->processBasicPlaceholder($objWorksheet, $extra);
 
-            $extra['placeholder'] = [];
-            foreach ($cells as $cellCoordinate) {
-                $this->extractPlaceholder($objWorksheet, $cellCoordinate, $extra);
+            if (!empty($extra['placeholders'])) {
+                $this->processAdvancedPlaceholder($objWorksheet, $extra);
             }
-
-            $this->processAdvancedPlaceholder($objWorksheet, $extra);
         }
 
         // to force the first sheet active
@@ -203,7 +202,8 @@ class ExcelReportBehavior extends Behavior
 
     public function getParams($controller)
     {
-        $params = $controller->request->query;
+        $model = $this->_table;
+        $params = $model->getQueryString();
         return $params;
     }
 
@@ -236,9 +236,19 @@ class ExcelReportBehavior extends Behavior
         return $file;
     }
 
+    private function getAdvancedTypeKeyword($keyword)
+    {
+        $format = '${"%s":';
+        $value = sprintf($format, $keyword);
+
+        return $value;
+    }
+
     private function isBasicType($str)
     {
-        foreach ($this->advancedTypes as $function => $value) {
+        foreach ($this->advancedTypes as $function => $keyword) {
+            $value = $this->getAdvancedTypeKeyword($keyword);
+
             $pos = strpos($str, $value);
             if ($pos !== false) {
                 return false;
@@ -257,10 +267,10 @@ class ExcelReportBehavior extends Behavior
         return $jsonArray;
     }
 
-    private function formatPlaceholder($str)
+    private function formatPlaceholder($str, $offset=1, $length=0, $replacement=['{n}'])
     {
         $placeholderArray = explode('.', $str);
-        array_splice($placeholderArray, 1, 0, array('{n}'));
+        array_splice($placeholderArray, $offset, $length, $replacement);
         $placeholder = implode(".", $placeholderArray);
 
         return $placeholder;
@@ -274,25 +284,39 @@ class ExcelReportBehavior extends Behavior
         return "[".$filterKey."=".$filterValue."]"; 
     }
 
-    private function extractPlaceholder($objWorksheet, $cellCoordinate, $extra)
+    private function splitDisplayValue($displayValue)
     {
-        $objCell = $objWorksheet->getCell($cellCoordinate);
+        $displayArray = explode(".", $displayValue);
+        $placeholderPrefix = current($displayArray);
+        array_shift($displayArray);
+        $placeholderSuffix = implode(".", $displayArray);
 
-        if (is_object($objCell->getValue())) {
-            $cellValue = $objCell->getValue()->getPlainText();
-        } else {
-            $cellValue = $objCell->getValue();
-        }
+        return [$placeholderPrefix, $placeholderSuffix];
+    }
 
-        if (strlen($cellValue) > 0) {
-            $pos = strpos($cellValue, '${');
+    private function processBasicPlaceholder($objWorksheet, $extra)
+    {
+        $cells = $objWorksheet->getCellCollection();
 
-            if ($pos !== false) {
-                // if is basic placeholder then replace first, else added into $placeholder to process later
-                if ($this->isBasicType($cellValue)) {
-                    $this->string($objWorksheet, $objCell, $cellValue, $extra);
-                } else {
-                    $extra['placeholder'][$cellCoordinate] = $cellValue;
+        foreach ($cells as $cellCoordinate) {
+            $objCell = $objWorksheet->getCell($cellCoordinate);
+
+            if (is_object($objCell->getValue())) {
+                $cellValue = $objCell->getValue()->getPlainText();
+            } else {
+                $cellValue = $objCell->getValue();
+            }
+
+            if (strlen($cellValue) > 0) {
+                $pos = strpos($cellValue, '${');
+
+                if ($pos !== false) {
+                    // if is basic placeholder then replace first, else added into $placeholder to process later
+                    if ($this->isBasicType($cellValue)) {
+                        $this->string($objWorksheet, $objCell, $cellValue, $extra);
+                    } else {
+                        $extra['placeholders'][$cellCoordinate] = $cellValue;
+                    }
                 }
             }
         }
@@ -300,11 +324,13 @@ class ExcelReportBehavior extends Behavior
 
     private function processAdvancedPlaceholder($objWorksheet, $extra)
     {
-        foreach ($extra['placeholder'] as $cellCoordinate => $cellValue) {
+        foreach ($extra['placeholders'] as $cellCoordinate => $cellValue) {
             $objCell = $objWorksheet->getCell($cellCoordinate);
 
             foreach ($this->advancedTypes as $function => $keyword) {
-                $pos = strpos($cellValue, $keyword);
+                $value = $this->getAdvancedTypeKeyword($keyword);
+
+                $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
                     $this->$function($objWorksheet, $objCell, $cellValue, $extra);
                 }
@@ -453,8 +479,8 @@ class ExcelReportBehavior extends Behavior
         $matchArray = array_key_exists('match', $jsonArray) ? $jsonArray['match'] : [];
         $rowsArray = array_key_exists('rows', $matchArray) ? $matchArray['rows'] : [];
 
-        $rowPlaceholderStr = array_key_exists('mapFrom', $rowsArray) ? $rowsArray['mapFrom'] : '';
-        $rowFilterStr = array_key_exists('mapTo', $rowsArray) ? $rowsArray['mapTo'] : '';
+        $rowPlaceholderStr = array_key_exists('matchFrom', $rowsArray) ? $rowsArray['matchFrom'] : '';
+        $rowFilterStr = array_key_exists('matchTo', $rowsArray) ? $rowsArray['matchTo'] : '';
         $rowPlaceholder = $this->formatPlaceholder($rowPlaceholderStr);
         $rowData = Hash::extract($extra['vars'], $rowPlaceholder);
 
@@ -487,13 +513,13 @@ class ExcelReportBehavior extends Behavior
         $columnsArray = array_key_exists('columns', $matchArray) ? $matchArray['columns'] : [];
         $nestedColumnsArray = isset($columnsArray['children']['columns']) ? $columnsArray['children']['columns'] : [];
 
-        $columnPlaceholderStr = array_key_exists('mapFrom', $columnsArray) ? $columnsArray['mapFrom'] : '';
-        $columnFilterStr = array_key_exists('mapTo', $columnsArray) ? $columnsArray['mapTo'] : '';
+        $columnPlaceholderStr = array_key_exists('matchFrom', $columnsArray) ? $columnsArray['matchFrom'] : '';
+        $columnFilterStr = array_key_exists('matchTo', $columnsArray) ? $columnsArray['matchTo'] : '';
         $columnPlaceholder = $this->formatPlaceholder($columnPlaceholderStr);
         $columnData = Hash::extract($extra['vars'], $columnPlaceholder);
 
-        $nestedPlaceholderStr = array_key_exists('mapFrom', $nestedColumnsArray) ? $nestedColumnsArray['mapFrom'] : '';
-        $nestedFilterStr = array_key_exists('mapTo', $nestedColumnsArray) ? $nestedColumnsArray['mapTo'] : '';
+        $nestedPlaceholderStr = array_key_exists('matchFrom', $nestedColumnsArray) ? $nestedColumnsArray['matchFrom'] : '';
+        $nestedFilterStr = array_key_exists('matchTo', $nestedColumnsArray) ? $nestedColumnsArray['matchTo'] : '';
         $nestedPlaceholder = $this->formatPlaceholder($nestedPlaceholderStr);
         $nestedData = Hash::extract($extra['vars'], $nestedPlaceholder);
 
@@ -507,15 +533,16 @@ class ExcelReportBehavior extends Behavior
                 $nestedColumnValue = $objCell->stringFromColumnIndex($columnIndex-1);
                 $nestedCellCoordinate = $nestedColumnValue.$cellRowValue;
 
-                $matchPlaceholderStr = isset($matchArray['displayValue']) ? $matchArray['displayValue'] : '';
-                $matchPlaceholder = $this->formatPlaceholder($matchPlaceholderStr);
-                $matchField = isset($matchArray['displayField']) ? $matchArray['displayField'] : '';
+                $displayValue = isset($matchArray['displayValue']) ? $matchArray['displayValue'] : '';
+                list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($displayValue);
+
+                $matchPlaceholder = $this->formatPlaceholder($placeholderPrefix);
                 if (!is_null($filter)) {
                     $matchPlaceholder .= $filter;
                 }
                 $matchPlaceholder .= $columnFilter;
                 $matchPlaceholder .= $nestedFilter;
-                $matchPlaceholder .= ".".$matchField;
+                $matchPlaceholder .= ".".$placeholderSuffix;
 
                 $matchData = Hash::extract($extra['vars'], $matchPlaceholder);
                 $matchValue = !empty($matchData) ? current($matchData) : '';
