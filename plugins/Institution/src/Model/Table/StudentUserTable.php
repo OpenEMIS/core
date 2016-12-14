@@ -49,6 +49,8 @@ class StudentUserTable extends ControllerActionTable
 			'pages' => ['view']
 		]);
 
+		$this->addBehavior('Configuration.DataSynchronisation');
+
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
 		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
