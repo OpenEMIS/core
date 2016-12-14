@@ -262,13 +262,15 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                             $StudentAdmission->aliasField('type') => 2, //transfer type
                             $StudentAdmission->aliasField('status') => 1 //status is approved
                         ])
-                        ->count();
+                        ->contain('Institutions')
+                        ->order($StudentAdmission->aliasField('created DESC'))
+                        ->first();
         }
 
         if ($Admission) {
-            $tooltipMessage = 'To register exam on the current school, please un-register student from the previous one.';
+            $tooltipMessage = __('Student has been transferred to') . ' (' . $Admission->institution->code_name . ') ' . __('after registration');
             return  "Yes<div class='tooltip-desc' style='display: inline-block;'>
-                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" .  __($tooltipMessage) . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
+                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
                     </div>";
         } else {
             return __('No');
