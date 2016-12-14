@@ -372,7 +372,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var deferred = $q.defer();
         var vm = this;
         if (externalSource == null) {
-            userRecord['username'] = userRecord['openemis_no'];
             userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date'])
             delete userRecord['gender'];
             if (userRecord['nationality_id'] != '' && userRecord['nationality_id'] != undefined) {
