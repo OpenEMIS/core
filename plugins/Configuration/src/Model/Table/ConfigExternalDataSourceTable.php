@@ -184,12 +184,13 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['third_name_mapping'] = 'third_name';
             $requestData[$this->alias()]['last_name_mapping'] = 'last_name';
             $requestData[$this->alias()]['date_of_birth_mapping'] = 'date_of_birth';
-            $requestData[$this->alias()]['identity_type_mapping'] = 'identity_type_name';
+            $requestData[$this->alias()]['gender_mapping'] = 'gender.name';
+            $requestData[$this->alias()]['identity_type_mapping'] = 'main_identity_type.name';
             $requestData[$this->alias()]['identity_number_mapping'] = 'identity_number';
-            $requestData[$this->alias()]['nationality_mapping'] = 'nationality_name';
+            $requestData[$this->alias()]['nationality_mapping'] = 'main_nationality.name';
             $requestData[$this->alias()]['token_uri'] = $url .'/api/oauth/token';
-            $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]';
-            $requestData[$this->alias()]['user_endpoint_uri'] = '';
+            $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
+            $requestData[$this->alias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
         }
         if (empty($requestData[$this->alias()]['private_key'])) {
