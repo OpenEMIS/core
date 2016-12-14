@@ -19,4 +19,4 @@ WHERE NOT EXISTS (
 	SELECT 1
     FROM `security_users`
     WHERE `user_identities`.`security_user_id` = `security_users`.`id`
-)
+);
