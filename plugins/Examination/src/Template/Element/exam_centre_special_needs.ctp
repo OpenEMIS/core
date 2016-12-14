@@ -14,7 +14,7 @@
             </div>
         </div>
     <?php else :
-        echo __('No Special Needs');
+        echo __('No Special Need Types');
     ?>
     <?php endif ?>
 
@@ -25,7 +25,7 @@
     ?>
     <?=
         $this->Form->input($ControllerAction['table']->alias().".special_need_type_id", [
-            'label' => __('Special Need Types'),
+            'label' => __('Add Special Need Type'),
             'type' => 'select',
             'options' => $attr['options'],
             'value' => 0,
