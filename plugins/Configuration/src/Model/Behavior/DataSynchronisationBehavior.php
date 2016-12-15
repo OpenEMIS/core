@@ -175,7 +175,7 @@ class DataSynchronisationBehavior extends Behavior {
 
 			$toolbarButton = [
 				'type' => 'button',
-				'label' => '<i class="fa fa-history"></i>',
+				'label' => '<i class="fa fa-refresh"></i>',
 				'attr' => [
 					'class' => 'btn btn-xs btn-default',
 					'data-toggle' => 'tooltip',
