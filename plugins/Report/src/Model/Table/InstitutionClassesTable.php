@@ -72,38 +72,82 @@ class InstitutionClassesTable extends AppTable  {
     {
         $query
         ->contain('Institutions.Areas')
+        ->contain('Institutions.Types')
         ->contain('EducationGrades')
         ->contain('InstitutionShifts.ShiftOptions')
         ->select([
             'area_name' => 'Areas.name', 
-            'area_code' => 'Areas.code'
+            'area_code' => 'Areas.code',
+            'institution_type' => 'Types.name'
         ]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
     {   
-        $extraField[] = [
+        //redeclare all for sorting purpose.
+        $newFields[] = [
+            'key' => 'InstitutionClasses.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.staff_id',
+            'field' => 'staff_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.institution_shift_id',
+            'field' => 'institution_shift_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.academic_period_id',
+            'field' => 'academic_period_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
             'key' => 'Education.education_grades',
             'field' => 'education_grades',
             'type' => 'string',
             'label' => ''
         ];
 
-        $extraField[] = [
+        $newFields[] = [
+            'key' => 'InstitutionClasses.institution_id',
+            'field' => 'institution_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
             'key' => 'Areas.area_name',
             'field' => 'area_name',
             'type' => 'string',
             'label' => ''
         ];
 
-        $extraField[] = [
+        $newFields[] = [
             'key' => 'Areas.area_code',
             'field' => 'area_code',
             'type' => 'string',
             'label' => ''
         ];
 
-        $newFields = array_merge($extraField, $fields->getArrayCopy());
+        $newFields[] = [
+            'key' => 'Types.institution_type',
+            'field' => 'institution_type',
+            'type' => 'string',
+            'label' => ''
+        ];
+
         $fields->exchangeArray($newFields);
     }
 }
