@@ -427,13 +427,14 @@ class StudentBehavioursTable extends AppTable
 	{
 		$institutionId = $params['institution_id'];
 		$studentId = $params['student_id'];
+		$academicPeriodId = $params['academic_period_id'];
 
-		$valueIndex = $this->getValueIndex($institutionId, $studentId);
+		$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId);
 
 		return $valueIndex;
 	}
 
-	public function getValueIndex($institutionId, $studentId)
+	public function getValueIndex($institutionId, $studentId, $academicPeriodId)
 	{
 		$Classifications = TableRegistry::get('Student.Classifications');
 
@@ -441,7 +442,9 @@ class StudentBehavioursTable extends AppTable
 			->find()
 			->where([
 				$this->aliasField('institution_id') => $institutionId,
-				$this->aliasField('student_id') => $studentId
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('academic_period_id') => $academicPeriodId
+
 			])
 			->all();
 
@@ -454,5 +457,36 @@ class StudentBehavioursTable extends AppTable
 		}
 
 		return $getValueIndex;
+	}
+
+	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+	{
+		$classificationId = $threshold; // it will classified by the classification id
+		$behaviourResults = $this
+			->find()
+			->contain(['StudentBehaviourCategories'])
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('academic_period_id') => $academicPeriodId,
+				'classification_id' => $classificationId
+			])
+			->all();
+
+		$referenceDetails = [];
+		foreach ($behaviourResults as $key => $obj) {
+			$title = $obj->student_behaviour_category->name;
+			$date = $obj->date_of_behaviour->format('d/m/Y');
+
+			$referenceDetails[$obj->id] = $title . ' (' . $date . ')';
+		}
+
+		// tooltip only receieved string to be display
+		$reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . '<br/>';
+        }
+
+		return $reference;
 	}
 }
