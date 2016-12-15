@@ -37,7 +37,7 @@ class StudentIndexesCriteriasTable extends AppTable
         return $value;
     }
 
-    public function getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId)
+    public function getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId, $academicPeriodId)
     {
         $IndexesCriteriasData = $this->IndexesCriterias->get($indexesCriteriaId);
         $operator = $IndexesCriteriasData->operator;
@@ -64,7 +64,7 @@ class StudentIndexesCriteriasTable extends AppTable
         case 3: // '='
             $criteriaModel = TableRegistry::get($IndexesCriteriasData->criteria);
 
-            $valueIndex = $criteriaModel->getValueIndex($institutionId, $studentId);
+            $valueIndex = $criteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId);
 
             if (array_key_exists($threshold, $valueIndex)) {
                 $indexValue = 0;
