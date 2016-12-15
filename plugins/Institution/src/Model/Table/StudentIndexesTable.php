@@ -99,12 +99,14 @@ class StudentIndexesTable extends ControllerActionTable
         $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $tableHeaders = $this->getMessage('Indexes.TableHeader');
         array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
+        $tableHeaders[] = __('References');
         $tableCells = [];
         $fieldKey = 'indexes_criterias';
 
         $indexId = $entity->index->id;
         $institutionId = $entity->institution->id;
         $studentId = $entity->user->id;
+        $academicPeriodId = $entity->academic_period_id;
 
         $institutionStudentIndexId = $this->paramsDecode($this->paramsPass(0))['id']; // paramsPass(0) after the hash of Id
 
@@ -129,22 +131,34 @@ class StudentIndexesTable extends ControllerActionTable
 
                 if ($value == 'True') {
                     // Comparison like behaviour
-                    // for threshold name
                     $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaKey);
                     $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
                     $CriteriaModel = TableRegistry::get($criteriaKey);
-                    $thresholdName = $LookupModel->get($threshold)->name;
 
                     // to get total number of behaviour
-                    $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId);
+                    $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId);
                     $totalBehaviour = $getValueIndex[$threshold];
                     $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . ' ( x' . $totalBehaviour . ' )' . '</div>';
 
+                    // for reference tooltip
+                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold);
+
+                    // for threshold name
+                    $thresholdName = $LookupModel->get($threshold)->name;
                     $threshold = $thresholdName;
                 } else {
                     // numeric value come here (absence quantity, results)
+                    $CriteriaModel = TableRegistry::get($criteriaKey);
+
+                    // for value
                     $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
+
+                    // for the reference tooltip
+                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold);
                 }
+
+                // blue info tooltip
+                $tooltipReference = '<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$reference.'"></i>';
 
                 // to put in the table
                 $rowData = [];
@@ -152,7 +166,8 @@ class StudentIndexesTable extends ControllerActionTable
                 $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['operator'][$operator];
                 $rowData[] = $threshold;
                 $rowData[] = $value;
-                $rowData[] = $indexValue; // need this as an operator to do the red font
+                $rowData[] = $indexValue;
+                $rowData[] = $tooltipReference;
 
                 $tableCells [] = $rowData;
             }

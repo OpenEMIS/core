@@ -207,7 +207,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
                 $params = new ArrayObject([
                     'institution_id' => $institutionId,
-                    'student_id' => $studentId
+                    'student_id' => $studentId,
+                    'academic_period_id' => $academicPeriodId
                 ]);
 
                 $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentIndexes.calculateIndexValue', [$params], $this);
@@ -332,7 +333,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         $value = $studentIndexesCriteriasObj->value;
                         $indexesCriteriaId = $studentIndexesCriteriasObj->indexes_criteria_id;
 
-                        $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId);
+                        $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId, $academicPeriodId);
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = !empty($indexTotal[$studentIndexesCriteriasObj->institution_student_index_id]) ? $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] : 0 ;
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] + $indexValue;
                     }
