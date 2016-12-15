@@ -10,7 +10,9 @@ use ArrayObject;
 use Cake\Validation\Validator;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
+use Cake\Log\Log;
 
 class ExaminationCentresTable extends ControllerActionTable {
     use OptionsTrait;
@@ -879,13 +881,16 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             $institutionsCount = $institutionOptions->count();
 
-            $yesOption = __('Yes') . ' (' . $institutionsCount . ' ' . __('institutions selected'). ')';
-            $selectOptions = [1 => $yesOption, 0 => __('No')];
+            $selectOptions = [];
+            if ($institutionsCount != 0) {
+                $yesOption = __('Yes') . ' (' . $institutionsCount . ' ' . __('institutions selected'). ')';
+                $selectOptions = [1 => $yesOption, 0 => __('No')];
+            }
 
+            $attr['type'] = 'select';
             $attr['options'] = $selectOptions;
             $attr['select'] = false;
             $attr['default'] = 0; // default selected is no
-            $attr['type'] = 'select';
             $attr['onChangeReload'] = 'changeAddAllInstitutions';
             return $attr;
         }
@@ -1024,38 +1029,62 @@ class ExaminationCentresTable extends ControllerActionTable {
                 return $model->saveMany($newEntities);
 
             } else if (isset($requestData[$model->alias()]['add_all_institutions']) && $requestData[$model->alias()]['add_all_institutions'] == 1) {
-                $examinationId = isset($requestData[$this->alias()]['examination_id']) ? $requestData[$this->alias()]['examination_id'] : 0;
+                if (empty($entity->errors())) {
+                    if (!empty($requestData[$this->alias()]['examination_id']) && !empty($requestData[$this->alias()]['academic_period_id'])) {
+                        $examinationId = $requestData[$model->alias()]['examination_id'];
+                        $academicPeriodId = $requestData[$model->alias()]['academic_period_id'];
+                        $institutionTypeId = !empty($requestData[$model->alias()]['institution_type']) ? $requestData[$model->alias()]['institution_type'] : '';
 
-                // get all institutions based on type (if type is selected)
-                $institutionQuery = $this->Institutions->find('NotExamCentres', ['examination_id' => $examinationId]);
-                if (!empty($requestData[$this->alias()]['institution_type'])) {
-                    $institutionQuery->where([$this->Institutions->aliasField('institution_type_id') => $requestData[$this->alias()]['institution_type']]);
+                        $specialNeedIds = [];
+                        if (isset($requestData[$model->alias()]['examination_centre_special_needs'])) {
+                            $specialNeedIds = array_column($requestData[$model->alias()]['examination_centre_special_needs'], 'special_need_type_id');
+                        }
+
+                        $subjectIds = [];
+                        if (isset($requestData[$model->alias()]['examination_centre_subjects'])) {
+                            $subjectIds = array_column($requestData[$model->alias()]['examination_centre_subjects'], 'education_subject_id');
+                        }
+
+                        // put special needs and subjects into System Processes params
+                        $SystemProcesses = TableRegistry::get('SystemProcesses');
+                        $name = 'AddAllInstitutionsExamCentre';
+                        $pid = '';
+                        $processModel = $model->registryAlias();
+                        $eventName = '';
+                        $passArray = ['special_needs' => $specialNeedIds, 'subjects' => $subjectIds];
+                        $params = json_encode($passArray);
+                        $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
+
+                        $this->triggerAddAllInstitutionsExamCentreShell($examinationId, $academicPeriodId, $systemProcessId);
+                        return true;
+                    }
                 }
-                $allInstitutionOptions = $institutionQuery->toArray();
-
-                foreach ($allInstitutionOptions as $institution) {
-                    $requestData['institution_id'] = $institution->id;
-                    $requestData['area_id'] = $institution->area_id;
-                    $requestData['name'] = $institution->name;
-                    $requestData['code'] = $institution->code;
-                    $requestData['address'] = $institution->address;
-                    $requestData['postal_code'] = $institution->postal_code;
-                    $requestData['contact_person'] = $institution->contact_person;
-                    $requestData['telephone'] = $institution->telephone;
-                    $requestData['fax'] = $institution->fax;
-                    $requestData['email'] = $institution->email;
-                    $requestData['website'] = $institution->website;
-
-                    $newEntities[] = $model->newEntity($requestData->getArrayCopy(), ['validate' => 'allInstitutions']);
-                }
-                return $model->saveMany($newEntities);
-
             } else {
                 return $model->save($entity);
             }
         };
 
         return $process;
+    }
+
+    private function triggerAddAllInstitutionsExamCentreShell($examinationId, $academicPeriodId, $systemProcessId, $institutionTypeId = null)
+    {
+        $args = '';
+        $args .= !is_null($examinationId) ? ' '.$examinationId : '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
+        $args .= !is_null($institutionTypeId) ? ' '.$institutionTypeId : '';
+        $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake AddAllInstitutionsExamCentre '.$args;
+        $logs = ROOT . DS . 'logs' . DS . 'AddAllInstitutionsExamCentre.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when add all institutions : '. $ex);
+        }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
