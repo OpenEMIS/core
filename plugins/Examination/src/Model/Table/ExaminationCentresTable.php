@@ -828,6 +828,7 @@ class ExaminationCentresTable extends ControllerActionTable {
         if ($action == 'add') {
             $attr['options'] = $this->Institutions->Types
                 ->find('list')
+                ->find('visible')
                 ->toArray();
 
             $attr['type'] = 'select';
@@ -879,15 +880,23 @@ class ExaminationCentresTable extends ControllerActionTable {
             $institutionsCount = $institutionOptions->count();
 
             $yesOption = __('Yes') . ' (' . $institutionsCount . ' ' . __('institutions selected'). ')';
-            // $yesOption = __('Yes (institutions selected:') . $institutionsCount . ')';
             $selectOptions = [1 => $yesOption, 0 => __('No')];
 
             $attr['options'] = $selectOptions;
             $attr['select'] = false;
             $attr['default'] = 0; // default selected is no
             $attr['type'] = 'select';
-            $attr['onChangeReload'] = true;
+            $attr['onChangeReload'] = 'changeAddAllInstitutions';
             return $attr;
+        }
+    }
+
+    public function addOnChangeAddAllInstitutions(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('institutions', $data[$this->alias()])) {
+                $data[$this->alias()]['institutions'] = '';
+            }
         }
     }
 
@@ -895,12 +904,11 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         if ($action == 'add') {
             $addAllInstitutions = isset($request->data[$this->alias()]['add_all_institutions']) ? $request->data[$this->alias()]['add_all_institutions'] : 0;
+
             if ($addAllInstitutions == 1) {
                 $attr['type'] = 'hidden';
-                $this->request->data[$this->alias()]['institutions'] = '';
 
             } else {
-                $attr['type'] = 'chosenSelect';
                 $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
                 $institutionOptions = $this->Institutions
                     ->find('list', [
@@ -915,6 +923,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
                 }
 
+                $attr['type'] = 'chosenSelect';
                 $attr['options'] = $institutionOptions->toArray();
                 $attr['fieldName'] = $this->alias().'.institutions';
             }
