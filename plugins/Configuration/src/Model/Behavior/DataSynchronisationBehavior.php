@@ -21,7 +21,7 @@ class DataSynchronisationBehavior extends Behavior {
 	private $lastNameMapping = null;
 	private $genderMapping = null;
 	private $dateOfBirthMapping = null;
-	private $countryMapping = null;
+	private $nationalityMapping = null;
 	private $identityTypeMapping = null;
 	private $identityNumberMapping = null;
 	private $userEndpoint = null;
@@ -58,7 +58,7 @@ class DataSynchronisationBehavior extends Behavior {
 			$this->lastNameMapping = $this->attributes['last_name_mapping'];
 			$this->genderMapping = $this->attributes['gender_mapping'];
 			$this->dateOfBirthMapping = $this->attributes['date_of_birth_mapping'];
-			$this->countryMapping = $this->attributes['nationality_mapping'];
+			$this->nationalityMapping = $this->attributes['nationality_mapping'];
 			$this->identityTypeMapping = $this->attributes['identity_type_mapping'];
 			$this->identityNumberMapping = $this->attributes['identity_number_mapping'];
 			$this->authEndpoint = $this->attributes['token_uri'];
@@ -76,10 +76,10 @@ class DataSynchronisationBehavior extends Behavior {
 
 	public function pull(Event $mainEvent, ArrayObject $extra)
 	{
-
+		return true;
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity)
+	public function viewAfterAction(Event $event, Entity $entity, $extra)
 	{
 		$http = new Client();
 		$credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($this->type);
@@ -122,20 +122,93 @@ class DataSynchronisationBehavior extends Behavior {
 			$this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping));
 			$this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping));
 			$this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping));
+			$NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
+			$nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
+			$nationalityArr = [
+				'id' => null,
+				'name' => ''
+			];
+			if ($nationalityName) {
+				$nationality = $NationalitiesTable
+					->find()
+					->where([$NationalitiesTable->aliasField('name') => $nationalityName])
+					->first();
+				if (empty($nationality)) {
+					$nationality = $NationalitiesTable->newEntity([
+						'name' => $nationalityName,
+						'visible' => 1,
+						'editable' => 1,
+						'default' => 0
+					]);
+					$nationality = $NationalitiesTable->save($nationality);
+				}
+
+				$nationalityArr['id'] = $nationality->id;
+				$nationalityArr['name'] = $nationality->name;
+			}
+			$this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr);
+
+			$IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
+			$identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
+			$identityTypeArr = [
+				'id' => null,
+				'name' => ''
+			];
+			if ($identityTypeName) {
+				$identityType = $IdentityTypesTable
+					->find()
+					->where([$IdentityTypesTable->aliasField('name') => $identityTypeName])
+					->first();
+				if (empty($identityType)) {
+					$identityType = $IdentityTypesTable->newEntity([
+						'name' => $identityTypeName,
+						'visible' => 1,
+						'editable' => 1,
+						'default' => 0
+					]);
+					$identityType = $IdentityTypesTable->save($identityType);
+				}
+				$identityTypeArr['id'] = $identityType->id;
+				$identityTypeArr['name'] = $identityType->name;
+			}
+			$this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr);
+
+			$toolbarButton = [
+				'type' => 'button',
+				'label' => '<i class="fa fa-history"></i>',
+				'attr' => [
+					'class' => 'btn btn-xs btn-default',
+					'data-toggle' => 'tooltip',
+					'data-placement' => 'bottom',
+					'escape' => false,
+					'title' => __('Synchronisation')
+				],
+				'url' => [
+					'plugin' => $this->_table->controller->plugin,
+					'controller' => $this->_table->controller->name,
+					'action' => $this->_table->alias(),
+					'0' => 'pull',
+					'1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
+				]
+			];
+
+			$toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues);
+
+			$extra['toolbarButtons']['synchronise'] = $toolbarButton;
+
 			$this->_table->field('first_name');
 			$this->_table->field('middle_name');
 			$this->_table->field('third_name');
 			$this->_table->field('last_name');
 			$this->_table->field('identity_number');
 			$this->_table->field('date_of_birth');
+			$this->_table->field('nationality_id');
 			$this->_table->setFieldOrder($fieldOrder);
 		} catch (NotFoundException $e) {
 			$this->_table->Alert->error('general.failConnectToExternalSource');
 		} catch (Exception $e) {
 			$this->_table->Alert->error('general.failConnectToExternalSource');
 		}
-
-
 	}
 
 	public function onGetFirstName(Event $event, Entity $entity)
@@ -180,6 +253,20 @@ class DataSynchronisationBehavior extends Behavior {
 		}
 	}
 
+	public function onGetNationalityId(Event $event, Entity $entity)
+	{
+		if (isset($this->newValues['nationality_id'])) {
+			return $this->newValues['nationality_id'];
+		}
+	}
+
+	public function onGetIdentityTypeId(Event $event, Entity $entity)
+	{
+		if (isset($this->newValues['identity_type_id'])) {
+			return $this->newValues['identity_type_id'];
+		}
+	}
+
 	private function setDateChanges($oldDate, $newDate)
 	{
 		$oldValue = $this->_table->formatDate(new Time($oldDate));
@@ -194,7 +281,15 @@ class DataSynchronisationBehavior extends Behavior {
 
 	private function setChanges($oldValue, $newValue)
 	{
-		if ($oldValue != $newValue) {
+		if (is_array($newValue)) {
+			$oldValueId = isset($oldValue['id']) ? $oldValue['id'] : null;
+			$oldValueName = isset($oldValue['name']) ? $oldValue['name'] : '';
+			if ($oldValueId != $newValue['id']) {
+				return '<span class="status past">'.__($oldValueName).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.__($newValue['name']).'</span>';
+			} else {
+				return null;
+			}
+		} else if ($oldValue != $newValue) {
 			return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
 		} else {
 			return null;
