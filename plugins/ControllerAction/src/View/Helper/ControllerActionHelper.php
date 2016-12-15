@@ -286,11 +286,6 @@ class ControllerActionHelper extends Helper {
 				}
 			}
 
-			//need to add <p> for plain string only.
-			if (substr($value, 0, 1) != '<') {
-				$value = '<p>' . $value . '</p>';
-			}
-
 			if (isset($attr['tableColumnClass'])) {
 				$row[] = [$value, ['class' => $attr['tableColumnClass']]];
 			} else {
