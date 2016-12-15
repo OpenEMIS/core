@@ -30,7 +30,7 @@
 		</div>
 		<div class="table-wrapper full-width">
 			<div class="table-responsive">
-			    <table class="table table-curved table-input">
+			    <table class="table table-curved table-input row-align-top">
 					<thead>
 						<tr>
 							<?php foreach ($attr['formFields'] as $formField) : ?>
