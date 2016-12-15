@@ -4,6 +4,7 @@ namespace CustomExcel\Model\Table;
 use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
 
 class AssessmentResultsTable extends AppTable
@@ -42,7 +43,8 @@ class AssessmentResultsTable extends AppTable
                 'AssessmentPeriods',
                 'ClassStudents',
                 'Institutions',
-                'InstitutionClasses'
+                'InstitutionClasses',
+                'InstitutionStudentAbsences'
             ]
         ]);
     }
@@ -55,9 +57,10 @@ class AssessmentResultsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseAssessmentItemsGradingTypes';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassStudents'] = 'onExcelTemplateInitialiseClassStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
-        $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassStudents'] = 'onExcelTemplateInitialiseClassStudents';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
         return $events;
     }
 
@@ -170,6 +173,39 @@ class AssessmentResultsTable extends AppTable
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['class_id']);
             return $entity->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
+            $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+            $query = $InstitutionStudentAbsences->find()
+                ->innerJoin(
+                    [$this->alias() => $this->table()],
+                    [
+                        $this->aliasField('institution_id = ') . $InstitutionStudentAbsences->aliasField('institution_id'),
+                        $this->aliasField('student_id = ') . $InstitutionStudentAbsences->aliasField('student_id'),
+                        $this->aliasField('institution_class_id') => $params['class_id']
+                    ]
+                )
+                ->where([
+                    $InstitutionStudentAbsences->aliasField('institution_id') => $params['institution_id']
+                ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $startDate = $row['start_date'];
+                        $endDate = $row['end_date'];
+                        $interval = $endDate->diff($startDate);
+                        // plus 1 day because if absence for the same day, interval diff return zero
+                        $row['number_of_days'] = $interval->days + 1;
+
+                        return $row;
+                    });
+                })
+                ->hydrate(false);
+
+            return $query->toArray();
         }
     }
 }
