@@ -129,6 +129,17 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $validator;
     }
 
+    public function validationAllInstitutions(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator
+            ->requirePresence('institutions', false)
+            ->remove('institutions')
+            ->requirePresence('code', false)
+            ->remove('code')
+            ->requirePresence('name', false);
+        return $validator;
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -434,6 +445,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['website']['visible'] = true;
                 } else if ($entity->create_as == 'existing') {
                     $this->field('institution_type');
+                    $this->field('add_all_institutions');
                     $this->field('institutions');
                     $this->fields['name']['visible'] = false;
                 } else {
@@ -443,7 +455,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 $this->fields['special_needs_section']['visible'] = true;
 
                 // field order
-                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'institution_type', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id', 'subjects_section', 'subjects']);
+                $this->setFieldOrder(['exam_centre_info_section', 'create_as', 'academic_period_id', 'examination_id', 'institution_type', 'add_all_institutions', 'institutions', 'code', 'name', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'special_needs_section', 'special_need_type_id', 'subjects_section', 'subjects']);
             } else if ($this->action == 'edit') {
                 $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
                 $this->fields['name']['visible'] = true;
@@ -853,28 +865,62 @@ class ExaminationCentresTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldInstitutions(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldAddAllInstitutions(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['type'] = 'chosenSelect';
             $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
-            $institutionOptions = $this->Institutions
-                ->find('list', [
-                    'keyField' => 'id',
-                    'valueField' => 'code_name'
-                ])
-                ->find('NotExamCentres', ['examination_id' => $examinationId]);
+            $institutionOptions = $this->Institutions->find('NotExamCentres', ['examination_id' => $examinationId]);
 
-            // if no institution type is selected, all institutions will be shown
             if (!empty($request->data[$this->alias()]['institution_type'])) {
                 $type = $request->data[$this->alias()]['institution_type'];
                 $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
             }
 
-            $attr['options'] = $institutionOptions->toArray();
-            $attr['fieldName'] = $this->alias().'.institutions';
+            $institutionsCount = $institutionOptions->count();
+
+            $yesOption = __('Yes') . ' (' . $institutionsCount . ' ' . __('institutions selected'). ')';
+            // $yesOption = __('Yes (institutions selected:') . $institutionsCount . ')';
+            $selectOptions = [1 => $yesOption, 0 => __('No')];
+
+            $attr['options'] = $selectOptions;
+            $attr['select'] = false;
+            $attr['default'] = 0; // default selected is no
+            $attr['type'] = 'select';
+            $attr['onChangeReload'] = true;
+            return $attr;
         }
-        return $attr;
+    }
+
+    public function onUpdateFieldInstitutions(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $addAllInstitutions = isset($request->data[$this->alias()]['add_all_institutions']) ? $request->data[$this->alias()]['add_all_institutions'] : 0;
+            if ($addAllInstitutions == 1) {
+                $attr['type'] = 'hidden';
+                $this->request->data[$this->alias()]['institutions'] = '';
+
+            } else {
+                $attr['type'] = 'chosenSelect';
+                $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
+                $institutionOptions = $this->Institutions
+                    ->find('list', [
+                        'keyField' => 'id',
+                        'valueField' => 'code_name'
+                    ])
+                    ->find('NotExamCentres', ['examination_id' => $examinationId]);
+
+                // if no institution type is selected, all institutions will be shown
+                if (!empty($request->data[$this->alias()]['institution_type'])) {
+                    $type = $request->data[$this->alias()]['institution_type'];
+                    $institutionOptions->where([$this->Institutions->aliasField('institution_type_id') => $type]);
+                }
+
+                $attr['options'] = $institutionOptions->toArray();
+                $attr['fieldName'] = $this->alias().'.institutions';
+            }
+
+            return $attr;
+        }
     }
 
     public function onUpdateFieldCreateAs(Event $event, array $attr, $action, Request $request)
@@ -901,6 +947,8 @@ class ExaminationCentresTable extends ControllerActionTable {
 
         if ($requestData[$this->alias()]['create_as'] == 'new') {
             $patchOptions['validate'] = 'noInstitutions';
+        } else if ($requestData[$this->alias()]['create_as'] == 'existing' && $requestData[$this->alias()]['add_all_institutions'] == 1) {
+            $patchOptions['validate'] = 'allInstitutions';
         } else {
             $patchOptions['validate'] = 'institutions';
         }
@@ -942,7 +990,8 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
     {
         $process = function ($model, $entity) use ($requestData) {
-            if (isset($requestData[$model->alias()]['institutions'])) {
+
+            if (isset($requestData[$model->alias()]['institutions']) && !empty($requestData[$model->alias()]['institutions'])) {
                 $institutions = $requestData[$model->alias()]['institutions'];
                 $newEntities = [];
                 if (is_array($institutions)) {
@@ -964,6 +1013,34 @@ class ExaminationCentresTable extends ControllerActionTable {
                     }
                 }
                 return $model->saveMany($newEntities);
+
+            } else if (isset($requestData[$model->alias()]['add_all_institutions']) && $requestData[$model->alias()]['add_all_institutions'] == 1) {
+                $examinationId = isset($requestData[$this->alias()]['examination_id']) ? $requestData[$this->alias()]['examination_id'] : 0;
+
+                // get all institutions based on type (if type is selected)
+                $institutionQuery = $this->Institutions->find('NotExamCentres', ['examination_id' => $examinationId]);
+                if (!empty($requestData[$this->alias()]['institution_type'])) {
+                    $institutionQuery->where([$this->Institutions->aliasField('institution_type_id') => $requestData[$this->alias()]['institution_type']]);
+                }
+                $allInstitutionOptions = $institutionQuery->toArray();
+
+                foreach ($allInstitutionOptions as $institution) {
+                    $requestData['institution_id'] = $institution->id;
+                    $requestData['area_id'] = $institution->area_id;
+                    $requestData['name'] = $institution->name;
+                    $requestData['code'] = $institution->code;
+                    $requestData['address'] = $institution->address;
+                    $requestData['postal_code'] = $institution->postal_code;
+                    $requestData['contact_person'] = $institution->contact_person;
+                    $requestData['telephone'] = $institution->telephone;
+                    $requestData['fax'] = $institution->fax;
+                    $requestData['email'] = $institution->email;
+                    $requestData['website'] = $institution->website;
+
+                    $newEntities[] = $model->newEntity($requestData->getArrayCopy(), ['validate' => 'allInstitutions']);
+                }
+                return $model->saveMany($newEntities);
+
             } else {
                 return $model->save($entity);
             }
