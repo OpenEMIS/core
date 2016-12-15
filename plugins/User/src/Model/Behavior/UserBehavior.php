@@ -108,6 +108,7 @@ class UserBehavior extends Behavior {
             $this->_table->fields['photo_name']['visible'] = false;
             $this->_table->fields['super_admin']['visible'] = false;
             $this->_table->fields['date_of_death']['visible'] = false;
+            $this->_table->fields['external_reference']['visible'] = false;
             $this->_table->fields['status']['visible'] = false;
             $this->_table->fields['preferred_language']['visible'] = false;
             $this->_table->fields['address_area_id']['type'] = 'areapicker';
@@ -141,6 +142,8 @@ class UserBehavior extends Behavior {
             }
 
             $this->_table->fields['date_of_birth']['order'] = $i++;
+            $this->_table->fields['nationality_id']['order'] = $i++;
+            $this->_table->fields['identity_type_id']['order'] = $i++;
             $this->_table->fields['identity_number']['order'] = $i++;
 
             $this->_table->fields['address']['order'] = $i++;
@@ -402,18 +405,7 @@ class UserBehavior extends Behavior {
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-            $identity = $IdentityType->getDefaultEntity();
-
-            if ($identity) {
-                $value = $identity->name;
-            }
-
-            return !empty($value) ? $value : $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        } else {
-            return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
+        return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
     public function getUniqueOpenemisId($options = []) {
