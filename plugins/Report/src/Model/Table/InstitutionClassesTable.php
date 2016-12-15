@@ -45,11 +45,6 @@ class InstitutionClassesTable extends AppTable  {
 		return $attr;
 	}
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity) 
-    {
-        return $entity->institution->code_name;
-    }
-
     public function onExcelGetInstitutionShiftId(Event $event, Entity $entity) 
     {
         return $entity->institution_shift->shift_option->name;
@@ -75,6 +70,8 @@ class InstitutionClassesTable extends AppTable  {
         ->contain('EducationGrades')
         ->contain('InstitutionShifts.ShiftOptions')
         ->select([
+            'institution_code' => 'Institutions.code', 
+            'institution_name' => 'Institutions.name', 
             'area_name' => 'Areas.name', 
             'area_code' => 'Areas.code',
             'institution_type' => 'Types.name'
@@ -85,27 +82,6 @@ class InstitutionClassesTable extends AppTable  {
     {   
         //redeclare all for sorting purpose.
         $newFields[] = [
-            'key' => 'InstitutionClasses.name',
-            'field' => 'name',
-            'type' => 'string',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionClasses.staff_id',
-            'field' => 'staff_id',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
-            'key' => 'InstitutionClasses.institution_shift_id',
-            'field' => 'institution_shift_id',
-            'type' => 'integer',
-            'label' => ''
-        ];
-
-        $newFields[] = [
             'key' => 'InstitutionClasses.academic_period_id',
             'field' => 'academic_period_id',
             'type' => 'integer',
@@ -113,22 +89,22 @@ class InstitutionClassesTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Education.education_grades',
-            'field' => 'education_grades',
+            'key' => 'Institutions.institution_code',
+            'field' => 'institution_code',
             'type' => 'string',
             'label' => ''
         ];
 
         $newFields[] = [
-            'key' => 'InstitutionClasses.institution_id',
-            'field' => 'institution_id',
-            'type' => 'integer',
+            'key' => 'Institutions.institution_name',
+            'field' => 'institution_name',
+            'type' => 'string',
             'label' => ''
         ];
 
         $newFields[] = [
-            'key' => 'Areas.area_name',
-            'field' => 'area_name',
+            'key' => 'Types.institution_type',
+            'field' => 'institution_type',
             'type' => 'string',
             'label' => ''
         ];
@@ -141,9 +117,37 @@ class InstitutionClassesTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Types.institution_type',
-            'field' => 'institution_type',
+            'key' => 'Areas.area_name',
+            'field' => 'area_name',
             'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.institution_shift_id',
+            'field' => 'institution_shift_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Education.education_grades',
+            'field' => 'education_grades',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.name',
+            'field' => 'name',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionClasses.staff_id',
+            'field' => 'staff_id',
+            'type' => 'integer',
             'label' => ''
         ];
 
