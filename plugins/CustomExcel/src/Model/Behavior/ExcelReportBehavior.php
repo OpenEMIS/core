@@ -30,6 +30,7 @@ class ExcelReportBehavior extends Behavior
         'match' => 'match'
     ];
     private $suppressAutoInsertNewRow = false;
+    private $suppressAutoInsertNewColumn = false;
 
 	public function initialize(array $config)
 	{
@@ -484,6 +485,9 @@ class ExcelReportBehavior extends Behavior
         foreach ($attr['data'] as $key => $value) {
             // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
             $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+            if (!$this->suppressAutoInsertNewColumn && $columnIndex != $attr['columnIndex']) {
+                $objWorksheet->insertNewColumnBefore($columnValue);
+            }
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
@@ -497,8 +501,11 @@ class ExcelReportBehavior extends Behavior
                 foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
                     // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
                     $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
-                    $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
+                    if (!$this->suppressAutoInsertNewColumn && $nestedColumnIndex != $columnIndex) {
+                        $objWorksheet->insertNewColumnBefore($nestedColumnValue);
+                    }
 
+                    $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
                     $this->renderCell($objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
 
                     $nestedColumnIndex++;
@@ -519,6 +526,11 @@ class ExcelReportBehavior extends Behavior
             }
 
             $columnIndex++;
+        }
+
+        // only insert new row for the first column which have repeat-rows
+        if ($this->suppressAutoInsertNewColumn == false) {
+            $this->suppressAutoInsertNewColumn = true;
         }
     }
 
@@ -550,12 +562,22 @@ class ExcelReportBehavior extends Behavior
 
         $rowValue = $attr['rowValue'];
         foreach ($rowData as $key => $value) {
+            // reset columnIndex after every loop of row
+            $columnIndex = $attr['columnIndex'];
             if (!empty($columnsArray)) {
-                // reset after every cycle of row
-                $columnIndex = $attr['columnIndex'];
                 $this->matchColumns($objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
             } else {
-                // to-do: get value and write to cell
+                $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
+                $placeholder = sprintf($placeholderFormat, $value);
+
+                $matchData = Hash::extract($extra['vars'], $placeholder);
+                $matchValue = !empty($matchData) ? current($matchData) : '';
+
+                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $cellCoordinate = $columnValue.$rowValue;
+
+                $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
             }
 
             $rowValue++;
