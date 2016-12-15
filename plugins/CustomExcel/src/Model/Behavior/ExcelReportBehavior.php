@@ -174,10 +174,26 @@ class ExcelReportBehavior extends Behavior
 
     public function renderCell($objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
     {
+        $type = $attr['type'];
+        $format = $attr['format'];
         $cellStyle = $attr['style'];
         $columnWidth = $attr['columnWidth'];
         $targetColumnValue = $objWorksheet->getCell($cellCoordinate)->getColumn();
 
+        switch($type) {
+            case 'number':
+                // set to two decimal places
+                if (!is_null($format)) {
+                    $formatting = number_format(0, $format);
+                    $cellStyle->getNumberFormat()->setFormatCode($formatting);
+                }
+                break;
+            case 'date':
+                $cellValue = !is_null($format) ? $cellValue->format($format) : $cellValue;
+                break;
+        }
+
+        // set cell style to follow placeholder
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
         $objWorksheet->duplicateStyle($cellStyle, $cellCoordinate);
 
@@ -258,6 +274,14 @@ class ExcelReportBehavior extends Behavior
         return $value;
     }
 
+    private function getPlaceholderData($placeholder, $extra)
+    {
+        $formattedPlaceholder = $this->formatPlaceholder($placeholder);
+        $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+
+        return $placeholderData;
+    }
+
     private function isBasicType($str)
     {
         foreach ($this->advancedTypes as $function => $keyword) {
@@ -281,18 +305,36 @@ class ExcelReportBehavior extends Behavior
         return $jsonArray;
     }
 
-    private function extractAttr($jsonArray, $keyword, $extra)
+    private function extractPlaceholderAttr($jsonArray, $keyword, $extra)
     {
         $attr = [];
 
         $settings = array_key_exists($keyword, $jsonArray) ? $jsonArray[$keyword] : [];
         $displayValue = array_key_exists('displayValue', $settings) ? $settings['displayValue'] : null;
+        $attr['displayValue'] = array_key_exists('displayValue', $settings) ? $settings['displayValue'] : null;
         $attr['type'] = array_key_exists('type', $settings) ? $settings['type'] : null;
         $attr['format'] = array_key_exists('format', $settings) ? $settings['format'] : null;
         $attr['children'] = array_key_exists('children', $settings) ? $settings['children'] : [];
+        $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
+        $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
+        $attr['data'] = $this->getPlaceholderData($displayValue, $extra);
 
-        $placeholder = $this->formatPlaceholder($displayValue);
-        $attr['data'] = !is_null($displayValue) ? Hash::extract($extra['vars'], $placeholder) : [];
+        return $attr;
+    }
+
+    private function extractCellAttr($objWorksheet, $objCell)
+    {
+        $attr = [];
+
+        // columnIndexFromString(): Column index start from 1
+        $columnValue = $objCell->getColumn();
+        $attr['columnValue'] = $columnValue;
+        $attr['columnIndex'] = $objCell->columnIndexFromString($columnValue);
+        $attr['columnWidth'] = $objWorksheet->getColumnDimension($columnValue)->getWidth();
+        $attr['rowValue'] = $objCell->getRow();
+        $coordinate = $objCell->getCoordinate();
+        $attr['coordinate'] = $coordinate;
+        $attr['style'] = $objCell->getStyle($coordinate);
 
         return $attr;
     }
@@ -306,12 +348,19 @@ class ExcelReportBehavior extends Behavior
         return $placeholder;
     }
 
-    private function formatFilter($filterStr, $filterValue)
+    private function formatFilter($filterStr)
     {
-        $filterArray = explode(".", $filterStr);
-        $filterKey = $filterArray[1];
+        $value = null;
 
-        return "[".$filterKey."=".$filterValue."]"; 
+        $filterArray = explode(".", $filterStr);
+        if (sizeof($filterArray) == 2) {
+            $filterKey = $filterArray[1];
+            $value = "[$filterKey=%s]";
+        } else {
+            $value = "[$filterStr=%s]";
+        }
+
+        return $value;
     }
 
     private function splitDisplayValue($displayValue)
@@ -363,19 +412,11 @@ class ExcelReportBehavior extends Behavior
                 $pos = strpos($cellValue, $value);
                 if ($pos !== false) {
                     if (method_exists($this, $function)) {
-                        // pr("function: " . $function . " >>>>> keyword: " .$keyword . " >>>>> cellCoordinate: " .$cellCoordinate);
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
-                        $attr = $this->extractAttr($jsonArray, $keyword, $extra);
 
-                        // columnIndexFromString(): Column index start from 1
-                        $columnValue = $objCell->getColumn();
-                        $attr['columnValue'] = $columnValue;
-                        $attr['columnIndex'] = $objCell->columnIndexFromString($columnValue);
-                        $attr['columnWidth'] = $objWorksheet->getColumnDimension($columnValue)->getWidth();
-                        $attr['rowValue'] = $objCell->getRow();
-                        $coordinate = $objCell->getCoordinate();
-                        $attr['coordinate'] = $coordinate;
-                        $attr['style'] = $objCell->getStyle($coordinate);
+                        $placeHolderAttr = $this->extractPlaceholderAttr($jsonArray, $keyword, $extra);
+                        $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
+                        $attr = array_merge($placeHolderAttr, $cellAttr);
 
                         $this->$function($objWorksheet, $objCell, $attr, $extra);
                     } else {
@@ -422,15 +463,8 @@ class ExcelReportBehavior extends Behavior
                 $objWorksheet->insertNewRowBefore($rowValue);
             }
 
-            $displayValue = $value;
-            switch ($attr['type']) {
-                case 'date':
-                    $displayValue = !is_null($attr['format']) ? $displayValue->format($attr['format']) : $displayValue;
-                    break;
-            }
-
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $displayValue, $attr, $extra);
+            $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
             $rowValue++;
         }
@@ -454,9 +488,8 @@ class ExcelReportBehavior extends Behavior
             $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
             if (!empty($nestedColumn)) {
-                // $nestedColumnArray = array_key_exists('repeatColumns', $nestedColumn) ? $nestedColumn['repeatColumns'] : [];
                 $keyword = $this->advancedTypes[__FUNCTION__];
-                $nestedAttr = $this->extractAttr($nestedColumn, $keyword, $extra);
+                $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $keyword, $extra);
 
                 $nestedColumnIndex = $columnIndex;
                 // always output children to the immediate next row
@@ -471,7 +504,7 @@ class ExcelReportBehavior extends Behavior
                     $nestedColumnIndex++;
                 }
 
-                // merge parent cell following number of columns occupied by children
+                // if nested column occupied more columns than the parent, then merge parent cell following number of columns occupied by children
                 if ($nestedColumnIndex > $columnIndex) {
                     $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
 
@@ -486,6 +519,89 @@ class ExcelReportBehavior extends Behavior
             }
 
             $columnIndex++;
+        }
+    }
+
+    private function match($objWorksheet, $objCell, $attr, $extra)
+    {
+        list($attr['placeholderPrefix'], $attr['placeholderSuffix']) = $this->splitDisplayValue($attr['displayValue']);
+
+        $rowsArray = array_key_exists('rows', $attr) ? $attr['rows'] : [];
+        $columnsArray = array_key_exists('columns', $attr) ? $attr['columns'] : [];
+        $data = array_key_exists('data', $attr) ? $attr['data'] : [];
+
+        if (!empty($rowsArray)) {
+            $this->matchRows($objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
+        } else {
+            $columnIndex = $attr['columnIndex'];
+            $rowValue = $attr['rowValue'];
+            $this->matchColumns($objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, null, $extra);
+        }
+    }
+
+    private function matchRows($objWorksheet, $objCell, $attr, $rowsArray=[], $columnsArray=[], $extra)
+    {
+        $matchFrom = array_key_exists('matchFrom', $rowsArray) ? $rowsArray['matchFrom'] : [];
+        $matchTo = array_key_exists('matchTo', $rowsArray) ? $rowsArray['matchTo'] : [];
+        $rowData = $this->getPlaceholderData($matchFrom, $extra);
+
+        $filterStr = $this->formatFilter($matchTo);
+        $attr['filterStr'] = array_key_exists('filterStr', $attr) ? $attr['filterStr'].$filterStr : $filterStr;
+
+        $rowValue = $attr['rowValue'];
+        foreach ($rowData as $key => $value) {
+            if (!empty($columnsArray)) {
+                // reset after every cycle of row
+                $columnIndex = $attr['columnIndex'];
+                $this->matchColumns($objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
+            } else {
+                // to-do: get value and write to cell
+            }
+
+            $rowValue++;
+        }
+    }
+
+    private function matchColumns($objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
+    {
+        $matchFrom = array_key_exists('matchFrom', $columnsArray) ? $columnsArray['matchFrom'] : [];
+        $matchTo = array_key_exists('matchTo', $columnsArray) ? $columnsArray['matchTo'] : [];
+        $columnData = $this->getPlaceholderData($matchFrom, $extra);
+
+        $nestedColumnsArray = isset($columnsArray['children']['columns']) ? $columnsArray['children']['columns'] : [];
+        $nestedMatchFrom = array_key_exists('matchFrom', $nestedColumnsArray) ? $nestedColumnsArray['matchFrom'] : [];
+        $nestedMatchTo = array_key_exists('matchTo', $nestedColumnsArray) ? $nestedColumnsArray['matchTo'] : [];
+        $nestedColumnData = $this->getPlaceholderData($nestedMatchFrom, $extra);
+
+        $filterStr = $this->formatFilter($matchTo);
+        if (!empty($nestedColumnData)) {
+            $filterStr .= $this->formatFilter($nestedMatchTo);
+        }
+        $attr['filterStr'] = array_key_exists('filterStr', $attr) ? $attr['filterStr'].$filterStr : $filterStr;
+
+        foreach ($columnData as $key => $value) {
+            if (!empty($nestedColumnsArray)) {
+                foreach ($nestedColumnData as $nestedKey => $nestedValue) {
+                    $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
+                    if (!is_null($filterValue)) {
+                        $placeholder = sprintf($placeholderFormat, $filterValue, $value, $nestedValue);
+                    } else {
+                        $placeholder = sprintf($placeholderFormat, $value, $nestedValue);
+                    }
+
+                    $matchData = Hash::extract($extra['vars'], $placeholder);
+                    $matchValue = !empty($matchData) ? current($matchData) : '';
+
+                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                    $nestedColumnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                    $nestedCellCoordinate = $nestedColumnValue.$rowValue;
+
+                    $this->renderCell($objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
+                    $columnIndex++;
+                }
+            } else {
+                // to-do: get value and write to cell
+            }
         }
     }
 }
