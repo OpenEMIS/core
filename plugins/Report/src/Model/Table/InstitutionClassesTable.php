@@ -69,12 +69,17 @@ class InstitutionClassesTable extends AppTable  {
         ->contain('Institutions.Types')
         ->contain('EducationGrades')
         ->contain('InstitutionShifts.ShiftOptions')
+        ->contain('AcademicPeriods')
         ->select([
             'institution_code' => 'Institutions.code', 
             'institution_name' => 'Institutions.name', 
             'area_name' => 'Areas.name', 
             'area_code' => 'Areas.code',
             'institution_type' => 'Types.name'
+        ])
+        ->order([
+            'AcademicPeriods.order',
+            'Institutions.code'
         ]);
     }
 
