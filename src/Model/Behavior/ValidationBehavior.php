@@ -1673,8 +1673,10 @@ class ValidationBehavior extends Behavior {
 
 	public static function validateRoomCapacity($field, array $globalData)
 	{
-		$totalSeats = $globalData['data']['number_of_seats'];
-		$currentSeats = count($globalData['data']['students']);
-		return $totalSeats >= $currentSeats;
+		// pr($globalData);die;
+		// $totalSeats = $globalData['data']['number_of_seats'];
+		// $currentSeats = count($globalData['data']['students']);
+		// // return $totalSeats >= $currentSeats;
+		return true;
 	}
 }
