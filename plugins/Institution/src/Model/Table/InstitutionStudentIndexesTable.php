@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -48,6 +49,11 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $this->field('average_index',['visible' => false]);
         $this->field('student_id');
 
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $userId = $session->read('Auth.User.id');
+        $indexId = $this->request->query['index_id'];
+
         // back buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
         $toolbarAttr = [
@@ -80,19 +86,22 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $toolbarButtonsArray['generate']['label'] = '<i class="fa fa-refresh"></i>';
         $toolbarButtonsArray['generate']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['generate']['attr']['title'] = __('Generate');
-        // URL not defined yet yet
-        $toolbarButtonsArray['generate']['url']['plugin'] = 'Indexes';
-        $toolbarButtonsArray['generate']['url']['controller'] = 'Indexes';
-        $toolbarButtonsArray['generate']['url']['action'] = 'Indexes';
-        $toolbarButtonsArray['generate']['url'][0] = 'generate';
+        $url = [
+            'plugin' => 'Indexes',
+            'controller' => 'Indexes',
+            'action' => 'Indexes',
+            'generate'
+        ];
+        $toolbarButtonsArray['generate']['url'] = $this->setQueryString($url, [
+            'institution_id' => $institutionId,
+            'user_id' => $userId,
+            'index_id' => $indexId
+        ]);
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end generate buttons
 
         // element control
-        $session = $this->request->session();
-
-        $institutionId = $session->read('Institution.Institutions.id');
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');

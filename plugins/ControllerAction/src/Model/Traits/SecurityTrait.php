@@ -23,7 +23,8 @@ trait SecurityTrait {
 
     public function getQueryString($queryString = null, $name = 'queryString')
     {
-        $query = $this->request->query($name);
+        // $query = $this->request->query($name);
+        $query = $_GET[$name];
 
         if (is_null($query)) {
             return null;
