@@ -97,6 +97,15 @@ class ExaminationCentresTable extends ControllerActionTable {
             ->requirePresence('create_as', 'create')
             ->requirePresence('academic_period_id')
             ->requirePresence('examination_id')
+            ->add('examination_id', 'ruleNoRunningSystemProcess', [
+                'rule' => ['checkNoRunningSystemProcess', 'AddAllInstitutionsExamCentre'],
+                'provider' => 'table',
+                'on' => function ($context) {
+                    $createAs = (array_key_exists('create_as', $context['data']))? $context['data']['create_as']: null;
+                    $addAllInstitutions = (array_key_exists('add_all_institutions', $context['data']))? $context['data']['add_all_institutions']: null;
+                    return ($createAs == 'existing' && $addAllInstitutions == 1);
+                }
+            ])
             ->requirePresence('code')
             ->requirePresence('name')
             ->add('code', 'ruleUnique', [
@@ -884,7 +893,7 @@ class ExaminationCentresTable extends ControllerActionTable {
             $selectOptions = [];
             if ($institutionsCount != 0) {
                 $yesOption = __('Yes') . ' (' . $institutionsCount . ' ' . __('institutions selected'). ')';
-                $selectOptions = [1 => $yesOption, 0 => __('No')];
+                $selectOptions = [0 => __('No'), 1 => $yesOption];
             }
 
             $attr['type'] = 'select';
@@ -1051,7 +1060,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $pid = '';
                         $processModel = $model->registryAlias();
                         $eventName = '';
-                        $passArray = ['special_needs' => $specialNeedIds, 'subjects' => $subjectIds];
+                        $passArray = ['examination_id' => $examinationId, 'special_needs' => $specialNeedIds, 'subjects' => $subjectIds];
                         $params = json_encode($passArray);
                         $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
 

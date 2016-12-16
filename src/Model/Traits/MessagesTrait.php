@@ -1424,6 +1424,9 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
                 ],
+                'examination_id' => [
+                    'ruleNoRunningSystemProcess' => 'There is currently a running process for this examination'
+                ],
             ],
             'ExaminationCentreRooms' => [
                 'name' => [
