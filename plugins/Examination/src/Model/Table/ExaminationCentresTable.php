@@ -55,6 +55,8 @@ class ExaminationCentresTable extends ControllerActionTable {
 
         $this->addBehavior('OpenEmis.Section');
         $this->setDeleteStrategy('restrict');
+
+        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportExaminationCentreRooms']);
     }
 
     public function implementedEvents() {
