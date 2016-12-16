@@ -150,7 +150,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
                     ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 1;
+        $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [__('Examination Code'), $translatedCol, $translatedReadableCol, __('Academic Period')];
         if (!empty($modelData)) {
             $displayedExamCode = []; //to skip display based on grouping.
