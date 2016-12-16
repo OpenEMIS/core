@@ -12,8 +12,10 @@ use Cake\ORM\Entity;
 use Cake\Network\Http\Client;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Log\Log;
+use Cake\Utility\Hash;
 
-class PullBehavior extends Behavior {
+class PullBehavior extends Behavior
+{
     private $type = 'None';
     private $attributes = [];
     private $firstNameMapping = null;
@@ -27,10 +29,11 @@ class PullBehavior extends Behavior {
     private $identityNumberMapping = null;
     private $userEndpoint = null;
     private $authEndpoint = null;
-
+    private $changes = false;
     private $newValues = [];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         parent::initialize($config);
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $type = $ConfigItems->find()->where([
@@ -65,15 +68,15 @@ class PullBehavior extends Behavior {
             $this->authEndpoint = $this->attributes['token_uri'];
             $this->userEndpoint = $this->attributes['user_endpoint_uri'];
         }
-
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 3];
         $events['ControllerAction.Model.pull'] = 'pull';
-        $events['ControllerAction.Model.pull.beforeAction'] = 'pullBeforeAction';
+        $events['ControllerAction.Model.pull.afterAction'] = 'pullAfterAction';
         $events['ControllerAction.Model.pull.beforePatch'] = 'pullBeforePatch';
         $events['ControllerAction.Model.pull.afterSave'] = 'pullAfterSave';
         $events['ControllerAction.Model.onGetIdentityNumber'] = ['callable' => 'onGetIdentityNumber', 'priority' => 15];
@@ -92,15 +95,16 @@ class PullBehavior extends Behavior {
     {
     	$model = $this->_table;
     	if ($model->action == 'pull') {
-    		$model->action = 'view';
-				$this->newValues = $model->getQueryString(null, 'display');
-				$fieldOrder = $model->fields;
-				foreach ($model->fields as $key => $field) {
-					if (!array_key_exists($key, $this->newValues)) {
-						$model->fields[$key]['visible'] = false;
-					}
+			$this->newValues = $model->getQueryString(null, 'display');
+			$fieldOrder = $model->fields;
+			foreach ($model->fields as $key => $field) {
+				if (!array_key_exists($key, $this->newValues)) {
+					$model->fields[$key]['visible'] = false;
 				}
-    	}
+			}
+            $extra['elements']['view'] = ['name' => 'OpenEmis.ControllerAction/view', 'order' => 5];
+            $extra['back'] = $this->_table->url('view', 'QUERY');
+        }
     }
 
     public function pull(Event $mainEvent, ArrayObject $extra)
@@ -199,15 +203,9 @@ class PullBehavior extends Behavior {
         return $entity;
     }
 
-    public function pullBeforeAction(Event $event, ArrayObject $extra)
+    public function pullAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
     	$this->_table->Alert->info('general.reconfirm');
-    	if (isset($extra['toolbarButtons']['back'])) {
-    		$extra['toolbarButtons'] = new ArrayObject([
-    			'back' => $extra['toolbarButtons']['back']
-    		]);
-    		$extra['toolbarButtons']['back']['url'] = $this->_table->url('view', 'QUERY');
-    	}
     }
 
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
@@ -258,16 +256,19 @@ class PullBehavior extends Behavior {
 	    		]
 	    	];
     	}
-
     }
 
     public function pullAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
         $model = $this->_table;
         $errors = $entity->errors();
         if (empty($errors)) {
-            $model->Alert->success('general.edit.success', ['reset' => true]);
+            $model->Alert->success('general.edit.success');
         } else {
-            $model->Alert->error('general.edit.failed', ['reset' => true]);
+            $model->Alert->error('general.edit.failed');
+            $errors = Hash::flatten($errors);
+            foreach ($errors as $error) {
+                $model->Alert->error(__($error), ['type' => 'text']);
+            }
         }
     }
 
@@ -276,8 +277,7 @@ class PullBehavior extends Behavior {
         $externalReference = $entity->getOriginal('external_reference');
 
         if (!empty($externalReference)) {
-        	$hasExternalSource = TableRegistry::get('Configuration.ConfigItems')->value('external_data_source_type');
-        	if ($hasExternalSource != 'None') {
+        	if ($this->type != 'None') {
 	            $http = new Client();
 	            $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($this->type);
 	            $data = [
@@ -380,42 +380,43 @@ class PullBehavior extends Behavior {
 	                	}
 	                }
 	                $this->newValues['gender_id'] = $this->setChanges($entity->gender, $genderArr);
+                    if ($this->changes) {
+    	                $toolbarButton = [
+    	                    'type' => 'button',
+    	                    'label' => '<i class="fa fa-refresh"></i>',
+    	                    'attr' => [
+    	                        'class' => 'btn btn-xs btn-default',
+    	                        'data-toggle' => 'tooltip',
+    	                        'data-placement' => 'bottom',
+    	                        'escape' => false,
+    	                        'title' => __('Synchronisation')
+    	                    ],
+    	                    'url' => [
+    	                        'plugin' => $this->_table->controller->plugin,
+    	                        'controller' => $this->_table->controller->name,
+    	                        'action' => $this->_table->alias(),
+    	                        '0' => 'pull',
+    	                        '1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
+    	                    ]
+    	                ];
 
-	                $toolbarButton = [
-	                    'type' => 'button',
-	                    'label' => '<i class="fa fa-refresh"></i>',
-	                    'attr' => [
-	                        'class' => 'btn btn-xs btn-default',
-	                        'data-toggle' => 'tooltip',
-	                        'data-placement' => 'bottom',
-	                        'escape' => false,
-	                        'title' => __('Synchronisation')
-	                    ],
-	                    'url' => [
-	                        'plugin' => $this->_table->controller->plugin,
-	                        'controller' => $this->_table->controller->name,
-	                        'action' => $this->_table->alias(),
-	                        '0' => 'pull',
-	                        '1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
-	                    ]
-	                ];
+    	                $externalDataValue = [
+    	                	'first_name' => $this->getValue($body['data'], $this->firstNameMapping),
+    	                	'middle_name' => $this->getValue($body['data'], $this->middleNameMapping),
+    	                	'third_name' => $this->getValue($body['data'], $this->thirdNameMapping),
+    	                	'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
+    	                	'gender_id' => $genderArr['id'],
+    	                	'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
+    	                	'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
+    	                	'identity_type_id' => $identityTypeArr['id'],
+    	                	'nationality_id' => $nationalityArr['id']
+    	                ];
 
-	                $externalDataValue = [
-	                	'first_name' => $this->getValue($body['data'], $this->firstNameMapping),
-	                	'middle_name' => $this->getValue($body['data'], $this->middleNameMapping),
-	                	'third_name' => $this->getValue($body['data'], $this->thirdNameMapping),
-	                	'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
-	                	'gender_id' => $genderArr['id'],
-	                	'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
-	                	'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
-	                	'identity_type_id' => $identityTypeArr['id'],
-	                	'nationality_id' => $nationalityArr['id']
-	                ];
+    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue);
+    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
+                        $extra['toolbarButtons']['synchronise'] = $toolbarButton;
+                    }
 
-	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue);
-	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
-
-	                $extra['toolbarButtons']['synchronise'] = $toolbarButton;
 
 	                $this->_table->field('first_name');
 	                $this->_table->field('middle_name');
@@ -503,6 +504,7 @@ class PullBehavior extends Behavior {
         $newValue = $this->_table->formatDate(new Time($newDate));
 
         if ($oldValue != $newValue) {
+            $this->changes = true;
             return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
         } else {
             return null;
@@ -515,11 +517,13 @@ class PullBehavior extends Behavior {
             $oldValueId = isset($oldValue['id']) ? $oldValue['id'] : null;
             $oldValueName = isset($oldValue['name']) ? $oldValue['name'] : '';
             if ($oldValueId != $newValue['id']) {
+                $this->changes = true;
                 return '<span class="status past">'.__($oldValueName).'</span> <span class="transition-arrow"></span> <span class="status highlight">'.__($newValue['name']).'</span>';
             } else {
                 return null;
             }
         } else if ($oldValue != $newValue) {
+            $this->changes = true;
             return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
         } else {
             return null;
