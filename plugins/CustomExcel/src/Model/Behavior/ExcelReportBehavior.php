@@ -15,6 +15,7 @@ use Cake\Log\Log;
 
 use PHPExcel_IOFactory;
 use PHPExcel_Worksheet;
+use PHPExcel_Cell;
 use PHPExcel_Cell_DataValidation;
 
 class ExcelReportBehavior extends Behavior
@@ -163,12 +164,7 @@ class ExcelReportBehavior extends Behavior
     public function generateExcel($objPHPExcel, ArrayObject $extra)
     {
         foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
-            $extra['placeholders'] = [];
-            $this->processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra);
-
-            if (!empty($extra['placeholders'])) {
-                $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
-            }
+            $this->processWorksheet($objPHPExcel, $objWorksheet, $extra);
         }
 
         // to force the first sheet active
@@ -208,8 +204,8 @@ class ExcelReportBehavior extends Behavior
     public function renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
     {
         $_attr = [
-            'promptTitle' => __('Pick from list'),
-            'prompt' => __('Please pick a value from the drop-down list.'),
+            'promptTitle' => __('Select from list'),
+            'prompt' => __('Please select a value from the dropdown list.'),
             'errorTitle' => __('Input error'),
             'error' => __('Value is not in list.')
         ];
@@ -427,15 +423,15 @@ class ExcelReportBehavior extends Behavior
         return [$placeholderPrefix, $placeholderSuffix];
     }
 
-    // private function processWorksheet($objPHPExcel, $objWorksheet, $extra)
-    // {
-    //     $extra['placeholders'] = [];
-    //     $this->processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra);
+    private function processWorksheet($objPHPExcel, $objWorksheet, $extra)
+    {
+        $extra['placeholders'] = [];
+        $this->processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra);
 
-    //     if (!empty($extra['placeholders'])) {
-    //         $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
-    //     }
-    // }
+        if (!empty($extra['placeholders'])) {
+            $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
+        }
+    }
 
     private function processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra)
     {
@@ -459,7 +455,10 @@ class ExcelReportBehavior extends Behavior
                         Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
                         $this->string($objPHPExcel, $objWorksheet, $objCell, $cellValue, $extra);
                     } else {
-                        $extra['placeholders'][$cellCoordinate] = $cellValue;
+                        $columnValue = $objCell->getColumn();
+                        $rowValue = $objCell->getRow();
+                        $columnIndex = $objCell->columnIndexFromString($columnValue);
+                        $extra['placeholders'][$columnIndex][$rowValue] = $cellValue;
                     }
                 }
             }
@@ -468,7 +467,17 @@ class ExcelReportBehavior extends Behavior
 
     private function processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra)
     {
-        foreach ($extra['placeholders'] as $cellCoordinate => $cellValue) {
+        // sort by column index so that to process the first column first
+        ksort($extra['placeholders']);
+
+        while(!empty($extra['placeholders'])) {
+            $columnIndex = key($extra['placeholders']);
+            $columnValue = PHPExcel_Cell::stringFromColumnIndex($columnIndex-1);
+            $rowsObj = current($extra['placeholders']);
+            $rowValue = key($rowsObj);
+            $cellValue = current($rowsObj);
+            
+            $cellCoordinate = $columnValue.$rowValue;
             $objCell = $objWorksheet->getCell($cellCoordinate);
 
             foreach ($this->advancedTypes as $function => $keyword) {
@@ -493,12 +502,35 @@ class ExcelReportBehavior extends Behavior
                     }
                 }
             }
-            // after process the first cell in the list, exit the loop to read back from the same sheet and extract the advanced placeholder again,
-            // this is because the advanced placeholder position might changed after auto insert row or column
-            // break;
-        }
 
-        // $this->processWorksheet($objPHPExcel, $objWorksheet, $extra);
+            unset($extra['placeholders'][$columnIndex][$rowValue]);
+            if (empty($extra['placeholders'][$columnIndex])) {
+                unset($extra['placeholders'][$columnIndex]);
+            }
+        }
+    }
+
+    private function updatePlaceholderCoordinate($affectedColumnValue=null, $affectedRowValue=null, $extra)
+    {
+        if (!is_null($affectedColumnValue)) {
+            $affectedColumnIndex = PHPExcel_Cell::columnIndexFromString($affectedColumnValue);
+
+            $placeholders = [];
+            foreach ($extra['placeholders'] as $columnIndex => $rowsObj) {
+                if ($columnIndex >= $affectedColumnIndex) {
+                    // logic to shift coordinate of unprocessed placeholder to right if it is affected after auto insert new column
+                    $newColumnIndex = $columnIndex + 1;
+                    $placeholders[$newColumnIndex] = $extra['placeholders'][$columnIndex];
+                } else {
+                    // if is not affected, the stay as it is
+                    $placeholders[$columnIndex] = $extra['placeholders'][$columnIndex];
+                }
+            }
+
+            $extra['placeholders'] = $placeholders;
+        } else if (!is_null($affectedRowValue)) {
+            // to-do: // logic to shift coordinate of unprocessed placeholder to down if it is affected after auto insert new row
+        }
     }
 
     private function string($objPHPExcel, $objWorksheet, $objCell, $search, $extra)
@@ -560,6 +592,7 @@ class ExcelReportBehavior extends Behavior
             $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
             if (!$this->suppressAutoInsertNewColumn && $columnIndex != $attr['columnIndex']) {
                 $objWorksheet->insertNewColumnBefore($columnValue);
+                $this->updatePlaceholderCoordinate($columnValue, null, $extra);
             }
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
@@ -576,6 +609,7 @@ class ExcelReportBehavior extends Behavior
                     $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
                     if (!$this->suppressAutoInsertNewColumn && $nestedColumnIndex != $columnIndex) {
                         $objWorksheet->insertNewColumnBefore($nestedColumnValue);
+                        $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
                     }
 
                     $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
