@@ -27,7 +27,7 @@ ALTER TABLE `examination_centre_rooms` CHANGE `number_of_seats` `number_of_seats
 
 -- security_functions
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES ('5056', 'Import Examination Rooms', 'Examinations', 'Administration', 'Examinations', '5000', NULL, NULL, NULL, NULL, 'ImportExaminationCentreRooms.add|ImportExaminationCentreRooms.template|ImportExaminationCentreRooms.results|ImportExaminationCentreRooms.downloadFailed|ImportExaminationCentreRooms.downloadPassed', '5053', '1', NULL, NULL, NULL, '1', '2016-11-18 09:51:29');
+VALUES ('5057', 'Import Examination Rooms', 'Examinations', 'Administration', 'Examinations', '5000', NULL, NULL, NULL, NULL, 'ImportExaminationCentreRooms.add|ImportExaminationCentreRooms.template|ImportExaminationCentreRooms.results|ImportExaminationCentreRooms.downloadFailed|ImportExaminationCentreRooms.downloadPassed', '5053', '1', NULL, NULL, NULL, '1', '2016-11-18 09:51:29');
 
 
 -- POCOR-3605
