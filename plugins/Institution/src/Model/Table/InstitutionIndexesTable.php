@@ -51,6 +51,16 @@ class InstitutionIndexesTable extends ControllerActionTable
         return $indexTotal;
     }
 
+    public function onGetGeneratedBy(Event $event, Entity $entity)
+    {
+        $generatedById = $entity->generated_by;
+
+        $Users = TableRegistry::get('Security.Users');
+        $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
+
+        return $userName;
+    }
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         if (isset($buttons['view']['url'])) {

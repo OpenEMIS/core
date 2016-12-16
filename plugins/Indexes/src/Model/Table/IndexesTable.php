@@ -3,11 +3,13 @@ namespace Indexes\Model\Table;
 
 use ArrayObject;
 
+use Cake\I18n\Date;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
@@ -82,14 +84,27 @@ class IndexesTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
-        pr('generate ()');
-        pr('Page still in development');
-        // pr($extra);
-        // die;
+        $this->fields = []; // reset all the fields
 
-        // pr($this->getCriteriasOptions());
-        die;
+        $extra['config']['form'] = true;
+        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
 
+        $params = $this->getQueryString();
+
+        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
+        $userId = array_key_exists('user_id', $params) ? $params['user_id'] : null;
+        $indexId = array_key_exists('index_id', $params) ? $params['index_id'] : null;
+
+        $entity = $this->newEntity();
+
+        if ($this->request->is(['get'])) {
+        } else if ($this->request->is(['post', 'put'])) {
+            // trigger shell
+            $this->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId);
+        }
+
+        $this->controller->set('data', $entity);
+        return $entity;
     }
 
     public function getCriteriasOptions()
@@ -231,7 +246,7 @@ class IndexesTable extends ControllerActionTable
         $this->field('name',['sort' => false]);
         $this->field('modified_user_id',['visible' => true]);
         $this->field('modified',['visible' => true, 'sort' => false]);
-        $this->field('generated_on',['sort' => false]);
+        $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -259,10 +274,6 @@ class IndexesTable extends ControllerActionTable
         $toolbarButtonsArray['generate']['label'] = '<i class="fa fa-refresh"></i>';
         $toolbarButtonsArray['generate']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['generate']['attr']['title'] = __('Generate');
-        // // URL not defined yet yet
-        // $toolbarButtonsArray['generate']['url']['plugin'] = 'Institution';
-        // $toolbarButtonsArray['generate']['url']['controller'] = 'Institutions';
-        // $toolbarButtonsArray['generate']['url']['action'] = 'InstitutionIndexes';
         $toolbarButtonsArray['generate']['url'][0] = 'generate';
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
@@ -341,8 +352,32 @@ class IndexesTable extends ControllerActionTable
         $this->setFieldOrder(['name', 'indexes_criterias']);
     }
 
+    public function onGetGeneratedBy(Event $event, Entity $entity)
+    {
+        $generatedById = $entity->generated_by;
+
+        $Users = TableRegistry::get('Security.Users');
+        $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
+
+        return $userName;
+    }
+
     public function getCriteriasDetails($criteriaKey)
     {
         return $details = $this->criteriaTypes[$criteriaKey];
+    }
+
+    public function triggerUpdateIndexesShell($shellName, $institutionId=0, $userId=0, $indexId=0)
+    {
+        $args = '';
+        $args .= !is_null($institutionId) ? ' '.$institutionId : '';
+        $args .= !is_null($userId) ? ' '.$userId : '';
+        $args .= !is_null($indexId) ? ' '.$indexId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        $pid = exec($shellCmd);
+        Log::write('debug', $shellCmd);
     }
 }
