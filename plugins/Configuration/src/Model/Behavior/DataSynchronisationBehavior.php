@@ -70,25 +70,108 @@ class DataSynchronisationBehavior extends Behavior {
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 3];
         $events['ControllerAction.Model.pull'] = 'pull';
+        $events['ControllerAction.Model.pull.beforeAction'] = 'pullBeforeAction';
+        $events['ControllerAction.Model.pull.afterAction'] = 'pullAfterAction';
         return $events;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+    	$model = $this->_table;
+    	if ($model->action == 'pull') {
+    		$model->action = 'view';
+    	}
+    }
+
+    public function pullBeforeAction(Event $event, ArrayObject $extra)
+    {
+    	if (isset($extra['toolbarButtons']['back'])) {
+    		$extra['toolbarButtons'] = new ArrayObject([
+    			'back' => $extra['toolbarButtons']['back']
+    		]);
+    		$extra['toolbarButtons']['back']['url'] = $this->_table->url('view', 'QUERY');
+    	}
+    }
+
+    public function pullAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+	    $model = $this->_table;
+	    $model->Alert->info('general.reconfirm', ['reset' => true]);
+		$newValues = $model->getQueryString();
+		foreach ($model->fields as $key => $field) {
+			if (!array_key_exists($key, $newValues)) {
+				$model->fields[$key]['visible'] = false;
+			}
+		}
+
+    	// $this->newValues['first_name'] = $this->setChanges($entity->first_name, $this->getValue($body['data'], $this->firstNameMapping));
+     //    $this->newValues['middle_name'] = $this->setChanges($entity->middle_name, $this->getValue($body['data'], $this->middleNameMapping));
+     //    $this->newValues['third_name'] = $this->setChanges($entity->third_name, $this->getValue($body['data'], $this->thirdNameMapping));
+     //    $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping));
+     //    $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping));
+     //    $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping));
+     //    $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
+     //    $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
+     //    $nationalityArr = [
+     //        'id' => null,
+     //        'name' => ''
+     //    ];
+     //    if ($nationalityName) {
+     //        $nationality = $NationalitiesTable
+     //            ->find()
+     //            ->where([$NationalitiesTable->aliasField('name') => $nationalityName])
+     //            ->first();
+     //        if (empty($nationality)) {
+     //            $nationality = $NationalitiesTable->newEntity([
+     //                'name' => $nationalityName,
+     //                'visible' => 1,
+     //                'editable' => 1,
+     //                'default' => 0
+     //            ]);
+     //            $nationality = $NationalitiesTable->save($nationality);
+     //        }
+
+     //        $nationalityArr['id'] = $nationality->id;
+     //        $nationalityArr['name'] = $nationality->name;
+     //    }
+     //    $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr);
+
+     //    $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
+     //    $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
+     //    $identityTypeArr = [
+     //        'id' => null,
+     //        'name' => ''
+     //    ];
+     //    if ($identityTypeName) {
+     //        $identityType = $IdentityTypesTable
+     //            ->find()
+     //            ->where([$IdentityTypesTable->aliasField('name') => $identityTypeName])
+     //            ->first();
+     //        if (empty($identityType)) {
+     //            $identityType = $IdentityTypesTable->newEntity([
+     //                'name' => $identityTypeName,
+     //                'visible' => 1,
+     //                'editable' => 1,
+     //                'default' => 0
+     //            ]);
+     //            $identityType = $IdentityTypesTable->save($identityType);
+     //        }
+     //        $identityTypeArr['id'] = $identityType->id;
+     //        $identityTypeArr['name'] = $identityType->name;
+     //    }
+     //    $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr);
     }
 
     public function pull(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
-        $model->action = 'pull';
         $request = $model->request;
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
 
-        $event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
-        if ($event->isStopped()) { return $event->result; }
-        if ($event->result instanceof Table) {
-            $model = $event->result;
-        }
-
-        $event = $model->dispatchEvent('ControllerAction.Model.edit.beforeAction', [$extra], $this);
+        $event = $model->dispatchEvent('ControllerAction.Model.pull.beforeAction', [$extra], $this);
         if ($event->isStopped()) { return $event->result; }
         if ($event->result instanceof Table) {
             $model = $event->result;
@@ -115,49 +198,33 @@ class DataSynchronisationBehavior extends Behavior {
             $query = $model->find()->where($idKeys);
 
             $event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
-            $event = $model->dispatchEvent('ControllerAction.Model.viewEdit.beforeQuery', [$query, $extra], $this);
-            $event = $model->dispatchEvent('ControllerAction.Model.edit.beforeQuery', [$query, $extra], $this);
+            $event = $model->dispatchEvent('ControllerAction.Model.pull.beforeQuery', [$query, $extra], $this);
 
             $entity = $query->first();
         }
 
-        $event = $model->dispatchEvent('ControllerAction.Model.viewEdit.afterQuery', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
-
-        $event = $model->dispatchEvent('ControllerAction.Model.edit.afterQuery', [$entity, $extra], $this);
+        $event = $model->dispatchEvent('ControllerAction.Model.pull.afterQuery', [$entity, $extra], $this);
         if ($event->isStopped()) { return $event->result; }
 
         if ($entity) {
-            if ($request->is(['get'])) {
-                $event = $model->dispatchEvent('ControllerAction.Model.edit.onInitialize', [$entity, $extra], $this);
-                if ($event->isStopped()) { return $event->result; }
-            } else if ($request->is(['post', 'put'])) {
+            if ($request->is(['post', 'put'])) {
                 $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
                 $patchOptions = new ArrayObject([]);
-                $requestData = new ArrayObject($request->data);
-
-                $params = [$entity, $requestData, $patchOptions, $extra];
+                $queryStringData = new ArrayObject($model->getQueryString());
+                $params = [$entity, $queryStringData, $patchOptions, $extra];
 
                 if ($submit == 'save') {
-                    $event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforePatch', $params, $this);
+                    $event = $model->dispatchEvent('ControllerAction.Model.pull.beforePatch', $params, $this);
                     if ($event->isStopped()) { return $event->result; }
 
-                    $event = $model->dispatchEvent('ControllerAction.Model.edit.beforePatch', $params, $this);
+                    $event = $model->dispatchEvent('ControllerAction.Model.pull.beforePatch', $params, $this);
                     if ($event->isStopped()) { return $event->result; }
-
-                    $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
-                    if ($extra['patchEntity']) {
-                        $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
-                        $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
-                        if ($event->isStopped()) { return $event->result; }
-                    }
 
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
 
-                    $event = $model->dispatchEvent('ControllerAction.Model.edit.beforeSave', [$entity, $requestData, $extra], $this);
+                    $event = $model->dispatchEvent('ControllerAction.Model.pull.beforeSave', [$entity, $requestData, $extra], $this);
                     if ($event->isStopped()) { return $event->result; }
                     if (is_callable($event->result)) {
                         $process = $event->result;
@@ -169,41 +236,19 @@ class DataSynchronisationBehavior extends Behavior {
                         Log::write('debug', $entity->errors());
                     }
 
-                    $event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);
+                    $event = $model->dispatchEvent('ControllerAction.Model.pull.afterSave', $params, $this);
                     if ($event->isStopped()) { return $event->result; }
 
                     if ($result) {
                         $mainEvent->stopPropagation();
                         return $model->controller->redirect($model->url('view'));
                     }
-                } else {
-                    $patchOptions['validate'] = false;
-                    $methodKey = 'on' . ucfirst($submit);
-
-                    // Event: addEditOnReload
-                    $eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
-                    $method = 'addEdit' . ucfirst($methodKey);
-                    $event = $this->dispatchEvent($model, $eventKey, $method, $params);
-                    if ($event->isStopped()) { return $event->result; }
-
-                    // Event: editOnReload
-                    $eventKey = 'ControllerAction.Model.edit.' . $methodKey;
-                    $method = 'edit' . ucfirst($methodKey);
-                    $event = $this->dispatchEvent($model, $eventKey, $method, $params);
-                    if ($event->isStopped()) { return $event->result; }
-
-                    $patchOptionsArray = $patchOptions->getArrayCopy();
-                    $request->data = $requestData->getArrayCopy();
-                    $entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
                 }
             }
             $model->controller->set('data', $entity);
         }
 
-        $event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
-        if ($event->isStopped()) { return $event->result; }
-
-        $event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
+        $event = $model->dispatchEvent('ControllerAction.Model.pull.afterAction', [$entity, $extra], $this);
         if ($event->isStopped()) { return $event->result; }
 
         if (!$entity) {
@@ -329,7 +374,18 @@ class DataSynchronisationBehavior extends Behavior {
                     ]
                 ];
 
-                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues);
+                $queryStringValue = [
+                	'first_name' => $this->getValue($body['data'], $this->firstNameMapping),
+                	'middle_name' => $this->getValue($body['data'], $this->middleNameMapping),
+                	'third_name' => $this->getValue($body['data'], $this->thirdNameMapping),
+                	'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
+                	'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
+                	'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
+                	'identity_type_id' => $identityTypeArr['id'],
+                	'nationality_id' => $nationalityArr['id']
+                ];
+
+                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $queryStringValue);
 
                 $extra['toolbarButtons']['synchronise'] = $toolbarButton;
 
