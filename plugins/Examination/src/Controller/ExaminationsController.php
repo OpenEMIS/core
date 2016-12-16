@@ -13,6 +13,7 @@ class ExaminationsController extends AppController
         parent::initialize();
         $this->ControllerAction->models = [
             'ImportResults' => ['className' => 'Examination.ImportResults', 'actions' => ['add']],
+            'ImportExaminationCentreRooms' => ['className' => 'Examination.ImportExaminationCentreRooms', 'actions' => ['add']],
         ];
         $this->attachAngularModules();
     }

@@ -888,16 +888,21 @@ class TrainingSessionsTable extends ControllerActionTable
 							->matching('Users', function($q) use ($openemis_no) {
 								return $q
 									->find('all')
-									->where(['Users.openemis_no' => $openemis_no])
-									;
-							})
-							->matching('Positions', function($q) use ($targetPopulationIds) {
-								return $q
-									->find('all')
-									->where([
-										'Positions.staff_position_title_id IN' => $targetPopulationIds
-									]);
-							})
+									->where(['Users.openemis_no' => $openemis_no]);
+							});
+
+                if (!empty($targetPopulationIds)) {
+                    $trainee =  $trainee
+                                ->matching('Positions', function($q) use ($targetPopulationIds) {
+                                    return $q
+                                        ->find('all')
+                                        ->where([
+                                            'Positions.staff_position_title_id IN' => $targetPopulationIds
+                                        ]);
+                                });
+                }
+
+                $trainee =  $trainee
 							->group([
 								$Staff->aliasField('staff_id')
 							])
