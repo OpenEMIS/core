@@ -156,31 +156,39 @@ class ImportExaminationCentreRoomsTable extends AppTable
         if ($selectedPeriod) {
             $tempRow['academic_period_id'] = $selectedPeriod;
         }
-        
 
-        // if (!$this->institutionId) {
-        //     $rowInvalidCodeCols['institution_id'] = __('No active institution');
-        //     $tempRow['institution_id'] = false;
-        //     return false;
-        // }
-        // $tempRow['institution_id'] = $this->institutionId;
+        //match selected academic period with examinations selected.
+        if ($tempRow->offsetExists('examination_id') && !empty($tempRow['examination_id'])) {
+            $Examinations = TableRegistry::get('Examination.Examinations');
+            $Examination = $Examinations
+                            ->find()
+                            ->where([
+                                $Examinations->aliasField('id') => $tempRow['examination_id'],
+                                $Examinations->aliasField('academic_period_id') => $selectedPeriod
+                            ]);
 
-        // if ($tempRow->offsetExists('textbook_id') && !empty($tempRow['textbook_id'])) {
-        //     $Textbooks = TableRegistry::get('Textbook.Textbooks');
-        //     $textbookResults = $Textbooks
-        //         ->find()
-        //         ->where([$Textbooks->aliasField('id') => $tempRow['textbook_id']])
-        //         ->all();
+            if ($Examination->isEmpty()) {
+                $rowInvalidCodeCols['examination_id'] = $this->getExcelLabel('Import', 'value_not_in_list');
+                return false;
+            }
+        }
 
-        //     if ($textbookResults->isEmpty()) {
-        //         $rowInvalidCodeCols['textbook_id'] = $this->getExcelLabel('Import', 'value_not_in_list');
-        //         return false;
-        //     } else {
-        //         $textbookEntity = $textbookResults->first();
-        //         $tempRow['academic_period_id'] = $textbookEntity->academic_period_id;
-        //         $tempRow['education_subject_id'] = $textbookEntity->education_subject_id;
-        //     }
-        // }
+        //match selected academic period with examination centres selected and also exam selected.
+        if ($tempRow->offsetExists('examination_centre_id') && !empty($tempRow['examination_centre_id'])) {
+            $ExaminationCentres = TableRegistry::get('Examination.ExaminationCentres');
+            $ExaminationCentre = $ExaminationCentres
+                                ->find()
+                                ->where([
+                                    $ExaminationCentres->aliasField('id') => $tempRow['examination_centre_id'],
+                                    $ExaminationCentres->aliasField('examination_id') => $tempRow['examination_id'],
+                                    $ExaminationCentres->aliasField('academic_period_id') => $selectedPeriod
+                                ]);
+
+            if ($ExaminationCentre->isEmpty()) {
+                $rowInvalidCodeCols['examination_centre_id'] = $this->getExcelLabel('Import', 'exam_centre_dont_match');
+                return false;
+            }
+        }
 
         return true;
     }
