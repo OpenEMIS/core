@@ -40,7 +40,7 @@ class ClassificationsTable extends ControllerActionTable
         $this->field('national_code', ['visible' => false]);
     }
 
-    public function getStudentBehaviourClassificationsOptions()
+    public function getThresholdOptions()
     {
         return $this
             ->find('list')

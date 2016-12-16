@@ -1281,4 +1281,15 @@ class StudentsTable extends ControllerActionTable
 
         return !($completedGradeCount == 0);
     }
+
+    public function getInstitutionIdByUser($studentId, $academicPeriodId)
+    {
+        return $institutionId = $this->find()
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('student_status_id') => 1 // status enrolled
+            ])
+            ->first()->institution_id;
+    }
 }

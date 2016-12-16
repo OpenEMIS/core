@@ -444,7 +444,6 @@ class StudentBehavioursTable extends AppTable
 				$this->aliasField('institution_id') => $institutionId,
 				$this->aliasField('student_id') => $studentId,
 				$this->aliasField('academic_period_id') => $academicPeriodId
-
 			])
 			->all();
 

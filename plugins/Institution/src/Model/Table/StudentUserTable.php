@@ -57,6 +57,8 @@ class StudentUserTable extends ControllerActionTable
 
 		$this->toggle('index', false);
         $this->toggle('remove', false);
+
+        $this->addBehavior('Indexes.Indexes');
 	}
 
 
@@ -133,6 +135,7 @@ class StudentUserTable extends ControllerActionTable
 	public function implementedEvents()
 	{
     	$events = parent::implementedEvents();
+    	$events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
     	return $events;
     }
 
@@ -577,4 +580,34 @@ class StudentUserTable extends ControllerActionTable
     	]);
     	return $query;
     }
+
+    public function getInstitutionId($studentId, $academicPeriodId)
+	{
+		$institutionId = $this->InstitutionStudents->getInstitutionIdByUser($studentId, $academicPeriodId);
+		return $institutionId;
+	}
+
+    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+	{
+		$institutionId = $params['institution_id'];
+		$studentId = $params['student_id'];
+		$academicPeriodId = $params['academic_period_id'];
+
+		$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId);
+
+		return $valueIndex;
+	}
+
+	public function getValueIndex($institutionId, $studentId, $academicPeriodId)
+	{
+		// for '=' the value index will be in array (valueIndex[threshold] = value)
+		$getValueIndex[$this->get($studentId)->gender_id] = 1;
+
+		return $getValueIndex;
+	}
+
+	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+	{
+		return $this->Genders->get($threshold)->name;;
+	}
 }
