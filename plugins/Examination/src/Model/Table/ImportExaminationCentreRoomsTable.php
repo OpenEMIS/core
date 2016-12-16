@@ -25,6 +25,8 @@ class ImportExaminationCentreRoomsTable extends AppTable
         ]);
 
         $this->AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $this->Examinations = TableRegistry::get('Examination.Examinations');
+        $this->ExaminationCentres = TableRegistry::get('Examination.ExaminationCentres');
     }
 
     public function implementedEvents()
@@ -93,7 +95,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         
         $selectFields = [$lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('name'), $this->AcademicPeriods->aliasField('code'), $this->AcademicPeriods->aliasField('name')];
         
-        $order = [$this->AcademicPeriods->aliasField('order') => 'DESC', $lookedUpTable->aliasField('name')];
+        $order = [$lookedUpTable->aliasField('name')];
         
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
@@ -122,30 +124,54 @@ class ImportExaminationCentreRoomsTable extends AppTable
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
         
-        $selectFields = [$lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('name'), $this->AcademicPeriods->aliasField('code'), $this->AcademicPeriods->aliasField('name')];
+        $selectFields = [
+            $lookedUpTable->aliasField($lookupColumn), 
+            $lookedUpTable->aliasField('name'), 
+            $this->AcademicPeriods->aliasField('code'), 
+            $this->AcademicPeriods->aliasField('name'),
+            $this->Examinations->aliasField('code'),
+            $this->Examinations->aliasField('name'),
+        ];
         
-        $order = [$this->AcademicPeriods->aliasField('order') => 'DESC', $lookedUpTable->aliasField('name')];
+        $order = [$this->Examinations->aliasField('name'), $lookedUpTable->aliasField('name')];
         
-        $modelData = $lookedUpTable->find('all')
-            ->select($selectFields)
-            ->matching($this->AcademicPeriods->alias())
-            ->where([
-                $this->AcademicPeriods->aliasField('id') => $selectedPeriod
-            ])
-            ->order($order);
+        $modelData = $lookedUpTable
+                    ->find('all')
+                    ->select($selectFields)
+                    ->matching($this->AcademicPeriods->alias())
+                    ->matching($this->Examinations->alias())
+                    ->where([
+                        $this->AcademicPeriods->aliasField('id') => $selectedPeriod
+                    ])
+                    ->group([
+                        $lookedUpTable->aliasField('id'),
+                        $this->Examinations->aliasField('id')
+                    ])
+                    ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 1;
-        $data[$columnOrder]['data'][] = [$translatedCol, $translatedReadableCol, __('Academic Period')];
+        $data[$columnOrder]['data'][] = [__('Examination Code'), $translatedCol, $translatedReadableCol, __('Academic Period')];
         if (!empty($modelData)) {
+            $displayedExamCode = []; //to skip display based on grouping.
             foreach($modelData->toArray() as $row) {
+                
+                $examCode = $row->_matchingData[$this->Examinations->alias()]->code;
+
+                if (in_array($examCode, $displayedExamCode)) {
+                    $examCode = '';
+                } else {
+                    $displayedExamCode[] = $examCode;
+                }
+
                 $data[$columnOrder]['data'][] = [
+                    $examCode,
                     $row->$lookupColumn,
                     $row->name,
                     $row->_matchingData[$this->AcademicPeriods->alias()]->name
                 ];
             }
-        }        
+        }    
     }
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
@@ -159,12 +185,12 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
         //match selected academic period with examinations selected.
         if ($tempRow->offsetExists('examination_id') && !empty($tempRow['examination_id'])) {
-            $Examinations = TableRegistry::get('Examination.Examinations');
-            $Examination = $Examinations
+            
+            $Examination = $this->Examinations
                             ->find()
                             ->where([
-                                $Examinations->aliasField('id') => $tempRow['examination_id'],
-                                $Examinations->aliasField('academic_period_id') => $selectedPeriod
+                                $this->Examinations->aliasField('id') => $tempRow['examination_id'],
+                                $this->Examinations->aliasField('academic_period_id') => $selectedPeriod
                             ]);
 
             if ($Examination->isEmpty()) {
@@ -175,13 +201,13 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
         //match selected academic period with examination centres selected and also exam selected.
         if ($tempRow->offsetExists('examination_centre_id') && !empty($tempRow['examination_centre_id'])) {
-            $ExaminationCentres = TableRegistry::get('Examination.ExaminationCentres');
-            $ExaminationCentre = $ExaminationCentres
+            
+            $ExaminationCentre = $this->ExaminationCentres
                                 ->find()
                                 ->where([
-                                    $ExaminationCentres->aliasField('id') => $tempRow['examination_centre_id'],
-                                    $ExaminationCentres->aliasField('examination_id') => $tempRow['examination_id'],
-                                    $ExaminationCentres->aliasField('academic_period_id') => $selectedPeriod
+                                    $this->ExaminationCentres->aliasField('id') => $tempRow['examination_centre_id'],
+                                    $this->ExaminationCentres->aliasField('examination_id') => $tempRow['examination_id'],
+                                    $this->ExaminationCentres->aliasField('academic_period_id') => $selectedPeriod
                                 ]);
 
             if ($ExaminationCentre->isEmpty()) {
