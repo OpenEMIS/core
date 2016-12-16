@@ -84,16 +84,25 @@ class IndexesTable extends ControllerActionTable
 
     public function generate(Event $event, ArrayObject $extra)
     {
+        $requestQuery = $this->request->query;
+        $session = $this->request->session();
+        $sessionUserId = $session->read('Auth.User.id');
+        $sessionIndexId = $session->read('Indexes.Indexes.primaryKey.id');
+
         $this->fields = []; // reset all the fields
 
         $extra['config']['form'] = true;
         $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
 
-        $params = $this->getQueryString();
+        $params = [];
 
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
-        $userId = array_key_exists('user_id', $params) ? $params['user_id'] : null;
-        $indexId = array_key_exists('index_id', $params) ? $params['index_id'] : null;
+        if (array_key_exists('queryString', $requestQuery)) {
+            $params = $this->getQueryString();
+        }
+
+        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : 0;
+        $userId = array_key_exists('user_id', $params) ? $params['user_id'] : $sessionUserId;
+        $indexId = array_key_exists('index_id', $params) ? $params['index_id'] : $sessionIndexId;
 
         $entity = $this->newEntity();
 
@@ -354,12 +363,41 @@ class IndexesTable extends ControllerActionTable
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
-        $generatedById = $entity->generated_by;
+        $userName = '';
+        if (isset($entity->generated_by)) {
+            $generatedById = $entity->generated_by;
 
-        $Users = TableRegistry::get('Security.Users');
-        $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
+            $Users = TableRegistry::get('Security.Users');
+            $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
+        }
 
         return $userName;
+    }
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        $requestQuery = $this->request->query;
+
+        switch ($this->action) {
+            case 'generate':
+                // on the generate page the save button was renamed to generate button.
+                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Generate');
+
+                // if queryString set means come from institutions index,
+                if (array_key_exists('queryString', $requestQuery)) {
+                    $cancelUrl = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'InstitutionIndexes',
+                        'index'
+                    ];
+                } else {
+                    $cancelUrl = $this->url('index');
+                }
+
+                $buttons[1]['url'] = $cancelUrl;
+                break;
+        }
     }
 
     public function getCriteriasDetails($criteriaKey)
