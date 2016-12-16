@@ -1,3 +1,12 @@
+-- POCOR-3661
+-- import_mapping
+DELETE FROM `import_mapping`
+WHERE `model` = 'Examination.ExaminationCentreRooms';
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3661';
+
+
 -- POCOR-3605
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` = 5056;
