@@ -150,8 +150,12 @@ class StudentIndexesTable extends ControllerActionTable
 
                     // to get total number of behaviour
                     $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId);
-                    $totalBehaviour = $getValueIndex[$threshold];
-                    $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . ' ( x' . $totalBehaviour . ' )' . '</div>';
+                    $quantity = '';
+                    if ($getValueIndex[$threshold] > 1) {
+                        $quantity = '<div style="color : red"> ( x' . $getValueIndex[$threshold] . ' )</div>';
+                    }
+
+                    $indexValue = $obj->indexes_criteria->index_value . $quantity;
 
                     // for reference tooltip
                     $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold);
