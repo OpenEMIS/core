@@ -1,3 +1,14 @@
+-- POCOR-3457
+-- assessment_grading_options
+ALTER TABLE `assessment_grading_options` DROP `description`;
+
+-- examination_grading_options
+ALTER TABLE `examination_grading_options` DROP `description`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3457';
+
+
 -- POCOR-3661
 -- import_mapping
 DELETE FROM `import_mapping`
