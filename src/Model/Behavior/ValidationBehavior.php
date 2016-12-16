@@ -837,26 +837,28 @@ class ValidationBehavior extends Behavior {
 					->findById($globalData['data'][$academicFieldName])
 					->first();
 
-			$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
-	        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
+			if (!empty($periodObj)) {
+				$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
+		        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
 
-	        if ($excludeFirstDay) {
-	        	$withFirstDay = Time::parse($periodObj->start_date);
-	        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
-	        } else {
-	        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
-	        }
+		        if ($excludeFirstDay) {
+		        	$withFirstDay = Time::parse($periodObj->start_date);
+		        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
+		        } else {
+		        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
+		        }
 
-	        if ($excludeLastDay) {
-	        	$withLastDay = Time::parse($periodObj->end_date);
-	        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
-	        } else {
-	        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
-	        }
+		        if ($excludeLastDay) {
+		        	$withLastDay = Time::parse($periodObj->end_date);
+		        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
+		        } else {
+		        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
+		        }
 
-	        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
+		        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
 
-	        return ($checkDate >= $startDate && $checkDate <= $endDate);
+		        return ($checkDate >= $startDate && $checkDate <= $endDate);
+			}
 		}
 
 		return false;
@@ -1673,8 +1675,35 @@ class ValidationBehavior extends Behavior {
 
 	public static function validateRoomCapacity($field, array $globalData)
 	{
-		$totalSeats = $globalData['data']['number_of_seats'];
-		$currentSeats = count($globalData['data']['students']);
-		return $totalSeats >= $currentSeats;
+		if (array_key_exists('students', $globalData)) {
+			$totalSeats = $globalData['data']['number_of_seats'];
+			$currentSeats = count($globalData['data']['students']);
+			return $totalSeats >= $currentSeats;
+		}
+
+		return true;
+	}
+
+	public static function checkNoRunningSystemProcess($check, $processName, array $globalData)
+	{
+		$RUNNING = 2;
+		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$runningProcesses = $SystemProcesses->find()
+			->where([
+				$SystemProcesses->aliasField('name') => $processName,
+				$SystemProcesses->aliasField('status') => $RUNNING
+			])
+			->toArray();
+
+		if (!empty($runningProcesses)) {
+			foreach ($runningProcesses as $key => $obj) {
+				$params = json_decode($obj->params);
+				if ($params->examination_id && $params->examination_id == $check) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }

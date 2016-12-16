@@ -3,12 +3,14 @@ namespace Institution\Model\Table;
 
 use App\Model\Table\AppTable;
 use ArrayObject;
+use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use DateTime;
 use PHPExcel_Worksheet;
 
 class ImportStudentAttendancesTable extends AppTable {
@@ -217,21 +219,31 @@ class ImportStudentAttendancesTable extends AppTable {
             $tempRow['academic_period_id'] = false;
             return false;
         }
-        $periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
-        if (!$periods) {
-            $rowInvalidCodeCols['academic_period_id'] = __('No matching academic period based on the start date');
-            $tempRow['academic_period_id'] = false;
+
+        if (empty($tempRow['start_date'])) {
+            $rowInvalidCodeCols['start_date'] = __('This field cannot be left empty');
             return false;
+        } else {
+            // from string to dateObject
+            $formattedDate = DateTime::createFromFormat('d/m/Y', $tempRow['start_date']);
+            $tempRow['start_date'] = $formattedDate;
+
+            $periods = $this->getAcademicPeriodByStartDate($tempRow['start_date']);
+            if (!$periods) {
+                $rowInvalidCodeCols['academic_period_id'] = __('No matching academic period based on the start date');
+                $tempRow['academic_period_id'] = false;
+                return false;
+            }
+            $periods = new Collection($periods);
+            $periodIds = $periods->extract('id');
+            $periodIds = $periodIds->toArray();
+            if (!in_array($currentPeriodId, $periodIds)) {
+                $rowInvalidCodeCols['academic_period_id'] = __('Date is not within current academic period');
+                $tempRow['academic_period_id'] = false;
+                return false;
+            }
+            $tempRow['academic_period_id'] = $currentPeriodId;
         }
-        $periods = new Collection($periods);
-        $periodIds = $periods->extract('id');
-        $periodIds = $periodIds->toArray();
-        if (!in_array($currentPeriodId, $periodIds)) {
-            $rowInvalidCodeCols['academic_period_id'] = __('Date is not within current academic period');
-            $tempRow['academic_period_id'] = false;
-            return false;
-        }
-        $tempRow['academic_period_id'] = $currentPeriodId;
 
         $student = $this->Students->find()->where([
             'academic_period_id' => $tempRow['academic_period_id'],
@@ -243,7 +255,7 @@ class ImportStudentAttendancesTable extends AppTable {
             $tempRow['student_id'] = false;
             return false;
         }
-        
+
         return true;
     }
 
