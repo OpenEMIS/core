@@ -97,6 +97,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         
         $order = [$lookedUpTable->aliasField('name')];
         
+        //populate exams based on selected academic period
         $modelData = $lookedUpTable->find('all')
             ->select($selectFields)
             ->matching($this->AcademicPeriods->alias())
@@ -135,6 +136,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         
         $order = [$this->Examinations->aliasField('name'), $lookedUpTable->aliasField('name')];
         
+        //populate exams and centre combination based on selected academic period
         $modelData = $lookedUpTable
                     ->find('all')
                     ->select($selectFields)
