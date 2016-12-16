@@ -204,11 +204,13 @@ class ExcelReportBehavior extends Behavior
     public function renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
     {
         $_attr = [
+            'source' => '',
             'promptTitle' => __('Select from list'),
             'prompt' => __('Please select a value from the dropdown list.'),
             'errorTitle' => __('Input error'),
             'error' => __('Value is not in list.')
         ];
+        $_attr = array_merge($_attr, $attr['dropdown']);
 
         $objValidation = $objWorksheet->getCell($cellCoordinate)->getDataValidation();
         $objValidation->setType( PHPExcel_Cell_DataValidation::TYPE_LIST );
@@ -222,13 +224,14 @@ class ExcelReportBehavior extends Behavior
         $objValidation->setErrorTitle($_attr['errorTitle']);
         $objValidation->setError($_attr['error']);
 
-        if (is_array($attr['source'])) {
-            $list = implode(",", $attr['source']);
+        if (is_array($_attr['source'])) {
+            $list = implode(",", $_attr['source']);
             $format = '"%s"';
             $value = sprintf($format, $list);
+
             $objValidation->setFormula1($value);
         } else {
-            list($sheetName, $coordinate) = explode(".", $attr['source']);
+            list($sheetName, $coordinate) = explode(".", $_attr['source']);
             $referencesWorksheet = $objPHPExcel->getSheetByName($sheetName);
             $referencesCell = $referencesWorksheet->getCell($coordinate);
             $columnValue = $referencesCell->getColumn();
@@ -359,12 +362,15 @@ class ExcelReportBehavior extends Behavior
         $attr['children'] = array_key_exists('children', $settings) ? $settings['children'] : [];
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
+
         // Start attributes  for dropdown
-        $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : [];
-        $attr['promptTitle'] = array_key_exists('promptTitle', $settings) ? $settings['promptTitle'] : [];
-        $attr['prompt'] = array_key_exists('prompt', $settings) ? $settings['prompt'] : [];
-        $attr['errorTitle'] = array_key_exists('errorTitle', $settings) ? $settings['errorTitle'] : [];
-        $attr['error'] = array_key_exists('error', $settings) ? $settings['error'] : [];
+        $dropdownAttrs = ['source', 'promptTitle', 'prompt', 'errorTitle', 'error'];
+        $attr['dropdown'] = [];
+        foreach ($dropdownAttrs as $attrName) {
+            if (array_key_exists($attrName, $settings)) {
+                $attr['dropdown'][$attrName] = $settings[$attrName];
+            }
+        }
         // End attributes  for dropdown
 
         $attr['data'] = $this->getPlaceholderData($displayValue, $extra);
@@ -529,7 +535,7 @@ class ExcelReportBehavior extends Behavior
 
             $extra['placeholders'] = $placeholders;
         } else if (!is_null($affectedRowValue)) {
-            // to-do: // logic to shift coordinate of unprocessed placeholder to down if it is affected after auto insert new row
+            // to-do: logic to shift coordinate of unprocessed placeholder to down if it is affected after auto insert new row
         }
     }
 
