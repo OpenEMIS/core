@@ -551,7 +551,8 @@ trait MessagesTrait {
             'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
             'survey_not_found' => 'No identifiable survey found',
             'no_answers' => 'No record were found in the file imported',
-            'institution_network_connectivity_id' => 'code'
+            'institution_network_connectivity_id' => 'code',
+            'exam_centre_dont_match' => 'Examination and centre combination cannot be found.'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
@@ -587,7 +588,9 @@ trait MessagesTrait {
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
         ],
-
+        'ExaminationCentres' => [
+            'savingProcessStarted' => 'Examination centres are currently being added in the background'
+        ],
         'ExaminationCentreStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
@@ -1250,6 +1253,13 @@ trait MessagesTrait {
                 ]
             ]
         ],
+        'Education' => [
+            'EducationGradesSubjects' => [
+                'hours_required' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ]
+            ]
+        ],
         'Localization' => [
             'Translations' => [
                 'en' => [
@@ -1423,6 +1433,9 @@ trait MessagesTrait {
             'ExaminationCentres' => [
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
+                ],
+                'examination_id' => [
+                    'ruleNoRunningSystemProcess' => 'There is currently a running process for this examination'
                 ],
             ],
             'ExaminationCentreRooms' => [

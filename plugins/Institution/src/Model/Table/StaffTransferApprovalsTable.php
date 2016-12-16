@@ -382,7 +382,7 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 						'action' => 'StaffUser',
 						'0' => 'view',
 						'1' => $this->paramsEncode(['id' => $staffId]),
-						'institution_id' => $entity->previous_institution_id
+						'institution_id' => $entity->getOriginal('previous_institution_id')
 
 					]);
 		}
