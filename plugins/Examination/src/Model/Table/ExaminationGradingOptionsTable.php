@@ -31,9 +31,9 @@ class ExaminationGradingOptionsTable extends ExaminationsAppTable {
 
     public function getFormFields($action = 'edit') {
         if ($action=='edit') {
-            return ['code'=>'', 'name'=>'', 'min'=>'', 'max'=>'', 'examination_grading_type_id'=>'', 'id'=>''];
+            return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'examination_grading_type_id'=>'', 'id'=>''];
         } else {
-            return ['code'=>'', 'name'=>'', 'min'=>'', 'max'=>''];
+            return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>''];
         }
     }
 
