@@ -15,6 +15,7 @@ use Cake\Log\Log;
 
 use PHPExcel_IOFactory;
 use PHPExcel_Worksheet;
+use PHPExcel_Cell_DataValidation;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -27,7 +28,8 @@ class ExcelReportBehavior extends Behavior
     private $advancedTypes = [
         'row' => 'repeatRows',
         'column' => 'repeatColumns',
-        'match' => 'match'
+        'match' => 'match',
+        'dropdown' => 'dropdown'
     ];
     private $suppressAutoInsertNewRow = false;
     private $suppressAutoInsertNewColumn = false;
@@ -162,10 +164,10 @@ class ExcelReportBehavior extends Behavior
     {
         foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
             $extra['placeholders'] = [];
-            $this->processBasicPlaceholder($objWorksheet, $extra);
+            $this->processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra);
 
             if (!empty($extra['placeholders'])) {
-                $this->processAdvancedPlaceholder($objWorksheet, $extra);
+                $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
             }
         }
 
@@ -173,7 +175,7 @@ class ExcelReportBehavior extends Behavior
         $objPHPExcel->setActiveSheetIndex(0);
     }
 
-    public function renderCell($objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
+    public function renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
     {
         $type = $attr['type'];
         $format = $attr['format'];
@@ -201,6 +203,49 @@ class ExcelReportBehavior extends Behavior
         // set column width to follow placeholder
         $objWorksheet->getColumnDimension($targetColumnValue)->setAutoSize(false);
         $objWorksheet->getColumnDimension($targetColumnValue)->setWidth($columnWidth);
+    }
+
+    public function renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $cellValue, $attr, $extra)
+    {
+        $_attr = [
+            'promptTitle' => __('Pick from list'),
+            'prompt' => __('Please pick a value from the drop-down list.'),
+            'errorTitle' => __('Input error'),
+            'error' => __('Value is not in list.')
+        ];
+
+        $objValidation = $objWorksheet->getCell($cellCoordinate)->getDataValidation();
+        $objValidation->setType( PHPExcel_Cell_DataValidation::TYPE_LIST );
+        $objValidation->setErrorStyle( PHPExcel_Cell_DataValidation::STYLE_INFORMATION );
+        $objValidation->setAllowBlank(false);
+        $objValidation->setShowInputMessage(true);
+        $objValidation->setShowErrorMessage(true);
+        $objValidation->setShowDropDown(true);
+        $objValidation->setPromptTitle($_attr['promptTitle']);
+        $objValidation->setPrompt($_attr['prompt']);
+        $objValidation->setErrorTitle($_attr['errorTitle']);
+        $objValidation->setError($_attr['error']);
+
+        if (is_array($attr['source'])) {
+            $list = implode(",", $attr['source']);
+            $format = '"%s"';
+            $value = sprintf($format, $list);
+            $objValidation->setFormula1($value);
+        } else {
+            list($sheetName, $coordinate) = explode(".", $attr['source']);
+            $referencesWorksheet = $objPHPExcel->getSheetByName($sheetName);
+            $referencesCell = $referencesWorksheet->getCell($coordinate);
+            $columnValue = $referencesCell->getColumn();
+            $rowValue = $referencesCell->getRow();
+            $highestRow = $referencesWorksheet->getHighestRow($columnValue);
+
+            $listLocation = sprintf('%s!$%s$%s:$%s$%s', "'$sheetName'", $columnValue, $rowValue, $columnValue, $highestRow);
+            Log::write('debug', $listLocation);
+            $objValidation->setFormula1($listLocation);
+        }
+
+        // set to empty to remove the placeholder
+        $objWorksheet->setCellValue($cellCoordinate, $cellValue);
     }
 
     public function saveExcel($objPHPExcel, $filepath)
@@ -318,6 +363,14 @@ class ExcelReportBehavior extends Behavior
         $attr['children'] = array_key_exists('children', $settings) ? $settings['children'] : [];
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
+        // Start attributes  for dropdown
+        $attr['source'] = array_key_exists('source', $settings) ? $settings['source'] : [];
+        $attr['promptTitle'] = array_key_exists('promptTitle', $settings) ? $settings['promptTitle'] : [];
+        $attr['prompt'] = array_key_exists('prompt', $settings) ? $settings['prompt'] : [];
+        $attr['errorTitle'] = array_key_exists('errorTitle', $settings) ? $settings['errorTitle'] : [];
+        $attr['error'] = array_key_exists('error', $settings) ? $settings['error'] : [];
+        // End attributes  for dropdown
+
         $attr['data'] = $this->getPlaceholderData($displayValue, $extra);
 
         return $attr;
@@ -374,7 +427,17 @@ class ExcelReportBehavior extends Behavior
         return [$placeholderPrefix, $placeholderSuffix];
     }
 
-    private function processBasicPlaceholder($objWorksheet, $extra)
+    // private function processWorksheet($objPHPExcel, $objWorksheet, $extra)
+    // {
+    //     $extra['placeholders'] = [];
+    //     $this->processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra);
+
+    //     if (!empty($extra['placeholders'])) {
+    //         $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
+    //     }
+    // }
+
+    private function processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra)
     {
         $cells = $objWorksheet->getCellCollection();
 
@@ -393,7 +456,8 @@ class ExcelReportBehavior extends Behavior
                 if ($pos !== false) {
                     // if is basic placeholder then replace first, else added into $placeholder to process later
                     if ($this->isBasicType($cellValue)) {
-                        $this->string($objWorksheet, $objCell, $cellValue, $extra);
+                        Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
+                        $this->string($objPHPExcel, $objWorksheet, $objCell, $cellValue, $extra);
                     } else {
                         $extra['placeholders'][$cellCoordinate] = $cellValue;
                     }
@@ -402,7 +466,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function processAdvancedPlaceholder($objWorksheet, $extra)
+    private function processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra)
     {
         foreach ($extra['placeholders'] as $cellCoordinate => $cellValue) {
             $objCell = $objWorksheet->getCell($cellCoordinate);
@@ -414,21 +478,30 @@ class ExcelReportBehavior extends Behavior
                 if ($pos !== false) {
                     if (method_exists($this, $function)) {
                         $jsonArray = $this->convertPlaceHolderToArray($cellValue);
+                        if (!empty($jsonArray)) {
+                            $placeHolderAttr = $this->extractPlaceholderAttr($jsonArray, $keyword, $extra);
+                            $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
+                            $attr = array_merge($placeHolderAttr, $cellAttr);
 
-                        $placeHolderAttr = $this->extractPlaceholderAttr($jsonArray, $keyword, $extra);
-                        $cellAttr = $this->extractCellAttr($objWorksheet, $objCell);
-                        $attr = array_merge($placeHolderAttr, $cellAttr);
-
-                        $this->$function($objWorksheet, $objCell, $attr, $extra);
+                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue);
+                            $this->$function($objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                        } else {
+                            Log::write('debug', $cellCoordinate . ' - ' . $cellValue . ' is not a valid json format');
+                        }
                     } else {
                         Log::write('debug', 'Function ' . $function . ' is not exists');
                     }
                 }
             }
+            // after process the first cell in the list, exit the loop to read back from the same sheet and extract the advanced placeholder again,
+            // this is because the advanced placeholder position might changed after auto insert row or column
+            // break;
         }
+
+        // $this->processWorksheet($objPHPExcel, $objWorksheet, $extra);
     }
 
-    private function string($objWorksheet, $objCell, $search, $extra)
+    private function string($objPHPExcel, $objWorksheet, $objCell, $search, $extra)
     {
         $format = '${%s}';
         $vars = $extra->offsetExists('vars') ? $extra['vars'] : [];
@@ -454,7 +527,7 @@ class ExcelReportBehavior extends Behavior
         $objWorksheet->setCellValue($cellCoordinate, $search);
     }
 
-    private function row($objWorksheet, $objCell, $attr, $extra)
+    private function row($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
     {
         $columnValue = $attr['columnValue'];
         $rowValue = $attr['rowValue'];
@@ -465,7 +538,7 @@ class ExcelReportBehavior extends Behavior
             }
 
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
             $rowValue++;
         }
@@ -476,7 +549,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function column($objWorksheet, $objCell, $attr, $extra)
+    private function column($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
     {
         $columnIndex = $attr['columnIndex'];
         $rowValue = $attr['rowValue'];
@@ -489,7 +562,7 @@ class ExcelReportBehavior extends Behavior
                 $objWorksheet->insertNewColumnBefore($columnValue);
             }
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
             if (!empty($nestedColumn)) {
                 $keyword = $this->advancedTypes[__FUNCTION__];
@@ -506,7 +579,7 @@ class ExcelReportBehavior extends Behavior
                     }
 
                     $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-                    $this->renderCell($objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+                    $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
 
                     $nestedColumnIndex++;
                 }
@@ -534,7 +607,7 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function match($objWorksheet, $objCell, $attr, $extra)
+    private function match($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
     {
         list($attr['placeholderPrefix'], $attr['placeholderSuffix']) = $this->splitDisplayValue($attr['displayValue']);
 
@@ -543,15 +616,15 @@ class ExcelReportBehavior extends Behavior
         $data = array_key_exists('data', $attr) ? $attr['data'] : [];
 
         if (!empty($rowsArray)) {
-            $this->matchRows($objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
+            $this->matchRows($objPHPExcel, $objWorksheet, $objCell, $attr, $rowsArray, $columnsArray, $extra);
         } else {
             $columnIndex = $attr['columnIndex'];
             $rowValue = $attr['rowValue'];
-            $this->matchColumns($objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, null, $extra);
+            $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, null, $extra);
         }
     }
 
-    private function matchRows($objWorksheet, $objCell, $attr, $rowsArray=[], $columnsArray=[], $extra)
+    private function matchRows($objPHPExcel, $objWorksheet, $objCell, $attr, $rowsArray=[], $columnsArray=[], $extra)
     {
         $matchFrom = array_key_exists('matchFrom', $rowsArray) ? $rowsArray['matchFrom'] : [];
         $matchTo = array_key_exists('matchTo', $rowsArray) ? $rowsArray['matchTo'] : [];
@@ -565,7 +638,7 @@ class ExcelReportBehavior extends Behavior
             // reset columnIndex after every loop of row
             $columnIndex = $attr['columnIndex'];
             if (!empty($columnsArray)) {
-                $this->matchColumns($objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
+                $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
             } else {
                 $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
                 $placeholder = sprintf($placeholderFormat, $value);
@@ -577,14 +650,14 @@ class ExcelReportBehavior extends Behavior
                 $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
                 $cellCoordinate = $columnValue.$rowValue;
 
-                $this->renderCell($objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
+                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
             }
 
             $rowValue++;
         }
     }
 
-    private function matchColumns($objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
+    private function matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray=[], &$columnIndex, &$rowValue, $filterValue=null, $extra)
     {
         $matchFrom = array_key_exists('matchFrom', $columnsArray) ? $columnsArray['matchFrom'] : [];
         $matchTo = array_key_exists('matchTo', $columnsArray) ? $columnsArray['matchTo'] : [];
@@ -618,12 +691,31 @@ class ExcelReportBehavior extends Behavior
                     $nestedColumnValue = $objCell->stringFromColumnIndex($columnIndex-1);
                     $nestedCellCoordinate = $nestedColumnValue.$rowValue;
 
-                    $this->renderCell($objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
+                    $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $matchValue, $attr, $extra);
                     $columnIndex++;
                 }
             } else {
                 // to-do: get value and write to cell
             }
+        }
+    }
+
+    private function dropdown($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $matchFrom = array_key_exists('rows', $attr) ? $attr['rows'] : [];
+        $rowData = $this->getPlaceholderData($matchFrom, $extra);
+
+        if (!empty($rowData)) {
+            $columnValue = $attr['columnValue'];
+            $rowValue = $attr['rowValue'];
+            foreach ($rowData as $key => $value) {
+                $cellCoordinate = $columnValue.$rowValue;
+                $this->renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+                $rowValue++;
+            }
+        } else {
+            $cellCoordinate = $attr['coordinate'];
+            $this->renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
     }
 }
