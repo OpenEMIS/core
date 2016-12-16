@@ -1677,4 +1677,27 @@ class ValidationBehavior extends Behavior {
 		$currentSeats = count($globalData['data']['students']);
 		return $totalSeats >= $currentSeats;
 	}
+
+	public static function checkNoRunningSystemProcess($check, $processName, array $globalData)
+	{
+		$RUNNING = 2;
+		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$runningProcesses = $SystemProcesses->find()
+			->where([
+				$SystemProcesses->aliasField('name') => $processName,
+				$SystemProcesses->aliasField('status') => $RUNNING
+			])
+			->toArray();
+
+		if (!empty($runningProcesses)) {
+			foreach ($runningProcesses as $key => $obj) {
+				$params = json_decode($obj->params);
+				if ($params->examination_id && $params->examination_id == $check) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
 }
