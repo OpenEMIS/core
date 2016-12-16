@@ -40,8 +40,11 @@ class AddAllInstitutionsExamCentreShell extends Shell {
             // get special needs and subjects from SystemProcesses params
             if (!empty($systemProcessId)) {
                 $SystemProcesses->updatePid($systemProcessId, $pid);
-                $params = $SystemProcesses->get($systemProcessId)->params;
-                $paramsObj = json_decode($params);
+                $processData = $SystemProcesses->get($systemProcessId);
+                if (!empty($processData)) {
+                    $params = $processData->params;
+                    $paramsObj = json_decode($params);
+                }
             }
 
             if (isset($paramsObj)) {
