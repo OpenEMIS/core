@@ -37,4 +37,19 @@ class IndexesCriteriasTable extends ControllerActionTable
 
         return !empty($indexTotal) ? $indexTotal : ' 0';
     }
+
+    public function getCriteriaKey($indexId)
+    {
+        $criteriaKeyResult = $this->find()
+            ->distinct(['criteria'])
+            ->where([$this->aliasField('index_id') => $indexId])
+            ->all();
+
+        $criteriaKey = [];
+        foreach ($criteriaKeyResult as $key => $obj) {
+            $criteriaKey[$obj->criteria] = $obj->criteria;
+        }
+
+        return $criteriaKey;
+    }
 }

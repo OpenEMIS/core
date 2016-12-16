@@ -62,7 +62,9 @@ class StudentIndexesTable extends ControllerActionTable
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('student_id') => $studentId,
-            ]);
+            ])
+            ->order(['academic_period_id', 'index_id'])
+            ;
 
         return $query;
     }
@@ -83,15 +85,23 @@ class StudentIndexesTable extends ControllerActionTable
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
         // from indexes table
-        // pr('onGetGeneratedBy');
-        // return
+        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $indexId = $entity->index->id;
+        $generatedById = $Indexes->get($indexId)->generated_by;
+
+        $userName = $this->Users->get($generatedById)->first_name . ' ' . $this->Users->get($generatedById)->last_name;
+
+        return $userName;
     }
 
     public function onGetGeneratedOn(Event $event, Entity $entity)
     {
         // from indexes table
-        // pr('onGetGeneratedOn');
-        // return
+        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $indexId = $entity->index->id;
+        $generatedOn = $Indexes->get($indexId)->generated_on->format('F d, Y - H:i:s');
+
+        return $generatedOn;
     }
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
