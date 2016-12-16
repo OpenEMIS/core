@@ -77,19 +77,28 @@ class AddAllInstitutionsExamCentreShell extends Shell {
 
             $newEntities = [];
             foreach ($allInstitutionsData as $institution) {
-                $obj['institution_id'] = $institution->id;
-                $obj['area_id'] = $institution->area_id;
-                $obj['name'] = $institution->name;
-                $obj['code'] = $institution->code;
-                $obj['address'] = $institution->address;
-                $obj['postal_code'] = $institution->postal_code;
-                $obj['contact_person'] = $institution->contact_person;
-                $obj['telephone'] = $institution->telephone;
-                $obj['fax'] = $institution->fax;
-                $obj['email'] = $institution->email;
-                $obj['website'] = $institution->website;
+                // check if this exam centre was added while shell is still running
+                $existingExamCentre = $this->ExaminationCentres->find()
+                    ->where([
+                        $this->ExaminationCentres->aliasField('institution_id') => $institution->id,
+                        $this->ExaminationCentres->aliasField('examination_id') => $examinationId,
+                    ])
+                    ->first();
 
-                $newEntities[] = $this->ExaminationCentres->newEntity($obj, ['validate' => false]);
+                if (empty($existingExamCentre)) {
+                    $obj['institution_id'] = $institution->id;
+                    $obj['area_id'] = $institution->area_id;
+                    $obj['name'] = $institution->name;
+                    $obj['code'] = $institution->code;
+                    $obj['address'] = $institution->address;
+                    $obj['postal_code'] = $institution->postal_code;
+                    $obj['contact_person'] = $institution->contact_person;
+                    $obj['telephone'] = $institution->telephone;
+                    $obj['fax'] = $institution->fax;
+                    $obj['email'] = $institution->email;
+                    $obj['website'] = $institution->website;
+                    $newEntities[] = $this->ExaminationCentres->newEntity($obj, ['validate' => false]);
+                }
             }
 
             try {
