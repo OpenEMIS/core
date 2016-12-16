@@ -23,6 +23,10 @@
     font-size: 12px;
 }
 
+.form-horizontal textarea {
+    min-width: 185px !important;
+}
+
 input[disabled="disabled"],
 textarea[disabled="disabled"] {
     color: #AAA !important;
