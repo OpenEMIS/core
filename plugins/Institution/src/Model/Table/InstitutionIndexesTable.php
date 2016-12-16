@@ -53,10 +53,13 @@ class InstitutionIndexesTable extends ControllerActionTable
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
-        $generatedById = $entity->generated_by;
+        $userName = '';
+        if (isset($entity->generated_by)) {
+            $generatedById = $entity->generated_by;
 
-        $Users = TableRegistry::get('Security.Users');
-        $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
+            $Users = TableRegistry::get('Security.Users');
+            $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
+        }
 
         return $userName;
     }

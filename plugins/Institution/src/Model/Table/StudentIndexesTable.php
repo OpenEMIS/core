@@ -89,7 +89,10 @@ class StudentIndexesTable extends ControllerActionTable
         $indexId = $entity->index->id;
         $generatedById = $Indexes->get($indexId)->generated_by;
 
-        $userName = $this->Users->get($generatedById)->first_name . ' ' . $this->Users->get($generatedById)->last_name;
+        $userName = '';
+        if (!empty($generatedById)) {
+            $userName = $this->Users->get($generatedById)->first_name . ' ' . $this->Users->get($generatedById)->last_name;
+        }
 
         return $userName;
     }
