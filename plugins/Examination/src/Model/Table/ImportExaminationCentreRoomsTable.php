@@ -126,6 +126,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
         $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
         
         $selectFields = [
+            $lookedUpTable->aliasField('id'), 
             $lookedUpTable->aliasField($lookupColumn), 
             $lookedUpTable->aliasField('name'), 
             $this->AcademicPeriods->aliasField('code'), 
@@ -153,7 +154,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
         $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [__('Examination Code'), $translatedCol, $translatedReadableCol, __('Academic Period')];
+        $data[$columnOrder]['data'][] = [__('Examination Code'), __('ID'), $translatedReadableCol, __('Academic Period')];
         if (!empty($modelData)) {
             $displayedExamCode = []; //to skip display based on grouping.
             foreach($modelData->toArray() as $row) {
@@ -168,8 +169,8 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
                 $data[$columnOrder]['data'][] = [
                     $examCode,
-                    $row->$lookupColumn,
-                    $row->name,
+                    $row->id,
+                    $row->$lookupColumn . ' - ' . $row->name,
                     $row->_matchingData[$this->AcademicPeriods->alias()]->name
                 ];
             }
@@ -203,7 +204,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
 
         //match selected academic period with examination centres selected and also exam selected.
         if ($tempRow->offsetExists('examination_centre_id') && !empty($tempRow['examination_centre_id'])) {
-            
+
             $ExaminationCentre = $this->ExaminationCentres
                                 ->find()
                                 ->where([
@@ -217,7 +218,6 @@ class ImportExaminationCentreRoomsTable extends AppTable
                 return false;
             }
         }
-
         return true;
     }
 }
