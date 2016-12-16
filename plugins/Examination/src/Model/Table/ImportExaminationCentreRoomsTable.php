@@ -126,8 +126,8 @@ class ImportExaminationCentreRoomsTable extends AppTable
         $selectedPeriod = $this->getAcademicPeriod($this->request->query('period'));
         
         $selectFields = [
-            $lookedUpTable->aliasField('id'), 
-            $lookedUpTable->aliasField($lookupColumn), 
+            $lookedUpTable->aliasField($lookupColumn),
+            $lookedUpTable->aliasField('code'), 
             $lookedUpTable->aliasField('name'), 
             $this->AcademicPeriods->aliasField('code'), 
             $this->AcademicPeriods->aliasField('name'),
@@ -170,7 +170,7 @@ class ImportExaminationCentreRoomsTable extends AppTable
                 $data[$columnOrder]['data'][] = [
                     $examCode,
                     $row->id,
-                    $row->$lookupColumn . ' - ' . $row->name,
+                    $row->code . ' - ' . $row->name,
                     $row->_matchingData[$this->AcademicPeriods->alias()]->name
                 ];
             }
