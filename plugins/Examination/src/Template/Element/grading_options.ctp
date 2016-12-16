@@ -30,7 +30,7 @@
         </div>
         <div class="table-wrapper full-width">
             <div class="table-responsive">
-                <table class="table table-curved table-input">
+                <table class="table table-curved table-input row-align-top">
                     <thead>
                         <tr>
                             <?php foreach ($attr['formFields'] as $formField) : ?>
@@ -38,7 +38,7 @@
                                     <?php
                                     $thClass = (isset($attr['fields'][$formField]['required']) && $attr['fields'][$formField]['required']) ? 'required' : '';
                                     ?>
-                                    <th class="<?= $thClass ?>"><label class="table-header-label"><?= Inflector::humanize($formField) ?></label></th>
+                                    <th class="<?= $thClass ?>"><label class="table-header-label"><?= __(Inflector::humanize($formField)) ?></label></th>
                                     <th></th>
                                 <?php endif; ?>
                             <?php endforeach;?>
