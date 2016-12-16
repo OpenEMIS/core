@@ -588,7 +588,9 @@ trait MessagesTrait {
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
         ],
-
+        'ExaminationCentres' => [
+            'savingProcessStarted' => 'Examination centres are currently being added in the background'
+        ],
         'ExaminationCentreStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
@@ -1431,6 +1433,9 @@ trait MessagesTrait {
             'ExaminationCentres' => [
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
+                ],
+                'examination_id' => [
+                    'ruleNoRunningSystemProcess' => 'There is currently a running process for this examination'
                 ],
             ],
             'ExaminationCentreRooms' => [
