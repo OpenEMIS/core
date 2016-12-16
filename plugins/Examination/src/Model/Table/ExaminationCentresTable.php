@@ -102,8 +102,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                 'provider' => 'table',
                 'on' => function ($context) {
                     $createAs = (array_key_exists('create_as', $context['data']))? $context['data']['create_as']: null;
-                    $addAllInstitutions = (array_key_exists('add_all_institutions', $context['data']))? $context['data']['add_all_institutions']: null;
-                    return ($createAs == 'existing' && $addAllInstitutions == 1);
+                    return ($createAs == 'existing');
                 }
             ])
             ->requirePresence('code')
@@ -1064,7 +1063,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $params = json_encode($passArray);
                         $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
 
-                        $this->triggerAddAllInstitutionsExamCentreShell($examinationId, $academicPeriodId, $systemProcessId);
+                        $this->triggerAddAllInstitutionsExamCentreShell($examinationId, $academicPeriodId, $systemProcessId, $institutionTypeId);
+                        $this->Alert->warning($this->aliasField('savingProcessStarted'), ['reset' => true]);
                         return true;
                     }
                 }
@@ -1081,8 +1081,8 @@ class ExaminationCentresTable extends ControllerActionTable {
         $args = '';
         $args .= !is_null($examinationId) ? ' '.$examinationId : '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
-        $args .= !is_null($institutionTypeId) ? ' '.$institutionTypeId : '';
         $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+        $args .= !is_null($institutionTypeId) ? ' '.$institutionTypeId : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake AddAllInstitutionsExamCentre '.$args;
         $logs = ROOT . DS . 'logs' . DS . 'AddAllInstitutionsExamCentre.log & echo $!';
