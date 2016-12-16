@@ -14,7 +14,7 @@
             </div>
         </div>
     <?php else :
-        echo __('No Special Need Types');
+        echo __('No record');
     ?>
     <?php endif ?>
 
@@ -22,15 +22,29 @@
     <?php
         $tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
         $tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
-    ?>
-    <?=
-        $this->Form->input($ControllerAction['table']->alias().".special_need_type_id", [
-            'label' => __('Add Special Need Type'),
+
+        $label = $attr['label'];
+        $inputField = implode('.', [$ControllerAction['table']->alias(), $attr['field']]);
+        $inputEvent = 'Select' . str_replace(' ', '', $label);
+
+        if (!array_key_exists('options', $attr)) {
+            $attr['options'] = [];
+        }
+
+        $selectOptions = ['' => '-- ' . __('Select ' . $label) . ' --'];
+        if (array_key_exists('addAll', $attr) && $attr['addAll'] && !empty($attr['options'])) {
+            $selectOptions['-1'] = '-- ' . __('Add all ' . $label) . ' --';
+        }
+        $selectOptions += $attr['options'];
+
+        $_inputOptions = [
             'type' => 'select',
-            'options' => $attr['options'],
-            'value' => 0,
-            'onchange' => "$('#reload').val('AddExamCentreSpecialNeeds').click();"
-        ]);
+            'label' => __('Add ' . $label),
+            'options' => $selectOptions,
+            'onchange' => "$('#reload').val('" . $inputEvent . "').click();"
+        ];
+
+        echo $this->Form->input($inputField, $_inputOptions);
     ?>
     <div class="table-responsive">
         <table class="table table-curved table-input">
