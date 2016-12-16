@@ -29,4 +29,12 @@ class GendersTable extends AppTable {
 		return $validator;
 	}
 
+	public function getThresholdOptions()
+    {
+        return $this
+            ->find('list')
+            ->order([$this->aliasField('order')])
+            ->toArray()
+        ;
+    }
 }

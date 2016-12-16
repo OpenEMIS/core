@@ -23,7 +23,7 @@
 	?>
 <?php endif ?>
 
-<div class="<?= $tableClass; ?>" autocomplete-ref="trainer_id">
+<div class="<?= $tableClass; ?>" autocomplete-ref="indexes">
 	<table class="table">
 		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 		<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>

@@ -51,11 +51,11 @@ class IndexesTable extends ControllerActionTable
         //     'operator' => [1 => '<', 2 => '>'],
         //     'threshold' => ['type' => 'number']
         // ],
-        // 'GENDER' => [
-        //     'name' => 'Genders',
-        //     'operator' => [3 => '='],
-        //     'threshold' => ['type' => 'select', 'lookupModel' => [3,4,5]]
-        // ],
+        'Institution.StudentUser' => [
+            'name' => 'Genders',
+            'operator' => [3 => '='],
+            'threshold' => ['type' => 'select', 'lookupModel' => 'User.Genders']
+        ],
         // 'GUARDIAN' => [
         //     'name' => 'Guardians',
         //     'operator' => [1 => '<', 2 => '>'],
@@ -152,7 +152,7 @@ class IndexesTable extends ControllerActionTable
     {
         $model = TableRegistry::get($model);
         $options = [];
-        $options = $model->getStudentBehaviourClassificationsOptions();
+        $options = $model->getThresholdOptions();
 
         return $options;
     }
@@ -356,6 +356,7 @@ class IndexesTable extends ControllerActionTable
     public function setupFields(Event $event, Entity $entity)
     {
         $this->field('generated_by',['visible' => false]);
+        $this->field('generated_on',['visible' => false]);
         $this->field('indexes_criterias', ['type' => 'custom_criterias']);
 
         $this->setFieldOrder(['name', 'indexes_criterias']);
