@@ -891,7 +891,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             $selectOptions = [];
             if ($institutionsCount != 0) {
-                $yesOption = __('Yes') . ' (' . $institutionsCount . ' ' . __('institutions selected'). ')';
+                $yesOption = __('Yes') . ' - ' . $institutionsCount . ' ' . __('institutions selected');
                 $selectOptions = [0 => __('No'), 1 => $yesOption];
             }
 
