@@ -116,6 +116,8 @@ class UserBehavior extends Behavior {
             $this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
             $this->_table->fields['birthplace_area_id']['source_model'] = 'Area.AreaAdministratives';
             $this->_table->fields['gender_id']['type'] = 'select';
+            $this->_table->fields['nationality_id']['type'] = 'select';
+            $this->_table->fields['identity_type_id']['type'] = 'select';
 
             $i = 10;
             $this->_table->fields['first_name']['order'] = $i++;
