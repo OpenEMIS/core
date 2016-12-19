@@ -128,7 +128,8 @@ class StudentIndexesTable extends ControllerActionTable
                 ->contain(['IndexesCriterias'])
                 ->where([
                     $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
-                    $this->StudentIndexesCriterias->aliasField('value') . ' <> ' => 0
+                    // $this->StudentIndexesCriterias->aliasField('value') . ' <> ' => 0
+                    $this->StudentIndexesCriterias->aliasField('value') . ' IS NOT NULL'
                 ])
                 ->order(['criteria','threshold'])
                 ->all();
@@ -152,10 +153,10 @@ class StudentIndexesTable extends ControllerActionTable
                     $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId);
                     $quantity = '';
                     if ($getValueIndex[$threshold] > 1) {
-                        $quantity = '<div style="color : red"> ( x' . $getValueIndex[$threshold] . ' )</div>';
+                        $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
                     }
 
-                    $indexValue = $obj->indexes_criteria->index_value . $quantity;
+                    $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . $quantity  .'</div>';
 
                     // for reference tooltip
                     $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold);

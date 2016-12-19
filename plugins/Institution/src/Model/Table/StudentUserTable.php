@@ -581,7 +581,7 @@ class StudentUserTable extends ControllerActionTable
     	return $query;
     }
 
-    public function getInstitutionId($studentId, $academicPeriodId)
+    public function getInstitutionIdByUser($studentId, $academicPeriodId)
 	{
 		$institutionId = $this->InstitutionStudents->getInstitutionIdByUser($studentId, $academicPeriodId);
 		return $institutionId;
