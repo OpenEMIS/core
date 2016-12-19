@@ -319,7 +319,8 @@ class InstitutionAssessmentsTable extends ControllerActionTable {
             $buttons['view']['url'] = $this->setQueryString($url, [
                 'class_id' => $entity->institution_class_id,
                 'assessment_id' => $entity->assessment_id,
-                'institution_id' => $entity->institution_id
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id
             ]);
         }
 
