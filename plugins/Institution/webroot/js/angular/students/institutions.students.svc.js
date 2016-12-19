@@ -372,7 +372,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var deferred = $q.defer();
         var vm = this;
         if (externalSource == null) {
-            delete userRecord['username'];
             userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date'])
             delete userRecord['gender'];
             if (userRecord['nationality_id'] != '' && userRecord['nationality_id'] != undefined) {
@@ -386,9 +385,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     'number': userRecord['identity_number']
                 }];
             }
-            delete userRecord['identity_type_id'];
-            delete userRecord['identity_number'];
-            delete userRecord['nationality_id'];
             StudentUser.reset();
             StudentUser.save(userRecord)
             .then(function(studentRecord) {
@@ -429,7 +425,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     newUserRecord['third_name'] = userRecord[attr['third_name_mapping']];
                 }
                 if (typeof userRecord[attr['identity_number_mapping']] != 'undefined') {
-                    identityNumber = userRecord[attr['identity_number_mapping']];
+                    newUserRecord['identity_number'] = userRecord[attr['identity_number_mapping']];
                 }
                 if (typeof userRecord[attr['nationality_mapping']] != 'undefined') {
                     nationality = userRecord[attr['nationality_mapping']];
@@ -464,6 +460,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         .then(function(promiseArr) {
                             newUserRecord['gender_id'] = promiseArr[0];
                             newUserRecord['nationality_id'] = promiseArr[1];
+                            newUserRecord['identity_type_id'] = promiseArr[2];
                             var identityTypeId = promiseArr[2];
                             StudentUser.reset();
                             StudentUser.save(newUserRecord)
@@ -476,8 +473,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                     var userId = userEntity.id;
                                     var promises = [];
                                     // Import identity
-                                    if (identityTypeId != null && identityNumber != null && identityNumber != '') {
-                                        vm.addUserIdentity(userId, identityTypeId, identityNumber);
+                                    if (newUserRecord['identity_type_id'] != null && newUserRecord['identity_number'] != null && newUserRecord['identity_number'] != '') {
+                                        vm.addUserIdentity(userId, newUserRecord['identity_type_id'], newUserRecord['identity_number']);
                                     }
                                     // Import nationality
                                     if (userEntity.nationality_id != null) {
