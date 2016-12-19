@@ -12,6 +12,7 @@ class UpdateIndexesShell extends Shell
     public function initialize()
     {
         parent::initialize();
+
         $this->loadModel('Institution.InstitutionStudentIndexes');
         $this->loadModel('Institution.StudentIndexesCriterias');
         $this->loadModel('Indexes.IndexesCriterias');
@@ -39,20 +40,28 @@ class UpdateIndexesShell extends Shell
         $criteriaKey = $this->Indexes->getCriteriasOptions();
 
         foreach ($criteriaKey as $key => $obj) {
-            $this->autoUpdateIndexes($key, $institutionId, $userId);
+            $this->autoUpdateIndexes($key, $obj, $institutionId, $userId);
         }
     }
 
-    public function autoUpdateIndexes($key, $institutionId=0, $userId=0)
+    public function autoUpdateIndexes($key, $obj, $institutionId=0, $userId=0)
     {
         $today = Time::now();
         $CriteriaModel = TableRegistry::get($key);
 
-        if (!empty($institutionId)) {
-            $condition = [$CriteriaModel->aliasField('institution_id') => $institutionId];
-        } else {
+        // $excludedModel = ['StudentUser', 'Guardians'];// doesnt have institution Id in the table.
+// pr($excludedModel);die;
+        // if (!empty($institutionId)) {
+        //     if (!in_array($obj, $CriteriaModel)) {
+        //         $condition = [$CriteriaModel->aliasField('institution_id') => $institutionId];
+        //     } else {
+        //         // model dont have institution Id. (security_user, student_guardians)
+        //         $condition = [];
+        //     }
+        // } else {
+            // dont have institution Id (from administrator > generate)
             $condition = [];
-        }
+        // }
 
         $criteriaModelResults = $CriteriaModel->find()
             ->where([$condition])

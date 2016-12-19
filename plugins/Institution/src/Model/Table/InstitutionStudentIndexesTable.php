@@ -39,6 +39,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $events['Model.StudentBehaviours.afterSave'] = 'afterSaveOrDelete';
         $events['Model.StudentBehaviours.afterDelete'] = 'afterSaveOrDelete';
         $events['Model.StudentUser.afterSave'] = 'afterSaveOrDelete'; // gender cant be deleted. only edit
+        $events['Model.Guardians.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.Guardians.afterDelete'] = 'afterSaveOrDelete';
         return $events;
     }
 
@@ -195,6 +197,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $criteriaTable = TableRegistry::get($criteriaModel);
 
+        // to get studentId
         if (isset($afterSaveOrDeleteEntity->student_id)) {
             $studentId = $afterSaveOrDeleteEntity->student_id;
         } else {
@@ -202,13 +205,15 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $studentId = $this->getStudentId($criteriaTable, $afterSaveOrDeleteEntity);
         }
 
+        // to get the academicPeriodId
         if (isset($afterSaveOrDeleteEntity->academic_period_id)) {
             $academicPeriodId = $afterSaveOrDeleteEntity->academic_period_id;
         } else {
             // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, model also have different date
-            $academicPeriodId = $this->getAcademicPeriodIdAfterDelete($criteriaTable, $afterSaveOrDeleteEntity);
+            $academicPeriodId = $this->getAcademicPeriodId($criteriaTable, $afterSaveOrDeleteEntity);
         }
 
+        // to get the institutionId
         if (isset($afterSaveOrDeleteEntity->institution_id)) {
             $institutionId = $afterSaveOrDeleteEntity->institution_id;
         } else {
@@ -221,14 +226,14 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             ->where([$IndexesCriterias->aliasField('criteria') => $criteriaModel])
             ->all();
 
-// pr('afterSaveOrDelete');
-// pr('criteriaModel: '. $criteriaModel);
-// pr('institutionId: '. $institutionId);
-// pr('studentId: '. $studentId);
-// pr('academicPeriodId: '. $academicPeriodId);
-// pr($afterSaveOrDeleteEntity);
-// pr($indexesCriteriaResults->toArray());
-// die;
+pr('afterSaveOrDelete');
+pr('criteriaModel: '. $criteriaModel);
+pr('institutionId: '. $institutionId);
+pr('studentId: '. $studentId);
+pr('academicPeriodId: '. $academicPeriodId);
+pr($afterSaveOrDeleteEntity);
+pr($indexesCriteriaResults->toArray());
+die;
         if (!$indexesCriteriaResults->isEmpty()) {
             foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
                 $indexId = $indexesCriteriaData->index_id;
@@ -273,13 +278,13 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     ]);
                 }
 
-                // if the condition fulfilled then the value will be saved as its value, if not saved as 0
+                // if the condition fulfilled then the value will be saved as its value, if not saved as null
                 switch ($operator) {
                     case 1: // '<'
                         if($valueIndexData < $threshold){
                             $valueIndex = $valueIndexData;
                         } else {
-                            $valueIndex = 0;
+                            $valueIndex = null;
                         }
                         break;
 
@@ -287,7 +292,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         if($valueIndexData > $threshold){
                             $valueIndex = $valueIndexData;
                         } else {
-                            $valueIndex = 0;
+                            $valueIndex = null;
                         }
                         break;
 
@@ -296,11 +301,12 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         if (array_key_exists($threshold, $valueIndexData)) {
                             $valueIndex = 'True';
                         } else {
-                            $valueIndex = 0;
+                            $valueIndex = null;
                         }
                         break;
                 }
-
+// pr($valueIndexData);
+// die;
                 // saving association to student_indexes_criterias
                 $criteriaData = [
                     'value' => $valueIndex,
@@ -351,6 +357,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         if (!$InstitutionStudentIndexesData->isEmpty()) {
             foreach ($InstitutionStudentIndexesData as $key => $institutionStudentIndexesObj) {
+// pr($institutionStudentIndexesObj);
                 $InstitutionStudentIndexesid = $institutionStudentIndexesObj->id;
                 $StudentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
                     ->where([$this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $InstitutionStudentIndexesid])
@@ -359,7 +366,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $indexTotal = [];
                 // to get the total of the index of the student
                 foreach ($StudentIndexesCriteriasResults as $key => $studentIndexesCriteriasObj) {
-                    if (!empty($studentIndexesCriteriasObj->value)) {
+// pr($studentIndexesCriteriasObj);
+                    if (!is_null($studentIndexesCriteriasObj->value)) {
                         $value = $studentIndexesCriteriasObj->value;
                         $indexesCriteriaId = $studentIndexesCriteriasObj->indexes_criteria_id;
 
@@ -367,9 +375,18 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = !empty($indexTotal[$studentIndexesCriteriasObj->institution_student_index_id]) ? $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] : 0 ;
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] + $indexValue;
                     }
+                    else {
+// // pr("empty student_indexes_criterias");
+                        $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = 0;
+                    }
                 }
+// pr($indexTotal);
+// die;
 
                 foreach ($indexTotal as $key => $obj) {
+// pr('empty ????');
+// pr($key);
+// pr($obj);
                     $this->query()
                         ->update()
                         ->set(['total_index' => $obj])
@@ -378,6 +395,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         ])
                         ->execute();
                 }
+// die;
             }
         }
     }
@@ -393,7 +411,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         return $studentId;
     }
 
-    public function getAcademicPeriodIdAfterDelete($criteriaTable, $afterSaveOrDeleteEntity)
+    public function getAcademicPeriodId($criteriaTable, $afterSaveOrDeleteEntity)
     {
         // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
         switch ($criteriaTable->alias()) {
@@ -411,6 +429,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         case 'StudentUser': // no date, will get the current academic period Id
             $academicPeriodId = $this->AcademicPeriods->getCurrent();
             break;
+
+        case 'Guardians': // no date, will get the current academic period Id
+            $academicPeriodId = $this->AcademicPeriods->getCurrent();
+            break;
         }
 
         return $academicPeriodId;
@@ -419,9 +441,15 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     public function getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId)
     {
         switch ($criteriaTable->alias()) {
-            case 'StudentUser': // The student_id is the Id
+            case 'StudentUser':
             $studentId = $afterSaveOrDeleteEntity->id;
-            $institutionId = $criteriaTable->getInstitutionId($studentId, $academicPeriodId);
+            $institutionId = $criteriaTable->getInstitutionIdByUser($studentId, $academicPeriodId);
+            break;
+
+            case 'Guardians':
+            $studentId = $afterSaveOrDeleteEntity->student_id;
+            $Students = TableRegistry::get('Institution.Students');
+            $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
             break;
         }
 

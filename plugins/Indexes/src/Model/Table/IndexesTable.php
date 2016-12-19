@@ -25,21 +25,21 @@ class IndexesTable extends ControllerActionTable
         //     'operator' => [1 => '<', 2 => '>'],
         //     'threshold' => ['type' => 'number']
         // ],
-        'Institution.StudentBehaviours' => [
-            'name' => 'Behavior',
-            'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
-        ],
         'Institution.InstitutionStudentAbsences' => [
             'name' => 'Absences',
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
-        // 'SPECIAL NEED' => [
-        //     'name' => 'Special Needs',
-        //     'operator' => [1 => '<', 2 => '>'],
-        //     'threshold' => ['type' => 'number']
-        // ],
+        'Institution.StudentBehaviours' => [
+            'name' => 'Behavior',
+            'operator' => [3 => '='],
+            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
+        ],
+        'User.SpecialNeeds' => [
+            'name' => 'Special Needs',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
         // 'STATUS' => [
         //     'name' => 'Status',
         //     'operator' => [3 => '='],
@@ -56,11 +56,11 @@ class IndexesTable extends ControllerActionTable
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'User.Genders']
         ],
-        // 'GUARDIAN' => [
-        //     'name' => 'Guardians',
-        //     'operator' => [1 => '<', 2 => '>'],
-        //     'threshold' => ['type' => 'number']
-        // ],
+        'Student.Guardians' => [
+            'name' => 'Guardians',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
         // // 'Language'
     ];
 
@@ -120,7 +120,7 @@ class IndexesTable extends ControllerActionTable
     {
         $criteriaOptions = [];
         foreach ($this->criteriaTypes as $key => $obj) {
-            $criteriaOptions [$key] = $obj['name'];
+            $criteriaOptions[$key] = $obj['name'];
         }
 
         return $criteriaOptions;
