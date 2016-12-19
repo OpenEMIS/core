@@ -12,6 +12,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Cake\Utility\Hash;
+use DateTime;
+use DateTimeImmutable;
 
 trait RestfulV1Trait {
     private function processQueryString($requestQueries)
@@ -261,14 +263,17 @@ trait RestfulV1Trait {
 
         foreach ($entity->visibleProperties() as $property) {
             if (in_array($schema->columnType($property), ['datetime', 'date'])) {
-                if (!empty($entity->$property)) {
+                if (!empty($entity->$property) && ($entity->$property instanceof DateTime || $entity->$property instanceof DateTimeImmutable)) {
                     $entity->$property = $entity->$property->format('Y-m-d');
-                } else {
+                } else if ($entity->$property == '0000-00-00') {
                     $entity->$property = '1970-01-01';
                 }
             }
             if ($entity->$property instanceof Entity) {
-                $this->convertBinaryToBase64($table, $entity->$property);
+                $source = $entity->$property->source();
+                $entityTable = TableRegistry::get($source);
+                $this->convertBinaryToBase64($entityTable, $entity->$property);
+                // $this->convertBinaryToBase64($table, $entity->$property);
             } else if (is_resource($entity->$property)) {
                 $entity->$property = base64_encode(stream_get_contents($entity->$property));
             } else if ($property == 'password') { // removing password from entity so that the value will not be exposed
