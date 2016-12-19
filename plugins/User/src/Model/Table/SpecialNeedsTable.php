@@ -12,10 +12,12 @@ class SpecialNeedsTable extends ControllerActionTable {
 		parent::initialize($config);
         $this->behaviors()->get('ControllerAction')->config('actions.search', false);
 
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
 		$this->belongsTo('SpecialNeedDifficulties', ['className' => 'FieldOption.SpecialNeedDifficulties']);
+
+        $this->addBehavior('Indexes.Indexes');
 	}
 
 	public function beforeAction($event) {
