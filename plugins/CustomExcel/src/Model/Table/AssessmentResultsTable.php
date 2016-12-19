@@ -178,9 +178,10 @@ class AssessmentResultsTable extends AppTable
 
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
+        if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             $query = $InstitutionStudentAbsences->find()
+                ->find('academicPeriod', ['academic_period_id' => $params['academic_period_id']])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
                     [
