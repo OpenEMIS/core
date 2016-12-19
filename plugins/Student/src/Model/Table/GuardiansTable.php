@@ -278,6 +278,7 @@ class GuardiansTable extends AppTable {
         $quantityResult = $this->find()
             ->where([$this->aliasField('student_id') => $studentId])
             ->all()->toArray();
+
         $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
 
         return $valueIndex = $quantity;
