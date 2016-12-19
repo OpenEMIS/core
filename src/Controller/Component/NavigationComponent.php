@@ -785,7 +785,7 @@ class NavigationComponent extends Component
 					'title' => 'Education Structure',
 					'parent' => 'SystemSetup',
 					'params' => ['plugin' => 'Education'],
-					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.Certifications',
+					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
 							'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
 				],
 				'Textbooks.Textbooks' => [
@@ -980,7 +980,7 @@ class NavigationComponent extends Component
 						'title' => 'Centres',
 						'parent' => 'Administration.Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.ExamCentres', 'Examinations.ExamCentreStudents', 'Examinations.LinkedInstitutionAddStudents', 'Examinations.ExamCentreRooms']
+						'selected' => ['Examinations.ExamCentres', 'Examinations.ExamCentreStudents', 'Examinations.LinkedInstitutionAddStudents', 'Examinations.ExamCentreRooms', 'Examinations.ImportExaminationCentreRooms']
 					],
 					'Examinations.RegisteredStudents' => [
 						'title' => 'Students',

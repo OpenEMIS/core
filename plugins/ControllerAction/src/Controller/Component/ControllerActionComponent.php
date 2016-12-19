@@ -1406,8 +1406,14 @@ class ControllerActionComponent extends Component {
             }
         } else if ($request->is('delete')) {
             $this->autoRender = false;
-            $id = $this->paramsDecode($request->data('primaryKey'));
-            $ids = $this->getIdKeys($model, $id, false);
+            $primaryKeyArr = [];
+            if (!is_array($primaryKey)) {
+                $primaryKeyArr[] = $primaryKey;
+            } else {
+                $primaryKeyArr = $primaryKey;
+            }
+            $primaryKeyValue = array_intersect_key($request->data, array_flip($primaryKeyArr));
+            $ids = $this->getIdKeys($model, $primaryKeyValue, false);
 
             $deleteOptions = new ArrayObject([]);
             $extra = new ArrayObject(['excludedModels' => []]);
