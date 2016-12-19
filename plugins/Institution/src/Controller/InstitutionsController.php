@@ -157,6 +157,31 @@ class InstitutionsController extends AppController
         }
     }
 
+    public function Staffs($pass = 'index') {
+        if ($pass == 'add') {
+            $session = $this->request->session();
+            $roles = [];
+
+            if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+                $userId = $this->Auth->user('id');
+                $institutionId = $session->read('Institution.Institutions.id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            }
+            $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
+            $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
+            $externalDataSource = false;
+            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
+            if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
+                $externalDataSource = true;
+            }
+            $this->set('externalDataSource', $externalDataSource);
+            $this->render('staffAdd');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Staff']);
+        }
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
