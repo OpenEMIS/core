@@ -460,6 +460,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key][mapping.date_of_birth_mapping]);
             studentRecords[key]['gender_name'] = studentRecords[key][mapping.gender_mapping];
             studentRecords[key]['gender'] = {'name': studentRecords[key][mapping.gender_mapping]};
+            studentRecords[key]['identity_type_name'] = studentRecords[key][mapping.identity_type_mapping];
             studentRecords[key]['identity_number'] = studentRecords[key][mapping.identity_number_mapping];
             studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
             studentRecords[key]['name'] = '';
