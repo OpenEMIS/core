@@ -41,6 +41,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $events['Model.StudentUser.afterSave'] = 'afterSaveOrDelete'; // gender cant be deleted. only edit
         $events['Model.Guardians.afterSave'] = 'afterSaveOrDelete';
         $events['Model.Guardians.afterDelete'] = 'afterSaveOrDelete';
+        $events['Model.SpecialNeeds.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.SpecialNeeds.afterDelete'] = 'afterSaveOrDelete';
         return $events;
     }
 
@@ -226,14 +228,14 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             ->where([$IndexesCriterias->aliasField('criteria') => $criteriaModel])
             ->all();
 
-pr('afterSaveOrDelete');
-pr('criteriaModel: '. $criteriaModel);
-pr('institutionId: '. $institutionId);
-pr('studentId: '. $studentId);
-pr('academicPeriodId: '. $academicPeriodId);
-pr($afterSaveOrDeleteEntity);
-pr($indexesCriteriaResults->toArray());
-die;
+// pr('afterSaveOrDelete');
+// pr('criteriaModel: '. $criteriaModel);
+// pr('institutionId: '. $institutionId);
+// pr('studentId: '. $studentId);
+// pr('academicPeriodId: '. $academicPeriodId);
+// pr($afterSaveOrDeleteEntity);
+// pr($indexesCriteriaResults->toArray());
+// die;
         if (!$indexesCriteriaResults->isEmpty()) {
             foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
                 $indexId = $indexesCriteriaData->index_id;
@@ -368,15 +370,15 @@ die;
                 foreach ($StudentIndexesCriteriasResults as $key => $studentIndexesCriteriasObj) {
 // pr($studentIndexesCriteriasObj);
                     if (!is_null($studentIndexesCriteriasObj->value)) {
+// pr('here?');
                         $value = $studentIndexesCriteriasObj->value;
                         $indexesCriteriaId = $studentIndexesCriteriasObj->indexes_criteria_id;
 
                         $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId, $academicPeriodId);
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = !empty($indexTotal[$studentIndexesCriteriasObj->institution_student_index_id]) ? $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] : 0 ;
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] + $indexValue;
-                    }
-                    else {
-// // pr("empty student_indexes_criterias");
+                    } else {
+// pr("empty student_indexes_criterias");
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = 0;
                     }
                 }
@@ -404,8 +406,12 @@ die;
     {
         switch ($criteriaTable->alias()) {
             case 'StudentUser': // The student_id is the Id
-            $studentId = $afterSaveOrDeleteEntity->id;
-            break;
+                $studentId = $afterSaveOrDeleteEntity->id;
+                break;
+
+            case 'SpecialNeeds': // The student_id is the Id
+                $studentId = $afterSaveOrDeleteEntity->security_user_id;
+                break;
         }
 
         return $studentId;
@@ -415,24 +421,29 @@ die;
     {
         // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
         switch ($criteriaTable->alias()) {
-        case 'InstitutionStudentAbsences': // have start date and end date
-            $startDate = $afterSaveOrDeleteEntity->start_date;
-            $endDate = $afterSaveOrDeleteEntity->end_date;
-            $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
-            break;
+            case 'InstitutionStudentAbsences': // have start date and end date
+                $startDate = $afterSaveOrDeleteEntity->start_date;
+                $endDate = $afterSaveOrDeleteEntity->end_date;
+                $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
+                break;
 
-        case 'StudentBehaviours': // have date of behaviours
-            $dateOfBehaviour = $afterSaveOrDeleteEntity->date_of_behaviour;
-            $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($dateOfBehaviour);
-            break;
+            case 'StudentBehaviours': // have date of behaviours
+                $date = $afterSaveOrDeleteEntity->date_of_behaviour;
+                $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($date);
+                break;
 
-        case 'StudentUser': // no date, will get the current academic period Id
-            $academicPeriodId = $this->AcademicPeriods->getCurrent();
-            break;
+            case 'StudentUser': // no date, will get the current academic period Id
+                $academicPeriodId = $this->AcademicPeriods->getCurrent();
+                break;
 
-        case 'Guardians': // no date, will get the current academic period Id
-            $academicPeriodId = $this->AcademicPeriods->getCurrent();
-            break;
+            case 'Guardians': // no date, will get the current academic period Id
+                $academicPeriodId = $this->AcademicPeriods->getCurrent();
+                break;
+
+            case 'SpecialNeeds': // have special need date
+                $date = $afterSaveOrDeleteEntity->special_need_date;
+                $academicPeriodId = $this->AcademicPeriods->getAcademicPeriodIdByDate($date);
+                break;
         }
 
         return $academicPeriodId;
@@ -442,15 +453,21 @@ die;
     {
         switch ($criteriaTable->alias()) {
             case 'StudentUser':
-            $studentId = $afterSaveOrDeleteEntity->id;
-            $institutionId = $criteriaTable->getInstitutionIdByUser($studentId, $academicPeriodId);
-            break;
+                $studentId = $afterSaveOrDeleteEntity->id;
+                $institutionId = $criteriaTable->getInstitutionIdByUser($studentId, $academicPeriodId);
+                break;
 
             case 'Guardians':
-            $studentId = $afterSaveOrDeleteEntity->student_id;
-            $Students = TableRegistry::get('Institution.Students');
-            $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
-            break;
+                $studentId = $afterSaveOrDeleteEntity->student_id;
+                $Students = TableRegistry::get('Institution.Students');
+                $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
+                break;
+
+            case 'SpecialNeeds':
+                $studentId = $afterSaveOrDeleteEntity->security_user_id;
+                $Students = TableRegistry::get('Institution.Students');
+                $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
+                break;
         }
 
         return $institutionId;

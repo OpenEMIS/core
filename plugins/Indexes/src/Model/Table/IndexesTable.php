@@ -35,11 +35,6 @@ class IndexesTable extends ControllerActionTable
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
         ],
-        'User.SpecialNeeds' => [
-            'name' => 'Special Needs',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
-        ],
         // 'STATUS' => [
         //     'name' => 'Status',
         //     'operator' => [3 => '='],
@@ -58,6 +53,11 @@ class IndexesTable extends ControllerActionTable
         ],
         'Student.Guardians' => [
             'name' => 'Guardians',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
+        'User.SpecialNeeds' => [
+            'name' => 'Special Needs',
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
