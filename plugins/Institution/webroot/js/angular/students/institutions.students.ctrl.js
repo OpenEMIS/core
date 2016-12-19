@@ -275,6 +275,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
+                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
@@ -342,6 +343,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     };
 
     function clearInternalSearchFilters() {
+        StudentController.internalFilterOpenemisNo = '';
         StudentController.internalFilterFirstName = '';
         StudentController.internalFilterLastName = '';
         StudentController.internalFilterIdentityNumber = '';
@@ -366,6 +368,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         startRow: params.startRow,
                         endRow: params.endRow,
                         conditions: {
+                            openemis_no: StudentController.internalFilterOpenemisNo,
                             first_name: StudentController.internalFilterFirstName,
                             last_name: StudentController.internalFilterLastName,
                             identity_number: StudentController.internalFilterIdentityNumber,
