@@ -239,7 +239,6 @@ class ExcelReportBehavior extends Behavior
             $highestRow = $referencesWorksheet->getHighestRow($columnValue);
 
             $listLocation = sprintf('%s!$%s$%s:$%s$%s', "'$sheetName'", $columnValue, $rowValue, $columnValue, $highestRow);
-            Log::write('debug', $listLocation);
             $objValidation->setFormula1($listLocation);
         }
 
