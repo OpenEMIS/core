@@ -30,31 +30,40 @@ use Cake\Utility\Inflector;
                     </div>
                 </div>
     <?php
-            } else if (array_key_exists($field, $searchables)) {
-                if (array_key_exists('type', $searchables[$field])) {
-                    if ($searchables[$field]['type'] == 'select') {
+            } else if (array_key_exists($field, $searchables) || array_key_exists($field, $includedFields)) {
+
+                //to be used both by $searchable and $includedFields
+                if (array_key_exists($field, $searchables)) {
+                    $varName = $searchables;
+                    $indexName = 'hasMany';
+                } else if (array_key_exists($field, $includedFields)) {
+                    $varName = $includedFields;
+                    $indexName = 'tableField';
+                }
+
+                if (array_key_exists('type', $varName[$field])) {
+                    if ($varName[$field]['type'] == 'select') {
     ?>
                         <div class="select">
-                            <label><?= $searchables[$field]['label'] ?>:</label>
+                            <label><?= $varName[$field]['label'] ?>:</label>
                             <div class="input-select-wrapper">
-                                <select name="AdvanceSearch[<?= $model ?>][hasMany][<?= $field ?>]">
+                                <select name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
                                     <option value=""><?= __('-- Select --'); ?></option>
-                                    <?php foreach ($searchables[$field]['options'] as $optKey=>$optVal): ?>
-                                        <?php $selected = ($optKey==$searchables[$field]['selected']) ? 'selected' : ''; ?>
+                                    <?php foreach ($varName[$field]['options'] as $optKey=>$optVal): ?>
+                                        <?php $selected = ($optKey==$varName[$field]['selected']) ? 'selected' : ''; ?>
                                     <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
                                  <?php endforeach; ?>
                                 </select>
                             </div>
                         </div>
-
     <?php
                     }
                 } else {
     ?>
                     <div class="text" style="margin-bottom:10px;">
-                        <label for="advancesearch-directories-identity-number"><?= $searchables[$field]['label'] ?>:</label>
+                        <label for="advancesearch-directories-identity-number"><?= $varName[$field]['label'] ?>:</label>
 
-                        <input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $field ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($field) ?>" value="<?= $searchables[$field]['value'] ?>" />
+                        <input type="text" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($field) ?>" value="<?= $varName[$field]['value'] ?>" />
                     </div>
     <?php
                 }
