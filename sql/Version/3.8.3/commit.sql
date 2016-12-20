@@ -22,6 +22,13 @@ SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, 
 
 INSERT INTO `config_item_options` (`id`, `option_type`, `option`, `value`, `order`, `visible`) VALUES ('102', 'external_data_source_type', 'Custom', 'Custom', '3', '1');
 
+CREATE TABLE `z_3593_config_items` LIKE `config_items`;
+
+INSERT INTO `z_3593_config_items`
+SELECT * FROM `config_items` WHERE `config_items`.`id` = 1002;
+
+UPDATE `config_items` SET `value` = 'None' WHERE `id` = 1002;
+
 CREATE TABLE `z_3593_external_data_source_attributes` LIKE `external_data_source_attributes`;
 
 INSERT INTO `z_3593_external_data_source_attributes` SELECT * FROM `external_data_source_attributes`;
