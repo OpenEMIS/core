@@ -192,6 +192,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
             $requestData[$this->alias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
+        } else if ($requestData[$this->alias()]['value'] == 'None') {
+            $patchOption['validate'] = false;
         }
         if (empty($requestData[$this->alias()]['private_key'])) {
             $newKey = openssl_pkey_new([
@@ -268,6 +270,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_number_mapping', ['type' => 'hidden']);
                 $this->field('nationality_mapping', ['type' => 'hidden']);
                 $this->field('user_endpoint_uri', ['type' => 'hidden']);
+                $this->field('private_key', ['type' => 'text']);
+                $this->field('public_key', ['type' => 'text']);
                 break;
 
             case 'Custom':
@@ -286,15 +290,16 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_number_mapping');
                 $this->field('nationality_mapping');
                 $this->field('user_endpoint_uri');
+                $this->field('private_key', ['type' => 'text']);
+                $this->field('public_key', ['type' => 'text']);
                 break;
 
             default:
-
                 break;
         }
 
-        $this->field('private_key', ['type' => 'text']);
-        $this->field('public_key', ['type' => 'text']);
+
+
     }
 
 }
