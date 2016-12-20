@@ -19,8 +19,9 @@ CREATE TABLE IF NOT EXISTS `config_items` (
   UNIQUE KEY `code` (`code`)
 ) ENGINE=InnoDB CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO `config_items` (`name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-VALUES ('Type', 'authentication_type', 'Authentication', 'Type', 'Local', 'Local', '1', '1', 'Dropdown', 'authentication_type', NULL, NULL, '1', NOW());
+-- Fixing the ID of authentication type to 1001
+INSERT IGNORE INTO `config_items` (`id`, `name`, `code`, `type`, `label`, `value`, `default_value`, `editable`, `visible`, `field_type`, `option_type`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+VALUES (1001, 'Type', 'authentication_type', 'Authentication', 'Type', 'Local', 'Local', '1', '1', 'Dropdown', 'authentication_type', NULL, NULL, '1', NOW());
 
 -- config_item_options
 CREATE TABLE IF NOT EXISTS `config_item_options` (
@@ -39,7 +40,7 @@ INSERT INTO `config_item_options` (`option_type`,`option`,`value`,`order`,`visib
 INSERT INTO `config_item_options` (`option_type`,`option`,`value`,`order`,`visible`) VALUES ('authentication_type','Saml2','Saml2',4,1);
 
 -- authentication_type_attributes
-CREATE TABLE `authentication_type_attributes` (
+CREATE TABLE IF NOT EXISTS `authentication_type_attributes` (
   `id` char(36) NOT NULL,
   `authentication_type` varchar(50) NOT NULL,
   `attribute_field` varchar(50) NOT NULL,
