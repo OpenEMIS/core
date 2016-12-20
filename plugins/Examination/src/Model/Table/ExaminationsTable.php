@@ -106,6 +106,11 @@ class ExaminationsTable extends ControllerActionTable {
         ]);
     }
 
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['ExaminationItems.ExaminationItemResults']);
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         // manually delete hasMany Examination items
