@@ -9,6 +9,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     var externalSource = null;
     var externalToken = null;
     var institutionId = null;
+    var externalDataSourceMapping = {};
 
     var service = {
         init: init,
@@ -18,7 +19,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
         getDefaultIdentityType: getDefaultIdentityType,
-        getExternalDefaultIdentityType: getExternalDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
@@ -27,10 +27,11 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         postEnrolledStudent: postEnrolledStudent,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
+        makeDate: makeDate,
         formatDate: formatDate,
+        formatDateForSaving: formatDateForSaving,
         getUserRecord: getUserRecord,
         getGenderRecord: getGenderRecord,
-        importIdentities: importIdentities,
         getInternalIdentityTypes: getInternalIdentityTypes,
         addIdentityType: addIdentityType,
         setExternalSourceUrl: setExternalSourceUrl,
@@ -38,12 +39,18 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        formatDateReverse: formatDateReverse,
         getAddNewStudentConfig: getAddNewStudentConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
-        getSpecialNeedTypes: getSpecialNeedTypes
+        getSpecialNeedTypes: getSpecialNeedTypes,
+        getExternalSourceAttributes: getExternalSourceAttributes,
+        getNationalityRecord: getNationalityRecord,
+        getIdentityTypeRecord: getIdentityTypeRecord,
+        importMappingObj: importMappingObj,
+        addUserIdentity: addUserIdentity,
+        addUserNationality: addUserNationality,
+        getExternalSourceMapping: getExternalSourceMapping
     };
 
     var models = {
@@ -57,16 +64,11 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         IdentityTypes: 'FieldOption.IdentityTypes',
         ExternalDataSourceAttributes: 'Configuration.ExternalDataSourceAttributes',
         Identities: 'User.Identities',
+        UserNationalities: 'User.UserNationalities',
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
         SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
-    };
-
-    var externalModels = {
-        Users: 'Users',
-        IdentityTypes: 'IdentityTypes'
-
     };
 
     return service;
@@ -89,9 +91,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         externalToken = null;
     }
 
+    function getExternalSourceMapping()
+    {
+        return this.externalSourceMapping;
+    }
+
     function getAccessToken()
     {
         var deferred = $q.defer();
+        var vm = this;
         this.init(angular.baseUrl);
         ConfigItems
         .select()
@@ -113,6 +121,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 for(var i = 0; i < data.length; i++) {
                     externalDataSourceObject[data[i].attribute_field] = data[i].value;
                 }
+                delete externalDataSourceObject.private_key;
+                delete externalDataSourceObject.public_key;
+                vm.externalSourceMapping = externalDataSourceObject;
                 if (externalDataSourceObject.hasOwnProperty('token_uri')) {
                     var tokenUri = externalDataSourceObject.token_uri;
 
@@ -120,18 +131,25 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         delete externalDataSourceObject.token_uri;
                         delete externalDataSourceObject.record_uri;
                         delete externalDataSourceObject.redirect_uri;
-                        var postData = 'grant_type=refresh_token';
-                        var log = [];
-                        angular.forEach(externalDataSourceObject, function(value, key) {
-                          postData = postData + '&' + key + '=' + value;
-                        }, log);
+
+                        var url = angular.baseUrl + '/Configurations/generateServerAuthorisationToken?external_data_source_type=' + externalDataSourceType;
                         $http({
-                            method: 'POST',
-                            url: tokenUri,
-                            data: postData,
+                            method: 'GET',
+                            url: url,
                             headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-                        }).then(function(res) {
-                            deferred.resolve(res.data.access_token);
+                        }).then(function (jwt) {
+                            var postData = 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer';
+                            postData = postData + '&assertion=' + jwt.data;
+                            $http({
+                                method: 'POST',
+                                url: tokenUri,
+                                data: postData,
+                                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                            }).then(function(res) {
+                                deferred.resolve(res.data.access_token);
+                            }, function(error) {
+                                deferred.reject(error);
+                            });
                         }, function(error) {
                             deferred.reject(error);
                         });
@@ -148,6 +166,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         });
 
         return deferred.promise;
+    }
+
+    function getExternalSourceAttributes() {
+        return ExternalDataSourceAttributes
+            .find('attributes')
+            .ajax({defer: true});
     }
 
     function getExternalSourceUrl()
@@ -176,8 +200,9 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     sourceUrl = source[0].value;
                     externalSource = sourceUrl;
                     externalToken = token;
+                } else {
+                    sourceUrl = source.record_uri;
                 }
-                vm.initExternal(sourceUrl);
                 var pageParams = {
                     limit: options['endRow'] - options['startRow'],
                     page: options['endRow'] / (options['endRow'] - options['startRow']),
@@ -185,10 +210,17 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                 var params = {};
                 params['super_admin'] = 0;
-                Users.reset();
-                Users
-                    .page(pageParams.page)
-                    .limit(pageParams.limit);
+
+                // Get url from user input
+                var replaceURL = sourceUrl;
+                var replacement = {
+                    "{page}": pageParams.page,
+                    "{limit}": pageParams.limit,
+                    "{first_name}": '',
+                    "{last_name}": '',
+                    "{identity_number}": '',
+                    "{date_of_birth}": ''
+                }
 
                 var conditionsCount = 0;
 
@@ -196,21 +228,21 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     for (var key in options['conditions']) {
                         if (typeof options['conditions'][key] == 'string') {
                             options['conditions'][key] = options['conditions'][key].trim();
-                            if (options['conditions'][key] !== '') {
-                                if (key != 'date_of_birth') {
-                                    params[key] = options['conditions'][key] + '_';
-                                } else {
-                                    params[key] = vm.formatDateReverse(options['conditions'][key]);
-                                }
-                                conditionsCount++;
+                            if (key != 'date_of_birth') {
+                                params[key] = options['conditions'][key];
+                            } else {
+                                params[key] = vm.formatDate(options['conditions'][key]);
                             }
+                            var replaceKey = '{'+key+'}';
+                            replacement[replaceKey] = params[key];
+                            conditionsCount++;
                         }
                     }
-                    if (Object.getOwnPropertyNames(params).length !== 0) {
-                        Users.where(params);
-                    }
                 }
-                Users.contain(['Genders']);
+                var url = replaceURL.replace(/{\w+}/g, function(all) {
+                    return all in replacement ? replacement[all] : all;
+                });
+
                 var authorizationHeader = 'Bearer ' + token;
 
                 var success = function(response, deferred) {
@@ -223,7 +255,11 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     }
                 };
 
-                return Users.ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
+                var opt = {
+                    method: 'GET',
+                    headers: {'Content-Type': 'application/json', 'Authorization': authorizationHeader}
+                }
+                return KdOrmSvc.customAjax(url, opt);
             }, function(error){
                 deferred.reject(error);
             })
@@ -258,7 +294,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
                     if (options['conditions'][key] !== '') {
                         if (key == 'date_of_birth') {
-                            options['conditions'][key] = vm.formatDateReverse(options['conditions'][key]);
+                            options['conditions'][key] = vm.formatDate(options['conditions'][key]);
                         }
                         params[key] = options['conditions'][key];
                         conditionsCount++;
@@ -299,82 +335,13 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
         StudentUser.select();
         var settings = {success: success, defer: true};
-        if (externalSource != null && externalToken !=null) {
-            vm.initExternal(externalSource);
-            var authorizationHeader = 'Bearer ' + externalToken;
-            settings.authorizationHeader = authorizationHeader;
-            return Users
-                .contain(['Genders', 'Identities.IdentityTypes'])
-                .where({
-                    id: id
-                })
-                .ajax(settings);
-        } else {
-            return StudentUser
-                .contain(['Genders', 'Identities.IdentityTypes'])
-                .find('enrolledInstitutionStudents')
-                .where({
-                    id: id
-                })
-                .ajax(settings);
-        }
-    };
-
-    function importIdentities(userId, identitiesRecord)
-    {
-        var deferred = $q.defer();
-        var vm = this;
-        vm.getInternalIdentityTypes()
-        .then(function(response) {
-            var data = response.data;
-            var promises = [];
-            for (var i = 0; i < identitiesRecord.length; i++) {
-                var identityTypeId = null;
-                for(var j = 0; j < data.length ; j++) {
-                    if (identitiesRecord[i].identity_type.name == data[j].name) {
-                        identityTypeId = data[j].id;
-                    }
-                }
-                if (identityTypeId != null) {
-                    promises.push(identityTypeId);
-                } else {
-                    promises.push(vm.addIdentityType(identitiesRecord[i].identity_type));
-                }
-            }
-            return $q.all(promises);
-        }, function(error) {
-            deferred.reject(error);
-        })
-        .then(function(identityTypeIds){
-            var promises = [];
-            for (var i = 0; i < identitiesRecord.length; i++) {
-                identitiesRecord[i].identity_type_id = identityTypeIds[i];
-                delete(identitiesRecord[i]['id'])
-                delete(identitiesRecord[i]['identity_type']);
-                delete(identitiesRecord[i]['created']);
-                delete(identitiesRecord[i]['modified']);
-                delete(identitiesRecord[i]['modified_user_id']);
-                delete(identitiesRecord[i]['created_user_id']);
-                identitiesRecord[i]['security_user_id'] = userId;
-                if (identitiesRecord[i]['issue_date'] != null) {
-                    identitiesRecord[i]['issue_date'] = vm.formatDate(identitiesRecord[i]['issue_date']);
-                }
-                if (identitiesRecord[i]['expiry_date'] != null) {
-                    identitiesRecord[i]['expiry_date'] = vm.formatDate(identitiesRecord[i]['expiry_date']);
-                }
-                promises.push(Identities.save(identitiesRecord[i]));
-            }
-            return $q.all(promises);
-        }, function(error) {
-            deferred.reject(error);
-        })
-        .then(function(response){
-            deferred.resolve(response);
-        }, function(error){
-            deferred.reject(error);
-        });
-
-        return deferred.promise;
+        return StudentUser
+            .contain(['Genders', 'Identities.IdentityTypes'])
+            .find('enrolledInstitutionStudents')
+            .where({
+                id: id
+            })
+            .ajax(settings);
     };
 
     function addIdentityType(identityType)
@@ -405,7 +372,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var deferred = $q.defer();
         var vm = this;
         if (externalSource == null) {
-            delete userRecord['username'];
+            userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date'])
             delete userRecord['gender'];
             if (userRecord['nationality_id'] != '' && userRecord['nationality_id'] != undefined) {
                 userRecord['nationalities'] = [{
@@ -418,9 +385,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                     'number': userRecord['identity_number']
                 }];
             }
-            delete userRecord['identity_type_id'];
-            delete userRecord['identity_number'];
-            delete userRecord['nationality_id'];
             StudentUser.reset();
             StudentUser.save(userRecord)
             .then(function(studentRecord) {
@@ -430,40 +394,76 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 console.log(error);
             });
         } else {
-            vm.getUserRecord(userRecord['openemis_no'])
-            .then(function(response) {
-                if (response.data.length > 0) {
-                    userData = response.data[0];
-                    modifiedUser = {id: userData.id, is_student: 1};
-                    StudentUser.save(modifiedUser)
-                    .then(function(response) {
-                        deferred.resolve([response.data, userData]);
-                    }, function(error) {
-                        deferred.reject(error);
-                        console.log(error);
-                    });
-                } else {
-                    delete userRecord['id'];
-                    delete userRecord['username'];
-                    delete userRecord['password'];
-                    delete userRecord['last_login'];
-                    delete userRecord['address_area_id'];
-                    delete userRecord['birthplace_area_id'];
-                    delete userRecord['created'];
-                    delete userRecord['modified'];
-                    delete userRecord['modified_user_id'];
-                    delete userRecord['created_user_id'];
-                    userRecord['date_of_birth'] = vm.formatDate(userRecord['date_of_birth']);
-                    userRecord['is_student'] = 1;
-                    vm.getGenderRecord(userRecord['gender']['code'])
-                    .then(function(genderRecord) {
-                        if (genderRecord.data.length > 0) {
-                            delete userRecord['gender'];
-                            var identitiesRecord = userRecord['identities'];
-                            delete userRecord['identities'];
-                            userRecord['gender_id'] = genderRecord.data[0].id;
+            var newUserRecord = {};
+            var nationality = '';
+            var identityType = '';
+            var genderName = '';
+            var identityNumber = '';
+            vm.getExternalSourceAttributes()
+            .then(function(attributes) {
+                var attr = attributes.data;
+
+                // Mandatory information from the form
+                newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
+                newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
+                newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
+
+
+                newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
+                newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];
+                newUserRecord['date_of_birth'] = userRecord[attr['date_of_birth_mapping']];
+                newUserRecord['external_reference'] = userRecord[attr['external_reference_mapping']];
+                genderName = userRecord[attr['gender_mapping']];
+                // By auto generated
+                newUserRecord['openemis_no'] = userRecord['openemis_no'];
+
+                // Optional fields
+                if (typeof userRecord[attr['middle_name_mapping']] != 'undefined') {
+                    newUserRecord['middle_name'] = userRecord[attr['middle_name_mapping']];
+                }
+                if (typeof userRecord[attr['third_name_mapping']] != 'undefined') {
+                    newUserRecord['third_name'] = userRecord[attr['third_name_mapping']];
+                }
+                if (typeof userRecord[attr['identity_number_mapping']] != 'undefined') {
+                    newUserRecord['identity_number'] = userRecord[attr['identity_number_mapping']];
+                }
+                if (typeof userRecord[attr['nationality_mapping']] != 'undefined') {
+                    nationality = userRecord[attr['nationality_mapping']];
+                }
+                if (typeof userRecord[attr['identity_type_mapping']] != 'undefined') {
+                    identityType = userRecord[attr['identity_type_mapping']];
+                }
+
+                vm.getUserRecord(newUserRecord['external_reference'])
+                .then(function(response) {
+                    if (response.data.length > 0) {
+                        userData = response.data[0];
+                        modifiedUser = userData;
+                        delete modifiedUser['openemis_no'];
+                        modifiedUser['is_student'] = 1;
+                        modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
+                        modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
+                        modifiedUser['start_date'] = userRecord['start_date'];
+                        StudentUser.save(modifiedUser)
+                        .then(function(response) {
+                            deferred.resolve([response.data, userData]);
+                        }, function(error) {
+                            deferred.reject(error);
+                            console.log(error);
+                        });
+                    } else {
+
+                        newUserRecord['date_of_birth'] = vm.formatDateForSaving(newUserRecord['date_of_birth']);
+                        newUserRecord['is_student'] = 1;
+
+                        vm.importMappingObj(genderName, nationality, identityType)
+                        .then(function(promiseArr) {
+                            newUserRecord['gender_id'] = promiseArr[0];
+                            newUserRecord['nationality_id'] = promiseArr[1];
+                            newUserRecord['identity_type_id'] = promiseArr[2];
+                            var identityTypeId = promiseArr[2];
                             StudentUser.reset();
-                            StudentUser.save(userRecord)
+                            StudentUser.save(newUserRecord)
                             .then(function(studentRecord) {
                                 var userEntity = studentRecord.data.data;
                                 var userEntityError = studentRecord.data.error;
@@ -471,55 +471,180 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                                     deferred.resolve(studentRecord.data);
                                 } else {
                                     var userId = userEntity.id;
-                                    vm.importIdentities(userId, identitiesRecord)
-                                    .then(function(res){
-                                        deferred.resolve([studentRecord.data, {}]);
-                                    }, function(error){
-                                        deferred.resolve([studentRecord.data, {}]);
-                                    });
+                                    var promises = [];
+                                    // Import identity
+                                    if (newUserRecord['identity_type_id'] != null && newUserRecord['identity_number'] != null && newUserRecord['identity_number'] != '') {
+                                        vm.addUserIdentity(userId, newUserRecord['identity_type_id'], newUserRecord['identity_number']);
+                                    }
+                                    // Import nationality
+                                    if (userEntity.nationality_id != null) {
+                                        var nationalityId = userEntity.nationality_id;
+                                        vm.addUserNationality(userId, nationalityId);
+                                    }
+                                    deferred.resolve([studentRecord.data, {}]);
                                 }
                             }, function(error) {
                                 deferred.reject(error);
                                 console.log(error);
                             });
-                        }
+                        }, function(error) {
+                            deferred.reject(error);
+                            console.log(error);
+                        });
 
-                    }, function(error) {
-                        deferred.reject(error);
-                        console.log(error);
-                    });
-
-                }
+                    }
+                }, function(error) {
+                    deferred.reject(error);
+                    console.log(error);
+                });
             }, function(error) {
                 deferred.reject(error);
-                console.log(error);
             });
         }
-
-
         return deferred.promise;
     };
 
-    function getUserRecord(openemisNo)
+    function getUserRecord(externalRef)
     {
         return StudentUser
             .select()
             .where({
-                'openemis_no': openemisNo
+                'external_reference': externalRef
             })
             .contain(['Genders', 'Identities.IdentityTypes'])
             .find('enrolledInstitutionStudents')
             .ajax({defer: true});
     };
 
-    function getGenderRecord(code)
+    function addUserNationality(userId, nationalityId)
     {
-        return Genders
+        var data = {};
+        data['security_user_id'] = userId;
+        data['nationality_id'] = nationalityId;
+        return UserNationalities
+            .save(data);
+    }
+
+    function addUserIdentity(userId, identityTypeId, identityNumber)
+    {
+        var data = {};
+        data['security_user_id'] = userId;
+        data['identity_type_id'] = identityTypeId;
+        data['number'] = identityNumber;
+        return Identities
+            .save(data);
+    }
+
+    function importMappingObj(genderName, nationalityName, identityTypeName)
+    {
+        var promises = [];
+        promises.push(this.getGenderRecord(genderName));
+        promises.push(this.getNationalityRecord(nationalityName));
+        promises.push(this.getIdentityTypeRecord(identityTypeName));
+        return $q.all(promises);
+
+    }
+
+    function getIdentityTypeRecord(name)
+    {
+        var deferred = $q.defer();
+
+        if (typeof name == 'undefined' || name == '') {
+            deferred.resolve(null);
+        } else {
+            IdentityTypes
+                .select()
+                .where({
+                    'name': name
+                })
+                .ajax({defer: true})
+                .then(function(response) {
+                    if (response.data.length > 0) {
+                        deferred.resolve(response.data[0].id);
+                    } else {
+                        var data = {};
+                        data['name'] = name;
+                        data['visible'] = 1;
+                        data['editable'] = 1;
+                        IdentityTypes.reset();
+                        IdentityTypes.save(data)
+                        .then(function(res) {
+                            deferred.resolve(res.data.data.id);
+                        }, function(error) {
+                            deferred.reject(error);
+                        });
+                    }
+                }, function(error) {
+                    deferred.reject(error);
+                });
+        }
+
+        return deferred.promise;
+    }
+
+    function getNationalityRecord(name)
+    {
+        var deferred = $q.defer();
+        if (typeof name == 'undefined' || name == '') {
+            deferred.resolve(null);
+        } else {
+            Nationalities
+                .select()
+                .where({
+                    'name': name
+                })
+                .ajax({defer: true})
+                .then(function(response) {
+                    if (response.data.length > 0) {
+                        deferred.resolve(response.data[0].id);
+                    } else {
+                        var data = {};
+                        data['name'] = name;
+                        data['visible'] = 1;
+                        data['editable'] = 1;
+                        Nationalities.reset();
+                        Nationalities.save(data)
+                        .then(function(res) {
+                            deferred.resolve(res.data.data.id);
+                        }, function(error) {
+                            deferred.reject(error);
+                        });
+                    }
+                }, function(error) {
+                    deferred.reject(error);
+                });
+        }
+        return deferred.promise;
+    };
+
+    function getGenderRecord(name)
+    {
+        var deferred = $q.defer();
+        Genders
             .select()
             .where({
-                'code': code
+                'name': name
             })
-            .ajax({defer: true});
+            .ajax({defer: true})
+            .then(function(response) {
+                if (response.data.length > 0) {
+                    deferred.resolve(response.data[0].id);
+                } else {
+                    var data = {};
+                    data['name'] = name;
+                    data['code'] = name;
+                    Genders.reset();
+                    Genders.save(data)
+                    .then(function(res) {
+                        deferred.resolve(res.data.data.id);
+                    }, function(error) {
+                        deferred.reject(error);
+                    });
+                }
+            }, function(error) {
+                deferred.reject(error);
+            });
+        return deferred.promise;
     };
 
     function getGenders()
@@ -541,6 +666,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         data['student_transfer_reason_id'] = 0;
         data['type'] = 1;
         data['status'] = 0;
+        data['start_date'] = this.formatDateForSaving(data['start_date']);
+        data['end_date'] = this.formatDateForSaving(data['end_date']);
         data['institution_class_id'] = data['class'];
         return StudentRecords.save(data)
     };
@@ -568,59 +695,51 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
 
-    function getExternalDefaultIdentityType() {
-        var vm = this;
-        var defer = $q.defer();
-
-        this.getExternalSourceUrl()
-        .then(function(sourceUrl) {
-            var source = sourceUrl.data;
-            if (source.length > 0) {
-                sourceUrl = source[0].value;
+    function makeDate(datetime) {
+        // Only get the date part, we do not require the time portion
+        if (datetime.indexOf('T') > -1) {
+            datetime = datetime.split('T')[0];
+        }
+        // Logic to handle external datasource giving the datetime in this format 2005-07-08T11:22:33+0800
+        if (datetime !== undefined && datetime != '' && datetime.indexOf('-') > -1) {
+            var date = datetime.split('-');
+            if (date[0].length == 4) {
+                // To fix timezone offset issue between server and client machine
+                var offset = new Date(Date.parse(datetime)).getTimezoneOffset() * 60000;
+                date = new Date(Date.parse(datetime) + offset);
+            } else {
+                date = new Date(date[2], date[1]-1, date[0]);
             }
-            vm.getAccessToken()
-            .then(function(token){
-                var authorizationHeader = 'Bearer ' + token;
-                var success = function(response, deferred) {
-                    var defaultIdentityType = response.data.data;
-                    if (angular.isObject(defaultIdentityType) && defaultIdentityType.length > 0) {
-                        deferred.resolve(defaultIdentityType);
-                    } else {
-                        deferred.resolve(defaultIdentityType);
-                    }
-                };
-                vm.initExternal(sourceUrl);
-                return IdentityTypes
-                    .find('DefaultIdentityType')
-                    .ajax({defer: true, success: success, authorizationHeader: authorizationHeader});
-            }, function (error) {
-                defer.reject(error);
-            })
-            .then(function(identityType) {
-                defer.resolve(identityType);
-            }, function(error) {
-                console.log(error);
-                defer.reject(error);
-            });
-        }, function(error) {
-            defer.reject(error);
-        });
-        return defer.promise;
-    };
-
-    function formatDateReverse(datetime) {
-        var dateArr = datetime.split('-');
-        return dateArr[2] + '-' + dateArr[1] + '-' + dateArr[0];
+            return date;
+        } else {
+            return null;
+        }
     }
 
     function formatDate(datetime) {
-        datetime = new Date(datetime);
+        var date = this.makeDate(datetime);
+        if (date != null) {
+            var yyyy = date.getFullYear().toString();
+            var mm = (date.getMonth()+1).toString(); // getMonth() is zero-based
+            var dd  = date.getDate().toString();
 
-        var yyyy = datetime.getFullYear().toString();
-        var mm = (datetime.getMonth()+1).toString(); // getMonth() is zero-based
-        var dd  = datetime.getDate().toString();
+            return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0])  + '-' +   yyyy;
+        } else {
+            return '';
+        }
+    };
 
-        return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0])  + '-' +   yyyy; // padding
+    function formatDateForSaving(datetime) {
+        var date = this.makeDate(datetime);
+        if (date != null) {
+            var yyyy = date.getFullYear().toString();
+            var mm = (date.getMonth()+1).toString(); // getMonth() is zero-based
+            var dd  = date.getDate().toString();
+
+            return yyyy + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + (dd[1]?dd:"0"+dd[0]);
+        } else {
+            return '';
+        }
     };
 
     function getAcademicPeriods() {
