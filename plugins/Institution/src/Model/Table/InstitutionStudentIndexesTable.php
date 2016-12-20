@@ -34,19 +34,34 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        // student absence and attendance
         $events['Model.InstitutionStudentAbsences.afterSave'] = 'afterSaveOrDelete';
         $events['Model.InstitutionStudentAbsences.afterDelete'] = 'afterSaveOrDelete';
+
+        // student behaviour
         $events['Model.StudentBehaviours.afterSave'] = 'afterSaveOrDelete';
         $events['Model.StudentBehaviours.afterDelete'] = 'afterSaveOrDelete';
-        $events['Model.StudentUser.afterSave'] = 'afterSaveOrDelete'; // gender cant be deleted. only edit
+
+        // student gender
+        $events['Model.StudentUser.afterSave'] = 'afterSaveOrDelete';
+
+        // student guardian
         $events['Model.Guardians.afterSave'] = 'afterSaveOrDelete';
         $events['Model.Guardians.afterDelete'] = 'afterSaveOrDelete';
+
+        // student with special need
         $events['Model.SpecialNeeds.afterSave'] = 'afterSaveOrDelete';
         $events['Model.SpecialNeeds.afterDelete'] = 'afterSaveOrDelete';
+
+        // student dropout (Students), repeated (IndividualPromotion), Overage will trigger the Students
         $events['Model.Students.afterSave'] = 'afterSaveOrDelete';
         $events['Model.Students.afterDelete'] = 'afterSaveOrDelete';
         $events['Model.IndividualPromotion.afterSave'] = 'afterSaveOrDelete';
         $events['Model.IndividualPromotion.afterDelete'] = 'afterSaveOrDelete';
+
+        // // overage
+        // $events['Model.IndividualPromotion.afterSave'] = 'afterSaveOrDelete';
+        // $events['Model.IndividualPromotion.afterDelete'] = 'afterSaveOrDelete';
         return $events;
     }
 
@@ -200,7 +215,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     {
         $criteriaModel = $afterSaveOrDeleteEntity->source();
 
-        if ($criteriaModel = 'Institution.IndividualPromotion') {
+        if ($criteriaModel == 'Institution.IndividualPromotion') {
             $criteriaModel = 'Institution.Students';
         }
 
