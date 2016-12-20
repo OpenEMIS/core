@@ -15,7 +15,7 @@ UPDATE `config_items` INNER JOIN `z_3593_config_items` ON `z_3593_config_items`.
 
 DROP TABLE `z_3593_config_items`;
 
-DELETE FROM `labels` WHERE `module` = 'ExternalDataSource' AND `field` = 'client_id';
+DELETE FROM `labels` WHERE `module` = 'ConfigExternalDataSource' AND `field` = 'client_id';
 
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue` = 'POCOR-3593';
