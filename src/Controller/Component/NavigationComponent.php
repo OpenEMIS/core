@@ -835,6 +835,12 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Infrastructure'],
 						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
 					],
+				'CustomExcels.ExcelTemplates' => [
+					'title' => 'Excel Template',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'CustomExcel'],
+					'selected' => ['CustomExcels.ExcelTemplates']
+				],
 				'Labels.index' => [
 					'title' => 'Labels',
 					'parent' => 'SystemSetup',
