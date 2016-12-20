@@ -3,8 +3,6 @@ namespace Configuration\Controller;
 
 use ArrayObject;
 use Cake\Event\Event;
-use Cake\ORM\Table;
-use Cake\Utility\Inflector;
 use Cake\ORM\TableRegistry;
 
 class ConfigurationsController extends AppController {
@@ -31,5 +29,13 @@ class ConfigurationsController extends AppController {
     public function ExternalDataSource()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']); }
     public function CustomValidation()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigCustomValidation']); }
     public function AdministrativeBoundaries()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']); }
+
+    public function generateServerAuthorisationToken()
+    {
+        $externalDataSourceType = $this->request->query('external_data_source_type');
+        $this->autoRender = false;
+        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        echo $ExternalDataSourceAttributes->generateServerAuthorisationToken($externalDataSourceType);
+    }
 
 }
