@@ -37,6 +37,9 @@ class ExaminationItemsTable extends AppTable {
                 'rule'  => ['range', 0, 2],
                 'last' => true
             ])
+            ->notEmpty('name')
+            ->notEmpty('code')
+            ->allowEmpty('education_subject_id')
             ->notEmpty('examination_grading_type_id')
             ->add('start_time', 'ruleCompareTime', [
                 'rule' => ['compareTime', 'end_time', true],
@@ -45,14 +48,6 @@ class ExaminationItemsTable extends AppTable {
             ->allowEmpty('start_time')
             ->allowEmpty('end_time');
         return $validator;
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_id . ',' . $entity->education_subject_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 
     public function populateExaminationItemsArray($gradeId)
