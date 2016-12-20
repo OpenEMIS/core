@@ -109,6 +109,15 @@ class StudentsTable extends ControllerActionTable
          * End Advance Search Types
          */
         $this->addBehavior('ControllerAction.Image'); // To be verified
+
+        $this->addBehavior('Indexes.Indexes');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        return $events;
     }
 
     public function validationDefault(Validator $validator)
@@ -1280,6 +1289,72 @@ class StudentsTable extends ControllerActionTable
             ;
 
         return !($completedGradeCount == 0);
+    }
+
+    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    {
+        $institutionId = $params['institution_id'];
+        $studentId = $params['student_id'];
+        $academicPeriodId = $params['academic_period_id'];
+
+        $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId);
+
+        return $valueIndex;
+    }
+
+    public function getValueIndex($institutionId, $studentId, $academicPeriodId)
+    {
+        $Classifications = TableRegistry::get('Student.Classifications');
+
+        $statusResults = $this
+            ->find()
+            ->where([
+                $this->aliasField('student_id') => $studentId
+            ])
+            ->all();
+
+        $getValueIndex = [];
+        foreach ($statusResults as $key => $obj) {
+            $statusId = $obj->student_status_id;
+
+            $getValueIndex[$statusId] = !empty($getValueIndex[$statusId]) ? $getValueIndex[$statusId] : 0;
+            $getValueIndex[$statusId] = $getValueIndex[$statusId] + 1;
+        }
+
+        return $getValueIndex;
+    }
+
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+    {
+// pr('getReferenceDetails');
+// die;
+        $statusId = $threshold; // it will classified by the status Id
+        $results = $this
+            ->find()
+            ->contain(['StudentStatuses', 'AcademicPeriods'])
+            ->where([
+                'student_id' => $studentId,
+                'student_status_id' => $statusId
+            ])
+            ->all();
+// pr($threshold);
+// pr($results->toArray());
+// die;
+        $referenceDetails = [];
+        foreach ($results as $key => $obj) {
+            $title = $obj->student_status->name;
+            $date = $obj->academic_period->name;
+
+            $referenceDetails[$obj->id] = $title . ' (' . $date . ')';
+        }
+
+        // tooltip only receieved string to be display
+        $reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . '<br/>';
+        }
+
+        return $reference;
     }
 
     public function getInstitutionIdByUser($studentId, $academicPeriodId)
