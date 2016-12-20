@@ -1406,14 +1406,20 @@ class ControllerActionComponent extends Component {
             }
         } else if ($request->is('delete')) {
             $this->autoRender = false;
-            $primaryKeyArr = [];
-            if (!is_array($primaryKey)) {
-                $primaryKeyArr[] = $primaryKey;
+
+            if ($this->deleteStrategy == 'restrict' || $this->deleteStrategy == 'transfer') {
+                $primaryKeyArr = [];
+                if (!is_array($primaryKey)) {
+                    $primaryKeyArr[] = $primaryKey;
+                } else {
+                    $primaryKeyArr = $primaryKey;
+                }
+                $primaryKeyValue = array_intersect_key($request->data, array_flip($primaryKeyArr));
+                $ids = $this->getIdKeys($model, $primaryKeyValue, false);
             } else {
-                $primaryKeyArr = $primaryKey;
+                $id = $this->paramsDecode($request->data('primaryKey'));
+                $ids = $this->getIdKeys($model, $id, false);
             }
-            $primaryKeyValue = array_intersect_key($request->data, array_flip($primaryKeyArr));
-            $ids = $this->getIdKeys($model, $primaryKeyValue, false);
 
             $deleteOptions = new ArrayObject([]);
             $extra = new ArrayObject(['excludedModels' => []]);
