@@ -18,3 +18,55 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `cod
 -- security_functions
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
 (5059, 'Excel Templates', 'CustomExcels', 'Administration', 'CustomExcels', '5000', 'ExcelTemplates.index|ExcelTemplates.view', 'ExcelTemplates.edit', NULL, NULL, 'ExcelTemplates.download', 5059, 1, NULL, NULL, NULL, 1, NOW());
+
+-- assessment_item_results
+ALTER TABLE `assessment_item_results`
+	ADD INDEX (`student_id`),
+	ADD INDEX (`assessment_id`),
+	ADD INDEX (`education_subject_id`),
+	ADD INDEX (`institution_id`),
+	ADD INDEX (`academic_period_id`),
+	ADD INDEX (`assessment_period_id`);
+
+-- examination_centres_institutions
+ALTER TABLE `examination_centres_institutions`
+	ADD INDEX (`examination_centre_id`),
+	ADD INDEX (`institution_id`);
+
+-- examination_centres_invigilators
+ALTER TABLE `examination_centres_invigilators`
+	ADD INDEX (`examination_centre_id`),
+	ADD INDEX (`invigilator_id`);
+
+-- examination_centre_rooms_invigilators
+ALTER TABLE `examination_centre_rooms_invigilators`
+	ADD INDEX (`examination_centre_room_id`),
+	ADD INDEX (`invigilator_id`);
+
+-- examination_centre_special_needs
+ALTER TABLE `examination_centre_special_needs`
+	ADD INDEX (`examination_centre_id`),
+	ADD INDEX (`special_need_type_id`);
+
+-- examination_centre_students
+ALTER TABLE `examination_centre_students`
+	ADD INDEX (`examination_centre_id`),
+	ADD INDEX (`student_id`),
+	ADD INDEX (`education_subject_id`);
+
+-- examination_centre_subjects
+ALTER TABLE `examination_centre_subjects`
+	ADD INDEX (`examination_centre_id`),
+	ADD INDEX (`education_subject_id`);
+
+-- examination_items
+ALTER TABLE `examination_items`
+	ADD INDEX (`examination_id`),
+	ADD INDEX (`education_subject_id`);
+
+-- examination_item_results
+ALTER TABLE `examination_item_results`
+	ADD INDEX (`academic_period_id`),
+	ADD INDEX (`examination_id`),
+	ADD INDEX (`education_subject_id`),
+	ADD INDEX (`student_id`);
