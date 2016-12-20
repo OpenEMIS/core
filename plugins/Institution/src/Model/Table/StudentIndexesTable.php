@@ -176,7 +176,7 @@ class StudentIndexesTable extends ControllerActionTable
                 }
 
                 // blue info tooltip
-                $tooltipReference = '<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$reference.'"></i>';
+                $tooltipReference = '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="left" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$reference.'"></i>';
 
                 // to put in the table
                 $rowData = [];

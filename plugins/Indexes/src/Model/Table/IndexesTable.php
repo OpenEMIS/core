@@ -35,18 +35,18 @@ class IndexesTable extends ControllerActionTable
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
         ],
+        // // // 'Pre Primary',
+        // 'Institution.StudentAdmission' => [
+        //     'name' => 'Overage',
+        //     'operator' => [1 => '<', 2 => '>'],
+        //     'threshold' => ['type' => 'number']
+        // ],
         // dropout will used the institution.students, while repeated will used Institution.IndividualPromotion
         'Institution.Students' => [
             'name' => 'Status',
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'Student.StudentStatuses']
         ],
-        // // // 'Pre Primary',
-        // 'OVERAGE' => [
-        //     'name' => 'Overage',
-        //     'operator' => [1 => '<', 2 => '>'],
-        //     'threshold' => ['type' => 'number']
-        // ],
         'Institution.StudentUser' => [
             'name' => 'Genders',
             'operator' => [3 => '='],
@@ -89,6 +89,34 @@ class IndexesTable extends ControllerActionTable
         $session = $this->request->session();
         $sessionUserId = $session->read('Auth.User.id');
         $sessionIndexId = $session->read('Indexes.Indexes.primaryKey.id');
+
+        // back Button
+        // if have queryString will be redirected to institution>indexes>generate
+        if (array_key_exists('queryString', $requestQuery)) {
+            $url = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'InstitutionIndexes',
+                'index'
+            ];
+        } else {
+            $url = $this->url('index');
+        }
+
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $toolbarButtonsArray['back']['type'] = 'button';
+        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
+        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
+        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
+        $toolbarButtonsArray['back']['url'] = $url;
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // end back Button
 
         $this->fields = []; // reset all the fields
 
@@ -263,7 +291,11 @@ class IndexesTable extends ControllerActionTable
     {
         $query->contain([
             'IndexesCriterias' => [
-                'sort' => ['IndexesCriterias.criteria' => 'ASC', 'IndexesCriterias.id' => 'ASC']
+                'sort' => [
+                    'IndexesCriterias.criteria' => 'ASC',
+                    'IndexesCriterias.operator' => 'ASC',
+                    'IndexesCriterias.threshold' => 'ASC'
+                ]
             ]
         ]);
     }
@@ -374,32 +406,6 @@ class IndexesTable extends ControllerActionTable
         }
 
         return $userName;
-    }
-
-    public function onGetFormButtons(Event $event, ArrayObject $buttons)
-    {
-        $requestQuery = $this->request->query;
-
-        switch ($this->action) {
-            case 'generate':
-                // on the generate page the save button was renamed to generate button.
-                $buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Generate');
-
-                // if queryString set means come from institutions index,
-                if (array_key_exists('queryString', $requestQuery)) {
-                    $cancelUrl = [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'InstitutionIndexes',
-                        'index'
-                    ];
-                } else {
-                    $cancelUrl = $this->url('index');
-                }
-
-                $buttons[1]['url'] = $cancelUrl;
-                break;
-        }
     }
 
     public function getCriteriasDetails($criteriaKey)
