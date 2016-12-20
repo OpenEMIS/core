@@ -27,6 +27,20 @@ class CustomExcelsController extends AppController
     	$this->set('contentHeader', $header);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        if (in_array($action, ['export', 'viewVars'])) {
+            return true;
+        }
+    }
+
     // CAv4
     public function ExcelTemplates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'CustomExcel.ExcelTemplates']); }
     // End
