@@ -23,6 +23,8 @@ class UsersTable extends AppTable {
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -57,6 +59,7 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('is_student', ['visible' => false]);
 		$this->ControllerAction->field('is_staff', ['visible' => false]);
 		$this->ControllerAction->field('is_guardian', ['visible' => false]);
+
 		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
 		$userId = $this->paramsEncode(['id' => $this->Auth->user('id')]);
