@@ -34,8 +34,6 @@ class InstitutionsController extends AppController
             'StaffAttendances'  => ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 
             'StaffBehaviours'   => ['className' => 'Institution.StaffBehaviours'],
-
-            'Students'          => ['className' => 'Institution.Students'],
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
             'StudentSurveys'    => ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
             'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
@@ -157,7 +155,7 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function Staffs($pass = 'index') {
+    public function Staff($pass = 'index') {
         if ($pass == 'add') {
             $session = $this->request->session();
             $roles = [];

@@ -17,10 +17,10 @@ use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Log\Log;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class StaffTable extends AppTable {
+class StaffTable extends ControllerActionTable {
 	use OptionsTrait;
 
 	private $assigned;
@@ -122,13 +122,8 @@ class StaffTable extends AppTable {
 		$this->endOfAssignment = $statuses['END_OF_ASSIGNMENT'];
 
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('ControllerAction.Image');
 	}
-
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
@@ -212,27 +207,14 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			if (isset($toolbarButtons['edit'])) {
-				$url = $toolbarButtons['edit']['url'];
-				$staffId = $url[1];
-				unset($url[1]);
-				$url[0] = 'add';
-				$url['institution_staff_id'] = $staffId;
-				$url['action'] = 'StaffPositionProfiles';
-				$toolbarButtons['edit']['url'] = $url;
-			}
-		}
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		$request = $this->request;
 		$query->contain(['Positions']);
 		$sortList = ['start_date', 'end_date'];
-		if (array_key_exists('sortWhitelist', $options)) {
-			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		if (array_key_exists('sortWhitelist', $extra)) {
+			$sortList = array_merge($extra['sortWhitelist'], $sortList);
 		}
-		$options['sortWhitelist'] = $sortList;
+		$extra['sortWhitelist'] = $sortList;
 
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// Academic Periods
@@ -280,6 +262,12 @@ class StaffTable extends AppTable {
 					->count();
 			}
 		]);
+
+		// To add the academic_period_id to export
+        if (isset($extra['toolbarButtons']['export']['url'])) {
+            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedPeriod;
+        }
+
 		$request->query['academic_period_id'] = $selectedPeriod;
 
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
@@ -291,7 +279,7 @@ class StaffTable extends AppTable {
 			});
 		}
 
-		$search = $this->ControllerAction->getSearchKey();
+		$search = $this->getSearchKey();
 		if (!empty($search)) {
 			// function from AdvancedNameSearchBehavior
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
@@ -299,10 +287,10 @@ class StaffTable extends AppTable {
 
 		// start: sort by name
 		$sortList = ['Users.first_name'];
-		if (array_key_exists('sortWhitelist', $options)) {
-			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		if (array_key_exists('sortWhitelist', $extra)) {
+			$sortList = array_merge($extra['sortWhitelist'], $sortList);
 		}
-		$options['sortWhitelist'] = $sortList;
+		$extra['sortWhitelist'] = $sortList;
 		// end: sort by name
 
 		$statusOptions = $this->StaffStatuses->find('list')->toArray();
@@ -346,7 +334,8 @@ class StaffTable extends AppTable {
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
-	public function indexAfterPaginate(Event $event, ResultSet $resultSet, Query $query) {
+	public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+	{
 		$this->dashboardQuery = clone $query;
 	}
 
@@ -455,20 +444,35 @@ class StaffTable extends AppTable {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$securityGroupId = $this->Institutions->get($institutionId)->security_group_id;
 		$this->security_group_id = $securityGroupId;
-		$this->ControllerAction->field('staff_name');
-		$this->ControllerAction->field('start_date');
-		$this->ControllerAction->field('position_type');
-		$this->ControllerAction->field('FTE');
-		$this->ControllerAction->field('institution_position_id');
-		$this->ControllerAction->field('end_date');
-		$this->ControllerAction->field('staff_id', ['visible' => false]);
-		$this->ControllerAction->field('group_id', ['type' => 'hidden', 'value' => $securityGroupId]);
-		$this->ControllerAction->setFieldOrder([
+		$this->field('staff_name');
+		$this->field('start_date');
+		$this->field('position_type');
+		$this->field('FTE');
+		$this->field('institution_position_id');
+		$this->field('end_date');
+		$this->field('staff_id', ['visible' => false]);
+		$this->field('group_id', ['type' => 'hidden', 'value' => $securityGroupId]);
+		$this->setFieldOrder([
 			'start_date', 'end_date', 'position_type', 'FTE', 'institution_position_id', 'staff_type_id', 'staff_status_id', 'staff_name'
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		if ($action == 'view') {
+			if (isset($extra['toolbarButtons'])) {
+				$toolbarButtons = $extra['toolbarButtons'];
+
+				if (isset($toolbarButtons['edit'])) {
+					$url = $toolbarButtons['edit']['url'];
+					$staffId = $url[1];
+					unset($url[1]);
+					$url[0] = 'add';
+					$url['institution_staff_id'] = $staffId;
+					$url['action'] = 'StaffPositionProfiles';
+					$toolbarButtons['edit']['url'] = $url;
+				}
+			}
+		}
 		$this->Session->write('Staff.Staff.id', $entity->staff_id);
 		$this->Session->write('Staff.Staff.name', $entity->user->name);
 		$this->setupTabElements($entity);
@@ -778,7 +782,7 @@ class StaffTable extends AppTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (isset($buttons['view'])) {
-			$url = $this->ControllerAction->url('view');
+			$url = $this->url('view');
 			$url['action'] = 'StaffUser';
 			$url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
 			$url['id'] = $entity->id;
@@ -786,7 +790,7 @@ class StaffTable extends AppTable {
 		}
 
 		if (isset($buttons['edit'])) {
-			$url = $this->ControllerAction->url('add');
+			$url = $this->url('add');
 			$url['action'] = 'StaffPositionProfiles';
 			$url['institution_staff_id'] = $entity->id;
 			$url['action'] = 'StaffPositionProfiles';
@@ -1003,11 +1007,11 @@ class StaffTable extends AppTable {
 		}
 	}
 
-	public function afterAction(Event $event) {
-		$this->ControllerAction->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
-		$this->ControllerAction->field('staff_status_id', ['type' => 'select']);
-		$this->ControllerAction->field('staff_id');
-		$this->ControllerAction->field('security_group_user_id', ['visible' => false]);
+	public function afterAction(Event $event, ArrayObject $extra) {
+		$this->field('staff_type_id', ['type' => 'select', 'visible' => ['index' => false, 'view' => true, 'edit' => true]]);
+		$this->field('staff_status_id', ['type' => 'select']);
+		$this->field('staff_id');
+		$this->field('security_group_user_id', ['visible' => false]);
 
 		$this->fields['staff_id']['sort'] = ['field' => 'Users.first_name'];
 
@@ -1042,11 +1046,12 @@ class StaffTable extends AppTable {
 			$InstitutionArray[__('Licenses')] = $table->getDonutChart('institution_staff_licenses',
 				['query' => $this->dashboardQuery, 'table'=>$this, 'key' => __('Licenses')]);
 
-			$this->controller->viewVars['indexElements'][] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
+			$indexElements = (isset($this->controller->viewVars['indexElements']))?$this->controller->viewVars['indexElements'] :[] ;
+			$indexElements[] = ['name' => 'Institution.Staff/controls', 'data' => [], 'options' => [], 'order' => 0];
 			$indexDashboard = 'dashboard';
 
             if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
-    			$this->controller->viewVars['indexElements']['mini_dashboard'] = [
+    			$indexElements['mini_dashboard'] = [
     	            'name' => $indexDashboard,
     	            'data' => [
     	            	'model' => 'staff',
@@ -1057,15 +1062,17 @@ class StaffTable extends AppTable {
     	            'order' => 2
     	        ];
             }
-			foreach ($this->controller->viewVars['indexElements'] as $key => $value) {
-				if ($value['name']=='advanced_search') {
-					$this->controller->viewVars['indexElements'][$key]['order'] = 1;
-				} else if ($value['name']=='OpenEmis.ControllerAction/index') {
-					$this->controller->viewVars['indexElements'][$key]['order'] = 3;
-				} else if ($value['name']=='OpenEmis.pagination') {
-					$this->controller->viewVars['indexElements'][$key]['order'] = 4;
-				}
-			}
+			foreach ($indexElements as $key => $value) {
+                if ($value['name']=='advanced_search') {
+                    $indexElements[$key]['order'] = 1;
+                } else if ($value['name']=='OpenEmis.ControllerAction/index') {
+                    $indexElements[$key]['order'] = 3;
+                } else if ($value['name']=='OpenEmis.pagination') {
+                    $indexElements[$key]['order'] = 4;
+                }
+            }
+
+            $extra['elements'] = array_merge($extra['elements'], $indexElements);
 		}
 	}
 
@@ -1074,8 +1081,8 @@ class StaffTable extends AppTable {
 			$this->Alert->success('StaffPositionProfiles.request');
 			$this->Session->delete('Institution.StaffPositionProfiles.addSuccessful');
 		}
-		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
-		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+		$this->field('photo_content', ['type' => 'image', 'order' => 0]);
+		$this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
 		$i = 10;
 		$this->fields['staff_id']['order'] = $i++;
 		$this->fields['institution_position_id']['order'] = $i++;
@@ -1087,25 +1094,25 @@ class StaffTable extends AppTable {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('staff_id', [
+		$this->field('staff_id', [
 			'type' => 'readonly',
 			'order' => 10,
 			'attr' => ['value' => $entity->user->name_with_id]
 		]);
-		$this->ControllerAction->field('institution_position_id', [
+		$this->field('institution_position_id', [
 			'type' => 'readonly',
 			'order' => 11,
 			'attr' => ['value' => $entity->position->name]
 		]);
 
 		if (empty($entity->end_date)) {
-			$this->ControllerAction->field('FTE', [
+			$this->field('FTE', [
 				'type' => 'select',
 				'order' => 12,
 				'options' => ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%']
 			]);
 		} else {
-			$this->ControllerAction->field('FTE', [
+			$this->field('FTE', [
 				'type' => 'readonly',
 				'order' => 12,
 				'attr' => ['value' => $entity->FTE]
@@ -1241,43 +1248,6 @@ class StaffTable extends AppTable {
 
 		} catch (InvalidPrimaryKeyException $ex) {
 			Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
-		}
-	}
-
-	public function ajaxUserAutocomplete() {
-		$this->controller->autoRender = false;
-		$this->ControllerAction->autoRender = false;
-
-		if ($this->request->is(['ajax'])) {
-			$term = $this->request->query['term'];
-			// only search for staff
-			$query = $this->Users->find()
-				->select([
-					$this->Users->aliasField('openemis_no'),
-					$this->Users->aliasField('first_name'),
-					$this->Users->aliasField('middle_name'),
-					$this->Users->aliasField('third_name'),
-					$this->Users->aliasField('last_name'),
-					$this->Users->aliasField('preferred_name'),
-					$this->Users->aliasField('id')
-				])
-				->where([$this->Users->aliasField('is_staff') => 1])->limit(100);
-
-			$term = trim($term);
-			if (!empty($term)) {
-				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
-			}
-
-			$list = $query->all();
-
-			$data = [];
-			foreach($list as $obj) {
-				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
-				$data[] = ['label' => $label, 'value' => $obj->id];
-			}
-
-			echo json_encode($data);
-			die;
 		}
 	}
 
