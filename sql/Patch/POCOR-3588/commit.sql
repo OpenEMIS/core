@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `examination_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination subjects for a particular examination';
 
 INSERT INTO `examination_items` (`name`, `code`, `weight`, `examination_date`, `start_time`, `end_time`, `examination_id`, `education_subject_id`, `examination_grading_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `education_subjects`.`name`, `education_subjects`.`code`, `z_3588_examination_items`.`weight`, `z_3588_examination_items`.`examination_date`, `z_3588_examination_items`.`start_time`, `z_3588_examination_items`.`end_time`, `z_3588_examination_items`.`examination_id`, `z_3588_examination_items`.`education_subject_id`, `z_3588_examination_items`.`examination_grading_type_id`, `z_3588_examination_items`.`modified_user_id`, `z_3588_examination_items`.`modified`, `z_3588_examination_items`.`created_user_id`, `z_3588_examination_items`.`created`
-FROM `z_3588_examination_items`
-LEFT JOIN `education_subjects`
-ON `education_subjects`.`id` = `z_3588_examination_items`.`education_subject_id`;
+SELECT `Subjects`.`name`, `Subjects`.`code`, `Items`.`weight`, `Items`.`examination_date`, `Items`.`start_time`, `Items`.`end_time`, `Items`.`examination_id`, `Items`.`education_subject_id`, `Items`.`examination_grading_type_id`, `Items`.`modified_user_id`, `Items`.`modified`, `Items`.`created_user_id`, `Items`.`created`
+FROM `z_3588_examination_items` `Items`
+LEFT JOIN `education_subjects` `Subjects`
+ON `Subjects`.`id` = `Items`.`education_subject_id`;
