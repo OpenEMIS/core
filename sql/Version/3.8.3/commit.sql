@@ -33,6 +33,8 @@ CREATE TABLE `z_3593_external_data_source_attributes` LIKE `external_data_source
 
 INSERT INTO `z_3593_external_data_source_attributes` SELECT * FROM `external_data_source_attributes`;
 
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES (uuid(), 'ConfigExternalDataSource', 'client_id', 'Configuration > External Data Source', 'Client ID', '1', '1', NOW());
+
 DELETE FROM `external_data_source_attributes`;
 
 
