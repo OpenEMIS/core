@@ -16,9 +16,10 @@ class ExaminationItemsTable extends AppTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Examination', ['className' => 'Examination.Examinations']);
+        $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationGradingTypes', ['className' => 'Examination.ExaminationGradingTypes']);
+        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['index']
@@ -30,6 +31,10 @@ class ExaminationItemsTable extends AppTable {
         $validator = parent::validationDefault($validator);
 
         $validator
+            ->add('code', 'ruleUniqueCodeWithinForm', [
+                'rule' => ['checkUniqueCodeWithinForm', $this->Examinations],
+            ])
+            ->notEmpty('name')
             ->add('weight', 'ruleIsDecimal', [
                 'rule' => ['decimal', null],
             ])
@@ -37,8 +42,6 @@ class ExaminationItemsTable extends AppTable {
                 'rule'  => ['range', 0, 2],
                 'last' => true
             ])
-            ->notEmpty('name')
-            ->notEmpty('code')
             ->allowEmpty('education_subject_id')
             ->notEmpty('examination_grading_type_id')
             ->add('start_time', 'ruleCompareTime', [
@@ -50,28 +53,7 @@ class ExaminationItemsTable extends AppTable {
         return $validator;
     }
 
-    public function populateExaminationItemsArray($gradeId)
-    {
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-        $gradeSubjects = $EducationGradesSubjects->find()
-            ->contain('EducationSubjects')
-            ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])
-            ->order(['order'])
-            ->toArray();
 
-        $examinationItems = [];
-        foreach ($gradeSubjects as $key => $gradeSubject) {
-            if (!empty($gradeSubject->education_subject)) {
-                $examinationItems[] = [
-                    'education_subject_id' => $gradeSubject->education_subject->id,
-                    'education_subject' => $gradeSubject->education_subject,
-                    'weight' => '0.00',
-                ];
-            }
-        }
-
-        return $examinationItems;
-    }
 
     public function getExaminationItemSubjects($examinationId)
     {

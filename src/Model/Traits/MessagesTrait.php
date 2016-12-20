@@ -1454,7 +1454,10 @@ trait MessagesTrait {
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'
-                ]
+                ],
+                'code' => [
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
+                ],
             ],
             'ExaminationGradingTypes' => [
                 'code' => [

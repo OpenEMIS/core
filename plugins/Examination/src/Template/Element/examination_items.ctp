@@ -107,21 +107,22 @@
                              <td>
                                 <?php
                                     // user can choose not to select subject
-                                    $emptySelect = ['0' => '-- ' . __('Select') . ' --'];
+                                    $emptySubject = ['0' => '-- ' . __('Select') . ' --'];
                                     echo $this->Form->input("$fieldPrefix.education_subject_id", [
                                         'type' => 'select',
                                         'label' => false,
-                                        'empty' => $emptySelect,
+                                        'empty' => $emptySubject,
                                         'options' => $educationSubjectOptions
                                     ]);
                                 ?>
                             </td>
                             <td>
                                 <?php
+                                    $emptyGradingType = '-- ' . __('Select') . ' --';
                                     echo $this->Form->input("$fieldPrefix.examination_grading_type_id", [
                                         'type' => 'select',
                                         'label' => false,
-                                        'empty' => $emptySelect,
+                                        'empty' => $emptyGradingType,
                                         'options' => $examinationGradingTypeOptions,
                                     ]);
                                 ?>
@@ -170,7 +171,12 @@
                             </td>
                             <td>
                                 <?php
+                                    if (empty($item->examination_item_results)) {
                                         echo "<button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button>";
+                                    } else {
+                                        $message = __('There are results for this item');
+                                        echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-toggle="tooltip" data-container="body" data-placement="top" data-animation="false" title="" data-html="true" data-original-title="' . $message . '"></i>';
+                                    }
                                 ?>
                             </td>
 
