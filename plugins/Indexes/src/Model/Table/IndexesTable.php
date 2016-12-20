@@ -35,11 +35,12 @@ class IndexesTable extends ControllerActionTable
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
         ],
-        // 'STATUS' => [
-        //     'name' => 'Status',
-        //     'operator' => [3 => '='],
-        //     'threshold' => ['type' => 'select', 'lookupModel' => [2,3,4]]
-        // ],
+        // dropout will used the institution.students, while repeated will used Institution.IndividualPromotion
+        'Institution.Students' => [
+            'name' => 'Status',
+            'operator' => [3 => '='],
+            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.StudentStatuses']
+        ],
         // // // 'Pre Primary',
         // 'OVERAGE' => [
         //     'name' => 'Overage',

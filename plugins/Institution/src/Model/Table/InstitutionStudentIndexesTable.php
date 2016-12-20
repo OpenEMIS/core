@@ -43,6 +43,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $events['Model.Guardians.afterDelete'] = 'afterSaveOrDelete';
         $events['Model.SpecialNeeds.afterSave'] = 'afterSaveOrDelete';
         $events['Model.SpecialNeeds.afterDelete'] = 'afterSaveOrDelete';
+        $events['Model.Students.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.Students.afterDelete'] = 'afterSaveOrDelete';
+        $events['Model.IndividualPromotion.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.IndividualPromotion.afterDelete'] = 'afterSaveOrDelete';
         return $events;
     }
 
@@ -196,6 +200,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     {
         $criteriaModel = $afterSaveOrDeleteEntity->source();
 
+        if ($criteriaModel = 'Institution.IndividualPromotion') {
+            $criteriaModel = 'Institution.Students';
+        }
+
         $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $criteriaTable = TableRegistry::get($criteriaModel);
 
@@ -279,7 +287,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         'index_id' => $indexId
                     ]);
                 }
-
+// pr($operator);
                 // if the condition fulfilled then the value will be saved as its value, if not saved as null
                 switch ($operator) {
                     case 1: // '<'
@@ -299,8 +307,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         break;
 
                     case 3: // '='
+// pr($threshold);
                         // value index is an array (valueIndex[threshold] = value)
                         if (array_key_exists($threshold, $valueIndexData)) {
+// pr('masuk sini');
                             $valueIndex = 'True';
                         } else {
                             $valueIndex = null;
@@ -338,6 +348,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $this->save($entity);
             }
         }
+// pr('here??');
+// die;
     }
 
     // will update the total index on the institution_student_indexes
@@ -377,11 +389,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId, $academicPeriodId);
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = !empty($indexTotal[$studentIndexesCriteriasObj->institution_student_index_id]) ? $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] : 0 ;
                         $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] + $indexValue;
-                    } else {
-// pr("empty student_indexes_criterias");
-                        $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = 0;
                     }
                 }
+// pr('indexTotal');
 // pr($indexTotal);
 // die;
 
