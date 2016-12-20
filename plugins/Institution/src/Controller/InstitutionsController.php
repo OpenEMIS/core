@@ -86,6 +86,7 @@ class InstitutionsController extends AppController
     public function Classes()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
     public function Subjects()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
     public function Assessments()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']); }
+    public function AssessmentResults()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentResults']); }
     public function StudentProgrammes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
     public function Exams()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
     public function UndoExaminationRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
@@ -122,11 +123,25 @@ class InstitutionsController extends AppController
 
         $this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles));
         $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
+
         $url = $this->ControllerAction->url('index');
-        $url['plugin'] = 'Institution';
-        $url['controller'] = 'Institutions';
-        $url['action'] = 'ClassStudents';
-        $url[0] = 'excel';
+
+        $ExcelTemplates = TableRegistry::get('CustomExcel.ExcelTemplates');
+        $AssessmentResults = TableRegistry::get('CustomExcel.AssessmentResults');
+        $hasTemplate = $ExcelTemplates->checkIfHasTemplate($AssessmentResults->registryAlias());
+
+        if ($hasTemplate) {
+            $url['plugin'] = 'CustomExcel';
+            $url['controller'] = 'CustomExcels';
+            $url['action'] = 'export';
+            $url[0] = 'AssessmentResults';
+        } else {
+            $url['plugin'] = 'Institution';
+            $url['controller'] = 'Institutions';
+            $url['action'] = 'ClassStudents';
+            $url[0] = 'excel';
+        }
+
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
