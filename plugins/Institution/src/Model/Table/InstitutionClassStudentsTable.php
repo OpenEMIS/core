@@ -98,7 +98,7 @@ class InstitutionClassStudentsTable extends AppTable {
     }
 
     public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
-        $classId = $this->request->query('class_id');
+        $classId = $this->ControllerAction->getQueryString('class_id');
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionCode = $this->Institutions->get($institutionId)->code;
         $className = $this->InstitutionClasses->get($classId)->name;
@@ -106,7 +106,8 @@ class InstitutionClassStudentsTable extends AppTable {
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
-        $classId = $this->request->query('class_id');
+        $classId = $this->ControllerAction->getQueryString('class_id');
+        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
         $AccessControl = $this->AccessControl;
         $userId = $this->Session->read('Auth.User.id');
         $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -138,7 +139,7 @@ class InstitutionClassStudentsTable extends AppTable {
             'name' => isset($name['name']) ? $name['name'] : __('Class Not Found'),
             'table' => $this,
             'query' => $this->find(),
-            'assessmentId' => $this->request->query('assessment_id'),
+            'assessmentId' => $assessmentId,
             'classId' => $classId,
             'staffId' => $userId,
             'institutionId' => $institutionId,
