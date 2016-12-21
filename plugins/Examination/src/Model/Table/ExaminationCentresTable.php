@@ -298,7 +298,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['ExaminationCentreSubjects.EducationSubjects'])
+            ->contain(['ExaminationCentreSubjects.EducationSubjects', 'ExaminationCentreSubjects.ExaminationItems'])
             ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes'])
             ->contain(['ExaminationCentreRooms.Students'])
             ->contain([
@@ -585,8 +585,12 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             $options = $ExaminationItemsTable
                 ->find()
-                ->matching('EducationSubjects')
-                ->select(['subject_code' => 'EducationSubjects.code', 'subject_name' => 'EducationSubjects.name'])
+                ->contain('EducationSubjects')
+                ->select([
+                    'item_code' => $ExaminationItemsTable->aliasField('code'),
+                    'item_name' => $ExaminationItemsTable->aliasField('name'),
+                    'education_subject' => 'EducationSubjects.name',
+                ])
                 ->where([
                     $ExaminationItemsTable->aliasField('examination_id') => $examinationId
                 ])
@@ -600,9 +604,15 @@ class ExaminationCentresTable extends ControllerActionTable {
             $entity = $attr['entity'];
             $subjects = [];
             foreach ($entity->examination_centre_subjects as $subject) {
+                $educationSubject = '';
+                if ($subject->has('education_subject') && $subject->education_subject->has('name')) {
+                    $educationSubject = $subject->education_subject->name;
+                }
+
                 $subjects[] = [
-                    'subject_code' => $subject->education_subject->code,
-                    'subject_name' => $subject->education_subject->name
+                    'item_code' => $subject->examination_item->code,
+                    'item_name' => $subject->examination_item->name,
+                    'education_subject' => $educationSubject
                 ];
             }
             $attr['type'] = 'element';
@@ -983,27 +993,23 @@ class ExaminationCentresTable extends ControllerActionTable {
         // Subjects logic
         // $subjects = $requestData[$this->alias()]['subjects'];
         $ExaminationItemsTable = $this->Examinations->ExaminationItems;
-        $subjects = $ExaminationItemsTable
-                ->find('list', [
-                    'keyField' => 'subject_id',
-                    'valueField' => 'subject_id'
-                ])
-                ->matching('EducationSubjects')
-                ->select([
-                    'subject_id' => $ExaminationItemsTable->aliasField('education_subject_id')
-                ])
+        $examinationItems = $ExaminationItemsTable
+                ->find()
+                ->contain('EducationSubjects')
+                ->select([$ExaminationItemsTable->aliasField('id'), $ExaminationItemsTable->aliasField('education_subject_id')])
                 ->where([
                     $ExaminationItemsTable->aliasField('examination_id') => $examinationId
                 ])
                 ->toArray();
 
         $examinationCentreSubjects = [];
-        if (is_array($subjects)) {
-            foreach($subjects as $subject) {
+        if (is_array($examinationItems)) {
+            foreach($examinationItems as $item) {
                 $examinationCentreSubjects[] = [
                     'examination_id' => $examinationId,
                     'academic_period_id' => $academicPeriodId,
-                    'education_subject_id' => $subject,
+                    'education_subject_id' => $item->education_subject_id,
+                    'examination_item_id' => $item->id,
                 ];
             }
         }
