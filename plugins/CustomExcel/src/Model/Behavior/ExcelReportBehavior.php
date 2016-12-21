@@ -568,16 +568,22 @@ class ExcelReportBehavior extends Behavior
     {
         $columnValue = $attr['columnValue'];
         $rowValue = $attr['rowValue'];
-        foreach ($attr['data'] as $key => $value) {
-            // skip first row don't need to auto insert new row
-            if (!$this->suppressAutoInsertNewRow && $rowValue != $attr['rowValue']) {
-                $objWorksheet->insertNewRowBefore($rowValue);
+        if (!empty($attr['data'])) {
+            foreach ($attr['data'] as $key => $value) {
+                // skip first row don't need to auto insert new row
+                if (!$this->suppressAutoInsertNewRow && $rowValue != $attr['rowValue']) {
+                    $objWorksheet->insertNewRowBefore($rowValue);
+                }
+
+                $cellCoordinate = $columnValue.$rowValue;
+                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+
+                $rowValue++;
             }
-
+        } else {
+            // replace placeholder as blank if data is empty
             $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
-
-            $rowValue++;
+            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
 
         // only insert new row for the first column which have repeat-rows
@@ -592,52 +598,61 @@ class ExcelReportBehavior extends Behavior
         $rowValue = $attr['rowValue'];
         $nestedColumn = array_key_exists('children', $attr) ? $attr['children'] : [];
 
-        foreach ($attr['data'] as $key => $value) {
-            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-            if (!$this->suppressAutoInsertNewColumn && $columnIndex != $attr['columnIndex']) {
-                $objWorksheet->insertNewColumnBefore($columnValue);
-                $this->updatePlaceholderCoordinate($columnValue, null, $extra);
-            }
-            $cellCoordinate = $columnValue.$rowValue;
-            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
+        if (!empty($attr['data'])) {
+            foreach ($attr['data'] as $key => $value) {
+                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                if (!$this->suppressAutoInsertNewColumn && $columnIndex != $attr['columnIndex']) {
+                    $objWorksheet->insertNewColumnBefore($columnValue);
+                    $this->updatePlaceholderCoordinate($columnValue, null, $extra);
+                }
+                $cellCoordinate = $columnValue.$rowValue;
+                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $value, $attr, $extra);
 
-            if (!empty($nestedColumn)) {
-                $keyword = $this->advancedTypes[__FUNCTION__];
-                $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $keyword, $extra);
+                if (!empty($nestedColumn)) {
+                    $keyword = $this->advancedTypes[__FUNCTION__];
+                    $nestedAttr = $this->extractPlaceholderAttr($nestedColumn, $keyword, $extra);
 
-                $nestedColumnIndex = $columnIndex;
-                // always output children to the immediate next row
-                $nestedRowValue = $rowValue + 1;
-                foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
-                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
-                    $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
-                    if (!$this->suppressAutoInsertNewColumn && $nestedColumnIndex != $columnIndex) {
-                        $objWorksheet->insertNewColumnBefore($nestedColumnValue);
-                        $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
+                    $nestedColumnIndex = $columnIndex;
+                    // always output children to the immediate next row
+                    $nestedRowValue = $rowValue + 1;
+                    foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
+                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                        $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+                        if (!$this->suppressAutoInsertNewColumn && $nestedColumnIndex != $columnIndex) {
+                            $objWorksheet->insertNewColumnBefore($nestedColumnValue);
+                            $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
+                        }
+
+                        $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
+                        $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+
+                        $nestedColumnIndex++;
                     }
 
-                    $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
-                    $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
+                    // if nested column occupied more columns than the parent, then merge parent cell following number of columns occupied by children
+                    if ($nestedColumnIndex > $columnIndex) {
+                        $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
 
-                    $nestedColumnIndex++;
+                        $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rowValue;
+                        $objWorksheet->mergeCells($mergeRange);
+                        // fix border doesn't set after cell is merged
+                        $cellStyle = $attr['style'];
+                        $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
+
+                        $columnIndex = $nestedColumnIndex-1;
+                    }
                 }
 
-                // if nested column occupied more columns than the parent, then merge parent cell following number of columns occupied by children
-                if ($nestedColumnIndex > $columnIndex) {
-                    $rangeColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-2);
-
-                    $mergeRange = $cellCoordinate.":".$rangeColumnValue.$rowValue;
-                    $objWorksheet->mergeCells($mergeRange);
-                    // fix border doesn't set after cell is merged
-                    $cellStyle = $attr['style'];
-                    $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
-
-                    $columnIndex = $nestedColumnIndex-1;
-                }
+                $columnIndex++;
             }
+        } else {
+            // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+            $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
 
-            $columnIndex++;
+            // replace placeholder as blank if data is empty
+            $cellCoordinate = $columnValue.$rowValue;
+            $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
 
         // only insert new row for the first column which have repeat-rows
