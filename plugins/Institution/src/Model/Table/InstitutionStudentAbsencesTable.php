@@ -736,7 +736,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return $valueIndex = $absenceDay;
 	}
 
-	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 	{
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;

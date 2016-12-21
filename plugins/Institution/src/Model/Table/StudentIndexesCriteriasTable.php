@@ -62,9 +62,12 @@ class StudentIndexesCriteriasTable extends AppTable
             break;
 
         case 3: // '='
-            $criteriaModel = TableRegistry::get($IndexesCriteriasData->criteria);
+            $Indexes = TableRegistry::get('Indexes.Indexes');
+            $criteriaName = $IndexesCriteriasData->criteria;
+            $criteriaDetails = $Indexes->getCriteriasDetails($criteriaName);
+            $criteriaModel = TableRegistry::get($criteriaDetails['model']);
 
-            $valueIndex = $criteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId);
+            $valueIndex = $criteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
             if (array_key_exists($threshold, $valueIndex)) {
                 $indexValue = 0;

@@ -106,8 +106,7 @@ class SpecialNeedsTable extends ControllerActionTable {
         return $valueIndex = $quantity;
     }
 
-    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
-    {
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 
         $specialNeedList = $this->find()
             ->contain(['SpecialNeedTypes', 'SpecialNeedDifficulties'])

@@ -1284,7 +1284,6 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
             ])
-            // ;pr($completedGradeCount->toArray());die;
             ->count()
             ;
 
@@ -1296,56 +1295,102 @@ class StudentsTable extends ControllerActionTable
         $institutionId = $params['institution_id'];
         $studentId = $params['student_id'];
         $academicPeriodId = $params['academic_period_id'];
+        $criteriaName = $params['criteria_name'];
 
-        $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId);
+        $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
         return $valueIndex;
     }
 
-    public function getValueIndex($institutionId, $studentId, $academicPeriodId)
+    public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
     {
-        $Classifications = TableRegistry::get('Student.Classifications');
+        switch ($criteriaName) {
+            case 'Status':
+                $statusResults = $this->find()
+                    ->where([
+                        'student_id' => $studentId
+                    ])
+                    ->all();
 
-        $statusResults = $this
-            ->find()
-            ->where([
-                $this->aliasField('student_id') => $studentId
-            ])
-            ->all();
+                $getValueIndex = [];
+                foreach ($statusResults as $key => $obj) {
+                    $statusId = $obj->student_status_id;
 
-        $getValueIndex = [];
-        foreach ($statusResults as $key => $obj) {
-            $statusId = $obj->student_status_id;
+                    $getValueIndex[$statusId] = !empty($getValueIndex[$statusId]) ? $getValueIndex[$statusId] : 0;
+                    $getValueIndex[$statusId] = $getValueIndex[$statusId] + 1;
+                }
 
-            $getValueIndex[$statusId] = !empty($getValueIndex[$statusId]) ? $getValueIndex[$statusId] : 0;
-            $getValueIndex[$statusId] = $getValueIndex[$statusId] + 1;
+                return $getValueIndex;
+                break;
+
+             case 'Overage':
+                $getValueIndex = 0;
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+                     $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
+                    $educationGradeId = $results->education_grade_id;
+                    $educationProgrammeId = $this->EducationGrades->get($educationGradeId)->education_programme_id;
+                    $admissionAge = $EducationProgrammes->getAdmissionAge($educationProgrammeId);
+
+                    $schoolStartDate = $results->start_year;
+                    $birthday = $results->user->date_of_birth->format('Y');
+
+                    $getValueIndex = ($schoolStartDate - $birthday)-$admissionAge;
+                }
+
+                return $getValueIndex;
+                break;
         }
 
-        return $getValueIndex;
     }
 
-    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
-// pr('getReferenceDetails');
-// die;
-        $statusId = $threshold; // it will classified by the status Id
-        $results = $this
-            ->find()
-            ->contain(['StudentStatuses', 'AcademicPeriods'])
-            ->where([
-                'student_id' => $studentId,
-                'student_status_id' => $statusId
-            ])
-            ->all();
-// pr($threshold);
-// pr($results->toArray());
-// die;
         $referenceDetails = [];
-        foreach ($results as $key => $obj) {
-            $title = $obj->student_status->name;
-            $date = $obj->academic_period->name;
 
-            $referenceDetails[$obj->id] = $title . ' (' . $date . ')';
+        switch ($criteriaName) {
+            case 'Status':
+                $statusId = $threshold; // it will classified by the status Id
+                $results = $this->find()
+                    ->contain(['StudentStatuses', 'AcademicPeriods'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => $statusId
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $title = $obj->student_status->name;
+                    $date = $obj->academic_period->name;
+
+                    $referenceDetails[$obj->id] = $title . ' (' . $date . ')';
+                }
+                break;
+
+            case 'Overage':
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1 // status enrolled
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $title = $obj->education_grade->name;
+                    $date = $obj->user->date_of_birth->format('d/m/Y');
+
+                    $referenceDetails[$obj->id] = $title . ' (' . __('Born on') . ': ' . $date . ')';
+                }
+                break;
         }
 
         // tooltip only receieved string to be display

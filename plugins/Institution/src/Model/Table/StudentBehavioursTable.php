@@ -428,13 +428,14 @@ class StudentBehavioursTable extends AppTable
 		$institutionId = $params['institution_id'];
 		$studentId = $params['student_id'];
 		$academicPeriodId = $params['academic_period_id'];
+		$criteriaName = $params['criteria_name'];
 
-		$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId);
+		$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
 		return $valueIndex;
 	}
 
-	public function getValueIndex($institutionId, $studentId, $academicPeriodId)
+	public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
 	{
 		$Classifications = TableRegistry::get('Student.Classifications');
 
@@ -458,7 +459,7 @@ class StudentBehavioursTable extends AppTable
 		return $getValueIndex;
 	}
 
-	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 	{
 		$classificationId = $threshold; // it will classified by the classification id
 		$behaviourResults = $this
