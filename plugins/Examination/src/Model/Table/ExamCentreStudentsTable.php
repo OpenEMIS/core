@@ -220,7 +220,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $academicPeriodId = $options['academic_period_id'];
         $examinationId = $options['examination_id'];
         $examinationCentreId = $options['examination_centre_id'];
-        $educationSubjectId = $options['education_subject_id'];
+        $examinationItemId = $options['examination_item_id'];
 
         $Users = $this->Users;
         $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
@@ -250,7 +250,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                     $ItemResults->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
-                    $ItemResults->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id'),
+                    $ItemResults->aliasField('examination_item_id = ') . $this->aliasField('examination_item_id'),
                     $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
             )
@@ -258,7 +258,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('examination_id') => $examinationId,
                 $this->aliasField('examination_centre_id') => $examinationCentreId,
-                $this->aliasField('education_subject_id') => $educationSubjectId
+                $this->aliasField('examination_item_id') => $examinationItemId
             ])
             ->group([
                 $this->aliasField('student_id'),
