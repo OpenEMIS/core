@@ -30,13 +30,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             </li>
             <li data-step="3" data-name="createUser" ng-show="InstitutionStaffController.createNewStudent">
                 <div class="step-wrapper">
-                    <?= __('New Student Details') ?>
+                    <?= __('New Staff Details') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
             <li data-step="4" data-name="addStudent">
                 <div class="step-wrapper">
-                    <?= __('Add Student') ?>
+                    <?= __('Add Staff') ?>
                     <input type="hidden" ng-model="InstitutionStaffController.hasExternalDataSource" ng-init="InstitutionStaffController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStaffController.institutionId=<?= $institutionId; ?>;"/>
                     <span class="chevron"></span>
                 </div>
@@ -51,7 +51,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ) && (InstitutionStaffController.step == 'external_search' || InstitutionStaffController.step == 'internal_search')"
             ng-disabled="InstitutionStaffController.selectedStudent"
             ng-click="InstitutionStaffController.onAddNewStudentClick()"
-            type="button" class="btn btn-default"><?= __('Create New Student') ?>
+            type="button" class="btn btn-default"><?= __('Create New Staff') ?>
         </button>
         <?php endif; ?>
         <button
@@ -63,7 +63,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-model="InstitutionStaffController.selectedStudent"
             ng-click="InstitutionStaffController.onAddStudentClick()"
             ng-disabled="!InstitutionStaffController.selectedStudent"
-            type="button" class="btn btn-default"><?= __('Add Student') ?>
+            type="button" class="btn btn-default"><?= __('Add Staff') ?>
         </button>
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStaffController.selectedStudent"
@@ -208,7 +208,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input date required">
                     <label for="Student_date_of_birth"><?= __('Date of Birth') ?></label>
                     <div class="input-group date " id="Student_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Student[date_of_birth]" ng-model="InstitutionStaffController.selectedStudentData.date_of_birth" ng-init="InstitutionStaffController.selectedStudentData.date_of_birth='';">
+                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStudentData.date_of_birth" ng-init="InstitutionStaffController.selectedStudentData.date_of_birth='';">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
@@ -265,7 +265,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
                 <div class="input string" ng-model="InstitutionStaffController.postResponse">
-                    <label><?= __('Student') ?></label>
+                    <label><?= __('Staff') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStudentData.name" type="string" disabled="disabled">
                     <div ng-if="InstitutionStaffController.postResponse.error.first_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.first_name">{{ error }}</p>
@@ -344,7 +344,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
                 <div class="input string" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Student Status') ?></label>
+                    <label><?= __('Staff Status') ?></label>
                     <input type="string" value="<?= __('Pending Admission') ?>" disabled="disabled">
                 </div>
 

@@ -1,10 +1,10 @@
 angular
-    .module('institutions.students.svc', ['kd.orm.svc'])
-    .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
+    .module('institutions.staff.svc', ['kd.orm.svc'])
+    .service('InstitutionsStaffSvc', InstitutionsStaffSvc);
 
-InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
+InstitutionsStaffSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
 
-function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
+function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     var externalSource = null;
     var externalToken = null;
