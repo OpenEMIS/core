@@ -9,9 +9,6 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     $scope.roles = [];
 
     angular.element(document).ready(function () {
-        $scope.class_id = UtilsSvc.requestQuery('class_id');
-        $scope.assessment_id = UtilsSvc.requestQuery('assessment_id');
-
         // init
         InstitutionsResultsSvc.init(angular.baseUrl);
 
