@@ -56,7 +56,7 @@ $this->start('panelBody');
 $session = $this->request->session();
 $institutionId = $session->read('Institution.Institutions.id');
 
-//follow the JS array requrement
+//follow the JS array requirement
 $roles = '[' . implode(",", $_roles) . ']';
 ?>
     <div class="alert {{class}}" ng-hide="message == null">
