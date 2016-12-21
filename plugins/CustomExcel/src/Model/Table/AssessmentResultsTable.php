@@ -144,7 +144,7 @@ class AssessmentResultsTable extends AppTable
             $entity = $this->find()
                 ->contain([
                     'Users' => [
-                        'BirthplaceAreas', 'Nationalities'
+                        'BirthplaceAreas', 'MainNationalities'
                     ]
                 ])
                 ->where([$this->aliasField('institution_class_id') => $params['class_id']])
