@@ -51,13 +51,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 isSuperAdmin = response[0];
                 securityUserId = response[1];
                 var institutionId = response[2];
-                // allSubjectRoles = response[3];
-                // subjectRoles = response[4];
 
-                // return SecurityGroupUsersTable
-                //     .select(['security_role_id'])
-                //     .find('RoleByInstitution', {security_user_id: securityUserId, institution_id: institutionId})
-                //     .ajax({defer: true});
                 return roles;
 
             }, function(error) {
@@ -66,10 +60,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 deferred.reject(error);
             })
             .then(function(roles) {
-                // var securityRoles = response.data;
-                // for (i = 0; i < securityRoles.length; i++) {
-                //     roles[i] = securityRoles[i].security_role_id;
-                // }
                 var promises = [];
 
                 promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
