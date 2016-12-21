@@ -513,8 +513,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .where({
                 'external_reference': externalRef
             })
-            .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('enrolledInstitutionStudents')
             .ajax({defer: true});
     };
 
