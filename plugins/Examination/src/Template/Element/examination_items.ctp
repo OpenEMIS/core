@@ -28,7 +28,7 @@
                             <td><?= $item->weight ?></td>
                             <td>
                                 <?php
-                                    if ($item->has('education_subject')) {
+                                    if ($item->has('education_subject') && $item->education_subject->has('name')) {
                                         echo $item->education_subject->name;
                                     }
                                 ?>
