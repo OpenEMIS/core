@@ -55,12 +55,15 @@ $this->end();
 $this->start('panelBody');
 $session = $this->request->session();
 $institutionId = $session->read('Institution.Institutions.id');
+
+//follow the JS array requirement
+$roles = '[' . implode(",", $_roles) . ']';
 ?>
     <div class="alert {{class}}" ng-hide="message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
 
-    <div ng-init="institution_id=<?= $institutionId; ?>">
+    <div ng-init="institution_id=<?= $institutionId; ?>; roles=<?=$roles;?>;">
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
