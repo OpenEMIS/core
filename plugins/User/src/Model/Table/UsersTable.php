@@ -14,6 +14,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
 use Cake\Network\Session;
+use Cake\Datasource\ConnectionManager;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -649,6 +650,20 @@ class UsersTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	public function updateAllIdentityNumber($nationalityType)
+	{
+		$connection = ConnectionManager::get('default');
+		$connection->execute(
+			'UPDATE `security_users`
+			INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
+			LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
+			SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
+			WHERE `security_users`.`nationality_id` = ?',
+			[$nationalityType],
+    		['integer']
+		);
 	}
 
 	public function updateIdentityNumber($userId, $identity)
