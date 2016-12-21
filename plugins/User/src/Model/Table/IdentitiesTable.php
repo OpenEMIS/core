@@ -111,6 +111,18 @@ class IdentitiesTable extends ControllerActionTable
 		return $validator->allowEmpty('number');
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on add/edit action
+	}
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		if ($entity->identity_type_id == $this->IdentityTypes->getDefaultValue()) { //if the delete is done to the default identity type
+			$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on delete action
+		}
+	}
+
 	public function getLatestDefaultIdentityNo($userId)
 	{
 		$UserNationalityTable = TableRegistry::get('User.UserNationalities');
