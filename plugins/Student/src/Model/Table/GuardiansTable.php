@@ -284,9 +284,8 @@ class GuardiansTable extends AppTable {
         return $valueIndex = $quantity;
     }
 
-    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
     {
-
         $guardianList = $this->find()
             ->contain(['Users', 'GuardianRelations'])
             ->where([$this->aliasField('student_id') => $studentId])

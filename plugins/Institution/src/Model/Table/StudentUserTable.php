@@ -592,13 +592,14 @@ class StudentUserTable extends ControllerActionTable
 		$institutionId = $params['institution_id'];
 		$studentId = $params['student_id'];
 		$academicPeriodId = $params['academic_period_id'];
+		$criteriaName = $params['criteria_name'];
 
-		$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId);
+		$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
 		return $valueIndex;
 	}
 
-	public function getValueIndex($institutionId, $studentId, $academicPeriodId)
+	public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
 	{
 		// for '=' the value index will be in array (valueIndex[threshold] = value)
 		$getValueIndex[$this->get($studentId)->gender_id] = 1;
@@ -606,7 +607,7 @@ class StudentUserTable extends ControllerActionTable
 		return $getValueIndex;
 	}
 
-	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold)
+	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 	{
 		return $this->Genders->get($threshold)->name;;
 	}
