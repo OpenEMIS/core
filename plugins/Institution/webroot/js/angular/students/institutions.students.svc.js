@@ -446,7 +446,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         modifiedUser['is_student'] = 1;
                         modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
                         modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
-                        modifiedUser['start_date'] = userRecord['start_date'];
+                        modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
                         StudentUser.save(modifiedUser)
                         .then(function(response) {
                             deferred.resolve([response.data, userData]);
