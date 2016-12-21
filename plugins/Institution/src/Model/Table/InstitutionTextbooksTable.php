@@ -60,6 +60,16 @@ class InstitutionTextbooksTable extends ControllerActionTable
             ]);
     }
 
+    public function implementedEvents() {
+       $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'textbook_id';
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra) 
     {
         $session = $this->request->session();
@@ -226,6 +236,13 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $searchKey = $this->request->data['Search']['searchField'];
+
+        if (strlen($searchKey)) {
+            $query->matching('Textbooks'); //to enable search by textbook title
+            $extra['OR'] = [$this->Textbooks->aliasField('title').' LIKE' => '%' . $searchKey . '%'];
+        }
+
         //filter
         if (array_key_exists('selectedPeriod', $extra)) {
             if ($extra['selectedPeriod']) {
@@ -246,7 +263,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         }
 
         $conditions[] = $this->aliasField('institution_id = ') . $this->institutionId;
-        
+
         $query->where([$conditions]);
     }
 
