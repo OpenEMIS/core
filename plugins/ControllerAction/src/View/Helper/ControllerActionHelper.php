@@ -81,7 +81,7 @@ class ControllerActionHelper extends Helper {
 		// save button
 		$buttons[] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Save'),
-			'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save']
+			'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onclick' => '$(this).attr(\'disabled\', true);']
 		];
 
 		// cancel button
