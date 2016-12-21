@@ -325,6 +325,17 @@ class InstitutionsController extends AppController
 	                }
             	}
                 break;
+            case 'Staff':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'add') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'institutions.staff.ctrl',
+                            'institutions.staff.svc'
+                        ]);
+                    }
+                }
+                break;
 		}
 	}
 
