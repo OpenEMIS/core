@@ -549,7 +549,7 @@ class NavigationComponent extends Component
 				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'id' => $id],
 				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
-					'Students.History', 'Students.GuardianUser']],
+					'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull']],
 			'Institutions.StudentProgrammes.index' => [
 				'title' => 'Academic',
 				'parent' => 'Institutions.Students.index',

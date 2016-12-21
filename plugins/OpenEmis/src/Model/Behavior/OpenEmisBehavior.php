@@ -391,6 +391,15 @@ class OpenEmisBehavior extends Behavior {
             $indexButtons['remove']['attr'] = $indexAttr;
         }
 
+        $backButton = $extra->offsetExists('back') ? $extra['back'] : false;
+        if ($backButton) {
+            $toolbarButtons['back']['url'] = $backButton;
+            $toolbarButtons['back']['type'] = 'button';
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = $toolbarAttr;
+            $toolbarButtons['back']['attr']['title'] = __('Back');
+        }
+
         $extra['toolbarButtons'] = $toolbarButtons;
         $extra['indexButtons'] = $indexButtons;
 
