@@ -43,9 +43,16 @@ class IndexesTable extends ControllerActionTable
         // ],
         // dropout will used the institution.students, while repeated will used Institution.IndividualPromotion
         'Institution.Students' => [
-            'name' => 'Status',
-            'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.StudentStatuses']
+            'Status' => [
+                'name' => 'Status',
+                'operator' => [3 => '='],
+                'threshold' => ['type' => 'select', 'lookupModel' => 'Student.StudentStatuses']
+            ],
+            'Overage' => [
+                'name' => 'Overage',
+                'operator' => [2 => '>'],
+                'threshold' => ['type' => 'number']
+            ]
         ],
         'Institution.StudentUser' => [
             'name' => 'Genders',
@@ -145,10 +152,30 @@ class IndexesTable extends ControllerActionTable
         return $entity;
     }
 
+    public function getCriteriasData()
+    {
+        $criteriaData = [];
+        foreach ($this->criteriaTypes as $key => $obj) {
+            if ($key == 'Institution.Students') {
+                foreach ($this->criteriaTypes[$key] as $institutionStudentsKey => $institutionStudentsObj) {
+                    $criteriaData[$institutionStudentsObj['name']] = $institutionStudentsObj;
+                    $criteriaData[$institutionStudentsObj['name']]['model'] = $key;
+                }
+            } else {
+                $criteriaData[$obj['name']] = $obj;
+                $criteriaData[$obj['name']]['model'] = $key;
+            }
+        }
+
+        return $criteriaData;
+    }
+
     public function getCriteriasOptions()
     {
+        $criteriaData = $this->getCriteriasData();
+
         $criteriaOptions = [];
-        foreach ($this->criteriaTypes as $key => $obj) {
+        foreach ($criteriaData as $key => $obj) {
             $criteriaOptions[$key] = $obj['name'];
         }
 
@@ -157,20 +184,24 @@ class IndexesTable extends ControllerActionTable
 
     public function getOperatorParams($criteriaType)
     {
+        $criteriaData = $this->getCriteriasData();
+
         $operatorParams['label'] = false;
         $operatorParams['type'] = 'select';
-        $operatorParams['options'] = $this->criteriaTypes[$criteriaType]['operator'];
+        $operatorParams['options'] = $criteriaData[$criteriaType]['operator'];
 
         return $operatorParams;
     }
 
     public function getThresholdParams($criteriaType)
     {
+        $criteriaData = $this->getCriteriasData();
+
         $thresholdParams['label'] = false;
-        $thresholdParams['type'] = $this->criteriaTypes[$criteriaType]['threshold']['type'];
+        $thresholdParams['type'] = $criteriaData[$criteriaType]['threshold']['type'];
 
         if ($thresholdParams['type'] == 'select') {
-            $model = $this->criteriaTypes[$criteriaType]['threshold']['lookupModel'];
+            $model = $criteriaData[$criteriaType]['threshold']['lookupModel'];
             $thresholdParams['options'] = $this->getOptions($model);
         }
 
@@ -188,19 +219,22 @@ class IndexesTable extends ControllerActionTable
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
+        $criteriaData = $this->getCriteriasData();
         $tableHeaders = $this->getMessage('Indexes.TableHeader');
         $tableCells = [];
         $criteriaOptions = ['' => '-- '.__('Select Criteria').' --'] + $this->getCriteriasOptions();
+
         $alias = $this->alias();
         $fieldKey = 'indexes_criterias';
 
         if ($action == 'view') {
             $associated = $entity->extractOriginal([$fieldKey]);
+
             if (!empty($associated[$fieldKey])) {
                 foreach ($associated[$fieldKey] as $i => $obj) {
                     if ($obj['operator'] == 3) {
                         // '=' the threshold is a string
-                        $lookupModel = TableRegistry::get($this->criteriaTypes[$obj['criteria']]['threshold']['lookupModel']);
+                        $lookupModel = TableRegistry::get($criteriaData[$obj['criteria']]['threshold']['lookupModel']);
                         $thresholdData = $lookupModel->get($obj['threshold'])->name;
                     } else {
                         // '<' and '>' the threshold is a numeric
@@ -208,8 +242,8 @@ class IndexesTable extends ControllerActionTable
                     }
 
                     $rowData = [];
-                    $rowData[] = $this->criteriaTypes[$obj['criteria']]['name'];
-                    $rowData[] = $this->criteriaTypes[$obj['criteria']]['operator'][$obj['operator']];
+                    $rowData[] = $criteriaData[$obj['criteria']]['name'];
+                    $rowData[] = $criteriaData[$obj['criteria']]['operator'][$obj['operator']];
                     $rowData[] = $thresholdData; // will get form the FO or from the model related
                     $rowData[] = $obj['index_value'];
 
@@ -247,7 +281,9 @@ class IndexesTable extends ControllerActionTable
             // refer to addEditOnAddTrainer for http post
             if ($this->request->data("$alias.$fieldKey")) {
                 $associated = $this->request->data("$alias.$fieldKey");
-
+// pr('associated');
+// pr($associated);
+// die;
                 foreach ($associated as $key => $obj) {
                     $rowData = [];
                     $criteriaType = $obj['criteria'];
@@ -410,7 +446,22 @@ class IndexesTable extends ControllerActionTable
 
     public function getCriteriasDetails($criteriaKey)
     {
-        return $details = $this->criteriaTypes[$criteriaKey];
+        $criteriaData = $this->getCriteriasData();
+        return $details = $criteriaData[$criteriaKey];
+    }
+
+    public function getCriteriaByModel($model)
+    {
+        $criteriaData = $this->getCriteriasData();
+
+        $criteria = [];
+        foreach ($criteriaData as $key => $obj) {
+            if ($obj['model'] == $model) {
+                $criteria[$obj['name']] = $obj;
+            }
+        }
+
+        return $criteria;
     }
 
     public function triggerUpdateIndexesShell($shellName, $institutionId=0, $userId=0, $indexId=0)

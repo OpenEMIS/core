@@ -137,20 +137,41 @@ class StudentIndexesTable extends ControllerActionTable
             foreach ($StudentIndexesCriteriasResults as $key => $obj) {
                 $indexesCriteriasId = $obj->indexes_criteria->id;
 
-                $criteriaKey = $obj->indexes_criteria->criteria;
+                $criteriaName = $obj->indexes_criteria->criteria;
                 $operator = $obj->indexes_criteria->operator;
                 $threshold = $obj->indexes_criteria->threshold;
 
                 $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriasId);
 
+                $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaName);
+                $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
+
+
+
+// pr($obj);
+// pr($criteriaDetails);
+// pr($CriteriaModel);
+// pr('indexesCriteriasId');
+// pr($indexesCriteriasId);
+// pr('criteriaKey');
+// pr($criteriaKey);
+// pr('operator');
+// pr($operator);
+// pr('threshold');
+// pr($threshold);
+// pr('value');
+// pr($value);
+// die;
+
+
                 if ($value == 'True') {
                     // Comparison like behaviour
-                    $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaKey);
+                    // $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaKey);
                     $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
-                    $CriteriaModel = TableRegistry::get($criteriaKey);
+                    // $CriteriaModel = TableRegistry::get($criteriaKey);
 
                     // to get total number of behaviour
-                    $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId);
+                    $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
                     $quantity = '';
                     if ($getValueIndex[$threshold] > 1) {
                         $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
@@ -159,20 +180,24 @@ class StudentIndexesTable extends ControllerActionTable
                     $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . $quantity  .'</div>';
 
                     // for reference tooltip
-                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold);
+                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
 
                     // for threshold name
                     $thresholdName = $LookupModel->get($threshold)->name;
                     $threshold = $thresholdName;
                 } else {
                     // numeric value come here (absence quantity, results)
-                    $CriteriaModel = TableRegistry::get($criteriaKey);
+                    // $CriteriaModel = TableRegistry::get($criteriaKey);
+// pr($criteriaKey);
+// pr($CriteriaModel);
+// pr('numeric');
+// die;
 
                     // for value
                     $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
 
                     // for the reference tooltip
-                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold);
+                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
                 }
 
                 // blue info tooltip
@@ -180,8 +205,8 @@ class StudentIndexesTable extends ControllerActionTable
 
                 // to put in the table
                 $rowData = [];
-                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['name'];
-                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaKey)['operator'][$operator];
+                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['name'];
+                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['operator'][$operator];
                 $rowData[] = $threshold;
                 $rowData[] = $value;
                 $rowData[] = $indexValue;
