@@ -256,6 +256,12 @@ class PullBehavior extends Behavior
 	    		]
 	    	];
     	}
+        if (isset($queryString['identity_number'])) {
+            unset($queryString['identity_number']);
+        }
+        if (isset($queryString['identity_type_id'])) {
+            unset($queryString['identity_type_id']);
+        }
     }
 
     public function pullAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
