@@ -4,7 +4,7 @@ angular
 
 InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'InstitutionsStaffSvc'];
 
-function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStudentsSvc) {
+function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStaffSvc) {
     // ag-grid vars
 
 
@@ -95,12 +95,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.postResponse;
 
     angular.element(document).ready(function () {
-        InstitutionsStudentsSvc.init(angular.baseUrl);
-        InstitutionsStudentsSvc.setInstitutionId(StaffController.institutionId);
+        InstitutionsStaffSvc.init(angular.baseUrl);
+        InstitutionsStaffSvc.setInstitutionId(StaffController.institutionId);
 
         UtilsSvc.isAppendLoader(true);
 
-        InstitutionsStudentsSvc.getAcademicPeriods()
+        InstitutionsStaffSvc.getAcademicPeriods()
         .then(function(periods) {
             var promises = [];
             var selectedPeriod = [];
@@ -119,11 +119,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             };
 
             if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-                $scope.endDate = InstitutionsStudentsSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date);
+                $scope.endDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date);
                 StaffController.onChangeAcademicPeriod();
             }
-            promises.push(InstitutionsStudentsSvc.getAddNewStudentConfig());
-            promises.push(InstitutionsStudentsSvc.getDefaultIdentityType());
+            promises.push(InstitutionsStaffSvc.getAddNewStudentConfig());
+            promises.push(InstitutionsStaffSvc.getDefaultIdentityType());
 
             return $q.all(promises);
         }, function(error) {
@@ -139,23 +139,23 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController[code] = addNewStudentConfig[i].value;
             }
             if (StaffController.StudentContacts != 2) {
-                promises[1] = InstitutionsStudentsSvc.getUserContactTypes();
+                promises[1] = InstitutionsStaffSvc.getUserContactTypes();
             }
             if (StaffController.StudentNationalities != 2) {
                 if (StaffController.StudentNationalities == 1) {
                     StaffController.Student.nationality_class = StaffController.Student.nationality_class + ' required';
                 }
-                promises[2] = InstitutionsStudentsSvc.getNationalities();
+                promises[2] = InstitutionsStaffSvc.getNationalities();
             }
             if (StaffController.StudentIdentities != 2) {
                 if (StaffController.StudentIdentities == 1) {
                     StaffController.Student.identity_class = StaffController.Student.identity_class + ' required';
                     StaffController.Student.identity_type_class = StaffController.Student.identity_type_class + ' required';
                 }
-                promises[3] = InstitutionsStudentsSvc.getIdentityTypes();
+                promises[3] = InstitutionsStaffSvc.getIdentityTypes();
             }
             if (StaffController.StudentSpecialNeeds != 2) {
-                promises[4] = InstitutionsStudentsSvc.getSpecialNeedTypes();
+                promises[4] = InstitutionsStaffSvc.getSpecialNeedTypes();
             }
             var defaultIdentityType = promisesObj[1];
             if (defaultIdentityType.length > 0) {
@@ -167,7 +167,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.Student.identity_type_id = null;
                 StaffController.Student.identity_type_name = 'No default identity set';
             }
-            promises[0] = InstitutionsStudentsSvc.getGenders();
+            promises[0] = InstitutionsStaffSvc.getGenders();
 
             return $q.all(promises);
         }, function(error){
@@ -333,12 +333,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (withData !== false) {
            StaffController.showExternalSearchButton = true;
         }
-        InstitutionsStudentsSvc.resetExternalVariable();
+        InstitutionsStaffSvc.resetExternalVariable();
         StaffController.createNewInternalDatasource(StaffController.internalGridOptions, withData);
     };
 
     function reloadExternalDatasource(withData) {
-        InstitutionsStudentsSvc.resetExternalVariable();
+        InstitutionsStaffSvc.resetExternalVariable();
         StaffController.createNewExternalDatasource(StaffController.externalGridOptions, withData);
     };
 
@@ -363,7 +363,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.reset($scope);
                 delete StaffController.selectedStudent;
                 if (withData) {
-                   InstitutionsStudentsSvc.getStudentRecords(
+                   InstitutionsStaffSvc.getStudentRecords(
                     {
                         startRow: params.startRow,
                         endRow: params.endRow,
@@ -409,7 +409,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.reset($scope);
                 delete StaffController.selectedStudent;
                 if (withData) {
-                    InstitutionsStudentsSvc.getExternalStudentRecords(
+                    InstitutionsStaffSvc.getExternalStudentRecords(
                         {
                             startRow: params.startRow,
                             endRow: params.endRow,
@@ -437,11 +437,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                             AlertSvc.warning($scope, message);
                         }
                         var studentRecords = [];
-                        InstitutionsStudentsSvc.init(angular.baseUrl);
+                        InstitutionsStaffSvc.init(angular.baseUrl);
                         return StaffController.processExternalStudentRecord(studentRecords, params, 0);
                     })
                     .finally(function(res) {
-                        InstitutionsStudentsSvc.init(angular.baseUrl);
+                        InstitutionsStaffSvc.init(angular.baseUrl);
                     });
                 } else {
                     StaffController.rowsThisPage = [];
@@ -456,11 +456,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function processExternalStudentRecord(studentRecords, params, totalRowCount) {
         for(var key in studentRecords) {
-            var mapping = InstitutionsStudentsSvc.getExternalSourceMapping();
+            var mapping = InstitutionsStaffSvc.getExternalSourceMapping();
             studentRecords[key]['institution_name'] = '-';
             studentRecords[key]['academic_period_name'] = '-';
             studentRecords[key]['education_grade_name'] = '-';
-            studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key][mapping.date_of_birth_mapping]);
+            studentRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(studentRecords[key][mapping.date_of_birth_mapping]);
             studentRecords[key]['gender_name'] = studentRecords[key][mapping.gender_mapping];
             studentRecords[key]['gender'] = {'name': studentRecords[key][mapping.gender_mapping]};
             studentRecords[key]['identity_type_name'] = studentRecords[key][mapping.identity_type_mapping];
@@ -495,7 +495,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 studentRecords[key]['education_grade_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? studentRecords[key].institution_students['0'].education_grade.name: '-';
             }
 
-            studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key]['date_of_birth']);
+            studentRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(studentRecords[key]['date_of_birth']);
             studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
 
             if (!studentRecords[key].hasOwnProperty('name')) {
@@ -534,7 +534,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             data['class'] = classId;
         }
 
-        InstitutionsStudentsSvc.postEnrolledStudent(data)
+        InstitutionsStaffSvc.postEnrolledStudent(data)
         .then(function(postResponse) {
             StaffController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
@@ -546,7 +546,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     if (userRecord.institution_students.length > 0) {
                         var schoolName = userRecord['institution_students'][0]['institution']['name'];
                         AlertSvc.warning($scope, 'Student is already enrolled in ' + schoolName);
-                        userRecord.date_of_birth = InstitutionsStudentsSvc.formatDate(userRecord.date_of_birth);
+                        userRecord.date_of_birth = InstitutionsStaffSvc.formatDate(userRecord.date_of_birth);
                         StaffController.selectedStudentData = userRecord;
                         StaffController.completeDisabled = true;
                     } else {
@@ -646,17 +646,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         AlertSvc.reset($scope);
 
         if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-            $scope.endDate = InstitutionsStudentsSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date);
-            StaffController.startDate = InstitutionsStudentsSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
+            $scope.endDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date);
+            StaffController.startDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
         }
 
         var startDatePicker = angular.element(document.getElementById('Students_start_date'));
-        startDatePicker.datepicker("setStartDate", InstitutionsStudentsSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
-        startDatePicker.datepicker("setEndDate", InstitutionsStudentsSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date));
-        startDatePicker.datepicker("setDate", InstitutionsStudentsSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setEndDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date));
+        startDatePicker.datepicker("setDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
 
         StaffController.educationGradeOptions = null;
-        InstitutionsStudentsSvc.getEducationGrades({
+        InstitutionsStaffSvc.getEducationGrades({
             institutionId: StaffController.institutionId,
             academicPeriodId: StaffController.academicPeriodOptions.selectedOption.id
         })
@@ -675,7 +675,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         StaffController.classOptions = null;
 
-        InstitutionsStudentsSvc.getClasses({
+        InstitutionsStaffSvc.getClasses({
             institutionId: StaffController.institutionId,
             academicPeriodId: StaffController.academicPeriodOptions.selectedOption.id,
             gradeId: StaffController.educationGradeOptions.selectedOption.education_grade_id
@@ -712,7 +712,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (StaffController.externalSearch) {
                 var studentData = StaffController.selectedStudentData;
                 var amendedStudentData = Object.assign({}, studentData);
-                amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDate(amendedStudentData.date_of_birth);
+                amendedStudentData.date_of_birth = InstitutionsStaffSvc.formatDate(amendedStudentData.date_of_birth);
                 StaffController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
             } else {
                 var studentId = StaffController.selectedStudent;
@@ -765,7 +765,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         newStudentData['start_date'] = startDate;
         newStudentData['nationality_id'] = StaffController.Student.nationality_id;
         newStudentData['identity_type_id'] = StaffController.Student.identity_type_id;
-        InstitutionsStudentsSvc.addUser(newStudentData)
+        InstitutionsStaffSvc.addUser(newStudentData)
         .then(function(user){
             if (user[0].error.length === 0) {
                 var studentId = user[0].data.id;
@@ -859,7 +859,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function getUniqueOpenEmisId() {
         UtilsSvc.isAppendLoader(true);
-        InstitutionsStudentsSvc.getUniqueOpenEmisId()
+        InstitutionsStaffSvc.getUniqueOpenEmisId()
         .then(function(response) {
             StaffController.selectedStudentData.openemis_no = response;
             UtilsSvc.isAppendLoader(false);
@@ -905,7 +905,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.createNewStudent = true;
             StaffController.step = 'create_user';
             StaffController.getUniqueOpenEmisId();
-            InstitutionsStudentsSvc.resetExternalVariable();
+            InstitutionsStaffSvc.resetExternalVariable();
         }
         // Step 4 - Add Student
         else {
