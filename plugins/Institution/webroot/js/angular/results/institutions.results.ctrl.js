@@ -6,6 +6,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     $scope.resultType = null;
     $scope.results = {};
     $scope.gridOptions = null;
+    $scope.roles = [];
 
     angular.element(document).ready(function () {
         // init
@@ -21,7 +22,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
             
-            return InstitutionsResultsSvc.getSubjects($scope.assessment_id, $scope.class_id);
+            return InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
         }, function(error) {
             // No Assessment
             console.log(error);
