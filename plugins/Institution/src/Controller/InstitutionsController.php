@@ -120,6 +120,7 @@ class InstitutionsController extends AppController
             $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         }
 
+        $this->set('_roles', $roles);
         $this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles));
         $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
         $url = $this->ControllerAction->url('index');
