@@ -2,6 +2,9 @@
 #################################################
 datasource.php
 test_datasource.php
+app_extra.php
+private.key
+public.key
 tmp
 tmp/*
 tmp/Bake*
