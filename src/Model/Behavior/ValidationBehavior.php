@@ -1706,4 +1706,18 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
+
+    public static function validateUniqueNationality($field, array $globalData) //combination of user and nationality must be unique 
+    {
+        $UserNationalities = TableRegistry::get('User.UserNationalities');
+
+        $UserNationality = $UserNationalities->find()
+                            ->where([
+                                $UserNationalities->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                                $UserNationalities->aliasField('nationality_id') => $globalData['data']['nationality_id']
+                            ])
+                            ->count();
+        
+        return !$UserNationality; //if has record then return false
+    }
 }

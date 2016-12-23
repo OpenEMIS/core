@@ -8,16 +8,22 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
-use Cake\Network\Session;
 use Cake\Network\Request;
+
 use App\Model\Table\ControllerActionTable;
+use App\Model\Traits\MessagesTrait;
 
 class UserNationalitiesTable extends ControllerActionTable {
-	public function initialize(array $config) {
-		parent::initialize($config);
+    use MessagesTrait;
+
+	public function initialize(array $config) 
+    {
+        parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+
+        $this->securityUserId = $this->getQueryString('security_user_id');
 	}
 
 	public function beforeAction(Event $event) {
@@ -31,7 +37,20 @@ class UserNationalitiesTable extends ControllerActionTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		return $validator->add('nationality_id', 'notBlank', ['rule' => 'notBlank']);
+		return $validator
+            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
+            ->add('nationality_id', 'ruleUniqueNationality', [
+                'rule' => 'validateUniqueNationality',
+                'on' => function ($context) {
+                    if ($this->action == 'edit') { //trigger this only during edit
+                        $originalNationality = $this->get($context['data']['id'])->nationality_id;
+                        $newNationality = $context['data']['nationality_id'];
+                        return $originalNationality != $newNationality; //only trigger validation if there is any changes on the code value.
+                    } else if ($this->action == 'add') { //during add, then validation always needed.
+                        return true;
+                    }
+                }
+            ]);
 	}
 
 	public function validationNonMandatory(Validator $validator) {
@@ -59,29 +78,28 @@ class UserNationalitiesTable extends ControllerActionTable {
 				break;
 		}
 
-		$tabElements = $this->controller->getUserTabElements($options);
+        $tabElements = $this->controller->getUserTabElements($options);
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
 	public function afterAction(Event $event) {
 		$this->setupTabElements();
-	}
+    }
 
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
     {
-        //get the current user nationality
         $currentNationalities = $this
                                 ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                                 ->matching('NationalitiesLookUp')
                                 ->where([
-                                    $this->aliasfield('security_user_id') => $this->Session->read('Student.Students.id')
+                                    $this->aliasfield('security_user_id') => $this->securityUserId
                                 ])
                                 ->select([
                                     'id' => $this->NationalitiesLookUp->aliasfield('id')
                                 ])
                                 ->toArray();
-
+        
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'edit') { //when edit then include the nationality that is being edited.
                 $nationalityId[] = $attr['entity']->nationality_id;
