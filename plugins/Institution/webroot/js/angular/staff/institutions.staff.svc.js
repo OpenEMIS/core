@@ -14,8 +14,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     var service = {
         init: init,
         initExternal: initExternal,
-        getStudentRecords: getStudentRecords,
-        getExternalStudentRecords: getExternalStudentRecords,
+        getStaffRecords: getStaffRecords,
+        getExternalStaffRecords: getExternalStaffRecords,
         setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
         getDefaultIdentityType: getDefaultIdentityType,
@@ -23,8 +23,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
         getColumnDefs: getColumnDefs,
-        getStudentData: getStudentData,
-        postEnrolledStudent: postEnrolledStudent,
+        getStaffData: getStaffData,
+        postEnrolledStaff: postEnrolledStaff,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
         makeDate: makeDate,
@@ -39,7 +39,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
-        getAddNewStudentConfig: getAddNewStudentConfig,
+        getAddNewStaffConfig: getAddNewStaffConfig,
         getUserContactTypes: getUserContactTypes,
         getIdentityTypes: getIdentityTypes,
         getNationalities: getNationalities,
@@ -56,7 +56,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     var models = {
         Genders: 'User.Genders',
         StudentRecords: 'Institution.StudentAdmission',
-        StudentUser: 'Institution.StudentUser',
+        StaffUser: 'Institution.StaffUser',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
@@ -75,7 +75,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function init(baseUrl) {
         KdOrmSvc.base(baseUrl);
-        KdOrmSvc.controllerAction('Students');
+        KdOrmSvc.controllerAction('Staff');
         KdOrmSvc.init(models);
     };
 
@@ -186,7 +186,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         var externalSource = url;
     };
 
-    function getExternalStudentRecords(options) {
+    function getExternalStaffRecords(options) {
         var deferred = $q.defer();
         var vm = this;
 
@@ -275,7 +275,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     };
 
-    function getStudentRecords(options) {
+    function getStaffRecords(options) {
         var vm = this;
         var institutionId = vm.getInstitutionId();
         var params = {
@@ -314,30 +314,30 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         };
 
         params['institution_id'] = institutionId;
-        StudentUser.reset();
-        StudentUser.find('Students', params);
-        StudentUser.find('enrolledInstitutionStudents');
-        StudentUser.contain(['Genders']);
+        StaffUser.reset();
+        StaffUser.find('Staffs', params);
+        // StaffUser.find('enrolledInstitutionStaffs');
+        StaffUser.contain(['Genders']);
 
-        return StudentUser.ajax({defer: true, success: success});
+        return StaffUser.ajax({defer: true, success: success});
     };
 
-    function getStudentData(id) {
+    function getStaffData(id) {
         var vm = this;
         var success = function(response, deferred) {
             var studentData = response.data.data;
             if (angular.isObject(studentData) && studentData.length > 0) {
                 deferred.resolve(studentData[0]);
             } else {
-                deferred.reject('Student not found');
+                deferred.reject('Staff not found');
             }
         };
 
-        StudentUser.select();
+        StaffUser.select();
         var settings = {success: success, defer: true};
-        return StudentUser
+        return StaffUser
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('enrolledInstitutionStudents')
+            // .find('enrolledInstitutionStudents')
             .where({
                 id: id
             })
@@ -385,8 +385,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                     'number': userRecord['identity_number']
                 }];
             }
-            StudentUser.reset();
-            StudentUser.save(userRecord)
+            StaffUser.reset();
+            StaffUser.save(userRecord)
             .then(function(studentRecord) {
                 deferred.resolve([studentRecord.data, {}]);
             }, function(error) {
@@ -440,11 +440,11 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         userData = response.data[0];
                         modifiedUser = userData;
                         delete modifiedUser['openemis_no'];
-                        modifiedUser['is_student'] = 1;
+                        modifiedUser['is_staff'] = 1;
                         modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
                         modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
                         modifiedUser['start_date'] = userRecord['start_date'];
-                        StudentUser.save(modifiedUser)
+                        StaffUser.save(modifiedUser)
                         .then(function(response) {
                             deferred.resolve([response.data, userData]);
                         }, function(error) {
@@ -454,7 +454,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                     } else {
 
                         newUserRecord['date_of_birth'] = vm.formatDateForSaving(newUserRecord['date_of_birth']);
-                        newUserRecord['is_student'] = 1;
+                        newUserRecord['is_staff'] = 1;
 
                         vm.importMappingObj(genderName, nationality, identityType)
                         .then(function(promiseArr) {
@@ -462,8 +462,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                             newUserRecord['nationality_id'] = promiseArr[1];
                             newUserRecord['identity_type_id'] = promiseArr[2];
                             var identityTypeId = promiseArr[2];
-                            StudentUser.reset();
-                            StudentUser.save(newUserRecord)
+                            StaffUser.reset();
+                            StaffUser.save(newUserRecord)
                             .then(function(studentRecord) {
                                 var userEntity = studentRecord.data.data;
                                 var userEntityError = studentRecord.data.error;
@@ -506,13 +506,13 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function getUserRecord(externalRef)
     {
-        return StudentUser
+        return StaffUser
             .select()
             .where({
                 'external_reference': externalRef
             })
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('enrolledInstitutionStudents')
+            .find('enrolledInstitutionStaffs')
             .ajax({defer: true});
     };
 
@@ -658,7 +658,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success:success, defer: true});
     };
 
-    function postEnrolledStudent(data) {
+    function postEnrolledStaff(data) {
         var institutionId = this.getInstitutionId();
         data['institution_id'] = institutionId;
         data['student_status_id'] = 1;
@@ -669,7 +669,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         data['start_date'] = this.formatDateForSaving(data['start_date']);
         data['end_date'] = this.formatDateForSaving(data['end_date']);
         data['institution_class_id'] = data['class'];
-        return StudentRecords.save(data)
+        return StaffRecords.save(data)
     };
 
     function setInstitutionId(id) {
@@ -809,7 +809,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Student';
+        var url = angular.baseUrl + '/Institutions/getUniqueOpenemisId/Staff';
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data.openemis_no);
@@ -819,10 +819,10 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     }
 
-    function getAddNewStudentConfig() {
+    function getAddNewStaffConfig() {
         return ConfigItems
             .select()
-            .where({type: 'Add New Student'})
+            .where({type: 'Add New Staff'})
             .ajax({defer: true});
     }
 
