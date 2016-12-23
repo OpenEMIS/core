@@ -1,3 +1,6 @@
+v3.8.3
+- Implemented feature to allow user to create customised report in excel format in Institution>Student Results module
+
 v3.8.2
 - Added Education Grade column in Institution Staff Reports
 - Implemented Import for Examination rooms
