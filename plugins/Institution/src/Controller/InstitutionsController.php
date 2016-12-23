@@ -539,6 +539,8 @@ class InstitutionsController extends AppController
 
     public function getUserTabElements($options = [])
     {
+        $encodedParam = $this->request->params['pass'][1]; //get the encoded param from URL
+
         $userRole = (array_key_exists('userRole', $options))? $options['userRole']: null;
         $action = (array_key_exists('action', $options))? $options['action']: 'add';
         $id = (array_key_exists('id', $options))? $options['id']: 0;
@@ -568,7 +570,16 @@ class InstitutionsController extends AppController
 
         $studentTabElements = [
             'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => ['url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Nationalities', $id], 'text' => __('Nationalities'), 'urlModel' => 'Nationalities'],
+            'UserNationalities' => [
+                'url' => [
+                    'plugin' => $this->plugin, 
+                    'controller' => $this->name, 
+                    'action' => 'Nationalities', 
+                    $id
+                ], 
+                'text' => __('Nationalities'), 
+                'urlModel' => 'Nationalities'
+            ],
             'Contacts' => ['text' => __('Contacts')],
             'Guardians' => ['text' => __('Guardians')],
             'Languages' => ['text' => __('Languages')],
@@ -603,9 +614,22 @@ class InstitutionsController extends AppController
                 $tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
             }
 
+            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
+
             foreach ($studentTabElements as $key => $value) {
                 $urlModel = (array_key_exists('urlModel', $value))? $value['urlModel'] : $key;
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$urlModel, 'index']);
+
+                $tempParam = [];
+                $tempParam['action'] = $urlModel;
+                $tempParam[] = 'index';
+
+                $url = $this->ControllerAction
+                        ->setQueryString(
+                            array_merge($studentUrl, $tempParam), 
+                            ['security_user_id' => $securityUserId]
+                        );
+
+                $tabElements[$key]['url'] = $url;
             }
         }
 
