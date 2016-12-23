@@ -96,14 +96,14 @@ class ExaminationItemResultsTable extends AppTable
                 $this->aliasField('examination_id') => $examinationId,
                 $this->aliasField('student_id') => $studentId
             ])
-            ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'subject_id' => $this->aliasField('education_subject_id')])
+            ->select(['grade_name' => 'ExaminationGradingOptions.name', 'grade_code' => 'ExaminationGradingOptions.code', 'examination_item_id' => $this->aliasField('examination_item_id')])
             ->autoFields(true)
             ->hydrate(false)
             ->toArray();
 
         $returnArray = [];
         foreach ($results as $result) {
-            $returnArray[$studentId][$result['subject_id']] = [
+            $returnArray[$studentId][$result['examination_item_id']] = [
                 'marks' => $result['marks'],
                 'grade_name' => $result['grade_name'],
                 'grade_code' => $result['grade_code']
