@@ -1066,6 +1066,11 @@ trait MessagesTrait {
                     'ruleNotBlank' => 'Please select a Bank Branch'
                 ]
             ],
+            'UserNationalities' => [
+                    'nationality_id' => [
+                        'ruleUniqueNationality' => 'Combination of user and nationality already exists'
+                    ]
+                ],
         ],
         'Student' => [
             'Extracurriculars' => [
