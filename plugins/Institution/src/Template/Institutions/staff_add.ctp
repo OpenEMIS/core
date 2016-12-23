@@ -28,13 +28,13 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="3" data-name="createUser" ng-show="InstitutionStaffController.createNewStudent">
+            <li data-step="3" data-name="createUser" ng-show="InstitutionStaffController.createNewStaff">
                 <div class="step-wrapper">
                     <?= __('New Staff Details') ?>
                     <span class="chevron"></span>
                 </div>
             </li>
-            <li data-step="4" data-name="addStudent">
+            <li data-step="4" data-name="addStaff">
                 <div class="step-wrapper">
                     <?= __('Add Staff') ?>
                     <input type="hidden" ng-model="InstitutionStaffController.hasExternalDataSource" ng-init="InstitutionStaffController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStaffController.institutionId=<?= $institutionId; ?>;"/>
@@ -49,24 +49,24 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-if="((!InstitutionStaffController.initialLoad && !InstitutionStaffController.hasExternalDataSource)
             || (!InstitutionStaffController.initialLoad && InstitutionStaffController.step == 'external_search')
             ) && (InstitutionStaffController.step == 'external_search' || InstitutionStaffController.step == 'internal_search')"
-            ng-disabled="InstitutionStaffController.selectedStudent"
-            ng-click="InstitutionStaffController.onAddNewStudentClick()"
+            ng-disabled="InstitutionStaffController.selectedStaff"
+            ng-click="InstitutionStaffController.onAddNewStaffClick()"
             type="button" class="btn btn-default"><?= __('Create New Staff') ?>
         </button>
         <?php endif; ?>
         <button
             type="button" class="btn btn-default" ng-click="InstitutionStaffController.onExternalSearchClick()"
-            ng-if="(!InstitutionStaffController.initialLoad && InstitutionStaffController.hasExternalDataSource && InstitutionStaffController.showExternalSearchButton && InstitutionStaffController.step=='internal_search')" ng-disabled="InstitutionStaffController.selectedStudent"><?= __('External Search') ?>
+            ng-if="(!InstitutionStaffController.initialLoad && InstitutionStaffController.hasExternalDataSource && InstitutionStaffController.showExternalSearchButton && InstitutionStaffController.step=='internal_search')" ng-disabled="InstitutionStaffController.selectedStaff"><?= __('External Search') ?>
         </button>
         <button
             ng-if="InstitutionStaffController.rowsThisPage.length > 0 && (InstitutionStaffController.step=='internal_search' || InstitutionStaffController.step=='external_search')"
-            ng-model="InstitutionStaffController.selectedStudent"
-            ng-click="InstitutionStaffController.onAddStudentClick()"
-            ng-disabled="!InstitutionStaffController.selectedStudent"
+            ng-model="InstitutionStaffController.selectedStaff"
+            ng-click="InstitutionStaffController.onAddStaffClick()"
+            ng-disabled="!InstitutionStaffController.selectedStaff"
             type="button" class="btn btn-default"><?= __('Add Staff') ?>
         </button>
         <button type="button" class="btn btn-default btn-next"
-            ng-model="InstitutionStaffController.selectedStudent"
+            ng-model="InstitutionStaffController.selectedStaff"
             ng-disabled="InstitutionStaffController.completeDisabled"
             ng-show="(InstitutionStaffController.step=='add_student' || InstitutionStaffController.step=='create_user')"
             data-last="Complete">
@@ -97,8 +97,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStaffController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="date">
-                    <label for="Staff_date_of_birth"><?= __('Date of Birth') ?></label>
-                    <div class="input-group date " id="Staff_date_of_birth" style="">
+                    <label for="Staffs_date_of_birth"><?= __('Date of Birth') ?></label>
+                    <div class="input-group date " id="Staffs_date_of_birth" style="">
                         <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.internalFilterDateOfBirth" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
@@ -139,8 +139,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStaffController.internalFilterIdentityNumber" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
-                    <label for="Staff_date_of_birth"><?= __('Date of Birth') ?></label>
-                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.internalFilterDateOfBirth" ng-disabled="true">
+                    <label for="Staffs_date_of_birth"><?= __('Date of Birth') ?></label>
+                        <input type="text" class="form-control " name="Staffs[date_of_birth]" ng-model="InstitutionStaffController.internalFilterDateOfBirth" ng-disabled="true">
                 </div>
             </div>
 
@@ -158,45 +158,45 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post">
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.openemis_no" type="string" ng-disabled="true">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
                     <div ng-if="InstitutionStaffController.postResponse.error.openemis_no" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.openemis_no">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string required">
                     <label><?= __('First Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.first_name" ng-change="InstitutionStaffController.setStudentName()" type="string" ng-init="InstitutionStaffController.selectedStudentData.first_name='';">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.first_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.first_name='';">
                     <div ng-if="InstitutionStaffController.postResponse.error.first_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.first_name">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string">
                     <label><?= __('Middle Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.middle_name" ng-change="InstitutionStaffController.setStudentName()" type="string">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.middle_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
                 </div>
                 <div class="input string">
                     <label><?= __('Third Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.third_name" ng-change="InstitutionStaffController.setStudentName()" type="string">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.third_name" ng-change="InstitutionStaffController.setStaffName()" type="string">
                 </div>
                 <div class="input string required">
                     <label><?= __('Last Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.last_name" ng-change="InstitutionStaffController.setStudentName()" type="string" ng-init="InstitutionStaffController.selectedStudentData.last_name='';">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.last_name" ng-change="InstitutionStaffController.setStaffName()" type="string" ng-init="InstitutionStaffController.selectedStaffData.last_name='';">
                     <div ng-if="InstitutionStaffController.postResponse.error.last_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string">
                     <label><?= __('Preferred Name') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.preferred_name" type="string">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.preferred_name" type="string">
                 </div>
                 <div class="input select required error">
                     <label><?= __('Gender') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Staff[gender_id]" id="staff-gender_id"
                             ng-options="option.id as option.name for option in InstitutionStaffController.genderOptions"
-                            ng-model="InstitutionStaffController.selectedStudentData.gender_id"
+                            ng-model="InstitutionStaffController.selectedStaffData.gender_id"
                             ng-change="InstitutionStaffController.changeGender()"
-                            ng-init="InstitutionStaffController.selectedStudentData.gender_id='';"
+                            ng-init="InstitutionStaffController.selectedStaffData.gender_id='';"
                             >
                             <option value="" >-- <?= __('Select') ?> --</option>
                         </select>
@@ -206,23 +206,23 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
                 <div class="input date required">
-                    <label for="Student_date_of_birth"><?= __('Date of Birth') ?></label>
-                    <div class="input-group date " id="Student_date_of_birth" style="">
-                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStudentData.date_of_birth" ng-init="InstitutionStaffController.selectedStudentData.date_of_birth='';">
+                    <label for="Staff_date_of_birth"><?= __('Date of Birth') ?></label>
+                    <div class="input-group date " id="Staff_date_of_birth" style="">
+                        <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-init="InstitutionStaffController.selectedStaffData.date_of_birth='';">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>
                     </div>
                 </div>
-                <div ng-class="InstitutionStaffController.Student.nationality_class" ng-show="InstitutionStaffController.StudentNationalities != 2">
+                <div ng-class="InstitutionStaffController.Staff.nationality_class" ng-show="InstitutionStaffController.StaffNationalities != 2">
                     <label><?= __('Nationality') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Staff[nationality_id]" id="staff-nationality_id"
-                            ng-options="option.id as option.name for option in InstitutionStaffController.StudentNationalitiesOptions"
-                            ng-model="InstitutionStaffController.Student.nationality_id"
+                            ng-options="option.id as option.name for option in InstitutionStaffController.StaffNationalitiesOptions"
+                            ng-model="InstitutionStaffController.Staff.nationality_id"
                             ng-change="InstitutionStaffController.changeNationality()"
-                            ng-init="InstitutionStaffController.Student.nationality_id='';"
+                            ng-init="InstitutionStaffController.Staff.nationality_id='';"
                             >
                             <option value="" >-- <?= __('Select') ?> --</option>
                         </select>
@@ -231,12 +231,12 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
                     </div>
                 </div>
-                <div ng-class="InstitutionStaffController.Student.identity_type_class" ng-show="InstitutionStaffController.StudentIdentities != 2 && InstitutionStaffController.StudentNationalities == 2">
+                <div ng-class="InstitutionStaffController.Staff.identity_type_class" ng-show="InstitutionStaffController.StaffIdentities != 2 && InstitutionStaffController.StaffNationalities == 2">
                     <label><?= __('Identity Type') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Staff[identities_type_id]" id="staff-identities_type_id"
-                            ng-options="option.id as option.name for option in InstitutionStaffController.StudentIdentitiesOptions"
-                            ng-model="InstitutionStaffController.Student.identity_type_id"
+                            ng-options="option.id as option.name for option in InstitutionStaffController.StaffIdentitiesOptions"
+                            ng-model="InstitutionStaffController.Staff.identity_type_id"
                             ng-change="InstitutionStaffController.changeIdentityType()"
                             >
                             <option value="" >-- <?= __('Select') ?> --</option>
@@ -246,27 +246,35 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].identity_type_id">{{ error }}</p>
                     </div>
                 </div>
-                <div ng-class="InstitutionStaffController.Student.identity_class" ng-show="InstitutionStaffController.StudentIdentities != 2">
-                    <label><?= __('{{InstitutionStaffController.Student.identity_type_name}}') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStudentData.identity_number='';">
+                <div ng-class="InstitutionStaffController.Staff.identity_class" ng-show="InstitutionStaffController.StaffIdentities != 2">
+                    <label><?= __('{{InstitutionStaffController.Staff.identity_type_name}}') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div ng-class="InstitutionStaffController.Staff.identity_class" ng-show="InstitutionStaffController.StaffIdentities != 2">
+                    <label><?= __('{{InstitutionStaffController.Staff.identity_type_name}}') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
                     <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
                     </div>
                 </div>
             </form>
         </div>
-        <div class="step-pane sample-pane" data-step="4" data-name="addStudent">
+        <div class="step-pane sample-pane" data-step="4" data-name="addStaff">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string required">
                     <label><?= __('OpenEMIS ID') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.openemis_no" type="string" ng-disabled="true">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.openemis_no" type="string" ng-disabled="true">
                     <div ng-if="InstitutionStaffController.postResponse.error.openemis_no" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.openemis_no">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string" ng-model="InstitutionStaffController.postResponse">
                     <label><?= __('Staff') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.name" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.name" type="string" disabled="disabled">
                     <div ng-if="InstitutionStaffController.postResponse.error.first_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.first_name">{{ error }}</p>
                     </div>
@@ -274,23 +282,23 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.last_name">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input string" ng-show="InstitutionStaffController.StudentNationalities != 2 && StudentController.createNewStudent == true">
+                <div class="input string" ng-show="InstitutionStaffController.StaffNationalities != 2 && StaffController.createNewStaff == true">
                     <label><?= __('Nationality') ?></label>
-                    <input ng-model="InstitutionStaffController.Student.nationality_name" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStaffController.Staff.nationality_name" type="string" disabled="disabled">
                     <div ng-if="InstitutionStaffController.postResponse.error.nationalities[0].nationality_id" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.nationalities[0].nationality_id">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input string" ng-show="InstitutionStaffController.StudentIdentities != 2">
+                <div class="input string" ng-show="InstitutionStaffController.StaffIdentities != 2">
                     <label><?= __('Identity Number') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.identity_number" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" disabled="disabled">
                     <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
                     </div>
                 </div>
                 <div class="input string">
                     <label><?= __('Date of Birth') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.date_of_birth" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" type="string" disabled="disabled">
                     <div ng-if="InstitutionStaffController.postResponse.error.student_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.student_name">{{ error }}</p>
                     </div>
@@ -300,7 +308,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="input string">
                     <label><?= __('Gender') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStudentData.gender.name" type="string" disabled="disabled">
+                    <input ng-model="InstitutionStaffController.selectedStaffData.gender.name" type="string" disabled="disabled">
                 </div>
                 <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
                     <label><?= __('Academic Period') ?></label>
@@ -368,22 +376,22 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="section-header" ng-show="InstitutionStaffController.completeDisabled"><?= __('Institution Information') ?></div>
                 <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
                     <label><?= __('Institution') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStudentData']['institution_staff'][0]['institution']['code_name']" disabled="disabled">
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['code_name']" disabled="disabled">
                 </div>
 
                 <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
                     <label><?= __('Area') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStudentData']['institution_staff'][0]['institution']['area']['code_name']" disabled="disabled">
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['area']['code_name']" disabled="disabled">
                 </div>
 
                 <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
                     <label><?= __('Contact Name') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStudentData']['institution_staff'][0]['institution']['contact_person']" disabled="disabled">
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['contact_person']" disabled="disabled">
                 </div>
 
                 <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
                     <label><?= __('Telephone') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStudentData']['institution_staff'][0]['institution']['telephone']" disabled="disabled">
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['telephone']" disabled="disabled">
                 </div>
             </form>
         </div>
@@ -395,8 +403,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 <script>
 $(function () {
 var datepicker0 = $('#Staff_start_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
-var datepicker1 = $('#Staff_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
-var datepicker2 = $('#Student_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+var datepicker1 = $('#Staffs_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+var datepicker2 = $('#Staff_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
 $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     window.clearTimeout( t );
     t = window.setTimeout( function(){
