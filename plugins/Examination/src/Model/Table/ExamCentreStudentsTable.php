@@ -52,7 +52,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'examination_item_id']]],
                 'provider' => 'table'
             ]);
     }
@@ -71,7 +71,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ',' . $entity->education_subject_id;
+            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ',' . $entity->examination_item_id;
             $entity->id = Security::hash($hashString, 'sha256');
         }
     }
@@ -90,6 +90,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->fields['education_grade_id']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
         $this->fields['examination_id']['visible'] = false;
+        $this->fields['education_subject_id']['visible'] = false;
         $this->fields['student_id']['type'] = 'string';
     }
 
