@@ -30,13 +30,8 @@ class ExaminationCentreSubjectsTable extends AppTable {
     {
         $subjectList = $this
             ->find('list', [
-                    'keyField' => 'subject_id',
-                    'valueField' => 'subject_name'
-            ])
-            ->matching('EducationSubjects')
-            ->select([
-                'subject_name' => 'EducationSubjects.name',
-                'subject_id' => $this->aliasField('education_subject_id')
+                'keyField' => 'examination_item_id',
+                'valueField' => 'education_subject_id'
             ])
             ->where([$this->aliasField('examination_centre_id') => $examinationCentreId])
             ->toArray();
