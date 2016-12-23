@@ -48,7 +48,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'examination_item_id']]],
                 'provider' => 'table'
             ])
             ->requirePresence('institution_id')
@@ -58,7 +58,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->education_subject_id;
+            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->examination_item_id;
             $entity->id = Security::hash($hashString, 'sha256');
         }
     }
