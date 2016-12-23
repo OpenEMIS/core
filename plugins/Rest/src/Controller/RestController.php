@@ -9,6 +9,7 @@ use App\Controller\AppController;
 use Cake\Network\Http\Client;
 use Cake\Utility\Security;
 use Firebase\JWT\JWT;
+use Cake\Core\Configure;
 use Cake\Network\Exception\BadRequestException;
 
 class RestController extends AppController
@@ -61,9 +62,12 @@ class RestController extends AppController
 	                'fields' => [
 	                    'username' => 'id'
 	                ],
+                    'allowedAlgs' => ['RS256'],
+                    'key' => Configure::read('Application.public.key'),
 	                'queryDatasource' => true
 	            ]
 	        ]);
+            $this->Auth->config('storage', 'Memory');
 	        $this->Auth->config('authorize', null);
 	        $this->Auth->allow(['auth']);
 	        if ($this->request->data('code')) {
@@ -73,7 +77,7 @@ class RestController extends AppController
 	        $header = $this->request->header('authorization');
 	        if ($header) {
 	            $token = str_ireplace('bearer ', '', $header);
-	            $payload = JWT::decode($token, Security::salt(), ['HS256']);
+	            $payload = JWT::decode($token, Configure::read('Application.private.key'), ['RS256']);
 	            $currentTimeStamp = (new Time)->toUnixString();
 	            $exp = $payload->exp;
 	            if ($exp < $currentTimeStamp) {
@@ -81,7 +85,7 @@ class RestController extends AppController
 	            	$event->stopPropagation();
 	            }
 	        }
-	       
+
 			$this->autoRender = false;
 
 			$pass = $this->request->params['pass'];
@@ -220,7 +224,7 @@ class RestController extends AppController
                 $this->Cookie->write('Restful.Call', true);
                 $this->Cookie->write('Restful.CallBackURL', $url);
                 $this->SSO->doAuthentication();
-            }   
+            }
         } else
         {
             $this->autoRender = false;
