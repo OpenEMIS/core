@@ -148,6 +148,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['visible' => false]);
         $model->field('examination_id', ['visible' => false]);
+        $model->field('education_subject_id', ['visible' => false]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
