@@ -30,7 +30,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
         $this->toggle('index', false);
         $this->toggle('edit', false);
