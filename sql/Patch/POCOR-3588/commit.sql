@@ -1,5 +1,5 @@
 -- db_patches
-INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3588', NOW());
+INSERT INTO `db_patches` (`issue`, `created`) VALUES ('POCOR-3588', NOW());
 
 -- examination_items
 RENAME TABLE `examination_items` TO `z_3588_examination_items`;
