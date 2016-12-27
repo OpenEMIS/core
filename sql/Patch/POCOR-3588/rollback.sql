@@ -14,5 +14,10 @@ RENAME TABLE `z_3588_examination_centre_students` TO `examination_centre_student
 DROP TABLE IF EXISTS `examination_centre_subjects`;
 RENAME TABLE `z_3588_examination_centre_subjects` TO `examination_centre_subjects`;
 
+-- import_mapping
+UPDATE `import_mapping`
+SET `column_name` = 'education_subject_id', `lookup_plugin` = 'Education', `lookup_model` = 'EducationSubjects'
+WHERE `model` = 'Examination.ExaminationItemResults' AND `column_name` = 'examination_item_id';
+
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3588';

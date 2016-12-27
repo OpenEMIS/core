@@ -144,3 +144,9 @@ FROM `z_3588_examination_centre_subjects` `CentreSubjects`
 LEFT JOIN `examination_items` `Items`
 ON (`CentreSubjects`.`examination_id` = `Items`.`examination_id`
 AND `CentreSubjects`.`education_subject_id` = `Items`.`education_subject_id`);
+
+-- import_mapping
+UPDATE `import_mapping`
+SET `column_name` = 'examination_item_id', `lookup_plugin` = 'Examination', `lookup_model` = 'ExaminationItems'
+WHERE `model` = 'Examination.ExaminationItemResults' AND `column_name` = 'education_subject_id';
+
