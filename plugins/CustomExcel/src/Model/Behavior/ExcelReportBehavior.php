@@ -182,7 +182,7 @@ class ExcelReportBehavior extends Behavior
         switch($type) {
             case 'number':
                 // set to two decimal places
-                if (!is_null($format)) {
+                if (!is_null($format) && is_numeric($cellValue)) {
                     $formatting = number_format(0, $format);
                     $cellStyle->getNumberFormat()->setFormatCode($formatting);
                 }
