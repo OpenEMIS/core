@@ -102,11 +102,38 @@ class AssessmentResultsTable extends AppTable
                         $this->aliasField('institution_class_id') => $params['class_id']
                     ]
                 )
-                ->contain(['AssessmentGradingOptions'])
+                ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
                 ->where([
                     $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
                     $AssessmentItemResults->aliasField('institution_id') => $params['institution_id']
                 ])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $resultType = $row['assessment_grading_option']['assessment_grading_type']['result_type'];
+
+                        switch ($resultType) {
+                            case 'MARKS':
+                                $row['marks_formatted'] = number_format($row['marks'], 2);
+                                break;
+                            case 'GRADES':
+                                $row['marks_formatted'] = $row['assessment_grading_option']['code'] . ' - ' . $row['assessment_grading_option']['name'];
+                                break;
+                            case 'DURATION':
+                                if (strlen($row['marks']) > 0) {
+                                    $duration = number_format($row['marks'], 2);
+
+                                    list($minutes, $seconds) = explode(".", $duration, 2);
+                                    $row['marks_formatted'] = $minutes . " : " . $seconds;
+                                    break;
+                                }
+                            default:
+                                $row['marks_formatted'] = '';
+                                break;
+                        }
+
+                        return $row;
+                    });
+                })
                 ->hydrate(false)
                 ->all();
             return $results->toArray();
@@ -120,6 +147,32 @@ class AssessmentResultsTable extends AppTable
             $results = $AssessmentItemsGradingTypes->find()
                 ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
                 ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
+                ->formatResults(function (ResultSetInterface $results) {
+                    return $results->map(function ($row) {
+                        $resultType = $row['assessment_grading_type']['result_type'];
+                        $max = $row['assessment_grading_type']['max'];
+
+                        switch ($resultType) {
+                            case 'MARKS':
+                            case 'GRADES':
+                                $row['assessment_grading_type']['max_formatted'] = number_format($max, 2);
+                                break;
+                            case 'DURATION':
+                                if (strlen($max) > 0) {
+                                    $duration = number_format($max/60, 2);
+
+                                    list($minutes, $seconds) = explode(".", $duration, 2);
+                                    $row['assessment_grading_type']['max_formatted'] = $minutes . " : " . $seconds;
+                                    break;
+                                }
+                            default:
+                                $row['assessment_grading_type']['max_formatted'] = number_format($max, 2);
+                                break;
+                        }
+
+                        return $row;
+                    });
+                })
                 ->hydrate(false)
                 ->all();
             return $results->toArray();
