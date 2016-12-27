@@ -320,8 +320,21 @@ class ExcelReportBehavior extends Behavior
 
     private function getPlaceholderData($placeholder, $extra)
     {
-        $formattedPlaceholder = $this->formatPlaceholder($placeholder);
-        $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+        $placeholderArray = explode(".", $placeholder);
+        if (end($placeholderArray) == 'i') {
+            array_pop($placeholderArray);   // remove i
+            $placeholder = implode(".", $placeholderArray);
+            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
+            $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+
+            $count = 1;
+            foreach ($placeholderData as $key => $value) {
+                $placeholderData[$key] = $count++;
+            }
+        } else {
+            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
+            $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+        }
 
         return $placeholderData;
     }
