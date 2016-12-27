@@ -21,6 +21,13 @@ class AssessmentItemResultsTable extends AppTable {
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'add']
         ]);
+        $this->addBehavior('Indexes.Indexes');
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        return $events;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -109,5 +116,66 @@ class AssessmentItemResultsTable extends AppTable {
                 ];
         }
         return $returnArray;
+    }
+
+    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    {
+        $institutionId = $params['institution_id'];
+        $studentId = $params['student_id'];
+        $academicPeriodId = $params['academic_period_id'];
+        $criteriaName = $params['criteria_name'];
+
+        $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+
+        return $valueIndex;
+    }
+
+    public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
+    {
+        $results = $this
+            ->find()
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+            ])
+            ->all();
+
+        $getValueIndex = 0;
+        foreach ($results as $key => $resultsObj) {
+            $getValueIndex = $getValueIndex + $resultsObj->marks;
+        }
+
+        return $getValueIndex;
+    }
+
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+    {
+        $results = $this
+            ->find()
+            ->contain(['Assessments', 'EducationSubjects'])
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->all();
+
+        $referenceDetails = [];
+        foreach ($results as $key => $obj) {
+            $assessmentName = $obj->assessment->name;
+            $educationSubjectName = $obj->education_subject->name;
+            $marks = !is_null($obj->marks) ? $obj->marks : 'null';
+
+            $referenceDetails[$obj->assessment_id] = $assessmentName . ' - ' . $educationSubjectName . ' (' . $marks . ')';
+        }
+
+        // tooltip only receieved string to be display
+        $reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . '<br/>';
+        }
+
+        return $reference;
     }
 }

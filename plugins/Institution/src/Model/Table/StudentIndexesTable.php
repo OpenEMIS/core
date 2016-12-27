@@ -124,17 +124,16 @@ class StudentIndexesTable extends ControllerActionTable
         $institutionStudentIndexId = $this->paramsDecode($this->paramsPass(0))['id']; // paramsPass(0) after the hash of Id
 
         if ($action == 'view') {
-            $StudentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
+            $studentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
                 ->contain(['IndexesCriterias'])
                 ->where([
                     $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
-                    // $this->StudentIndexesCriterias->aliasField('value') . ' <> ' => 0
                     $this->StudentIndexesCriterias->aliasField('value') . ' IS NOT NULL'
                 ])
                 ->order(['criteria','threshold'])
                 ->all();
 
-            foreach ($StudentIndexesCriteriasResults as $key => $obj) {
+            foreach ($studentIndexesCriteriasResults as $key => $obj) {
                 $indexesCriteriasId = $obj->indexes_criteria->id;
 
                 $criteriaName = $obj->indexes_criteria->criteria;
@@ -145,24 +144,6 @@ class StudentIndexesTable extends ControllerActionTable
 
                 $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaName);
                 $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
-
-
-
-// pr($obj);
-// pr($criteriaDetails);
-// pr($CriteriaModel);
-// pr('indexesCriteriasId');
-// pr($indexesCriteriasId);
-// pr('criteriaKey');
-// pr($criteriaKey);
-// pr('operator');
-// pr($operator);
-// pr('threshold');
-// pr($threshold);
-// pr('value');
-// pr($value);
-// die;
-
 
                 if ($value == 'True') {
                     // Comparison like behaviour
@@ -187,12 +168,6 @@ class StudentIndexesTable extends ControllerActionTable
                     $threshold = $thresholdName;
                 } else {
                     // numeric value come here (absence quantity, results)
-                    // $CriteriaModel = TableRegistry::get($criteriaKey);
-// pr($criteriaKey);
-// pr($CriteriaModel);
-// pr('numeric');
-// die;
-
                     // for value
                     $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
 

@@ -59,9 +59,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $events['Model.IndividualPromotion.afterSave'] = 'afterSaveOrDelete';
         $events['Model.IndividualPromotion.afterDelete'] = 'afterSaveOrDelete';
 
-        // // overage
-        // $events['Model.IndividualPromotion.afterSave'] = 'afterSaveOrDelete';
-        // $events['Model.IndividualPromotion.afterDelete'] = 'afterSaveOrDelete';
+        // Assessment result item
+        $events['Model.AssessmentItemResults.afterSave'] = 'afterSaveOrDelete';
+        $events['Model.AssessmentItemResults.afterDelete'] = 'afterSaveOrDelete';
         return $events;
     }
 
@@ -175,7 +175,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             'order' => 3
         ];
         // end element control
-
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -220,9 +219,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         }
 
         $criteriaData = $this->Indexes->getCriteriaByModel($criteriaModel);
-// pr('criteriaData');
-// pr($criteriaData);
-// die;
+
         $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $criteriaTable = TableRegistry::get($criteriaModel);
 
@@ -252,22 +249,12 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         foreach ($criteriaData as $criteriaDataKey => $criteriaDataObj) {
             $criteriaName = $criteriaDataObj['name'];
-// pr($criteriaDataObj);
-// pr($criteriaName);
+
             // to get the indexes criteria to get the value on the student_indexes_criterias
             $indexesCriteriaResults = $IndexesCriterias->find()
                 ->where([$IndexesCriterias->aliasField('criteria') => $criteriaName])
                 ->all();
 
-// pr('afterSaveOrDelete');
-// pr('criteriaModel: '. $criteriaModel);
-// pr('criteriaName: '. $criteriaName);
-// pr('institutionId: '. $institutionId);
-// pr('studentId: '. $studentId);
-// pr('academicPeriodId: '. $academicPeriodId);
-// pr($afterSaveOrDeleteEntity);
-// pr($indexesCriteriaResults->toArray());
-// die;
             if (!$indexesCriteriaResults->isEmpty()) {
                 foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
                     $indexId = $indexesCriteriaData->index_id;
@@ -289,9 +276,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     }
 
                     $valueIndexData = $event->result;
-// pr('valueIndexData');
-// pr($valueIndexData);
-// die;
+
                     $institutionStudentIndexesResults = $this->find()
                         ->where([
                             $this->aliasField('academic_period_id') => $academicPeriodId,
@@ -314,7 +299,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                             'index_id' => $indexId
                         ]);
                     }
-    // pr($operator);
+
                     // if the condition fulfilled then the value will be saved as its value, if not saved as null
                     switch ($operator) {
                         case 1: // '<'
@@ -334,18 +319,15 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                             break;
 
                         case 3: // '='
-    // pr($threshold);
                             // value index is an array (valueIndex[threshold] = value)
                             if (array_key_exists($threshold, $valueIndexData)) {
-    // pr('masuk sini');
                                 $valueIndex = 'True';
                             } else {
                                 $valueIndex = null;
                             }
                             break;
                     }
-    // pr($valueIndexData);
-    // die;
+
                     // saving association to student_indexes_criterias
                     $criteriaData = [
                         'value' => $valueIndex,
@@ -376,8 +358,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 }
             }
         }
-// pr('here??');
-// die;
     }
 
     // will update the total index on the institution_student_indexes
@@ -399,7 +379,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         if (!$InstitutionStudentIndexesData->isEmpty()) {
             foreach ($InstitutionStudentIndexesData as $key => $institutionStudentIndexesObj) {
-// pr($institutionStudentIndexesObj);
                 $InstitutionStudentIndexesid = $institutionStudentIndexesObj->id;
                 $StudentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
                     ->where([$this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $InstitutionStudentIndexesid])
@@ -408,25 +387,15 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $indexTotal = [];
                 // to get the total of the index of the student
                 foreach ($StudentIndexesCriteriasResults as $key => $studentIndexesCriteriasObj) {
-// pr($studentIndexesCriteriasObj);die;
-                    if (!is_null($studentIndexesCriteriasObj->value)) {
-// pr('here?');
-                        $value = $studentIndexesCriteriasObj->value;
-                        $indexesCriteriaId = $studentIndexesCriteriasObj->indexes_criteria_id;
+                    $value = $studentIndexesCriteriasObj->value;
+                    $indexesCriteriaId = $studentIndexesCriteriasObj->indexes_criteria_id;
 
-                        $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId, $academicPeriodId);
-                        $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = !empty($indexTotal[$studentIndexesCriteriasObj->institution_student_index_id]) ? $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] : 0 ;
-                        $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] + $indexValue;
-                    }
+                    $indexValue = $this->StudentIndexesCriterias->getIndexValue($value, $indexesCriteriaId, $institutionId, $studentId, $academicPeriodId);
+                    $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = !empty($indexTotal[$studentIndexesCriteriasObj->institution_student_index_id]) ? $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] : 0 ;
+                    $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] = $indexTotal[$studentIndexesCriteriasObj->institution_student_index_id] + $indexValue;
                 }
-// pr('indexTotal');
-// pr($indexTotal);
-// die;
 
                 foreach ($indexTotal as $key => $obj) {
-// pr('empty ????');
-// pr($key);
-// pr($obj);
                     $this->query()
                         ->update()
                         ->set(['total_index' => $obj])
@@ -435,7 +404,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         ])
                         ->execute();
                 }
-// die;
             }
         }
     }
