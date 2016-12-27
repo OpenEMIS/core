@@ -658,6 +658,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function setupFields(Entity $entity, ArrayObject $extra) {
         $model = $this->_table;
+        $model->field('education_subject_id', ['visible' => false]);
         $model->field('examination_centre_id', ['visible' => false]);
         $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);
