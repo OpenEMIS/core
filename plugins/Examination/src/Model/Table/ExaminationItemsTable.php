@@ -53,8 +53,6 @@ class ExaminationItemsTable extends AppTable {
         return $validator;
     }
 
-
-
     public function getExaminationItemSubjects($examinationId)
     {
         $subjectList = $this
