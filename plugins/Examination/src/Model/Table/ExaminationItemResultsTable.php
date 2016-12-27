@@ -19,6 +19,7 @@ class ExaminationItemResultsTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('ExaminationGradingOptions', ['className' => 'Examination.ExaminationGradingOptions']);
@@ -32,7 +33,7 @@ class ExaminationItemResultsTable extends AppTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $hashString = $entity->academic_period_id . ',' . $entity->examination_id . ',' . $entity->education_subject_id . ',' . $entity->student_id;
+            $hashString = $entity->academic_period_id . ',' . $entity->examination_id . ',' . $entity->examination_item_id . ',' . $entity->student_id;
             $entity->id = Security::hash($hashString, 'sha256');
         }
         $this->getExamGrading($entity);
@@ -51,7 +52,7 @@ class ExaminationItemResultsTable extends AppTable
             ->contain(['ExaminationGradingTypes.GradingOptions'])
             ->where([
                 $ExaminationItems->aliasField('examination_id') => $entity->examination_id,
-                $ExaminationItems->aliasField('education_subject_id') => $entity->education_subject_id
+                $ExaminationItems->aliasField('id') => $entity->examination_item_id
             ])
             ->first();
 
@@ -80,6 +81,7 @@ class ExaminationItemResultsTable extends AppTable
                 'examination_centre_id' => $entity->examination_centre_id,
                 'student_id' => $entity->student_id,
                 'education_subject_id' => $entity->education_subject_id,
+                'examination_item_id' => $entity->examination_item_id,
                 'institution_id' => $entity->institution_id,
                 'academic_period_id' => $entity->academic_period_id,
                 'examination_id' => $entity->examination_id
