@@ -28,7 +28,7 @@ class ImportResultsTable extends AppTable
     {
         $events = parent::implementedEvents();
         $events['Model.import.onImportPopulateExaminationsData'] = 'onImportPopulateExaminationsData';
-        $events['Model.import.onImportPopulateEducationSubjectsData'] = 'onImportPopulateEducationSubjectsData';
+        $events['Model.import.onImportPopulateExaminationItemsData'] = 'onImportPopulateExaminationItemsData';
         $events['Model.import.onImportPopulateUsersData'] = 'onImportPopulateUsersData';
         $events['Model.import.onImportPopulateExaminationGradingOptionsData'] = 'onImportPopulateExaminationGradingOptionsData';
         $events['Model.import.onImportModelSpecificValidation'] = 'onImportModelSpecificValidation';
@@ -64,24 +64,19 @@ class ImportResultsTable extends AppTable
         }
     }
 
-    public function onImportPopulateEducationSubjectsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    public function onImportPopulateExaminationItemsData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
     {
         $order = [$lookupModel.'.name', $lookupModel.'.code'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
-        $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
-        $selectFields = [$lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $ExaminationItems->aliasField('weight')];
+        $selectFields = [$lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('weight')];
         // show distinct list of subjects which are added as exam items and subject weight is more than zero
         $modelData = $ExaminationCentreSubjects->find('all')
             ->select($selectFields)
             ->matching($lookedUpTable->alias())
-            ->innerJoin([$ExaminationItems->alias() => $ExaminationItems->table()], [
-                $ExaminationItems->aliasField('examination_id = ') . $ExaminationCentreSubjects->aliasField('examination_id'),
-                $ExaminationItems->aliasField('education_subject_id = ') . $ExaminationCentreSubjects->aliasField('education_subject_id'),
-                $ExaminationItems->aliasField('weight > ') => 0
-            ])
-            ->group([$ExaminationCentreSubjects->aliasField('education_subject_id')])
+            ->where([$lookedUpTable->aliasField('weight > ') => 0])
+            ->group([$ExaminationCentreSubjects->aliasField('examination_item_id')])
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
@@ -130,29 +125,32 @@ class ImportResultsTable extends AppTable
 
     public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
     {
-        if ($tempRow->offsetExists('examination_id') && $tempRow->offsetExists('education_subject_id') && $tempRow->offsetExists('student_id')) {
-            if (!empty($tempRow['examination_id']) && !empty($tempRow['education_subject_id']) && !empty($tempRow['student_id'])) {
+        if ($tempRow->offsetExists('examination_id') && $tempRow->offsetExists('examination_item_id') && $tempRow->offsetExists('student_id')) {
+            if (!empty($tempRow['examination_id']) && !empty($tempRow['examination_item_id']) && !empty($tempRow['student_id'])) {
                 $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
                 $examinationItemResults = $ExaminationItems
                     ->find()
                     ->contain(['ExaminationGradingTypes.GradingOptions'])
                     ->where([
                         $ExaminationItems->aliasField('examination_id') => $tempRow['examination_id'],
-                        $ExaminationItems->aliasField('education_subject_id') => $tempRow['education_subject_id']
+                        $ExaminationItems->aliasField('id') => $tempRow['examination_item_id']
                     ])
                     ->all();
 
                 if ($examinationItemResults->isEmpty()) {
                     // Subject is not added to the exam
-                    $rowInvalidCodeCols['education_subject_id'] = __('Education Subject is not configured in the examination');
+                    $rowInvalidCodeCols['examination_item_id'] = __('Examination Item is not configured in the examination');
                     return false;
                 } else {
+                    $examinationItemEntity = $examinationItemResults->first();
+                    $tempRow['education_subject_id'] = $examinationItemEntity->education_subject_id;
+
                     $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
                     $registeredStudentQuery = $ExaminationCentreStudents
                         ->find()
                         ->where([
                             $ExaminationCentreStudents->aliasField('examination_id') => $tempRow['examination_id'],
-                            $ExaminationCentreStudents->aliasField('education_subject_id') => $tempRow['education_subject_id'],
+                            $ExaminationCentreStudents->aliasField('examination_item_id') => $tempRow['examination_item_id'],
                             $ExaminationCentreStudents->aliasField('student_id') => $tempRow['student_id']
                         ]);
 
@@ -168,12 +166,11 @@ class ImportResultsTable extends AppTable
                         $tempRow['institution_id'] = $registeredStudentEntity->institution_id;
                     }
 
-                    $examinationItemEntity = $examinationItemResults->first();
                     if ($examinationItemEntity->has('examination_grading_type')) {
                         $gradingTypeEntity = $examinationItemEntity->examination_grading_type;
                         if (empty($gradingTypeEntity->grading_options)) {
                             // exam item is linked to a grading type but no grading options is added
-                            $rowInvalidCodeCols['education_subject_id'] = __('Examination Grading Options is not configured for '.$examinationItemEntity->examination_grading_type->code_name);
+                            $rowInvalidCodeCols['examination_item_id'] = __('Examination Grading Options is not configured for '.$examinationItemEntity->examination_grading_type->code_name);
                             return false;
                         } else {
                             if ($tempRow->offsetExists('marks') && $tempRow->offsetExists('examination_grading_option_id')) {
@@ -249,7 +246,7 @@ class ImportResultsTable extends AppTable
                         }
                     } else {
                         // will never come to here unless orphan record in exam item
-                        $rowInvalidCodeCols['education_subject_id'] = __('Examination Grading Type is not configured');
+                        $rowInvalidCodeCols['examination_item_id'] = __('Examination Grading Type is not configured');
                         return false;
                     }
                 }
