@@ -20,11 +20,11 @@ class IndexesTable extends ControllerActionTable
     use HtmlTrait;
 
     private $criteriaTypes = [
-        // 'RESULT' => [
-        //     'name' => 'Results',
-        //     'operator' => [1 => '<', 2 => '>'],
-        //     'threshold' => ['type' => 'number']
-        // ],
+        'Assessment.AssessmentItemResults' => [
+            'name' => 'Results',
+            'operator' => [1 => '<', 2 => '>'],
+            'threshold' => ['type' => 'number']
+        ],
         'Institution.InstitutionStudentAbsences' => [
             'name' => 'Absences',
             'operator' => [1 => '<', 2 => '>'],
@@ -35,12 +35,6 @@ class IndexesTable extends ControllerActionTable
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
         ],
-        // // // 'Pre Primary',
-        // 'Institution.StudentAdmission' => [
-        //     'name' => 'Overage',
-        //     'operator' => [1 => '<', 2 => '>'],
-        //     'threshold' => ['type' => 'number']
-        // ],
         // dropout will used the institution.students, while repeated will used Institution.IndividualPromotion
         'Institution.Students' => [
             'Status' => [
@@ -69,7 +63,6 @@ class IndexesTable extends ControllerActionTable
             'operator' => [1 => '<', 2 => '>'],
             'threshold' => ['type' => 'number']
         ],
-        // // 'Language'
     ];
 
 
@@ -281,9 +274,6 @@ class IndexesTable extends ControllerActionTable
             // refer to addEditOnAddTrainer for http post
             if ($this->request->data("$alias.$fieldKey")) {
                 $associated = $this->request->data("$alias.$fieldKey");
-// pr('associated');
-// pr($associated);
-// die;
                 foreach ($associated as $key => $obj) {
                     $rowData = [];
                     $criteriaType = $obj['criteria'];

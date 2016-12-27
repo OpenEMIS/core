@@ -26,11 +26,7 @@ class IndexesBehavior extends Behavior
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $alias = $this->_table->alias();
-// pr('afterSave - IndexesBehavior');
-// pr($alias);
-// // pr($options);
-// // pr($entity);
-// die;
+
         $broadcaster = $this->_table;
         $listeners = [];
         $listeners[] = TableRegistry::get('Institution.InstitutionStudentIndexes');
@@ -42,9 +38,6 @@ class IndexesBehavior extends Behavior
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-pr('afterDelete - IndexesBehavior');
-pr($alias);
-die;
         $alias = $this->_table->alias();
 
         $broadcaster = $this->_table;

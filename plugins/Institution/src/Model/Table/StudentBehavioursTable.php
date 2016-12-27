@@ -437,8 +437,6 @@ class StudentBehavioursTable extends AppTable
 
 	public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
 	{
-		$Classifications = TableRegistry::get('Student.Classifications');
-
 		$behaviourResults = $this
 			->find()
 			->where([

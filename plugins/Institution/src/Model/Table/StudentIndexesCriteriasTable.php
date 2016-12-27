@@ -46,10 +46,10 @@ class StudentIndexesCriteriasTable extends AppTable
         $indexValue = 0;
         switch ($operator) {
         case 1: // '<'
-            if ($value < $threshold) {
+            if (!is_null($value) && $value < $threshold) {
                 $indexValue = $IndexesCriteriasData->index_value;
             } else {
-               $indexValue = 0;
+                $indexValue = 0;
             }
             break;
 
