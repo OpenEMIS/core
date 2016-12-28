@@ -93,7 +93,7 @@ class ExaminationsTable extends ControllerActionTable {
         $this->controller->set('educationSubjectOptions', $subjects);
     }
 
-    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
         if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
             $this->Alert->warning($this->aliasField('noExaminationItems'));
