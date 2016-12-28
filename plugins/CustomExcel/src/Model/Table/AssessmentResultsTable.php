@@ -321,7 +321,7 @@ class AssessmentResultsTable extends AppTable
     {
         if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
-            $query = $InstitutionStudentAbsences->find()
+            $studentAbsenceResults = $InstitutionStudentAbsences->find()
                 ->find('academicPeriod', ['academic_period_id' => $params['academic_period_id']])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
@@ -345,9 +345,26 @@ class AssessmentResultsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false);
+                ->hydrate(false)
+                ->all();
 
-            return $query->toArray();
+            // sum all number_of_days a student absence in an academic period
+            $results = [];
+            foreach ($studentAbsenceResults as $key => $obj) {
+                $studentId = $obj['student_id'];
+                $institutionId = $obj['institution_id'];
+                $numberOfDays = $obj['number_of_days'];
+                if (isset($results[$studentId])) {
+                    $results[$studentId]['number_of_days'] += $numberOfDays;
+                } else {
+                    $results[$studentId]['student_id'] = $studentId;
+                    $results[$studentId]['institution_id'] = $institutionId;
+                    $results[$studentId]['number_of_days'] = $numberOfDays;
+                }
+            }
+            $results = array_values($results);
+
+            return $results;
         }
     }
 }
