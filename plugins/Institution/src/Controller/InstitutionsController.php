@@ -346,7 +346,8 @@ class InstitutionsController extends AppController
             }
 
             $studentModels = [
-                'StudentProgrammes' => __('Programmes')
+                'StudentProgrammes' => __('Programmes'),
+                'StudentIndexes' => __('Indexes')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name

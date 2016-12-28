@@ -476,7 +476,7 @@ class StudentBehavioursTable extends AppTable
 			$title = $obj->student_behaviour_category->name;
 			$date = $obj->date_of_behaviour->format('d/m/Y');
 
-			$referenceDetails[$obj->id] = $title . ' (' . $date . ')';
+			$referenceDetails[$obj->id] = __($title) . ' (' . $date . ')';
 		}
 
 		// tooltip only receieved string to be display

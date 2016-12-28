@@ -118,7 +118,7 @@ class SpecialNeedsTable extends ControllerActionTable {
             $specialNeedName = $obj->special_need_type->name;
             $specialNeedDifficulties = $obj->special_need_difficulty->name;
 
-            $referenceDetails[$obj->id] = $specialNeedName . ' (' . $specialNeedDifficulties . ')';
+            $referenceDetails[$obj->id] = __($specialNeedName) . ' (' . __($specialNeedDifficulties) . ')';
         }
 
         // tooltip only receieved string to be display

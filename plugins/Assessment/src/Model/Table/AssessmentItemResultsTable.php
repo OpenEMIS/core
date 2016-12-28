@@ -167,7 +167,7 @@ class AssessmentItemResultsTable extends AppTable {
             $educationSubjectName = $obj->education_subject->name;
             $marks = !is_null($obj->marks) ? $obj->marks : 'null';
 
-            $referenceDetails[$obj->assessment_id] = $assessmentName . ' - ' . $educationSubjectName . ' (' . $marks . ')';
+            $referenceDetails[$obj->assessment_id] = __($assessmentName) . ' - ' . __($educationSubjectName) . ' (' . $marks . ')';
         }
 
         // tooltip only receieved string to be display

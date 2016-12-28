@@ -29,7 +29,7 @@ class StudentIndexesCriteriasTable extends AppTable
             ])
             ->first();
 
-        $value = '0';
+        $value = null;
         if (!empty($valueData)) {
             $value = $valueData->value;
         }
@@ -44,38 +44,40 @@ class StudentIndexesCriteriasTable extends AppTable
         $threshold = $IndexesCriteriasData->threshold;
 
         $indexValue = 0;
-        switch ($operator) {
-        case 1: // '<'
-            if (!is_null($value) && $value < $threshold) {
-                $indexValue = $IndexesCriteriasData->index_value;
-            } else {
-                $indexValue = 0;
+        if (!is_null($value)) {
+            switch ($operator) {
+            case 1: // '<'
+                if ($value < $threshold) {
+                    $indexValue = $IndexesCriteriasData->index_value;
+                } else {
+                    $indexValue = 0;
+                }
+                break;
+
+             case 2: // '>'
+                if ($value > $threshold) {
+                    $indexValue = $IndexesCriteriasData->index_value;
+                } else {
+                    $indexValue = 0;
+                }
+                break;
+
+            case 3: // '='
+                $Indexes = TableRegistry::get('Indexes.Indexes');
+                $criteriaName = $IndexesCriteriasData->criteria;
+                $criteriaDetails = $Indexes->getCriteriasDetails($criteriaName);
+                $criteriaModel = TableRegistry::get($criteriaDetails['model']);
+
+                $valueIndex = $criteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+
+                if (array_key_exists($threshold, $valueIndex)) {
+                    $indexValue = 0;
+                    $indexValue = ($valueIndex[$threshold]) * ($IndexesCriteriasData->index_value);
+                } else {
+                    $indexValue = 0;
+                }
+                break;
             }
-            break;
-
-         case 2: // '>'
-            if ($value > $threshold) {
-                $indexValue = $IndexesCriteriasData->index_value;
-            } else {
-                $indexValue = 0;
-            }
-            break;
-
-        case 3: // '='
-            $Indexes = TableRegistry::get('Indexes.Indexes');
-            $criteriaName = $IndexesCriteriasData->criteria;
-            $criteriaDetails = $Indexes->getCriteriasDetails($criteriaName);
-            $criteriaModel = TableRegistry::get($criteriaDetails['model']);
-
-            $valueIndex = $criteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
-
-            if (array_key_exists($threshold, $valueIndex)) {
-                $indexValue = 0;
-                $indexValue = ($valueIndex[$threshold]) * ($IndexesCriteriasData->index_value);
-            } else {
-                $indexValue = 0;
-            }
-            break;
         }
 
         return $indexValue;
