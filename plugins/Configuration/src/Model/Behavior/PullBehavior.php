@@ -13,6 +13,7 @@ use Cake\Network\Http\Client;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
+use Cake\Datasource\ConnectionManager;
 
 class PullBehavior extends Behavior
 {
@@ -256,6 +257,26 @@ class PullBehavior extends Behavior
 	    		]
 	    	];
     	}
+        if (isset($queryString['identity_number'])) {
+            unset($queryString['identity_number']);
+        }
+        if (isset($queryString['identity_type_id'])) {
+            unset($queryString['identity_type_id']);
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $connection = ConnectionManager::get('default');
+        $connection->execute(
+            'UPDATE `security_users`
+            INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
+            LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
+            SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
+            WHERE `security_users`.`id` = ?',
+            [$entity->id],
+            ['integer']
+        );
     }
 
     public function pullAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {

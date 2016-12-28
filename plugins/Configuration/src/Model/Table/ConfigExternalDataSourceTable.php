@@ -39,9 +39,18 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
 
         return $validator
             ->requirePresence('client_id')
+            ->requirePresence('url')
+            ->requirePresence('token_uri')
+            ->requirePresence('record_uri')
             ->requirePresence('first_name_mapping')
             ->requirePresence('last_name_mapping')
             ->requirePresence('gender_mapping');
+    }
+
+    public function validationCustom(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator->requirePresence('url', false);
     }
 
     public function validationOpenEMISIdentity(Validator $validator)
@@ -188,12 +197,15 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['identity_type_mapping'] = 'main_identity_type.name';
             $requestData[$this->alias()]['identity_number_mapping'] = 'identity_number';
             $requestData[$this->alias()]['nationality_mapping'] = 'main_nationality.name';
+            $requestData[$this->alias()]['external_reference_mapping'] = 'id';
             $requestData[$this->alias()]['token_uri'] = $url .'/api/oauth/token';
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
             $requestData[$this->alias()]['user_endpoint_uri'] = $url .'/api/restful/Users/{external_reference}.json?_contain=Genders,MainIdentityType,MainNationality&_flatten=1';
             $patchOption['validate'] = 'OpenEMISIdentity';
         } else if ($requestData[$this->alias()]['value'] == 'None') {
             $patchOption['validate'] = false;
+        } else if ($requestData[$this->alias()]['value'] == 'Custom') {
+            $patchOption['validate'] = 'Custom';
         }
         if (empty($requestData[$this->alias()]['private_key'])) {
             $newKey = openssl_pkey_new([
@@ -278,6 +290,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('token_uri');
                 $this->field('record_uri');
                 $this->field('client_id');
+                $this->field('user_endpoint_uri');
                 $this->field('scope');
                 $this->field('first_name_mapping');
                 $this->field('middle_name_mapping');
@@ -289,7 +302,6 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_type_mapping');
                 $this->field('identity_number_mapping');
                 $this->field('nationality_mapping');
-                $this->field('user_endpoint_uri');
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
                 break;

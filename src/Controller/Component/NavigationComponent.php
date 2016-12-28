@@ -580,7 +580,7 @@ class NavigationComponent extends Component
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-					'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
+					'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add'],
 			],
 			'Staff.Qualifications' => [
 				'title' => 'Professional Development',
@@ -835,6 +835,12 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Infrastructure'],
 						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
 					],
+				'CustomExcels.ExcelTemplates' => [
+					'title' => 'Excel Templates',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'CustomExcel'],
+					'selected' => ['CustomExcels.ExcelTemplates']
+				],
 				'Labels.index' => [
 					'title' => 'Labels',
 					'parent' => 'SystemSetup',

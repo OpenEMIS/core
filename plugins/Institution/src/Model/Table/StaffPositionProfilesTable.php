@@ -476,6 +476,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	private function initialiseVariable($entity) {
 		$institutionStaffId = $this->request->query('institution_staff_id');
+
+		$institutionStaffId = $this->paramsDecode($institutionStaffId)['id'];
+
 		if (is_null($institutionStaffId)) {
 			return true;
 		}
