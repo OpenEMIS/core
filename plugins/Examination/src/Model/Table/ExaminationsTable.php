@@ -93,6 +93,13 @@ class ExaminationsTable extends ControllerActionTable {
         $this->controller->set('educationSubjectOptions', $subjects);
     }
 
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
+            $this->Alert->warning($this->aliasField('noExaminationItems'));
+        }
+    }
+
     public function setupFields(Entity $entity)
     {
         $this->field('code');
@@ -114,22 +121,32 @@ class ExaminationsTable extends ControllerActionTable {
         $query->contain(['ExaminationItems.ExaminationItemResults']);
     }
 
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
+            $this->Alert->warning($this->aliasField('noExaminationItems'));
+        }
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        // manually delete hasMany Examination items
-        $fieldKey = 'examination_items';
-        if (!array_key_exists($fieldKey, $data[$this->alias()])) {
-            $data[$this->alias()][$fieldKey] = [];
-        }
+        $errors = $entity->errors();
+        if (empty($errors)) {
+            // manually delete hasMany Examination items
+            $fieldKey = 'examination_items';
+            if (!array_key_exists($fieldKey, $data[$this->alias()])) {
+                $data[$this->alias()][$fieldKey] = [];
+            }
 
-        $savedExamItems = array_column($data[$this->alias()][$fieldKey], 'id');
-        $originalExamItems = $entity->extractOriginal([$fieldKey])[$fieldKey];
-        foreach ($originalExamItems as $key => $item) {
-            if (!in_array($item['id'], $savedExamItems)) {
-                // check that there are no results for this examination item
-                if (!$item->has('examination_item_results') || empty($item->examination_item_results)) {
-                    $this->ExaminationItems->delete($item);
-                    unset($entity->examination_items[$key]);
+            $savedExamItems = array_column($data[$this->alias()][$fieldKey], 'id');
+            $originalExamItems = $entity->extractOriginal([$fieldKey])[$fieldKey];
+            foreach ($originalExamItems as $key => $item) {
+                if (!in_array($item['id'], $savedExamItems)) {
+                    // check that there are no results for this examination item
+                    if (!$item->has('examination_item_results') || empty($item->examination_item_results)) {
+                        $this->ExaminationItems->delete($item);
+                        unset($entity->examination_items[$key]);
+                    }
                 }
             }
         }

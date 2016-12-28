@@ -589,6 +589,9 @@ trait MessagesTrait {
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
         ],
+        'Examinations' => [
+            'noExaminationItems' => 'There are no examination items for this examination'
+        ],
         'ExaminationCentres' => [
             'savingProcessStarted' => 'Examination centres are currently being added in the background'
         ],
