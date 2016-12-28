@@ -28,6 +28,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Excel', [
 			'excludes' => [
 				'start_year',
