@@ -762,9 +762,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$endDate = $obj->end_date;
 
 			if ($startDate == $endDate) {
-				$referenceDetails[$obj->id] = $title . ' (' . $startDate->format('d/m/Y') . ')';
+				$referenceDetails[$obj->id] = __($title) . ' (' . $startDate->format('d/m/Y') . ')';
 			} else {
-				$referenceDetails[$obj->id] = $title . ' (' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y') . ')';
+				$referenceDetails[$obj->id] = __($title) . ' (' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y') . ')';
 			}
 		}
 

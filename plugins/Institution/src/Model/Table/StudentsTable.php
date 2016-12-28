@@ -1371,7 +1371,7 @@ class StudentsTable extends ControllerActionTable
                     $title = $obj->student_status->name;
                     $date = $obj->academic_period->name;
 
-                    $referenceDetails[$obj->id] = $title . ' (' . $date . ')';
+                    $referenceDetails[$obj->id] = __($title) . ' (' . $date . ')';
                 }
                 break;
 
@@ -1388,7 +1388,7 @@ class StudentsTable extends ControllerActionTable
                     $title = $obj->education_grade->name;
                     $date = $obj->user->date_of_birth->format('d/m/Y');
 
-                    $referenceDetails[$obj->id] = $title . ' (' . __('Born on') . ': ' . $date . ')';
+                    $referenceDetails[$obj->id] = __($title) . ' (' . __('Born on') . ': ' . $date . ')';
                 }
                 break;
         }
