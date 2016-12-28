@@ -102,7 +102,12 @@ class StudentIndexesTable extends ControllerActionTable
         // from indexes table
         $Indexes = TableRegistry::get('Indexes.Indexes');
         $indexId = $entity->index->id;
-        $generatedOn = $Indexes->get($indexId)->generated_on->format('F d, Y - H:i:s');
+        $indexesGeneratedOn = $Indexes->get($indexId)->generated_on;
+
+        $generatedOn = 0;
+        if (isset($indexesGeneratedOn)) {
+            $generatedOn = $indexesGeneratedOn->format('F d, Y - H:i:s');
+        }
 
         return $generatedOn;
     }
@@ -134,60 +139,60 @@ class StudentIndexesTable extends ControllerActionTable
                 ->all();
 
             foreach ($studentIndexesCriteriasResults as $key => $obj) {
-                $indexesCriteriasId = $obj->indexes_criteria->id;
+                if (isset($obj->indexes_criteria)) {
+                    $indexesCriteriasId = $obj->indexes_criteria->id;
 
-                $criteriaName = $obj->indexes_criteria->criteria;
-                $operator = $obj->indexes_criteria->operator;
-                $threshold = $obj->indexes_criteria->threshold;
+                    $criteriaName = $obj->indexes_criteria->criteria;
+                    $operator = $obj->indexes_criteria->operator;
+                    $threshold = $obj->indexes_criteria->threshold;
 
-                $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriasId);
+                    $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriasId);
 
-                $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaName);
-                $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
+                    $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaName);
+                    $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
 
-                if ($value == 'True') {
-                    // Comparison like behaviour
-                    // $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaKey);
-                    $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
-                    // $CriteriaModel = TableRegistry::get($criteriaKey);
+                    if ($value == 'True') {
+                        // Comparison like behaviour
+                        $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
 
-                    // to get total number of behaviour
-                    $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
-                    $quantity = '';
-                    if ($getValueIndex[$threshold] > 1) {
-                        $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
+                        // to get total number of behaviour
+                        $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+                        $quantity = '';
+                        if ($getValueIndex[$threshold] > 1) {
+                            $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
+                        }
+
+                        $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . $quantity  .'</div>';
+
+                        // for reference tooltip
+                        $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
+
+                        // for threshold name
+                        $thresholdName = $LookupModel->get($threshold)->name;
+                        $threshold = $thresholdName;
+                    } else {
+                        // numeric value come here (absence quantity, results)
+                        // for value
+                        $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
+
+                        // for the reference tooltip
+                        $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
                     }
 
-                    $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . $quantity  .'</div>';
+                    // blue info tooltip
+                    $tooltipReference = '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="left" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$reference.'"></i>';
 
-                    // for reference tooltip
-                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
+                    // to put in the table
+                    $rowData = [];
+                    $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['name'];
+                    $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['operator'][$operator];
+                    $rowData[] = $threshold;
+                    $rowData[] = $value;
+                    $rowData[] = $indexValue;
+                    $rowData[] = $tooltipReference;
 
-                    // for threshold name
-                    $thresholdName = $LookupModel->get($threshold)->name;
-                    $threshold = $thresholdName;
-                } else {
-                    // numeric value come here (absence quantity, results)
-                    // for value
-                    $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
-
-                    // for the reference tooltip
-                    $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
+                    $tableCells [] = $rowData;
                 }
-
-                // blue info tooltip
-                $tooltipReference = '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="left" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$reference.'"></i>';
-
-                // to put in the table
-                $rowData = [];
-                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['name'];
-                $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['operator'][$operator];
-                $rowData[] = $threshold;
-                $rowData[] = $value;
-                $rowData[] = $indexValue;
-                $rowData[] = $tooltipReference;
-
-                $tableCells [] = $rowData;
             }
         }
 
