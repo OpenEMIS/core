@@ -157,16 +157,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (StaffController.StaffSpecialNeeds != 2) {
                 promises[4] = InstitutionsStaffSvc.getSpecialNeedTypes();
             }
-            var defaultIdentityType = promisesObj[1];
-            if (defaultIdentityType.length > 0) {
-                StaffController.defaultIdentityTypeName = defaultIdentityType[0].name;
-                StaffController.defaultIdentityTypeId = defaultIdentityType[0].id;
-                StaffController.Staff.identity_type_id = StaffController.defaultIdentityTypeId;
-                StaffController.Staff.identity_type_name = StaffController.defaultIdentityTypeName;
-            } else {
-                StaffController.Staff.identity_type_id = null;
-                StaffController.Staff.identity_type_name = 'No default identity set';
-            }
             promises[0] = InstitutionsStaffSvc.getGenders();
 
             return $q.all(promises);

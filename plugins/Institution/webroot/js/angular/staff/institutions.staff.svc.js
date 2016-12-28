@@ -18,10 +18,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getExternalStaffRecords: getExternalStaffRecords,
         setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
-        getDefaultIdentityType: getDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
-        getEducationGrades: getEducationGrades,
-        getClasses: getClasses,
         getColumnDefs: getColumnDefs,
         getStaffData: getStaffData,
         postEnrolledStaff: postEnrolledStaff,
@@ -55,7 +52,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     var models = {
         Genders: 'User.Genders',
-        StudentRecords: 'Institution.StudentAdmission',
+        StaffAssignment: 'Institution.StaffTransferRequests',
         StaffUser: 'Institution.StaffUser',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
@@ -680,21 +677,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return this.institutionId;
     };
 
-    function getDefaultIdentityType() {
-        var success = function(response, deferred) {
-            var defaultIdentityType = response.data.data;
-            if (angular.isObject(defaultIdentityType) && defaultIdentityType.length > 0) {
-                deferred.resolve(defaultIdentityType);
-            } else {
-                deferred.resolve(defaultIdentityType);
-            }
-        };
-
-        return IdentityTypes
-            .find('DefaultIdentityType')
-            .ajax({success: success, defer: true});
-    };
-
     function makeDate(datetime) {
         // Only get the date part, we do not require the time portion
         if (datetime.indexOf('T') > -1) {
@@ -756,43 +738,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             .find('SchoolAcademicPeriod')
             .ajax({success: success, defer: true});
     };
-
-    function getEducationGrades(options) {
-        var success = function(response, deferred) {
-            var educationGrades = response.data.data;
-            if (angular.isObject(educationGrades) && educationGrades.length > 0) {
-                deferred.resolve(educationGrades);
-            } else {
-                deferred.reject('You need to configure Education Grades first');
-            }
-        };
-
-        InstitutionGrades.select();
-
-        if (typeof options !== "undefined" && options.hasOwnProperty('academicPeriodId')) {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {academic_period_id: options.academicPeriodId, institution_id: options.institutionId});
-        } else {
-            InstitutionGrades.find('EducationGradeInCurrentInstitution', {institution_id: options.institutionId});
-        }
-
-        return InstitutionGrades.ajax({success: success, defer: true});
-    };
-
-    function getClasses(options) {
-        var success = function(response, deferred) {
-            var classes = response.data.data;
-            // does not matter if no classes available
-            deferred.resolve(classes);
-        };
-        return InstitutionClasses
-            .select()
-            .find('ClassOptions', {
-                institution_id: options.institutionId,
-                academic_period_id: options.academicPeriodId,
-                grade_id: options.gradeId
-            })
-            .ajax({success: success, defer: true});
-    }
 
     function getColumnDefs() {
         var filterParams = {
