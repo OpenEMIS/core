@@ -1,10 +1,10 @@
 angular
-    .module('institutions.staff.svc', ['kd.orm.svc'])
-    .service('InstitutionsStaffSvc', InstitutionsStaffSvc);
+    .module('institutions.students.svc', ['kd.orm.svc'])
+    .service('InstitutionsStudentsSvc', InstitutionsStudentsSvc);
 
-InstitutionsStaffSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
+InstitutionsStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
 
-function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
+function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     var externalSource = null;
     var externalToken = null;
@@ -18,7 +18,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getExternalStudentRecords: getExternalStudentRecords,
         setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
-        getDefaultIdentityType: getDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
@@ -678,21 +677,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function getInstitutionId() {
         return this.institutionId;
-    };
-
-    function getDefaultIdentityType() {
-        var success = function(response, deferred) {
-            var defaultIdentityType = response.data.data;
-            if (angular.isObject(defaultIdentityType) && defaultIdentityType.length > 0) {
-                deferred.resolve(defaultIdentityType);
-            } else {
-                deferred.resolve(defaultIdentityType);
-            }
-        };
-
-        return IdentityTypes
-            .find('DefaultIdentityType')
-            .ajax({success: success, defer: true});
     };
 
     function makeDate(datetime) {
