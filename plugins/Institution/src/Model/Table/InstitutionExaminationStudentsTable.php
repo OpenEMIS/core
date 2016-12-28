@@ -26,12 +26,13 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('Excel', [
-            'excludes' => ['id', 'education_subject_id'],
+            'excludes' => ['id', 'education_subject_id', 'examination_item_id'],
             'pages' => ['index'],
             'filename' => 'RegisteredStudents',
             'orientation' => 'landscape'
@@ -44,7 +45,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'examination_item_id']]],
                 'provider' => 'table'
             ]);
     }
@@ -52,7 +53,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->education_subject_id;
+            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->examination_item_id;
             $entity->id = Security::hash($hashString, 'sha256');
         }
     }
@@ -176,12 +177,12 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     {
         //work around for export button showing in pages not specified
         if ($this->action != 'index') {
-            if (isset($extra['toolbarButtons']['export']))
-            {
+            if (isset($extra['toolbarButtons']['export'])) {
                 unset($extra['toolbarButtons']['export']);
             }
         }
         $this->fields['total_mark']['visible'] = false;
+        $this->fields['education_subject_id']['visible'] = false;
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -219,10 +220,8 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
 
         $examinationId = $this->request->query('examination_id');
 
-        if ($examinationId == -1 || !$examinationId || !$this->AccessControl->check(['Institutions', 'ExaminationStudents', 'excel']))
-        {
-            if (isset($extra['toolbarButtons']['export']))
-            {
+        if ($examinationId == -1 || !$examinationId || !$this->AccessControl->check(['Institutions', 'ExaminationStudents', 'excel'])) {
+            if (isset($extra['toolbarButtons']['export'])) {
                 unset($extra['toolbarButtons']['export']);
             }
         }
@@ -250,8 +249,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
-
-        $this->field('registration_number' , ['visible' => false]);
         $this->field('total_mark' , ['visible' => false]);
 
         $this->setFieldOrder([
@@ -479,6 +476,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
     {
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
+        $requestData[$this->alias()]['examination_item_id'] = 0;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
@@ -511,8 +509,9 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
                         $studentCount++;
-                        foreach($ExaminationCentreSubjects as $subject => $name) {
-                            $obj['education_subject_id'] = $subject;
+                        foreach($ExaminationCentreSubjects as $examItemId => $subjectId) {
+                            $obj['examination_item_id'] = $examItemId;
+                            $obj['education_subject_id'] = $subjectId;
                             $newEntities[] = $obj;
                         }
                     }

@@ -72,8 +72,32 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
+        // send to ctp
+        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions());
+
         $this->setupFields($entity);
+    }
+
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // only can choose subject in add
+        $subjects = [];
+        if (!empty($this->request->data[$this->alias()]['education_grade_id'])) {
+            $selectedGrade = $this->request->data[$this->alias()]['education_grade_id'];
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+
+            $subjects = $EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
+        }
+
+        // send to ctp
+        $this->controller->set('educationSubjectOptions', $subjects);
+    }
+
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
+            $this->Alert->warning($this->aliasField('noExaminationItems'));
+        }
     }
 
     public function setupFields(Entity $entity)
@@ -92,22 +116,40 @@ class ExaminationsTable extends ControllerActionTable {
         ]);
     }
 
-    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //patch data to handle fail save because of validation error.
-        if (array_key_exists($this->alias(), $requestData)) {
-            if (array_key_exists('examination_items', $requestData[$this->alias()])) {
-                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-                foreach ($requestData[$this->alias()]['examination_items'] as $key => $item) {
-                    $subjectId = $item['education_subject_id'];
-                    $requestData[$this->alias()]['examination_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
+        $query->contain(['ExaminationItems.ExaminationItemResults']);
+    }
+
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
+            $this->Alert->warning($this->aliasField('noExaminationItems'));
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $errors = $entity->errors();
+        if (empty($errors)) {
+            // manually delete hasMany Examination items
+            $fieldKey = 'examination_items';
+            if (!array_key_exists($fieldKey, $data[$this->alias()])) {
+                $data[$this->alias()][$fieldKey] = [];
+            }
+
+            $savedExamItems = array_column($data[$this->alias()][$fieldKey], 'id');
+            $originalExamItems = $entity->extractOriginal([$fieldKey])[$fieldKey];
+            foreach ($originalExamItems as $key => $item) {
+                if (!in_array($item['id'], $savedExamItems)) {
+                    // check that there are no results for this examination item
+                    if (!$item->has('examination_item_results') || empty($item->examination_item_results)) {
+                        $this->ExaminationItems->delete($item);
+                        unset($entity->examination_items[$key]);
+                    }
                 }
-            } else { //logic to capture error if no subject inside the grade.
-                $errorMessage = $this->aliasField('noSubjects');
-                $requestData['errorMessage'] = $errorMessage;
             }
         }
-
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -208,7 +250,7 @@ class ExaminationsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
         unset($request->query['grade']);
@@ -219,12 +261,31 @@ class ExaminationsTable extends ControllerActionTable {
                 if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
                     $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
                     $request->query['grade'] = $selectedGrade;
-
-                    $examinationItems = $this->ExaminationItems->populateExaminationItemsArray($selectedGrade);
-                    $data[$this->alias()]['examination_items'] = $examinationItems;
                 }
             }
         }
+    }
+
+    public function addOnAddExaminationItem(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $fieldKey = 'examination_items';
+
+        if (empty($data[$this->alias()][$fieldKey])) {
+            $data[$this->alias()][$fieldKey] = [];
+        }
+
+        if ($data->offsetExists($this->alias())) {
+            $data[$this->alias()][$fieldKey][] = [
+                'code' => '',
+                'name' => '',
+                'weight' => '',
+                'examination_grading_type_id' => ''
+            ];
+        }
+
+        $options['associated'] = [
+            'ExaminationItems' => ['validate' => false]
+        ];
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
