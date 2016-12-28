@@ -11,13 +11,21 @@
             <thead>
                 <th><?= __('Code') ?></th>
                 <th><?= __('Name') ?></th>
+                <th><?= __('Education Subject') ?></th>
             </thead>
             <?php if (isset($data['examination_centre_subjects'])) : ?>
                 <tbody>
                     <?php foreach ($data['examination_centre_subjects'] as $i => $item) : ?>
                         <tr>
-                            <td><?= $item->education_subject->code; ?></td>
-                            <td><?= $item->education_subject->name; ?></td>
+                            <td><?= $item->examination_item->code; ?></td>
+                            <td><?= $item->examination_item->name; ?></td>
+                            <td>
+                                <?php
+                                    if ($item->has('education_subject') && $item->education_subject->has('name')) {
+                                        echo $item->education_subject->name;
+                                    }
+                                ?>
+                            </td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -35,13 +43,15 @@
                 <thead>
                     <th><?= __('Code') ?></th>
                     <th><?= __('Name') ?></th>
+                    <th><?= __('Education Subject') ?></th>
                 </thead>
                 <?php if (isset($attr['data'])) : ?>
                     <tbody>
                         <?php foreach ($attr['data'] as $i => $item) : ?>
                             <tr>
-                                <td><?= $item['subject_code']; ?></td>
-                                <td><?= __($item['subject_name']); ?></td>
+                                <td><?= $item['item_code']; ?></td>
+                                <td><?= __($item['item_name']); ?></td>
+                                <td><?= __($item['education_subject']); ?></td>
                             </tr>
                         <?php endforeach ?>
                     </tbody>

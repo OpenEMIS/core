@@ -79,7 +79,8 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 academic_period_id: academicPeriodId,
                 examination_id: examinationId,
                 examination_centre_id: 0,
-                education_subject_id: 0
+                education_subject_id: 0,
+                examination_item_id: 0
             },
             columnDefs: [],
             rowData: [],
@@ -128,7 +129,8 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         if (vm.gridOptions != null) {
             // update value in context
             vm.gridOptions.context.examination_centre_id = vm.examinationCentreId;
-            vm.gridOptions.context.education_subject_id = subject.id;
+            vm.gridOptions.context.education_subject_id = subject.education_subject_id;
+            vm.gridOptions.context.examination_item_id = subject.id;
             // Always reset
             vm.gridOptions.api.setColumnDefs([]);
             vm.gridOptions.api.setRowData([]);
@@ -203,16 +205,17 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             var examinationId = vm.gridOptions.context.examination_id;
             var examinationCentreId = vm.gridOptions.context.examination_centre_id;
             var educationSubjectId = vm.gridOptions.context.education_subject_id;
+            var examinationItemId = vm.gridOptions.context.examination_item_id;
 
             UtilsSvc.isAppendSpinner(true, 'examination-result-table');
-            ExaminationsResultsSvc.saveRowData(vm.results, vm.education_subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId)
+            ExaminationsResultsSvc.saveRowData(vm.results, vm.education_subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId)
             .then(function(response) {
             }, function(error) {
                 console.log(error);
             })
             .finally(function() {
                 vm.gridOptions.api.forEachNode(function(row) {
-                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, row.data.institution_id, row.data.education_grade_id, academicPeriodId, examinationId, examinationCentreId, educationSubjectId);
+                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, row.data.institution_id, row.data.education_grade_id, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId);
                 });
 
                 $scope.action = 'view';
