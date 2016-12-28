@@ -196,7 +196,7 @@
                                                     echo "<button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button>";
                                                 } else {
                                                     $message = __('There are results for this examination item');
-                                                    echo '<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-toggle="tooltip" data-container="body" data-placement="top" data-animation="false" title="" data-html="true" data-original-title="' . $message . '"></i>';
+                                                    echo '<i class="fa fa-info-circle fa-lg icon-blue" data-toggle="tooltip" data-container="body" data-placement="top" data-animation="false" title="" data-html="true" data-original-title="' . $message . '"></i>';
                                                 }
                                             ?>
                                         </td>
