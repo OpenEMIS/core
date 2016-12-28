@@ -834,7 +834,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         } else {
 
             //generate `list`
-            $studentOptions = $this->InstitutionSubjectStudents->getStudentList($entity->academic_period_id, $entity->institution_class_id, $entity->education_subject_id);
+            $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($entity->academic_period_id, $entity->institution_class_id, $entity->education_subject_id);
 
             $studentOptions = array('null' => __('-- Select --')) + $studentOptions; //additional default option
 
@@ -952,7 +952,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $studentOptions = [];
             if ($selectedPeriod && $selectedClass && $selectedSubject) {
-                $studentOptions = $this->InstitutionSubjectStudents->getStudentList($selectedPeriod, $selectedClass, $selectedSubject);
+                $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($selectedPeriod, $selectedClass, $selectedSubject);
             }
             $attr['options'] = $studentOptions;
                 
