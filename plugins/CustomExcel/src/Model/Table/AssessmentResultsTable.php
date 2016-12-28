@@ -206,12 +206,12 @@ class AssessmentResultsTable extends AppTable
             $results = $AssessmentItemsGradingTypes->find()
                 ->select([
                     $AssessmentItemsGradingTypes->aliasField('education_subject_id'),
-                    'assessment_period_section' => 'AssessmentPeriods.section',
-                    'section_max' => $query->func()->sum('AssessmentGradingTypes.max')
+                    'academic_term' => 'AssessmentPeriods.academic_term',
+                    'academic_term_max' => $query->func()->sum('AssessmentGradingTypes.max')
                 ])
                 ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
                 ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
-                ->group([$AssessmentItemsGradingTypes->aliasField('education_subject_id'), 'AssessmentPeriods.section'])
+                ->group([$AssessmentItemsGradingTypes->aliasField('education_subject_id'), 'AssessmentPeriods.academic_term'])
                 ->hydrate(false)
                 ->all();
             return $results->toArray();
@@ -230,8 +230,8 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
                     $AssessmentItemResults->aliasField('education_subject_id'),
-                    'assessment_period_section' => 'AssessmentPeriods.section',
-                    'section_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks'))
+                    'academic_term' => 'AssessmentPeriods.academic_term',
+                    'academic_term_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks'))
                 ])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
@@ -253,7 +253,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('assessment_id'),
                     $AssessmentItemResults->aliasField('student_id'),
                     $AssessmentItemResults->aliasField('education_subject_id'),
-                    'AssessmentPeriods.section'
+                    'AssessmentPeriods.academic_term'
                 ])
                 ->hydrate(false)
                 ->all();
@@ -269,10 +269,10 @@ class AssessmentResultsTable extends AppTable
             $results = $AssessmentPeriods->find()
                 ->select([
                     'total_period_weight' => $query->func()->sum($AssessmentPeriods->aliasField('weight')),
-                    $AssessmentPeriods->aliasField('section')
+                    $AssessmentPeriods->aliasField('academic_term')
                 ])
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
-                ->group([$AssessmentPeriods->aliasField('section')])
+                ->group([$AssessmentPeriods->aliasField('academic_term')])
                 ->hydrate(false)
                 ->all();
             return $results->toArray();
