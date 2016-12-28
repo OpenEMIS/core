@@ -72,22 +72,25 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $subjects = [];
-        $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+        // send to ctp
+        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions());
 
-        if ($this->action == 'add' && !empty($this->request->data[$this->alias()]['education_grade_id'])) {
+        $this->setupFields($entity);
+    }
+
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // only can choose subject in add
+        $subjects = [];
+        if (!empty($this->request->data[$this->alias()]['education_grade_id'])) {
             $selectedGrade = $this->request->data[$this->alias()]['education_grade_id'];
-            $subjects = $EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
-        } else if ($this->action == 'edit' && $entity->has('education_grade_id')) {
-            $selectedGrade = $entity->education_grade_id;
+            $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+
             $subjects = $EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
         }
 
         // send to ctp
         $this->controller->set('educationSubjectOptions', $subjects);
-        $this->controller->set('examinationGradingTypeOptions', $this->getGradingTypeOptions());
-
-        $this->setupFields($entity);
     }
 
     public function setupFields(Entity $entity)
@@ -123,8 +126,11 @@ class ExaminationsTable extends ControllerActionTable {
         $originalExamItems = $entity->extractOriginal([$fieldKey])[$fieldKey];
         foreach ($originalExamItems as $key => $item) {
             if (!in_array($item['id'], $savedExamItems)) {
-                $this->ExaminationItems->delete($item);
-                unset($entity->examination_items[$key]);
+                // check that there are no results for this examination item
+                if (!$item->has('examination_item_results') || empty($item->examination_item_results)) {
+                    $this->ExaminationItems->delete($item);
+                    unset($entity->examination_items[$key]);
+                }
             }
         }
     }
@@ -243,7 +249,7 @@ class ExaminationsTable extends ControllerActionTable {
         }
     }
 
-    public function addEditOnAddExaminationItem(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addOnAddExaminationItem(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $fieldKey = 'examination_items';
 
