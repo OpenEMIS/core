@@ -41,6 +41,9 @@ class AssessmentResultsTable extends AppTable
                 'AssessmentItemsGradingTypes',
                 'AssessmentItemResults',
                 'AssessmentPeriods',
+                'GroupAssessmentItemsGradingTypes',
+                'GroupAssessmentItemResults',
+                'GroupAssessmentPeriods',
                 'ClassStudents',
                 'Institutions',
                 'InstitutionClasses',
@@ -57,6 +60,9 @@ class AssessmentResultsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseAssessmentItemsGradingTypes';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes'] = 'onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentItemResults'] = 'onExcelTemplateInitialiseGroupAssessmentItemResults';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseGroupAssessmentPeriods'] = 'onExcelTemplateInitialiseGroupAssessmentPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassStudents'] = 'onExcelTemplateInitialiseClassStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
@@ -82,6 +88,7 @@ class AssessmentResultsTable extends AppTable
             $results = $AssessmentItems->find()
                 ->contain(['EducationSubjects'])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
+                ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name'])
                 ->hydrate(false)
                 ->all();
             return $results->toArray();
@@ -185,6 +192,87 @@ class AssessmentResultsTable extends AppTable
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
             $results = $AssessmentPeriods->find()
                 ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
+                ->hydrate(false)
+                ->all();
+            return $results->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseGroupAssessmentItemsGradingTypes(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $params)) {
+            $AssessmentItemsGradingTypes = TableRegistry::get('Assessment.AssessmentItemsGradingTypes');
+            $query = $AssessmentItemsGradingTypes->find();
+            $results = $AssessmentItemsGradingTypes->find()
+                ->select([
+                    $AssessmentItemsGradingTypes->aliasField('education_subject_id'),
+                    'assessment_period_section' => 'AssessmentPeriods.section',
+                    'section_max' => $query->func()->sum('AssessmentGradingTypes.max')
+                ])
+                ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
+                ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
+                ->group([$AssessmentItemsGradingTypes->aliasField('education_subject_id'), 'AssessmentPeriods.section'])
+                ->hydrate(false)
+                ->all();
+            return $results->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseGroupAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('class_id', $params) && array_key_exists('assessment_id', $params) && array_key_exists('institution_id', $params)) {
+            $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+            $query = $AssessmentItemResults->find();
+            $results = $AssessmentItemResults->find()
+                ->select([
+                    $AssessmentItemResults->aliasField('institution_id'),
+                    $AssessmentItemResults->aliasField('academic_period_id'),
+                    $AssessmentItemResults->aliasField('assessment_id'),
+                    $AssessmentItemResults->aliasField('student_id'),
+                    $AssessmentItemResults->aliasField('education_subject_id'),
+                    'assessment_period_section' => 'AssessmentPeriods.section',
+                    'section_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks'))
+                ])
+                ->innerJoin(
+                    [$this->alias() => $this->table()],
+                    [
+                        $this->aliasField('institution_id = ') . $AssessmentItemResults->aliasField('institution_id'),
+                        $this->aliasField('academic_period_id = ') . $AssessmentItemResults->aliasField('academic_period_id'),
+                        $this->aliasField('student_id = ') . $AssessmentItemResults->aliasField('student_id'),
+                        $this->aliasField('institution_class_id') => $params['class_id']
+                    ]
+                )
+                ->contain(['AssessmentGradingOptions', 'AssessmentPeriods'])
+                ->where([
+                    $AssessmentItemResults->aliasField('assessment_id') => $params['assessment_id'],
+                    $AssessmentItemResults->aliasField('institution_id') => $params['institution_id']
+                ])
+                ->group([
+                    $AssessmentItemResults->aliasField('institution_id'),
+                    $AssessmentItemResults->aliasField('academic_period_id'),
+                    $AssessmentItemResults->aliasField('assessment_id'),
+                    $AssessmentItemResults->aliasField('student_id'),
+                    $AssessmentItemResults->aliasField('education_subject_id'),
+                    'AssessmentPeriods.section'
+                ])
+                ->hydrate(false)
+                ->all();
+            return $results->toArray();
+        }
+    }
+
+    public function onExcelTemplateInitialiseGroupAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('assessment_id', $params)) {
+            $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
+            $query = $AssessmentPeriods->find();
+            $results = $AssessmentPeriods->find()
+                ->select([
+                    'total_period_weight' => $query->func()->sum($AssessmentPeriods->aliasField('weight')),
+                    $AssessmentPeriods->aliasField('section')
+                ])
+                ->where([$AssessmentPeriods->aliasField('assessment_id') => $params['assessment_id']])
+                ->group([$AssessmentPeriods->aliasField('section')])
                 ->hydrate(false)
                 ->all();
             return $results->toArray();
