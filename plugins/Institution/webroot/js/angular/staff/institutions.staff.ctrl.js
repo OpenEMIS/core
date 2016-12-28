@@ -21,8 +21,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.createNewStaff = false;
     StaffController.genderOptions = {};
     StaffController.academicPeriodOptions = {};
-    StaffController.educationGradeOptions = {};
-    StaffController.classOptions = {};
     StaffController.step = 'internal_search';
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
@@ -65,7 +63,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.createNewExternalDatasource = createNewExternalDatasource;
     StaffController.insertStaffData = insertStaffData;
     StaffController.onChangeAcademicPeriod = onChangeAcademicPeriod;
-    StaffController.onChangeEducationGrade = onChangeEducationGrade;
     StaffController.getStaffData = getStaffData;
     StaffController.selectStaff = selectStaff;
     StaffController.postForm = postForm;
@@ -83,13 +80,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.clearInternalSearchFilters = clearInternalSearchFilters;
     StaffController.initialLoad = true;
     StaffController.date_of_birth = '';
-    $scope.endDate;
 
     StaffController.selectedStaff;
     StaffController.addStaffButton = false;
     StaffController.selectedStaffData = null;
     StaffController.startDate = '';
-    StaffController.endDateFormatted;
+    StaffController.endDate = '';
     StaffController.defaultIdentityTypeName;
     StaffController.defaultIdentityTypeId;
     StaffController.postResponse;
@@ -119,12 +115,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             };
 
             if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-                $scope.endDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date);
                 StaffController.onChangeAcademicPeriod();
             }
             promises.push(InstitutionsStaffSvc.getAddNewStaffConfig());
-            promises.push(InstitutionsStaffSvc.getDefaultIdentityType());
-
             return $q.all(promises);
         }, function(error) {
             console.log(error);
@@ -341,10 +334,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.initialLoad = true;
         StaffController.createNewInternalDatasource(StaffController.internalGridOptions);
     }
-
-    $scope.$watch('endDate', function (newValue) {
-        StaffController.endDateFormatted = $filter('date')(newValue, 'dd-MM-yyyy');
-    });
 
     function createNewInternalDatasource(gridObj, withData) {
         var dataSource = {
@@ -636,7 +625,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         AlertSvc.reset($scope);
 
         if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
-            $scope.endDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date);
             StaffController.startDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
         }
 
@@ -644,50 +632,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         startDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
         startDatePicker.datepicker("setEndDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date));
         startDatePicker.datepicker("setDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
-
-        StaffController.educationGradeOptions = null;
-        InstitutionsStaffSvc.getEducationGrades({
-            institutionId: StaffController.institutionId,
-            academicPeriodId: StaffController.academicPeriodOptions.selectedOption.id
-        })
-        .then(function(educationGrades) {
-            StaffController.educationGradeOptions = {
-                availableOptions: educationGrades,
-            };
-        }, function(error) {
-            console.log(error);
-            AlertSvc.warning($scope, error);
-        });
-    }
-
-    function onChangeEducationGrade() {
-        AlertSvc.reset($scope);
-
-        StaffController.classOptions = null;
-
-        InstitutionsStaffSvc.getClasses({
-            institutionId: StaffController.institutionId,
-            academicPeriodId: StaffController.academicPeriodOptions.selectedOption.id,
-            gradeId: StaffController.educationGradeOptions.selectedOption.education_grade_id
-        })
-        .then(function(classes) {
-            StaffController.classOptions = {
-                availableOptions: classes,
-            };
-        }, function(error) {
-            console.log(error);
-            AlertSvc.warning($scope, error);
-        });
     }
 
     function postForm() {
 
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
         var educationGradeId = (StaffController.educationGradeOptions.hasOwnProperty('selectedOption'))? StaffController.educationGradeOptions.selectedOption.education_grade_id: '';
-        var classId = null;
-        if (StaffController.classOptions.hasOwnProperty('selectedOption')) {
-            classId = StaffController.classOptions.selectedOption.id;
-        }
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
@@ -696,7 +646,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 startDate = undefined;
             }
         }
-        var endDate = $scope.endDate;
+        var endDate = StaffController.endDate;
 
         if (!StaffController.createNewStaff) {
             if (StaffController.externalSearch) {
@@ -869,8 +819,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (data.step == 1) {
             StaffController.Staff.identity_type_name = StaffController.defaultIdentityTypeName;
             StaffController.Staff.identity_type_id = StaffController.defaultIdentityTypeId;
-            StaffController.educationGradeOptions.selectedOption = '';
-            StaffController.classOptions.selectedOption = '';
             delete StaffController.postResponse;
             StaffController.reloadInternalDatasource(true);
             StaffController.createNewStaff = false;
@@ -881,8 +829,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         else if (data.step == 2) {
             StaffController.Staff.identity_type_name = StaffController.externalIdentityType;
             StaffController.Staff.identity_type_id = StaffController.defaultIdentityTypeId;
-            StaffController.educationGradeOptions.selectedOption = '';
-            StaffController.classOptions.selectedOption = '';
             delete StaffController.postResponse;
             StaffController.reloadExternalDatasource(true);
             StaffController.createNewStaff = false;

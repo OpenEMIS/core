@@ -312,8 +312,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
         params['institution_id'] = institutionId;
         StaffUser.reset();
-        StaffUser.find('Staffs', params);
-        // StaffUser.find('enrolledInstitutionStaffs');
+        StaffUser.find('Staff', params);
         StaffUser.contain(['Genders']);
 
         return StaffUser.ajax({defer: true, success: success});
