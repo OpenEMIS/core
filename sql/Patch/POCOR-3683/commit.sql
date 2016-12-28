@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `assessment_periods` (
   `date_enabled` date NOT NULL,
   `date_disabled` date NOT NULL,
   `weight` decimal(6,2) DEFAULT '0.00',
-  `section` varchar(250) DEFAULT NULL,
+  `academic_term` varchar(250) DEFAULT NULL,
   `assessment_id` int(11) NOT NULL COMMENT 'links to assessments.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -26,5 +26,5 @@ CREATE TABLE IF NOT EXISTS `assessment_periods` (
   INDEX `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of periods for a specific assessment';
 
-INSERT INTO `assessment_periods` (`id`, `code`, `name`, `start_date`, `end_date`, `date_enabled`, `date_disabled`, `weight`, `section`, `assessment_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+INSERT INTO `assessment_periods` (`id`, `code`, `name`, `start_date`, `end_date`, `date_enabled`, `date_disabled`, `weight`, `academic_term`, `assessment_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `code`, `name`, `start_date`, `end_date`, `date_enabled`, `date_disabled`, `weight`, NULL, `assessment_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_3683_assessment_periods`;
