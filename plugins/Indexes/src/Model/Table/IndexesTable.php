@@ -31,7 +31,7 @@ class IndexesTable extends ControllerActionTable
             'threshold' => ['type' => 'number']
         ],
         'Institution.StudentBehaviours' => [
-            'name' => 'Behavior',
+            'name' => 'Behaviour',
             'operator' => [3 => '='],
             'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
         ],
@@ -170,7 +170,7 @@ class IndexesTable extends ControllerActionTable
 
         $criteriaOptions = [];
         foreach ($criteriaData as $key => $obj) {
-            $criteriaOptions[$key] = $obj['name'];
+            $criteriaOptions[$key] = __($obj['name']);
         }
         ksort($criteriaOptions); // sorting the option by Key
 
@@ -237,10 +237,10 @@ class IndexesTable extends ControllerActionTable
                     }
 
                     $rowData = [];
-                    $rowData[] = $criteriaData[$obj['criteria']]['name'];
+                    $rowData[] = __($criteriaData[$obj['criteria']]['name']);
                     $rowData[] = $criteriaData[$obj['criteria']]['operator'][$obj['operator']];
-                    $rowData[] = $thresholdData; // will get form the FO or from the model related
-                    $rowData[] = $obj['index_value'];
+                    $rowData[] = __($thresholdData); // will get form the FO or from the model related
+                    $rowData[] = __($obj['index_value']);
 
                     $tableCells[] = $rowData;
                 }
@@ -340,11 +340,17 @@ class IndexesTable extends ControllerActionTable
             'data-placement' => 'bottom',
             'escape' => false
         ];
+        $url = [
+            'plugin' => 'Indexes',
+            'controller' => 'Indexes',
+            'action' => 'Indexes',
+            'generate'
+        ];
         $toolbarButtonsArray['generate']['type'] = 'button';
         $toolbarButtonsArray['generate']['label'] = '<i class="fa fa-refresh"></i>';
         $toolbarButtonsArray['generate']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['generate']['attr']['title'] = __('Generate');
-        $toolbarButtonsArray['generate']['url'][0] = 'generate';
+        $toolbarButtonsArray['generate']['url'] = $url;
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end generate buttons

@@ -613,6 +613,6 @@ class StudentUserTable extends ControllerActionTable
 
 	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 	{
-		return $this->Genders->get($threshold)->name;;
+		return __($this->Genders->get($threshold)->name);
 	}
 }

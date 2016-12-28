@@ -296,7 +296,7 @@ class GuardiansTable extends AppTable {
             $guardianName = $obj->user->first_name . ' ' . $obj->user->last_name;
             $guardianRelation = $obj->guardian_relation->name;
 
-            $referenceDetails[$obj->guardian_id] = $guardianName . ' (' . $guardianRelation . ')';
+            $referenceDetails[$obj->guardian_id] = $guardianName . ' (' . __($guardianRelation) . ')';
         }
 
         // tooltip only receieved string to be display

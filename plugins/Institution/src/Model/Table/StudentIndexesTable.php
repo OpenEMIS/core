@@ -184,10 +184,10 @@ class StudentIndexesTable extends ControllerActionTable
 
                     // to put in the table
                     $rowData = [];
-                    $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['name'];
+                    $rowData[] = __($this->Indexes->getCriteriasDetails($criteriaName)['name']);
                     $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['operator'][$operator];
-                    $rowData[] = $threshold;
-                    $rowData[] = $value;
+                    $rowData[] = __($threshold);
+                    $rowData[] = __($value);
                     $rowData[] = $indexValue;
                     $rowData[] = $tooltipReference;
 
