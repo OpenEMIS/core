@@ -783,17 +783,26 @@ class StaffTable extends ControllerActionTable {
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (isset($buttons['view'])) {
+			$primaryKey = array_flip($this->primaryKey());
+			$entityArr = $entity->getOriginalValues();
+			$primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
+			$encodeValue = $this->paramsEncode($primaryKeyValues);
+
 			$url = $this->url('view');
 			$url['action'] = 'StaffUser';
 			$url[1] = $this->paramsEncode(['id' => $entity['_matchingData']['Users']['id']]);
-			$url['id'] = $entity->id;
+			$url['id'] = $encodeValue;
 			$buttons['view']['url'] = $url;
 		}
 
 		if (isset($buttons['edit'])) {
+			$primaryKey = array_flip($this->primaryKey());
+			$entityArr = $entity->getOriginalValues();
+			$primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
+			$encodeValue = $this->paramsEncode($primaryKeyValues);
 			$url = $this->url('add');
 			$url['action'] = 'StaffPositionProfiles';
-			$url['institution_staff_id'] = $entity->id;
+			$url['id'] = $encodeValue;
 			$url['action'] = 'StaffPositionProfiles';
 			$buttons['edit']['url'] = $url;
 		}
