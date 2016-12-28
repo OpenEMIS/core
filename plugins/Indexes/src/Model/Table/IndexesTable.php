@@ -71,6 +71,7 @@ class IndexesTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionStudentIndexes', ['className' => 'Institution.InstitutionStudentIndexes', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('search', false);
         $this->toggle('remove', false);
@@ -171,6 +172,7 @@ class IndexesTable extends ControllerActionTable
         foreach ($criteriaData as $key => $obj) {
             $criteriaOptions[$key] = $obj['name'];
         }
+        ksort($criteriaOptions); // sorting the option by Key
 
         return $criteriaOptions;
     }
@@ -352,6 +354,63 @@ class IndexesTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
+    }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        // to clear the indexes criteria when delete all the criteria
+        if (!isset($data[$this->alias()]['indexes_criterias'])) {
+            $data[$this->alias()]['indexes_criterias'] = [];
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $entityIndexesCriteriasData = $entity->indexes_criterias;
+        // list of criteria in the index type
+        $entityIndexesCriterias = [];
+        foreach ($entityIndexesCriteriasData as $key => $entityIndexesCriteriasObj) {
+            $entityIndexesCriterias[$entityIndexesCriteriasObj->id] = $entityIndexesCriteriasObj;
+        }
+
+        $indexId = $entity->id;
+        // get the list of student that using this index type (student that will be affected)
+        $institutionStudentIndexesResults = $this->InstitutionStudentIndexes->find()
+            ->where(['index_id' => $indexId])
+            ->all();
+
+        $indexTotal = [];
+        foreach ($institutionStudentIndexesResults as $key => $obj) {
+            $institutionStudentIndexesId = $obj->id;
+            $institutionId = $obj->institution_id;
+            $studentId = $obj->student_id;
+            $academicPeriodId = $obj->academic_period_id;
+
+            if (!empty($entityIndexesCriterias)) {
+                foreach ($entityIndexesCriterias as $entityIndexesCriteriasKey => $entityIndexesCriteriasObj) {
+                    $StudentIndexesCriterias = TableRegistry::get('Institution.StudentIndexesCriterias');
+                    $value = $StudentIndexesCriterias->getValue($institutionStudentIndexesId, $entityIndexesCriteriasKey);
+                    $indexValue = $StudentIndexesCriterias->getIndexValue($value, $entityIndexesCriteriasKey, $institutionId, $studentId, $academicPeriodId);
+
+                    $indexTotal[$institutionStudentIndexesId] = !empty($indexTotal[$institutionStudentIndexesId]) ? $indexTotal[$institutionStudentIndexesId] : 0;
+                    $indexTotal[$institutionStudentIndexesId] = $indexTotal[$institutionStudentIndexesId] + $indexValue;
+                }
+            } else {
+                // if the indexes doesnt have anymore criteria
+                $indexTotal[$institutionStudentIndexesId] = 0;
+            }
+
+            // update the total index on the student indexes.
+            foreach ($indexTotal as $key => $obj) {
+                $this->InstitutionStudentIndexes->query()
+                    ->update()
+                    ->set(['total_index' => $obj])
+                    ->where([
+                        'id' => $key
+                    ])
+                    ->execute();
+            }
+        }
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
