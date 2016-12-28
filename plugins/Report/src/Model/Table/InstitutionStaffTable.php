@@ -18,7 +18,7 @@ class InstitutionStaffTable extends AppTable  {
 		parent::initialize($config);
 
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => ['institution_position_id', 'academic_period_id']]);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
@@ -61,9 +61,9 @@ class InstitutionStaffTable extends AppTable  {
 
 		$query
 		->contain([
-			'Users.Genders', 
-			'Institutions.Areas', 
-			'Positions.StaffPositionTitles', 
+			'Users.Genders',
+			'Institutions.Areas',
+			'Positions.StaffPositionTitles',
 			'Institutions.Types'
         ])
 		->select([
@@ -76,7 +76,7 @@ class InstitutionStaffTable extends AppTable  {
 			'gender' => 'Genders.name',
 			'area_name' => 'Areas.name',
 			'area_code' => 'Areas.code',
-			'position_title_teaching' => 'StaffPositionTitles.type', 
+			'position_title_teaching' => 'StaffPositionTitles.type',
 			'institution_type' => 'Types.name'
 		]);
 	}
@@ -103,7 +103,7 @@ class InstitutionStaffTable extends AppTable  {
 		return $age;
 	}
 
-	public function onExcelGetEducationGrades(Event $event, Entity $entity) 
+	public function onExcelGetEducationGrades(Event $event, Entity $entity)
     {
     	$ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
 

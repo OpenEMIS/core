@@ -20,8 +20,10 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Dashboard' => ['index']
+        	'Dashboard' => ['index'],
+        	'Staff' => ['index', 'add']
         ]);
 	}
 

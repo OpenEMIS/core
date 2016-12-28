@@ -42,7 +42,7 @@ class StaffTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users',			['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+		$this->belongsTo('Positions',		['className' => 'Institution.InstitutionPositions', 'foreignKey' => ['institution_position_id', 'academic_period_id']]);
 		$this->belongsTo('Institutions',	['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
@@ -156,7 +156,7 @@ class StaffTable extends ControllerActionTable {
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
-			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
+			$query->where([$this->aliasField('academic_period_id') => $periodId]);
 		}
 		$query->contain(['Positions.StaffPositionTitles'])->select(['position_title_teaching' => 'StaffPositionTitles.type'])->autoFields(true);
 	}
@@ -185,6 +185,8 @@ class StaffTable extends ControllerActionTable {
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields['staff_id']['order'] = 5;
+		$this->fields['institution_position_id']['type'] = 'integer';
+		$this->fields['start_date']['type'] = 'date';
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
 
@@ -272,7 +274,7 @@ class StaffTable extends ControllerActionTable {
 
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
-		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
+		$query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
 		if ($selectedPosition != 0) {
 			$query->matching('Positions', function ($q) use ($selectedPosition) {
 				return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
@@ -330,7 +332,6 @@ class StaffTable extends ControllerActionTable {
 		$this->advancedSelectOptions($statusOptions, $selectedStatus);
 		$request->query['staff_status_id'] = $selectedStatus;
 		$query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
-
 		$this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
 	}
 
@@ -1032,7 +1033,7 @@ class StaffTable extends ControllerActionTable {
 
 			$institutionStaffQuery = clone $this->dashboardQuery;
 			// Get Number of staff in an institution
-			$staffCount = $institutionStaffQuery->count();
+			$staffCount = $institutionStaffQuery->group($this->aliasField('staff_id'))->count();
 
 			unset($institutionStaffQuery);
 
@@ -1073,6 +1074,8 @@ class StaffTable extends ControllerActionTable {
             }
 
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
+
+            $this->setFieldOrder(['photo_content', 'openemis_no', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id']);
 		}
 	}
 
@@ -1292,12 +1295,11 @@ class StaffTable extends ControllerActionTable {
 			$currentYear = __('Not Defined');
 		}
 
-		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
+		$staffsByPositionConditions = ['Genders.name IS NOT NULL', $this->aliasField('academic_period_id') => $currentYearId];
 		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
 
 		$query = $this->find('all');
 		$staffByPositions = $query
-			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
 			->contain(['Users.Genders','Positions.StaffPositionTitles'])
 			->select([
 				'Positions.id',
