@@ -324,38 +324,10 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.academic_period_id">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input select required error" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Education Grade') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[education_grade_id]" id="staff-education-grade-id"
-                            ng-options="option.education_grade.name for option in InstitutionStaffController.educationGradeOptions.availableOptions track by option.id"
-                            ng-model="InstitutionStaffController.educationGradeOptions.selectedOption"
-                            ng-change="InstitutionStaffController.onChangeEducationGrade()"
-                            >
-                            <option value="" >-- <?= __('Select') ?> --</option>
-                        </select>
-                    </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.education_grade_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.education_grade_id">{{ error }}</p>
-                    </div>
-                </div>
-                <div class="input select" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Class') ?></label>
-                    <div class="input-select-wrapper">
-                        <select name="Staff[class]" id="staff-class"
-                            ng-options="option.name for option in InstitutionStaffController.classOptions.availableOptions track by option.id"
-                            ng-model="InstitutionStaffController.classOptions.selectedOption"
-                            ng-change="InstitutionStaffController.onChangeClass()"
-                            >
-                            <option value="" >-- <?= __('No Class Assignment') ?> --</option>
-                        </select>
-                    </div>
-                </div>
                 <div class="input string" ng-show="!InstitutionStaffController.completeDisabled">
                     <label><?= __('Staff Status') ?></label>
-                    <input type="string" value="<?= __('Pending Admission') ?>" disabled="disabled">
+                    <input type="string" value="<?= __('Assigned') ?>" disabled="disabled">
                 </div>
-
 
                 <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
                     <label for="Staff_start_date"><?= __('Start Date') ?></label>
@@ -368,10 +340,15 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
 
-
-                <div class="input text required" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label for="staff-end-date"><?= __('End Date') ?></label>
-                    <input ng-model="InstitutionStaffController.endDateFormatted" type="text" disabled="disabled">
+                <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
+                    <label for="Staff_end_date"><?= __('End Date') ?></label>
+                    <div class="input-group date " id="Staff_end_date" style="">
+                        <input type="text" class="form-control " name="Staff[end_date]" ng-model="InstitutionStaffController.endDate">
+                        <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.end_date" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.end_date">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="section-header" ng-show="InstitutionStaffController.completeDisabled"><?= __('Institution Information') ?></div>
                 <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
@@ -403,14 +380,16 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
 <script>
 $(function () {
 var datepicker0 = $('#Staff_start_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
-var datepicker1 = $('#Staffs_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
-var datepicker2 = $('#Staff_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+var datepicker1 = $('#Staff_end_date').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+var datepicker2 = $('#Staffs_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
+var datepicker3 = $('#Staff_date_of_birth').datepicker({"format":"dd-mm-yyyy","todayBtn":"linked","orientation":"auto","autoclose":true});
 $( document ).on('DOMMouseScroll mousewheel scroll', function(){
     window.clearTimeout( t );
     t = window.setTimeout( function(){
         datepicker0.datepicker('place');
         datepicker1.datepicker('place');
         datepicker2.datepicker('place');
+        datepicker3.datepicker('place');
     });
 });
 });
