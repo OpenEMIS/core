@@ -13,6 +13,7 @@ return [
         'Cache' => $baseDir . '/plugins/Cache/',
         'Configuration' => $baseDir . '/plugins/Configuration/',
         'ControllerAction' => $baseDir . '/plugins/ControllerAction/',
+        'CustomExcel' => $baseDir . '/plugins/CustomExcel/',
         'CustomField' => $baseDir . '/plugins/CustomField/',
         'DebugKit' => $baseDir . '/vendor/cakephp/debug_kit/',
         'Directory' => $baseDir . '/plugins/Directory/',
