@@ -24,9 +24,9 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
 	public function getFormFields($action = 'edit') {
 		if ($action=='edit') {
-			return ['code'=>'', 'name'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>''];
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>''];
 		} else {
-			return ['code'=>'', 'name'=>'', 'min'=>'', 'max'=>''];
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>''];
 		}
 	}
 
