@@ -310,6 +310,12 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label><?= __('Gender') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.gender.name" type="string" disabled="disabled">
                 </div>
+
+                <div class="input string" ng-show="!InstitutionStaffController.completeDisabled">
+                    <label><?= __('Staff Status') ?></label>
+                    <input type="string" value="<?= __('Assigned') ?>" disabled="disabled">
+                </div>
+
                 <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
                     <label><?= __('Academic Period') ?></label>
                     <div class="input-select-wrapper">
@@ -324,10 +330,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.academic_period_id">{{ error }}</p>
                     </div>
                 </div>
-                <div class="input string" ng-show="!InstitutionStaffController.completeDisabled">
-                    <label><?= __('Staff Status') ?></label>
-                    <input type="string" value="<?= __('Assigned') ?>" disabled="disabled">
-                </div>
 
                 <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
                     <label for="Staff_start_date"><?= __('Start Date') ?></label>
@@ -340,7 +342,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
 
-                <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
+                <div class="input date" ng-show="!InstitutionStaffController.completeDisabled">
                     <label for="Staff_end_date"><?= __('End Date') ?></label>
                     <div class="input-group date " id="Staff_end_date" style="">
                         <input type="text" class="form-control " name="Staff[end_date]" ng-model="InstitutionStaffController.endDate">
@@ -348,6 +350,24 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.end_date" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.end_date">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
+                    <label><?= __('Position Type') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[position_type]" id="staff-position-type"
+                            ng-model="InstitutionStaffController.positionType"
+                            ng-change="InstitutionStaffController.onChangePositionType()"
+                            ng-init="InstitutionStaffController.positionType = '';"
+                            >
+                            <option value="">-- <?= __('Select')?> --</option>
+                            <option value="Full-Time"> <?= __('Full-Time')?> </option>
+                            <option value="Part-Time"> <?= __('Part-Time')?> </option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.academic_period_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.academic_period_id">{{ error }}</p>
                     </div>
                 </div>
                 <div class="section-header" ng-show="InstitutionStaffController.completeDisabled"><?= __('Institution Information') ?></div>

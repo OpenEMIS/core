@@ -78,10 +78,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.reloadInternalDatasource = reloadInternalDatasource;
     StaffController.reloadExternalDatasource = reloadExternalDatasource;
     StaffController.clearInternalSearchFilters = clearInternalSearchFilters;
+    StaffController.onChangePositionType = onChangePositionType;
     StaffController.initialLoad = true;
     StaffController.date_of_birth = '';
 
     StaffController.selectedStaff;
+    StaffController.positionType = '';
     StaffController.addStaffButton = false;
     StaffController.selectedStaffData = null;
     StaffController.startDate = '';
@@ -226,6 +228,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.Staff.identity_type_name = options[i].name;
                 break;
             }
+        }
+    }
+
+    function onChangePositionType() {
+        if (StaffController.positionType == '') {
+
+        } else if (StaffController.positionType = 'Full-Time') {
+
+        } else if (StaffController.positionType = 'Part-Time') {
+
         }
     }
 
@@ -619,6 +631,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.selectedStaffData = value;
             }
         }, log);
+        console.log(StaffController.selectedStaffData);
     }
 
     function onChangeAcademicPeriod() {
@@ -628,10 +641,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.startDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
         }
 
-        var startDatePicker = angular.element(document.getElementById('Staffs_start_date'));
+        var startDatePicker = angular.element(document.getElementById('Staff_start_date'));
         startDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
         startDatePicker.datepicker("setEndDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.end_date));
         startDatePicker.datepicker("setDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
+        var endDatePicker = angular.element(document.getElementById('Staff_end_date'));
+        endDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
     }
 
     function postForm() {

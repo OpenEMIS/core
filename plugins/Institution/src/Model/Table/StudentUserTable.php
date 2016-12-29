@@ -52,7 +52,6 @@ class StudentUserTable extends ControllerActionTable
 		$this->addBehavior('Configuration.Pull');
 
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
-		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add']
         ]);
@@ -117,6 +116,7 @@ class StudentUserTable extends ControllerActionTable
 		]);
 
         $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students',    'foreignKey' => 'student_id', 'dependent' => true]);
+        $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff',    'foreignKey' => 'staff_id', 'dependent' => true]);
 		$model->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours',	'foreignKey' => 'student_id', 'dependent' => true]);
 		$model->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults',	'foreignKey' => 'student_id', 'dependent' => true]);
@@ -189,8 +189,8 @@ class StudentUserTable extends ControllerActionTable
 		$toolbarButtons = $extra['toolbarButtons'];
 
 		// Back button does not contain the pass
-		if (isset($this->request->pass[1])) {
-			$toolbarButtons['back']['url'][1] = $this->request->pass[1];
+		if ($this->action == 'edit' && !empty($this->paramsPass(0))) {
+			$toolbarButtons['back']['url'][1] = $this->paramsPass(0)	;
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
