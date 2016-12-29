@@ -313,6 +313,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         params['institution_id'] = institutionId;
         StaffUser.reset();
         StaffUser.find('Staff', params);
+        StaffUser.find('assignedInstitutionStaff', {'institution_id': institutionId});
         StaffUser.contain(['Genders']);
 
         return StaffUser.ajax({defer: true, success: success});
@@ -320,6 +321,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function getStaffData(id) {
         var vm = this;
+        var institutionId = vm.getInstitutionId();
         var success = function(response, deferred) {
             var studentData = response.data.data;
             if (angular.isObject(studentData) && studentData.length > 0) {
@@ -333,7 +335,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         var settings = {success: success, defer: true};
         return StaffUser
             .contain(['Genders', 'Identities.IdentityTypes'])
-            // .find('enrolledInstitutionStudents')
+            .find('assignedInstitutionStaff', {'institution_id': institutionId})
             .where({
                 id: id
             })
@@ -502,13 +504,15 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
     function getUserRecord(externalRef)
     {
+        var vm = this;
+        var institutionId = vm.getInstitutionId();
         return StaffUser
             .select()
             .where({
                 'external_reference': externalRef
             })
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('enrolledInstitutionStaffs')
+            .find('assignedInstitutionStaff', {'institution_id': institutionId})
             .ajax({defer: true});
     };
 
