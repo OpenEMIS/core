@@ -1076,10 +1076,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->toArray();
 
         $Students = TableRegistry::get('Institution.InstitutionClassStudents');
-        $conditions = [
-            $Students->aliasField('institution_class_id').' IN' => $classKeys,
-            $Students->aliasField('education_grade_id').' IN' => $grades
-        ];
+        if (!empty($grades)) {
+            $conditions[$Students->aliasField('education_grade_id').' IN'] = $grades;
+        }
+
+        $conditions[$Students->aliasField('institution_class_id').' IN'] = $classKeys;
         /**
          * Attempt to improve performance by filtering out includedStudents in $studentOptions through SQL query
          */

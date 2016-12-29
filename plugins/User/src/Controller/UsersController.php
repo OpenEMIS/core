@@ -7,6 +7,7 @@ use ArrayObject;
 use Cake\Routing\Router;
 use Firebase\JWT\JWT;
 use Cake\Utility\Security;
+use Cake\Core\Configure;
 
 class UsersController extends AppController
 {
@@ -147,8 +148,7 @@ class UsersController extends AppController
         return JWT::encode([
                     'sub' => $user['id'],
                     'exp' =>  time() + 10800
-                ],
-                Security::salt());
+                ], Configure::read('Application.private.key'), 'RS256');
     }
 
     public function afterIdentify(Event $event, $user)
