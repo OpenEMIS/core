@@ -24,19 +24,13 @@ class ExaminationItemResultsTable extends AppTable
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('ExaminationGradingOptions', ['className' => 'Examination.ExaminationGradingOptions']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['index', 'add']
         ]);
-    }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->academic_period_id . ',' . $entity->examination_id . ',' . $entity->examination_item_id . ',' . $entity->student_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
-        $this->getExamGrading($entity);
+        $this->addBehavior('CompositeKey');
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)

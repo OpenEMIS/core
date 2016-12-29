@@ -192,7 +192,7 @@
                                         </td>
                                         <td>
                                             <?php
-                                                if (empty($item->examination_item_results)) {
+                                                if (empty($item->student_results)) {
                                                     echo "<button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button>";
                                                 } else {
                                                     $message = __('There are results for this examination item');

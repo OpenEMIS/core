@@ -118,7 +118,7 @@ class ExaminationsTable extends ControllerActionTable {
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['ExaminationItems.ExaminationItemResults']);
+        $query->contain(['ExaminationItems.StudentResults']);
     }
 
     public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
@@ -143,7 +143,7 @@ class ExaminationsTable extends ControllerActionTable {
             foreach ($originalExamItems as $key => $item) {
                 if (!in_array($item['id'], $savedExamItems)) {
                     // check that there are no results for this examination item
-                    if (!$item->has('examination_item_results') || empty($item->examination_item_results)) {
+                    if (!$item->has('student_results') || empty($item->student_results)) {
                         $this->ExaminationItems->delete($item);
                         unset($entity->examination_items[$key]);
                     }
