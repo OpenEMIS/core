@@ -181,7 +181,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRooms = $entity->auto_assign_to_rooms;
                 $studentCount = 0;
                 $roomStudents = [];
@@ -199,7 +200,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
                         $studentCount++;
-                        foreach($ExaminationCentreSubjects as $examItemId => $subjectId) {
+                        foreach($examCentreSubjects as $examItemId => $subjectId) {
                             $obj['examination_item_id'] = $examItemId;
                             $obj['education_subject_id'] = $subjectId;
                             $newEntities[] = $obj;

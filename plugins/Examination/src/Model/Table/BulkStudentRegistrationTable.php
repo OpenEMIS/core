@@ -329,7 +329,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $studentCount = 0;
                 $roomStudents = [];
                 foreach ($students as $key => $student) {
@@ -346,7 +347,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
                         $studentCount++;
-                        foreach($ExaminationCentreSubjects as $examItemId => $subjectId) {
+                        foreach($examCentreSubjects as $examItemId => $subjectId) {
                             $obj['examination_item_id'] = $examItemId;
                             $obj['education_subject_id'] = $subjectId;
                             $newEntities[] = $obj;
