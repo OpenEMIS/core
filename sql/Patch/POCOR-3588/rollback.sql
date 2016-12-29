@@ -16,7 +16,7 @@ RENAME TABLE `z_3588_examination_centre_subjects` TO `examination_centre_subject
 
 -- import_mapping
 UPDATE `import_mapping`
-SET `column_name` = 'education_subject_id', `lookup_plugin` = 'Education', `lookup_model` = 'EducationSubjects'
+SET `column_name` = 'education_subject_id', `description` = 'Code', `lookup_plugin` = 'Education', `lookup_model` = 'EducationSubjects', `lookup_column` = 'code'
 WHERE `model` = 'Examination.ExaminationItemResults' AND `column_name` = 'examination_item_id';
 
 -- db_patches
