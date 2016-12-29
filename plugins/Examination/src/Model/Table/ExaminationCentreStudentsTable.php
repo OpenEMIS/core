@@ -33,6 +33,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('CompositeKey');
     }
 
     public function validationDefault(Validator $validator)
@@ -66,14 +67,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     {
         if ($this->action == 'add') {
             $Navigation->substituteCrumb('Registered Students', 'Single Student Registration');
-        }
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ',' . $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
         }
     }
 

@@ -17,13 +17,7 @@ class ExaminationCentreRoomsInvigilatorsTable extends AppTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-	}
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_room_id . ',' . $entity->invigilator_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
-    }
+        $this->addBehavior('CompositeKey');
+	}
 }

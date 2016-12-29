@@ -30,6 +30,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->toggle('index', false);
+
+        $this->addBehavior('CompositeKey');
     }
 
     public function implementedEvents() {
@@ -54,14 +56,6 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
             ])
             ->requirePresence('institution_id')
             ->requirePresence('auto_assign_to_rooms');
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
