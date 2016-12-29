@@ -32,10 +32,13 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
+
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['index', 'add']
         ]);
+        $this->addBehavior('CompositeKey');
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
     }
@@ -67,14 +70,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Exam Centre Students', 'Exam Centres', $overviewUrl);
         $Navigation->addCrumb('Students');
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ',' . $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

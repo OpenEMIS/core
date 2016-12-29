@@ -32,6 +32,9 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
+
+        $this->addBehavior('CompositeKey');
+
         $this->toggle('index', false);
         $this->toggle('edit', false);
         $this->toggle('view', false);
@@ -64,14 +67,6 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Linked Institution Add Students', 'Exam Centres', $overviewUrl);
         $Navigation->addCrumb('Students');
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
