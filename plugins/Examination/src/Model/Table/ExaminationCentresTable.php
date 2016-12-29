@@ -1011,15 +1011,17 @@ class ExaminationCentresTable extends ControllerActionTable {
         if (is_array($examinationItems)) {
             foreach($examinationItems as $item) {
                 $examinationCentreSubjects[] = [
-                    'examination_id' => $examinationId,
-                    'academic_period_id' => $academicPeriodId,
-                    'education_subject_id' => $item->education_subject_id,
-                    'examination_item_id' => $item->id,
+                    'id' => $item->id,
+                    '_joinData' => [
+                        'examination_id' => $examinationId,
+                        'academic_period_id' => $academicPeriodId,
+                        'education_subject_id' => $item->education_subject_id,
+                    ]
                 ];
             }
         }
 
-        $requestData[$this->alias()]['examination_centre_subjects'] = $examinationCentreSubjects;
+        $requestData[$this->alias()]['examination_items'] = $examinationCentreSubjects;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
