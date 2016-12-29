@@ -16,14 +16,8 @@ class ExaminationCentreSubjectsTable extends AppTable {
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-    }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
+        $this->addBehavior('CompositeKey');
     }
 
     public function getExaminationCentreSubjects($examinationCentreId)
