@@ -32,6 +32,9 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
+
+        $this->addBehavior('CompositeKey');
+
         $this->toggle('index', false);
         $this->toggle('edit', false);
         $this->toggle('view', false);
@@ -64,14 +67,6 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Linked Institution Add Students', 'Exam Centres', $overviewUrl);
         $Navigation->addCrumb('Students');
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -186,7 +181,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRooms = $entity->auto_assign_to_rooms;
                 $studentCount = 0;
                 $roomStudents = [];
@@ -204,7 +200,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
                         $studentCount++;
-                        foreach($ExaminationCentreSubjects as $examItemId => $subjectId) {
+                        foreach($examCentreSubjects as $examItemId => $subjectId) {
                             $obj['examination_item_id'] = $examItemId;
                             $obj['education_subject_id'] = $subjectId;
                             $newEntities[] = $obj;
