@@ -1,0 +1,46 @@
+-- db_patches
+INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3527', NOW());
+
+RENAME TABLE `db_patches` TO `system_patches`;
+
+CREATE TABLE IF NOT EXISTS `system_updates` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `version` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `date_released` date NOT NULL,
+  `date_approved` date DEFAULT NULL,
+  `approved_by` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
+  `status` int(11) NOT NULL,
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `system_updates` ADD UNIQUE(`version`);
+
+
+INSERT INTO config_items (id, name, code, type, label, value, default_value, editable, visible, field_type, option_type, created_user_id, created) VALUES
+(200, 'Version Support Emails', 'version_support_emails', 'System', 'Version Support Emails', 'support@openemis.org,shasanuddin@kordit.com', 'support@openemis.org', 0, 0, '', '', 1, NOW()),
+(201, 'Version API Domain', 'version_api_domain', 'System', 'Version API Domain', 'https://demo.openemis.org/core', 'https://demo.openemis.org/core', 0, 0, '', '', 1, NOW());
+
+TRUNCATE TABLE system_updates;
+INSERT INTO system_updates
+SELECT
+NULL,
+version,
+created,
+created,
+1,
+2,
+null, null, 1, created
+FROM system_patches
+WHERE version IS NOT NULL
+AND NOT EXISTS (
+  SELECT 1 FROM system_updates WHERE system_updates.version = system_patches.version
+)
+GROUP BY version
+ORDER BY created ASC, version ASC
+
+
+
