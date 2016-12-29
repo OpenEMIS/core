@@ -70,7 +70,7 @@ class ImportResultsTable extends AppTable
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
         $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
-        $selectFields = [$lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('weight')];
+        $selectFields = [$lookedUpTable->aliasField('code'), $lookedUpTable->aliasField('name'), $lookedUpTable->aliasField($lookupColumn), $lookedUpTable->aliasField('weight')];
         // show distinct list of subjects which are added as exam items and subject weight is more than zero
         $modelData = $ExaminationCentreSubjects->find('all')
             ->select($selectFields)
@@ -80,12 +80,13 @@ class ImportResultsTable extends AppTable
             ->order($order);
 
         $translatedReadableCol = $this->getExcelLabel($lookedUpTable, 'name');
-        $data[$columnOrder]['lookupColumn'] = 2;
-        $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
+        $data[$columnOrder]['lookupColumn'] = 3;
+        $data[$columnOrder]['data'][] = [$translatedReadableCol, __('Code'), $translatedCol];
         if (!empty($modelData)) {
             foreach($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->_matchingData[$lookedUpTable->alias()]->name,
+                    $row->_matchingData[$lookedUpTable->alias()]->code,
                     $row->_matchingData[$lookedUpTable->alias()]->$lookupColumn
                 ];
             }
