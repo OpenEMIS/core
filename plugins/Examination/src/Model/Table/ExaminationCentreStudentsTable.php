@@ -33,6 +33,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('CompositeKey');
     }
 
     public function validationDefault(Validator $validator)
@@ -66,14 +67,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     {
         if ($this->action == 'add') {
             $Navigation->substituteCrumb('Registered Students', 'Single Student Registration');
-        }
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ',' . $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
         }
     }
 
@@ -475,7 +468,8 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             if (empty($entity->errors())) {
                 // get subjects for exam centre
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRoom = $requestData[$this->alias()]['auto_assign_to_room'];
 
                 // check if candidate is a current student
@@ -492,7 +486,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                     ->first();
 
                 $newEntities = [];
-                foreach ($ExaminationCentreSubjects as $examItemId => $subjectId) {
+                foreach ($examCentreSubjects as $examItemId => $subjectId) {
                     $obj['examination_centre_id'] = $requestData[$this->alias()]['examination_centre_id'];
                     $obj['student_id'] = $requestData[$this->alias()]['student_id'];
                     $obj['examination_item_id'] = $examItemId;

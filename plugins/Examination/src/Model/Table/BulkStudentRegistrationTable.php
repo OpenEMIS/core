@@ -30,6 +30,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->toggle('index', false);
+
+        $this->addBehavior('CompositeKey');
     }
 
     public function implementedEvents() {
@@ -54,14 +56,6 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
             ])
             ->requirePresence('institution_id')
             ->requirePresence('auto_assign_to_rooms');
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->examination_item_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -335,7 +329,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $studentCount = 0;
                 $roomStudents = [];
                 foreach ($students as $key => $student) {
@@ -352,7 +347,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
                         $studentCount++;
-                        foreach($ExaminationCentreSubjects as $examItemId => $subjectId) {
+                        foreach($examCentreSubjects as $examItemId => $subjectId) {
                             $obj['examination_item_id'] = $examItemId;
                             $obj['education_subject_id'] = $subjectId;
                             $newEntities[] = $obj;

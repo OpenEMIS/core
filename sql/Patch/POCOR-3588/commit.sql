@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `examination_items` (
 INSERT INTO `examination_items` (`name`, `code`, `weight`, `examination_date`, `start_time`, `end_time`, `examination_id`, `education_subject_id`, `examination_grading_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `Subjects`.`name`, `Subjects`.`code`, `Items`.`weight`, `Items`.`examination_date`, `Items`.`start_time`, `Items`.`end_time`, `Items`.`examination_id`, `Items`.`education_subject_id`, `Items`.`examination_grading_type_id`, `Items`.`modified_user_id`, `Items`.`modified`, `Items`.`created_user_id`, `Items`.`created`
 FROM `z_3588_examination_items` `Items`
-LEFT JOIN `education_subjects` `Subjects`
+INNER JOIN `education_subjects` `Subjects`
 ON `Subjects`.`id` = `Items`.`education_subject_id`;
 
 -- examination_item_results
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `examination_item_results` (
 INSERT INTO `examination_item_results` (`id`, `marks`, `academic_period_id`, `examination_id`, `examination_item_id`, `student_id`, `education_subject_id`, `examination_centre_id`, `examination_grading_option_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT sha2(CONCAT(`Results`.`academic_period_id`, ',', `Results`.`examination_id`, ',', `Items`.`id`, ',', `Results`.`student_id`), '256'), `Results`.`marks`, `Results`.`academic_period_id`, `Results`.`examination_id`, `Items`.`id`, `Results`.`student_id`, `Results`.`education_subject_id`, `Results`.`examination_centre_id`, `Results`.`examination_grading_option_id`, `Results`.`institution_id`, `Results`.`modified_user_id`, `Results`.`modified`, `Results`.`created_user_id`, `Results`.`created`
 FROM `z_3588_examination_item_results` `Results`
-LEFT JOIN `examination_items` `Items`
+INNER JOIN `examination_items` `Items`
 ON (`Results`.`examination_id` = `Items`.`examination_id`
 AND `Results`.`education_subject_id` = `Items`.`education_subject_id`);
 
@@ -109,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `examination_centre_students` (
 INSERT INTO `examination_centre_students` (`id`, `registration_number`, `total_mark`, `examination_centre_id`, `student_id`, `examination_item_id`, `education_subject_id`, `institution_id`, `education_grade_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT sha2(CONCAT(`Students`.`examination_centre_id`, ',', `Students`.`student_id`, ',', `Items`.`id`), '256'), `Students`.`registration_number`, `Students`.`total_mark`, `Students`.`examination_centre_id`, `Students`.`student_id`, `Items`.`id`, `Students`.`education_subject_id`, `Students`.`institution_id`, `Students`.`education_grade_id`, `Students`.`academic_period_id`, `Students`.`examination_id`, `Students`.`modified_user_id`, `Students`.`modified`, `Students`.`created_user_id`, `Students`.`created`
 FROM `z_3588_examination_centre_students` `Students`
-LEFT JOIN `examination_items` `Items`
+INNER JOIN `examination_items` `Items`
 ON (`Students`.`examination_id` = `Items`.`examination_id`
 AND `Students`.`education_subject_id` = `Items`.`education_subject_id`);
 
@@ -141,12 +141,12 @@ CREATE TABLE IF NOT EXISTS `examination_centre_subjects` (
 INSERT INTO `examination_centre_subjects` (`id`, `examination_centre_id`, `examination_item_id`, `education_subject_id`, `academic_period_id`, `examination_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT sha2(CONCAT(`CentreSubjects`.`examination_centre_id`, ',', `Items`.`id`), '256'), `CentreSubjects`.`examination_centre_id`, `Items`.`id`, `CentreSubjects`.`education_subject_id`, `CentreSubjects`.`academic_period_id`, `CentreSubjects`.`examination_id`, `CentreSubjects`.`modified_user_id`, `CentreSubjects`.`modified`, `CentreSubjects`.`created_user_id`, `CentreSubjects`.`created`
 FROM `z_3588_examination_centre_subjects` `CentreSubjects`
-LEFT JOIN `examination_items` `Items`
+INNER JOIN `examination_items` `Items`
 ON (`CentreSubjects`.`examination_id` = `Items`.`examination_id`
 AND `CentreSubjects`.`education_subject_id` = `Items`.`education_subject_id`);
 
 -- import_mapping
 UPDATE `import_mapping`
-SET `column_name` = 'examination_item_id', `lookup_plugin` = 'Examination', `lookup_model` = 'ExaminationItems'
+SET `column_name` = 'examination_item_id', `description` = 'Id', `lookup_plugin` = 'Examination', `lookup_model` = 'ExaminationItems', `lookup_column` = 'id'
 WHERE `model` = 'Examination.ExaminationItemResults' AND `column_name` = 'education_subject_id';
 
