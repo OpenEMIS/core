@@ -28,10 +28,8 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('LinkedInstitutions', [
             'className' => 'Institution.Institutions',
@@ -47,6 +45,24 @@ class ExaminationCentresTable extends ControllerActionTable {
             'foreignKey' => 'examination_centre_id',
             'targetForeignKey' => 'invigilator_id',
             'through' => 'Examination.ExaminationCentresInvigilators',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->belongsToMany('ExaminationItems', [
+            'className' => 'Examination.ExaminationItems',
+            'joinTable' => 'examination_centre_subjects',
+            'foreignKey' => 'examination_centre_id',
+            'targetForeignKey' => 'examination_item_id',
+            'through' => 'Examination.ExaminationCentreSubjects',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->belongsToMany('Students', [
+            'className' => 'User.Users',
+            'joinTable' => 'examination_centre_students',
+            'foreignKey' => 'examination_centre_id',
+            'targetForeignKey' => 'student_id',
+            'through' => 'Examination.ExaminationCentreStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -298,7 +314,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query
-            ->contain(['ExaminationCentreSubjects.EducationSubjects', 'ExaminationCentreSubjects.ExaminationItems'])
+            ->contain(['ExaminationItems.EducationSubjects'])
             ->contain(['ExaminationCentreSpecialNeeds.SpecialNeedTypes'])
             ->contain(['ExaminationCentreRooms.Students'])
             ->contain([
@@ -327,16 +343,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         $this->controller->set('contentHeader', $this->examCentreName. ' - ' .__('Overview'));
 
         $this->controller->getExamCentresTab();
-    }
-
-
-    public function editOnInitialize(Event $event, Entity $entity)
-    {
-        $subjects = [];
-        foreach ($entity->examination_centre_subjects as $subject) {
-            $subjects[] = $subject->education_subject_id;
-        }
-        $this->request->data[$this->alias()]['subjects']['_ids'] = $subjects;
     }
 
     public function editOnAddInvigilator(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -603,15 +609,15 @@ class ExaminationCentresTable extends ControllerActionTable {
         } else if ($action == 'edit') {
             $entity = $attr['entity'];
             $subjects = [];
-            foreach ($entity->examination_centre_subjects as $subject) {
+            foreach ($entity->examination_items as $item) {
                 $educationSubject = '';
-                if ($subject->has('education_subject') && $subject->education_subject->has('name')) {
-                    $educationSubject = $subject->education_subject->name;
+                if ($item->has('education_subject') && $item->education_subject->has('name')) {
+                    $educationSubject = $item->education_subject->name;
                 }
 
                 $subjects[] = [
-                    'item_code' => $subject->examination_item->code,
-                    'item_name' => $subject->examination_item->name,
+                    'item_code' => $item->code,
+                    'item_name' => $item->name,
                     'education_subject' => $educationSubject
                 ];
             }
@@ -991,7 +997,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         $examinationId = $requestData[$this->alias()]['examination_id'];
 
         // Subjects logic
-        // $subjects = $requestData[$this->alias()]['subjects'];
         $ExaminationItemsTable = $this->Examinations->ExaminationItems;
         $examinationItems = $ExaminationItemsTable
                 ->find()

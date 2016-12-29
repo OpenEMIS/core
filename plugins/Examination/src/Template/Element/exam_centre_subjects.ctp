@@ -13,12 +13,12 @@
                 <th><?= __('Name') ?></th>
                 <th><?= __('Education Subject') ?></th>
             </thead>
-            <?php if (isset($data['examination_centre_subjects'])) : ?>
+            <?php if (isset($data['examination_items'])) : ?>
                 <tbody>
-                    <?php foreach ($data['examination_centre_subjects'] as $i => $item) : ?>
+                    <?php foreach ($data['examination_items'] as $i => $item) : ?>
                         <tr>
-                            <td><?= $item->examination_item->code; ?></td>
-                            <td><?= $item->examination_item->name; ?></td>
+                            <td><?= $item->code; ?></td>
+                            <td><?= $item->name; ?></td>
                             <td>
                                 <?php
                                     if ($item->has('education_subject') && $item->education_subject->has('name')) {
