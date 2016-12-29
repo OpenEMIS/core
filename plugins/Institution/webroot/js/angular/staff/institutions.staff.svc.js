@@ -21,7 +21,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getAcademicPeriods: getAcademicPeriods,
         getColumnDefs: getColumnDefs,
         getStaffData: getStaffData,
-        postEnrolledStaff: postEnrolledStaff,
+        postAssignedStaff: postAssignedStaff,
         getExternalSourceUrl: getExternalSourceUrl,
         addUser: addUser,
         makeDate: makeDate,
@@ -54,6 +54,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         Genders: 'User.Genders',
         StaffAssignment: 'Institution.StaffTransferRequests',
         StaffUser: 'Institution.StaffUser',
+        StaffRecord: 'Institution.Staff',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
@@ -313,13 +314,12 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         params['institution_id'] = institutionId;
         StaffUser.reset();
         StaffUser.find('Staff', params);
-        StaffUser.find('assignedInstitutionStaff', {'institution_id': institutionId});
         StaffUser.contain(['Genders']);
 
         return StaffUser.ajax({defer: true, success: success});
     };
 
-    function getStaffData(id) {
+    function getStaffData(id, academicPeriodId) {
         var vm = this;
         var institutionId = vm.getInstitutionId();
         var success = function(response, deferred) {
@@ -335,7 +335,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         var settings = {success: success, defer: true};
         return StaffUser
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('assignedInstitutionStaff', {'institution_id': institutionId})
+            .find('assignedInstitutionStaff', {'institution_id': institutionId, 'academic_period_id': academicPeriodId})
             .where({
                 id: id
             })
@@ -432,7 +432,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                     identityType = userRecord[attr['identity_type_mapping']];
                 }
 
-                vm.getUserRecord(newUserRecord['external_reference'])
+                vm.getUserRecord(newUserRecord['external_reference'], newUserRecord['academic_period_id'])
                 .then(function(response) {
                     if (response.data.length > 0) {
                         userData = response.data[0];
@@ -502,7 +502,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     };
 
-    function getUserRecord(externalRef)
+    function getUserRecord(externalRef, academicPeriodId)
     {
         var vm = this;
         var institutionId = vm.getInstitutionId();
@@ -512,7 +512,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                 'external_reference': externalRef
             })
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('assignedInstitutionStaff', {'institution_id': institutionId})
+            .find('assignedInstitutionStaff', {'institution_id': institutionId, 'academic_period_id': academicPeriodId})
             .ajax({defer: true});
     };
 
@@ -658,18 +658,13 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success:success, defer: true});
     };
 
-    function postEnrolledStaff(data) {
+    function postAssignedStaff(data) {
         var institutionId = this.getInstitutionId();
         data['institution_id'] = institutionId;
-        data['student_status_id'] = 1;
-        data['previous_institution_id'] = 0;
-        data['student_transfer_reason_id'] = 0;
-        data['type'] = 1;
-        data['status'] = 0;
+        data['staff_status_id'] = 1;
         data['start_date'] = this.formatDateForSaving(data['start_date']);
         data['end_date'] = this.formatDateForSaving(data['end_date']);
-        data['institution_class_id'] = data['class'];
-        return StaffRecords.save(data)
+        return StaffRecord.save(data)
     };
 
     function setInstitutionId(id) {

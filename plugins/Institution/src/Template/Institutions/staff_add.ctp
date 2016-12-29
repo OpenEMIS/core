@@ -299,8 +299,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string">
                     <label><?= __('Date of Birth') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" type="string" disabled="disabled">
-                    <div ng-if="InstitutionStaffController.postResponse.error.student_name" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.student_name">{{ error }}</p>
+                    <div ng-if="InstitutionStaffController.postResponse.error.staff_name" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_name">{{ error }}</p>
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.date_of_birth" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.date_of_birth">{{ error }}</p>

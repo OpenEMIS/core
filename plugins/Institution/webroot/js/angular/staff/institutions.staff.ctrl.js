@@ -186,8 +186,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .finally(function(result) {
             $scope.initGrid();
             UtilsSvc.isAppendLoader(false);
-            if ($location.search().student_added) {
-                AlertSvc.success($scope, 'The student is added to the Pending Admission list successfully.');
+            if ($location.search().staff_added) {
+                AlertSvc.success($scope, 'The staff is added successfully.');
             }
         });
 
@@ -509,48 +509,51 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return studentRecords;
     }
 
-    function insertStaffData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, userRecord) {
+    function insertStaffData(staffId, academicPeriodId, startDate, endDate, userRecord) {
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
         var data = {
-            student_id: studentId,
-            student_name: studentId,
+            staff_id: staffId,
+            staff_name: staffId,
             academic_period_id: academicPeriodId,
-            education_grade_id: educationGradeId,
             start_date: startDate,
             end_date: endDate
         };
 
-        if (classId != null) {
-            data['class'] = classId;
-        }
-
-        InstitutionsStaffSvc.postEnrolledStaff(data)
-        .then(function(postResponse) {
-            StaffController.postResponse = postResponse.data;
+        InstitutionsStaffSvc.getStaffData(staffId, academicPeriodId)
+        .then(function(staffData) {
             UtilsSvc.isAppendLoader(false);
-            if (postResponse.data.error.length === 0) {
-                AlertSvc.success($scope, 'The student is added to the Pending Admission list successfully.');
-                $window.location.href = 'add?student_added=true';
-            } else {
-                if (userRecord.hasOwnProperty('institution_students')) {
-                    if (userRecord.institution_students.length > 0) {
-                        var schoolName = userRecord['institution_students'][0]['institution']['name'];
-                        AlertSvc.warning($scope, 'Student is already enrolled in ' + schoolName);
-                        userRecord.date_of_birth = InstitutionsStaffSvc.formatDate(userRecord.date_of_birth);
-                        StaffController.selectedStaffData = userRecord;
-                        StaffController.completeDisabled = true;
-                    } else {
-                        AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                    }
-                } else {
-                    AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                }
-            }
+            console.log(staffData);
         }, function(error) {
-            console.log(error);
-            AlertSvc.warning($scope, error);
+            UtilsSvc.isAppendLoader(false);
         });
+
+        // InstitutionsStaffSvc.postAssignedStaff(data)
+        // .then(function(postResponse) {
+        //     StaffController.postResponse = postResponse.data;
+        //     UtilsSvc.isAppendLoader(false);
+        //     if (postResponse.data.error.length === 0) {
+        //         AlertSvc.success($scope, 'The staff is added successfully.');
+        //         $window.location.href = 'add?staff_added=true';
+        //     } else {
+        //         if (userRecord.hasOwnProperty('institution_students')) {
+        //             if (userRecord.institution_students.length > 0) {
+        //                 var schoolName = userRecord['institution_students'][0]['institution']['name'];
+        //                 AlertSvc.warning($scope, 'Staff is already added in ' + schoolName);
+        //                 userRecord.date_of_birth = InstitutionsStaffSvc.formatDate(userRecord.date_of_birth);
+        //                 StaffController.selectedStaffData = userRecord;
+        //                 StaffController.completeDisabled = true;
+        //             } else {
+        //                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+        //             }
+        //         } else {
+        //             AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+        //         }
+        //     }
+        // }, function(error) {
+        //     console.log(error);
+        //     AlertSvc.warning($scope, error);
+        // });
     }
 
     function onAddNewStaffClick() {
@@ -631,7 +634,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.selectedStaffData = value;
             }
         }, log);
-        console.log(StaffController.selectedStaffData);
     }
 
     function onChangeAcademicPeriod() {
@@ -639,6 +641,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
             StaffController.startDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
+            console.log(StaffController.startDate);
         }
 
         var startDatePicker = angular.element(document.getElementById('Staff_start_date'));
@@ -652,7 +655,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function postForm() {
 
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
-        var educationGradeId = (StaffController.educationGradeOptions.hasOwnProperty('selectedOption'))? StaffController.educationGradeOptions.selectedOption.education_grade_id: '';
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
@@ -668,10 +670,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 var studentData = StaffController.selectedStaffData;
                 var amendedStaffData = Object.assign({}, studentData);
                 amendedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(amendedStaffData.date_of_birth);
-                StaffController.addStaffUser(amendedStaffData, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                StaffController.addStaffUser(amendedStaffData, academicPeriodId, startDate, endDate);
             } else {
-                var studentId = StaffController.selectedStaff;
-                StaffController.insertStaffData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
+                var staffId = StaffController.selectedStaff;
+                StaffController.insertStaffData(staffId, academicPeriodId, startDate, endDate, {});
             }
         } else {
             console.log('postForm');
@@ -707,24 +709,23 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 delete studentData['modified_user_id'];
                 delete studentData['created'];
                 delete studentData['created_user_id'];
-                StaffController.addStaffUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                StaffController.addStaffUser(studentData, academicPeriodId, startDate, endDate);
             }
         }
     }
 
-    function addStaffUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate) {
+    function addStaffUser(studentData, academicPeriodId, startDate, endDate) {
 
         var newStaffData = studentData;
         newStaffData['academic_period_id'] = academicPeriodId;
-        newStaffData['education_grade_id'] = educationGradeId;
         newStaffData['start_date'] = startDate;
         newStaffData['nationality_id'] = StaffController.Staff.nationality_id;
         newStaffData['identity_type_id'] = StaffController.Staff.identity_type_id;
         InstitutionsStaffSvc.addUser(newStaffData)
         .then(function(user){
             if (user[0].error.length === 0) {
-                var studentId = user[0].data.id;
-                StaffController.insertStaffData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, user[1]);
+                var staffId = user[0].data.id;
+                StaffController.insertStaffData(staffId, academicPeriodId, startDate, endDate, user[1]);
             } else {
                 StaffController.postResponse = user[0];
                 console.log(user[0]);
