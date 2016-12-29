@@ -257,13 +257,13 @@ class StaffUserTable extends ControllerActionTable {
         return $query;
     }
 
-    // needs to migrate
     public function findAssignedInstitutionStaff(Query $query, array $options = []) {
         $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
 
         $query->contain([
-            'InstitutionStaff' => function($q) use ($institutionId) {
-                return $q->where(['InstitutionStaff.staff_status_id' => 1, 'InstitutionStaff.institution_id <>' => $institutionId]);
+            'InstitutionStaff' => function($q) use ($institutionId, $academicPeriodId) {
+                return $q->where(['InstitutionStaff.staff_status_id' => 1, 'InstitutionStaff.academic_period_id' => $academicPeriodId, 'InstitutionStaff.institution_id <>' => $institutionId]);
             },
             'InstitutionStaff.Institutions.Areas'
         ]);
