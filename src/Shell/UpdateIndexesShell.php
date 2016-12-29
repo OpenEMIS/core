@@ -17,7 +17,7 @@ class UpdateIndexesShell extends Shell
         $this->loadModel('Institution.StudentIndexesCriterias');
         $this->loadModel('Indexes.IndexesCriterias');
         $this->loadModel('Indexes.Indexes');
-
+        $this->loadModel('Institution.Students');
     }
 
     public function main()
@@ -26,52 +26,76 @@ class UpdateIndexesShell extends Shell
         $userId = !empty($this->args[1]) ? $this->args[1] : 0;
         $indexId = !empty($this->args[2]) ? $this->args[2] : 0;
 
-        $today = Time::now();
+        $indexesCriteriaData = $this->IndexesCriterias->getCriteriaKey($indexId);
 
-        // update the generated_by and generated_on in indexes table
-        $this->Indexes->query()
-            ->update()
-            ->set([
-                'generated_by' => $userId,
-                'generated_on' => $today
-            ])
-            ->execute();
+        if (!empty($indexesCriteriaData)) {
+            foreach ($indexesCriteriaData as $key => $obj) {
+                $criteriaData = $this->Indexes->getCriteriasDetails($key);
+                $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId);
+            }
 
-        $criteriaKey = $this->Indexes->getCriteriasOptions();
-
-        foreach ($criteriaKey as $key => $obj) {
-            $this->autoUpdateIndexes($key, $obj, $institutionId, $userId);
+            // update the generated_by and generated_on in indexes table
+            $today = Time::now();
+            $this->Indexes->query()
+                ->update()
+                ->set([
+                    'generated_by' => $userId,
+                    'generated_on' => $today
+                ])
+                ->execute();
         }
     }
 
-    public function autoUpdateIndexes($key, $obj, $institutionId=0, $userId=0)
+    public function autoUpdateIndexes($key, $model, $institutionId=0, $userId=0)
     {
         $today = Time::now();
-        $CriteriaModel = TableRegistry::get($key);
+        $CriteriaModel = TableRegistry::get($model);
 
-        // $excludedModel = ['StudentUser', 'Guardians'];// doesnt have institution Id in the table.
-// pr($excludedModel);die;
-        // if (!empty($institutionId)) {
-        //     if (!in_array($obj, $CriteriaModel)) {
-        //         $condition = [$CriteriaModel->aliasField('institution_id') => $institutionId];
-        //     } else {
-        //         // model dont have institution Id. (security_user, student_guardians)
-        //         $condition = [];
-        //     }
-        // } else {
-            // dont have institution Id (from administrator > generate)
+        if (!empty($institutionId)) {
+            $institutionStudentsResults = $this->Students->find()
+                ->where([
+                    'institution_id' => $institutionId,
+                    'student_status_id' => 1 //enrolled status
+                ])
+                ->all();
+
+            // list of enrolled student in the institution
+            $institutionStudentsList = [];
+            foreach ($institutionStudentsResults as $institutionStudentsResultsKey => $institutionStudentsResultsObj) {
+                $institutionStudentsList[] = $institutionStudentsResultsObj->student_id;
+            }
+
+            switch ($key) {
+                case 'Genders':
+                    $condition = [$CriteriaModel->aliasField('id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                case 'Guardians':
+                    $condition = [$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                case 'Special Needs':
+                    $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                default: // have institution_id in the model table
+                    $condition = [$CriteriaModel->aliasField('institution_id') => $institutionId];
+                    break;
+            }
+        } else {
+            // dont have institution Id (from Administrator > Indexes > generate)
             $condition = [];
-        // }
+        }
 
         $criteriaModelResults = $CriteriaModel->find()
             ->where([$condition])
             ->all();
 
-        foreach ($criteriaModelResults as $key => $criteriaModelEntity) {
+        foreach ($criteriaModelResults as $criteriaModelResultsKey => $criteriaModelEntity) {
             $criteriaModelEntityId = $criteriaModelEntity->id;
 
             // will triggered the aftersave of the model (indexes behavior)
-            $criteriaModelEntity->dirty('comment', true);
+            $criteriaModelEntity->dirty('modified_user_id', true);
             $CriteriaModel->save($criteriaModelEntity);
 
             // update the institution student index
