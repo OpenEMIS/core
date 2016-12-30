@@ -9,10 +9,10 @@ CREATE TABLE IF NOT EXISTS `system_updates` (
   `date_released` date NOT NULL,
   `date_approved` date DEFAULT NULL,
   `approved_by` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
-  `status` int(11) NOT NULL,
+  `status` int(11) NOT NULL DEFAULT 1,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
-  `created_user_id` int(11) NOT NULL,
+  `created_user_id` int(11) NOT NULL DEFAULT 1,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -43,4 +43,11 @@ GROUP BY version
 ORDER BY created ASC, version ASC
 
 
+-- Add below into version commit.sql at the end of the script
 
+-- INSERT INTO system_updates (id, version, date_released, date_approved, approved_by, created) VALUES
+-- (
+--   NULL,
+--   (SELECT value FROM config_items WHERE code = 'db_version'),
+--   NOW(), NOW(), 1, NOW()
+-- );
