@@ -1706,4 +1706,57 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
+
+	public static function checkStaffAssignment($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$staffId = $data['staff_id'];
+		$startDate = new Date($data['start_date']);
+
+		// check if staff is already assigned
+		$StaffTable = TableRegistry::get('Institution.Staff');
+		$staffRecord = $StaffTable->find()
+			->contain(['Institutions'])
+			->where([
+				$StaffTable->aliasField('staff_id') => $staffId,
+				$StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
+				'OR' => [
+					[$this->aliasField('end_date').' >= ' => $startDate],
+					[$this->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$this->aliasField('created') => 'DESC'])
+			->first();
+
+		if ($staffRecord) {
+			// For staff transfer
+			$pending = 0;
+			$approved = 1;
+			$StaffTransferRequestsTable = TableRegistry::get('Institution.StaffTransferRequests');
+			$transferRecord = $StaffTransferRequestsTable->find()
+				->where([
+					$StaffTransferRequestsTable->aliasField('staff_id') => $staffId,
+					$StaffTransferRequestsTable->aliasField('status').' IN ' => [$pending, $approved]
+				]);
+
+			return false;
+			// if ($transferRecord->count() == 0) {
+			// 	if ($data['institution_id'] != $staffRecord->institution_id) {
+			// 		$data[$this->alias()]['institution_id'] = $entity->institution_id;
+			// 		$data[$this->alias()]['previous_institution_id'] = $staffRecord->institution_id;
+			// 		$data[$this->alias()]['transfer_from'] = $staffRecord->institution->name;
+			// 		$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
+			// 		$event->stopPropagation();
+			// 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
+			// 		return $this->controller->redirect($action);
+			// 	}
+			// } else {
+			// 	$event->stopPropagation();
+			// 	$this->Alert->error('Staff.transferExists');
+			// 	$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
+			// 	return $this->controller->redirect($action);
+			// }
+		}
+		return true;
+	}
 }

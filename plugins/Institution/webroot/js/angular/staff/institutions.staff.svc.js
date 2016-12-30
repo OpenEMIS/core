@@ -47,7 +47,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality,
-        getExternalSourceMapping: getExternalSourceMapping
+        getExternalSourceMapping: getExternalSourceMapping,
+        getPositionList: getPositionList
     };
 
     var models = {
@@ -749,6 +750,20 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             filterParams: filterParams
         });
     };
+
+    function getPositionList(academicPeriodId, fte, startDate, endDate) {
+        var vm = this;
+        var institutionId = vm.getInstitutionId();
+        var deferred = $q.defer();
+        var url = angular.baseUrl + '/Institutions/getInstitutionPositions/' + institutionId + '/' + academicPeriodId + '/' + fte + '/' + startDate + '/' + endDate;
+        $http.get(url)
+        .then(function(response){
+            deferred.resolve(response.data);
+        }, function(error) {
+            deferred.reject(error);
+        });
+        return deferred.promise;
+    }
 
     function getUniqueOpenEmisId() {
         var deferred = $q.defer();

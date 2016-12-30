@@ -9,11 +9,15 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
-
+use Cake\I18n\Date;
+use ControllerAction\Model\Traits\UtilityTrait;
+use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController
 {
+    use OptionsTrait;
+    use UtilityTrait;
     public $activeObj = null;
 
     public function initialize()
@@ -722,5 +726,97 @@ class InstitutionsController extends AppController
     public function getProfessionalDevelopmentTabElements($options = []) {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+    }
+
+    public function getInstitutionPositions($institutionId, $academicPeriodId, $fte, $startDate, $endDate = '')
+    {
+        $this->autoRender= false;
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $positionTable = TableRegistry::get('Institution.InstitutionPositions');
+        $userId = $this->Auth->user('id');
+
+        $selectedFTE = empty($fte) ? 0 : $fte;
+        $excludePositions = $StaffTable->find();
+
+        $startDate = new Date($startDate);
+
+        $excludePositions = $excludePositions
+            ->select([
+                'position_id' => $StaffTable->aliasField('institution_position_id'),
+            ])
+            ->where([
+                $StaffTable->aliasField('institution_id') => $institutionId,
+                $StaffTable->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->group($StaffTable->aliasField('institution_position_id'))
+            ->having([
+                'OR' => [
+                    'SUM('.$StaffTable->aliasField('FTE') .') >= ' => 1,
+                    'SUM('.$StaffTable->aliasField('FTE') .') >= ' => (1-$selectedFTE),
+                ]
+            ])
+            ->hydrate(false);
+
+        $endDate = null;
+        if (!empty($endDate)) {
+            $endDate = new Date($endDate);
+            $excludePositions = $excludePositions->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+        } else {
+            $orCondition = [
+                $StaffTable->aliasField('end_date') . ' >= ' => $startDate,
+                $StaffTable->aliasField('end_date') . ' IS NULL'
+            ];
+            $excludePositions = $excludePositions->where([
+                    $StaffTable->aliasField('start_date').' <= ' => $startDate,
+                    'OR' => $orCondition
+                ]);
+        }
+
+        if ($this->AccessControl->isAdmin()) {
+            $userId = null;
+            $roles = [];
+        } else {
+            $roles = $StaffTable->Institutions->getInstitutionRoles($userId, $institutionId);
+        }
+
+        // Filter by active status
+        $activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+        $positionConditions = [];
+        $positionConditions[$StaffTable->Positions->aliasField('institution_id')] = $institutionId;
+        $positionConditions[$StaffTable->Positions->aliasField('academic_period_id')] = $academicPeriodId;
+        if (!empty($activeStatusId)) {
+            $positionConditions[$StaffTable->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+        }
+
+        if ($selectedFTE > 0) {
+            $staffPositionsOptions = $StaffTable->Positions
+                ->find()
+                ->innerJoinWith('StaffPositionTitles.SecurityRoles')
+                ->where($positionConditions)
+                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+                ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+                ->autoFields(true)
+                ->toArray();
+        } else {
+            $staffPositionsOptions = [];
+        }
+
+        // Filter by role previlege
+        $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+        $roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+        $roleOptions = array_keys($roleOptions);
+        $staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+        $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+        // Adding the opt group
+        $types = $this->getSelectOptions('Staff.position_types');
+        $options = [];
+        $excludePositions = array_column($excludePositions->toArray(), 'position_id');
+        foreach ($staffPositionsOptions as $position) {
+            $type = __($types[$position->type]);
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name, 'disabled' => !in_array($position->id, $excludePositions)];
+        }
+
+        echo json_encode($options);
     }
 }
