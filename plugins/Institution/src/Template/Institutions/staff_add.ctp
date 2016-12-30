@@ -353,6 +353,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
 
+
+
                 <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
                     <label><?= __('Position Type') ?></label>
                     <div class="input-select-wrapper">
@@ -366,10 +368,48 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                             <option value="Part-Time"> <?= __('Part-Time')?> </option>
                         </select>
                     </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.academic_period_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.academic_period_id">{{ error }}</p>
+                    <div ng-if="InstitutionStaffController.postResponse.error.position_type" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.position_type">{{ error }}</p>
                     </div>
                 </div>
+
+                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled" ng-hide="InstitutionStaffController.positionType != 'Part-Time';">
+                    <label><?= __('FTE') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[position_type]" id="staff-position-type"
+                            ng-model="InstitutionStaffController.fte"
+                            ng-change="InstitutionStaffController.onChangeFTE()"
+                            ng-init="InstitutionStaffController.fte = '';"
+                            >
+                            <option value=''>-- <?= __('Select')?> --</option>
+                            <option value="0.25"> <?= __('25%')?> </option>
+                            <option value="0.5"> <?= __('50%')?> </option>
+                            <option value="0.75"> <?= __('75%')?> </option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.fte" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.fte">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
+                    <label><?= __('Position') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[institution_position_id]" id="staff-institution-position-id"
+                            ng-model="InstitutionStaffController.institutionPositionId.selectedOption"
+                            ng-change="InstitutionStaffController.onChangeInstitutionPositionId()"
+                            ng-options="option.name group by option.group disable when option.disabled for option in InstitutionStaffController.institutionPositionId.availableOptions track by option.value"
+                            ng-init="InstitutionStaffController.institutionPositionId = '';"
+                            >
+                            <option value="">-- <?= __('Select')?> --</option>
+                            <option ng-repeat="option in InstitutionStaffController.institutionPositionId.availableOptions" value="{{option.value}}" ng-disabled="{{option.disabled}}">{{option.name}}</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.institution_position_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.institution_position_id">{{ error }}</p>
+                    </div>
+                </div>
+
                 <div class="section-header" ng-show="InstitutionStaffController.completeDisabled"><?= __('Institution Information') ?></div>
                 <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
                     <label><?= __('Institution') ?></label>

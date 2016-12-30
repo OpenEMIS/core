@@ -21,6 +21,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.createNewStaff = false;
     StaffController.genderOptions = {};
     StaffController.academicPeriodOptions = {};
+    StaffController.institutionPositionId = {};
     StaffController.step = 'internal_search';
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
@@ -79,6 +80,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.reloadExternalDatasource = reloadExternalDatasource;
     StaffController.clearInternalSearchFilters = clearInternalSearchFilters;
     StaffController.onChangePositionType = onChangePositionType;
+    StaffController.onChangeFTE = onChangeFTE;
     StaffController.initialLoad = true;
     StaffController.date_of_birth = '';
 
@@ -114,6 +116,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             StaffController.academicPeriodOptions = {
                 availableOptions: periods,
                 selectedOption: selectedPeriod[0]
+            };
+
+            StaffController.institutionPositionId = {
+                availableOptions: [],
+                selectedOption: ''
             };
 
             if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
@@ -233,12 +240,32 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     function onChangePositionType() {
         if (StaffController.positionType == '') {
-
-        } else if (StaffController.positionType = 'Full-Time') {
-
-        } else if (StaffController.positionType = 'Part-Time') {
-
+            StaffController.fte = '';
+            StaffController.onChangeFTE();
+        } else if (StaffController.positionType == 'Full-Time') {
+            StaffController.fte = 1;
+            StaffController.onChangeFTE();
+        } else if (StaffController.positionType == 'Part-Time') {
+            StaffController.fte = '';
+            StaffController.onChangeFTE();
         }
+    }
+
+    function onChangeFTE() {
+        var academicPeriodId = StaffController.academicPeriodOptions.selectedOption.id;
+        var fte = StaffController.fte;
+        if (fte == '') {
+            fte = 0;
+        }
+        var startDate = StaffController.startDate;
+        var endDate = StaffController.endDate;
+        InstitutionsStaffSvc.getPositionList(academicPeriodId, fte, startDate, endDate)
+        .then(function(response) {
+            StaffController.institutionPositionId.availableOptions = response;
+            console.log(StaffController.institutionPositionId.availableOptions);
+        }, function(errors) {
+
+        });
     }
 
     function initIdentityType() {
@@ -509,51 +536,47 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         return studentRecords;
     }
 
-    function insertStaffData(staffId, academicPeriodId, startDate, endDate, userRecord) {
+    function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord) {
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
         var data = {
             staff_id: staffId,
             staff_name: staffId,
+            institution_position_id: institutionPositionId,
             academic_period_id: academicPeriodId,
+            position_type: positionType,
+            staff_type_id: staffTypeId,
+            FTE: fte,
             start_date: startDate,
             end_date: endDate
         };
 
-        InstitutionsStaffSvc.getStaffData(staffId, academicPeriodId)
-        .then(function(staffData) {
+        InstitutionsStaffSvc.postAssignedStaff(data)
+        .then(function(postResponse) {
+            StaffController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
-            console.log(staffData);
+            if (postResponse.data.error.length === 0) {
+                AlertSvc.success($scope, 'The staff is added successfully.');
+                $window.location.href = 'add?staff_added=true';
+            } else {
+                if (userRecord.hasOwnProperty('institution_students')) {
+                    if (userRecord.institution_students.length > 0) {
+                        var schoolName = userRecord['institution_students'][0]['institution']['name'];
+                        AlertSvc.warning($scope, 'Staff is already added in ' + schoolName);
+                        userRecord.date_of_birth = InstitutionsStaffSvc.formatDate(userRecord.date_of_birth);
+                        StaffController.selectedStaffData = userRecord;
+                        StaffController.completeDisabled = true;
+                    } else {
+                        AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                    }
+                } else {
+                    AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                }
+            }
         }, function(error) {
-            UtilsSvc.isAppendLoader(false);
+            console.log(error);
+            AlertSvc.warning($scope, error);
         });
-
-        // InstitutionsStaffSvc.postAssignedStaff(data)
-        // .then(function(postResponse) {
-        //     StaffController.postResponse = postResponse.data;
-        //     UtilsSvc.isAppendLoader(false);
-        //     if (postResponse.data.error.length === 0) {
-        //         AlertSvc.success($scope, 'The staff is added successfully.');
-        //         $window.location.href = 'add?staff_added=true';
-        //     } else {
-        //         if (userRecord.hasOwnProperty('institution_students')) {
-        //             if (userRecord.institution_students.length > 0) {
-        //                 var schoolName = userRecord['institution_students'][0]['institution']['name'];
-        //                 AlertSvc.warning($scope, 'Staff is already added in ' + schoolName);
-        //                 userRecord.date_of_birth = InstitutionsStaffSvc.formatDate(userRecord.date_of_birth);
-        //                 StaffController.selectedStaffData = userRecord;
-        //                 StaffController.completeDisabled = true;
-        //             } else {
-        //                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-        //             }
-        //         } else {
-        //             AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-        //         }
-        //     }
-        // }, function(error) {
-        //     console.log(error);
-        //     AlertSvc.warning($scope, error);
-        // });
     }
 
     function onAddNewStaffClick() {
@@ -655,6 +678,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     function postForm() {
 
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
+        var positionType = StaffController.positionType;
+        var fte = (StaffController.fteOptions.hasOwnProperty('selectedOption'))? StaffController.fteOptions.selectedOption.id: '';
+        var staffTypeId = (StaffController.staffTypeIdOptions.hasOwnProperty('selectedOption'))? StaffController.staffTypeIdOptions.selectedOption.id: '';
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
@@ -670,10 +696,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 var studentData = StaffController.selectedStaffData;
                 var amendedStaffData = Object.assign({}, studentData);
                 amendedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(amendedStaffData.date_of_birth);
-                StaffController.addStaffUser(amendedStaffData, academicPeriodId, startDate, endDate);
+                StaffController.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
             } else {
                 var staffId = StaffController.selectedStaff;
-                StaffController.insertStaffData(staffId, academicPeriodId, startDate, endDate, {});
+                StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, {});
             }
         } else {
             console.log('postForm');
@@ -709,12 +735,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 delete studentData['modified_user_id'];
                 delete studentData['created'];
                 delete studentData['created_user_id'];
-                StaffController.addStaffUser(studentData, academicPeriodId, startDate, endDate);
+                StaffController.addStaffUser(studentData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
             }
         }
     }
 
-    function addStaffUser(studentData, academicPeriodId, startDate, endDate) {
+    function addStaffUser(studentData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate) {
 
         var newStaffData = studentData;
         newStaffData['academic_period_id'] = academicPeriodId;
@@ -725,7 +751,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(user){
             if (user[0].error.length === 0) {
                 var staffId = user[0].data.id;
-                StaffController.insertStaffData(staffId, academicPeriodId, startDate, endDate, user[1]);
+                StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1]);
             } else {
                 StaffController.postResponse = user[0];
                 console.log(user[0]);
