@@ -47,37 +47,8 @@ class SystemUpdatesTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $SystemPatches = TableRegistry::get('System.SystemPatches');
-        $versions = $SystemPatches
-            ->find()
-            ->select(['version', 'created'])
-            ->where([
-                'NOT EXISTS (SELECT 1 FROM system_updates WHERE system_updates.version = SystemPatches.version AND system_updates.status = 2)'
-            ])
-            ->group(['version'])
-            ->order(['created' => 'ASC', 'version' => 'ASC'])
-            ->all();
-
         $query = $this->find();
         $maxId = $query->select(['max' => $query->func()->max('id')])->hydrate(false)->first();
-
-        foreach ($versions as $version) {
-            if ($this->exists(['version' => $version->version])) {
-                $this->updateAll(['status' => 2], ['version' => $version->version]);
-            } else {
-                $entity = $this->newEntity([
-                    'id' => ++$maxId['max'],
-                    'version' => $version->version,
-                    'date_released' => $version->created,
-                    'date_approved' => $version->created,
-                    'approved_by' => 1,
-                    'status' => 2,
-                    'created_user_id' => 1,
-                    'created' => $version->created
-                ]);
-                $this->save($entity);
-            }
-        }
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $domain = $ConfigItems->value('version_api_domain');
@@ -96,10 +67,6 @@ class SystemUpdatesTable extends ControllerActionTable {
                         'id' => $item['id'],
                         'version' => $item['version'],
                         'date_released' => $item['date_released'],
-                        'date_approved' => NULL,
-                        'approved_by' => NULL,
-                        'status' => 1,
-                        'created_user_id' => 1,
                         'created' => Time::now(),
                     ]);
                     $this->save($entity);
@@ -131,7 +98,7 @@ class SystemUpdatesTable extends ControllerActionTable {
     public function onGetFormButtons(Event $event, ArrayObject $buttons)
     {
         if ($this->action == 'updates') {
-            $name = str_replace('Save', 'Upgrade', $buttons[0]['name']);
+            $name = str_replace('Save', 'Update', $buttons[0]['name']);
             $buttons[0]['name'] = $name;
         }
     }
@@ -154,7 +121,7 @@ class SystemUpdatesTable extends ControllerActionTable {
             ->send($subject);
 
             $this->updateAll(['date_approved' => Time::now(), 'approved_by' => $this->Auth->user('id'), 'status' => 2], ['status' => 1]);
-            $this->Alert->show('Your upgrade request has been submitted.', 'success');
+            $this->Alert->show('Your update request has been submitted.', 'success');
 
             $mainEvent->stopPropagation();
             return $this->controller->redirect(['action' => 'Updates', 'index']);
