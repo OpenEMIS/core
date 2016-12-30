@@ -21,7 +21,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.createNewStaff = false;
     StaffController.genderOptions = {};
     StaffController.academicPeriodOptions = {};
-    StaffController.institutionPositionId = {};
+    StaffController.institutionPositionOptions = {};
+    StaffController.staffTypeOptions = {};
     StaffController.step = 'internal_search';
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
@@ -118,7 +119,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 selectedOption: selectedPeriod[0]
             };
 
-            StaffController.institutionPositionId = {
+            StaffController.institutionPositionOptions = {
                 availableOptions: [],
                 selectedOption: ''
             };
@@ -127,6 +128,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 StaffController.onChangeAcademicPeriod();
             }
             promises.push(InstitutionsStaffSvc.getAddNewStaffConfig());
+            promises.push(InstitutionsStaffSvc.getStaffTypes());
             return $q.all(promises);
         }, function(error) {
             console.log(error);
@@ -136,6 +138,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(promisesObj) {
             var promises = [];
             var addNewStaffConfig = promisesObj[0].data;
+            var staffTypes = promisesObj[1].data;
+            StaffController.staffTypeOptions = staffTypes;
+
             for(i=0; i < addNewStaffConfig.length; i++) {
                 var code = addNewStaffConfig[i].code;
                 StaffController[code] = addNewStaffConfig[i].value;
@@ -261,8 +266,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var endDate = StaffController.endDate;
         InstitutionsStaffSvc.getPositionList(academicPeriodId, fte, startDate, endDate)
         .then(function(response) {
-            StaffController.institutionPositionId.availableOptions = response;
-            console.log(StaffController.institutionPositionId.availableOptions);
+            StaffController.institutionPositionOptions.availableOptions = response;
         }, function(errors) {
 
         });
@@ -555,23 +559,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(postResponse) {
             StaffController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
+            console.log(postResponse);
             if (postResponse.data.error.length === 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
             } else {
-                if (userRecord.hasOwnProperty('institution_students')) {
-                    if (userRecord.institution_students.length > 0) {
-                        var schoolName = userRecord['institution_students'][0]['institution']['name'];
-                        AlertSvc.warning($scope, 'Staff is already added in ' + schoolName);
-                        userRecord.date_of_birth = InstitutionsStaffSvc.formatDate(userRecord.date_of_birth);
-                        StaffController.selectedStaffData = userRecord;
-                        StaffController.completeDisabled = true;
-                    } else {
-                        AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                    }
-                } else {
-                    AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                }
+                AlertSvc.error($scope, 'The record is not added due to errors encountered.');
             }
         }, function(error) {
             console.log(error);
@@ -664,7 +657,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         if (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
             StaffController.startDate = InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date);
-            console.log(StaffController.startDate);
         }
 
         var startDatePicker = angular.element(document.getElementById('Staff_start_date'));
@@ -673,14 +665,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         startDatePicker.datepicker("setDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
         var endDatePicker = angular.element(document.getElementById('Staff_end_date'));
         endDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
+        StaffController.onChangeFTE();
     }
 
     function postForm() {
 
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
         var positionType = StaffController.positionType;
-        var fte = (StaffController.fteOptions.hasOwnProperty('selectedOption'))? StaffController.fteOptions.selectedOption.id: '';
-        var staffTypeId = (StaffController.staffTypeIdOptions.hasOwnProperty('selectedOption'))? StaffController.staffTypeIdOptions.selectedOption.id: '';
+        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption')) ? StaffController.institutionPositionOptions.selectedOption.value: '';
+        var fte = StaffController.fte;
+        var staffTypeId = StaffController.staffTypeId.id;
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];

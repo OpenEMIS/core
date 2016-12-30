@@ -1233,8 +1233,8 @@ class ValidationBehavior extends Behavior {
 		$identicalPositionHolders = $InstitutionStaff->find()
 			->where(
 				[
-					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
-
+					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id'],
+					$InstitutionStaff->aliasField('academic_period_id') => $globalData['data']['academic_period_id']
 				]
 			);
 
@@ -1711,6 +1711,7 @@ class ValidationBehavior extends Behavior {
 	{
 		$data = $globalData['data'];
 		$staffId = $data['staff_id'];
+		$academicPeriodId = $data['academic_period_id'];
 		$startDate = new Date($data['start_date']);
 
 		// check if staff is already assigned
@@ -1720,42 +1721,17 @@ class ValidationBehavior extends Behavior {
 			->where([
 				$StaffTable->aliasField('staff_id') => $staffId,
 				$StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
+				$StaffTable->aliasField('academic_period_id') => $academicPeriodId,
 				'OR' => [
-					[$this->aliasField('end_date').' >= ' => $startDate],
-					[$this->aliasField('end_date').' IS NULL']
+					[$StaffTable->aliasField('end_date').' >= ' => $startDate],
+					[$StaffTable->aliasField('end_date').' IS NULL']
 				]
 			])
-			->order([$this->aliasField('created') => 'DESC'])
+			->order([$StaffTable->aliasField('created') => 'DESC'])
 			->first();
 
 		if ($staffRecord) {
-			// For staff transfer
-			$pending = 0;
-			$approved = 1;
-			$StaffTransferRequestsTable = TableRegistry::get('Institution.StaffTransferRequests');
-			$transferRecord = $StaffTransferRequestsTable->find()
-				->where([
-					$StaffTransferRequestsTable->aliasField('staff_id') => $staffId,
-					$StaffTransferRequestsTable->aliasField('status').' IN ' => [$pending, $approved]
-				]);
-
 			return false;
-			// if ($transferRecord->count() == 0) {
-			// 	if ($data['institution_id'] != $staffRecord->institution_id) {
-			// 		$data[$this->alias()]['institution_id'] = $entity->institution_id;
-			// 		$data[$this->alias()]['previous_institution_id'] = $staffRecord->institution_id;
-			// 		$data[$this->alias()]['transfer_from'] = $staffRecord->institution->name;
-			// 		$this->Session->write('Institution.Staff.transfer', $data[$this->alias()]);
-			// 		$event->stopPropagation();
-			// 		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StaffTransferRequests', 'add'];
-			// 		return $this->controller->redirect($action);
-			// 	}
-			// } else {
-			// 	$event->stopPropagation();
-			// 	$this->Alert->error('Staff.transferExists');
-			// 	$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
-			// 	return $this->controller->redirect($action);
-			// }
 		}
 		return true;
 	}
