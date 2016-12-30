@@ -322,7 +322,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <select name="Staff[academic_period_id]" id="staff-academic-period-id"
                             ng-options="option.name for option in InstitutionStaffController.academicPeriodOptions.availableOptions track by option.id"
                             ng-model="InstitutionStaffController.academicPeriodOptions.selectedOption"
-                            ng-change="InstitutionStaffController.onChangeAcademicPeriod()"
+                            ng-change="InstitutionStaffController.onChangeAcademicPeriod(); "
                             >
                         </select>
                     </div>
@@ -334,7 +334,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input date required" ng-show="!InstitutionStaffController.completeDisabled">
                     <label for="Staff_start_date"><?= __('Start Date') ?></label>
                     <div class="input-group date " id="Staff_start_date" style="">
-                        <input type="text" class="form-control " name="Staff[start_date]" ng-model="InstitutionStaffController.startDate">
+                        <input type="text" class="form-control " name="Staff[start_date]" ng-model="InstitutionStaffController.startDate" ng-change="InstitutionStaffController.onChangeFTE();">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.start_date" class="error-message">
@@ -345,7 +345,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input date" ng-show="!InstitutionStaffController.completeDisabled">
                     <label for="Staff_end_date"><?= __('End Date') ?></label>
                     <div class="input-group date " id="Staff_end_date" style="">
-                        <input type="text" class="form-control " name="Staff[end_date]" ng-model="InstitutionStaffController.endDate">
+                        <input type="text" class="form-control " name="Staff[end_date]" ng-model="InstitutionStaffController.endDate" ng-change="InstitutionStaffController.onChangeFTE();">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.end_date" class="error-message">
@@ -396,13 +396,27 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label><?= __('Position') ?></label>
                     <div class="input-select-wrapper">
                         <select name="Staff[institution_position_id]" id="staff-institution-position-id"
-                            ng-model="InstitutionStaffController.institutionPositionId.selectedOption"
-                            ng-change="InstitutionStaffController.onChangeInstitutionPositionId()"
-                            ng-options="option.name group by option.group disable when option.disabled for option in InstitutionStaffController.institutionPositionId.availableOptions track by option.value"
-                            ng-init="InstitutionStaffController.institutionPositionId = '';"
+                            ng-model="InstitutionStaffController.institutionPositionOptions.selectedOption"
+                            ng-options="option.name group by option.group disable when option.disabled for option in InstitutionStaffController.institutionPositionOptions.availableOptions track by option.value"
+                            ng-init="InstitutionStaffController.institutionPositionOptions.selectedOption = '';"
                             >
                             <option value="">-- <?= __('Select')?> --</option>
-                            <option ng-repeat="option in InstitutionStaffController.institutionPositionId.availableOptions" value="{{option.value}}" ng-disabled="{{option.disabled}}">{{option.name}}</option>
+                        </select>
+                    </div>
+                    <div ng-if="InstitutionStaffController.postResponse.error.institution_position_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.institution_position_id">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input select required" ng-model="InstitutionStaffController.postResponse" ng-show="!InstitutionStaffController.completeDisabled">
+                    <label><?= __('Staff Type') ?></label>
+                    <div class="input-select-wrapper">
+                        <select name="Staff[staff_type_id]" id="staff-staff-type-id"
+                            ng-model="InstitutionStaffController.staffTypeId"
+                            ng-options="option.name for option in InstitutionStaffController.staffTypeOptions track by option.id"
+                            ng-init="InstitutionStaffController.staffTypeId = '';"
+                            >
+                            <option value="">-- <?= __('Select')?> --</option>
                         </select>
                     </div>
                     <div ng-if="InstitutionStaffController.postResponse.error.institution_position_id" class="error-message">

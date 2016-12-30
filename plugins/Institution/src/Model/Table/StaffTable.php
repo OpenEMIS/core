@@ -47,7 +47,7 @@ class StaffTable extends ControllerActionTable {
 		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses',	['className' => 'Staff.StaffStatuses']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
-		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		// $this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'institution_staff_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
 		$this->addBehavior('AcademicPeriod.Period');
@@ -63,7 +63,8 @@ class StaffTable extends ControllerActionTable {
 		]);
 
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'StaffRoom' => ['index', 'add']
+        	'StaffRoom' => ['index', 'add'],
+        	'Staff' => ['index', 'add']
         ]);
 
 		$this->addBehavior('HighChart', [
@@ -190,6 +191,7 @@ class StaffTable extends ControllerActionTable {
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields['staff_id']['order'] = 5;
 		$this->fields['institution_position_id']['type'] = 'integer';
+		$this->fields['staff_id']['type'] = 'integer';
 		$this->fields['start_date']['type'] = 'date';
 		$this->fields['institution_position_id']['order'] = 6;
 		$this->fields['FTE']['visible'] = false;
@@ -656,7 +658,7 @@ class StaffTable extends ControllerActionTable {
 	private function updateSecurityGroupUserId($entity, $groupUserId) {
 		$this->updateAll(
 			['security_group_user_id' => $groupUserId],
-			[$this->primaryKey() => $entity->id]
+			['id' => $entity->id]
 		);
 	}
 
@@ -1088,7 +1090,7 @@ class StaffTable extends ControllerActionTable {
 
             $extra['elements'] = array_merge($extra['elements'], $indexElements);
 
-            $this->setFieldOrder(['photo_content', 'openemis_no', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id']);
+            $this->setFieldOrder(['photo_content', 'openemis_no', 'staff_id', 'institution_position_id', 'start_date', 'end_date', 'staff_status_id']);
 		}
 	}
 
