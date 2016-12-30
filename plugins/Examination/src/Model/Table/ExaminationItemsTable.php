@@ -16,9 +16,38 @@ class ExaminationItemsTable extends AppTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Examination', ['className' => 'Examination.Examinations']);
+        $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationGradingTypes', ['className' => 'Examination.ExaminationGradingTypes']);
+        $this->belongsToMany('ExaminationCentres', [
+            'className' => 'Examination.ExaminationCentres',
+            'joinTable' => 'examination_centre_subjects',
+            'foreignKey' => 'examination_item_id',
+            'targetForeignKey' => 'examination_centre_id',
+            'through' => 'Examination.ExaminationCentreSubjects',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+        $this->belongsToMany('Students', [
+            'className' => 'User.Users',
+            'joinTable' => 'examination_centre_students',
+            'foreignKey' => 'examination_item_id',
+            'targetForeignKey' => 'student_id',
+            'through' => 'Examination.ExaminationCentreStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+        $this->belongsToMany('StudentResults', [
+            'className' => 'User.Users',
+            'joinTable' => 'examination_item_results',
+            'foreignKey' => 'examination_item_id',
+            'targetForeignKey' => 'student_id',
+            'through' => 'Examination.ExaminationItemResults',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['index']
@@ -30,6 +59,10 @@ class ExaminationItemsTable extends AppTable {
         $validator = parent::validationDefault($validator);
 
         $validator
+            ->add('code', 'ruleUniqueCodeWithinForm', [
+                'rule' => ['checkUniqueCodeWithinForm', $this->Examinations],
+            ])
+            ->notEmpty('name')
             ->add('weight', 'ruleIsDecimal', [
                 'rule' => ['decimal', null],
             ])
@@ -37,6 +70,7 @@ class ExaminationItemsTable extends AppTable {
                 'rule'  => ['range', 0, 2],
                 'last' => true
             ])
+            ->allowEmpty('education_subject_id')
             ->notEmpty('examination_grading_type_id')
             ->add('start_time', 'ruleCompareTime', [
                 'rule' => ['compareTime', 'end_time', true],
@@ -45,37 +79,6 @@ class ExaminationItemsTable extends AppTable {
             ->allowEmpty('start_time')
             ->allowEmpty('end_time');
         return $validator;
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_id . ',' . $entity->education_subject_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
-    }
-
-    public function populateExaminationItemsArray($gradeId)
-    {
-        $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-        $gradeSubjects = $EducationGradesSubjects->find()
-            ->contain('EducationSubjects')
-            ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $gradeId])
-            ->order(['order'])
-            ->toArray();
-
-        $examinationItems = [];
-        foreach ($gradeSubjects as $key => $gradeSubject) {
-            if (!empty($gradeSubject->education_subject)) {
-                $examinationItems[] = [
-                    'education_subject_id' => $gradeSubject->education_subject->id,
-                    'education_subject' => $gradeSubject->education_subject,
-                    'weight' => '0.00',
-                ];
-            }
-        }
-
-        return $examinationItems;
     }
 
     public function getExaminationItemSubjects($examinationId)
