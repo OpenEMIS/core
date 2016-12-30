@@ -77,7 +77,10 @@ class SystemUpdatesTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
+        $queryParams = $this->request->query;
+        if (!array_key_exists('sort', $queryParams)) {
+            $query->order([$this->aliasField('date_released') => 'DESC', $this->aliasField('version') => 'DESC']);
+        }
 
         if ($this->exists(['status' => 1])) {
             $extra['toolbarButtons']['update'] = [
