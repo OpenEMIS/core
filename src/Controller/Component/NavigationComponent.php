@@ -1004,8 +1004,7 @@ class NavigationComponent extends Component
 			'Systems.Updates' => [
 				'title' => 'Updates',
 				'parent' => 'Administration',
-				'params' => ['plugin' => 'System'],
-				'selected' => ['System.SystemUpdates']
+				'params' => ['plugin' => 'System']
 			]
 		];
 		return $navigation;
