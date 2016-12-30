@@ -998,6 +998,11 @@ class NavigationComponent extends Component
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
 				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Statuses']
+			],
+			'Systems.Updates' => [
+				'title' => 'Updates',
+				'parent' => 'Administration',
+				'params' => ['plugin' => 'System']
 			]
 		];
 		return $navigation;
