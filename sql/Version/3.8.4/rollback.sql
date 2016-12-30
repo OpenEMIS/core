@@ -29,6 +29,16 @@ RENAME TABLE `z_3683_assessment_periods` TO `assessment_periods`;
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3683';
 
+DROP TABLE IF EXISTS `system_updates`;
+DELETE FROM security_functions WHERE id = 5060;
+DELETE FROM config_items WHERE id = 200;
+DELETE FROM config_items WHERE id = 201;
+RENAME TABLE `system_patches` TO `db_patches`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3527';
+
 
 -- 3.8.3
+DELETE FROM system_updates WHERE version = (SELECT value FROM config_items WHERE code = 'db_version');
 UPDATE config_items SET value = '3.8.3' WHERE code = 'db_version';
