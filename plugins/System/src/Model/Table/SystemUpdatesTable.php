@@ -90,7 +90,7 @@ class SystemUpdatesTable extends ControllerActionTable {
                     'title' => __('Update')
                 ],
                 'label' => '<i class="fa fa-refresh"></i>',
-                'url' => ['updates']
+                'url' => ['controller' => $this->controller->name, 'action' => 'Updates', 'updates']
             ];
         }
     }
@@ -100,6 +100,8 @@ class SystemUpdatesTable extends ControllerActionTable {
         if ($this->action == 'updates') {
             $name = str_replace('Save', 'Update', $buttons[0]['name']);
             $buttons[0]['name'] = $name;
+
+            $buttons[1]['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'index'];
         }
     }
 
@@ -107,6 +109,11 @@ class SystemUpdatesTable extends ControllerActionTable {
     {
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $supportEmails = $ConfigItems->value('version_support_emails');
+
+        if (!$this->exists(['status' => 1])) { // if there are nothing to update
+            $mainEvent->stopPropagation();
+            return $this->controller->redirect(['action' => 'Updates', 'index']);
+        }
 
         if ($this->request->is(['post', 'put'])) {
             $emails = explode(',', $supportEmails);
@@ -132,20 +139,6 @@ class SystemUpdatesTable extends ControllerActionTable {
                 return $this->controller->redirect(['action' => 'Updates', 'index']);
             }
 
-            $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-            $toolbarAttr = [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false
-            ];
-            $toolbarButtonsArray['back']['type'] = 'button';
-            $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
-            $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
-            $toolbarButtonsArray['back']['attr']['title'] = __('Back');
-            $toolbarButtonsArray['back']['url'] = $this->url('index');
-            $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-
             $extra['config']['form'] = true;
             $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
             $this->fields = []; // reset all the fields
@@ -158,7 +151,7 @@ class SystemUpdatesTable extends ControllerActionTable {
             $entity = $this->newEntity();
 
             $this->controller->set('data', $entity);
+            return $entity;
         }
-        return $entity;
     }
 }
