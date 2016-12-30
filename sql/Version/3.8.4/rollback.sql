@@ -22,5 +22,13 @@ WHERE `model` = 'Examination.ExaminationItemResults' AND `column_name` = 'examin
 -- db_patches
 DELETE FROM `db_patches` WHERE `issue`='POCOR-3588';
 
+-- assessment_periods
+DROP TABLE IF EXISTS `assessment_periods`;
+RENAME TABLE `z_3683_assessment_periods` TO `assessment_periods`;
+
+-- db_patches
+DELETE FROM `db_patches` WHERE `issue`='POCOR-3683';
+
+
 -- 3.8.3
 UPDATE config_items SET value = '3.8.3' WHERE code = 'db_version';
