@@ -48,7 +48,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality,
         getExternalSourceMapping: getExternalSourceMapping,
-        getPositionList: getPositionList
+        getPositionList: getPositionList,
+        getStaffTypes: getStaffTypes
     };
 
     var models = {
@@ -56,6 +57,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         StaffAssignment: 'Institution.StaffTransferRequests',
         StaffUser: 'Institution.StaffUser',
         StaffRecord: 'Institution.Staff',
+        StaffTypes: 'Staff.StaffTypes',
         InstitutionGrades: 'Institution.InstitutionGrades',
         Institutions: 'Institution.Institutions',
         AcademicPeriods: 'AcademicPeriod.AcademicPeriods',
@@ -763,6 +765,12 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             deferred.reject(error);
         });
         return deferred.promise;
+    }
+
+    function getStaffTypes() {
+        return StaffTypes
+        .select()
+        .ajax({defer: true});
     }
 
     function getUniqueOpenEmisId() {

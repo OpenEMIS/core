@@ -752,7 +752,7 @@ class InstitutionsController extends AppController
             ->having([
                 'OR' => [
                     'SUM('.$StaffTable->aliasField('FTE') .') >= ' => 1,
-                    'SUM('.$StaffTable->aliasField('FTE') .') >= ' => (1-$selectedFTE),
+                    'SUM('.$StaffTable->aliasField('FTE') .') > ' => (1-$selectedFTE),
                 ]
             ])
             ->hydrate(false);
@@ -814,7 +814,7 @@ class InstitutionsController extends AppController
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
         foreach ($staffPositionsOptions as $position) {
             $type = __($types[$position->type]);
-            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name, 'disabled' => !in_array($position->id, $excludePositions)];
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name, 'disabled' => in_array($position->id, $excludePositions)];
         }
 
         echo json_encode($options);
