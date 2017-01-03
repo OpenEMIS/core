@@ -186,7 +186,7 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3527', NOW());
 
 RENAME TABLE `db_patches` TO `system_patches`;
 
-CREATE TABLE IF NOT EXISTS `system_updates2` (
+CREATE TABLE IF NOT EXISTS `system_updates` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `version` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `date_released` date NOT NULL,
@@ -233,11 +233,11 @@ ORDER BY created ASC, version ASC;
 
 -- SET @maxId := 0;
 -- SELECT max(id) + 1 INTO @maxId FROM system_updates;
--- INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, created) VALUES
+-- INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, status, created) VALUES
 -- (
 --   @maxId,
 --   (SELECT value FROM config_items WHERE code = 'db_version'),
---   NOW(), NOW(), 1, NOW()
+--   NOW(), NOW(), 1, 2, NOW()
 -- );
 
 
