@@ -41,6 +41,12 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <span class="chevron"></span>
                 </div>
             </li>
+            <li data-step="5" data-name="transferStaff" ng-show="InstitutionStaffController.step == 'transfer_staff'">
+                <div class="step-wrapper">
+                    <?= __('Staff Transfer') ?>
+                    <span class="chevron"></span>
+                </div>
+            </li>
         </ul>
     </div>
     <div class="actions top">
@@ -68,7 +74,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStaffController.selectedStaff"
             ng-disabled="InstitutionStaffController.completeDisabled"
-            ng-show="(InstitutionStaffController.step=='add_student' || InstitutionStaffController.step=='create_user')"
+            ng-show="(InstitutionStaffController.step=='add_staff' || InstitutionStaffController.step=='create_user')"
             data-last="Complete">
             <?= __('Next') ?>
         </button>
@@ -254,11 +260,19 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
 
-                <div ng-class="InstitutionStaffController.Staff.identity_class" ng-show="InstitutionStaffController.StaffIdentities != 2">
-                    <label><?= __('{{InstitutionStaffController.Staff.identity_type_name}}') ?></label>
-                    <input ng-model="InstitutionStaffController.selectedStaffData.identity_number" type="string" ng-init="InstitutionStaffController.selectedStaffData.identity_number='';">
-                    <div ng-if="InstitutionStaffController.postResponse.error.identities[0].number" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.identities[0].number">{{ error }}</p>
+                <div class="input string">
+                    <label><?= __('Username') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.username" type="string" ng-init="InstitutionStaffController.selectedStaffData.username='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.username" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.username">{{ error }}</p>
+                    </div>
+                </div>
+
+                <div class="input password">
+                    <label><?= __('Password') ?></label>
+                    <input ng-model="InstitutionStaffController.selectedStaffData.password" type="password" ng-init="InstitutionStaffController.selectedStaffData.password='';">
+                    <div ng-if="InstitutionStaffController.postResponse.error.password" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.password">{{ error }}</p>
                     </div>
                 </div>
             </form>
@@ -446,6 +460,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </form>
         </div>
+    </div>
+    <div class="step-pane sample-pane" data-step="5" data-name="transferStaff">
+
     </div>
     <div class="actions bottom">
     </div>
