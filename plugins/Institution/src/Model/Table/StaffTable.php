@@ -136,10 +136,15 @@ class StaffTable extends ControllerActionTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
-			->add('institution_position_id', 'ruleCheckStaffAssignment', [
+			// ->add('institution_position_id', 'ruleCheckStaffAssignment', [
+			// 	'rule' => ['checkStaffAssignment'],
+			// 	'on' => 'create'
+			// ])
+			->add('staff_assignment', 'ruleCheckStaffAssignment', [
 				'rule' => ['checkStaffAssignment'],
 				'on' => 'create'
 			])
+			->requirePresence('FTE')
 			->requirePresence('position_type')
 		;
 	}

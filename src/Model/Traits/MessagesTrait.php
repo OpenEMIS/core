@@ -809,8 +809,10 @@ trait MessagesTrait {
                     'ruleInstitutionStaffId' => 'Staff has already been added.'
                 ],
                 'institution_position_id' => [
-                    'ruleCheckFTE' => 'No available FTE.',
-                    'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.',
+                    'ruleCheckFTE' => 'No available FTE.'
+                ],
+                'staff_assignment' => [
+                    'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
                     'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
