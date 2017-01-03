@@ -260,7 +260,7 @@ class StudentSurveysTable extends AppTable {
 
 	public function _redirect($institutionId=null, $studentId=null, $periodId=0, $formId=0) {
 		$currentAction = $this->ControllerAction->action();
-		$paramsPass = $this->ControllerAction->paramsPass();
+		$paramsPass = $this->paramsDecode($this->ControllerAction->paramsPass())['id'];
 
 		$results = $this
 			->find()

@@ -612,7 +612,7 @@ class StudentAttendancesTable extends AppTable {
 					'controller' => $this->controller->name,
 					'action' => $StudentAbsences->alias(),
 					'view',
-					$entity->StudentAbsences['id']
+					$this->paramsEncode(['id' => $entity->StudentAbsences['id']])
 				]);
 			}
 		}
