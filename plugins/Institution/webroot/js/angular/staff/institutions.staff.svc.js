@@ -322,7 +322,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return StaffUser.ajax({defer: true, success: success});
     };
 
-    function getStaffData(id, academicPeriodId) {
+    function getStaffData(id, startDate, endDate) {
         var vm = this;
         var institutionId = vm.getInstitutionId();
         var success = function(response, deferred) {
@@ -338,7 +338,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         var settings = {success: success, defer: true};
         return StaffUser
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('assignedInstitutionStaff', {'institution_id': institutionId, 'academic_period_id': academicPeriodId})
+            .find('assignedInstitutionStaff', {'institution_id': institutionId, 'start_date': startDate, 'end_date': endDate})
             .where({
                 id: id
             })
@@ -505,7 +505,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return deferred.promise;
     };
 
-    function getUserRecord(externalRef, academicPeriodId)
+    function getUserRecord(externalRef, startDate, endDate)
     {
         var vm = this;
         var institutionId = vm.getInstitutionId();
@@ -515,7 +515,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                 'external_reference': externalRef
             })
             .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('assignedInstitutionStaff', {'institution_id': institutionId, 'academic_period_id': academicPeriodId})
+            .find('assignedInstitutionStaff', {'institution_id': institutionId, 'start_date': startDate, 'end_date': endDate})
             .ajax({defer: true});
     };
 
