@@ -401,8 +401,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                             <option value="0.75"> <?= __('75%')?> </option>
                         </select>
                     </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.fte" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.fte">{{ error }}</p>
+                    <div ng-if="InstitutionStaffController.postResponse.error.FTE" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.FTE">{{ error }}</p>
                     </div>
                 </div>
 
@@ -433,8 +433,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                             <option value="">-- <?= __('Select')?> --</option>
                         </select>
                     </div>
-                    <div ng-if="InstitutionStaffController.postResponse.error.institution_position_id" class="error-message">
-                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.institution_position_id">{{ error }}</p>
+                    <div ng-if="InstitutionStaffController.postResponse.error.staff_type_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_type_id">{{ error }}</p>
                     </div>
                 </div>
 
