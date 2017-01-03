@@ -49,7 +49,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         addUserNationality: addUserNationality,
         getExternalSourceMapping: getExternalSourceMapping,
         getPositionList: getPositionList,
-        getStaffTypes: getStaffTypes
+        getStaffTypes: getStaffTypes,
+        getInstitution: getInstitution
     };
 
     var models = {
@@ -770,6 +771,13 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     function getStaffTypes() {
         return StaffTypes
         .select()
+        .ajax({defer: true});
+    }
+
+    function getInstitution(institutionId) {
+        return Institutions
+        .select()
+        .where({'id': institutionId})
         .ajax({defer: true});
     }
 

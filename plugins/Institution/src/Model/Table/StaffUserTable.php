@@ -269,12 +269,21 @@ class StaffUserTable extends ControllerActionTable {
 
     public function findAssignedInstitutionStaff(Query $query, array $options = []) {
         $institutionId = $options['institution_id'];
+        $startDate = $options['start_date'];
 
         $query->contain([
-            'InstitutionStaff' => function($q) use ($institutionId) {
-                return $q->where(['InstitutionStaff.staff_status_id' => 1, 'InstitutionStaff.institution_id <>' => $institutionId])->order(['InstitutionStaff.FTE' => 'desc']);
+            'InstitutionStaff' => function($q) use ($institutionId, $startDate) {
+                return $q->where([
+                    'InstitutionStaff.staff_status_id' => 1,
+                    'InstitutionStaff.institution_id <>' => $institutionId,
+                    'OR' => [
+                        ['InstitutionStaff.end_date >= ' => $startDate],
+                        ['InstitutionStaff.end_date IS NULL']
+                    ]
+                ])
+                ->order(['InstitutionStaff.created' => 'desc']);
             },
-            'InstitutionStaff.Institutions.Areas',
+            'InstitutionStaff.Institutions.Areas'
         ]);
         return $query;
     }
