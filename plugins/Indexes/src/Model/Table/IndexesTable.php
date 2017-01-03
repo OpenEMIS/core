@@ -329,7 +329,12 @@ class IndexesTable extends ControllerActionTable
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
+            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+
+            $attr['type'] = 'select';
+            $attr['options'] = $periodOptions;
+        } elseif ($action == 'edit') {
             $requestQuery = $this->request->query;
 
             $academicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
