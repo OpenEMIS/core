@@ -53,6 +53,7 @@ trait MessagesTrait {
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
             'noRecords' => 'No Record',
+            'failConnectToExternalSource' => 'There is an issue establishing connection to the External Datasource. Please contact the administrator for assistance.',
             'select' => [
                 'noOptions' => 'No options'
             ],

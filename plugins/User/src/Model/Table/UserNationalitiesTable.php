@@ -24,6 +24,10 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 
         $this->securityUserId = $this->getQueryString('security_user_id');
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
 	}
 
 	public function beforeAction(Event $event) {
