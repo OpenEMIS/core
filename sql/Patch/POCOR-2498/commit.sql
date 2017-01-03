@@ -1,4 +1,5 @@
 -- db_patches
+-- INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-2498', NOW()); // effective on 3.8.4
 INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-2498', NOW());
 
 -- code here
@@ -8,11 +9,15 @@ CREATE TABLE IF NOT EXISTS `indexes` (
     `name` varchar(100) NOT NULL,
     `generated_by` int(11) DEFAULT NULL,
     `generated_on` datetime DEFAULT NULL,
+    `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
     `modified_user_id` int(11) DEFAULT NULL,
     `modified` datetime DEFAULT NULL,
     `created_user_id` int(11) NOT NULL,
     `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE `indexes`
+    ADD KEY `academic_period_id` (`academic_period_id`);
 
 
 -- Table structure for table `indexes_criterias`

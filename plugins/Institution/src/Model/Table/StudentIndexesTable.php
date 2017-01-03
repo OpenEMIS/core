@@ -43,6 +43,25 @@ class StudentIndexesTable extends ControllerActionTable
     {
         $this->field('generated_by',['after' => 'total_index']);
         $this->field('generated_on',['after' => 'generated_by']);
+
+        // element control
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $requestQuery = $this->request->query;
+
+        $selectedAcademicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        $extra['elements']['control'] = [
+            'name' => 'Indexes/controls',
+            'data' => [
+                'academicPeriodOptions'=>$academicPeriodOptions,
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+            ],
+            'options' => [],
+            'order' => 3
+        ];
+        // end element control
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -62,8 +81,9 @@ class StudentIndexesTable extends ControllerActionTable
             ->where([
                 $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']
             ])
-            ->order(['academic_period_id', 'index_id'])
+            ->order(['index_id'])
             ;
 
         return $query;
