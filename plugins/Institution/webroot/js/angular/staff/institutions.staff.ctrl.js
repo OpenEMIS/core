@@ -23,6 +23,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.academicPeriodOptions = {};
     StaffController.institutionPositionOptions = {};
     StaffController.staffTypeOptions = {};
+    StaffController.staffTypeId = {};
     StaffController.step = 'internal_search';
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
@@ -87,6 +88,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.initialLoad = true;
     StaffController.date_of_birth = '';
 
+    StaffController.displayedFTE = '';
     StaffController.selectedStaff;
     StaffController.positionType = '';
     StaffController.addStaffButton = false;
@@ -264,6 +266,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         if (fte == '') {
             fte = 0;
         }
+        StaffController.displayedFTE = (fte*100) + '%';
         var startDate = StaffController.startDate;
         var endDate = StaffController.endDate;
         InstitutionsStaffSvc.getPositionList(academicPeriodId, fte, startDate, endDate)
@@ -362,11 +365,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
            StaffController.showExternalSearchButton = true;
         }
         InstitutionsStaffSvc.resetExternalVariable();
+        delete StaffController.selectedStaff;
         StaffController.createNewInternalDatasource(StaffController.internalGridOptions, withData);
     };
 
     function reloadExternalDatasource(withData) {
         InstitutionsStaffSvc.resetExternalVariable();
+        delete StaffController.selectedStaff;
         StaffController.createNewExternalDatasource(StaffController.externalGridOptions, withData);
     };
 
@@ -385,7 +390,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
-                delete StaffController.selectedStaff;
                 if (withData) {
                    InstitutionsStaffSvc.getStaffRecords(
                     {
@@ -431,7 +435,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             pageSize: pageSize,
             getRows: function (params) {
                 AlertSvc.reset($scope);
-                delete StaffController.selectedStaff;
                 if (withData) {
                     InstitutionsStaffSvc.getExternalStaffRecords(
                         {
@@ -577,15 +580,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
-                deferred.resolve(StaffController.postResponse);
+
             } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
                 console.log('here');
                 StaffController.transferStaffError = true;
+                AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
             } else {
                 StaffController.addStaffError = true;
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
-                deferred.resolve(StaffController.postResponse);
             }
+            deferred.resolve(StaffController.postResponse);
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
@@ -911,21 +915,14 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (StaffController.externalSearch) {
                 StaffController.getUniqueOpenEmisId();
             }
-            studentData = StaffController.selectedStaffData;
-            StaffController.completeDisabled = false;
-            if (studentData.hasOwnProperty('institution_students')) {
-                if (studentData.institution_students.length > 0) {
-                    var schoolName = studentData['institution_students'][0]['institution']['name'];
-                    AlertSvc.warning($scope, 'This student is already allocated to ' + schoolName);
-                    StaffController.completeDisabled = true;
-                }
-            }
+            StaffController.createNewInternalDatasource(StaffController.internalGridOptions, true);
             StaffController.step = 'add_staff';
         }
 
         // Step 5 - Transfer Staff
         else if (data.step == 5) {
             StaffController.postForm().then(function(response) {
+                console.log(StaffController.transferStaffError);
                 if (StaffController.addStaffError) {
                     angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
                         step: "addStaff"
@@ -935,6 +932,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.step = 'transfer_staff';
                 }
             }, function(error) {
+                console.log(StaffController.transferStaffError);
                 // error handling here
             });
         }

@@ -74,7 +74,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStaffController.selectedStaff"
             ng-disabled="InstitutionStaffController.completeDisabled"
-            ng-show="(InstitutionStaffController.step=='add_staff' || InstitutionStaffController.step=='create_user')"
+            ng-show="(InstitutionStaffController.step=='add_staff' || InstitutionStaffController.step=='create_user' || InstitutionStaffController.step=='transfer_staff')"
             data-last="Complete">
             <?= __('Next') ?>
         </button>
@@ -437,32 +437,48 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_type_id">{{ error }}</p>
                     </div>
                 </div>
-
-                <div class="section-header" ng-show="InstitutionStaffController.completeDisabled"><?= __('Institution Information') ?></div>
-                <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
-                    <label><?= __('Institution') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['code_name']" disabled="disabled">
+            </form>
+        </div>
+        <div class="step-pane sample-pane" data-step="5" data-name="transferStaff">
+            <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
+                <div class="input string">
+                    <label><?= __('Status') ?></label>
+                    <input type="string" value="<?= __('Pending Approval') ?>" disabled="disabled">
                 </div>
-
-                <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
-                    <label><?= __('Area') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['area']['code_name']" disabled="disabled">
+                <div class="input string">
+                    <label><?= __('OpenEMIS No') ?></label>
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['name']" disabled="disabled">
                 </div>
-
-                <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
-                    <label><?= __('Contact Name') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['contact_person']" disabled="disabled">
+                <div class="input string">
+                    <label><?= __('Staff') ?></label>
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['name']" disabled="disabled">
                 </div>
-
-                <div class="input string" ng-show="InstitutionStaffController.completeDisabled">
-                    <label><?= __('Telephone') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['telephone']" disabled="disabled">
+                <div class="input string">
+                    <label><?= __('Currently Assigned To') ?></label>
+                    <input type="string" disabled="disabled">
+                </div>
+                <div class="input string">
+                    <label><?= __('Requested By') ?></label>
+                    <input type="string" disabled="disabled">
+                </div>
+                <div class="input string">
+                    <label><?= __('Position') ?></label>
+                    <input type="string" ng-model="InstitutionStaffController.institutionPositionOptions.selectedOption.name" disabled="disabled">
+                </div>
+                <div class="input string">
+                    <label><?= __('Staff Type') ?></label>
+                    <input type="string" ng-model="InstitutionStaffController.staffTypeId.name" disabled="disabled">
+                </div>
+                <div class="input string">
+                    <label><?= __('FTE') ?></label>
+                    <input type="string" ng-model="InstitutionStaffController.displayedFTE" disabled="disabled">
+                </div>
+                <div class="input string">
+                    <label><?= __('Start Date') ?></label>
+                    <input type="string" ng-model="InstitutionStaffController.startDate" disabled="disabled">
                 </div>
             </form>
         </div>
-    </div>
-    <div class="step-pane sample-pane" data-step="5" data-name="transferStaff">
-
     </div>
     <div class="actions bottom">
     </div>

@@ -116,6 +116,16 @@ class StaffUserTable extends ControllerActionTable {
         $model->hasMany('InstitutionRubrics',       ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $options['associated']['Nationalities'] = [
+            'validate' => 'AddByAssociation'
+        ];
+        $options['associated']['Identities'] = [
+            'validate' => 'AddByAssociation'
+        ];
+    }
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
