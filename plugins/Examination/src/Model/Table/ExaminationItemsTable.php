@@ -46,7 +46,11 @@ class ExaminationItemsTable extends AppTable {
             'targetForeignKey' => 'student_id',
             'through' => 'Examination.ExaminationItemResults',
             'dependent' => true,
-            'cascadeCallbacks' => true
+            'cascadeCallbacks' => true,
+            'conditions' => ['OR' => [
+                'ExaminationItemResults.marks IS NOT NULL',
+                'ExaminationItemResults.examination_grading_option_id IS NOT NULL'
+            ]]
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
