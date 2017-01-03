@@ -21,7 +21,7 @@ class Student extends Entity
             $studentStatus = $this->student_status->name;
         }
 
-        return $institutionName . ' - ' . $studentStatus;
+        return $institutionName . ' - ' . __($studentStatus);
     }
 
     protected function _getEducationGradeStudentStatus() {
@@ -35,6 +35,6 @@ class Student extends Entity
             $studentStatus = $this->student_status->name;
         }
 
-        return $gradeName . ' - ' . $studentStatus;
+        return $gradeName . ' - ' . __($studentStatus);
     }
 }
