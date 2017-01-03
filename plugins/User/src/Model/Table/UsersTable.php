@@ -127,7 +127,7 @@ class UsersTable extends AppTable {
 		$model->hasMany('Comments', 				['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Languages', 				['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Awards', 					['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('ExaminationItemResults', 	['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$model->hasMany('ExaminationItemResults', 	['className' => 'Examination.ExaminationItemResults', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$model->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',

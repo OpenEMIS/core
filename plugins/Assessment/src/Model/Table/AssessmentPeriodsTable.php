@@ -109,6 +109,10 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $this->field('weight', [
             'visible' => ['index'=>false]
         ]);
+
+        $this->setFieldOrder([
+            'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -140,7 +144,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         $this->controller->set('assessmentGradingTypeOptions', $this->getGradingTypeOptions()); //send to ctp
 
         $this->setFieldOrder([
-             'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
+             'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
         ]);
 
         //this is to sort array based on certain value on subarray, in this case based on education order value
@@ -401,7 +405,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder([
-             'academic_period_id', 'assessment_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
+             'academic_period_id', 'assessment_id', 'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled', 'weight', 'education_subjects'
         ]);
     }
 
