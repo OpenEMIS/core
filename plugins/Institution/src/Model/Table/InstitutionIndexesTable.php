@@ -19,6 +19,8 @@ class InstitutionIndexesTable extends ControllerActionTable
         $this->table('indexes');
         parent::initialize($config);
 
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
+
         $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->toggle('search', false);
@@ -32,8 +34,33 @@ class InstitutionIndexesTable extends ControllerActionTable
         $this->field('name',['sort' => false]);
         $this->field('average_index',['sort' => false]);
         $this->field('total_risk_index',['sort' => false]);
+        $this->field('academic_period_id',['visible' => false]);
 
         $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
+
+        // element control
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $requestQuery = $this->request->query;
+
+        $selectedAcademicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        $extra['elements']['control'] = [
+            'name' => 'Indexes/controls',
+            'data' => [
+                'academicPeriodOptions'=>$academicPeriodOptions,
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+            ],
+            'options' => [],
+            'order' => 3
+        ];
+        // end element control
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
     public function setupFields(Event $event, Entity $entity)
@@ -72,6 +99,7 @@ class InstitutionIndexesTable extends ControllerActionTable
                 'controller' => $this->controller->name,
                 'action' => 'InstitutionStudentIndexes',
                 'index_id' => $entity->id,
+                'academic_period_id' => $entity->academic_period_id
             ];
         }
 

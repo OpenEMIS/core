@@ -5,9 +5,11 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
@@ -26,7 +28,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('search', false);
-        $this->toggle('view', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
@@ -69,14 +70,15 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     {
         $this->field('openemis_no');
         $this->field('index_id',['visible' => false]);
-        $this->field('academic_period_id',['visible' => false]);
         $this->field('average_index',['visible' => false]);
         $this->field('student_id');
+        $this->field('academic_period_id',['visible' => false]);
 
         $session = $this->request->session();
         $institutionId = $session->read('Institution.Institutions.id');
         $userId = $session->read('Auth.User.id');
         $indexId = $this->request->query['index_id'];
+        $academicPeriodId = $this->request->query['academic_period_id'];
 
         // back buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
@@ -119,30 +121,17 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $toolbarButtonsArray['generate']['url'] = $this->setQueryString($url, [
             'institution_id' => $institutionId,
             'user_id' => $userId,
-            'index_id' => $indexId
+            'index_id' => $indexId,
+            'academic_period_id' => $academicPeriodId
         ]);
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end generate buttons
 
         // element control
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-
-        $selectedAcademicPeriodId = $this->queryString('academic_period_id', $academicPeriodOptions);
-        $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
-            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-            'callable' => function($id) use ($Classes, $institutionId) {
-                return $Classes->find()
-                    ->where([
-                        $Classes->aliasField('institution_id') => $institutionId,
-                        $Classes->aliasField('academic_period_id') => $id
-                    ])
-                    ->count();
-            }
-        ]);
-        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+        $selectedAcademicPeriodId = $this->request->query['academic_period_id'];
 
         $classOptions = $Classes->getClassOptions($selectedAcademicPeriodId, $institutionId);
         if (!empty($classOptions)) {
@@ -164,10 +153,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $extra['selectedClass'] = $selectedClassId;
 
         $extra['elements']['control'] = [
-            'name' => 'Institution.Indexes/controls',
+            'name' => 'StudentIndexes/controls',
             'data' => [
-                'academicPeriodOptions'=>$academicPeriodOptions,
-                'selectedAcademicPeriod'=>$selectedAcademicPeriodId,
                 'classOptions'=>$classOptions,
                 'selectedClass'=>$selectedClassId,
             ],
@@ -183,7 +170,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $session = $this->request->session();
 
         $institutionId = $session->read('Institution.Institutions.id');
-        $academicPeriodId = $extra['selectedAcademicPeriodId'];
+        $academicPeriodId = $requestQuery['academic_period_id'];
         $classId = $extra['selectedClass'];
 
         $conditions = [
@@ -203,6 +190,30 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         }
 
         return $query->where([$conditions]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('index_id', ['after' => 'academic_period_id']);
+        $this->field('total_index', ['after' => 'index_id']);
+        $this->field('indexes_criterias', ['type' => 'custom_criterias', 'after' => 'total_index']);
+        $this->field('average_index', ['visible' => false]);
+        $this->field('student_id', ['visible' => false]);
+        $this->field('created_user_id', ['visible' => false]);
+        $this->field('created', ['visible' => false]);
+
+        // BreadCrumb
+        $indexId = $this->request->query['index_id'];
+        $academicPeriodId = $this->request->query['academic_period_id'];
+        $institutionIndexesUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionStudentIndexes', 'index_id' => $indexId, 'academic_period_id' => $academicPeriodId];
+
+        $this->Navigation->substituteCrumb('Institution Student Indexes', 'Institution Student Indexes', $institutionIndexesUrl);
+
+        // Header
+        $studentName = $entity->user->first_name . ' ' . $entity->user->last_name;
+        $header = $studentName . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
+
+        $this->controller->set('contentHeader', $header);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -252,7 +263,11 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
             // to get the indexes criteria to get the value on the student_indexes_criterias
             $indexesCriteriaResults = $IndexesCriterias->find()
-                ->where([$IndexesCriterias->aliasField('criteria') => $criteriaName])
+                ->contain(['Indexes'])
+                ->where([
+                    'criteria' => $criteriaName,
+                    'Indexes.academic_period_id' => $academicPeriodId
+                ])
                 ->all();
 
             if (!$indexesCriteriaResults->isEmpty()) {
@@ -407,6 +422,97 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             }
         }
     }
+
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
+        $tableHeaders = $this->getMessage('Indexes.TableHeader');
+        array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
+        $tableHeaders[] = __('References');
+        $tableCells = [];
+        $fieldKey = 'indexes_criterias';
+
+        $indexId = $entity->index->id;
+        $institutionId = $entity->institution->id;
+        $studentId = $entity->user->id;
+        $academicPeriodId = $entity->academic_period_id;
+
+        $institutionStudentIndexId = $this->paramsDecode($this->paramsPass(0))['id']; // paramsPass(0) after the hash of Id
+
+        if ($action == 'view') {
+            $studentIndexesCriteriasResults = $this->StudentIndexesCriterias->find()
+                ->contain(['IndexesCriterias'])
+                ->where([
+                    $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $institutionStudentIndexId,
+                    $this->StudentIndexesCriterias->aliasField('value') . ' IS NOT NULL'
+                ])
+                ->order(['criteria','threshold'])
+                ->all();
+
+            foreach ($studentIndexesCriteriasResults as $key => $obj) {
+                if (isset($obj->indexes_criteria)) {
+                    $indexesCriteriasId = $obj->indexes_criteria->id;
+
+                    $criteriaName = $obj->indexes_criteria->criteria;
+                    $operator = $obj->indexes_criteria->operator;
+                    $threshold = $obj->indexes_criteria->threshold;
+
+                    $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriasId);
+
+                    $criteriaDetails = $this->Indexes->getCriteriasDetails($criteriaName);
+                    $CriteriaModel = TableRegistry::get($criteriaDetails['model']);
+
+                    if ($value == 'True') {
+                        // Comparison like behaviour
+                        $LookupModel = TableRegistry::get($criteriaDetails['threshold']['lookupModel']);
+
+                        // to get total number of behaviour
+                        $getValueIndex = $CriteriaModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+                        $quantity = '';
+                        if ($getValueIndex[$threshold] > 1) {
+                            $quantity = ' ( x'. $getValueIndex[$threshold]. ' )';
+                        }
+
+                        $indexValue = '<div style="color : red">' . $obj->indexes_criteria->index_value . $quantity  .'</div>';
+
+                        // for reference tooltip
+                        $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
+
+                        // for threshold name
+                        $thresholdName = $LookupModel->get($threshold)->name;
+                        $threshold = $thresholdName;
+                    } else {
+                        // numeric value come here (absence quantity, results)
+                        // for value
+                        $indexValue = '<div style="color : red">'.$obj->indexes_criteria->index_value.'</div>';
+
+                        // for the reference tooltip
+                        $reference = $CriteriaModel->getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName);
+                    }
+
+                    // blue info tooltip
+                    $tooltipReference = '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="left" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$reference.'"></i>';
+
+                    // to put in the table
+                    $rowData = [];
+                    $rowData[] = __($this->Indexes->getCriteriasDetails($criteriaName)['name']);
+                    $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['operator'][$operator];
+                    $rowData[] = __($threshold);
+                    $rowData[] = __($value);
+                    $rowData[] = $indexValue;
+                    $rowData[] = $tooltipReference;
+
+                    $tableCells [] = $rowData;
+                }
+            }
+        }
+
+        $attr['tableHeaders'] = $tableHeaders;
+        $attr['tableCells'] = $tableCells;
+
+        return $event->subject()->renderElement('Indexes.Indexes/' . $fieldKey, ['attr' => $attr]);
+    }
+
 
     public function getStudentId($criteriaTable, $afterSaveOrDeleteEntity)
     {

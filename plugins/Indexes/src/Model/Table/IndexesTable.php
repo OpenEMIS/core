@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Log\Log;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\HtmlTrait;
@@ -70,6 +71,8 @@ class IndexesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' =>'academic_period_id']);
+
         $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStudentIndexes', ['className' => 'Institution.InstitutionStudentIndexes', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -84,12 +87,24 @@ class IndexesTable extends ControllerActionTable
         return $events;
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('name', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table',
+                'message' => __('This field has to be unique')
+            ]);
+    }
+
     public function generate(Event $event, ArrayObject $extra)
     {
         $requestQuery = $this->request->query;
         $session = $this->request->session();
         $sessionUserId = $session->read('Auth.User.id');
         $sessionIndexId = $session->read('Indexes.Indexes.primaryKey.id');
+        $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
 
         // back Button
         // if have queryString will be redirected to institution>indexes>generate
@@ -133,13 +148,14 @@ class IndexesTable extends ControllerActionTable
         $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : 0;
         $userId = array_key_exists('user_id', $params) ? $params['user_id'] : $sessionUserId;
         $indexId = array_key_exists('index_id', $params) ? $params['index_id'] : $sessionIndexId;
+        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : $currentAcademicPeriodId;
 
         $entity = $this->newEntity();
 
         if ($this->request->is(['get'])) {
         } else if ($this->request->is(['post', 'put'])) {
             // trigger shell
-            $this->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId);
+            $this->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId, $academicPeriodId);
         }
 
         $this->controller->set('data', $entity);
@@ -260,6 +276,7 @@ class IndexesTable extends ControllerActionTable
                 }
 
                 $associated = $entity->extractOriginal([$fieldKey]);
+
                 if (!empty($associated[$fieldKey])) {
                     foreach ($associated[$fieldKey] as $key => $obj) {
                         $this->request->data[$alias][$fieldKey][$key] = [
@@ -267,7 +284,8 @@ class IndexesTable extends ControllerActionTable
                             'criteria' => $obj->criteria,
                             'operator' => $obj->operator,
                             'threshold' => $obj->threshold,
-                            'index_value' => $obj->index_value
+                            'index_value' => $obj->index_value,
+                            'index_id' => $obj->index_id
                         ];
                     }
                 }
@@ -281,6 +299,7 @@ class IndexesTable extends ControllerActionTable
                     $criteriaType = $obj['criteria'];
                     $operator = $obj['operator'];
                     $threshold = $obj['threshold'];
+                    $indexId = $obj['index_id'];
 
                     $cell = $criteriaOptions[$criteriaType];
                     if (isset($obj['id'])) {
@@ -289,6 +308,7 @@ class IndexesTable extends ControllerActionTable
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.criteria", ['value' => $criteriaType]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.operator", ['value' => $operator]);
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.threshold", ['value' => $threshold]);
+                    $cell .= $Form->hidden("$alias.$fieldKey.$key.index_id", ['value' => $indexId]);
 
                     $rowData[] = $cell;
                     $rowData[] = $Form->input("$alias.$fieldKey.$key.operator", $this->getOperatorParams($criteriaType));
@@ -307,12 +327,52 @@ class IndexesTable extends ControllerActionTable
         return $event->subject()->renderElement('Indexes.Indexes/' . $fieldKey, ['attr' => $attr]);
     }
 
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $requestQuery = $this->request->query;
+
+            $academicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriodId)->name;
+            $attr['value'] = $academicPeriodId;
+        }
+
+        return $attr;
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name',['sort' => false]);
         $this->field('modified_user_id',['visible' => true]);
         $this->field('modified',['visible' => true, 'sort' => false]);
         $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
+        $this->field('academic_period_id',['visible' => false]);
+
+        // element control
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList();
+        $requestQuery = $this->request->query;
+
+        $selectedAcademicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+
+        $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        $extra['elements']['control'] = [
+            'name' => 'Indexes/controls',
+            'data' => [
+                'academicPeriodOptions'=>$academicPeriodOptions,
+                'selectedAcademicPeriod'=>$selectedAcademicPeriodId
+            ],
+            'options' => [],
+            'order' => 3
+        ];
+        // end element control
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -360,6 +420,7 @@ class IndexesTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
+        $this->field('academic_period_id',['before' => 'name']);
     }
 
     public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -375,8 +436,10 @@ class IndexesTable extends ControllerActionTable
         $entityIndexesCriteriasData = $entity->indexes_criterias;
         // list of criteria in the index type
         $entityIndexesCriterias = [];
-        foreach ($entityIndexesCriteriasData as $key => $entityIndexesCriteriasObj) {
-            $entityIndexesCriterias[$entityIndexesCriteriasObj->id] = $entityIndexesCriteriasObj;
+        if (!empty($entityIndexesCriteriasData)) {
+            foreach ($entityIndexesCriteriasData as $key => $entityIndexesCriteriasObj) {
+                $entityIndexesCriterias[$entityIndexesCriteriasObj->id] = $entityIndexesCriteriasObj;
+            }
         }
 
         $indexId = $entity->id;
@@ -465,7 +528,8 @@ class IndexesTable extends ControllerActionTable
                 'criteria' => $criteriaType,
                 'operator' => '',
                 'threshold' => '',
-                'index_value' => ''
+                'index_value' => '',
+                'index_id' => 0
             ];
 
             unset($data[$alias]['criteria_type']);
@@ -519,12 +583,13 @@ class IndexesTable extends ControllerActionTable
         return $criteria;
     }
 
-    public function triggerUpdateIndexesShell($shellName, $institutionId=0, $userId=0, $indexId=0)
+    public function triggerUpdateIndexesShell($shellName, $institutionId=0, $userId=0, $indexId=0, $academicPeriodId=0)
     {
         $args = '';
         $args .= !is_null($institutionId) ? ' '.$institutionId : '';
         $args .= !is_null($userId) ? ' '.$userId : '';
         $args .= !is_null($indexId) ? ' '.$indexId : '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
