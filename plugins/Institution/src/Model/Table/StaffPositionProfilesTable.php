@@ -289,7 +289,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			'controller' => 'Institutions',
 			'action' => 'Staff',
 			'0' => 'view',
-			'1' => $entity->institution_staff_id
+			'1' => $this->paramsEncode(['id' => $entity->institution_staff_id])
 		];
 
 		// To investigate
@@ -476,6 +476,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	private function initialiseVariable($entity) {
 		$institutionStaffId = $this->request->query('institution_staff_id');
+
+		$institutionStaffId = $this->paramsDecode($institutionStaffId)['id'];
+
 		if (is_null($institutionStaffId)) {
 			return true;
 		}

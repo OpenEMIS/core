@@ -21,7 +21,7 @@ class SpecialNeedTypesTable extends ControllerActionTable
         ]);
     }
 
-    public function findVisibleNeedTypes(array $options = [])
+    public function getVisibleNeedTypes(array $options = [])
     {
         $query = $this
             ->find('visible')

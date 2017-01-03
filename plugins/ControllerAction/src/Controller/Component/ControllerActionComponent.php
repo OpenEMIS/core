@@ -1261,7 +1261,7 @@ class ControllerActionComponent extends Component {
     }
 
     public function remove($id=0) {
-        $ids = $this->paramsDecode($id);
+        $ids = ($id) ? $this->paramsDecode($id) : 0;
         $request = $this->request;
         $model = $this->model;
         $settings = new ArrayObject([]);
@@ -1284,9 +1284,8 @@ class ControllerActionComponent extends Component {
 
         $primaryKey = $model->primaryKey();
 
-        $idKeys = $this->getIdKeys($model, $ids);
-
         if ($request->is('get')) {
+            $idKeys = $this->getIdKeys($model, $ids);
             if ($model->exists($idKeys)) {
                 $entity = $model->get($idKeys);
 
@@ -1407,7 +1406,20 @@ class ControllerActionComponent extends Component {
             }
         } else if ($request->is('delete')) {
             $this->autoRender = false;
-            $ids = $this->getIdKeys($model, $request->data, false);
+
+            if ($this->deleteStrategy == 'restrict' || $this->deleteStrategy == 'transfer') {
+                $primaryKeyArr = [];
+                if (!is_array($primaryKey)) {
+                    $primaryKeyArr[] = $primaryKey;
+                } else {
+                    $primaryKeyArr = $primaryKey;
+                }
+                $primaryKeyValue = array_intersect_key($request->data, array_flip($primaryKeyArr));
+                $ids = $this->getIdKeys($model, $primaryKeyValue, false);
+            } else {
+                $id = $this->paramsDecode($request->data('primaryKey'));
+                $ids = $this->getIdKeys($model, $id, false);
+            }
 
             $deleteOptions = new ArrayObject([]);
             $extra = new ArrayObject(['excludedModels' => []]);
