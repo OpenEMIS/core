@@ -226,7 +226,7 @@ AND NOT EXISTS (
   SELECT 1 FROM system_updates WHERE system_updates.version = system_patches.version
 )
 GROUP BY version
-ORDER BY created ASC, version ASC
+ORDER BY created ASC, version ASC;
 
 
 -- Add below into version commit.sql at the end of the script
