@@ -28,6 +28,8 @@ class UserNationalitiesTable extends ControllerActionTable {
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add']
         ]);
+
+        $this->addBehavior('CompositeKey');
 	}
 
 	public function beforeAction(Event $event) {
@@ -36,25 +38,13 @@ class UserNationalitiesTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($entity);    
+        $this->setupFields($entity);
     }
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 		return $validator
-            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
-            ->add('nationality_id', 'ruleUniqueNationality', [
-                'rule' => 'validateUniqueNationality',
-                'on' => function ($context) {
-                    if ($this->action == 'edit') { //trigger this only during edit
-                        $originalNationality = $this->get($context['data']['id'])->nationality_id;
-                        $newNationality = $context['data']['nationality_id'];
-                        return $originalNationality != $newNationality; //only trigger validation if there is any changes on the code value.
-                    } else if ($this->action == 'add') { //during add, then validation always needed.
-                        return true;
-                    }
-                }
-            ]);
+            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank']);
 	}
 
 	public function validationNonMandatory(Validator $validator) {
@@ -87,40 +77,64 @@ class UserNationalitiesTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'NationalitiesLookUp'
+        ]);
+    }
+
 	public function afterAction(Event $event) {
 		$this->setupTabElements();
     }
 
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
     {
-        $currentNationalities = $this
-                                ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                                ->matching('NationalitiesLookUp')
-                                ->where([
-                                    $this->aliasfield('security_user_id') => $this->securityUserId
-                                ])
-                                ->select([
-                                    'id' => $this->NationalitiesLookUp->aliasfield('id')
-                                ])
-                                ->toArray();
-        
         if ($action == 'add' || $action == 'edit') {
-            if ($action == 'edit') { //when edit then include the nationality that is being edited.
-                $nationalityId[] = $attr['entity']->nationality_id;
-                $currentNationalities = array_diff($currentNationalities, $nationalityId);
-            }
+            
+            if ($action == 'add') {
+                $currentNationalities = $this
+                                        ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                                        ->matching('NationalitiesLookUp')
+                                        ->where([
+                                            $this->aliasfield('security_user_id') => $this->securityUserId
+                                        ])
+                                        ->select([
+                                            'id' => $this->NationalitiesLookUp->aliasfield('id')
+                                        ])
+                                        ->toArray();
 
-            $nationalities = $this->NationalitiesLookUp->find('visible')->find('list');
+                $nationalities = $this->NationalitiesLookUp->find('visible')->find('list');
 
-            if (!empty($currentNationalities)) {
-                $nationalities = $nationalities
+                if (!empty($currentNationalities)) {
+                    $nationalities = $nationalities
                                     ->where([
                                         $this->NationalitiesLookUp->aliasfield('id NOT IN ') => $currentNationalities
                                     ]);
-            }
+                }
 
-            $nationalities = $nationalities->toArray();
-            $attr['options'] = $nationalities;
+                $nationalities = $nationalities->toArray();
+                $attr['options'] = $nationalities;
+            } else if ($action == 'edit') {
+                $entity = $attr['entity'];
+                $attr['type'] = 'readonly';
+                $attr['value'] = $entity->nationality_id;
+                $attr['attr']['value'] = $entity->nationalities_look_up->name;
+            }
+        }
+        return $attr;
+
+        if ($action == 'add') {
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+
+            $attr['options'] = $periodOptions;
+            $attr['default'] = $selectedPeriod;
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->academic_period_id;
+            $attr['attr']['value'] = $entity->academic_period->name;
         }
         return $attr;
     }
