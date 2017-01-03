@@ -549,6 +549,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             staff_id: staffId,
             staff_name: staffId,
             institution_position_id: institutionPositionId,
+            staff_assignment: true,
             academic_period_id: academicPeriodId,
             position_type: positionType,
             staff_type_id: staffTypeId,
@@ -564,10 +565,22 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             console.log(postResponse);
             StaffController.addStaffError = false;
             StaffController.transferStaffError = false;
-            if (postResponse.data.error.length === 0) {
+
+            var log = [];
+            var counter = 0;
+            angular.forEach(postResponse.data.error , function(value) {
+                counter++;
+            }, log);
+
+            console.log(counter);
+
+            if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
                 deferred.resolve(StaffController.postResponse);
+            } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
+                console.log('here');
+                StaffController.transferStaffError = true;
             } else {
                 StaffController.addStaffError = true;
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
@@ -681,10 +694,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var deferred = $q.defer();
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
         var positionType = StaffController.positionType;
-        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption')) ? StaffController.institutionPositionOptions.selectedOption.value: '';
+        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value: '';
         institutionPositionId = (institutionPositionId == undefined) ? '' : institutionPositionId;
         var fte = StaffController.fte;
-        var staffTypeId = StaffController.staffTypeId.id;
+        var staffTypeId = (StaffController.staffTypeId != null && StaffController.staffTypeId.hasOwnProperty('id')) ? StaffController.staffTypeId.id : '';
         var startDate = StaffController.startDate;
         var startDateArr = startDate.split("-");
         startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
