@@ -580,16 +580,24 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
-
+                deferred.resolve(StaffController.postResponse);
             } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
-                console.log('here');
-                StaffController.transferStaffError = true;
-                AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
+                InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
+                .then(function(response) {
+                    console.log(response);
+                    StaffController.transferStaffError = true;
+                    AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
+                    deferred.resolve(StaffController.postResponse);
+                }, function(error) {
+                    deferred.resolve(StaffController.postResponse);
+                });
+
             } else {
                 StaffController.addStaffError = true;
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                deferred.resolve(StaffController.postResponse);
             }
-            deferred.resolve(StaffController.postResponse);
+
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
@@ -674,6 +682,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         angular.forEach(StaffController.rowsThisPage , function(value) {
             if (value.id == StaffController.selectedStaff) {
                 StaffController.selectedStaffData = value;
+                console.log(StaffController.selectedStaffData);
             }
         }, log);
     }
@@ -915,7 +924,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             if (StaffController.externalSearch) {
                 StaffController.getUniqueOpenEmisId();
             }
+            // Work around for alert reset
             StaffController.createNewInternalDatasource(StaffController.internalGridOptions, true);
+
             StaffController.step = 'add_staff';
         }
 
@@ -932,7 +943,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.step = 'transfer_staff';
                 }
             }, function(error) {
-                console.log(StaffController.transferStaffError);
+                console.log(errors);
                 // error handling here
             });
         }
