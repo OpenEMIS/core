@@ -186,13 +186,13 @@ INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3527', NOW());
 
 RENAME TABLE `db_patches` TO `system_patches`;
 
-CREATE TABLE IF NOT EXISTS `system_updates` (
+CREATE TABLE IF NOT EXISTS `system_updates2` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `version` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `date_released` date NOT NULL,
   `date_approved` date DEFAULT NULL,
   `approved_by` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
-  `status` int(11) NOT NULL DEFAULT 1,
+  `status` int(11) NOT NULL DEFAULT 1 COMMENT '1 -> Pending, 2 -> Approved',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL DEFAULT 1,
@@ -246,9 +246,9 @@ UPDATE config_items SET value = '3.8.4' WHERE code = 'db_version';
 UPDATE system_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
 SET @maxId := 0;
 SELECT max(id) + 1 INTO @maxId FROM system_updates;
-INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, created) VALUES
+INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, status, created) VALUES
 (
   @maxId,
   (SELECT value FROM config_items WHERE code = 'db_version'),
-  NOW(), NOW(), 1, NOW()
+  NOW(), NOW(), 1, 2, NOW()
 );
