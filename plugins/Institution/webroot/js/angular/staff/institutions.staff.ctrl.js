@@ -28,6 +28,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
     StaffController.institutionId = null;
+    StaffController.institutionName = '';
     StaffController.addStaffError = false;
     StaffController.transferStaffError = false;
 
@@ -133,6 +134,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
             promises.push(InstitutionsStaffSvc.getAddNewStaffConfig());
             promises.push(InstitutionsStaffSvc.getStaffTypes());
+            promises.push(InstitutionsStaffSvc.getInstitution(StaffController.institutionId));
             return $q.all(promises);
         }, function(error) {
             console.log(error);
@@ -143,6 +145,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             var promises = [];
             var addNewStaffConfig = promisesObj[0].data;
             var staffTypes = promisesObj[1].data;
+            var institutionName = promisesObj[2].data[0]['code_name'];
+            StaffController.institutionName = institutionName;
             StaffController.staffTypeOptions = staffTypes;
 
             for(i=0; i < addNewStaffConfig.length; i++) {
@@ -575,8 +579,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 counter++;
             }, log);
 
-            console.log(counter);
-
             if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
@@ -584,11 +586,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
                 InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
                 .then(function(response) {
-                    console.log(response);
+                    StaffController.selectedStaffData['institution_staff'] = response.institution_staff;
                     StaffController.transferStaffError = true;
                     AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
                     deferred.resolve(StaffController.postResponse);
                 }, function(error) {
+                    StaffController.transferStaffError = true;
+                    AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
                     deferred.resolve(StaffController.postResponse);
                 });
 

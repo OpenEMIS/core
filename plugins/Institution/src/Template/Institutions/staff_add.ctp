@@ -37,7 +37,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             <li data-step="4" data-name="addStaff">
                 <div class="step-wrapper">
                     <?= __('Add Staff') ?>
-                    <input type="hidden" ng-model="InstitutionStaffController.hasExternalDataSource" ng-init="InstitutionStaffController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStaffController.institutionId=<?= $institutionId; ?>;"/>
+                    <input type="hidden" ng-model="InstitutionStaffController.hasExternalDataSource" ng-init="InstitutionStaffController.hasExternalDataSource = <?php if ($externalDataSource) echo 'true'; else echo 'false'; ?>; InstitutionStaffController.institutionId=<?= $institutionId; ?>; "/>
                     <span class="chevron"></span>
                 </div>
             </li>
@@ -446,8 +446,8 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input type="string" value="<?= __('Pending Approval') ?>" disabled="disabled">
                 </div>
                 <div class="input string">
-                    <label><?= __('OpenEMIS No') ?></label>
-                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['name']" disabled="disabled">
+                    <label><?= __('OpenEMIS ID') ?></label>
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['openemis_no']" disabled="disabled">
                 </div>
                 <div class="input string">
                     <label><?= __('Staff') ?></label>
@@ -455,11 +455,11 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
                 <div class="input string">
                     <label><?= __('Currently Assigned To') ?></label>
-                    <input type="string" disabled="disabled">
+                    <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['institution_staff'][0]['institution']['code_name']" disabled="disabled">
                 </div>
                 <div class="input string">
                     <label><?= __('Requested By') ?></label>
-                    <input type="string" disabled="disabled">
+                    <input type="string" ng-model="InstitutionStaffController.institutionName" disabled="disabled">
                 </div>
                 <div class="input string">
                     <label><?= __('Position') ?></label>

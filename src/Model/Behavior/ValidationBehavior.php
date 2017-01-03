@@ -1721,7 +1721,6 @@ class ValidationBehavior extends Behavior {
 			->where([
 				$StaffTable->aliasField('staff_id') => $staffId,
 				$StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
-				$StaffTable->aliasField('academic_period_id') => $academicPeriodId,
 				'OR' => [
 					[$StaffTable->aliasField('end_date').' >= ' => $startDate],
 					[$StaffTable->aliasField('end_date').' IS NULL']
