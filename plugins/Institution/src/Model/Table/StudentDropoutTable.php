@@ -163,7 +163,7 @@ class StudentDropoutTable extends AppTable {
 					'controller' => $urlParams['controller'],
 					'action' => $urlParams['action'],
 					'0' => 'edit',
-					'1' => $entity->id
+					'1' => $this->paramsEncode(['id' => $entity->id])
 				]);
 			}
 		}

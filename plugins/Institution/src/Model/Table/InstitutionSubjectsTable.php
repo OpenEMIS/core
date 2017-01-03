@@ -760,7 +760,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         return $entity;
     }
-    
+
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
@@ -778,7 +778,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $assocTable->aliasField('status') => 1
             ]);
         }
-        
+
     }
 
 /******************************************************************************************************************
@@ -1076,10 +1076,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->toArray();
 
         $Students = TableRegistry::get('Institution.InstitutionClassStudents');
-        $conditions = [
-            $Students->aliasField('institution_class_id').' IN' => $classKeys,
-            $Students->aliasField('education_grade_id').' IN' => $grades
-        ];
+        if (!empty($grades)) {
+            $conditions[$Students->aliasField('education_grade_id').' IN'] = $grades;
+        }
+
+        $conditions[$Students->aliasField('institution_class_id').' IN'] = $classKeys;
         /**
          * Attempt to improve performance by filtering out includedStudents in $studentOptions through SQL query
          */
@@ -1248,7 +1249,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $value->id
+                            $this->paramsEncode(['id' => $value->id])
                         ]);
                         break;
 

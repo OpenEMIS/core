@@ -14,6 +14,7 @@ use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
 use Cake\Network\Session;
+use Cake\Datasource\ConnectionManager;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -114,6 +115,8 @@ class UsersTable extends AppTable {
 		$model->belongsTo('Genders', 		 		['className' => 'User.Genders']);
 		$model->belongsTo('AddressAreas', 	 		['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$model->belongsTo('BirthplaceAreas', 		['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		$model->belongsTo('MainNationalities',		['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$model->belongsTo('MainIdentityTypes',		['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		$model->hasMany('Identities', 				['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('Nationalities', 			['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
@@ -195,18 +198,18 @@ class UsersTable extends AppTable {
 
 		$tabElements = [
 			$this->alias => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $this->paramsEncode(['id' => $id])],
 				'text' => __('Details')
 			],
 			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->paramsEncode(['id' => $id])],
 				'text' => __('Account')
 			]
 		];
 
 		if (!in_array($this->controller->name, ['Students', 'Staff', 'Guardians'])) {
 			$tabElements[$this->alias] = [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $id],
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $this->paramsEncode(['id' => $id])],
 				'text' => __('Details')
 			];
 		}
@@ -367,15 +370,9 @@ class UsersTable extends AppTable {
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
 
-		if (array_key_exists('model', $options)) {
-			switch ($options['model']) {
-				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
-					$prefix = explode(",", $prefix);
-					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
-					break;
-			}
-		}
+		$prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
+		$prefix = explode(",", $prefix);
+		$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
 		$latest = $this->find()
 			->order($this->aliasField('id').' DESC')
@@ -657,8 +654,31 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function updateIdentityNumber($userId, $identityNo)
+	public function updateAllIdentityNumber($nationalityType)
 	{
-		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);
+		$connection = ConnectionManager::get('default');
+		$connection->execute(
+			'UPDATE `security_users`
+			INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
+			LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
+			SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
+			WHERE `security_users`.`nationality_id` = ?',
+			[$nationalityType],
+    		['integer']
+		);
+	}
+
+	public function updateIdentityNumber($userId)
+	{
+		$connection = ConnectionManager::get('default');
+        $connection->execute(
+            'UPDATE `security_users`
+            INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
+            LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
+            SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
+            WHERE `security_users`.`id` = ?',
+            [$userId],
+            ['integer']
+        );
 	}
 }
