@@ -27,6 +27,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.showExternalSearchButton = false;
     StaffController.completeDisabled = false;
     StaffController.institutionId = null;
+    StaffController.addStaffError = false;
+    StaffController.transferStaffError = false;
 
     // 0 - Non-mandatory, 1 - Mandatory, 2 - Excluded
     StaffController.StaffContacts = 2;
@@ -554,22 +556,29 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             start_date: startDate,
             end_date: endDate
         };
-
+        var deferred = $q.defer();
         InstitutionsStaffSvc.postAssignedStaff(data)
         .then(function(postResponse) {
             StaffController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
             console.log(postResponse);
+            StaffController.addStaffError = false;
+            StaffController.transferStaffError = false;
             if (postResponse.data.error.length === 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
+                deferred.resolve(StaffController.postResponse);
             } else {
+                StaffController.addStaffError = true;
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                deferred.resolve(StaffController.postResponse);
             }
         }, function(error) {
             console.log(error);
             AlertSvc.warning($scope, error);
+            deferred.reject(error);
         });
+        return deferred.promise;
     }
 
     function onAddNewStaffClick() {
@@ -669,10 +678,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function postForm() {
-
+        var deferred = $q.defer();
         var academicPeriodId = (StaffController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StaffController.academicPeriodOptions.selectedOption.id: '';
         var positionType = StaffController.positionType;
         var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption')) ? StaffController.institutionPositionOptions.selectedOption.value: '';
+        institutionPositionId = (institutionPositionId == undefined) ? '' : institutionPositionId;
         var fte = StaffController.fte;
         var staffTypeId = StaffController.staffTypeId.id;
         var startDate = StaffController.startDate;
@@ -690,13 +700,12 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 var studentData = StaffController.selectedStaffData;
                 var amendedStaffData = Object.assign({}, studentData);
                 amendedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(amendedStaffData.date_of_birth);
-                StaffController.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
+                return StaffController.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
             } else {
                 var staffId = StaffController.selectedStaff;
-                StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, {});
+                return StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, {});
             }
         } else {
-            console.log('postForm');
             if (StaffController.selectedStaffData != null) {
                 console.log('not null');
                 var studentData = {};
@@ -729,13 +738,13 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 delete studentData['modified_user_id'];
                 delete studentData['created'];
                 delete studentData['created_user_id'];
-                StaffController.addStaffUser(studentData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
+                return StaffController.addStaffUser(studentData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
             }
         }
     }
 
     function addStaffUser(studentData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate) {
-
+        var deferred = $q.defer();
         var newStaffData = studentData;
         newStaffData['academic_period_id'] = academicPeriodId;
         newStaffData['start_date'] = startDate;
@@ -745,16 +754,20 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(user){
             if (user[0].error.length === 0) {
                 var staffId = user[0].data.id;
-                StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1]);
+                deferred.resolve(StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1]));
             } else {
                 StaffController.postResponse = user[0];
                 console.log(user[0]);
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
+                deferred.resolve(StaffController.postResponse);
             }
         }, function(error){
             console.log(error);
+            deferred.reject(error);
             AlertSvc.warning($scope, error);
         });
+
+        return deferred.promise;
     }
 
 
@@ -846,7 +859,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
-        StaffController.postForm();
+        // The last complete step is now transfer staff, add transfer staff logic function call here
+        // StaffController.postForm();
     });
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
@@ -880,7 +894,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             InstitutionsStaffSvc.resetExternalVariable();
         }
         // Step 4 - Add Staff
-        else {
+        else if (data.step == 4) {
             if (StaffController.externalSearch) {
                 StaffController.getUniqueOpenEmisId();
             }
@@ -893,7 +907,23 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     StaffController.completeDisabled = true;
                 }
             }
-            StaffController.step = 'add_student';
+            StaffController.step = 'add_staff';
+        }
+
+        // Step 5 - Transfer Staff
+        else if (data.step == 5) {
+            StaffController.postForm().then(function(response) {
+                if (StaffController.addStaffError) {
+                    angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                        step: "addStaff"
+                    });
+                    StaffController.step = 'add_staff';
+                } else if (StaffController.transferStaffError) {
+                    StaffController.step = 'transfer_staff';
+                }
+            }, function(error) {
+                // error handling here
+            });
         }
     });
 
