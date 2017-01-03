@@ -28,7 +28,7 @@ class RestfulV1Component extends Component implements RestfulInterface
 
     public function token()
     {
-        $this->autoRender = false;
+        $this->controller->autoRender = false;
         if (!empty($this->request->query)) {
             pr($this->request->query);
         }
