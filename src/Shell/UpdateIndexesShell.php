@@ -12,12 +12,12 @@ class UpdateIndexesShell extends Shell
     public function initialize()
     {
         parent::initialize();
-
         $this->loadModel('Institution.InstitutionStudentIndexes');
         $this->loadModel('Institution.StudentIndexesCriterias');
         $this->loadModel('Indexes.IndexesCriterias');
         $this->loadModel('Indexes.Indexes');
         $this->loadModel('Institution.Students');
+        $this->loadModel('AcademicPeriod.AcademicPeriods');
     }
 
     public function main()
@@ -25,13 +25,16 @@ class UpdateIndexesShell extends Shell
         $institutionId = !empty($this->args[0]) ? $this->args[0] : 0;
         $userId = !empty($this->args[1]) ? $this->args[1] : 0;
         $indexId = !empty($this->args[2]) ? $this->args[2] : 0;
+        $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
+        // $indexesCriteriaData = $this->Indexes->getCriteriasData(); // all the criteria
         $indexesCriteriaData = $this->IndexesCriterias->getCriteriaKey($indexId);
+
 
         if (!empty($indexesCriteriaData)) {
             foreach ($indexesCriteriaData as $key => $obj) {
                 $criteriaData = $this->Indexes->getCriteriasDetails($key);
-                $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId);
+                $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId);
             }
 
             // update the generated_by and generated_on in indexes table
@@ -46,7 +49,7 @@ class UpdateIndexesShell extends Shell
         }
     }
 
-    public function autoUpdateIndexes($key, $model, $institutionId=0, $userId=0)
+    public function autoUpdateIndexes($key, $model, $institutionId=0, $userId=0, $academicPeriodId=0)
     {
         $today = Time::now();
         $CriteriaModel = TableRegistry::get($model);
@@ -55,31 +58,47 @@ class UpdateIndexesShell extends Shell
             $institutionStudentsResults = $this->Students->find()
                 ->where([
                     'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
                     'student_status_id' => 1 //enrolled status
                 ])
                 ->all();
 
-            // list of enrolled student in the institution
+            // list of enrolled student in the institution in academic period
             $institutionStudentsList = [];
             foreach ($institutionStudentsResults as $institutionStudentsResultsKey => $institutionStudentsResultsObj) {
                 $institutionStudentsList[] = $institutionStudentsResultsObj->student_id;
             }
 
             switch ($key) {
-                case 'Genders':
+                case 'Absences': // no academic_period_id (within start and end date of the academic period)
+                    $academicPeriodDetails = $this->AcademicPeriods->get($academicPeriodId);
+                    $academicPeriodStartDate = $academicPeriodDetails->start_date;
+                    $academicPeriodEndDate = $academicPeriodDetails->end_date;
+
+                    $condition = [
+                        $CriteriaModel->aliasField('institution_id') => $institutionId,
+                        $CriteriaModel->aliasField('start_date') . ' >= ' => $academicPeriodStartDate,
+                        $CriteriaModel->aliasField('end_date') . ' <= ' => $academicPeriodEndDate
+                    ];
+                    break;
+
+                case 'Genders': // no institution_id
                     $condition = [$CriteriaModel->aliasField('id') . ' IN ' => $institutionStudentsList];
                     break;
 
-                case 'Guardians':
+                case 'Guardians': // no institution_id
                     $condition = [$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList];
                     break;
 
-                case 'Special Needs':
+                case 'Special Needs': // no institution_id
                     $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $institutionStudentsList];
                     break;
 
-                default: // have institution_id in the model table
-                    $condition = [$CriteriaModel->aliasField('institution_id') => $institutionId];
+                default: // have institution_id and academic_period_id in the model table
+                    $condition = [
+                        $CriteriaModel->aliasField('institution_id') => $institutionId,
+                        $CriteriaModel->aliasField('academic_period_id') => $academicPeriodId
+                    ];
                     break;
             }
         } else {
