@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS `system_updates` (
   `date_released` date NOT NULL,
   `date_approved` date DEFAULT NULL,
   `approved_by` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
-  `status` int(11) NOT NULL DEFAULT 1,
+  `status` int(11) NOT NULL DEFAULT 1 COMMENT '1 -> Pending, 2 -> Approved',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL DEFAULT 1,
@@ -50,9 +50,9 @@ ORDER BY created ASC, version ASC
 
 -- SET @maxId := 0;
 -- SELECT max(id) + 1 INTO @maxId FROM system_updates;
--- INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, created) VALUES
+-- INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, status, created) VALUES
 -- (
 --   @maxId,
 --   (SELECT value FROM config_items WHERE code = 'db_version'),
---   NOW(), NOW(), 1, NOW()
+--   NOW(), NOW(), 1, 2, NOW()
 -- );
