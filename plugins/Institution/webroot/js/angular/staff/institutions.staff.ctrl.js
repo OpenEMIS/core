@@ -79,6 +79,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.validateNewUser = validateNewUser;
     StaffController.onExternalSearchClick = onExternalSearchClick;
     StaffController.onAddNewStaffClick = onAddNewStaffClick;
+    StaffController.onAddStaffCompleteClick = onAddStaffCompleteClick;
     StaffController.onAddStaffClick = onAddStaffClick;
     StaffController.getUniqueOpenEmisId = getUniqueOpenEmisId;
     StaffController.reloadInternalDatasource = reloadInternalDatasource;
@@ -86,6 +87,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     StaffController.clearInternalSearchFilters = clearInternalSearchFilters;
     StaffController.onChangePositionType = onChangePositionType;
     StaffController.onChangeFTE = onChangeFTE;
+    StaffController.postTransferForm = postTransferForm;
     StaffController.initialLoad = true;
     StaffController.date_of_birth = '';
 
@@ -370,12 +372,22 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         }
         InstitutionsStaffSvc.resetExternalVariable();
         delete StaffController.selectedStaff;
+        StaffController.staffTypeId = '';
+        StaffController.positionType = '';
+        StaffController.endDate = '';
+        StaffController.onChangeAcademicPeriod();
+        StaffController.onChangePositionType();
         StaffController.createNewInternalDatasource(StaffController.internalGridOptions, withData);
     };
 
     function reloadExternalDatasource(withData) {
         InstitutionsStaffSvc.resetExternalVariable();
         delete StaffController.selectedStaff;
+        StaffController.staffTypeId = '';
+        StaffController.positionType = '';
+        StaffController.endDate = '';
+        StaffController.onChangeAcademicPeriod();
+        StaffController.onChangePositionType();
         StaffController.createNewExternalDatasource(StaffController.externalGridOptions, withData);
     };
 
@@ -630,6 +642,23 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         });
     }
 
+    function onAddStaffCompleteClick() {
+        StaffController.postForm().then(function(response) {
+            if (StaffController.addStaffError) {
+                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                    step: "addStaff"
+                });
+            } else if (StaffController.transferStaffError) {
+                angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
+                    step: "transferStaff"
+                });
+            }
+        }, function(error) {
+            console.log(errors);
+            // error handling here
+        });
+    }
+
     function onExternalSearchClick() {
         angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
             step: "externalSearch"
@@ -705,6 +734,55 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var endDatePicker = angular.element(document.getElementById('Staff_end_date'));
         endDatePicker.datepicker("setStartDate", InstitutionsStaffSvc.formatDate(StaffController.academicPeriodOptions.selectedOption.start_date));
         StaffController.onChangeFTE();
+    }
+
+    function postTransferForm() {
+        var startDate = StaffController.startDate;
+        var startDateArr = startDate.split("-");
+        startDate = startDateArr[2] + '-' + startDateArr[1] + '-' + startDateArr[0];
+        for(i = 0; i < startDateArr.length; i++) {
+            if (startDateArr[i] == undefined || startDateArr[i] == null || startDateArr[i] == '') {
+                startDate = undefined;
+            }
+        }
+        var positionType = StaffController.positionType;
+        var institutionPositionId = (StaffController.institutionPositionOptions.hasOwnProperty('selectedOption') && StaffController.institutionPositionOptions.selectedOption != null) ? StaffController.institutionPositionOptions.selectedOption.value: '';
+        institutionPositionId = (institutionPositionId == undefined) ? '' : institutionPositionId;
+        var fte = StaffController.fte;
+        var staffTypeId = (StaffController.staffTypeId != null && StaffController.staffTypeId.hasOwnProperty('id')) ? StaffController.staffTypeId.id : '';
+        var data = {
+            staff_id: StaffController.selectedStaff,
+            start_date: startDate,
+            end_date: StaffController.endDate,
+            staff_type_id: staffTypeId,
+            FTE: fte,
+            institution_position_id: institutionPositionId,
+            status: 0,
+            institution_id: StaffController.institutionId,
+            previous_institution_id: StaffController.selectedStaffData.institution_staff[0]['institution']['id'],
+            type: 2,
+            comment: StaffController.comment,
+            update: 0
+        };
+
+        InstitutionsStaffSvc.addStaffTransferRequest(data)
+        .then(function(response) {
+            console.log(response);
+            var data = response.data;
+            if (data.error.length == 0) {
+                AlertSvc.success($scope, 'Staff transfer request is added successfully.');
+                $window.location.href = 'add?staff_transfer_added=true';
+            } else if (data.error.hasOwnProperty('update') && data.error.update.hasOwnProperty('ruleTransferRequestExists')) {
+                AlertSvc.warning($scope, 'There is an existing transfer in request.');
+                $window.location.href = data.error.update.ruleTransferRequestExists;
+            } else {
+                console.log(response);
+                AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
+            }
+        }, function(error) {
+            console.log(error);
+            AlertSvc.error($scope, 'There is an error in adding staff transfer request.');
+        })
     }
 
     function postForm() {
@@ -890,7 +968,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
     angular.element(document.querySelector('#wizard')).on('finished.fu.wizard', function(evt, data) {
         // The last complete step is now transfer staff, add transfer staff logic function call here
-        // StaffController.postForm();
+        StaffController.postTransferForm();
     });
 
     angular.element(document.querySelector('#wizard')).on('changed.fu.wizard', function(evt, data) {
@@ -930,26 +1008,11 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
             // Work around for alert reset
             StaffController.createNewInternalDatasource(StaffController.internalGridOptions, true);
-
             StaffController.step = 'add_staff';
         }
-
         // Step 5 - Transfer Staff
         else if (data.step == 5) {
-            StaffController.postForm().then(function(response) {
-                console.log(StaffController.transferStaffError);
-                if (StaffController.addStaffError) {
-                    angular.element(document.querySelector('#wizard')).wizard('selectedItem', {
-                        step: "addStaff"
-                    });
-                    StaffController.step = 'add_staff';
-                } else if (StaffController.transferStaffError) {
-                    StaffController.step = 'transfer_staff';
-                }
-            }, function(error) {
-                console.log(errors);
-                // error handling here
-            });
+            StaffController.step = 'transfer_staff';
         }
     });
 

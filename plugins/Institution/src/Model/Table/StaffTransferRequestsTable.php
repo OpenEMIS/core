@@ -29,7 +29,12 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		return $validator->requirePresence('institution_position_id');
+		return $validator
+			->add('update', 'ruleTransferRequestExists', [
+				'rule' => ['checkPendingStaffTransfer'],
+				'on' => 'create'
+			])
+			->requirePresence('institution_position_id');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
