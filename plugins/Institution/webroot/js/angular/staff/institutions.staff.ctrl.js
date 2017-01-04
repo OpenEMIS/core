@@ -581,19 +581,21 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         .then(function(postResponse) {
             StaffController.postResponse = postResponse.data;
             UtilsSvc.isAppendLoader(false);
-            console.log(postResponse);
             StaffController.addStaffError = false;
             StaffController.transferStaffError = false;
-
             var log = [];
             var counter = 0;
             angular.forEach(postResponse.data.error , function(value) {
                 counter++;
             }, log);
-
             if (counter == 0) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
                 $window.location.href = 'add?staff_added=true';
+                deferred.resolve(StaffController.postResponse);
+            }
+            else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleTransferRequestExists')) {
+                AlertSvc.warning($scope, 'There is an existing transfer in request.');
+                $window.location.href = postResponse.data.error.staff_assignment.ruleTransferRequestExists;
                 deferred.resolve(StaffController.postResponse);
             } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
                 InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
