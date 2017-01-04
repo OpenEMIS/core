@@ -18,6 +18,7 @@ use App\Model\Traits\MessagesTrait;
 class InstitutionSubjectsTable extends ControllerActionTable
 {
     use MessagesTrait;
+    private $enrolledStatus;
 
     public function initialize(array $config)
     {
@@ -97,6 +98,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $extra['institution_id'] = $this->Session->read('Institution.Institutions.id');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $this->enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true, 'add'=>true], 'onChangeReload' => true]);
         $this->field('created', ['type' => 'string', 'visible' => false]);
         $this->field('created_user_id', ['type' => 'string', 'visible' => false]);
@@ -319,7 +323,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'Rooms',
             'SubjectStudents' => [
                 'Users.Genders',
-                'ClassStudents.StudentStatuses'
+                'StudentStatuses'
             ]
         ]);
     }
@@ -547,10 +551,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'Teachers',
             'Rooms',
             'SubjectStaff',
-            // 'SubjectStudents.Users.Genders',
             'SubjectStudents' => [
                 'Users.Genders',
-                'ClassStudents.StudentStatuses'
+                'StudentStatuses'
             ],
             'ClassSubjects'
         ]);
@@ -672,7 +675,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
              */
             if (array_key_exists('subject_students', $this->request->data[$this->alias()])) {
                 foreach ($this->request->data[$this->alias()]['subject_students'] as $row) {
-                    if ($row['status']>0 && array_key_exists($row['student_id'], $studentOptions)) {
+                    if (array_key_exists($row['student_id'], $studentOptions)) {
+
                         $id = $row['student_id'];
                         /**
                          * Changed in PHPOE-1997 to remove duplicate records on the UI.
@@ -855,24 +859,22 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'institution_class_id' => $classId,
             'institution_id' => $entity->institution_id,
             'academic_period_id' => $entity->academic_period_id,
-            'education_subject_id' => $entity->education_subject_id,
-            'status' => 1
+            'education_subject_id' => $entity->education_subject_id
         ];
+
         if (strtolower($persona)=='students') {
             $userData = $this->Institutions->Students->find()->contain(['Users.Genders', 'StudentStatuses'])->where(['student_id'=>$id])->first();
+
             if (empty($userData)) {
                 $this->Alert->warning($this->alias().".studentRemovedFromInstitution");
             } else {
-                $data['class_student'] = [
-                    'student_status' => $userData->student_status
-                ];
                 $data['user'] = [];
+                $data['student_status'] = [];
+                $data['student_status_id'] = $userData->student_status_id;
+
                 if (!empty($requestData)) {
                     if (array_key_exists('education_grade_id', $requestData)) {
                         $data['education_grade_id'] = $requestData['education_grade_id'];
-                    }
-                    if (array_key_exists('status', $requestData)) {
-                        $data['status'] = $requestData['status'];
                     }
                 }
             }
@@ -889,6 +891,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $newEntity = $this->$model->newEntity();
             $newEntity = $this->$model->patchEntity($newEntity, $data);
             $newEntity->user = $userData->user;
+            $newEntity->student_status = $userData->student_status;
             return $newEntity;
         }
     }
@@ -1301,7 +1304,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->where([
                             'Users.gender_id' => $gender_id,
                             $table->aliasField('institution_subject_id') => $entity->id,
-                            $table->aliasField('status') .' > 0'
+                            $table->aliasField('student_status_id') => $this->enrolledStatus
                             ])
                         ->count();
             return $count;
@@ -1319,7 +1322,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->where([
                             'Users.gender_id' => $gender_id,
                             $table->aliasField('institution_subject_id') => $entity->id,
-                            $table->aliasField('status') .' > 0'
+                            $table->aliasField('student_status_id') => $this->enrolledStatus
                             ])
                         ->count();
             return $count;
@@ -1334,7 +1337,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->find()
                         ->where([
                             $table->aliasField('institution_subject_id') => $entity->id,
-                            $table->aliasField('status') .' > 0'
+                            $table->aliasField('student_status_id') => $this->enrolledStatus
                             ])
                         ->count();
             return $count;
