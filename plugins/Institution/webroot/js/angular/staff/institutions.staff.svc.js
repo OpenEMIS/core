@@ -760,11 +760,11 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         });
     };
 
-    function getPositionList(academicPeriodId, fte, startDate, endDate) {
+    function getPositionList(fte, startDate, endDate) {
         var vm = this;
         var institutionId = vm.getInstitutionId();
         var deferred = $q.defer();
-        var url = angular.baseUrl + '/Institutions/getInstitutionPositions/' + institutionId + '/' + academicPeriodId + '/' + fte + '/' + startDate + '/' + endDate;
+        var url = angular.baseUrl + '/Institutions/getInstitutionPositions/' + institutionId + '/' + fte + '/' + startDate + '/' + endDate;
         $http.get(url)
         .then(function(response){
             deferred.resolve(response.data);

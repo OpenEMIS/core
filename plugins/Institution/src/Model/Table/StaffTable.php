@@ -166,7 +166,7 @@ class StaffTable extends ControllerActionTable {
 		$query->where([$this->aliasField('institution_id') => $institutionId]);
 		$periodId = $this->request->query['academic_period_id'];
 		if ($periodId > 0) {
-			$query->where([$this->aliasField('academic_period_id') => $periodId]);
+			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
 		}
 		$query->contain(['Positions.StaffPositionTitles'])->select(['position_title_teaching' => 'StaffPositionTitles.type'])->autoFields(true);
 	}
@@ -285,7 +285,7 @@ class StaffTable extends ControllerActionTable {
 
 		$this->advancedSelectOptions($positionOptions, $selectedPosition);
 
-		$query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
+		$query->find('academicPeriod', ['academic_period_id' => $selectedPeriod]);
 		if ($selectedPosition != 0) {
 			$query->matching('Positions', function ($q) use ($selectedPosition) {
 				return $q->where(['Positions.staff_position_title_id' => $selectedPosition]);
@@ -791,10 +791,11 @@ class StaffTable extends ControllerActionTable {
 		return $attr;
 	}
 
+
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		if (isset($buttons['view'])) {
-			$primaryKey = array_flip($this->primaryKey());
+			$primaryKey = is_array($this->primaryKey()) ? array_flip($this->primaryKey()) : [0 => $this->primaryKey()];
 			$entityArr = $entity->getOriginalValues();
 			$primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
 			$encodeValue = $this->paramsEncode($primaryKeyValues);
@@ -807,7 +808,7 @@ class StaffTable extends ControllerActionTable {
 		}
 
 		if (isset($buttons['edit'])) {
-			$primaryKey = array_flip($this->primaryKey());
+			$primaryKey = is_array($this->primaryKey()) ? array_flip($this->primaryKey()) : [0 => $this->primaryKey()];
 			$entityArr = $entity->getOriginalValues();
 			$primaryKeyValues = array_intersect_key($entityArr, $primaryKey);
 			$encodeValue = $this->paramsEncode($primaryKeyValues);
@@ -1315,11 +1316,12 @@ class StaffTable extends ControllerActionTable {
 			$currentYear = __('Not Defined');
 		}
 
-		$staffsByPositionConditions = ['Genders.name IS NOT NULL', $this->aliasField('academic_period_id') => $currentYearId];
+		$staffsByPositionConditions = ['Genders.name IS NOT NULL'];
 		$staffsByPositionConditions = array_merge($staffsByPositionConditions, $_conditions);
 
 		$query = $this->find('all');
 		$staffByPositions = $query
+			->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
 			->contain(['Users.Genders','Positions.StaffPositionTitles'])
 			->select([
 				'Positions.id',
