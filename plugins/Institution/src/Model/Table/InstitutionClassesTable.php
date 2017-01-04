@@ -554,7 +554,7 @@ class InstitutionClassesTable extends ControllerActionTable
             foreach ($entity->institution_subjects as $key => $subjectEntity) {
                 foreach ($data['class_students'] as $classStudent) {
                     $subjectStudents[] = [
-                        'status' => 1,
+                        'student_status_id' => $classStudent['student_status_id'],
                         'student_id' => $classStudent['student_id'],
                         'institution_subject_id' => $subjectEntity->id,
                         'institution_class_id' => $classStudent['institution_class_id'],
