@@ -38,9 +38,6 @@
 				<tbody>
 				<?php
 				foreach($attr['data']['students'] as $i => $obj) :
-					// pr($obj);die;
-					if ($obj->status == 0) continue;
-
 					if ($action=='edit') :
 						$n = $obj->student_id;
 						if (is_object($obj->user)) {
@@ -48,9 +45,11 @@
 								'openemis_no' => $obj->user->openemis_no,
 								'name' => $obj->user->name,
 								'gender' => ['name' => $obj->user->gender->name],
+								'student_status' => ['name' => $obj->student_status->name]
 							];
 						} else if (is_array($obj->user)) {
 							$userData = $obj->user;
+							$userData['student_status']['name'] = $obj['student_status']['name'];
 						} else {
 							/**
 							 * @todo
@@ -63,7 +62,8 @@
 
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.id", [ 'value' => $obj->id ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.student_id", [ 'value' => $n ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.status", [ 'value' => $obj->status ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.student_status_id", [ 'value' => $obj->student_status_id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.student_status.name", [ 'value' => $userData['student_status']['name'] ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_subject_id", [ 'value' => $obj->institution_subject_id ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_class_id", [ 'value' => $obj->institution_class_id ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_id", [ 'value' => $obj->institution_id ]);
@@ -78,7 +78,7 @@
 						<td><?= $userData['openemis_no'] ?></td>
 						<td><?= $userData['name'] ?></td>
 						<td><?= $userData['gender']['name'] ?></td>
-						<td><?= $obj->student_status ?></td>
+						<td><?= $userData['student_status']['name'] ?></td>
 						<td>
 							<?php //if ($attr['data']['isHistoryRecord']): ?>
 
@@ -110,7 +110,7 @@
 						</td>
 						<td><?= $obj->student_name ?></td>
 						<td><?= $obj->student_gender ?></td>
-						<td><?= $obj->student_status ?></td>
+						<td><?= $obj->student_status->name ?></td>
 					</tr>
 
 				<?php endif;?>
