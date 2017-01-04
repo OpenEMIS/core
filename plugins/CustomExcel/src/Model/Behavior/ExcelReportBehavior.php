@@ -182,7 +182,7 @@ class ExcelReportBehavior extends Behavior
         switch($type) {
             case 'number':
                 // set to two decimal places
-                if (!is_null($format)) {
+                if (!is_null($format) && is_numeric($cellValue)) {
                     $formatting = number_format(0, $format);
                     $cellStyle->getNumberFormat()->setFormatCode($formatting);
                 }
@@ -320,8 +320,21 @@ class ExcelReportBehavior extends Behavior
 
     private function getPlaceholderData($placeholder, $extra)
     {
-        $formattedPlaceholder = $this->formatPlaceholder($placeholder);
-        $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+        $placeholderArray = explode(".", $placeholder);
+        if (end($placeholderArray) == 'i') {
+            array_pop($placeholderArray);   // remove i
+            $placeholder = implode(".", $placeholderArray);
+            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
+            $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+
+            $count = 1;
+            foreach ($placeholderData as $key => $value) {
+                $placeholderData[$key] = $count++;
+            }
+        } else {
+            $formattedPlaceholder = $this->formatPlaceholder($placeholder);
+            $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+        }
 
         return $placeholderData;
     }
