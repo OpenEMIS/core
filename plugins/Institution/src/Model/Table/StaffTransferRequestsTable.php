@@ -61,7 +61,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, $extra) {
-		$query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'Positions']);
+		$query->contain(['Users', 'Institutions', 'PreviousInstitutions']);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -127,28 +127,15 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		}
 	}
 
-	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		$staffName = $this->Users->get($this->getEntityProperty($entity, 'staff_id'))->name_with_id;
-		$staffTypeName = $this->StaffTypes->get($this->getEntityProperty($entity, 'staff_type_id'))->name;
-		$institutionCodeName = $this->Institutions->get($this->getEntityProperty($entity, 'institution_id'))->code_name;
-		$prevInstitutionCodeName = $this->Institutions->get($entity->previous_institution_id)->code_name;
-		$positionName = $this->Positions->get($this->getEntityProperty($entity, 'institution_position_id'))->name;
-
-		$this->field('status', ['type' => 'readonly']);
-		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $staffName]]);
-		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $prevInstitutionCodeName]]);
-		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institutionCodeName]]);
-		$this->field('institution_position_id', ['after' => 'institution_id', 'type' => 'readonly', 'attr' => ['value' => $positionName]]);
-		$this->field('staff_type_id', ['type' => 'readonly', 'attr' => ['value' => $staffTypeName]]);
-		$this->field('FTE', ['type' => 'readonly']);
-		$this->field('start_date', ['type' => 'readonly']);
-		$this->field('comment');
-		$this->field('update', ['type' => 'hidden', 'value' => 0, 'visible' => true]);
-		$this->field('type', ['type' => 'hidden', 'visible' => true, 'value' => self::TRANSFER]);
-
-		$message = $this->getMessage($this->aliasField('alreadyAssigned'), ['sprintf' => [$staffName, $prevInstitutionCodeName]]);
-		$this->Alert->warning($message, ['type' => 'text']);
-		$this->Alert->info($this->aliasField('confirmRequest'));
+	public function onGetInstitutionPositionId(Event $event, Entity $entity)
+	{
+		$InstitutionPositions = TableRegistry::get('Institution.InstitutionPositions');
+		return $InstitutionPositions
+			->find()
+			->where([$InstitutionPositions->aliasField('id') => $entity->institution_position_id])
+			->order([$InstitutionPositions->aliasField('created') => 'desc', $InstitutionPositions->aliasField('modified') => 'desc'])
+			->first()
+			->name;
 	}
 
 	public function onGetPreviousInstitutionId(Event $event, Entity $entity) {
@@ -162,11 +149,11 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
 
 			// // excluding positions where 'InstitutionStaff.end_date is NULL'
-			$excludePositions = $this->Positions->find('list');
+			$excludePositions = $positionTable->find('list');
 			$excludePositions->matching('InstitutionStaff', function ($q) {
 					return $q->where(['InstitutionStaff.end_date is NULL', 'InstitutionStaff.FTE' => 1]);
 				});
-			$excludePositions->where([$this->Positions->aliasField('institution_id') => $institutionId])
+			$excludePositions->where([$positionTable->aliasField('institution_id') => $institutionId])
 				->toArray()
 				;
 			$excludeArray = [];
@@ -184,14 +171,14 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
 			$positionConditions = [];
-			$positionConditions[$this->Positions->aliasField('institution_id')] = $institutionId;
+			$positionConditions[$positionTable->aliasField('institution_id')] = $institutionId;
 			if (!empty($activeStatusId)) {
-				$positionConditions[$this->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+				$positionConditions[$positionTable->aliasField('status_id').' IN '] = $activeStatusId;
 			}
 			if (!empty($excludeArray)) {
-				$positionConditions[$this->Positions->aliasField('id').' NOT IN '] = $excludeArray;
+				$positionConditions[$positionTable->aliasField('id').' NOT IN '] = $excludeArray;
 			}
-			$staffPositionsOptions = $this->Positions
+			$staffPositionsOptions = $positionTable
 					->find()
 					->innerJoinWith('StaffPositionTitles.SecurityRoles')
 					->where($positionConditions)

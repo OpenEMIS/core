@@ -32,7 +32,7 @@ class StaffTransfer extends ControllerActionTable {
 
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+		// $this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('PreviousInstitutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'previous_institution_id']);
 		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 	}
@@ -78,7 +78,7 @@ class StaffTransfer extends ControllerActionTable {
 		$this->field('staff_id', ['type' => 'readonly', 'attr' => ['value' => $entity->user->name_with_id]]);
 		$this->field('previous_institution_id', ['type' => 'readonly', 'attr' => ['value' => $entity->previous_institution->name]]);
 		$this->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $institution_name_with_code]]);
-		$this->field('institution_position_id', ['type' => 'readonly', 'after' => 'institution_id', 'attr' => ['value' => $entity->position->name]]);
+		// $this->field('institution_position_id', ['type' => 'readonly', 'after' => 'institution_id', 'attr' => ['value' => $entity->position->name]]);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, $extra) {
