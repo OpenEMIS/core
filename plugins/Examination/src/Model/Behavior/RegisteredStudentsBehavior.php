@@ -148,6 +148,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['visible' => false]);
         $model->field('examination_id', ['visible' => false]);
+        $model->field('education_subject_id', ['visible' => false]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -193,7 +194,7 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->aliasField('examination_id'),
                 $model->aliasField('registration_number'),
                 $model->aliasField('examination_centre_id'),
-                $model->aliasField('education_subject_id'),
+                $model->aliasField('examination_item_id'),
                 $model->Users->aliasField('openemis_no'),
                 $model->Users->aliasField('first_name'),
                 $model->Users->aliasField('middle_name'),
@@ -658,6 +659,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
     public function setupFields(Entity $entity, ArrayObject $extra) {
         $model = $this->_table;
+        $model->field('education_subject_id', ['visible' => false]);
         $model->field('examination_centre_id', ['visible' => false]);
         $model->field('education_grade_id', ['visible' => false]);
         $model->field('academic_period_id', ['type' => 'select', 'entity' => $entity]);

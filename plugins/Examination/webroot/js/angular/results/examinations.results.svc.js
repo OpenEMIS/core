@@ -51,12 +51,8 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 var subjects = [];
                 angular.forEach(examinationSubjects, function(examinationSubject, key) 
                 {
-                    educationSubject = examinationSubject.education_subject;
-                    educationSubject.examination_grading_type = examinationSubject.examination_grading_type;
-                    educationSubject.weight = examinationSubject.weight;
-
-                    if (educationSubject.weight > 0) {
-                        this.push(educationSubject);
+                    if (examinationSubject.weight > 0) {
+                        this.push(examinationSubject);
                     }
                 }, subjects);
 
@@ -78,7 +74,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
 
-function getColumnDefs(action, subject, _results) {
+    function getColumnDefs(action, subject, _results) {
         var deferred = $q.defer();
 
         if (subject.examination_grading_type.grading_options.length == 0) {
@@ -416,7 +412,7 @@ function getColumnDefs(action, subject, _results) {
                 academic_period_id: academicPeriodId,
                 examination_id: examinationId,
                 examination_centre_id: examinationCentreId,
-                education_subject_id: subject.id
+                examination_item_id: subject.id
             })
             .limit(limit)
             .page(page)
@@ -456,7 +452,7 @@ function getColumnDefs(action, subject, _results) {
         }
     };
 
-    function saveRowData(results, subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
+    function saveRowData(results, subject, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId) {
         var promises = [];
 
         angular.forEach(results, function(result, studentId) {
@@ -485,6 +481,7 @@ function getColumnDefs(action, subject, _results) {
                     "academic_period_id" : academicPeriodId,
                     "examination_id" : examinationId,
                     "education_subject_id" : educationSubjectId,
+                    "examination_item_id" : examinationItemId,
                     "examination_centre_id" : examinationCentreId,
                     "institution_id" : institutionId,
                     "student_id" : parseInt(studentId)
@@ -497,7 +494,7 @@ function getColumnDefs(action, subject, _results) {
         return $q.all(promises);
     };
 
-    function saveTotal(row, studentId, institutionId, educationGradeId, academicPeriodId, examinationId, examinationCentreId, educationSubjectId) {
+    function saveTotal(row, studentId, institutionId, educationGradeId, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId) {
         var totalMark = this.calculateTotal(row);
         totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
 
@@ -509,7 +506,8 @@ function getColumnDefs(action, subject, _results) {
             "academic_period_id" : academicPeriodId,
             "examination_id" : examinationId,
             "examination_centre_id" : examinationCentreId,
-            "education_subject_id" : educationSubjectId
+            "education_subject_id" : educationSubjectId,
+            "examination_item_id" : examinationItemId
         };
 
         ExaminationCentreStudentsTable.save(data);
