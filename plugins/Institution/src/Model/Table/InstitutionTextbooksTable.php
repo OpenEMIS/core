@@ -79,10 +79,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $request = $this->request;
-        $searchKey = $request->data['Search']['searchField'];
-        $extra['searchKey'] = $searchKey;
+        $searchKey = $this->getSearchKey();
 
-        if (!strlen($searchKey)) {
+        if (!strlen($searchKey)) { //during search, then hide the control filter
             //academic period filter
             list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
@@ -241,9 +240,11 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        if (strlen($extra['searchKey'])) {
+        $searchKey = $this->getSearchKey();
+        
+        if (strlen($searchKey)) {
             $query->matching('Textbooks'); //to enable search by textbook title
-            $extra['OR'] = [$this->Textbooks->aliasField('title').' LIKE' => '%' . $extra['searchKey'] . '%'];
+            $extra['OR'] = [$this->Textbooks->aliasField('title').' LIKE' => '%' . $searchKey . '%'];
         } else { //if no search key specified, then search is by filter.
             //filter
             if (array_key_exists('selectedPeriod', $extra)) {
