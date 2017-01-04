@@ -303,7 +303,7 @@ class DirectoriesController extends AppController {
             $this->name => ['text' => __('Overview')],
             'Accounts' => ['text' => __('Account')],
             'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => ['text' => __('Nationalities')],
+            'Nationalities' => ['text' => __('Nationalities')],
             'Contacts' => ['text' => __('Contacts')],
             'Languages' => ['text' => __('Languages')],
             'Comments' => ['text' => __('Comments')],
@@ -328,9 +328,6 @@ class DirectoriesController extends AppController {
             } else {
 
                 $actionURL = $key;
-                if ($key == 'UserNationalities') {
-                    $actionURL = 'Nationalities';
-                }
                 $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
                                                 'plugin' => $plugin, 
                                                 'controller' => $name, 
