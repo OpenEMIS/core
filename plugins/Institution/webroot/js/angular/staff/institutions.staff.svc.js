@@ -50,7 +50,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getExternalSourceMapping: getExternalSourceMapping,
         getPositionList: getPositionList,
         getStaffTypes: getStaffTypes,
-        getInstitution: getInstitution
+        getInstitution: getInstitution,
+        addStaffTransferRequest: addStaffTransferRequest
     };
 
     var models = {
@@ -504,6 +505,11 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
             });
         }
         return deferred.promise;
+    };
+
+    function addStaffTransferRequest(data)
+    {
+        return StaffAssignment.save(data);
     };
 
     function getUserRecord(externalRef, startDate, endDate)

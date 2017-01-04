@@ -71,11 +71,16 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-disabled="!InstitutionStaffController.selectedStaff"
             type="button" class="btn btn-default"><?= __('Add Staff') ?>
         </button>
+        <button
+            ng-if="(InstitutionStaffController.step=='add_staff')"
+            ng-click="InstitutionStaffController.onAddStaffCompleteClick()"
+            type="button" class="btn btn-default"><?= __('Complete') ?>
+        </button>
         <button type="button" class="btn btn-default btn-next"
             ng-model="InstitutionStaffController.selectedStaff"
             ng-disabled="InstitutionStaffController.completeDisabled"
-            ng-show="(InstitutionStaffController.step=='add_staff' || InstitutionStaffController.step=='create_user' || InstitutionStaffController.step=='transfer_staff')"
-            data-last="Complete">
+            ng-show="(InstitutionStaffController.step=='create_user' || InstitutionStaffController.step=='transfer_staff')"
+            data-last="<?= __('Complete') ?>">
             <?= __('Next') ?>
         </button>
     </div>
@@ -439,7 +444,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
             </form>
         </div>
-        <div class="step-pane sample-pane" data-step="5" data-name="transferStaff">
+        <div class="step-pane sample-pane" data-step="5" data-name="transferStaff" ng-show="InstitutionStaffController.step == 'transfer_staff';">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
                 <div class="input string">
                     <label><?= __('Status') ?></label>
@@ -476,6 +481,10 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string">
                     <label><?= __('Start Date') ?></label>
                     <input type="string" ng-model="InstitutionStaffController.startDate" disabled="disabled">
+                </div>
+                <div class="input text">
+                    <label><?= __('Comment') ?></label>
+                    <textarea ng-model="InstitutionStaffController.comment" ng-init="InstitutionStaffController.comment = ''"></textarea>
                 </div>
             </form>
         </div>
