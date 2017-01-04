@@ -67,7 +67,7 @@ class StaffTransfer extends ControllerActionTable {
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, $extra) {
-		$query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'Positions']);
+		$query->contain(['Users', 'Institutions', 'PreviousInstitutions']);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
