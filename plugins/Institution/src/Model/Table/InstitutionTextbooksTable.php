@@ -244,7 +244,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
         
         if (strlen($searchKey)) {
             $query->matching('Textbooks'); //to enable search by textbook title
-            $extra['OR'] = [$this->Textbooks->aliasField('title').' LIKE' => '%' . $searchKey . '%'];
+            $extra['OR'] = [
+                $this->Textbooks->aliasField('title').' LIKE' => '%' . $searchKey . '%',
+                $this->Textbooks->aliasField('code').' LIKE' => '%' . $searchKey . '%',
+            ];
         } else { //if no search key specified, then search is by filter.
             //filter
             if (array_key_exists('selectedPeriod', $extra)) {
