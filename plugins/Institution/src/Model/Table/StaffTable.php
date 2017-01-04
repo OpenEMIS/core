@@ -136,10 +136,10 @@ class StaffTable extends ControllerActionTable {
 				'rule' => ['institutionStaffId'],
 				'on' => 'create'
 			])
-			// ->add('institution_position_id', 'ruleCheckStaffAssignment', [
-			// 	'rule' => ['checkStaffAssignment'],
-			// 	'on' => 'create'
-			// ])
+			->add('staff_assignment', 'ruleTransferRequestExists', [
+				'rule' => ['checkPendingStaffTransfer'],
+				'on' => 'create'
+			])
 			->add('staff_assignment', 'ruleCheckStaffAssignment', [
 				'rule' => ['checkStaffAssignment'],
 				'on' => 'create'
