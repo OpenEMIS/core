@@ -20,8 +20,13 @@ CREATE TABLE IF NOT EXISTS `user_nationalities` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains nationality information of every user';
 
 INSERT INTO `user_nationalities` (`id`, `nationality_id`, `comments`, `security_user_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT sha2(CONCAT(t.`nationality_id`, ',', t.`security_user_id`), '256'), t.`nationality_id`, t.`comments`, t.`security_user_id`, t.`modified_user_id`, t.`modified`, t.`created_user_id`, t.`created` FROM (
-    SELECT * FROM `z_3606_user_nationalities`
-    ORDER BY `comments` DESC
-) t 
-GROUP BY t.`security_user_id`, t.`nationality_id`;
+SELECT sha2(CONCAT(`nationality_id`, ',', `security_user_id`), '256'), `nationality_id`, `comments`, `security_user_id`, `modified_user_id`, `modified`, `created_user_id`, `created` 
+FROM `z_3606_user_nationalities`
+GROUP BY `security_user_id`, `nationality_id`;
+
+UPDATE `user_nationalities` U
+INNER JOIN `z_3606_user_nationalities` Z
+  ON (Z.`nationality_id` = U.`nationality_id` 
+      AND Z.`security_user_id` = U.`security_user_id`
+      AND (Z.`comments` IS NOT NULL AND Z.`comments` <> ''))
+SET U.`comments` = Z.`comments`;
