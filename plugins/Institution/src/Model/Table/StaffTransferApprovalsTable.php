@@ -103,7 +103,9 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 			$this->field('current_FTE', ['after' => 'current_institution_position_id', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->FTE]]);
 			$this->field('current_staff_type', ['after' => 'current_FTE', 'type' => 'disabled', 'attr' => ['value' => $staffRecord->staff_type->name]]);
 			$this->field('current_start_date', ['after' => 'current_staff_type', 'type' => 'disabled', 'attr' => ['value' => $this->formatDate($staffRecord->start_date)]]);
-			$this->field('institution_position_id', ['type' => 'disabled', 'after' => 'institution_id', 'attr' => ['required' => false, 'value' => $entity->position->name]]);
+			$InstitutionPosition = TableRegistry::get('Institution.InstitutionPosition');
+			$positionName = $InstitutionPosition->find()->where([$InstitutionPosition->aliasField('id') => $entity->institution_position_id])->first()->name;
+			$this->field('institution_position_id', ['type' => 'disabled', 'after' => 'institution_id', 'attr' => ['required' => false, 'value' => $positionName]]);
 			$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 			$this->field('FTE', ['type' => 'disabled', 'after' => 'institution_position_id', 'attr' => ['value' => $fteOptions[strval($entity->FTE)], 'required' => false]]);
 			$this->field('staff_type_id', ['type' => 'disabled', 'attr' => ['required' => false, 'value' => $this->StaffTypes->get($entity->staff_type_id)->name], 'after' => 'FTE']);
