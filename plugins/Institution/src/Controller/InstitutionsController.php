@@ -728,7 +728,7 @@ class InstitutionsController extends AppController
         return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
     }
 
-    public function getInstitutionPositions($institutionId, $academicPeriodId, $fte, $startDate, $endDate = '')
+    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate = '')
     {
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
@@ -746,7 +746,6 @@ class InstitutionsController extends AppController
             ])
             ->where([
                 $StaffTable->aliasField('institution_id') => $institutionId,
-                $StaffTable->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->group($StaffTable->aliasField('institution_position_id'))
             ->having([
@@ -757,7 +756,6 @@ class InstitutionsController extends AppController
             ])
             ->hydrate(false);
 
-        $endDate = null;
         if (!empty($endDate)) {
             $endDate = new Date($endDate);
             $excludePositions = $excludePositions->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
@@ -783,7 +781,6 @@ class InstitutionsController extends AppController
         $activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
         $positionConditions = [];
         $positionConditions[$StaffTable->Positions->aliasField('institution_id')] = $institutionId;
-        $positionConditions[$StaffTable->Positions->aliasField('academic_period_id')] = $academicPeriodId;
         if (!empty($activeStatusId)) {
             $positionConditions[$StaffTable->Positions->aliasField('status_id').' IN '] = $activeStatusId;
         }

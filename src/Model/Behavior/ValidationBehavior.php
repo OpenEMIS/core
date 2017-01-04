@@ -1234,8 +1234,7 @@ class ValidationBehavior extends Behavior {
 		$identicalPositionHolders = $InstitutionStaff->find()
 			->where(
 				[
-					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id'],
-					$InstitutionStaff->aliasField('academic_period_id') => $globalData['data']['academic_period_id']
+					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
 				]
 			);
 
@@ -1712,7 +1711,6 @@ class ValidationBehavior extends Behavior {
 	{
 		$data = $globalData['data'];
 		$staffId = $data['staff_id'];
-		$academicPeriodId = $data['academic_period_id'];
 		$startDate = new Date($data['start_date']);
 
 		// check if staff is already assigned

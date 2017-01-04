@@ -275,7 +275,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         StaffController.displayedFTE = (fte*100) + '%';
         var startDate = StaffController.startDate;
         var endDate = StaffController.endDate;
-        InstitutionsStaffSvc.getPositionList(academicPeriodId, fte, startDate, endDate)
+        InstitutionsStaffSvc.getPositionList(fte, startDate, endDate)
         .then(function(response) {
             StaffController.institutionPositionOptions.availableOptions = response;
         }, function(errors) {
@@ -830,7 +830,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                     studentData.date_of_birth = dateOfBirth;
                 }
                 delete studentData['id'];
-                delete studentData['institution_students'];
+                delete studentData['institution_staff'];
                 delete studentData['is_staff'];
                 delete studentData['is_guardian'];
                 delete studentData['address'];
