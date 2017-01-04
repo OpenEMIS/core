@@ -16,13 +16,7 @@ class ExaminationCentreSpecialNeedsTable extends AppTable {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
-    }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->special_need_type_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
+        $this->addBehavior('CompositeKey');
     }
 }
