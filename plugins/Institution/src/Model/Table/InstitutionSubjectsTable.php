@@ -579,7 +579,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 if (!array_key_exists($k, $data[$this->alias()]['subject_students'])) {
                     $data[$this->alias()]['subject_students'][$k] = [
                         'id' => $record->id,
-                        'status' => 0,
+                        'student_status_id' => $record->student_status_id,
                         'student_id' => $k,
                         'institution_class_id' => $record->institution_class_id,
                         'institution_id' => $record->institution_id,
@@ -592,7 +592,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             } else {
                 $data[$this->alias()]['subject_students'][$k] = [
                     'id' => $record->id,
-                    'status' => 0,
+                    'student_status_id' => $record->student_status_id,
                     'student_id' => $k,
                     'institution_class_id' => $record->institution_class_id,
                     'institution_id' => $record->institution_id,
@@ -779,7 +779,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         if ($assocTable->alias() == 'InstitutionSubjectStudents') {
             $query->where([
-                $assocTable->aliasField('status') => 1
+                $assocTable->aliasField('student_status_id') => $this->enrolledStatus
             ]);
         }
 
@@ -863,7 +863,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ];
 
         if (strtolower($persona)=='students') {
-            $userData = $this->Institutions->Students->find()->contain(['Users.Genders', 'StudentStatuses'])->where(['student_id'=>$id])->first();
+            $userData = $this->Institutions->Students->find()
+                ->contain(['Users.Genders', 'StudentStatuses'])
+                ->where(['student_id'=>$id])
+                ->order([$this->Institutions->Students->aliasField('created') => 'DESC'])
+                ->first();
 
             if (empty($userData)) {
                 $this->Alert->warning($this->alias().".studentRemovedFromInstitution");
