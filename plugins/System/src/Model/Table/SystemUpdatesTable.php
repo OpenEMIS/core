@@ -41,7 +41,7 @@ class SystemUpdatesTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('approved_by', ['type' => 'select', 'after' => 'date_approved']);
+        $this->field('approved_by', ['after' => 'date_approved']);
         $this->field('status', ['options' => ['1' => __('Pending'), '2' => __('Approved')], 'after' => 'approved_by']);
     }
 
