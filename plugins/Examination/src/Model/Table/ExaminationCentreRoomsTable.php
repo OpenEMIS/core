@@ -77,13 +77,13 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
                 'rule' => ['numericPositive']
             ])
             ->add('size', 'ruleRoomSize',  [
-                'rule'  => ['range', 1, 1000000000]
+                'rule'  => ['range', 1, 2147483647]
             ])
             ->add('number_of_seats', 'ruleValidateNumeric',  [
                 'rule' => ['numericPositive']
             ])
             ->add('number_of_seats', 'ruleSeatsNumber',  [
-                'rule'  => ['range', 1, 1000000000]
+                'rule'  => ['range', 1, 2147483647]
             ])
             ->add('number_of_seats', 'ruleExceedRoomCapacity', [
                 'rule' => 'validateRoomCapacity'
