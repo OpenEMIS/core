@@ -673,16 +673,16 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function setStaffName() {
-        var studentData = StaffController.selectedStaffData;
-        studentData.name = '';
+        var staffData = StaffController.selectedStaffData;
+        staffData.name = '';
 
-        if (studentData.hasOwnProperty('first_name')) {
-            studentData.name = studentData.first_name.trim();
+        if (staffData.hasOwnProperty('first_name')) {
+            staffData.name = staffData.first_name.trim();
         }
-        StaffController.appendName(studentData, 'middle_name', true);
-        StaffController.appendName(studentData, 'third_name', true);
-        StaffController.appendName(studentData, 'last_name', true);
-        StaffController.selectedStaffData = studentData;
+        StaffController.appendName(staffData, 'middle_name', true);
+        StaffController.appendName(staffData, 'third_name', true);
+        StaffController.appendName(staffData, 'last_name', true);
+        StaffController.selectedStaffData = staffData;
     }
 
     function appendName(studentObj, variableName, trim) {
@@ -698,17 +698,17 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     function changeGender() {
-        var studentData = StaffController.selectedStaffData;
-        if (studentData.hasOwnProperty('gender_id')) {
+        var staffData = StaffController.selectedStaffData;
+        if (staffData.hasOwnProperty('gender_id')) {
             var genderOptions = StaffController.genderOptions;
             for(var i = 0; i < genderOptions.length; i++) {
-                if (genderOptions[i].id == studentData.gender_id) {
-                    studentData.gender = {
+                if (genderOptions[i].id == staffData.gender_id) {
+                    staffData.gender = {
                         name: genderOptions[i].name
                     };
                 }
             }
-            StaffController.selectedStaffData = studentData;
+            StaffController.selectedStaffData = staffData;
         }
     }
 
@@ -717,7 +717,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         angular.forEach(StaffController.rowsThisPage , function(value) {
             if (value.id == StaffController.selectedStaff) {
                 StaffController.selectedStaffData = value;
-                console.log(StaffController.selectedStaffData);
             }
         }, log);
     }
@@ -769,7 +768,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         InstitutionsStaffSvc.addStaffTransferRequest(data)
         .then(function(response) {
-            console.log(response);
             var data = response.data;
             if (data.error.length == 0) {
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
@@ -807,8 +805,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         if (!StaffController.createNewStaff) {
             if (StaffController.externalSearch) {
-                var studentData = StaffController.selectedStaffData;
-                var amendedStaffData = Object.assign({}, studentData);
+                var staffData = StaffController.selectedStaffData;
+                var amendedStaffData = Object.assign({}, staffData);
                 amendedStaffData.date_of_birth = InstitutionsStaffSvc.formatDate(amendedStaffData.date_of_birth);
                 return StaffController.addStaffUser(amendedStaffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
             } else {
@@ -817,45 +815,49 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             }
         } else {
             if (StaffController.selectedStaffData != null) {
-                console.log('not null');
-                var studentData = {};
+                var staffData = {};
                 var log = [];
                 angular.forEach(StaffController.selectedStaffData, function(value, key) {
-                  studentData[key] = value;
+                  staffData[key] = value;
                 }, log);
-                if (studentData.hasOwnProperty('date_of_birth')) {
-                    var dateOfBirth = studentData.date_of_birth;
+                if (staffData.hasOwnProperty('date_of_birth')) {
+                    var dateOfBirth = staffData.date_of_birth;
                     var dateOfBirthArr = dateOfBirth.split("-");
                     dateOfBirth = dateOfBirthArr[2] + '-' + dateOfBirthArr[1] + '-' + dateOfBirthArr[0];
-                    studentData.date_of_birth = dateOfBirth;
+                    staffData.date_of_birth = dateOfBirth;
                 }
-                delete studentData['id'];
-                delete studentData['institution_staff'];
-                delete studentData['is_staff'];
-                delete studentData['is_guardian'];
-                delete studentData['address'];
-                delete studentData['postal_code'];
-                delete studentData['address_area_id'];
-                delete studentData['birthplace_area_id'];
-                delete studentData['date_of_death'];
-                delete studentData['password'];
-                studentData['super_admin'] = 0;
-                studentData['status'] = 1;
-                delete studentData['last_login'];
-                delete studentData['photo_name'];
-                delete studentData['photo_content'];
-                delete studentData['modified'];
-                delete studentData['modified_user_id'];
-                delete studentData['created'];
-                delete studentData['created_user_id'];
-                return StaffController.addStaffUser(studentData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
+                delete staffData['id'];
+                delete staffData['institution_staff'];
+                delete staffData['is_staff'];
+                delete staffData['is_guardian'];
+                delete staffData['address'];
+                delete staffData['postal_code'];
+                delete staffData['address_area_id'];
+                delete staffData['birthplace_area_id'];
+                delete staffData['date_of_death'];
+                staffData['super_admin'] = 0;
+                staffData['status'] = 1;
+                delete staffData['last_login'];
+                delete staffData['photo_name'];
+                delete staffData['photo_content'];
+                delete staffData['modified'];
+                delete staffData['modified_user_id'];
+                delete staffData['created'];
+                delete staffData['created_user_id'];
+                if (staffData['username'] == '') {
+                    staffData['username'] = null;
+                    staffData['password'] = null;
+                } else {
+                    staffData['password'] = (staffData['password'] == '') ? null : staffData['password'];
+                }
+                return StaffController.addStaffUser(staffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate);
             }
         }
     }
 
-    function addStaffUser(studentData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate) {
+    function addStaffUser(staffData, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate) {
         var deferred = $q.defer();
-        var newStaffData = studentData;
+        var newStaffData = staffData;
         newStaffData['academic_period_id'] = academicPeriodId;
         newStaffData['start_date'] = startDate;
         newStaffData['nationality_id'] = StaffController.Staff.nationality_id;
@@ -867,7 +869,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 deferred.resolve(StaffController.insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, user[1]));
             } else {
                 StaffController.postResponse = user[0];
-                console.log(user[0]);
                 AlertSvc.error($scope, 'The record is not added due to errors encountered.');
                 deferred.resolve(StaffController.postResponse);
             }

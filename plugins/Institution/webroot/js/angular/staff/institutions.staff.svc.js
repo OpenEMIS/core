@@ -388,6 +388,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                     'number': userRecord['identity_number']
                 }];
             }
+            console.log(userRecord);
             StaffUser.reset();
             StaffUser.save(userRecord)
             .then(function(studentRecord) {
@@ -437,15 +438,14 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                     identityType = userRecord[attr['identity_type_mapping']];
                 }
 
-                vm.getUserRecord(newUserRecord['external_reference'], newUserRecord['academic_period_id'])
+                vm.getUserRecord(newUserRecord['external_reference'])
                 .then(function(response) {
                     if (response.data.length > 0) {
                         userData = response.data[0];
                         modifiedUser = userData;
                         delete modifiedUser['openemis_no'];
+                        console.log(modifiedUser);
                         modifiedUser['is_staff'] = 1;
-                        modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
-                        modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
                         modifiedUser['start_date'] = userRecord['start_date'];
                         StaffUser.save(modifiedUser)
                         .then(function(response) {
@@ -455,7 +455,6 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                             console.log(error);
                         });
                     } else {
-
                         newUserRecord['date_of_birth'] = vm.formatDateForSaving(newUserRecord['date_of_birth']);
                         newUserRecord['is_staff'] = 1;
 
@@ -512,17 +511,14 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         return StaffAssignment.save(data);
     };
 
-    function getUserRecord(externalRef, startDate, endDate)
+    function getUserRecord(externalRef)
     {
         var vm = this;
-        var institutionId = vm.getInstitutionId();
         return StaffUser
             .select()
             .where({
                 'external_reference': externalRef
             })
-            .contain(['Genders', 'Identities.IdentityTypes'])
-            .find('assignedInstitutionStaff', {'institution_id': institutionId, 'start_date': startDate, 'end_date': endDate})
             .ajax({defer: true});
     };
 

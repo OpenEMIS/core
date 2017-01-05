@@ -34,7 +34,7 @@ class InstitutionPositionsTable extends ControllerActionTable {
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
 		$this->belongsTo('Assignees',			['className' => 'User.Users']);
 
-		$this->hasMany('InstitutionStaff',		['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => ['id', 'academic_period_id']]);
+		$this->hasMany('InstitutionStaff',		['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositions',		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffAttendances',		['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferRequests',	['className' => 'Institution.StaffTransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
