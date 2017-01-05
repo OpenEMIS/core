@@ -23,6 +23,8 @@ class ExaminationCentreRoomStudentsTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Students', ['className' => 'Institution.StudentUser']);
         $this->belongsTo('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms']);
+
+        $this->addBehavior('CompositeKey');
         $this->setDeleteStrategy('restrict');
     }
 
@@ -30,13 +32,5 @@ class ExaminationCentreRoomStudentsTable extends ControllerActionTable {
     {
         $this->field('examination_id', ['visible' => false]);
         $this->field('examination_centre_id', ['visible' => false]);
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_room_id . ',' . $entity->student_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 }
