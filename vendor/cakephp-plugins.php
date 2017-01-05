@@ -43,6 +43,7 @@ return [
         'Student' => $baseDir . '/plugins/Student/',
         'StudentCustomField' => $baseDir . '/plugins/StudentCustomField/',
         'Survey' => $baseDir . '/plugins/Survey/',
+        'System' => $baseDir . '/plugins/System/',
         'Textbook' => $baseDir . '/plugins/Textbook/',
         'Training' => $baseDir . '/plugins/Training/',
         'User' => $baseDir . '/plugins/User/',

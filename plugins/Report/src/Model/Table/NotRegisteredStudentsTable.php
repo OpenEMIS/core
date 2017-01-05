@@ -42,8 +42,8 @@ class NotRegisteredStudentsTable extends AppTable  {
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
         $selectedPeriod = $requestData->academic_period_id;
-        $selectedExam = $requestData->examination_id;
-        $selectedInstitution = $requestData->institution_id;
+        $selectedExam = !empty($requestData->examination_id) ? $requestData->examination_id : -1;
+        $selectedInstitution = !empty($requestData->institution_id) ? $requestData->institution_id : -1;
 
         $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
         $Examinations = TableRegistry::get('Examination.Examinations');
@@ -53,7 +53,12 @@ class NotRegisteredStudentsTable extends AppTable  {
         $examination = $Examinations->find()
             ->where([$Examinations->aliasField('id') => $selectedExam])
             ->first();
-        $selectedGrade = $examination->education_grade_id;
+
+        $selectedGrade = -1;
+        if (!empty($examination) && $examination->has('education_grade_id')) {
+            $selectedGrade = $examination->education_grade_id;
+        }
+
         $currentStatus = $this->StudentStatuses->getIdByCode('CURRENT');
 
         $query

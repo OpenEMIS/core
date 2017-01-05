@@ -12,7 +12,7 @@ use App\Model\Table\AppTable;
 class ExaminationResultsTable extends AppTable  {
 
     private $examinationResults = [];
-    private $subjectWeightedMark = 0;
+    private $itemWeightedMark = 0;
     private $totalMarks = 0;
     private $totalWeightedMark = 0;
 
@@ -28,6 +28,7 @@ class ExaminationResultsTable extends AppTable  {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
 
         $this->addBehavior('Excel', [
             'excludes' => ['id', 'total_mark'],
@@ -48,8 +49,8 @@ class ExaminationResultsTable extends AppTable  {
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
         $requestData = json_decode($settings['process']['params']);
-        $selectedExam = $requestData->examination_id;
-        $selectedInstitution = $requestData->institution_id;
+        $selectedExam = !empty($requestData->examination_id) ? $requestData->examination_id : -1;
+        $selectedInstitution = !empty($requestData->institution_id) ? $requestData->institution_id : -1;
 
         $query
             ->contain(['Users', 'Institutions'])
@@ -120,42 +121,45 @@ class ExaminationResultsTable extends AppTable  {
         $selectedExam = $requestData->examination_id;
         $selectedAcademicPeriod = $requestData->academic_period_id;
 
-        $ExamItems = TableRegistry::get('Examination.ExaminationItems');
-        $examSubjects = $ExamItems
+        $ExaminationItems = TableRegistry::get('Examination.ExaminationItems');
+        $examItems = $ExaminationItems
             ->find()
-            ->matching('EducationSubjects')
             ->contain('ExaminationGradingTypes')
-            ->where([$ExamItems->aliasField('examination_id') => $selectedExam])
+            ->where([
+                $ExaminationItems->aliasField('examination_id') => $selectedExam,
+                $ExaminationItems->aliasField('weight > ') => 0
+            ])
+            ->order([$ExaminationItems->aliasField('code')])
             ->toArray();
 
-        foreach ($examSubjects as $subject) {
-            $subjectId = $subject->education_subject_id;
-            $subjectName = $subject->_matchingData['EducationSubjects']->name;
-            $weight = $subject->weight;
+        foreach ($examItems as $item) {
+            $examItemId = $item->id;
+            $examItemCodeName = $item->code_name;
+            $weight = $item->weight;
 
-            $label = __($subjectName);
+            $label = __($examItemCodeName);
             $weightLabel = __('Weighted Marks');
-            $resultType = $subject->examination_grading_type->result_type;
+            $resultType = $item->examination_grading_type->result_type;
             if ($resultType == 'MARKS') {
                 $label = $label.' ('.$weight.') ';
                 $weightLabel = $weightLabel.' ('.$weight.')';
             }
 
             $newFields[] = [
-                'key' => 'subject_mark',
-                'field' => 'subject_mark',
-                'type' => 'subject_mark',
+                'key' => 'item_mark',
+                'field' => 'item_mark',
+                'type' => 'item_mark',
                 'label' => $label,
                 'examinationId' => $selectedExam,
-                'subjectId' => $subjectId,
+                'examItemId' => $examItemId,
                 'academicPeriodId' => $selectedAcademicPeriod,
                 'resultType' => $resultType,
                 'weight' => $weight
             ];
 
             $newFields[] = [
-                'key' => 'subject_weighted_mark',
-                'field' => 'subject_weighted_mark',
+                'key' => 'item_weighted_mark',
+                'field' => 'item_weighted_mark',
                 'type' => 'integer',
                 'label' => $weightLabel
             ];
@@ -205,11 +209,11 @@ class ExaminationResultsTable extends AppTable  {
         }
     }
 
-    public function onExcelRenderSubjectMark(Event $event, Entity $entity, array $attr)
+    public function onExcelRenderItemMark(Event $event, Entity $entity, array $attr)
     {
         $studentId = $entity->student_id;
         $examinationId = $attr['examinationId'];
-        $subjectId = $attr['subjectId'];
+        $examItemId = $attr['examItemId'];
         $academicPeriodId = $attr['academicPeriodId'];
         $resultType = $attr['resultType'];
         $weight = $attr['weight'];
@@ -222,13 +226,13 @@ class ExaminationResultsTable extends AppTable  {
         }
 
         $printedResult = '';
-        if (isset($results[$studentId][$subjectId])) {
-            $marks = $results[$studentId][$subjectId];
+        if (isset($results[$studentId][$examItemId])) {
+            $marks = $results[$studentId][$examItemId];
             switch($resultType) {
                 case 'MARKS':
                     $weightedMark = $marks['marks']*$weight;
                     $this->totalMarks += $marks['marks'];
-                    $this->subjectWeightedMark = $weightedMark;
+                    $this->itemWeightedMark = $weightedMark;
                     $this->totalWeightedMark += $weightedMark;
                     $printedResult = $marks['marks'];
                     break;
@@ -241,10 +245,10 @@ class ExaminationResultsTable extends AppTable  {
         return $printedResult;
     }
 
-    public function onExcelGetSubjectWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelGetItemWeightedMark(Event $event, Entity $entity, array $attr)
     {
-        $printedResult = $this->subjectWeightedMark;
-        $this->subjectWeightedMark = 0;
+        $printedResult = $this->itemWeightedMark;
+        $this->itemWeightedMark = 0;
         return ' '.$printedResult;
     }
 

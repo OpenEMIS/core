@@ -390,7 +390,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "6b2884da93ef59a2018d3cb214c644fec15347ba"
+                "reference": "7078dcb3768294ea8a1dc143161dbbe2c6d692c0"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.9"
@@ -436,7 +436,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2016-12-19 06:45:28"
+            "time": "2016-12-29 03:11:24"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
