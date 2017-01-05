@@ -24,6 +24,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->toggle('index', false);
         $this->toggle('remove', false);
@@ -62,6 +63,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
+        $this->field('education_subject_id', ['visible' => false]);
 
         $this->setFieldOrder([
             'academic_period_id', 'examination_id', 'examination_education_grade', 'special_needs_required', 'examination_centre_id', 'special_needs', 'institution_class_id', 'student_id'
@@ -269,6 +271,7 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
     {
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
+        $requestData[$this->alias()]['examination_item_id'] = 0;
         $requestData[$this->alias()]['examination_centre_id'] = 0;
     }
 

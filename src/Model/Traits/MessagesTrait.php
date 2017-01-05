@@ -596,6 +596,9 @@ trait MessagesTrait {
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
         ],
+        'Examinations' => [
+            'noExaminationItems' => 'There are no examination items for this examination'
+        ],
         'ExaminationCentres' => [
             'savingProcessStarted' => 'Examination centres are currently being added in the background'
         ],
@@ -1462,7 +1465,10 @@ trait MessagesTrait {
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'
-                ]
+                ],
+                'code' => [
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
+                ],
             ],
             'ExaminationGradingTypes' => [
                 'code' => [
