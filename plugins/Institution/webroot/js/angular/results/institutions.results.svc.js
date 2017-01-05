@@ -220,6 +220,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 hide: true,
                 filterParams: filterParams
             });
+            columnDefs.push({
+                headerName: "Status",
+                field: "student_status_id",
+                filterParams: filterParams
+            });
 
             var ResultsSvc = this;
             angular.forEach(periods, function(period, key) {
@@ -635,6 +640,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
                                     student_id: currentStudentId,
+                                    student_status_id: subjectStudent.student_status.name,
                                     total_mark: subjectStudent.total_mark,
                                     is_dirty: false
                                 };
