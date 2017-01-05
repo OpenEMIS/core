@@ -55,7 +55,7 @@ class StaffUserTable extends ControllerActionTable {
             ]
         ]);
         $this->addBehavior('Import.ImportLink');
-
+        $this->addBehavior('Configuration.Pull');
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Staff' => ['index', 'add']
