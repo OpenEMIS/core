@@ -795,18 +795,6 @@ class NavigationComponent extends Component
 					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
 							'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
 				],
-				'Textbooks.Textbooks' => [
-                    'title' => 'Textbooks',
-                    'parent' => 'SystemSetup',
-                    'params' => ['plugin' => 'Textbook'],
-                    'selected' => ['Textbooks.Textbooks']
-                ],
-				'Assessments.Assessments' => [
-					'title' => 'Assessments',
-					'parent' => 'SystemSetup',
-					'params' => ['plugin' => 'Assessment'],
-					'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
-				],
 				'FieldOptions.index' => [
 					'title' => 'Field Options',
 					'parent' => 'SystemSetup',
@@ -976,7 +964,12 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Results']
 				],
-
+            'Assessments.Assessments' => [
+                'title' => 'Assessments',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Assessment'],
+                'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
+            ],
 			'Administration.Examinations' => [
 					'title' => 'Examinations',
 					'parent' => 'Administration',
@@ -1006,12 +999,22 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Examination'],
 						'selected' => ['Examinations.ExamResults', 'Examinations.Results', 'Examinations.ImportResults']
 					],
-
+            'Textbooks.Textbooks' => [
+                'title' => 'Textbooks',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Textbook'],
+                'selected' => ['Textbooks.Textbooks']
+            ],
 			'Workflows.Workflows' => [
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
 				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Statuses']
+			],
+			'Systems.Updates' => [
+				'title' => 'Updates',
+				'parent' => 'Administration',
+				'params' => ['plugin' => 'System']
 			]
 		];
 		return $navigation;

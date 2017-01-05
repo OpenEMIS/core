@@ -1149,41 +1149,31 @@ class StudentsTable extends ControllerActionTable
         }
         $academicPeriodList = array_reverse($academicPeriodList, true);
 
-        if (!empty($academicPeriodList)) {
-            $academicPeriodCondition = ['academic_period_id IN ' => array_keys($academicPeriodList)];
-        } else {
-            $academicPeriodCondition = [];
-        }
+        foreach ($academicPeriodList as $periodId => $periodName) {
+            foreach ($genderOptions as $genderId => $genderName) {
+                $queryCondition = array_merge(['Genders.id' => $genderId, 'AcademicPeriods.id' => $periodId], $_conditions);
 
-        $queryCondition = array_merge($academicPeriodCondition, $_conditions);
-        $studentsByYear = $this
-            ->find('list',[
-                'groupField' => 'gender_name',
-                'keyField' => 'period_name',
-                'valueField' => 'total'
-            ])
-            ->matching('Users.Genders')
-            ->matching('AcademicPeriods')
-            ->select([
-                'gender_name' => 'Genders.name',
-                'period_name' => 'AcademicPeriods.name',
-                'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('student_id'))
-            ])
-            ->where($queryCondition)
-            ->group(['gender_name', $this->aliasField('academic_period_id')])
-            ->order('AcademicPeriods.order DESC')
-            ->hydrate(false)
-            ->toArray()
-            ;
+                $studentsByYear = $this
+                ->find('list',[
+                    'groupField' => 'gender_name',
+                    'keyField' => 'period_name',
+                    'valueField' => 'total'
+                ])
+                ->matching('Users.Genders')
+                ->matching('AcademicPeriods')
+                ->select([
+                    'gender_name' => 'Genders.name',
+                    'period_name' => 'AcademicPeriods.name',
+                    'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('student_id'))
+                ])
+                ->where($queryCondition)
+                ->group(['gender_name', $this->aliasField('academic_period_id')])
+                ->order('AcademicPeriods.order DESC')
+                ->hydrate(false)
+                ->toArray()
+                ;
 
-        foreach ($dataSet as $key => $data) {
-            foreach ($academicPeriodList as $period) {
-
-                if (isset($studentsByYear[$key][$period])) {
-                    $dataSet[$key]['data'][$period] = $studentsByYear[$key][$period];
-                } else {
-                    $dataSet[$key]['data'][$period] = 0;
-                }
+                $dataSet[$genderName]['data'][$periodName] = !empty($studentsByYear) ? $studentsByYear[$genderName][$periodName] : 0;
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();

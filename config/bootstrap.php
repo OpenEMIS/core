@@ -258,6 +258,7 @@ Plugin::load('Cache', ['routes' => true, 'autoload' => true]);
 Plugin::load('Restful');
 Plugin::load('ADmad/JwtAuth');
 Plugin::load('SSO');
+Plugin::load('System', ['routes' => true, 'autoload' => true]);
 Plugin::load('InstitutionRepeater', ['routes' => true, 'autoload' => true]);
 Plugin::load('Examination', ['routes' => true, 'autoload' => true]);
 Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
