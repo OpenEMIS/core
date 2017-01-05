@@ -410,53 +410,71 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         renderGrades: function(allowEdit, cols, extra, _results) {
             var gradingOptions = extra.gradingOptions;
             var period = extra.period;
+            var enrolledStatus = extra.enrolledStatus;
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    cellClass: 'oe-cell-highlight',
                     cellRenderer: function(params) {
-                        if (params.value.length == 0) {
-                            params.value = 0;
+                        studentStatusId = params.data.student_status_id;
+
+                        if (studentStatusId == enrolledStatus) {
+                            if (params.value.length == 0) {
+                                params.value = 0;
+                            }
+
+                            var oldValue = params.value;
+                            var studentId = params.data.student_id;
+                            var periodId = period.id;
+
+                            var eCell = document.createElement('div');
+                            eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+
+                            var eSelect = document.createElement("select");
+
+                            angular.forEach(gradingOptions, function(obj, key) {
+                                var eOption = document.createElement("option");
+                                var labelText = obj.name;
+                                if (obj.code.length > 0) {
+                                    labelText = obj.code + ' - ' + labelText;
+                                }
+                                eOption.setAttribute("value", key);
+                                eOption.innerHTML = labelText;
+                                eSelect.appendChild(eOption);
+                            });
+
+                            eSelect.value = params.value;
+
+                            eSelect.addEventListener('change', function () {
+                                var newValue = eSelect.value;
+                                params.data[params.colDef.field] = newValue;
+
+                                if (angular.isUndefined(_results[studentId])) {
+                                    _results[studentId] = {};
+                                }
+
+                                if (angular.isUndefined(_results[studentId][periodId])) {
+                                    _results[studentId][periodId] = {gradingOptionId: ''};
+                                }
+
+                                _results[studentId][periodId]['gradingOptionId'] = newValue;
+                            });
+
+                            eCell.appendChild(eSelect);
+
+                        } else {
+                            // don't allow input if student is not enrolled
+                            var cellValue = '';
+                            if (params.value.length != 0 && params.value != 0) {
+                                cellValue = gradingOptions[params.value]['name'];
+                                if (gradingOptions[params.value]['code'].length > 0) {
+                                    cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                                }
+                            }
+
+                            var eCell = document.createElement('div');
+                            var eLabel = document.createTextNode(cellValue);
+                            eCell.appendChild(eLabel);
                         }
-
-                        var oldValue = params.value;
-                        var studentId = params.data.student_id;
-                        var periodId = period.id;
-
-                        var eCell = document.createElement('div');
-                        eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
-
-                        var eSelect = document.createElement("select");
-
-                        angular.forEach(gradingOptions, function(obj, key) {
-                            var eOption = document.createElement("option");
-                            var labelText = obj.name;
-                            if (obj.code.length > 0) {
-                                labelText = obj.code + ' - ' + labelText;
-                            }
-                            eOption.setAttribute("value", key);
-                            eOption.innerHTML = labelText;
-                            eSelect.appendChild(eOption);
-                        });
-
-                        eSelect.value = params.value;
-
-                        eSelect.addEventListener('change', function () {
-                            var newValue = eSelect.value;
-                            params.data[params.colDef.field] = newValue;
-
-                            if (angular.isUndefined(_results[studentId])) {
-                                _results[studentId] = {};
-                            }
-
-                            if (angular.isUndefined(_results[studentId][periodId])) {
-                                _results[studentId][periodId] = {gradingOptionId: ''};
-                            }
-
-                            _results[studentId][periodId]['gradingOptionId'] = newValue;
-                        });
-
-                        eCell.appendChild(eSelect);
 
                         return eCell;
                     },
@@ -492,6 +510,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
             var periodId = extra.period.id;
+            var enrolledStatus = extra.enrolledStatus;
 
             cols = angular.merge(cols, {
                 cellStyle: function(params) {
@@ -521,7 +540,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    cellClass: 'oe-cell-highlight',
+                    cellClass: function(params) {
+                        studentStatusId = params.data.student_status_id;
+                        var highlightClass = 'oe-cell-highlight';
+                        return (studentStatusId == enrolledStatus) ? highlightClass : false;
+                    },
                     cellRenderer: function(params) {
                         var studentId = params.data.student_id;
 
@@ -559,52 +582,60 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             secondInput.value = duration[1];
                         }
 
-                        eCell.addEventListener('change', function() {
-                            var minuteInt = parseInt(minuteInput.value);
-                            var secondInt = parseInt(secondInput.value);
+                        studentStatusId = params.data.student_status_id;
+                        if (studentStatusId == enrolledStatus) {
+                            eCell.addEventListener('change', function() {
+                                var minuteInt = parseInt(minuteInput.value);
+                                var secondInt = parseInt(secondInput.value);
 
-                            // Minute Input
-                            if (minuteInput.value.length > 0) {
-                                if (isNaN(minuteInt) || (minuteInt < 0 || minuteInt > 999)) {
-                                    minuteInput.value = '';
-                                    secondInput.value = '';
-                                } else {
-                                    minuteInput.value = minuteInt;
+                                // Minute Input
+                                if (minuteInput.value.length > 0) {
+                                    if (isNaN(minuteInt) || (minuteInt < 0 || minuteInt > 999)) {
+                                        minuteInput.value = '';
+                                        secondInput.value = '';
+                                    } else {
+                                        minuteInput.value = minuteInt;
+                                    }
                                 }
-                            }
-                            // End
+                                // End
 
-                            // Second Input
-                            if (secondInput.value.length > 0) {
-                                if (isNaN(secondInt) || (secondInt < 0 || secondInt > 59)) {
-                                    minuteInput.value = '';
-                                    secondInput.value = '';
-                                } else if (secondInput.value.length == 1) {
-                                    // for padding
-                                    secondInput.value = '0' + secondInt;
-                                } else {
-                                    secondInput.value = secondInt;
+                                // Second Input
+                                if (secondInput.value.length > 0) {
+                                    if (isNaN(secondInt) || (secondInt < 0 || secondInt > 59)) {
+                                        minuteInput.value = '';
+                                        secondInput.value = '';
+                                    } else if (secondInput.value.length == 1) {
+                                        // for padding
+                                        secondInput.value = '0' + secondInt;
+                                    } else {
+                                        secondInput.value = secondInt;
+                                    }
                                 }
-                            }
-                            // End
+                                // End
 
-                            if (angular.isUndefined(_results[studentId])) {
-                                _results[studentId] = {};
-                            }
+                                if (angular.isUndefined(_results[studentId])) {
+                                    _results[studentId] = {};
+                                }
 
-                            if (angular.isUndefined(_results[studentId][periodId])) {
-                                _results[studentId][periodId] = {duration: ''};
-                            }
+                                if (angular.isUndefined(_results[studentId][periodId])) {
+                                    _results[studentId][periodId] = {duration: ''};
+                                }
 
-                            var durationAsFloat = '';
-                            if (minuteInput.value.length > 0 || secondInput.value.length > 0) {
-                                var duration = minuteInput.value + '.' + secondInput.value;
-                                durationAsFloat = $filter('number')(duration, 2);
-                            }
+                                var durationAsFloat = '';
+                                if (minuteInput.value.length > 0 || secondInput.value.length > 0) {
+                                    var duration = minuteInput.value + '.' + secondInput.value;
+                                    durationAsFloat = $filter('number')(duration, 2);
+                                }
 
-                            params.data[params.colDef.field] = durationAsFloat;
-                            _results[studentId][periodId]['duration'] = durationAsFloat;
-                        });
+                                params.data[params.colDef.field] = durationAsFloat;
+                                _results[studentId][periodId]['duration'] = durationAsFloat;
+                            });
+
+                        } else {
+                            // disable input if student is not enrolled
+                            secondInput.disabled = true;
+                            minuteInput.disabled = true;
+                        }
 
                         return eCell;
                     },
