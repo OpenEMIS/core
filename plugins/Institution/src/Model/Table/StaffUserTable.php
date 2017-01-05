@@ -61,6 +61,7 @@ class StaffUserTable extends ControllerActionTable {
             'Staff' => ['index', 'add']
         ]);
         $this->toggle('index', false);
+        $this->toggle('add', false);
         $this->toggle('remove', false);
     }
 
@@ -188,16 +189,6 @@ class StaffUserTable extends ControllerActionTable {
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
-	}
-
-	//to handle identity_number field that is automatically created by mandatory behaviour.
-	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-			$attr['fieldName'] = $this->alias().'.identities.0.number';
-			$attr['attr']['label'] = __('Identity Number');
-		}
-		return $attr;
 	}
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
