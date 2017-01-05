@@ -542,7 +542,7 @@ class NavigationComponent extends Component
 				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'id' => $id],
 				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
-					'Students.History', 'Students.GuardianUser']],
+					'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull']],
 			'Institutions.StudentProgrammes.index' => [
 				'title' => 'Academic',
 				'parent' => 'Institutions.Students.index',
@@ -580,7 +580,7 @@ class NavigationComponent extends Component
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-					'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
+					'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add'],
 			],
 			'Staff.Qualifications' => [
 				'title' => 'Professional Development',
@@ -788,18 +788,6 @@ class NavigationComponent extends Component
 					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
 							'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
 				],
-				'Textbooks.Textbooks' => [
-                    'title' => 'Textbooks',
-                    'parent' => 'SystemSetup',
-                    'params' => ['plugin' => 'Textbook'],
-                    'selected' => ['Textbooks.Textbooks']
-                ],
-				'Assessments.Assessments' => [
-					'title' => 'Assessments',
-					'parent' => 'SystemSetup',
-					'params' => ['plugin' => 'Assessment'],
-					'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
-				],
 				'FieldOptions.index' => [
 					'title' => 'Field Options',
 					'parent' => 'SystemSetup',
@@ -835,6 +823,12 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Infrastructure'],
 						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
 					],
+				'CustomExcels.ExcelTemplates' => [
+					'title' => 'Excel Templates',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'CustomExcel'],
+					'selected' => ['CustomExcels.ExcelTemplates']
+				],
 				'Labels.index' => [
 					'title' => 'Labels',
 					'parent' => 'SystemSetup',
@@ -958,7 +952,12 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Results']
 				],
-
+            'Assessments.Assessments' => [
+                'title' => 'Assessments',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Assessment'],
+                'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
+            ],
 			'Administration.Examinations' => [
 					'title' => 'Examinations',
 					'parent' => 'Administration',
@@ -988,12 +987,22 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Examination'],
 						'selected' => ['Examinations.ExamResults', 'Examinations.Results', 'Examinations.ImportResults']
 					],
-
+            'Textbooks.Textbooks' => [
+                'title' => 'Textbooks',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Textbook'],
+                'selected' => ['Textbooks.Textbooks']
+            ],
 			'Workflows.Workflows' => [
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
 				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Statuses']
+			],
+			'Systems.Updates' => [
+				'title' => 'Updates',
+				'parent' => 'Administration',
+				'params' => ['plugin' => 'System']
 			]
 		];
 		return $navigation;
