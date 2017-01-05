@@ -716,9 +716,7 @@ class StudentsTable extends ControllerActionTable
             }
 
             foreach ($indexElements as $key => $value) {
-                if ($value['name']=='advanced_search') {
-                    $indexElements[$key]['order'] = 1;
-                } else if ($value['name']=='OpenEmis.ControllerAction/index') {
+                if ($value['name']=='OpenEmis.ControllerAction/index') {
                     $indexElements[$key]['order'] = 3;
                 } else if ($value['name']=='OpenEmis.pagination') {
                     $indexElements[$key]['order'] = 4;
