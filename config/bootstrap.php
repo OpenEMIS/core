@@ -64,6 +64,8 @@ use Cake\Routing\DispatcherFactory;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Error\AppError;
+use Cake\Core\Exception\Exception;
+
 /**
  * Read configuration file and inject configuration into various
  * CakePHP classes.
@@ -77,9 +79,15 @@ try {
     Configure::load('app', 'default', false);
     Configure::load('app_extra', 'default');
     Configure::load('datasource', 'default');
+
+    if (!Configure::read('Application.private.key') || !Configure::read('Application.public.key')) {
+        throw new Exception('Could not load application key, please contact administrator to have the key set up for your application.');
+    }
 } catch (\Exception $e) {
     exit($e->getMessage() . "\n");
 }
+
+
 
 // For unit testing
 try {
@@ -249,9 +257,11 @@ Plugin::load('Cache', ['routes' => true, 'autoload' => true]);
 Plugin::load('Restful');
 Plugin::load('ADmad/JwtAuth');
 Plugin::load('SSO');
+Plugin::load('System', ['routes' => true, 'autoload' => true]);
 Plugin::load('InstitutionRepeater', ['routes' => true, 'autoload' => true]);
 Plugin::load('Examination', ['routes' => true, 'autoload' => true]);
 Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
+Plugin::load('CustomExcel', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system

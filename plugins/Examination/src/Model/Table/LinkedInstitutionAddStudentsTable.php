@@ -30,8 +30,11 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsToMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds']);
+
+        $this->addBehavior('CompositeKey');
+
         $this->toggle('index', false);
         $this->toggle('edit', false);
         $this->toggle('view', false);
@@ -42,7 +45,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'examination_item_id']]],
                 'provider' => 'table'
             ])
             ->requirePresence('institution_id')
@@ -66,14 +69,6 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $Navigation->addCrumb('Students');
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->education_subject_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
-    }
-
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->controller->getExamCentresTab('ExamCentreStudents');
@@ -93,6 +88,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $this->field('education_grade_id', ['type' => 'hidden', 'value' => $examCentre->examination->education_grade_id]);
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
+        $this->field('education_subject_id', ['visible' => false]);
 
         $extra['toolbarButtons']['back']['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
 
@@ -174,6 +170,7 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
         $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreStudents', 'queryString' => $this->request->query('queryString')];
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
+        $requestData[$this->alias()]['examination_item_id'] = 0;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
@@ -184,7 +181,8 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $autoAssignToRooms = $entity->auto_assign_to_rooms;
                 $studentCount = 0;
                 $roomStudents = [];
@@ -202,8 +200,9 @@ class LinkedInstitutionAddStudentsTable extends ControllerActionTable {
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
                         $studentCount++;
-                        foreach($ExaminationCentreSubjects as $subject => $name) {
-                            $obj['education_subject_id'] = $subject;
+                        foreach($examCentreSubjects as $examItemId => $subjectId) {
+                            $obj['examination_item_id'] = $examItemId;
+                            $obj['education_subject_id'] = $subjectId;
                             $newEntities[] = $obj;
                         }
                     }

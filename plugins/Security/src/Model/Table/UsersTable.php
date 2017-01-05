@@ -13,9 +13,11 @@ use App\Model\Table\AppTable;
 
 use App\Model\Traits\OptionsTrait;
 
-class UsersTable extends AppTable {
+class UsersTable extends AppTable
+{
 	use OptionsTrait;
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('security_users');
 		parent::initialize($config);
 		$this->entityClass('User.User');
@@ -23,6 +25,8 @@ class UsersTable extends AppTable {
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -64,7 +68,8 @@ class UsersTable extends AppTable {
 	}
 
 	// autocomplete used for UserGroups
-	public function autocomplete($search) {
+	public function autocomplete($search)
+	{
 		$search = sprintf('%s%%', $search);
 
 		$list = $this
@@ -101,12 +106,15 @@ class UsersTable extends AppTable {
 		return $data;
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event)
+	{
 		$this->fields['photo_content']['visible'] = false;
 		$this->fields['address']['visible'] = false;
 		$this->fields['postal_code']['visible'] = false;
 		$this->fields['address_area_id']['visible'] = false;
 		$this->fields['birthplace_area_id']['visible'] = false;
+		$this->fields['nationality_id']['type'] = 'readonly';
+		$this->fields['identity_type_id']['type'] = 'readonly';
 
 		if (in_array($this->action, ['add'])) {
 			$this->fields['username']['visible'] = true;
@@ -126,7 +134,8 @@ class UsersTable extends AppTable {
 		]);
 	}
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event)
+	{
 		$this->fields['first_name']['visible'] = false;
 		$this->fields['middle_name']['visible'] = false;
 		$this->fields['third_name']['visible'] = false;
@@ -139,7 +148,8 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('name');
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+	{
 		$options['auto_search'] = false;
 		$query->find('notSuperAdmin');
 
@@ -150,11 +160,13 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function findNotSuperAdmin(Query $query, array $options) {
+	public function findNotSuperAdmin(Query $query, array $options)
+	{
 		return $query->where([$this->aliasField('super_admin') => 0]);
 	}
 
-	public function viewBeforeAction(Event $event) {
+	public function viewBeforeAction(Event $event)
+	{
 		$this->ControllerAction->field('roles', [
 			'type' => 'role_table',
 			'order' => 69,
@@ -163,25 +175,31 @@ class UsersTable extends AppTable {
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements(['id' => $entity->id]);
-	}
-
-	private function setupTabElements($options) {
-		$this->controller->set('selectedAction', 'Securities');
-		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
-	}
-
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query)
+	{
 		$query->find('notSuperAdmin');
+		$query->contain(['MainNationalities', 'IdentityTypes']);
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query) {
+	public function viewBeforeQuery(Event $event, Query $query)
+	{
 		$options['auto_contain'] = false;
 		$query->contain(['Roles']);
 	}
 
-	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
+		$this->setupTabElements(['id' => $entity->id]);
+	}
+
+	private function setupTabElements($options)
+	{
+		$this->controller->set('selectedAction', 'Securities');
+		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
+	}
+
+	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[])
+	{
 		$tableHeaders = [__('Groups'), __('Roles')];
 		$tableCells = [];
 		$alias = $this->alias();
@@ -224,7 +242,8 @@ class UsersTable extends AppTable {
 		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
 
-	public function addBeforeAction(Event $event) {
+	public function addBeforeAction(Event $event)
+	{
 		$uniqueOpenemisId = $this->getUniqueOpenemisId(['model'=>Inflector::singularize('User')]);
 
 		// first value is for the hidden field value, the second value is for the readonly value
@@ -237,22 +256,27 @@ class UsersTable extends AppTable {
 	public function editAfterAction(Event $event, Entity $entity)
 	{
 		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+		$this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
+		$this->fields['identity_type_id']['attr']['value'] = $entity->has('identity_type') ? $entity->identity_type->name : '';
 	}
 
-	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		// not saving empty passwords
 		if (empty($data[$this->alias()]['password'])) {
 			unset($data[$this->alias()]['password']);
 		}
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
 	}
 
-	public function isAdmin($userId) {
+	public function isAdmin($userId)
+	{
 		return $this->get($userId)->super_admin;
 	}
 }
