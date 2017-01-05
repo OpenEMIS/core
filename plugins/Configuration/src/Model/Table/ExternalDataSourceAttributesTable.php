@@ -14,7 +14,8 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Students' => ['index']
+        	'Students' => ['index'],
+            'Staff' => ['index']
         ]);
 	}
 

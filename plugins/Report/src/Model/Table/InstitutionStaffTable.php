@@ -61,9 +61,9 @@ class InstitutionStaffTable extends AppTable  {
 
 		$query
 		->contain([
-			'Users.Genders', 
-			'Institutions.Areas', 
-			'Positions.StaffPositionTitles', 
+			'Users.Genders',
+			'Institutions.Areas',
+			'Positions.StaffPositionTitles',
 			'Institutions.Types'
         ])
 		->select([
@@ -76,7 +76,7 @@ class InstitutionStaffTable extends AppTable  {
 			'gender' => 'Genders.name',
 			'area_name' => 'Areas.name',
 			'area_code' => 'Areas.code',
-			'position_title_teaching' => 'StaffPositionTitles.type', 
+			'position_title_teaching' => 'StaffPositionTitles.type',
 			'institution_type' => 'Types.name'
 		]);
 	}
@@ -103,7 +103,7 @@ class InstitutionStaffTable extends AppTable  {
 		return $age;
 	}
 
-	public function onExcelGetEducationGrades(Event $event, Entity $entity) 
+	public function onExcelGetEducationGrades(Event $event, Entity $entity)
     {
     	$ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
 
