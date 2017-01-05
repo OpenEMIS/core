@@ -80,7 +80,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-model="InstitutionStaffController.selectedStaff"
             ng-disabled="InstitutionStaffController.completeDisabled"
             ng-show="(InstitutionStaffController.step=='create_user' || InstitutionStaffController.step=='transfer_staff')"
-            data-last="<?= __('Complete') ?>">
+            data-last="<?= __('Save') ?>">
             <?= __('Next') ?>
         </button>
     </div>
@@ -446,10 +446,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
         </div>
         <div class="step-pane sample-pane" data-step="5" data-name="transferStaff" ng-show="InstitutionStaffController.step == 'transfer_staff';">
             <form class="form-horizontal ng-pristine ng-valid" accept-charset="utf-8" method="post" >
-                <div class="input string">
-                    <label><?= __('Status') ?></label>
-                    <input type="string" value="<?= __('Pending Approval') ?>" disabled="disabled">
-                </div>
                 <div class="input string">
                     <label><?= __('OpenEMIS ID') ?></label>
                     <input type="string" ng-model="InstitutionStaffController['selectedStaffData']['openemis_no']" disabled="disabled">

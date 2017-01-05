@@ -210,6 +210,8 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             UtilsSvc.isAppendLoader(false);
             if ($location.search().staff_added) {
                 AlertSvc.success($scope, 'The staff is added successfully.');
+            } else if ($location.search().staff_transfer_added) {
+                AlertSvc.success($scope, 'Staff transfer request is added successfully.');
             }
         });
 
@@ -601,8 +603,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
                 .then(function(response) {
                     StaffController.selectedStaffData['institution_staff'] = response.institution_staff;
+                    var idName = StaffController.selectedStaffData.openemis_no + ' - ' + StaffController.selectedStaffData.name;
+                    var institutionName = StaffController.selectedStaffData['institution_staff'][0]['institution']['code_name'];
                     StaffController.transferStaffError = true;
-                    AlertSvc.warning($scope, 'Staff is currently assigned to another Institution.');
+                    AlertSvc.info($scope, idName + ' is currently assigned to '+ institutionName +'. By clicking save, a transfer request will be sent to the institution for approval');
                     deferred.resolve(StaffController.postResponse);
                 }, function(error) {
                     StaffController.transferStaffError = true;
