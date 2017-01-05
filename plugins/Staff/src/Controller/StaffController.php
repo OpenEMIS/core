@@ -89,8 +89,6 @@ class StaffController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Staff.Staff.id')) {
 				$id = $session->read('Staff.Staff.id');
-			} else if ($session->check('Institution.Staff.id')) {
-				$id = $session->read('Institution.Staff.id');
 			}
 
 			if (!empty($id)) {

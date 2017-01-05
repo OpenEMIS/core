@@ -9,9 +9,9 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class DirectoriesTable extends AppTable {
+class DirectoriesTable extends ControllerActionTable {
 	// public $InstitutionStudent;
 
 	// these constants are being used in AdvancedPositionSearchBehavior as well
@@ -46,7 +46,7 @@ class DirectoriesTable extends AppTable {
 
         //specify order of advanced search fields
         $advancedSearchFieldOrder = [
-            'user_type', 'first_name', 'middle_name', 'third_name', 'last_name', 
+            'user_type', 'first_name', 'middle_name', 'third_name', 'last_name',
             'openemis_no', 'gender_id', 'contact_number', 'birthplace_area_id', 'address_area_id', 'position',
             'identity_type', 'identity_number'
         ];
@@ -54,8 +54,8 @@ class DirectoriesTable extends AppTable {
         	'include' =>[
         		'openemis_no'
         	],
-        	'order' => $advancedSearchFieldOrder, 
-        	'showOnLoad' => 1, 
+        	'order' => $advancedSearchFieldOrder,
+        	'showOnLoad' => 1,
         	'customFields' => ['user_type']
         ]);
 
@@ -64,9 +64,11 @@ class DirectoriesTable extends AppTable {
 				'_function' => 'getNumberOfUsersByGender'
 			]
 		]);
+        $this->addBehavior('Configuration.Pull');
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportUsers']);
 
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
+        $this->toggle('search', false);
 	}
 
     public function implementedEvents()
@@ -74,7 +76,6 @@ class DirectoriesTable extends AppTable {
         $events = parent::implementedEvents();
         $events['AdvanceSearch.getCustomFilter'] = 'getCustomFilter';
         $events['AdvanceSearch.onModifyConditions'] = 'onModifyConditions';
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
         return $events;
     }
 
@@ -136,7 +137,7 @@ class DirectoriesTable extends AppTable {
         return $filters;
     }
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $options)
     {
         if (!$this->isAdvancedSearchEnabled()) {
             $event->stopPropagation();
@@ -238,35 +239,15 @@ class DirectoriesTable extends AppTable {
         return $query;
     }
 
-	public function afterAction(Event $event) {
-		if ($this->action == 'index') {
-			$indexElements = $this->controller->viewVars['indexElements'];
-
-			foreach ($indexElements as $key => $value) {
-				if ($value['name']=='advanced_search') {
-					$indexElements[$key]['order'] = 1;
-				} else if ($value['name']=='OpenEmis.ControllerAction/index') {
-					$indexElements[$key]['order'] = 3;
-				} else if ($value['name']=='OpenEmis.pagination') {
-					$indexElements[$key]['order'] = 4;
-				} else {
-					// $indexElements[$key]['order'] = $key + 4;
-				}
-			}
-			$this->controller->set('indexElements', $indexElements);
-		}
-	}
-
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		if ($this->action == 'add') {
 			if ($this->controller->name != 'Students') {
-				$this->ControllerAction->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
+				$this->field('user_type', ['type' => 'select', 'after' => 'photo_content']);
 			} else {
 				$this->request->query['user_type'] = self::GUARDIAN;
 			}
 			$userType = isset($this->request->data[$this->alias()]['user_type']) ? $this->request->data[$this->alias()]['user_type'] : $this->request->query('user_type');
-			$this->ControllerAction->field('openemis_no', ['user_type' => $userType]);
-
+			$this->field('openemis_no', ['user_type' => $userType]);
 			switch ($userType) {
 				case self::STUDENT:
                     $this->addBehavior('User.Mandatory', ['userRole' => 'Student', 'roleFields' => ['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
@@ -314,7 +295,7 @@ class DirectoriesTable extends AppTable {
 	{
 		if (($action=="add") || ($action=="edit")) { //hide "other information" section on add/edit guardian because there wont be any custom field.
 			if (($controller=="Students") || ($controller=="Directories")) {
-				$this->ControllerAction->field('other_information_section', ['visible' => false]);
+				$this->field('other_information_section', ['visible' => false]);
 			}
 		}
 	}
@@ -341,35 +322,34 @@ class DirectoriesTable extends AppTable {
 				// do nothing
 				break;
 			case self::STAFF:
-				$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
-				$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
+				$this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+				$this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 				break;
 			default:
 				$this->fields['identity_number']['type'] = 'hidden';
-				$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
-				$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
+				$this->field('username', ['order' => ++$highestOrder, 'visible' => true]);
+				$this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 				break;
 		}
 	}
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        if ($action == 'index') {
-            $toolbarButtons['advance_search'] = [
-                'type' => 'button',
-                'attr' => [
-                    'class' => 'btn btn-default btn-xs',
-                    'data-toggle' => 'tooltip',
-                    'data-placement' => 'bottom',
-                    'title' => __('Advanced Search'),
-                    'id' => 'search-toggle',
-                    'escape' => false,
-                    'ng-click'=> 'toggleAdvancedSearch()'
-                ],
-                'url' => '#',
-                'label' => '<i class="fa fa-search-plus"></i>',
-            ];
-        }
+        $toolbarButtons = $extra['toolbarButtons'];
+        $toolbarButtons['advance_search'] = [
+            'type' => 'button',
+            'attr' => [
+                'class' => 'btn btn-default btn-xs',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'title' => __('Advanced Search'),
+                'id' => 'search-toggle',
+                'escape' => false,
+                'ng-click'=> 'toggleAdvancedSearch()'
+            ],
+            'url' => '#',
+            'label' => '<i class="fa fa-search-plus"></i>',
+        ];
     }
 
 	public function onUpdateFieldUserType(Event $event, array $attr, $action, Request $request) {
@@ -477,12 +457,12 @@ class DirectoriesTable extends AppTable {
 				// Do nothing
 				break;
 			case self::STUDENT:
-				$this->ControllerAction->field('institution', ['order' => 50]);
-				$this->ControllerAction->field('student_status', ['order' => 51]);
+				$this->field('institution', ['order' => 50]);
+				$this->field('student_status', ['order' => 51]);
 				break;
 
 			case self::STAFF:
-				$this->ControllerAction->field('institution', ['order' => 50]);
+				$this->field('institution', ['order' => 50]);
 				break;
 
 			case self::GUARDIAN:
@@ -494,6 +474,24 @@ class DirectoriesTable extends AppTable {
 				break;
 		}
 	}
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->action == 'index') {
+            $userType = $this->Session->read('Directories.advanceSearch.belongsTo.user_type');
+            switch($userType) {
+                case self::STUDENT:
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution', 'student_status']);
+                    break;
+                case self::STAFF:
+                    $this->setFieldOrder(['photo_content', 'openemis_no', 'name', 'institution']);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }
 
 	public function onGetStudentStatus(Event $event, Entity $entity) {
 		return __($entity->student_status_name);
@@ -570,7 +568,7 @@ class DirectoriesTable extends AppTable {
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {
-				$urlParams = $this->ControllerAction->url('edit');
+				$urlParams = $this->url('edit');
 				$event->stopPropagation();
 				return $this->controller->redirect($urlParams);
 			}
@@ -587,7 +585,7 @@ class DirectoriesTable extends AppTable {
 		if ($isSet) {
 			$reload = $this->Session->read('Directory.Directories.reload');
 			if (!isset($reload)) {
-				$urlParams = $this->ControllerAction->url('view');
+				$urlParams = $this->url('view');
 				$event->stopPropagation();
 				return $this->controller->redirect($urlParams);
 			}
