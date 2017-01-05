@@ -28,7 +28,10 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->toggle('index', false);
+
+        $this->addBehavior('CompositeKey');
     }
 
     public function implementedEvents() {
@@ -48,19 +51,11 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id', 'education_subject_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id', 'examination_item_id']]],
                 'provider' => 'table'
             ])
             ->requirePresence('institution_id')
             ->requirePresence('auto_assign_to_rooms');
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->examination_centre_id . ',' . $entity->student_id . ','. $entity->education_subject_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -81,6 +76,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         $this->field('auto_assign_to_rooms', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
         $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
+        $this->field('education_subject_id', ['type' => 'hidden']);
         $this->field('total_mark', ['visible' => false]);
         $this->field('registration_number', ['visible' => false]);
 
@@ -322,6 +318,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         $extra['redirect'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'RegisteredStudents', 'index'];
         $requestData[$this->alias()]['student_id'] = 0;
         $requestData[$this->alias()]['education_subject_id'] = 0;
+        $requestData[$this->alias()]['examination_item_id'] = 0;
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
@@ -332,7 +329,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $newEntities = [];
 
                 $selectedExaminationCentre = $requestData[$this->alias()]['examination_centre_id'];
-                $ExaminationCentreSubjects = $this->ExaminationCentres->ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
+                $ExaminationCentreSubjects = TableRegistry::get('Examination.ExaminationCentreSubjects');
+                $examCentreSubjects = $ExaminationCentreSubjects->getExaminationCentreSubjects($selectedExaminationCentre);
                 $studentCount = 0;
                 $roomStudents = [];
                 foreach ($students as $key => $student) {
@@ -349,8 +347,9 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                         $obj['counterNo'] = $key;
                         $roomStudents[] = $obj;
                         $studentCount++;
-                        foreach($ExaminationCentreSubjects as $subject => $name) {
-                            $obj['education_subject_id'] = $subject;
+                        foreach($examCentreSubjects as $examItemId => $subjectId) {
+                            $obj['examination_item_id'] = $examItemId;
+                            $obj['education_subject_id'] = $subjectId;
                             $newEntities[] = $obj;
                         }
                     }
