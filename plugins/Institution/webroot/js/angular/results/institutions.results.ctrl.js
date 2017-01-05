@@ -7,6 +7,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     $scope.results = {};
     $scope.gridOptions = null;
     $scope.roles = [];
+    $scope.enrolledStatus = null;
 
     angular.element(document).ready(function () {
         // init
@@ -36,10 +37,18 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
                 $scope.initGrid(subject);
             }
+            return InstitutionsResultsSvc.getStudentStatusId("CURRENT");
         }, function(error) {
             // No Assessment Items
             console.log(error);
             AlertSvc.warning($scope, error);
+        })
+        // getStudentStatusId (enrolled)
+        .then(function(response) {
+            $scope.enrolledStatus = response.data[0].id;
+        }, function(error) {
+            // No enrolled status
+            console.log(error);
         })
         .finally(function(obj) {
             UtilsSvc.isAppendLoader(false);
@@ -105,7 +114,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
     };
 
     $scope.resetColumnDefs = function(action, subject, periods, gradingTypes) {
-        var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes, $scope.results);
+        var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes, $scope.results, $scope.enrolledStatus);
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
