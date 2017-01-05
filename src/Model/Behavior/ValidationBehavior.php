@@ -1715,6 +1715,26 @@ class ValidationBehavior extends Behavior {
 
 		// check if staff is already assigned
 		$StaffTable = TableRegistry::get('Institution.Staff');
+
+		$staffRecord = $StaffTable->find()
+			->contain(['Institutions'])
+			->where([
+				$StaffTable->aliasField('staff_id') => $staffId,
+				$StaffTable->aliasField('institution_id') => $data['institution_id'],
+				'OR' => [
+					[$StaffTable->aliasField('end_date').' >= ' => $startDate],
+					[$StaffTable->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$StaffTable->aliasField('created') => 'DESC'])
+			->first();
+
+		// Check if staff already exist in the school
+		if ($staffRecord) {
+			return true;
+		}
+
+		// If staff does not exist in the school, we check if the staff is in another school
 		$staffRecord = $StaffTable->find()
 			->contain(['Institutions'])
 			->where([
@@ -1731,6 +1751,7 @@ class ValidationBehavior extends Behavior {
 		if ($staffRecord) {
 			return false;
 		}
+
 		return true;
 	}
 

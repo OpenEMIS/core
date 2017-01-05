@@ -765,7 +765,6 @@ class InstitutionsController extends AppController
                 $StaffTable->aliasField('end_date') . ' IS NULL'
             ];
             $excludePositions = $excludePositions->where([
-                    $StaffTable->aliasField('start_date').' <= ' => $startDate,
                     'OR' => $orCondition
                 ]);
         }
