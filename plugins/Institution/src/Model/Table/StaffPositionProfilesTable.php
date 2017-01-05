@@ -56,7 +56,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
+		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => ['institution_position_id', 'academic_period_id']]);
 		$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
 		$this->addBehavior('Institution.StaffValidation');
 		$this->addBehavior('Workflow.Workflow');
@@ -304,8 +304,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->field('current_staff_type', ['before' => 'staff_type_id']);
 		$fteOptions = ['0.25' => '25%', '0.5' => '50%', '0.75' => '75%', '1' => '100%'];
 		$this->field('FTE', ['type' => 'select', 'options' => $fteOptions, 'value' => $entity->FTE]);
-		$this->field('academic_period_id', ['type' => 'hidden']);
-		$this->field('institution_position_id', ['after' => 'staff_id', 'type' => 'readonly', 'attr' => ['value' => $this->Positions->get(['id' => $this->getEntityProperty($entity, 'institution_position_id'), 'academic_period_id' => $entity->academic_period_id])->name]]);
+		$this->field('institution_position_id', ['after' => 'staff_id', 'type' => 'readonly', 'attr' => ['value' => $this->Positions->get($this->getEntityProperty($entity, 'institution_position_id'))->name]]);
 		$this->field('current_FTE', ['before' => 'FTE', 'type' => 'disabled', 'options' => $fteOptions]);
 		$this->field('effective_date');
 		$this->field('end_date');
@@ -476,15 +475,15 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	private function initialiseVariable($entity) {
-		$institutionStaff = $this->request->query('id');
+		$institutionStaffId = $this->request->query('institution_staff_id');
 
-		$institutionStaff = $this->paramsDecode($institutionStaff);
+		$institutionStaffId = $this->paramsDecode($institutionStaffId)['id'];
 
-		if (is_null($institutionStaff)) {
+		if (is_null($institutionStaffId)) {
 			return true;
 		}
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
-		$staff = $InstitutionStaff->get($institutionStaff);
+		$staff = $InstitutionStaff->get($institutionStaffId);
 		$approvedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
 		$closedStatus = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'CLOSED');
 
@@ -505,13 +504,11 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$entity->end_date = $staff->end_date;
 			$entity->staff_type_id = $staff->staff_type_id;
 			$entity->FTE = $staff->FTE;
-			$entity->academic_period_id = $staff->academic_period_id;
 			$this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staff);
 			$this->request->data[$this->alias()]['staff_id'] = $entity->staff_id;
 			$this->request->data[$this->alias()]['institution_position_id'] = $entity->institution_position_id;
 			$this->request->data[$this->alias()]['institution_id'] = $entity->institution_id;
 			$this->request->data[$this->alias()]['staff_change_type_id'] = '';
-			$this->request->data[$this->alias()]['academic_period_id'] = $entity->academic_period_id;
 			return false;
 		} else {
 			return $staffPositionProfilesRecord;
@@ -519,24 +516,21 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 	}
 
 	public function editOnInitialize(Event $event, Entity $entity) {
-		$StaffTable = TableRegistry::get('Institution.Staff');
-
-		$staffEntity = $StaffTable->find()->where([$this->aliasField('id') => $entity->institution_staff_id])->first();
+		$staffEntity = TableRegistry::get('Institution.Staff')->get($entity->institution_staff_id);
 		$this->Session->write('Institution.StaffPositionProfiles.staffRecord', $staffEntity);
 		$this->request->data[$this->alias()]['staff_change_type_id'] = $entity->staff_change_type_id;
-		$this->request->data[$this->alias()]['academic_period_id'] = $staffEntity->academic_period_id;
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
 		$addOperation = $this->initialiseVariable($entity);
 		if ($addOperation) {
-			$institutionStaff = $this->request->query('id');
-			if (is_null($institutionStaff)) {
+			$institutionStaffId = $this->request->query('institution_staff_id');
+			if (is_null($institutionStaffId)) {
 				$url = $this->url('index');
 			} else {
 				$staffTableViewUrl = $this->url('view');
 				$staffTableViewUrl['action'] = 'Staff';
-				$staffTableViewUrl[1] = $institutionStaff;
+				$staffTableViewUrl[1] = $institutionStaffId;
 				$this->Session->write('Institution.StaffPositionProfiles.viewBackUrl', $staffTableViewUrl);
 				$url = $this->url('view');
 				$url[1] = $this->paramsEncode(['id' => $addOperation->id]);
