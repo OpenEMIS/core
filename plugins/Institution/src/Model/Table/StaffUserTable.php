@@ -146,6 +146,7 @@ class StaffUserTable extends ControllerActionTable {
     {
         $validator = parent::validationDefault($validator);
         $validator
+            ->allowEmpty('username')
             ->allowEmpty('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [
                 'rule' => ['validateCustomPattern', 'postal_code'],
