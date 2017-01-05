@@ -9,7 +9,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         AssessmentPeriodsTable: 'Assessment.AssessmentPeriods',
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
-        SecurityGroupUsersTable: 'Security.SecurityGroupUsers'
+        SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
+        StudentStatusesTable: 'Student.StudentStatuses'
     };
 
     return {
@@ -197,7 +198,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             .ajax({success: success, defer: true});
         },
 
-        getColumnDefs: function(action, subject, periods, gradingTypes, _results) {
+        getStudentStatusId: function(statusCode)
+        {
+            return StudentStatusesTable.select(['id']).where({code: statusCode}).ajax({defer: true});
+        },
+
+        getColumnDefs: function(action, subject, periods, gradingTypes, _results, enrolledStatus) {
             var filterParams = {
                 cellHeight: 30
             };
@@ -222,7 +228,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             });
             columnDefs.push({
                 headerName: "Status",
-                field: "student_status_id",
+                field: "student_status_name",
                 filterParams: filterParams
             });
 
@@ -272,7 +278,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         extra = {
                             minMark: 0,
                             passMark: subject.grading_type.pass_mark,
-                            maxMark: subject.grading_type.max
+                            maxMark: subject.grading_type.max,
+                            enrolledStatus: enrolledStatus
                         };
                     }
 
@@ -292,7 +299,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         });
 
                         extra = {
-                            gradingOptions: gradingOptions
+                            gradingOptions: gradingOptions,
+                            enrolledStatus: enrolledStatus
                         };
                     }
 
@@ -303,7 +311,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         extra = {
                             minMark: 0,
                             passMark: subject.grading_type.pass_mark,
-                            maxMark: subject.grading_type.max
+                            maxMark: subject.grading_type.max,
+                            enrolledStatus: enrolledStatus
                         };
                     }
 
@@ -349,6 +358,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
+            var enrolledStatus = extra.enrolledStatus;
 
             cols = angular.merge(cols, {
                 filter: 'number',
@@ -372,8 +382,16 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    editable: true,
-                    cellClass: 'oe-cell-highlight',
+                    cellClass: function(params) {
+                        studentStatusId = params.data.student_status_id;
+                        var highlightClass = 'oe-cell-highlight';
+                        return (studentStatusId == enrolledStatus) ? highlightClass : false;
+                    },
+                    editable: function(params) {
+                        // only enrolled student is editable
+                        studentStatusId = params.node.data.student_status_id;
+                        return (studentStatusId == enrolledStatus);
+                    },
                     newValueHandler: function(params) {
                         var valueAsFloat = parseFloat(params.newValue);
 
@@ -640,7 +658,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
                                     student_id: currentStudentId,
-                                    student_status_id: subjectStudent.student_status.name,
+                                    student_status_id: subjectStudent.student_status_id,
+                                    student_status_name: subjectStudent.student_status.name,
                                     total_mark: subjectStudent.total_mark,
                                     is_dirty: false
                                 };
