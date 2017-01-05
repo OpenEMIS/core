@@ -55,6 +55,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 
 		$Users = $this->Users;
 		$InstitutionSubjects = $this->InstitutionSubjects;
+        $StudentStatuses = $this->StudentStatuses;
 		$ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
 
 		return $query
@@ -64,15 +65,19 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				$ItemResults->aliasField('assessment_grading_option_id'),
 				$ItemResults->aliasField('assessment_period_id'),
 				$this->aliasField('student_id'),
+                $this->aliasField('student_status_id'),
 				$this->aliasField('total_mark'),
 				$Users->aliasField('openemis_no'),
 				$Users->aliasField('first_name'),
 				$Users->aliasField('middle_name'),
 				$Users->aliasField('third_name'),
 				$Users->aliasField('last_name'),
-				$Users->aliasField('preferred_name')
+				$Users->aliasField('preferred_name'),
+                $StudentStatuses->aliasField('code'),
+                $StudentStatuses->aliasField('name')
 			])
 			->matching('Users')
+            ->contain('StudentStatuses')
 			->innerJoin(
 				[$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
 				[
