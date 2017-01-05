@@ -416,6 +416,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
                 newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];
                 newUserRecord['date_of_birth'] = userRecord[attr['date_of_birth_mapping']];
+                newUserRecord['address'] = userRecord[attr['address_mapping']];
                 newUserRecord['external_reference'] = userRecord[attr['external_reference_mapping']];
                 genderName = userRecord[attr['gender_mapping']];
                 // By auto generated
