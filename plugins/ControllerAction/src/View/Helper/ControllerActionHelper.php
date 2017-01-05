@@ -57,7 +57,8 @@ class ControllerActionHelper extends Helper {
 		$options = [
 			'id' => 'content-main-form',
 			'class' => 'form-horizontal',
-			'novalidate' => true
+			'novalidate' => true,
+			'onSubmit' => '$(\'button[type="submit"]\').prop(\'disabled\', true);'
 		];
 
 		$config = $this->_View->get('ControllerAction');
@@ -81,7 +82,7 @@ class ControllerActionHelper extends Helper {
 		// save button
 		$buttons[] = [
 			'name' => '<i class="fa fa-check"></i> ' . __('Save'),
-			'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save', 'onclick' => '$(this).attr(\'disabled\', true);']
+			'attr' => ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'save']
 		];
 
 		// cancel button
