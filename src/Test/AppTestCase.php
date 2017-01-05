@@ -58,6 +58,19 @@ class AppTestCase extends IntegrationTestCase
         ]);
     }
 
+    public function setIndexesSession($id)
+    {
+        $this->session([
+            'Indexes' => [
+                'Indexes' => [
+                    'primaryKey' => [
+                        'id' => $id
+                    ]
+                ]
+            ]
+        ]);
+    }
+
     public function urlPrefix($param = null)
     {
         if (!is_null($param)) {

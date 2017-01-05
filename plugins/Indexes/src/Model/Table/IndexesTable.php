@@ -4,6 +4,7 @@ namespace Indexes\Model\Table;
 use ArrayObject;
 
 use Cake\I18n\Date;
+use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
@@ -104,7 +105,6 @@ class IndexesTable extends ControllerActionTable
         $session = $this->request->session();
         $sessionUserId = $session->read('Auth.User.id');
         $sessionIndexId = $session->read('Indexes.Indexes.primaryKey.id');
-        $currentAcademicPeriodId = $this->AcademicPeriods->getCurrent();
 
         // back Button
         // if have queryString will be redirected to institution>indexes>generate
@@ -142,13 +142,13 @@ class IndexesTable extends ControllerActionTable
         $params = [];
 
         if (array_key_exists('queryString', $requestQuery)) {
-            $params = $this->getQueryString();
+            $params = $this->paramsDecode($requestQuery['queryString']);
         }
 
         $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : 0;
         $userId = array_key_exists('user_id', $params) ? $params['user_id'] : $sessionUserId;
         $indexId = array_key_exists('index_id', $params) ? $params['index_id'] : $sessionIndexId;
-        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : $currentAcademicPeriodId;
+        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : $requestQuery['academic_period_id'];
 
         $entity = $this->newEntity();
 
@@ -330,7 +330,7 @@ class IndexesTable extends ControllerActionTable
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+            $periodOptions = $this->AcademicPeriods->getYearList();
 
             $attr['type'] = 'select';
             $attr['options'] = $periodOptions;
@@ -409,7 +409,8 @@ class IndexesTable extends ControllerActionTable
             'plugin' => 'Indexes',
             'controller' => 'Indexes',
             'action' => 'Indexes',
-            'generate'
+            'generate',
+            'academic_period_id' => $entity->academic_period_id
         ];
         $toolbarButtonsArray['generate']['type'] = 'button';
         $toolbarButtonsArray['generate']['label'] = '<i class="fa fa-refresh"></i>';
@@ -601,5 +602,135 @@ class IndexesTable extends ControllerActionTable
         $shellCmd = $cmd . ' >> ' . $logs;
         $pid = exec($shellCmd);
         Log::write('debug', $shellCmd);
+    }
+
+    public function autoUpdateIndexes($key, $model, $institutionId, $userId, $academicPeriodId)
+    {
+        $today = Time::now();
+        $CriteriaModel = TableRegistry::get($model);
+        $StudentIndexesCriterias = TableRegistry::get('Institution.StudentIndexesCriterias');
+        $Students = TableRegistry::get('Institution.Students');
+
+        if (!empty($institutionId)) {
+            $institutionStudentsResults = $Students->find()
+                ->where([
+                    'institution_id' => $institutionId,
+                    'academic_period_id' => $academicPeriodId,
+                    'student_status_id' => 1 //enrolled status
+                ])
+                ->all();
+
+            // list of enrolled student in the institution in academic period
+            $institutionStudentsList = [];
+            foreach ($institutionStudentsResults as $institutionStudentsResultsKey => $institutionStudentsResultsObj) {
+                $institutionStudentsList[] = $institutionStudentsResultsObj->student_id;
+            }
+
+            switch ($key) {
+                case 'Absences': // no academic_period_id (within start and end date of the academic period)
+                    $academicPeriodDetails = $this->AcademicPeriods->get($academicPeriodId);
+                    $academicPeriodStartDate = $academicPeriodDetails->start_date;
+                    $academicPeriodEndDate = $academicPeriodDetails->end_date;
+
+                    $condition = [
+                        $CriteriaModel->aliasField('institution_id') => $institutionId,
+                        $CriteriaModel->aliasField('start_date') . ' >= ' => $academicPeriodStartDate,
+                        $CriteriaModel->aliasField('end_date') . ' <= ' => $academicPeriodEndDate
+                    ];
+                    break;
+
+                case 'Genders': // no institution_id, no academic_period_id
+                    $condition = [$CriteriaModel->aliasField('id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                case 'Guardians': // no institution_id, no academic_period_id
+                    $condition = [$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                case 'Special Needs': // no institution_id, no academic_period_id
+                    $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                default: // have institution_id and academic_period_id in the model table
+                    $condition = [
+                        $CriteriaModel->aliasField('institution_id') => $institutionId,
+                        $CriteriaModel->aliasField('academic_period_id') => $academicPeriodId
+                    ];
+                    break;
+            }
+        } else {
+            // dont have institution Id (from Administrator > Indexes > generate)
+            $institutionStudentsResults = $Students->find()
+                ->where([
+                    'academic_period_id' => $academicPeriodId,
+                    'student_status_id' => 1 //enrolled status
+                ])
+                ->all();
+
+            // list of enrolled student in the institution in academic period
+            $institutionStudentsList = [];
+            foreach ($institutionStudentsResults as $institutionStudentsResultsKey => $institutionStudentsResultsObj) {
+                $institutionStudentsList[] = $institutionStudentsResultsObj->student_id;
+            }
+
+            switch ($key) {
+                case 'Absences': // no academic_period_id (within start and end date of the academic period)
+                    $academicPeriodDetails = $this->AcademicPeriods->get($academicPeriodId);
+                    $academicPeriodStartDate = $academicPeriodDetails->start_date;
+                    $academicPeriodEndDate = $academicPeriodDetails->end_date;
+
+                    $condition = [
+                        $CriteriaModel->aliasField('start_date') . ' >= ' => $academicPeriodStartDate,
+                        $CriteriaModel->aliasField('end_date') . ' <= ' => $academicPeriodEndDate
+                    ];
+                    break;
+
+                case 'Genders': // no academic_period_id
+                    $condition = [$CriteriaModel->aliasField('id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                case 'Guardians': // no academic_period_id
+                    $condition = [$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                case 'Special Needs': // no academic_period_id
+                    $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $institutionStudentsList];
+                    break;
+
+                default:
+                    $condition = [$CriteriaModel->aliasField('academic_period_id') => $academicPeriodId];
+                    break;
+            }
+        }
+
+        $criteriaModelResults = $CriteriaModel->find()
+            ->where([$condition])
+            ->all();
+
+        foreach ($criteriaModelResults as $criteriaModelResultsKey => $criteriaModelEntity) {
+            $criteriaModelEntityId = $criteriaModelEntity->id;
+
+            // will triggered the aftersave of the model (indexes behavior)
+            $criteriaModelEntity->dirty('modified_user_id', true);
+            $CriteriaModel->save($criteriaModelEntity);
+
+            // update the institution student index
+            $this->InstitutionStudentIndexes->query()
+                ->update()
+                ->set([
+                    'created_user_id' => $userId,
+                    'created' => $today
+                ])
+                ->execute();
+
+            // update the student indexes criteria
+            $StudentIndexesCriterias->query()
+                ->update()
+                ->set([
+                    'created_user_id' => $userId,
+                    'created' => $today
+                ])
+                ->execute();
+        }
     }
 }
