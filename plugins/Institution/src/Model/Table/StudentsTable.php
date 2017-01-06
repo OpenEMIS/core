@@ -1294,9 +1294,6 @@ class StudentsTable extends ControllerActionTable
 
     public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
     {
-pr('studenttable - getValueIndex');
-pr($criteriaName);
-die;
         switch ($criteriaName) {
             case 'Status':
                 $statusResults = $this->find()
@@ -1309,6 +1306,7 @@ die;
                 foreach ($statusResults as $key => $obj) {
                     $statusId = $obj->student_status_id;
 
+                    // for '=' the value index will be in array (valueIndex[threshold] = value)
                     $getValueIndex[$statusId] = !empty($getValueIndex[$statusId]) ? $getValueIndex[$statusId] : 0;
                     $getValueIndex[$statusId] = $getValueIndex[$statusId] + 1;
                 }
@@ -1332,11 +1330,10 @@ die;
                     $educationGradeId = $results->education_grade_id;
                     $educationProgrammeId = $this->EducationGrades->get($educationGradeId)->education_programme_id;
                     $admissionAge = $EducationProgrammes->getAdmissionAge($educationProgrammeId);
+                    $schoolStartYear = $results->start_year;
+                    $birthdayYear = $results->user->date_of_birth->format('Y');
 
-                    $schoolStartDate = $results->start_year;
-                    $birthday = $results->user->date_of_birth->format('Y');
-
-                    $getValueIndex = ($schoolStartDate - $birthday)-$admissionAge;
+                    $getValueIndex = ($schoolStartYear - $birthdayYear) - $admissionAge;
                 }
 
                 return $getValueIndex;
@@ -1361,7 +1358,6 @@ die;
                 break;
 
             case 'Guardians':
-// pr('Guardians - case');
                 $getValueIndex = 0;
                 $results = $this->find()
                     ->contain(['Users', 'EducationGrades'])
@@ -1370,19 +1366,17 @@ die;
                         'student_status_id' => 1,  // student status current
                     ])
                     ->first();
-// pr($results);
+
                 if (!empty($results)) {
                     $Guardians = TableRegistry::get('Student.Guardians');
 
                     $guardiansData = $Guardians->find()
                         ->where(['student_id' => $results->student_id])
                         ->all()->toArray();
-// pr($guardiansData);
+
                     $getValueIndex = count($guardiansData);
                 }
-// pr('getValueIndex');
-// pr($getValueIndex);
-// die;
+
                 return $getValueIndex;
                 break;
         }

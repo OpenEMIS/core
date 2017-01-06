@@ -63,8 +63,6 @@ class StudentUserTable extends ControllerActionTable
         $this->addBehavior('Indexes.Indexes');
 	}
 
-
-
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
 	{
 		$options['associated']['Nationalities'] = [
@@ -135,13 +133,6 @@ class StudentUserTable extends ControllerActionTable
 		$model->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract',	'foreignKey' => 'student_id', 'dependent' => true]);
 		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
-
-	// public function implementedEvents()
-	// {
- //    	$events = parent::implementedEvents();
- //    	$events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
- //    	return $events;
- //    }
 
 	public function validationDefault(Validator $validator)
 	{
@@ -584,35 +575,4 @@ class StudentUserTable extends ControllerActionTable
     	]);
     	return $query;
     }
-
- //    public function getInstitutionIdByUser($studentId, $academicPeriodId)
-	// {
-	// 	$institutionId = $this->InstitutionStudents->getInstitutionIdByUser($studentId, $academicPeriodId);
-	// 	return $institutionId;
-	// }
-
- //    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
-	// {
-	// 	$institutionId = $params['institution_id'];
-	// 	$studentId = $params['student_id'];
-	// 	$academicPeriodId = $params['academic_period_id'];
-	// 	$criteriaName = $params['criteria_name'];
-
-	// 	$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
-
-	// 	return $valueIndex;
-	// }
-
-	// public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
-	// {
-	// 	// for '=' the value index will be in array (valueIndex[threshold] = value)
-	// 	$getValueIndex[$this->get($studentId)->gender_id] = 1;
-
-	// 	return $getValueIndex;
-	// }
-
-	// public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
-	// {
-	// 	return __($this->Genders->get($threshold)->name);
-	// }
 }
