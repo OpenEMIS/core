@@ -206,12 +206,26 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                     if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'])) {
                         gradingType = properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'];
                         passMark = gradingType.pass_mark;
+                        resultType = gradingType.result_type;
                     }
 
-                    if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
-                        return {color: '#CC5C5C'};
+                    if (resultType == 'DURATION') {
+                        var duration = String(params.value).split(" : ");
+                        var minInSeconds = parseInt(duration[0]) * 60;
+                        var seconds = parseInt(duration[1]);
+                        var totalSeconds = minInSeconds + seconds;
+
+                        if (!isNaN(parseFloat(params.value)) && totalSeconds > passMark) {
+                            return {color: '#CC5C5C', direction: 'ltr'};
+                        } else {
+                            return {color: '#333', direction: 'ltr'};
+                        }
                     } else {
-                        return {color: '#333'};
+                        if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
+                            return {color: '#CC5C5C'};
+                        } else {
+                            return {color: '#333'};
+                        }
                     }
                 },
                 valueGetter: function(params) {
@@ -227,6 +241,16 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
                     if (resultType == 'MARKS') {
                         return $filter('number')(value, 2);
+
+                    } else if (resultType == 'DURATION') {
+                        if (!isNaN(parseFloat(value))) {
+                            var durationAsFloat = $filter('number')(value, 2);
+                            var duration = String(durationAsFloat).replace(".", " : ");
+                            return duration;
+                        } else {
+                            return '';
+                        }
+
                     } else {
                         // for GRADES type
                         return value;
@@ -294,6 +318,10 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                         break;
                     case 'GRADES':
                         result = assessmentGradingOption.code_name;
+                        weight = '';
+                        break;
+                    case 'DURATION':
+                        result = resultObj.marks;
                         weight = '';
                         break;
                     default:
