@@ -1,5 +1,5 @@
 -- db_patches
-INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-3562', NOW());
+INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3562', NOW());
 
 -- create backup institution_subject_students table
 CREATE TABLE IF NOT EXISTS `z_3562_institution_subject_students`
