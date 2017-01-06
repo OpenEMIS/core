@@ -933,11 +933,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
 
         var arrNumber = [{}];
 
-        // if (StaffController.StaffIdentities == 1 && (StaffController.Staff.identity_type_id == '' || StaffController.Staff.identity_type_id == undefined)) {
-        //     arrNumber[0]['identity_type_id'] = empty;
-        //     StaffController.postResponse.error.identities = arrNumber;
-        //     remain = true;
-        // }
         if (StaffController.StaffIdentities == 1 && (StaffController.selectedStaffData.identity_number == '' || StaffController.selectedStaffData.identity_number == undefined)) {
             arrNumber[0]['number'] = empty;
             StaffController.postResponse.error.identities = arrNumber;
