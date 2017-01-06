@@ -43,8 +43,6 @@ class StudentSubjectsTable extends ControllerActionTable {
         $extra['elements']['controls'] = ['name' => 'Student.Subjects/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
-<<<<<<< HEAD
-=======
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -117,7 +115,6 @@ class StudentSubjectsTable extends ControllerActionTable {
             ->where($where);
     }
 
->>>>>>> 676dae5f831ef903afca6a0ef6db56baa2eaefa8
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
