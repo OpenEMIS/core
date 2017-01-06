@@ -85,8 +85,7 @@ class ConfigurationsController extends AppController {
             $response = $http->get($recordUri);
 
             if ($response->isOK()) {
-                pr($response->header());
-                echo $response->body();
+                echo json_encode($response->body('json_decode'), JSON_PRETTY_PRINT);
             }
         }
 
