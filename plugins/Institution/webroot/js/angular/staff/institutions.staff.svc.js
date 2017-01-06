@@ -193,89 +193,51 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         var deferred = $q.defer();
         var vm = this;
 
-        this.getExternalSourceUrl()
-        .then(function(sourceUrl) {
-            var source = sourceUrl.data;
-            vm.getAccessToken()
-            .then(function(token){
-                var sourceUrl = null;
-                if (source.length > 0) {
-                    sourceUrl = source[0].value;
-                    externalSource = sourceUrl;
-                    externalToken = token;
-                } else {
-                    sourceUrl = source.record_uri;
-                }
-                var pageParams = {
-                    limit: options['endRow'] - options['startRow'],
-                    page: options['endRow'] / (options['endRow'] - options['startRow']),
-                };
+        var url = angular.baseUrl + '/Configurations/getExternalUsers?page={page}&limit={limit}&first_name={first_name}&last_name={last_name}&identity_number={identity_number}&date_of_birth={date_of_birth}';
+        var pageParams = {
+            limit: options['endRow'] - options['startRow'],
+            page: options['endRow'] / (options['endRow'] - options['startRow']),
+        };
 
-                var params = {};
-                params['super_admin'] = 0;
+        var params = {};
+        params['super_admin'] = 0;
 
-                // Get url from user input
-                var replaceURL = sourceUrl;
-                var replacement = {
-                    "{page}": pageParams.page,
-                    "{limit}": pageParams.limit,
-                    "{first_name}": '',
-                    "{last_name}": '',
-                    "{identity_number}": '',
-                    "{date_of_birth}": ''
-                }
+        // Get url from user input
+        var replaceURL = url;
+        var replacement = {
+            "{page}": pageParams.page,
+            "{limit}": pageParams.limit,
+            "{first_name}": '',
+            "{last_name}": '',
+            "{identity_number}": '',
+            "{date_of_birth}": ''
+        }
 
-                var conditionsCount = 0;
+        var conditionsCount = 0;
 
-                if (options.hasOwnProperty('conditions')) {
-                    for (var key in options['conditions']) {
-                        if (typeof options['conditions'][key] == 'string') {
-                            options['conditions'][key] = options['conditions'][key].trim();
-                            if (key != 'date_of_birth') {
-                                params[key] = options['conditions'][key];
-                            } else {
-                                params[key] = vm.formatDate(options['conditions'][key]);
-                            }
-                            var replaceKey = '{'+key+'}';
-                            replacement[replaceKey] = params[key];
-                            conditionsCount++;
-                        }
-                    }
-                }
-                var url = replaceURL.replace(/{\w+}/g, function(all) {
-                    return all in replacement ? replacement[all] : all;
-                });
-
-                var authorizationHeader = 'Bearer ' + token;
-
-                var success = function(response, deferred) {
-                    var studentData = response.data;
-                    studentData['conditionsCount'] = conditionsCount;
-                    if (angular.isObject(studentData)) {
-                        deferred.resolve(studentData);
+        if (options.hasOwnProperty('conditions')) {
+            for (var key in options['conditions']) {
+                if (typeof options['conditions'][key] == 'string') {
+                    options['conditions'][key] = options['conditions'][key].trim();
+                    if (key != 'date_of_birth') {
+                        params[key] = options['conditions'][key];
                     } else {
-                        deferred.reject('Error getting student records');
+                        params[key] = vm.formatDate(options['conditions'][key]);
                     }
-                };
-
-                var opt = {
-                    method: 'GET',
-                    headers: {'Content-Type': 'application/json', 'Authorization': authorizationHeader}
+                    var replaceKey = '{'+key+'}';
+                    replacement[replaceKey] = params[key];
+                    conditionsCount++;
                 }
-                return KdOrmSvc.customAjax(url, opt);
-            }, function(error){
-                deferred.reject(error);
-            })
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error){
-                deferred.reject(error);
-            });
-        }, function(error) {
-            console.log(error);
-            deferred.reject(error);
+            }
+        }
+        var url = replaceURL.replace(/{\w+}/g, function(all) {
+            return all in replacement ? replacement[all] : all;
         });
-        return deferred.promise;
+
+        var opt = {
+            method: 'GET'
+        }
+        return KdOrmSvc.customAjax(url, opt);
     };
 
     function getStaffRecords(options) {
