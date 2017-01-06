@@ -109,7 +109,6 @@ class StudentSubjectsTable extends ControllerActionTable {
         }
         // End
 
-        $where[$this->aliasField('status > ')] = '0';
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->where($where);
