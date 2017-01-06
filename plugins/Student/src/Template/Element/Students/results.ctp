@@ -5,6 +5,13 @@
 <?php
 $this->start('panelBody');
 ?>
+
+	<style type='text/css'>
+	    .ag-grid-dir-ltr {
+	        direction: ltr !important;
+	    }
+	</style>
+
 	<div class="alert {{class}}" ng-hide="message == null">
 		<a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
 	</div>
