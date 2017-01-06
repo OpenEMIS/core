@@ -60,6 +60,16 @@ class InstitutionTextbooksTable extends ControllerActionTable
             ]);
     }
 
+    public function implementedEvents() {
+       $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'textbook_id';
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra) 
     {
         $session = $this->request->session();
@@ -69,185 +79,199 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $request = $this->request;
+        $searchKey = $this->getSearchKey();
 
-        //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+        if (!strlen($searchKey)) { //during search, then hide the control filter
+            //academic period filter
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
-        $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-            'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
-            'callable' => function($id) {
-                return $this
-                        ->find()
-                        ->where([
-                            $this->aliasField('institution_id') => $this->institutionId,
-                            $this->aliasField('academic_period_id') => $id
-                        ])
-                        ->count();
-            }
-        ]);
-        $extra['selectedPeriod'] = $selectedPeriod;
-        $data['periodOptions'] = $periodOptions;
-        $data['selectedPeriod'] = $selectedPeriod;
-
-        //education grade filter
-        if ($selectedPeriod) {
-
-            $gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $selectedPeriod);
-
-            if ($gradeOptions) {
-                $gradeOptions = array(-1 => __('-- Select Education Grade --')) + $gradeOptions;
-            }
-
-            if ($request->query('grade')) {
-                $selectedGrade = $request->query('grade');
-            } else {
-                $selectedGrade = -1;
-            }
-
-            $this->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
-                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-                'callable' => function($id) use ($selectedPeriod) {
-                    
-                    $join = [
-                        'table' => 'institution_class_grades',
-                        'alias' => 'InstitutionClassGrades',
-                        'conditions' => [
-                            'InstitutionClassGrades.institution_class_id = InstitutionClasses.id'
-                        ]
-                    ];
-
-                    if ($id > 0) {
-                        $join['conditions']['InstitutionClassGrades.education_grade_id'] = $id;
-                    }
-
-                    $query = $this->InstitutionClasses
-                            ->find()
-                            ->join([$join])
-                            ->where([
-                                $this->InstitutionClasses->aliasField('institution_id') => $this->institutionId,
-                                $this->InstitutionClasses->aliasField('academic_period_id') => $selectedPeriod,
-                            ]);
-                    return $query->count();
-                }
-            ]);
-            $extra['selectedGrade'] = $selectedGrade;
-            $data['gradeOptions'] = $gradeOptions;
-            $data['selectedGrade'] = $selectedGrade;
-        }
-
-        //education subjects filter
-        if ($selectedPeriod && $selectedGrade) {
-            $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
-
-            $subjectOptions = array(-1 => __('-- Select Education Subject --')) + $subjectOptions;
-            
-            if ($request->query('subject')) {
-                $selectedSubject = $request->query('subject');
-            } else {
-                $selectedSubject = -1;
-            }
-
-            $this->advancedSelectOptions($subjectOptions, $selectedSubject, [
+            $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
-                'callable' => function($id) use ($selectedPeriod) {
-                    $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
-
-                    if ($id > 0) {
-                        $conditions[] = $this->aliasField('education_subject_id = ') . $id;
-                    }
-
-                    return $this->find()
-                                ->where([
-                                    $conditions
-                                ])
-                                ->count();
+                'callable' => function($id) {
+                    return $this
+                            ->find()
+                            ->where([
+                                $this->aliasField('institution_id') => $this->institutionId,
+                                $this->aliasField('academic_period_id') => $id
+                            ])
+                            ->count();
                 }
             ]);
-            $extra['selectedSubject'] = $selectedSubject;
-            $data['subjectOptions'] = $subjectOptions;
-            $data['selectedSubject'] = $selectedSubject;
-        }
+            $extra['selectedPeriod'] = $selectedPeriod;
+            $data['periodOptions'] = $periodOptions;
+            $data['selectedPeriod'] = $selectedPeriod;
 
-        //textbook filter
-        // if ($selectedPeriod && $selectedGrade && $selectedSubject) {
+            //education grade filter
+            if ($selectedPeriod) {
 
-            $textbookOptions = $this->Textbooks->getTextbookOptions($selectedPeriod, $selectedGrade, $selectedSubject);
+                $gradeOptions = $this->InstitutionGrades->getGradeOptions($this->institutionId, $selectedPeriod);
 
-            // if ($textbookOptions) {
-                $textbookOptions = array(-1 => __('-- Select Textbooks --')) + $textbookOptions;
-            // }
-            
-            if ($request->query('textbook')) {
-                $selectedTextbook = $request->query('textbook');
-            } else {
-                $selectedTextbook = -1;
+                if ($gradeOptions) {
+                    $gradeOptions = array(-1 => __('-- Select Education Grade --')) + $gradeOptions;
+                }
+
+                if ($request->query('grade')) {
+                    $selectedGrade = $request->query('grade');
+                } else {
+                    $selectedGrade = -1;
+                }
+
+                $this->advancedSelectOptions($gradeOptions, $selectedEducationGradeId, [
+                    'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+                    'callable' => function($id) use ($selectedPeriod) {
+                        
+                        $join = [
+                            'table' => 'institution_class_grades',
+                            'alias' => 'InstitutionClassGrades',
+                            'conditions' => [
+                                'InstitutionClassGrades.institution_class_id = InstitutionClasses.id'
+                            ]
+                        ];
+
+                        if ($id > 0) {
+                            $join['conditions']['InstitutionClassGrades.education_grade_id'] = $id;
+                        }
+
+                        $query = $this->InstitutionClasses
+                                ->find()
+                                ->join([$join])
+                                ->where([
+                                    $this->InstitutionClasses->aliasField('institution_id') => $this->institutionId,
+                                    $this->InstitutionClasses->aliasField('academic_period_id') => $selectedPeriod,
+                                ]);
+                        return $query->count();
+                    }
+                ]);
+                $extra['selectedGrade'] = $selectedGrade;
+                $data['gradeOptions'] = $gradeOptions;
+                $data['selectedGrade'] = $selectedGrade;
             }
 
-            $this->advancedSelectOptions($textbookOptions, $selectedTextbook, [
-                'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noRecord')),
-                'callable' => function($id) use ($selectedPeriod, $selectedSubject) {
-                    $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
-                    $conditions[] = $this->aliasField('education_subject_id = ') . $selectedSubject;
+            //education subjects filter
+            if ($selectedPeriod && $selectedGrade) {
+                $subjectOptions = $this->EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
 
-                    if ($id > 0) {
-                        $conditions[] = $this->aliasField('textbook_id = ') . $id;
+                $subjectOptions = array(-1 => __('-- Select Education Subject --')) + $subjectOptions;
+                
+                if ($request->query('subject')) {
+                    $selectedSubject = $request->query('subject');
+                } else {
+                    $selectedSubject = -1;
+                }
+
+                $this->advancedSelectOptions($subjectOptions, $selectedSubject, [
+                    'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noTextbooks')),
+                    'callable' => function($id) use ($selectedPeriod) {
+                        $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
+
+                        if ($id > 0) {
+                            $conditions[] = $this->aliasField('education_subject_id = ') . $id;
+                        }
 
                         return $this->find()
-                                ->where([
-                                    $conditions
-                                ])
-                                ->count();
-                    } else {
-                        return 1;
+                                    ->where([
+                                        $conditions
+                                    ])
+                                    ->count();
                     }
+                ]);
+                $extra['selectedSubject'] = $selectedSubject;
+                $data['subjectOptions'] = $subjectOptions;
+                $data['selectedSubject'] = $selectedSubject;
+            }
 
-                    
+            //textbook filter
+            // if ($selectedPeriod && $selectedGrade && $selectedSubject) {
+
+                $textbookOptions = $this->Textbooks->getTextbookOptions($selectedPeriod, $selectedGrade, $selectedSubject);
+
+                // if ($textbookOptions) {
+                    $textbookOptions = array(-1 => __('-- Select Textbooks --')) + $textbookOptions;
+                // }
+                
+                if ($request->query('textbook')) {
+                    $selectedTextbook = $request->query('textbook');
+                } else {
+                    $selectedTextbook = -1;
                 }
-            ]);
-            $extra['selectedTextbook'] = $selectedTextbook;
-            $data['textbookOptions'] = $textbookOptions;
-            $data['selectedTextbook'] = $selectedTextbook;
-        // }
 
-        //build up the control filter
-        $extra['elements']['control'] = [
-            'name' => 'Institution.Textbooks/controls',
-            'data' => $data,
-            'order' => 3
-        ];
+                $this->advancedSelectOptions($textbookOptions, $selectedTextbook, [
+                    'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noRecord')),
+                    'callable' => function($id) use ($selectedPeriod, $selectedSubject) {
+                        $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
+                        $conditions[] = $this->aliasField('education_subject_id = ') . $selectedSubject;
 
+                        if ($id > 0) {
+                            $conditions[] = $this->aliasField('textbook_id = ') . $id;
+
+                            return $this->find()
+                                    ->where([
+                                        $conditions
+                                    ])
+                                    ->count();
+                        } else {
+                            return 1;
+                        }
+
+                        
+                    }
+                ]);
+                $extra['selectedTextbook'] = $selectedTextbook;
+                $data['textbookOptions'] = $textbookOptions;
+                $data['selectedTextbook'] = $selectedTextbook;
+            // }
+
+            //build up the control filter
+            $extra['elements']['control'] = [
+                'name' => 'Institution.Textbooks/controls',
+                'data' => $data,
+                'order' => 3
+            ];
+        }
+
+        $this->field('academic_period_id', ['type' => 'string']);
         $this->field('comment', ['visible' => false]);
         $this->field('education_subject_id', ['visible' => false]);
 
         $this->setFieldOrder([
-            'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id'
+            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id'
         ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        //filter
-        if (array_key_exists('selectedPeriod', $extra)) {
-            if ($extra['selectedPeriod']) {
-                $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
-            }
-        }
-
-        if (array_key_exists('selectedSubject', $extra)) {
-            if ($extra['selectedSubject']) {
-                $conditions[] = $this->aliasField('education_subject_id = ') . $extra['selectedSubject'];
-            }
-        }   
-
-        if (array_key_exists('selectedTextbook', $extra)) {
-            if ($extra['selectedTextbook'] > 0) {
-                $conditions[] = $this->aliasField('textbook_id = ') . $extra['selectedTextbook'];
-            }
-        }
-
-        $conditions[] = $this->aliasField('institution_id = ') . $this->institutionId;
+        $searchKey = $this->getSearchKey();
         
-        $query->where([$conditions]);
+        if (strlen($searchKey)) {
+            $query->matching('Textbooks'); //to enable search by textbook title
+            $extra['OR'] = [
+                $this->Textbooks->aliasField('title').' LIKE' => '%' . $searchKey . '%',
+                $this->Textbooks->aliasField('code').' LIKE' => '%' . $searchKey . '%',
+            ];
+        } else { //if no search key specified, then search is by filter.
+            //filter
+            if (array_key_exists('selectedPeriod', $extra)) {
+                if ($extra['selectedPeriod']) {
+                    $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                }
+            }
+
+            if (array_key_exists('selectedSubject', $extra)) {
+                if ($extra['selectedSubject']) {
+                    $conditions[] = $this->aliasField('education_subject_id = ') . $extra['selectedSubject'];
+                }
+            }   
+
+            if (array_key_exists('selectedTextbook', $extra)) {
+                if ($extra['selectedTextbook'] > 0) {
+                    $conditions[] = $this->aliasField('textbook_id = ') . $extra['selectedTextbook'];
+                }
+            }
+
+            $conditions[] = $this->aliasField('institution_id = ') . $this->institutionId;
+
+            $query->where([$conditions]);
+        }
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -398,7 +422,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
     public function onGetAcademicPeriodId(Event $event, Entity $entity)
     {
-        if ($this->action == 'view') {
+        if (($this->action == 'view') || ($this->action == 'index')) {
             return $entity->academic_period->name;
         }
     }
