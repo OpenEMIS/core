@@ -136,12 +136,12 @@ class StudentUserTable extends ControllerActionTable
 		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
 
-	public function implementedEvents()
-	{
-    	$events = parent::implementedEvents();
-    	$events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
-    	return $events;
-    }
+	// public function implementedEvents()
+	// {
+ //    	$events = parent::implementedEvents();
+ //    	$events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+ //    	return $events;
+ //    }
 
 	public function validationDefault(Validator $validator)
 	{
@@ -585,34 +585,34 @@ class StudentUserTable extends ControllerActionTable
     	return $query;
     }
 
-    public function getInstitutionIdByUser($studentId, $academicPeriodId)
-	{
-		$institutionId = $this->InstitutionStudents->getInstitutionIdByUser($studentId, $academicPeriodId);
-		return $institutionId;
-	}
+ //    public function getInstitutionIdByUser($studentId, $academicPeriodId)
+	// {
+	// 	$institutionId = $this->InstitutionStudents->getInstitutionIdByUser($studentId, $academicPeriodId);
+	// 	return $institutionId;
+	// }
 
-    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
-	{
-		$institutionId = $params['institution_id'];
-		$studentId = $params['student_id'];
-		$academicPeriodId = $params['academic_period_id'];
-		$criteriaName = $params['criteria_name'];
+ //    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+	// {
+	// 	$institutionId = $params['institution_id'];
+	// 	$studentId = $params['student_id'];
+	// 	$academicPeriodId = $params['academic_period_id'];
+	// 	$criteriaName = $params['criteria_name'];
 
-		$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+	// 	$valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
-		return $valueIndex;
-	}
+	// 	return $valueIndex;
+	// }
 
-	public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
-	{
-		// for '=' the value index will be in array (valueIndex[threshold] = value)
-		$getValueIndex[$this->get($studentId)->gender_id] = 1;
+	// public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
+	// {
+	// 	// for '=' the value index will be in array (valueIndex[threshold] = value)
+	// 	$getValueIndex[$this->get($studentId)->gender_id] = 1;
 
-		return $getValueIndex;
-	}
+	// 	return $getValueIndex;
+	// }
 
-	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
-	{
-		return __($this->Genders->get($threshold)->name);
-	}
+	// public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+	// {
+	// 	return __($this->Genders->get($threshold)->name);
+	// }
 }

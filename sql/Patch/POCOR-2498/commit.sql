@@ -1,6 +1,5 @@
 -- db_patches
--- INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-2498', NOW()); // effective on 3.8.4
-INSERT INTO `db_patches` (`issue`, `created`) VALUES('POCOR-2498', NOW());
+INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-2498', NOW());
 
 -- code here
 -- Table structure for table `indexes`
@@ -55,7 +54,7 @@ CREATE TABLE IF NOT EXISTS `classifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Adding new column student_behaviour_categories
-ALTER TABLE `student_behaviour_categories` ADD `classification_id` INT(3) NOT NULL DEFAULT '0' COMMENT 'links to classification.id' AFTER `national_code`;
+ALTER TABLE `student_behaviour_categories` ADD `classification_id` INT(11) NOT NULL COMMENT 'links to classification.id' AFTER `national_code`;
 ALTER TABLE `student_behaviour_categories` ADD KEY `classification_id` (`classification_id`);
 
 
@@ -84,7 +83,7 @@ ALTER TABLE `institution_student_indexes`
 -- Table structure for table `student_indexes_criterias`
 CREATE TABLE IF NOT EXISTS `student_indexes_criterias` (
     `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    `value` varchar(50) NOT NULL,
+    `value` varchar(50) DEFAULT NULL,
     `institution_student_index_id` int(11) NOT NULL COMMENT 'links to institution_student_indexes.id',
     `indexes_criteria_id` int(11) NOT NULL COMMENT 'links to indexes_criterias.id',
     `modified_user_id` int(11) DEFAULT NULL,
@@ -114,7 +113,7 @@ UPDATE `student_behaviours`
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
     VALUES ('1053', 'Indexes', 'Institutions', 'Institutions', 'Students', '8', 'InstitutionIndexes.index|InstitutionIndexes.view|InstitutionStudentIndexes.index', NULL, NULL, NULL, 'Indexes.generate', '1053', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00'),
         ('2030', 'Indexes', 'Institutions', 'Institutions', 'Students - Academic', '2000', 'StudentIndexes.index|StudentIndexes.view', NULL, NULL, NULL, NULL, '2030', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00'),
-        ('5060', 'Indexes', 'Indexes', 'Administration', 'Indexes', '5000', 'Indexes.index|Indexes.view', 'Indexes.edit', 'Indexes.add', NULL, 'Indexes.generate', '5060', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00')
+        ('5061', 'Indexes', 'Indexes', 'Administration', 'Indexes', '5000', 'Indexes.index|Indexes.view', 'Indexes.edit', 'Indexes.add', NULL, 'Indexes.generate', '5061', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00')
 
 
 
