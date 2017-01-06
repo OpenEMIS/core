@@ -58,7 +58,7 @@ class ControllerActionHelper extends Helper {
 			'id' => 'content-main-form',
 			'class' => 'form-horizontal',
 			'novalidate' => true,
-			'onSubmit' => '$(\'button[type="submit"]\').prop(\'disabled\', true);'
+			'onSubmit' => '$(\'button[type="submit"]\').click(function() { return false; });'
 		];
 
 		$config = $this->_View->get('ControllerAction');
