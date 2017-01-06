@@ -19,7 +19,7 @@ class GuardiansTable extends AppTable {
         $this->table('student_guardians');
         parent::initialize($config);
 
-        $this->belongsTo('Students',            ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
+        $this->belongsTo('StudentUser',            ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
         $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
         $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
@@ -29,13 +29,6 @@ class GuardiansTable extends AppTable {
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Indexes.Indexes');
     }
-
-    // public function implementedEvents()
-    // {
-    //     $events = parent::implementedEvents();
-    //     $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
-    //     return $events;
-    // }
 
     public function validationDefault(Validator $validator) {
 	$validator = parent::validationDefault($validator);
@@ -133,7 +126,7 @@ class GuardiansTable extends AppTable {
     }
 
     public function editBeforeQuery(Event $event, Query $query) {
-        $query->contain(['Students', 'Users']);
+        $query->contain(['StudentUser', 'Users']);
     }
 
     public function editAfterAction(Event $event, Entity $entity) {
@@ -268,47 +261,4 @@ class GuardiansTable extends AppTable {
         }
         $this->editButtonAction = $action;
     }
-
-    // public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
-    // {
-    //     $institutionId = $params['institution_id'];
-    //     $studentId = $params['student_id'];
-    //     $academicPeriodId = $params['academic_period_id'];
-
-    //     $quantityResult = $this->find()
-    //         ->where([$this->aliasField('student_id') => $studentId])
-    //         ->all()->toArray();
-
-    //     $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
-
-    //     return $valueIndex = $quantity;
-    // }
-
-    // public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
-    // {
-    //     $guardianList = $this->find()
-    //         ->contain(['Users', 'GuardianRelations'])
-    //         ->where([$this->aliasField('student_id') => $studentId])
-    //         ->all();
-
-    //     $referenceDetails = [];
-    //     foreach ($guardianList as $key => $obj) {
-    //         $guardianName = $obj->user->first_name . ' ' . $obj->user->last_name;
-    //         $guardianRelation = $obj->guardian_relation->name;
-
-    //         $referenceDetails[$obj->guardian_id] = $guardianName . ' (' . __($guardianRelation) . ')';
-    //     }
-
-    //     // tooltip only receieved string to be display
-    //     $reference = '';
-    //     if (!empty($referenceDetails)) {
-    //         foreach ($referenceDetails as $key => $referenceDetailsObj) {
-    //             $reference = $reference . $referenceDetailsObj . ' <br/>';
-    //         }
-    //     } else {
-    //         $reference = __('No Guardians');
-    //     }
-
-    //     return $reference;
-    // }
 }
