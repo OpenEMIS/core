@@ -504,6 +504,7 @@ class InstitutionClassStudentsTable extends AppTable {
 
     private function _setSubjectStudentData($data) {
 
+        $enrolledStatus = $this->StudentStatuses->getIdByCode('CURRENT');
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 
         //get the education_subject_id and education_subject_id using the institution_id
@@ -522,7 +523,7 @@ class InstitutionClassStudentsTable extends AppTable {
         foreach ($classSubjectsData as $classSubjects) {
 
             $subjectStudents[] = [
-                'status' => 1,
+                'student_status_id' => $enrolledStatus,
                 'student_id' => $data['student_id'],
                 'institution_subject_id' => $classSubjects['institution_subject_id'],
                 'institution_class_id' => $data['institution_class_id'],

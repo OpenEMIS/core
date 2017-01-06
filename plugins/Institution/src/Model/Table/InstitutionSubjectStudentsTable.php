@@ -40,11 +40,43 @@ class InstitutionSubjectStudentsTable extends AppTable {
         ]);
 	}
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        return $events;
+    }
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
 			$entity->id = Text::uuid();
 		}
 	}
+
+    public function studentsAfterSave(Event $event, $student)
+    {
+        // saving of new students is handled by _setSubjectStudentData in InstitutionClassStudents
+        if (!$student->isNew()) {
+            // to update student status in subject if student status in school has been changed
+            $subjectStudents = $this->find()
+                ->matching('InstitutionClasses.ClassGrades')
+                ->where([
+                    $this->aliasField('institution_id') => $student->institution_id,
+                    $this->aliasField('academic_period_id') => $student->academic_period_id,
+                    $this->aliasField('student_id') => $student->student_id,
+                    'ClassGrades.education_grade_id' => $student->education_grade_id
+                ])->toArray();
+
+            if (!empty($subjectStudents)) {
+                foreach ($subjectStudents as $key => $subjectStudent) {
+                    if ($subjectStudent->student_status_id != $student->student_status_id) {
+                        $subjectStudent->student_status_id = $student->student_status_id;
+                    }
+                }
+                $this->saveMany($subjectStudents);
+            }
+        }
+    }
 
 	public function findResults(Query $query, array $options) {
 		$institutionId = $options['institution_id'];
