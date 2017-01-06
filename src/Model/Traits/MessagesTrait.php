@@ -1454,11 +1454,13 @@ trait MessagesTrait {
                     'ruleUnique' => 'Please enter a unique name for this examination centre room'
                 ],
                 'size' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value',
+                    'ruleRoomSize' => 'Room size is out of range'
                 ],
                 'number_of_seats' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
-                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available'
+                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available',
+                    'ruleSeatsNumber' => 'Number of seats is out of range'
                 ]
             ],
             'ExaminationItems' => [
