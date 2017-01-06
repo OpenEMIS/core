@@ -48,7 +48,7 @@ DELETE FROM `institution_rooms` WHERE `start_date` > `end_date`;
 INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3668', NOW());
 
 -- examination_centre_rooms
-ALTER TABLE `examination_centre_rooms` CHANGE `size` `size` INT(3) NULL DEFAULT '0'
+ALTER TABLE `examination_centre_rooms` CHANGE `size` `size` INT(3) NULL DEFAULT '0';
 
 
 -- 3.8.5
