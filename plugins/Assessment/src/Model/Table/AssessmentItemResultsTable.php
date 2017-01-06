@@ -56,8 +56,6 @@ class AssessmentItemResultsTable extends AppTable {
                 $this->AssessmentGradingOptions->aliasField('code'),
                 $this->AssessmentGradingOptions->aliasField('name'),
                 $this->AssessmentGradingOptions->aliasField('assessment_grading_type_id'),
-                $this->Institutions->aliasField('code'),
-                $this->Institutions->aliasField('name'),
                 $this->AssessmentPeriods->aliasField('code'),
                 $this->AssessmentPeriods->aliasField('name'),
                 $this->AssessmentPeriods->aliasField('weight')
@@ -65,14 +63,12 @@ class AssessmentItemResultsTable extends AppTable {
             ->innerJoinWith('Assessments')
             ->innerJoinWith('EducationSubjects')
             ->innerJoinWith('AssessmentGradingOptions')
-            ->innerJoinWith('Institutions')
             ->innerJoinWith('AssessmentPeriods')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') => $studentId
             ])
             ->order([
-                $this->Institutions->aliasField('code'), $this->Institutions->aliasField('name'),
                 $this->Assessments->aliasField('code'), $this->Assessments->aliasField('name')
             ]);
     }
