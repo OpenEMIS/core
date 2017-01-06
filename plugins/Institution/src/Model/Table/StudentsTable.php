@@ -1294,6 +1294,9 @@ class StudentsTable extends ControllerActionTable
 
     public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
     {
+pr('studenttable - getValueIndex');
+pr($criteriaName);
+die;
         switch ($criteriaName) {
             case 'Status':
                 $statusResults = $this->find()
@@ -1313,7 +1316,7 @@ class StudentsTable extends ControllerActionTable
                 return $getValueIndex;
                 break;
 
-             case 'Overage':
+            case 'Overage':
                 $getValueIndex = 0;
                 $results = $this->find()
                     ->contain(['Users', 'EducationGrades'])
@@ -1324,7 +1327,7 @@ class StudentsTable extends ControllerActionTable
                     ->first();
 
                 if (!empty($results)) {
-                     $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+                    $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
                     $educationGradeId = $results->education_grade_id;
                     $educationProgrammeId = $this->EducationGrades->get($educationGradeId)->education_programme_id;
@@ -1336,6 +1339,50 @@ class StudentsTable extends ControllerActionTable
                     $getValueIndex = ($schoolStartDate - $birthday)-$admissionAge;
                 }
 
+                return $getValueIndex;
+                break;
+
+            case 'Genders':
+                $getValueIndex = [];
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+                    // for '=' the value index will be in array (valueIndex[threshold] = value)
+                    $getValueIndex[$results->user->gender_id] = 1;
+                }
+
+                return $getValueIndex;
+                break;
+
+            case 'Guardians':
+// pr('Guardians - case');
+                $getValueIndex = 0;
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+// pr($results);
+                if (!empty($results)) {
+                    $Guardians = TableRegistry::get('Student.Guardians');
+
+                    $guardiansData = $Guardians->find()
+                        ->where(['student_id' => $results->student_id])
+                        ->all()->toArray();
+// pr($guardiansData);
+                    $getValueIndex = count($guardiansData);
+                }
+// pr('getValueIndex');
+// pr($getValueIndex);
+// die;
                 return $getValueIndex;
                 break;
         }
@@ -1363,6 +1410,7 @@ class StudentsTable extends ControllerActionTable
 
                     $referenceDetails[$obj->id] = __($title) . ' (' . $date . ')';
                 }
+
                 break;
 
             case 'Overage':
@@ -1380,6 +1428,45 @@ class StudentsTable extends ControllerActionTable
 
                     $referenceDetails[$obj->id] = __($title) . ' (' . __('Born on') . ': ' . $date . ')';
                 }
+
+                break;
+
+            case 'Genders':
+                $Genders = TableRegistry::get('User.Genders');
+
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1 // status enrolled
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $referenceDetails[$obj->id] = __($Genders->get($obj->user->gender_id)->name);
+                }
+
+                break;
+
+            case 'Guardians':
+                $Guardians = TableRegistry::get('Student.Guardians');
+
+                $results = $Guardians->find()
+                    ->contain(['Users', 'GuardianRelations'])
+                    ->where(['student_id' => $studentId])
+                    ->all();
+
+                if (!$results->isEmpty()) {
+                    foreach ($results as $key => $obj) {
+                        $guardianName = $obj->user->first_name . ' ' . $obj->user->last_name;
+                        $guardianRelation = $obj->guardian_relation->name;
+
+                        $referenceDetails[$obj->guardian_id] = $guardianName . ' (' . __($guardianRelation) . ')';
+                    }
+                } else {
+                    $referenceDetails[] =  __('No Guardian');
+                }
+
                 break;
         }
 

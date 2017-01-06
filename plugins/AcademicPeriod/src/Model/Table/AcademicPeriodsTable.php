@@ -821,6 +821,7 @@ class AcademicPeriodsTable extends AppTable
             ->where([
                 $this->aliasField('start_date') . ' <= ' => $startDate,
                 $this->aliasField('end_date') . ' >= ' => $endDate,
+                $this->aliasField('code') . ' <> ' => 'all'
             ])
             ->first();
 
@@ -838,6 +839,7 @@ class AcademicPeriodsTable extends AppTable
             ->where([
                 $this->aliasField('start_date') . ' <= ' => $date,
                 $this->aliasField('end_date') . ' >= ' => $date,
+                $this->aliasField('code') . ' <> ' => 'all'
             ])
             ->first();
 

@@ -20,7 +20,7 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
 
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);
 
-        $this->belongsTo('Classifications', ['className' => 'Student.Classifications']);
+        $this->belongsTo('Classifications', ['className' => 'Student.Classifications', 'foreignKey' => 'classification_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }

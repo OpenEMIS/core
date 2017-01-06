@@ -223,17 +223,27 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
     public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
     {
+
         $criteriaModel = $afterSaveOrDeleteEntity->source();
 
-        if ($criteriaModel == 'Institution.IndividualPromotion') {
+// Institution.StudentUser       Student.Guardians
+        $consolidatedModel = ['Institution.StudentUser', 'Student.Guardians', 'Institution.IndividualPromotion'];
+// pr('criteriaModel - afterSaveOrDelete');
+// pr($criteriaModel);
+// die;
+        // if ($criteriaModel == 'Institution.IndividualPromotion') {
+        if (in_array($criteriaModel, $consolidatedModel)) {
+            // pr('inside');die;
             $criteriaModel = 'Institution.Students';
         }
 
-        $criteriaData = $this->Indexes->getCriteriaByModel($criteriaModel);
+        // $criteriaData = $this->Indexes->getCriteriaByModel($criteriaModel);
 
-        $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
+        // $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
+        pr($criteriaModel);
         $criteriaTable = TableRegistry::get($criteriaModel);
 
+        pr($criteriaTable);die;
         // to get studentId
         if (isset($afterSaveOrDeleteEntity->student_id)) {
             $studentId = $afterSaveOrDeleteEntity->student_id;
@@ -257,7 +267,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             // for gender will be using security_user table, doesnt have any institution
             $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
         }
-
+// pr('afterSaveOrDelete - ins stu inde table');
+// pr($afterSaveOrDeleteEntity);
+// pr($criteriaData);
+// die;
         foreach ($criteriaData as $criteriaDataKey => $criteriaDataObj) {
             $criteriaName = $criteriaDataObj['name'];
 
@@ -269,7 +282,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     'Indexes.academic_period_id' => $academicPeriodId
                 ])
                 ->all();
-
+// pr('indexesCriteriaResults');
+// pr($indexesCriteriaResults);
+pr($criteriaTable);
+die;
             if (!$indexesCriteriaResults->isEmpty()) {
                 foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
                     $indexId = $indexesCriteriaData->index_id;
@@ -291,7 +307,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     }
 
                     $valueIndexData = $event->result;
-
+pr('valueIndexData');
+pr($valueIndexData);
+die;
                     $institutionStudentIndexesResults = $this->find()
                         ->where([
                             $this->aliasField('academic_period_id') => $academicPeriodId,
@@ -349,6 +367,21 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         'indexes_criteria_id' => $indexesCriteriaData->id
                     ];
 
+pr('valueIndexData');
+pr($valueIndexData);
+// pr('academicPeriodId '. $academicPeriodId);
+// pr('institutionId '.$institutionId);
+// pr('studentId '.$studentId);
+// pr('indexId '.$indexId);
+
+// // pr('institutionStudentIndexesResults');
+// // pr($institutionStudentIndexesResults);
+
+// pr('criteriaData');
+// pr($criteriaData);
+// pr($entity);
+// die;
+
                     if (!$entity->isNew()) {
                         $studentIndexesCriteriaResults = $this->StudentIndexesCriterias->find()
                             ->where([
@@ -369,6 +402,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
                     $patchOptions = ['validate' => false];
                     $entity = $this->patchEntity($entity, $data, $patchOptions);
+pr('before the saving');
+pr($entity);
+die;
                     $this->save($entity);
                 }
             }
@@ -531,6 +567,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
     public function getAcademicPeriodId($criteriaTable, $afterSaveOrDeleteEntity)
     {
+
+pr('getAcademicPeriodId');
+pr($criteriaTable->alias());
         // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
         switch ($criteriaTable->alias()) {
             case 'InstitutionStudentAbsences': // have start date and end date
@@ -548,7 +587,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $academicPeriodId = $this->AcademicPeriods->getCurrent();
                 break;
 
-            case 'Guardians': // no date, will get the current academic period Id
+            case 'Students': // no date, will get the current academic period Id
                 $academicPeriodId = $this->AcademicPeriods->getCurrent();
                 break;
 
@@ -569,7 +608,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $institutionId = $criteriaTable->getInstitutionIdByUser($studentId, $academicPeriodId);
                 break;
 
-            case 'Guardians':
+            case 'Students':
                 $studentId = $afterSaveOrDeleteEntity->student_id;
                 $Students = TableRegistry::get('Institution.Students');
                 $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
