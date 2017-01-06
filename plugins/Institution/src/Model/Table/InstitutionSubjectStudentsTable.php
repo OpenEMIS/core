@@ -124,7 +124,6 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				[
 					$ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
 					$ItemResults->aliasField('assessment_id') => $assessmentId,
-					$ItemResults->aliasField('institution_id') => $institutionId,
 					$ItemResults->aliasField('academic_period_id') => $periodId,
 					$ItemResults->aliasField('education_subject_id') => $subjectId
 				]
