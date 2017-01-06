@@ -60,16 +60,6 @@ class IndexesTable extends ControllerActionTable
                 'threshold' => ['type' => 'number']
             ]
         ],
-        // 'Institution.StudentUser' => [
-        //     'name' => 'Genders',
-        //     'operator' => [3 => '='],
-        //     'threshold' => ['type' => 'select', 'lookupModel' => 'User.Genders']
-        // ],
-        // 'Student.Guardians' => [
-        //     'name' => 'Guardians',
-        //     'operator' => [1 => '<', 2 => '>'],
-        //     'threshold' => ['type' => 'number']
-        // ],
         'User.SpecialNeeds' => [
             'name' => 'Special Needs',
             'operator' => [1 => '<', 2 => '>'],
@@ -656,9 +646,6 @@ class IndexesTable extends ControllerActionTable
 
                 case 'Guardians': // no institution_id, no academic_period_id
                     $condition = [$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList];
-                    // $criteriaModelResults = $CriteriaModel->find()
-                    //     ->where([$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList])
-                    //     ->all();
                     break;
 
                 case 'Special Needs': // no institution_id, no academic_period_id
@@ -720,7 +707,7 @@ class IndexesTable extends ControllerActionTable
         $criteriaModelResults = $CriteriaModel->find()
             ->where([$condition])
             ->all();
-// pr($criteriaModelResults);
+
         foreach ($criteriaModelResults as $criteriaModelResultsKey => $criteriaModelEntity) {
             $criteriaModelEntityId = $criteriaModelEntity->id;
 

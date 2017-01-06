@@ -26,9 +26,6 @@ class IndexesBehavior extends Behavior
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $alias = $this->_table->alias();
-// pr('afterSave');
-// pr($alias);
-// die;
 
         $broadcaster = $this->_table;
         $listeners = [];
