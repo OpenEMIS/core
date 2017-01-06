@@ -1,3 +1,13 @@
+-- POCOR-3663
+-- institution_rooms
+DROP TABLE IF EXISTS `institution_rooms`;
+
+RENAME TABLE `z_3663_institution_rooms` TO `institution_rooms`;
+
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue`='POCOR-3663';
+
+
 -- POCOR-3668
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3668';
