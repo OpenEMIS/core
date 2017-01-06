@@ -57,7 +57,8 @@ class ControllerActionHelper extends Helper {
 		$options = [
 			'id' => 'content-main-form',
 			'class' => 'form-horizontal',
-			'novalidate' => true
+			'novalidate' => true,
+			'onSubmit' => '$(\'button[type="submit"]\').click(function() { return false; });'
 		];
 
 		$config = $this->_View->get('ControllerAction');
@@ -260,7 +261,7 @@ class ControllerActionHelper extends Helper {
 					$value = $event->result;
 				}
 				$entity->$field = $value;
-			} else if ($this->endsWith($field, '_id')) {
+			} else if ($this->endsWith($field, '_id') || $this->isForeignKey($table, $field)) {
 				$associatedObject = '';
 				if (isset($table->CAVersion) && $table->CAVersion=='4.0') {
 					$associatedObject = $table->getAssociatedEntity($field);
@@ -273,8 +274,6 @@ class ControllerActionHelper extends Helper {
                     $associatedFound = true;
                 }
 			}
-
-
 
 			if (!$associatedFound) {
 				$value = $this->HtmlField->render($type, 'index', $entity, $attr);
@@ -586,4 +585,16 @@ class ControllerActionHelper extends Helper {
 		$this->HtmlField->includes($table, 'view');
 		return $html;
 	}
+
+	public function isForeignKey($model, $field)
+    {
+        foreach ($model->associations() as $assoc) {
+            if ($assoc->type() == 'manyToOne') { // belongsTo associations
+                if ($field === $assoc->foreignKey()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

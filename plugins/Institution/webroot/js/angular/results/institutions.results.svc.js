@@ -77,7 +77,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
                     .contain(['EducationSubjects'])
-                    .where({assessment_id: assessmentId});
+                    .where({assessment_id: assessmentId})
+                    .order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
 
                 // For no subjects
                 var fail = function(response, deferred) {
