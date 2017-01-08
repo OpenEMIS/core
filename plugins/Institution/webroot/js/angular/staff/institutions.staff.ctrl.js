@@ -214,7 +214,6 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                 AlertSvc.success($scope, 'Staff transfer request is added successfully.');
             }
         });
-
     });
 
     function initNationality() {
@@ -428,9 +427,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         } else {
                             StaffController.initialLoad = false;
                         }
-                        var studentRecords = response.data;
+                        var staffRecords = response.data;
                         var totalRowCount = response.total;
-                        return StaffController.processStaffRecord(studentRecords, params, totalRowCount);
+                        return StaffController.processStaffRecord(staffRecords, params, totalRowCount);
                     }, function(error) {
                         console.log(error);
                         AlertSvc.warning($scope, error);
@@ -467,10 +466,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                         }
                     )
                     .then(function(response) {
-                        var studentRecords = response.data;
+                        var staffRecords = response.data;
                         var totalRowCount = response.total;
                         StaffController.initialLoad = false;
-                        return StaffController.processExternalStaffRecord(studentRecords, params, totalRowCount);
+                        return StaffController.processExternalStaffRecord(staffRecords, params, totalRowCount);
                     }, function(error) {
                         console.log(error);
                         var status = error.status;
@@ -481,9 +480,9 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
                             var message = 'External search failed, please contact your administrator to verify the external search attributes';
                             AlertSvc.warning($scope, message);
                         }
-                        var studentRecords = [];
+                        var staffRecords = [];
                         InstitutionsStaffSvc.init(angular.baseUrl);
-                        return StaffController.processExternalStaffRecord(studentRecords, params, 0);
+                        return StaffController.processExternalStaffRecord(staffRecords, params, 0);
                     })
                     .finally(function(res) {
                         InstitutionsStaffSvc.init(angular.baseUrl);
@@ -499,68 +498,70 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         gridObj.api.sizeColumnsToFit();
     }
 
-    function processExternalStaffRecord(studentRecords, params, totalRowCount) {
-        for(var key in studentRecords) {
+    function processExternalStaffRecord(staffRecords, params, totalRowCount) {
+        for(var key in staffRecords) {
             var mapping = InstitutionsStaffSvc.getExternalSourceMapping();
-            studentRecords[key]['institution_name'] = '-';
-            studentRecords[key]['academic_period_name'] = '-';
-            studentRecords[key]['education_grade_name'] = '-';
-            studentRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(studentRecords[key][mapping.date_of_birth_mapping]);
-            studentRecords[key]['gender_name'] = studentRecords[key][mapping.gender_mapping];
-            studentRecords[key]['gender'] = {'name': studentRecords[key][mapping.gender_mapping]};
-            studentRecords[key]['identity_type_name'] = studentRecords[key][mapping.identity_type_mapping];
-            studentRecords[key]['identity_number'] = studentRecords[key][mapping.identity_number_mapping];
-            studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
-            studentRecords[key]['name'] = '';
-            if (studentRecords[key].hasOwnProperty(mapping.first_name_mapping)) {
-                studentRecords[key]['name'] = studentRecords[key][mapping.first_name_mapping];
+            staffRecords[key]['institution_name'] = '-';
+            staffRecords[key]['academic_period_name'] = '-';
+            staffRecords[key]['education_grade_name'] = '-';
+            staffRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(staffRecords[key][mapping.date_of_birth_mapping]);
+            staffRecords[key]['gender_name'] = staffRecords[key][mapping.gender_mapping];
+            staffRecords[key]['gender'] = {'name': staffRecords[key][mapping.gender_mapping]};
+            staffRecords[key]['identity_type_name'] = staffRecords[key][mapping.identity_type_mapping];
+            staffRecords[key]['identity_number'] = staffRecords[key][mapping.identity_number_mapping];
+            staffRecords[key]['nationality_name'] = staffRecords[key][mapping.nationality_mapping];
+            staffRecords[key]['address'] = staffRecords[key][mapping.address_mapping];
+            staffRecords[key]['postal_code'] = staffRecords[key][mapping.postal_mapping];
+            staffRecords[key]['name'] = '';
+            if (staffRecords[key].hasOwnProperty(mapping.first_name_mapping)) {
+                staffRecords[key]['name'] = staffRecords[key][mapping.first_name_mapping];
             }
-            StaffController.appendName(studentRecords[key], mapping.middle_name_mapping);
-            StaffController.appendName(studentRecords[key], mapping.third_name_mapping);
-            StaffController.appendName(studentRecords[key], mapping.last_name_mapping);
+            StaffController.appendName(staffRecords[key], mapping.middle_name_mapping);
+            StaffController.appendName(staffRecords[key], mapping.third_name_mapping);
+            StaffController.appendName(staffRecords[key], mapping.last_name_mapping);
         }
 
         var lastRow = totalRowCount;
-        StaffController.rowsThisPage = studentRecords;
+        StaffController.rowsThisPage = staffRecords;
 
         params.successCallback(StaffController.rowsThisPage, lastRow);
         StaffController.externalDataLoaded = true;
         UtilsSvc.isAppendLoader(false);
-        return studentRecords;
+        return staffRecords;
     }
 
-    function processStaffRecord(studentRecords, params, totalRowCount) {
-        for(var key in studentRecords) {
-            studentRecords[key]['institution_name'] = '-';
-            studentRecords[key]['academic_period_name'] = '-';
-            studentRecords[key]['education_grade_name'] = '-';
-            if ((studentRecords[key].hasOwnProperty('institution_students') && studentRecords[key]['institution_students'].length > 0)) {
-                studentRecords[key]['institution_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('institution')))? studentRecords[key].institution_students['0'].institution.name: '-';
-                studentRecords[key]['academic_period_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('academic_period')))? studentRecords[key].institution_students['0'].academic_period.name: '-';
-                studentRecords[key]['education_grade_name'] = ((studentRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? studentRecords[key].institution_students['0'].education_grade.name: '-';
+    function processStaffRecord(staffRecords, params, totalRowCount) {
+        for(var key in staffRecords) {
+            staffRecords[key]['institution_name'] = '-';
+            staffRecords[key]['academic_period_name'] = '-';
+            staffRecords[key]['education_grade_name'] = '-';
+            if ((staffRecords[key].hasOwnProperty('institution_students') && staffRecords[key]['institution_students'].length > 0)) {
+                staffRecords[key]['institution_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('institution')))? staffRecords[key].institution_students['0'].institution.name: '-';
+                staffRecords[key]['academic_period_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('academic_period')))? staffRecords[key].institution_students['0'].academic_period.name: '-';
+                staffRecords[key]['education_grade_name'] = ((staffRecords[key].institution_students['0'].hasOwnProperty('education_grade')))? staffRecords[key].institution_students['0'].education_grade.name: '-';
             }
 
-            studentRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(studentRecords[key]['date_of_birth']);
-            studentRecords[key]['gender_name'] = studentRecords[key]['gender']['name'];
+            staffRecords[key]['date_of_birth'] = InstitutionsStaffSvc.formatDate(staffRecords[key]['date_of_birth']);
+            staffRecords[key]['gender_name'] = staffRecords[key]['gender']['name'];
 
-            if (!studentRecords[key].hasOwnProperty('name')) {
-                studentRecords[key]['name'] = '';
-                if (studentRecords[key].hasOwnProperty('first_name')) {
-                    studentRecords[key]['name'] = studentRecords[key]['first_name'];
+            if (!staffRecords[key].hasOwnProperty('name')) {
+                staffRecords[key]['name'] = '';
+                if (staffRecords[key].hasOwnProperty('first_name')) {
+                    staffRecords[key]['name'] = staffRecords[key]['first_name'];
                 }
-                StaffController.appendName(studentRecords[key], 'middle_name');
-                StaffController.appendName(studentRecords[key], 'third_name');
-                StaffController.appendName(studentRecords[key], 'last_name');
+                StaffController.appendName(staffRecords[key], 'middle_name');
+                StaffController.appendName(staffRecords[key], 'third_name');
+                StaffController.appendName(staffRecords[key], 'last_name');
             }
         }
 
         var lastRow = totalRowCount;
-        StaffController.rowsThisPage = studentRecords;
+        StaffController.rowsThisPage = staffRecords;
 
         params.successCallback(StaffController.rowsThisPage, lastRow);
         StaffController.externalDataLoaded = true;
         UtilsSvc.isAppendLoader(false);
-        return studentRecords;
+        return staffRecords;
     }
 
     function insertStaffData(staffId, academicPeriodId, institutionPositionId, positionType, fte, staffTypeId, startDate, endDate, userRecord) {
