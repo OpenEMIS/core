@@ -70,6 +70,7 @@ class ConfigurationsController extends AppController {
         ];
         $http = new Client();
         $response = $http->post($attributes['token_uri'], $data);
+        $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
         if ($response->isOK()) {
             $body = $response->body('json_decode');
             $recordUri = $attributes['record_uri'];
@@ -86,7 +87,11 @@ class ConfigurationsController extends AppController {
 
             if ($response->isOK()) {
                 echo json_encode($response->body('json_decode'), JSON_PRETTY_PRINT);
+            } else {
+                echo $noData;
             }
+        } else {
+            echo $noData;
         }
 
     }

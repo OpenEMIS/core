@@ -12,7 +12,19 @@ WHERE NOT EXISTS (
 );
 
 INSERT INTO `external_data_source_attributes` (`id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id`)
+SELECT * FROM (SELECT '858682fb-d583-11e6-87d6-525400b263eb', 'OpenEMIS Identity', 'postal_mapping' as field, 'postal_mapping', 'postal_code', NOW(), 1) as tmp
+WHERE NOT EXISTS (
+    SELECT `id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id` FROM `external_data_source_attributes` WHERE `external_data_source_type` = 'OpenEMIS Identity' AND `attribute_field` = 'postal_mapping'
+);
+
+INSERT INTO `external_data_source_attributes` (`id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id`)
 SELECT * FROM (SELECT '51528c40-d331-11e6-9166-525400b263eb', 'Custom', 'address_mapping' as field, 'address_mapping', '', NOW(), 1) as tmp
 WHERE NOT EXISTS (
     SELECT `id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id` FROM `external_data_source_attributes` WHERE `external_data_source_type` = 'Custom' AND `attribute_field` = 'address_mapping'
+);
+
+INSERT INTO `external_data_source_attributes` (`id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id`)
+SELECT * FROM (SELECT '615a0770-d584-11e6-87d6-525400b263eb', 'Custom', 'postal_mapping' as field, 'postal_mapping', '', NOW(), 1) as tmp
+WHERE NOT EXISTS (
+    SELECT `id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id` FROM `external_data_source_attributes` WHERE `external_data_source_type` = 'Custom' AND `attribute_field` = 'postal_mapping'
 );
