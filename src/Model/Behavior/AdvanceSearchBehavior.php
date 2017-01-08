@@ -72,11 +72,10 @@ class AdvanceSearchBehavior extends Behavior {
             $includedFields = new ArrayObject(); //new type of advance search, field from the database table.
 
 			foreach ($fields as $key) {
+				$label = $labels->getLabel($this->_table->alias(), $key, $language);
 				if (!in_array($key , $this->config('exclude'))) {
 
 					$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
-
-                    $label = $labels->getLabel($this->_table->alias(), $key, $language);
 
 					if ($this->isForeignKey($key)) {
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
@@ -120,7 +119,7 @@ class AdvanceSearchBehavior extends Behavior {
 
                 if (in_array($key , $this->config('include'))) {
                     $includedFields[$key] = [
-                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                        'label' => ($label) ? $label : Inflector::humanize($key),
                         'value' => (isset($advanceSearchModelData['tableField']) && isset($advanceSearchModelData['tableField'][$key])) ? $advanceSearchModelData['tableField'][$key] : '',
                     ];
                 }
