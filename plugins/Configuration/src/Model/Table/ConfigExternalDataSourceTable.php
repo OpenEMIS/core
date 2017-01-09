@@ -197,6 +197,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
             $requestData[$this->alias()]['identity_type_mapping'] = 'main_identity_type.name';
             $requestData[$this->alias()]['identity_number_mapping'] = 'identity_number';
             $requestData[$this->alias()]['nationality_mapping'] = 'main_nationality.name';
+            $requestData[$this->alias()]['address_mapping'] = 'address';
+            $requestData[$this->alias()]['postal_mapping'] = 'postal_code';
             $requestData[$this->alias()]['external_reference_mapping'] = 'id';
             $requestData[$this->alias()]['token_uri'] = $url .'/api/oauth/token';
             $requestData[$this->alias()]['record_uri'] = $url .'/api/restful/Users.json?_finder=Students[first_name:{first_name};last_name:{last_name};date_of_birth:{date_of_birth};identity_number:{identity_number};limit:{limit};page:{page}]&_flatten=1';
@@ -243,7 +245,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
         $fields = [
             'url', 'token_uri', 'record_uri', 'user_endpoint_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
-            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'private_key', 'public_key'
+            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'address_mapping', 'postal_mapping', 'private_key', 'public_key'
         ];
         foreach ($fields as $field) {
             if ($entity->has($field)) {
@@ -281,6 +283,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_type_mapping', ['type' => 'hidden']);
                 $this->field('identity_number_mapping', ['type' => 'hidden']);
                 $this->field('nationality_mapping', ['type' => 'hidden']);
+                $this->field('address_mapping', ['type' => 'hidden']);
+                $this->field('postal_mapping', ['type' => 'hidden']);
                 $this->field('user_endpoint_uri', ['type' => 'hidden']);
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
@@ -302,6 +306,8 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
                 $this->field('identity_type_mapping');
                 $this->field('identity_number_mapping');
                 $this->field('nationality_mapping');
+                $this->field('address_mapping');
+                $this->field('postal_mapping');
                 $this->field('private_key', ['type' => 'text']);
                 $this->field('public_key', ['type' => 'text']);
                 break;
