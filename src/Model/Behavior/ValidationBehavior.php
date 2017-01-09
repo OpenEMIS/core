@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validation;
 use Cake\Validation\Validator;
 use DateTime;
+use Cake\Routing\Router;
 
 class ValidationBehavior extends Behavior {
 	use MessagesTrait;
@@ -1234,7 +1235,6 @@ class ValidationBehavior extends Behavior {
 			->where(
 				[
 					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
-
 				]
 			);
 
@@ -1702,6 +1702,81 @@ class ValidationBehavior extends Behavior {
 					return false;
 				}
 			}
+		}
+
+		return true;
+	}
+
+	public static function checkStaffAssignment($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$staffId = $data['staff_id'];
+		$startDate = new Date($data['start_date']);
+
+		// check if staff is already assigned
+		$StaffTable = TableRegistry::get('Institution.Staff');
+
+		$staffRecord = $StaffTable->find()
+			->contain(['Institutions'])
+			->where([
+				$StaffTable->aliasField('staff_id') => $staffId,
+				$StaffTable->aliasField('institution_id') => $data['institution_id'],
+				'OR' => [
+					[$StaffTable->aliasField('end_date').' >= ' => $startDate],
+					[$StaffTable->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$StaffTable->aliasField('created') => 'DESC'])
+			->first();
+
+		// Check if staff already exist in the school
+		if ($staffRecord) {
+			return true;
+		}
+
+		// If staff does not exist in the school, we check if the staff is in another school
+		$staffRecord = $StaffTable->find()
+			->contain(['Institutions'])
+			->where([
+				$StaffTable->aliasField('staff_id') => $staffId,
+				$StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
+				'OR' => [
+					[$StaffTable->aliasField('end_date').' >= ' => $startDate],
+					[$StaffTable->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$StaffTable->aliasField('created') => 'DESC'])
+			->first();
+
+		if ($staffRecord) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static function checkPendingStaffTransfer($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$staffId = $data['staff_id'];
+		$institutionId = $data['institution_id'];
+		$newTransferStatus = 0;
+		$type = 2;
+		$TransferRequest = TableRegistry::get('Institution.StaffTransferRequests');
+
+		$transferRecord = $TransferRequest
+			->find()
+			->where([
+				$TransferRequest->aliasField('institution_id') => $institutionId,
+				$TransferRequest->aliasField('staff_id') => $staffId,
+				$TransferRequest->aliasField('type') => $type,
+				$TransferRequest->aliasField('status') => $newTransferStatus
+			])
+			->first();
+
+		if ($transferRecord) {
+			$url = Router::url(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferRequests', 'view', $TransferRequest->paramsEncode(['id' => $transferRecord->id])], true);
+			return $url;
 		}
 
 		return true;
