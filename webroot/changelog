@@ -1,3 +1,12 @@
+v3.8.5
+- System allows user to search for Textbook name
+- Implemented Institution and Grade filter in Students > Academic > Subjects page
+
+v3.8.4
+- System allows user to add Exam items manually
+- System allows user to link an Exam items to an existing Subject
+- Implemented version release management and approval feature
+
 v3.8.3
 - Implemented feature to allow user to create customised report in excel format in Institution>Student Results module
 
