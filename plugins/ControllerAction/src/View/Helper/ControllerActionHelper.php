@@ -295,10 +295,10 @@ class ControllerActionHelper extends Helper {
 		$primaryKeyValue = [];
 		if (is_array($primaryKeys)) {
 			foreach ($primaryKeys as $key) {
-				$primaryKeyValue[$key] = $entity->$key;
+				$primaryKeyValue[$key] = $entity->getOriginal($key);
 			}
 		} else {
-			$primaryKeyValue[$primaryKeys] = $entity->$primaryKeys;
+			$primaryKeyValue[$primaryKeys] = $entity->getOriginal($primaryKeys);
 		}
 
 		$encodedKeys = $this->paramsEncode($primaryKeyValue);

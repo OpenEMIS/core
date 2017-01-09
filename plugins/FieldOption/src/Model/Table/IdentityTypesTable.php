@@ -22,7 +22,8 @@ class IdentityTypesTable extends ControllerActionTable
 
         $this->behaviors()->get('ControllerAction')->config('actions.remove', 'restrict');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add']
+            'Students' => ['index', 'add'],
+            'Staff' => ['index', 'add']
         ]);
         $this->addBehavior('FieldOption.FieldOption');
     }
