@@ -1,4 +1,3 @@
--- POCOR-2828
 -- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-2828', NOW());
 
@@ -28,17 +27,4 @@ INSERT INTO `external_data_source_attributes` (`id`, `external_data_source_type`
 SELECT * FROM (SELECT '615a0770-d584-11e6-87d6-525400b263eb', 'Custom', 'postal_mapping' as field, 'postal_mapping', '', NOW(), 1) as tmp
 WHERE NOT EXISTS (
     SELECT `id`, `external_data_source_type`, `attribute_field`, `attribute_name`, `value`, `created`, `created_user_id` FROM `external_data_source_attributes` WHERE `external_data_source_type` = 'Custom' AND `attribute_field` = 'postal_mapping'
-);
-
-
--- 3.8.6
-UPDATE config_items SET value = '3.8.6' WHERE code = 'db_version';
-UPDATE system_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
-SET @maxId := 0;
-SELECT max(id) + 1 INTO @maxId FROM system_updates;
-INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, status, created) VALUES
-(
-  @maxId,
-  (SELECT value FROM config_items WHERE code = 'db_version'),
-  NOW(), NOW(), 1, 2, NOW()
 );

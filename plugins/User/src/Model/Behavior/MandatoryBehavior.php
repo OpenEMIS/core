@@ -136,9 +136,10 @@ class MandatoryBehavior extends Behavior {
 			if ($value == 'Non-Mandatory') {
 				// need to set the relevant non-mandatory fields and set it to required = false to remove *
 				$singularAndLowerKey = strtolower(Inflector::singularize(Inflector::tableize($key)));
-				foreach ($event->subject()->model->fields as $fkey => $fvalue) {
+				$model = $this->_table;
+				foreach ($model->fields as $fkey => $fvalue) {
 					if (strpos($fkey, $singularAndLowerKey)!==false) {
-						$event->subject()->model->fields[$fkey]['attr']['required'] = false;
+						$model->fields[$fkey]['attr']['required'] = false;
 					}
 				}
 			}
