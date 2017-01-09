@@ -35,7 +35,7 @@ class ImportLinkBehavior extends Behavior {
 	}
 
     //using after action for ordering of toolbar buttons (because export also using afteraction)
-    public function indexAfterActionImportv4(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterActionImportv4(Event $event, Query $query, $data, ArrayObject $extra)
     {
         $attr = $this->_table->getButtonAttr();
         $action = $this->_table->action;
