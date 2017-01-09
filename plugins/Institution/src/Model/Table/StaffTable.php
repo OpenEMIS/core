@@ -453,19 +453,17 @@ class StaffTable extends ControllerActionTable {
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		if ($action == 'view') {
-			if (isset($extra['toolbarButtons'])) {
-				$toolbarButtons = $extra['toolbarButtons'];
+		if (isset($extra['toolbarButtons'])) {
+			$toolbarButtons = $extra['toolbarButtons'];
 
-				if (isset($toolbarButtons['edit'])) {
-					$url = $toolbarButtons['edit']['url'];
-					$staffId = $url[1];
-					unset($url[1]);
-					$url[0] = 'add';
-					$url['institution_staff_id'] = $staffId;
-					$url['action'] = 'StaffPositionProfiles';
-					$toolbarButtons['edit']['url'] = $url;
-				}
+			if (isset($toolbarButtons['edit'])) {
+				$url = $toolbarButtons['edit']['url'];
+				$staffId = $url[1];
+				unset($url[1]);
+				$url[0] = 'add';
+				$url['institution_staff_id'] = $staffId;
+				$url['action'] = 'StaffPositionProfiles';
+				$toolbarButtons['edit']['url'] = $url;
 			}
 		}
 		$this->Session->write('Staff.Staff.id', $entity->staff_id);
