@@ -34,6 +34,8 @@ class DirectoriesTable extends ControllerActionTable {
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		$this->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$this->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
@@ -91,6 +93,16 @@ class DirectoriesTable extends ControllerActionTable {
             ;
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
+	}
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+	{
+		$options['associated']['Nationalities'] = [
+			'validate' => 'AddByAssociation'
+		];
+		$options['associated']['Identities'] = [
+			'validate' => 'AddByAssociation'
+		];
 	}
 
     public function onModifyConditions(Event $events, $key, $value)
