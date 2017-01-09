@@ -4,6 +4,7 @@ namespace Configuration\Controller;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Http\Client;
 
 class ConfigurationsController extends AppController {
     public function initialize()
@@ -37,12 +38,62 @@ class ConfigurationsController extends AppController {
         return $events;
     }
 
-    public function generateServerAuthorisationToken()
+    public function getExternalUsers()
     {
         $this->autoRender = false;
-        $externalDataSourceType = $this->request->query('external_data_source_type');
         $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        echo $ExternalDataSourceAttributes->generateServerAuthorisationToken($externalDataSourceType);
+        $attributes = $ExternalDataSourceAttributes
+            ->find('list', [
+                'keyField' => 'attribute_field',
+                'valueField' => 'value'
+            ])
+            ->innerJoin(['ConfigItems' => 'config_items'], [
+                'ConfigItems.code' => 'external_data_source_type',
+                $ExternalDataSourceAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+            ])
+            ->toArray();
+
+        $serverAuthorisationToken = $ExternalDataSourceAttributes->generateServerAuthorisationToken($attributes['client_id'], $attributes['scope'], $attributes['token_uri'], $attributes['private_key']);
+
+        $data = [
+            'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+            'assertion' => $serverAuthorisationToken
+        ];
+
+        $fieldMapping = [
+            '{page}' => $this->request->query('page'),
+            '{limit}' => $this->request->query('limit'),
+            '{first_name}' => $this->request->query('first_name'),
+            '{last_name}' => $this->request->query('last_name'),
+            '{identity_number}' => $this->request->query('identity_number'),
+            '{date_of_birth}' => $this->request->query('date_of_birth')
+        ];
+        $http = new Client();
+        $response = $http->post($attributes['token_uri'], $data);
+        $noData = json_encode(['data' => [], 'total' => 0], JSON_PRETTY_PRINT);
+        if ($response->isOK()) {
+            $body = $response->body('json_decode');
+            $recordUri = $attributes['record_uri'];
+
+            foreach ($fieldMapping as $key => $map) {
+                $recordUri = str_replace($key, $map, $recordUri);
+            }
+
+            $http = new Client([
+                'headers' => ['Authorization' => $body->token_type.' '.$body->access_token]
+            ]);
+
+            $response = $http->get($recordUri);
+
+            if ($response->isOK()) {
+                echo json_encode($response->body('json_decode'), JSON_PRETTY_PRINT);
+            } else {
+                echo $noData;
+            }
+        } else {
+            echo $noData;
+        }
+
     }
 
     public function isActionIgnored(Event $event, $action)

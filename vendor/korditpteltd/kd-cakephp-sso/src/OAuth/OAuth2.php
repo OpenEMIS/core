@@ -576,15 +576,7 @@ class Custom_Auth_OAuth2 extends Google_Auth_Abstract
     $http = new Client();
     $keys = [];
 
-    $response = $http->get($this->OAUTH2_JWKS_URI);
-    if ($response->statusCode() == 200) {
-      $body = json_decode($response->body(), true);
-      if (isset($body['keys'])) {
-        $keys = $body['keys'];
-      }
-    }
-
-    $response = $http->post($this->OAUTH2_JWKS_URI);
+    $response = $http->get($this->OAUTH2_JWKS_URI, [], ['redirect' => 3]);
     if ($response->statusCode() == 200) {
       $body = json_decode($response->body(), true);
       if (isset($body['keys'])) {
