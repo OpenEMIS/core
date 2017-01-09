@@ -245,7 +245,7 @@ class ConfigExternalDataSourceTable extends ControllerActionTable {
         $ExternalDataSourceAttributes->deleteAll(['external_data_source_type' => $entity->value]);
         $fields = [
             'url', 'token_uri', 'record_uri', 'user_endpoint_uri', 'client_id', 'scope', 'first_name_mapping', 'middle_name_mapping', 'third_name_mapping', 'last_name_mapping', 'date_of_birth_mapping',
-            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'private_key', 'public_key'
+            'external_reference_mapping', 'gender_mapping', 'identity_type_mapping', 'identity_number_mapping', 'nationality_mapping', 'address_mapping', 'postal_mapping', 'private_key', 'public_key'
         ];
         foreach ($fields as $field) {
             if ($entity->has($field)) {
