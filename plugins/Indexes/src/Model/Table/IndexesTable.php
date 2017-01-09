@@ -640,14 +640,6 @@ class IndexesTable extends ControllerActionTable
                     ];
                     break;
 
-                case 'Genders': // no institution_id, no academic_period_id
-                    $condition = [$CriteriaModel->aliasField('id') . ' IN ' => $institutionStudentsList];
-                    break;
-
-                case 'Guardians': // no institution_id, no academic_period_id
-                    $condition = [$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList];
-                    break;
-
                 case 'Special Needs': // no institution_id, no academic_period_id
                     $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $institutionStudentsList];
                     break;
@@ -661,7 +653,7 @@ class IndexesTable extends ControllerActionTable
             }
         } else {
             // dont have institution Id (from Administrator > Indexes > generate)
-            $institutionStudentsResults = $Students->find()
+            $studentsResults = $Students->find()
                 ->where([
                     'academic_period_id' => $academicPeriodId,
                     'student_status_id' => 1 //enrolled status
@@ -669,9 +661,9 @@ class IndexesTable extends ControllerActionTable
                 ->all();
 
             // list of enrolled student in the institution in academic period
-            $institutionStudentsList = [];
-            foreach ($institutionStudentsResults as $institutionStudentsResultsKey => $institutionStudentsResultsObj) {
-                $institutionStudentsList[] = $institutionStudentsResultsObj->student_id;
+            $studentsList = [];
+            foreach ($studentsResults as $studentsResultsKey => $studentsResultsObj) {
+                $studentsList[] = $studentsResultsObj->student_id;
             }
 
             switch ($key) {
@@ -686,16 +678,8 @@ class IndexesTable extends ControllerActionTable
                     ];
                     break;
 
-                case 'Genders': // no academic_period_id
-                    $condition = [$CriteriaModel->aliasField('id') . ' IN ' => $institutionStudentsList];
-                    break;
-
-                case 'Guardians': // no academic_period_id
-                    $condition = [$CriteriaModel->aliasField('student_id') . ' IN ' => $institutionStudentsList];
-                    break;
-
                 case 'Special Needs': // no academic_period_id
-                    $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $institutionStudentsList];
+                    $condition = [$CriteriaModel->aliasField('security_user_id') . ' IN ' => $studentsList];
                     break;
 
                 default:
