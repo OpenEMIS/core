@@ -2,11 +2,28 @@
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3562', NOW());
 
 -- create backup institution_subject_students table
-CREATE TABLE IF NOT EXISTS `z_3562_institution_subject_students`
-LIKE `institution_subject_students`;
-
+CREATE TABLE IF NOT EXISTS `z_3562_institution_subject_students` LIKE `institution_subject_students`;
 INSERT INTO `z_3562_institution_subject_students`
 SELECT * FROM `institution_subject_students`;
+
+-- create backup assessment_item_results table
+CREATE TABLE IF NOT EXISTS `z_3562_assessment_item_results` LIKE `assessment_item_results`;
+INSERT INTO `z_3562_assessment_item_results`
+SELECT * FROM `assessment_item_results`;
+
+-- delete associated results where status in institution_subject_students is 0
+DELETE `Results`
+FROM `assessment_item_results` `Results`
+INNER JOIN `institution_subject_students` `SubjectStudents`
+ON (`Results`.`student_id` = `SubjectStudents`.`student_id`
+AND `Results`.`education_subject_id` = `SubjectStudents`.`education_subject_id`
+AND `Results`.`institution_id` = `SubjectStudents`.`institution_id`
+AND `Results`.`academic_period_id` = `SubjectStudents`.`academic_period_id`)
+WHERE `SubjectStudents`.`status` = 0;
+
+-- delete institution_subject_students that have status 0
+DELETE FROM `institution_subject_students`
+WHERE `status` = 0;
 
 -- institution_subject_students
 ALTER TABLE `institution_subject_students`
