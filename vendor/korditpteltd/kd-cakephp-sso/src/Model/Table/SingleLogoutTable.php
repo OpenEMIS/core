@@ -17,14 +17,7 @@ class SingleLogoutTable extends Table {
 		parent::initialize($config);
 	}
 
-    public function implementedEvent()
-    {
-        $events = parent::implementedEvent();
-        $events['Model.SSO.SingleLogout.afterLogout'] = 'afterLogout';
-        $events['Model.SSO.SingleLogout.afterLogin'] = 'afterLogin';
-    }
-
-    public function afterLogout(Event $event, $user)
+    public function afterLogout($user)
     {
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username)) {
@@ -32,7 +25,7 @@ class SingleLogoutTable extends Table {
         }
     }
 
-    public function afterLogin(Event $event, $user, $autoLoginUrl, Request $request)
+    public function afterLogin($user, $autoLoginUrl, Request $request)
     {
         $sessionId = $request->session()->id();
         $username = isset($user['username']) ? $user['username'] : null;
