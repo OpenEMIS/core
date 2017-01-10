@@ -547,44 +547,45 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         return (studentStatusId == enrolledStatus) ? highlightClass : false;
                     },
                     cellRenderer: function(params) {
-                        var studentId = params.data.student_id;
+                        var value = params.data[params.colDef.field];
+                        var studentStatusId = params.data.student_status_id;
 
-                        var eCell = document.createElement('div');
-                        eCell.setAttribute("class", "ag-grid-dir-ltr");
-
-                        var minuteInput = document.createElement('input');
-                        minuteInput.setAttribute("id", "mins");
-                        minuteInput.setAttribute("type", "number");
-                        minuteInput.setAttribute("min", "0");
-                        minuteInput.setAttribute("max", "999");
-                        minuteInput.setAttribute("class", "ag-grid-duration");
-                        minuteInput.setAttribute("lang", "en");
-
-                        var text = document.createElement('span');
-                        var colon = document.createTextNode(" : ");
-                        text.appendChild(colon);
-
-                        var secondInput = document.createElement('input');
-                        secondInput.setAttribute("id", "secs");
-                        secondInput.setAttribute("type", "number");
-                        secondInput.setAttribute("min", "0");
-                        secondInput.setAttribute("max", "59");
-                        secondInput.setAttribute("class", "ag-grid-duration");
-                        secondInput.setAttribute("lang", "en");
-
-                        eCell.appendChild(minuteInput);
-                        eCell.appendChild(text);
-                        eCell.appendChild(secondInput);
-
-                        var oldValue = params.data[params.colDef.field];
-                        if (oldValue) {
-                            var duration = String(oldValue).split(".");
-                            minuteInput.value = duration[0];
-                            secondInput.value = duration[1];
-                        }
-
-                        studentStatusId = params.data.student_status_id;
                         if (studentStatusId == enrolledStatus) {
+                            var studentId = params.data.student_id;
+
+                            var eCell = document.createElement('div');
+                            eCell.setAttribute("class", "ag-grid-dir-ltr");
+
+                            var minuteInput = document.createElement('input');
+                            minuteInput.setAttribute("id", "mins");
+                            minuteInput.setAttribute("type", "number");
+                            minuteInput.setAttribute("min", "0");
+                            minuteInput.setAttribute("max", "999");
+                            minuteInput.setAttribute("class", "ag-grid-duration");
+                            minuteInput.setAttribute("lang", "en");
+
+                            var text = document.createElement('span');
+                            var colon = document.createTextNode(" : ");
+                            text.appendChild(colon);
+
+                            var secondInput = document.createElement('input');
+                            secondInput.setAttribute("id", "secs");
+                            secondInput.setAttribute("type", "number");
+                            secondInput.setAttribute("min", "0");
+                            secondInput.setAttribute("max", "59");
+                            secondInput.setAttribute("class", "ag-grid-duration");
+                            secondInput.setAttribute("lang", "en");
+
+                            eCell.appendChild(minuteInput);
+                            eCell.appendChild(text);
+                            eCell.appendChild(secondInput);
+
+                            if (value) {
+                                var duration = String(value).split(".");
+                                minuteInput.value = duration[0];
+                                secondInput.value = duration[1];
+                            }
+
                             eCell.addEventListener('change', function() {
                                 var minuteInt = parseInt(minuteInput.value);
                                 var secondInt = parseInt(secondInput.value);
@@ -631,14 +632,17 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 params.data[params.colDef.field] = durationAsFloat;
                                 _results[studentId][periodId]['duration'] = durationAsFloat;
                             });
+                            return eCell;
 
                         } else {
-                            // disable input if student is not enrolled
-                            secondInput.disabled = true;
-                            minuteInput.disabled = true;
+                            // don't allow input if student is not enrolled
+                            if (!isNaN(parseFloat(value))) {
+                                var duration = String(value).replace(".", " : ");
+                                return duration;
+                            } else {
+                                return '';
+                            }
                         }
-
-                        return eCell;
                     },
                     suppressMenu: true
                 });
