@@ -34,9 +34,12 @@ class SingleLogoutTable extends Table {
             foreach ($autoLogoutUrl as $url) {
                 if (!empty($url)) {
                     try {
+                        // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
                         $url = rtrim($url, '/');
                         $url = $url.'/';
-                        $response = $http->put($url, ['url' => rtrim(Router::url([], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
+                        // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
+                        // http://php.net/manual/en/thread.start.php
+                        $response = $http->put($url, ['url' => rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true)), '/'), 'session_id' => $sessionId, 'username' => $username]);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }
@@ -73,8 +76,14 @@ class SingleLogoutTable extends Table {
     {
         try {
             $http = new Client();
-            $url = $entity->url;
+
+            // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
+            $url = rtrim($entity->url, '/');
+            $url = $url . '/';
             $username = $entity->username;
+
+            // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
+            // http://php.net/manual/en/thread.start.php
             $http->post($url, ['username' => $username]);
         } catch (Exception $e) {
             Log::write('error', $e);
