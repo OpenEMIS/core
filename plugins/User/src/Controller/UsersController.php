@@ -22,7 +22,7 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords']);
+        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'captureLogin']);
 
         $action = $this->request->params['action'];
         if ($action == 'login_remote') {
@@ -42,6 +42,11 @@ class UsersController extends AppController
         $shellCmd = sprintf($nohup, $cmd, ROOT.DS);
         \Cake\Log\Log::write('debug', $shellCmd);
         exec($shellCmd);
+    }
+
+    public function captureLogin($userId, $encodedUrl, $sessionId)
+    {
+        $url = $this->ControllerAction->urlsafeB64Decode($encodedUrl);
     }
 
     public function login()
@@ -84,16 +89,23 @@ class UsersController extends AppController
         $this->SSO->doAuthentication();
     }
 
-    public function logout()
+    public function logout($sessionId = null)
     {
+        $this->request->session()->id($sessionId);
         $this->request->session()->destroy();
         return $this->redirect($this->Auth->logout());
+    }
+
+    public function afterLogout(Event $event, $user)
+    {
+        $this->Users->dispatchEventToModels('Model.Users.afterLogout', [$user], $this, $listeners);
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
+        $events['Auth.logout'] = 'afterLogout';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
