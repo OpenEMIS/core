@@ -50,6 +50,9 @@ class AssessmentsTable extends ControllerActionTable {
             'cascadeCallbacks' => true
         ]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index', 'view']
+        ]);
         $this->setDeleteStrategy('restrict');
     }
 

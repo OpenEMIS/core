@@ -16,13 +16,13 @@
 					<th><?= $this->Label->get('InstitutionStaff.fte'); ?></th>
 				</tr>
 			</thead>
-	
+
 			<tbody data-link="row">
 				<?php if (count($attr['data'])>0) : ?>
 					<?php foreach ($attr['data'] as $i => $obj) : ?>
 						<?php if (!is_object($obj->user)): ?>
 							<tr><td>There is an error with this user data. User might have been deleted from users table.</td></tr>
-							<?php else: 
+							<?php else:
 								$link = '';
 							?>
 							<tr>
@@ -31,7 +31,7 @@
 										'controller' => 'Institutions',
 										'action' => 'StaffUser',
 										'view',
-										$obj->user->id
+										$this->ControllerAction->paramsEncode(['id' => $obj->user->id])
 									]) ?>
 								</td>
 								<td><?= $obj->user->name ?></td>

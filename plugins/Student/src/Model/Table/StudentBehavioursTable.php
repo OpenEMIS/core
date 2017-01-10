@@ -16,7 +16,7 @@ class StudentBehavioursTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('student_id', ['visible' => false]);
 		$this->ControllerAction->field('student_behaviour_category_id', ['type' => 'select']);
 		$this->ControllerAction->field('description', ['visible' => false]);
@@ -33,7 +33,8 @@ class StudentBehavioursTable extends AppTable {
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentBehaviours',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;

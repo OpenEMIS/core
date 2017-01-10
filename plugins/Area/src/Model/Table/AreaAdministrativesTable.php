@@ -32,10 +32,14 @@ class AreaAdministrativesTable extends ControllerActionTable
             ]);
         }
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StaffRoom' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
-    public function beforeAction(Event $event, arrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('area_administrative_level_id');
         $this->field('is_main_country', ['visible' => false]);
@@ -59,7 +63,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         $this->recover();
     }
 
-    public function afterAction(Event $event, arrayObject $extra)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder($this->_fieldOrder);
     }
@@ -72,7 +76,7 @@ class AreaAdministrativesTable extends ControllerActionTable
             ]);
     }
 
-    public function indexBeforeAction(Event $event, arrayObject $extra)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // Add breadcrumb
         $toolbarElements = [
@@ -111,13 +115,13 @@ class AreaAdministrativesTable extends ControllerActionTable
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, arrayObject $extra)
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->data[$this->alias()]['area_administrative_level_id'] = $entity->area_administrative_level_id;
         $this->field('is_main_country');
     }
 
-    public function addBeforeAction(Event $event, arrayObject $extra)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('is_main_country');
     }

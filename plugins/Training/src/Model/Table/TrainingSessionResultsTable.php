@@ -2,24 +2,42 @@
 namespace Training\Model\Table;
 
 use ArrayObject;
+
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
 use Cake\Network\Request;
-use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Event\Event;
 
-class TrainingSessionResultsTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class TrainingSessionResultsTable extends ControllerActionTable
+{
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
+
 	public $openStatusIds = [];
 	public $approvedStatusIds = [];
 	public $resultTypeOptions = [];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Sessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'training_session_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
+		$this->addBehavior('Workflow.Workflow');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
+        $this->toggle('add', false);
 	}
 
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	{
 		$SessionResults = $this;
 		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
 
@@ -67,16 +85,16 @@ class TrainingSessionResultsTable extends AppTable {
 		return $process;
 	}
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data) {
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+	{
 		// redirect back to edit page
-		$url = $this->ControllerAction->url('edit');
 		$event->stopPropagation();
-		return $this->controller->redirect($url);
+		return $this->controller->redirect($this->url('edit'));
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		// To manually clear all records in training_session_trainee_results when delete
-		$entity = $this->get($id);
 		$TraineeResults = $this->Sessions->TraineeResults;
 		$TraineeResults->deleteAll([
 			$TraineeResults->aliasField('training_session_id') => $entity->training_session_id
@@ -96,23 +114,25 @@ class TrainingSessionResultsTable extends AppTable {
 		// End
 
 		$this->Alert->success('general.delete.success');
-		$url = $this->ControllerAction->url('index');
 
 		$event->stopPropagation();
-		return $this->controller->redirect($url);
+		return $this->controller->redirect($this->url('index'));
 	}
 
-	public function onGetTrainingCourse(Event $event, Entity $entity) {
+	public function onGetTrainingCourse(Event $event, Entity $entity)
+	{
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->course->name;
 	}
 
-	public function onGetTrainingProvider(Event $event, Entity $entity) {
+	public function onGetTrainingProvider(Event $event, Entity $entity)
+	{
 		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
 		return $trainingSession->_matchingData['TrainingProviders']->name;
 	}
 
-	public function onGetResultType(Event $event, Entity $entity) {
+	public function onGetResultType(Event $event, Entity $entity)
+	{
 		$html = '';
 
 		$Form = $event->subject()->Form;
@@ -156,7 +176,8 @@ class TrainingSessionResultsTable extends AppTable {
 		return $html;
 	}
 
-	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
+	{
 		$sessionId = $entity->training_session_id;
 		$selectedResultType = $this->request->query('result_type');
 
@@ -211,7 +232,7 @@ class TrainingSessionResultsTable extends AppTable {
 					'plugin' => 'Directory',
 					'controller' => 'Directories',
 					'action' => 'view',
-					$traineeObj->id
+					$this->paramsEncode(['id' => $traineeObj->id])
 				]);
 				$rowData[] = $traineeObj->name;
 				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
@@ -245,39 +266,36 @@ class TrainingSessionResultsTable extends AppTable {
 		return $event->subject()->renderElement('Training.Results/' . $key, ['attr' => $attr]);
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
 		$this->openStatusIds = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'OPEN');
 		$this->approvedStatusIds = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$selectedStatus = $this->ControllerAction->getVar('selectedStatus');
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->buildRecords();
 
-		$this->ControllerAction->field('training_course');
-		$this->ControllerAction->field('training_provider');
+		$this->field('training_course');
+		$this->field('training_provider');
 
-		if (is_null($selectedStatus) || $selectedStatus == -1) {
-			$this->buildRecords();
-		} else {
-			if (in_array($selectedStatus, $this->openStatusIds)) {	// Open
-				$this->buildRecords();
-			}
-		}
-
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'training_course', 'training_provider', 'training_session_id'
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->setupFields($entity);
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->setupFields($entity);
 	}
 
-	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'edit') {
 			$statusOptions = $this->getWorkflowStepList();
 			if (isset($attr['attr']['value'])) {
@@ -291,7 +309,8 @@ class TrainingSessionResultsTable extends AppTable {
     	return $attr;
     }
 
-    public function onUpdateFieldTrainingCourse(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldTrainingCourse(Event $event, array $attr, $action, $request)
+    {
     	if ($action == 'view') {
     		// refer onGetTrainingCourse
     	} else if ($action == 'edit') {
@@ -308,7 +327,8 @@ class TrainingSessionResultsTable extends AppTable {
     	return $attr;
     }
 
-    public function onUpdateFieldTrainingProvider(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldTrainingProvider(Event $event, array $attr, $action, $request)
+    {
     	if ($action == 'view') {
     		// refer onGetTrainingProvider
     	} else if ($action == 'edit') {
@@ -325,11 +345,12 @@ class TrainingSessionResultsTable extends AppTable {
     	return $attr;
     }
 
-	public function onUpdateFieldTrainingSessionId(Event $event, array $attr, $action, $request) {
+	public function onUpdateFieldTrainingSessionId(Event $event, array $attr, $action, $request)
+	{
 		if ($action == 'view') {
 			$attr['type'] = 'select';
 		} else if ($action == 'edit') {
-			$sessionOptions = $this->Training->getSessionList();
+			$sessionOptions = $this->Training->getSessionList(['listAll' => true]);
 			if (isset($attr['attr']['value'])) {
 				$sessionId = $attr['attr']['value'];
 
@@ -341,7 +362,8 @@ class TrainingSessionResultsTable extends AppTable {
 		return $attr;
 	}
 
-    public function onUpdateFieldResultType(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldResultType(Event $event, array $attr, $action, $request)
+    {
     	$resultTypeOptions = [];
 
     	if (isset($attr['attr']['value'])) {
@@ -368,7 +390,8 @@ class TrainingSessionResultsTable extends AppTable {
     	return $attr;
     }
 
-    public function editOnChangeResultType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function editOnChangeResultType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
     	$request = $this->request;
 		unset($request->query['result_type']);
 
@@ -383,14 +406,15 @@ class TrainingSessionResultsTable extends AppTable {
 		}
     }
 
-	public function buildRecords($sessionId=null) {
+	public function buildRecords($sessionId=null)
+	{
 		$sessions = $this->Training->getSessionList();
-		
+
 		$openStatusId = null;
 		$workflow = $this->getWorkflow($this->registryAlias());
 		if (!empty($workflow)) {
 			foreach ($workflow->workflow_steps as $workflowStep) {
-				if ($workflowStep->stage == 0) {
+				if ($workflowStep->category == self::TO_DO && $workflowStep->is_system_defined == 1) {
 					$openStatusId = $workflowStep->id;
 					break;
 				}
@@ -423,7 +447,8 @@ class TrainingSessionResultsTable extends AppTable {
 		}
 	}
 
-	public function getResultTypeOptions($id=null) {
+	public function getResultTypeOptions($id=null)
+	{
 		$list = [];
 
 		if (!is_null($id)) {
@@ -436,30 +461,93 @@ class TrainingSessionResultsTable extends AppTable {
 		return $list;
 	}
 
-	public function setupFields(Entity $entity) {
-		$this->ControllerAction->field('status', [
+	public function setupFields(Entity $entity)
+	{
+		$this->field('status', [
 			'visible' => ['index' => false, 'view' => false, 'edit' => true],
 			'attr' => ['value' => $entity->status_id]
 		]);
-		$this->ControllerAction->field('training_course', [
+		$this->field('training_course', [
 			'attr' => ['value' => $entity->training_session_id]
 		]);
-		$this->ControllerAction->field('training_provider', [
+		$this->field('training_provider', [
 			'attr' => ['value' => $entity->training_session_id]
 		]);
-		$this->ControllerAction->field('result_type', [
+		$this->field('result_type', [
 			'attr' => ['value' => $entity->training_session_id]
 		]);
-		$this->ControllerAction->field('training_session_id', [
+		$this->field('training_session_id', [
 			'attr' => ['value' => $entity->training_session_id]
 		]);
-		$this->ControllerAction->field('trainees', [
+		$this->field('trainees', [
 			'type' => 'trainee_table',	// custom type
 			'valueClass' => 'table-full-width'
 		]);
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'status', 'training_course', 'training_provider', 'training_session_id', 'result_type', 'trainees'
 		]);
+	}
+
+	public function findWorkbench(Query $query, array $options)
+	{
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
+		$userId = $session->read('Auth.User.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('training_session_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Statuses->aliasField('name'),
+				$this->Sessions->aliasField('code'),
+				$this->Sessions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->Sessions->alias(), $this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => 'Training',
+						'controller' => 'Trainings',
+						'action' => 'Results',
+						'view',
+						$this->paramsEncode(['id' => $row->id])
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = __('Results of').' '.$row->session->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }

@@ -78,7 +78,7 @@ Router::scope('/', function (RouteBuilder $routes) {
 // For restful controller
 Router::scope('/restful', [], function ($routes) {
 
-    $routes->scope('/doc', ['plugin' => 'Restful', 'controller' => 'Doc'], function ($routes) {
+    $routes->scope('/doc', ['controller' => 'Doc'], function ($routes) {
         $routes->connect( '/', ['action' => 'index']);
         $routes->connect( '/index', ['action' => 'index']);
         $routes->connect( '/listing', ['action' => 'listing']);
@@ -91,27 +91,67 @@ Router::scope('/restful', [], function ($routes) {
 
     $routes->scope('/', ['controller' => 'Restful'], function ($routes) {
         $routes->extensions(['json', 'xml']);
-        $routes->connect('/', ['action' => 'nothing']);
-        $routes->connect('/token', ['action' => 'token', '_method' => 'GET']);
-        $routes->connect('/:model',
+        $routes->connect( '/', ['action' => 'nothing']);
+
+        // Regex ([v][\d+]|[v][\d+][.\d]+|latest), start with a lowercase v followed by the following format (v1 or v1.1 or v1.1.1 ..) or latest
+        // Regex reference: https://www.tutorialspoint.com/php/php_regular_expression.htm
+
+        // Preflight Options
+        $routes->connect('/*',
+            ['action' => 'options', '_method' => 'OPTIONS']
+        );
+
+        // Index
+        $routes->connect( '/:version/:model',
             ['action' => 'index', '_method' => 'GET'],
-            ['pass' => ['model']]
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
         );
+
         $routes->connect( '/:model',
-            ['action' => 'add', '_method' => 'POST'],
-            ['pass' => ['model']]
+            ['action' => 'index', '_method' => 'GET']
         );
+
+        // View
+        $routes->connect( '/:version/:model/:id',
+            ['action' => 'view', '_method' => 'GET'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['model', 'id']]
+        );
+
         $routes->connect( '/:model/:id',
             ['action' => 'view', '_method' => 'GET'],
-            ['pass' => ['model', 'id']]
+            ['pass' => ['id']]
         );
+
+        // Add
+        $routes->connect( '/:version/:model',
+            ['action' => 'add', '_method' => 'POST'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
+        );
+
+        $routes->connect( '/:model',
+            ['action' => 'add', '_method' => 'POST']
+        );
+
+        // Edit
+        $routes->connect( '/:version/:model/:id',
+            ['action' => 'edit', '_method' => 'PATCH'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
+        );
+
         $routes->connect( '/:model/:id',
-            ['action' => 'edit', '_method' => 'PUT'],
-            ['pass' => ['model', 'id']]
+            ['action' => 'edit', '_method' => 'PATCH'],
+            ['pass' => ['id']]
         );
+
+        // Delete
+        $routes->connect( '/:version/:model/:id',
+            ['action' => 'delete', '_method' => 'DELETE'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
+        );
+
         $routes->connect( '/:model/:id',
             ['action' => 'delete', '_method' => 'DELETE'],
-            ['pass' => ['model', 'id']]
+            ['pass' => ['id']]
         );
     });
 });

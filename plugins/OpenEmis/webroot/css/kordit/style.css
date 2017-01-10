@@ -1,4 +1,4 @@
-/* KORDIT FONT PACK v.1.0.10 */
+/* KORDIT FONT PACK v.1.0.11 */
 
 @font-face {
     font-family: 'kordit-fonts';
@@ -12,20 +12,26 @@
 }
 
 [class^="kd-"], [class*=" kd-"] {
-    /* use !important to prevent issues with browser extensions that change fonts */
-    font-family: 'kordit-fonts' !important;
-    speak: none;
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'kordit-fonts' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
 
-    /* Better Font Rendering =========== */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+.kd-add-multiple:before {
+  content: "\e916";
+}
+.kd-user:before {
+  content: "\e915";
+}
 .kd-close-round:before {
     content: "\e913";
 }

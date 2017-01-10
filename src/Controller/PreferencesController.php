@@ -18,12 +18,24 @@ class PreferencesController extends AppController {
 		$this->ControllerAction->model('Users');
 		$this->ControllerAction->models = [
 			'Users' 				=> ['className' => 'Users'],
-			'Account' 				=> ['className' => 'UserAccounts'],
+			'Account' 				=> ['className' => 'UserAccounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 		];
 	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        return true;
+    }
 
     // CAv4
     public function Nationalities()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
@@ -39,13 +51,7 @@ class PreferencesController extends AppController {
 		$header = __('Preferences');
 
 		$action = $this->request->params['action'];
-		$session = $this->request->session();
-		if ($action == 'view') {
-			$session->write($this->name.'.security_user_id', $this->Auth->user('id'));
-		} else {
-			$this->activeObj = $this->Users->get($this->Auth->user('id'));
-			$name = $this->activeObj->name;
-		}
+		$this->activeObj = $this->Users->get($this->Auth->user('id'));
 
 		$this->Navigation->addCrumb('Preferences', ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']);
 
@@ -64,7 +70,7 @@ class PreferencesController extends AppController {
 
 	public function index() {
 		$userId = $this->Auth->user('id');
-		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Users', 'view', $userId]);
+		return $this->redirect(['plugin' => false, 'controller' => $this->name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])]);
 	}
 
 	public function getUserTabElements() {
@@ -74,11 +80,11 @@ class PreferencesController extends AppController {
 		$userId = $this->Auth->user('id');
 		$tabElements = [
 			'General' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $userId],
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
 				'text' => __('General')
 			],
 			'Account' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Account', 'view', $userId],
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Account', 'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
 				'text' => __('Account')
 			],
 			'Contacts' => [
@@ -121,13 +127,10 @@ class PreferencesController extends AppController {
 	}
 
 	public function beforePaginate(Event $event, $model, Query $query, ArrayObject $options) {
-		$session = $this->request->session();
-
-		if ($session->check($this->name.'.security_user_id')) {
-			if ($model->hasField('security_user_id')) {
-				$userId = $this->Auth->user('id');
-				$query->where([$model->aliasField('security_user_id') => $userId]);
-			}
+		$user = $this->Auth->user();
+		if (isset($user['id'])) {
+			$userId = $user['id'];
+			$query->where([$model->aliasField('security_user_id') => $userId]);
 		} else {
 			$this->Alert->warning('general.noData');
 			$event->stopPropagation();

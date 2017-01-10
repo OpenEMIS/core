@@ -27,6 +27,9 @@ class SurveyQuestionsTable extends CustomFieldsTable {
 			'through' => 'Survey.SurveyFormsQuestions',
 			'dependent' => true
 		]);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Rules' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {

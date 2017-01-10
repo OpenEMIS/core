@@ -11,7 +11,7 @@ use Cake\Network\Exception\NotFoundException;
 
 class DownloadBehavior extends Behavior {
 	protected $_defaultConfig = [
-		'name' => 'file_name', 
+		'name' => 'file_name',
 		'content' => 'file_content'
 	];
 
@@ -43,12 +43,10 @@ class DownloadBehavior extends Behavior {
 
 	public function download(Event $mainEvent, ArrayObject $extra) {
 		$model = $this->_table;
-    	$id = $model->paramsPass(0);
-    	$primaryKey = $model->primaryKey();
-		$idKey = $model->aliasField($primaryKey);
-		
-		if ($model->exists([$idKey => $id])) {
-			$data = $model->get($id);
+    	$ids = $model->paramsDecode($model->paramsPass(0));
+
+		if ($model->exists($ids)) {
+			$data = $model->get($ids);
 			$fileName = $data->{$this->config('name')};
 			$pathInfo = pathinfo($fileName);
 
@@ -57,7 +55,7 @@ class DownloadBehavior extends Behavior {
 			if (array_key_exists($pathInfo['extension'], $this->fileTypes)) {
 				$this->fileTypes[$pathInfo['extension']];
 			}
-			
+
 			// echo '<img src="data:image/jpg;base64,' .   base64_encode($file)  . '" />';
 
 			header("Pragma: public", true);
@@ -74,10 +72,10 @@ class DownloadBehavior extends Behavior {
 	}
 
 	private function getFile($phpResourceFile) {
-		$file = ''; 
+		$file = '';
 		while (!feof($phpResourceFile)) {
-			$file .= fread($phpResourceFile, 8192); 
-		} 
+			$file .= fread($phpResourceFile, 8192);
+		}
 		fclose($phpResourceFile);
 
 		return $file;

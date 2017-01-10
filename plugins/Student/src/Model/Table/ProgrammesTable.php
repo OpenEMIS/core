@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
 
 use App\Model\Table\ControllerActionTable;
@@ -22,6 +23,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('PreviousInstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'previous_institution_student_id']);
 
 		$this->toggle('remove', false);
 		$this->toggle('add', false);
@@ -37,6 +39,11 @@ class ProgrammesTable extends ControllerActionTable
 	{
 		return $entity->institution->code_name;
 	}
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('previous_institution_student_id', ['visible' => false]);
+    }
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
@@ -68,7 +75,8 @@ class ProgrammesTable extends ControllerActionTable
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'Students',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;
@@ -82,7 +90,8 @@ class ProgrammesTable extends ControllerActionTable
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'Students',
-				'edit', $entity->id,
+				'edit',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['edit']['url'] = $url;
@@ -103,7 +112,7 @@ class ProgrammesTable extends ControllerActionTable
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function indexAfterAction(Event $event, $data, ArrayObject $extra)
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
 	{
 		$this->setupTabElements();
 	}

@@ -26,6 +26,9 @@ class ContactTypesTable extends ControllerActionTable
 		}
 
 		$this->addBehavior('FieldOption.FieldOption');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
 	}
 
 	public function findWithContactOptions(Query $query, array $options)

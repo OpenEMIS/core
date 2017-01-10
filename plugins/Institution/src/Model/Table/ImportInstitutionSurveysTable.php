@@ -335,7 +335,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                                 $cellValue = $selectedAnswer[$codeIndex]->id;
                             } else {
                                 $rowFailed = true;
-                                $rowInvalidCodeCols[$question->name] = __('Selected value is not in the list');
+                                $rowInvalidCodeCols[$question->name] = $this->getExcelLabel('Import', 'value_not_in_list');
                             }
                             $colCount++;
                             break;
@@ -354,7 +354,7 @@ class ImportInstitutionSurveysTable extends AppTable {
                                     $trimmedVal = $selectedAnswer[$codeIndex]->id;
                                 } else {
                                     $rowFailed = true;
-                                    $rowInvalidCodeCols[$question->name] = __('Selected value is not in the list');
+                                    $rowInvalidCodeCols[$question->name] = $this->getExcelLabel('Import', 'value_not_in_list');
                                 }
 
                                 if (!$rowFailed) {

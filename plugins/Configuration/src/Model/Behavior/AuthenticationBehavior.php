@@ -13,7 +13,6 @@ use Cake\Validation\Validator;
 require_once( ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
 
 class AuthenticationBehavior extends Behavior {
-
 	private $alias;
 
 	public function initialize(array $config) {
@@ -102,29 +101,33 @@ class AuthenticationBehavior extends Behavior {
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
-		$authenticationType = $data[$this->alias]['value'];
-		$AuthenticationTypeAttributesTable->deleteAll(
-			['authentication_type' => $authenticationType]
-		);
-        if (!isset($data['AuthenticationTypeAttributes'])) {
-            $data['AuthenticationTypeAttributes'] = [];
-        }
-		foreach ($data['AuthenticationTypeAttributes'] as $key => $value) {
-			$entityData = [
-				'authentication_type' => $authenticationType,
-				'attribute_field' => $key,
-				'attribute_name' => $value['name'],
-				'value' => $value['value']
-			];
-			$entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
-			$AuthenticationTypeAttributesTable->save($entity);
-		}
+		if (empty($entity->errors())) {
+            $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
+    		$authenticationType = $data[$this->alias]['value'];
+    		$AuthenticationTypeAttributesTable->deleteAll(
+    			['authentication_type' => $authenticationType]
+    		);
+            if (!isset($data['AuthenticationTypeAttributes'])) {
+                $data['AuthenticationTypeAttributes'] = [];
+            }
+            foreach ($data['AuthenticationTypeAttributes'] as $key => $value) {
+                if ($key != 'allow_create_user_text') {
+                    $entityData = [
+                        'authentication_type' => $authenticationType,
+                        'attribute_field' => $key,
+                        'attribute_name' => $value['name'],
+                        'value' => trim($value['value'])
+                    ];
+                    $entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
+                    $AuthenticationTypeAttributesTable->save($entity);
+                }
+            }
 
-		if (method_exists($this, strtolower($authenticationType).'AfterSave')) {
-			$method = strtolower($authenticationType).'AfterSave';
-			$this->$method($data['AuthenticationTypeAttributes']);
-		}
+            if (method_exists($this, strtolower($authenticationType).'AfterSave')) {
+                $method = strtolower($authenticationType).'AfterSave';
+                $this->$method($data['AuthenticationTypeAttributes']);
+            }
+        }
 	}
 
 	public function saml2AfterSave($samlAttributes) {
@@ -212,26 +215,41 @@ class AuthenticationBehavior extends Behavior {
     	return true;
     }
 
+    public function oAuth2OpenIDConnectAuthenticationValidation($authenticationAttributes) {
+        $attribute = [];
+        $this->oAuth2OpenIDConnectAuthentication($attribute);
+        foreach ($attribute as $key => $values) {
+            if (!isset($values['required'])) {
+                if (empty($authenticationAttributes[$key]['value'])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 	public function saml2Authentication(&$attribute) {
 		$attribute['idp_entity_id'] = ['label' => 'Identity Provider - Entity ID', 'type' => 'text'];
-		$attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
-		$attribute['idp_sso_binding'] = ['label' => 'Identity Provider - Single Signon Service Binding', 'type' => 'text'];
-		$attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
-		$attribute['idp_slo_binding'] = ['label' => 'Identity Provider - Single Logout Service Binding', 'type' => 'text'];
-		$attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500, 'required' => false];
-		$attribute['idp_certFingerprint'] = ['label' => 'Identity Provider - Certificate Fingerprint', 'type' => 'text', 'required' => false];
-		$attribute['idp_certFingerprintAlgorithm'] = ['label' => 'Identity Provider - Certificate Fingerprint Algorithm', 'type' => 'text', 'required' => false];
-		$attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text', 'readonly' => true];
-		$attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text', 'readonly' => true];
-		$attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text', 'readonly' => true];
-		$attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text', 'required' => false];
-		$attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'textarea', 'maxlength' => 1500, 'required' => false];
-		$attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
-		$attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
-		$attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
-		$attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
-		$attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text', 'required' => false];
-		$attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden', 'required' => false];
+        $attribute['idp_sso'] = ['label' => 'Identity Provider - Single Signon Service', 'type' => 'text'];
+        $attribute['idp_sso_binding'] = ['label' => 'Identity Provider - Single Signon Service Binding', 'type' => 'text'];
+        $attribute['idp_slo'] = ['label' => 'Identity Provider - Single Logout Service', 'type' => 'text'];
+        $attribute['idp_slo_binding'] = ['label' => 'Identity Provider - Single Logout Service Binding', 'type' => 'text'];
+        $attribute['idp_x509cert'] = ['label' => 'Identity Provider - X509 Certificate', 'type' => 'textarea', 'maxlength' => 1500, 'required' => false];
+        $attribute['idp_certFingerprint'] = ['label' => 'Identity Provider - Certificate Fingerprint', 'type' => 'text', 'required' => false];
+        $attribute['idp_certFingerprintAlgorithm'] = ['label' => 'Identity Provider - Certificate Fingerprint Algorithm', 'type' => 'text', 'required' => false];
+        $attribute['sp_entity_id'] = ['label' => 'Service Provider - Entity ID', 'type' => 'text', 'readonly' => true];
+        $attribute['sp_acs'] = ['label' => 'Service Provider - Assertion Consumer Service', 'type' => 'text', 'readonly' => true];
+        $attribute['sp_slo'] = ['label' => 'Service Provider - Single Logout Service', 'type' => 'text', 'readonly' => true];
+        $attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text', 'required' => false];
+        $attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'textarea', 'maxlength' => 1500, 'required' => false];
+        $attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
+        $attribute['allow_create_user_text'] = ['label' => 'Allow User Creation', 'type' => 'text', 'readonly' => true];
+        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'hidden', 'value' => 0, 'required' => false];
+        $attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
+        $attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
+        $attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
+        $attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text', 'required' => false];
+        $attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden', 'required' => false];
 	}
 
 	public function saml2ModifyValue($key, $attributeValue) {
@@ -245,23 +263,57 @@ class AuthenticationBehavior extends Behavior {
 			return \OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
 		} else if ($key == 'sp_acs') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-		}
+		} else if ($key == 'allow_create_user_text') {
+            return __('No');
+        }
 		return false;
 	}
 
 	public function googleAuthentication(&$attribute) {
 		$attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
-		$attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
-		$attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
-		$attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
+        $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
+        $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
+        $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
+        $attribute['allow_create_user_text'] = ['label' => 'Allow User Creation', 'type' => 'text', 'readonly' => true];
+        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'hidden', 'value' => 0, 'required' => false];
 	}
+
+    public function oAuth2OpenIDConnectAuthentication(&$attribute) {
+        $attribute['client_id'] = ['label' => 'Client ID', 'type' => 'text'];
+        $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
+        $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
+        $attribute['openid_configuration'] = ['label' => 'OpenID Configuration URI', 'type' => 'text', 'required' => false, 'onblur' => 'Authentication.populate(this.value);'];
+        $attribute['auth_uri'] = ['label' => 'Authentication URI', 'type' => 'text', 'id' => 'authUri'];
+        $attribute['token_uri'] = ['label' => 'Token URI', 'type' => 'text', 'id' => 'tokenUri'];
+        $attribute['userInfo_uri'] = ['label' => 'User Information URI', 'type' => 'text', 'id' => 'userInfoUri'];
+        $attribute['issuer'] = ['label' => 'Issuer', 'type' => 'text', 'id' => 'issuer'];
+        $attribute['jwk_uri'] = ['label' => 'Public Key URI', 'type' => 'text', 'id' => 'jwksUri'];
+        $attribute['username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
+        $attribute['allow_create_user_text'] = ['label' => 'Allow User Creation', 'type' => 'text', 'readonly' => true];
+        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'hidden', 'value' => 0, 'required' => false];
+        $attribute['firstName_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
+        $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
+        $attribute['dob_mapping'] = ['label' => 'Date of Birth Mapping', 'type' => 'text', 'required' => false];
+        $attribute['gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
+    }
 
 	public function googleModifyValue($key, $attributeValue) {
 		if ($key == 'redirect_uri') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-		}
+		} else if ($key == 'allow_create_user_text') {
+            return __('No');
+        }
 		return false;
 	}
+
+    public function oAuth2OpenIDConnectModifyValue($key, $attributeValue) {
+        if ($key == 'redirect_uri') {
+            return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
+        } else if ($key == 'allow_create_user_text') {
+            return __('No');
+        }
+        return false;
+    }
 
 	public function onGetAuthenticationTypeElement(Event $event, $action, $entity, $attr, $options=[]) {
 		switch ($action){
@@ -276,11 +328,13 @@ class AuthenticationBehavior extends Behavior {
 
 				$tableHeaders = [__('Attribute Name'), __('Value')];
 				$tableCells = [];
-				foreach ($attribute as $value) {
-					$row = [];
-					$row[] = $value['label'];
-					$row[] = $value['value'];
-					$tableCells[] = $row;
+				foreach ($attribute as $key => $value) {
+                    if ($key != 'allow_create_user') {
+                        $row = [];
+                        $row[] = $value['label'];
+                        $row[] = $value['value'];
+                        $tableCells[] = $row;
+                    }
 				}
 				$attr['tableHeaders'] = $tableHeaders;
 		    	$attr['tableCells'] = $tableCells;

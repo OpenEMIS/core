@@ -9,12 +9,13 @@
             $template = $this->ControllerAction->getFormTemplate();
             $this->Form->templates($template);
         ?>
+
         <div class="input select">
             <div class="input-select-wrapper">
                 <select class="form-control"
                     ng-options="item.value as item.text for item in ExaminationsResultsController.academicPeriodOptions"
                     ng-model="ExaminationsResultsController.academicPeriodId"
-                    ng-change="ExaminationsResultsController.onChangeAcademicPeriod(ExaminationsResultsController.academicPeriodId);"
+                    disabled="disabled"
                 ></select>
             </div>
         </div>
@@ -23,7 +24,7 @@
                 <select class="form-control"
                     ng-options="item.value as item.text for item in ExaminationsResultsController.examinationOptions"
                     ng-model="ExaminationsResultsController.examinationId"
-                    ng-change="ExaminationsResultsController.onChangeExamination(ExaminationsResultsController.academicPeriodId, ExaminationsResultsController.examinationId);"
+                    disabled="disabled"
                 ></select>
             </div>
         </div>
@@ -32,7 +33,7 @@
                 <select class="form-control"
                     ng-options="item.value as item.text for item in ExaminationsResultsController.examinationCentreOptions"
                     ng-model="ExaminationsResultsController.examinationCentreId"
-                    ng-change="ExaminationsResultsController.onChangeExaminationCentre(ExaminationsResultsController.academicPeriodId, ExaminationsResultsController.examinationId, ExaminationsResultsController.examinationCentreId);"
+                    disabled="disabled"
                 ></select>
             </div>
         </div>

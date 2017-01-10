@@ -1,4 +1,4 @@
-<?php if (!empty($systemOptions) || !empty($levelOptions) || !empty($cycleOptions) || !empty($programmeOptions) || !empty($setupOptions)) : ?>
+<?php if (!empty($systemOptions) || !empty($levelOptions) || !empty($cycleOptions) || !empty($programmeOptions) || !empty($gradeOptions) || !empty($setupOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -52,6 +52,18 @@
 						'default' => $selectedProgramme,
 						'url' => $baseUrl,
 						'data-named-key' => 'programme',
+						'data-named-group' => 'level'
+					));
+				}
+
+				if (!empty($gradeOptions)) {
+					echo $this->Form->input('setups', array(
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $gradeOptions,
+						'default' => $selectedGrade,
+						'url' => $baseUrl,
+						'data-named-key' => 'grade',
 						'data-named-group' => 'level'
 					));
 				}

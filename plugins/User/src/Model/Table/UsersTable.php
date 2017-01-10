@@ -13,6 +13,8 @@ use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\UserTrait;
 use Cake\I18n\Time;
+use Cake\Network\Session;
+use Cake\Datasource\ConnectionManager;
 
 class UsersTable extends AppTable {
 	use OptionsTrait;
@@ -61,82 +63,71 @@ class UsersTable extends AppTable {
 
 		$this->addBehavior('Area.Areapicker');
 		$this->addBehavior('User.AdvancedNameSearch');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'StaffRoom' => ['index', 'add']
+        ]);
 	}
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser'
+			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser',
+			'Model.Users.afterLogin' => 'afterLogin',
+			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage'
 		];
 
 		$events = array_merge($events, $newEvent);
 		return $events;
 	}
 
+	public function updateLoginLanguage(Event $event, $user, $language)
+	{
+		if ($user['preferred_language'] != $language) {
+			$user = $this->get($user['id']);
+			$user->preferred_language = $language;
+			$this->save($user);
+		}
+	}
+
+	public function afterLogin(Event $event, Entity $userEntity)
+    {
+    	$userEntity->last_login = new Time();
+    	$controller = $event->subject();
+    	$SSO = $controller->SSO;
+    	$Cookie = $controller->Localization->getCookie();
+    	$session = $controller->request->session();
+    	if ($session->read('System.language_menu') && $SSO->getAuthenticationType() != 'Local') {
+    		if (empty($userEntity->preferred_language)) {
+    			$userEntity->preferred_language = 'en';
+    		}
+    		$Cookie->write('System.language', $userEntity->preferred_language);
+    	} else {
+    		$userEntity->preferred_language = $session->read('System.language');
+    	}
+    	$this->save($userEntity);
+    }
+
 	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
-		$openemisNo = $this->getUniqueOpenemisId();
-
-        $GenderTable = TableRegistry::get('User.Genders');
-        $genderList = $GenderTable->find('list')->toArray();
-
-        // Just in case the gender is others
-        if (!isset($userInfo['gender'])) {
-        	$userInfo['gender'] = null;
-        }
-        $gender = array_search($userInfo['gender'], $genderList);
-        if ($gender === false) {
-            $gender = key($genderList);
-        }
-
-        if (isset($userInfo['dateOfBirth'])) {
-			try {
-				$dateOfBirth = Time::createFromFormat('Y-m-d', $userInfo['dateOfBirth']);
-			} catch (\Exception $e) {
-				$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
-			}
-        } else {
-        	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
-        }
-
-        if (isset($userInfo['openemis_no'])) {
-        	$openemisNo = $userInfo['openemis_no'];
-        }
-
-        $date = Time::now();
-        $data = [
-            'username' => $userName,
-            'openemis_no' => $openemisNo,
-            'first_name' => $userInfo['firstName'],
-            'last_name' => $userInfo['lastName'],
-            'gender_id' => $gender,
-            'date_of_birth' => $dateOfBirth,
-            'super_admin' => 0,
-            'status' => 1,
-            'created_user_id' => 1,
-            'created' => $date,
-        ];
-        $userEntity = $this->newEntity($data, ['validate' => false]);
-        if ($this->save($userEntity)) {
-        	return $userName;
-        } else {
-        	return false;
-        }
+        return false;
 	}
 
 	public static function handleAssociations($model) {
-		$model->belongsTo('Genders', 		 ['className' => 'User.Genders']);
-		$model->belongsTo('AddressAreas', 	 ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-		$model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		$model->belongsTo('Genders', 		 		['className' => 'User.Genders']);
+		$model->belongsTo('AddressAreas', 	 		['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+		$model->belongsTo('BirthplaceAreas', 		['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+		$model->belongsTo('MainNationalities',		['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$model->belongsTo('MainIdentityTypes',		['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
-		$model->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('SpecialNeeds', 	['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Contacts', 		['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Attachments', 		['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('BankAccounts', 	['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Comments', 		['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Languages', 		['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
-		$model->hasMany('Awards', 			['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Identities', 				['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Nationalities', 			['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('SpecialNeeds', 			['className' => 'User.SpecialNeeds',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Contacts', 				['className' => 'User.Contacts',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Attachments', 				['className' => 'User.Attachments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('BankAccounts', 			['className' => 'User.BankAccounts',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Comments', 				['className' => 'User.Comments',		'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Languages', 				['className' => 'User.UserLanguages',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('Awards', 					['className' => 'User.Awards',			'foreignKey' => 'security_user_id', 'dependent' => true]);
+		$model->hasMany('ExaminationItemResults', 	['className' => 'Examination.ExaminationItemResults', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$model->belongsToMany('SecurityRoles', [
 			'className' => 'Security.SecurityRoles',
@@ -207,18 +198,18 @@ class UsersTable extends AppTable {
 
 		$tabElements = [
 			$this->alias => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $this->paramsEncode(['id' => $id])],
 				'text' => __('Details')
 			],
 			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->paramsEncode(['id' => $id])],
 				'text' => __('Account')
 			]
 		];
 
 		if (!in_array($this->controller->name, ['Students', 'Staff', 'Guardians'])) {
 			$tabElements[$this->alias] = [
-				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $id],
+				'url' => ['plugin' => Inflector::singularize($this->controller->name), 'controller' => $this->controller->name, 'action' => $this->alias(), 'view', $this->paramsEncode(['id' => $id])],
 				'text' => __('Details')
 			];
 		}
@@ -227,7 +218,7 @@ class UsersTable extends AppTable {
         $this->controller->set('tabElements', $tabElements);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('first_name', ['visible' => false]);
 		$this->ControllerAction->field('middle_name', ['visible' => false]);
 		$this->ControllerAction->field('third_name', ['visible' => false]);
@@ -379,15 +370,9 @@ class UsersTable extends AppTable {
 	public function getUniqueOpenemisId($options = []) {
 		$prefix = '';
 
-		if (array_key_exists('model', $options)) {
-			switch ($options['model']) {
-				case 'Student': case 'Staff': case 'Guardian':
-					$prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
-					$prefix = explode(",", $prefix);
-					$prefix = ($prefix[1] > 0)? $prefix[0]: '';
-					break;
-			}
-		}
+		$prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
+		$prefix = explode(",", $prefix);
+		$prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
 		$latest = $this->find()
 			->order($this->aliasField('id').' DESC')
@@ -597,7 +582,7 @@ class UsersTable extends AppTable {
 			$actions = ['view', 'edit'];
 			foreach ($actions as $action) {
 				if (array_key_exists($action, $buttons)) {
-					$buttons[$action]['url'][1] = $entity->security_user_id;
+					$buttons[$action]['url'][1] = $this->paramsEncode(['id' => $entity->security_user_id]);
 				}
 			}
 			if (array_key_exists('remove', $buttons)) {
@@ -669,8 +654,31 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function updateIdentityNumber($userId, $identityNo)
+	public function updateAllIdentityNumber($nationalityType)
 	{
-		$this->updateAll(['identity_number' => $identityNo], ['id' => $userId]);
+		$connection = ConnectionManager::get('default');
+		$connection->execute(
+			'UPDATE `security_users`
+			INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
+			LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
+			SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
+			WHERE `security_users`.`nationality_id` = ?',
+			[$nationalityType],
+    		['integer']
+		);
+	}
+
+	public function updateIdentityNumber($userId)
+	{
+		$connection = ConnectionManager::get('default');
+        $connection->execute(
+            'UPDATE `security_users`
+            INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
+            LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
+            SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
+            WHERE `security_users`.`id` = ?',
+            [$userId],
+            ['integer']
+        );
 	}
 }

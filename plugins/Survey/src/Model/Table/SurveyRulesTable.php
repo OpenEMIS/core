@@ -13,11 +13,11 @@ use App\Model\Traits\OptionsTrait;
 
 use App\Model\Table\ControllerActionTable;
 
-class SurveyRulesTable extends ControllerActionTable 
+class SurveyRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    public function initialize(array $config) 
+    public function initialize(array $config)
     {
         $this->table('survey_rules');
         parent::initialize($config);
@@ -26,14 +26,17 @@ class SurveyRulesTable extends ControllerActionTable
         $this->belongsTo('DependentQuestions',              ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'dependent_question_id']);
         $this->toggle('view', false);
         $this->toggle('add', false);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Rules' => ['index', 'add']
+        ]);
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $entity->id = Text::uuid();
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit'])) {
             $toolbarButtons = $extra['toolbarButtons'];
@@ -47,7 +50,7 @@ class SurveyRulesTable extends ControllerActionTable
                 'title' => __('Edit')
             ];
         }
-        
+
         $extra['elements']['controls'] = ['name' => 'Survey.survey_rules_controls', 'data' => [], 'options' => [], 'order' => 2];
         $this->fields['survey_question_id']['type'] = 'integer';
         if (!$this->request->query('survey_form_id')) {
@@ -55,7 +58,7 @@ class SurveyRulesTable extends ControllerActionTable
         }
     }
 
-    public function onGetShowOptions(Event $event, Entity $entity) 
+    public function onGetShowOptions(Event $event, Entity $entity)
     {
         $showOptions = $entity->show_options;
         $showOptions = $event->subject()->HtmlField->decodeEscapeHtmlEntity($showOptions);
@@ -68,14 +71,14 @@ class SurveyRulesTable extends ControllerActionTable
                 ->where([$SurveyQuestionChoicesTable->aliasField('id').' IN' => $showOptions])
                 ->hydrate(false)
                 ->extract('name')
-                ->toList(); 
+                ->toList();
             return implode('<br />', $options);
         } else {
             return ' ';
         }
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event,$entity,$buttons);
         if (isset($buttons['edit'])) {
@@ -90,7 +93,7 @@ class SurveyRulesTable extends ControllerActionTable
         return $options[$entity->enabled];
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Survey form options
         $surveyFormOptions = $this->SurveyForms
@@ -102,8 +105,8 @@ class SurveyRulesTable extends ControllerActionTable
         $this->controller->set(compact('surveyFormOptions'));
 
         // Survey sections
-        
-        if (!empty($surveyFormId)) 
+
+        if (!empty($surveyFormId))
         {
             $SurveyFormsQuestionsTable = TableRegistry::get('Survey.SurveyFormsQuestions');
 
@@ -123,6 +126,8 @@ class SurveyRulesTable extends ControllerActionTable
 
             $sectionOptions = ['0' => '-- '.__('Select Section').' --'] + $surveySections;
             $sectionOptions = array_values($sectionOptions);
+            // original section options will not be translated
+            $originalOptions = $sectionOptions;
             $sectionId = $this->request->query('section_id');
             $this->advancedSelectOptions($sectionOptions, $sectionId);
             $this->controller->set(compact('sectionOptions'));
@@ -131,11 +136,12 @@ class SurveyRulesTable extends ControllerActionTable
         if (!empty($surveyFormId)) {
 
             $query->where([$this->aliasField('survey_form_id') => $surveyFormId]);
-            
+
             // Checking if the survey form id and the section id is 0 or empty
-            if (!empty($sectionId)) 
+            if (!empty($sectionId))
             {
-                $section = $sectionOptions[$sectionId]['text'];
+                //get section text from original section options
+                $section = $originalOptions[$sectionId];
 
                 // Subquery for questions
                 $questionIds = $SurveyFormsQuestionsTable
@@ -148,9 +154,19 @@ class SurveyRulesTable extends ControllerActionTable
                 $query->where([$this->aliasField('survey_question_id').' IN ' => $questionIds]);
             }
         }
+
+        // for searching survey forms, questions, dependent questions
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $query->contain(['SurveyForms', 'SurveyQuestions', 'DependentQuestions']);
+
+            $extra['OR'] = [[$this->SurveyForms->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->SurveyQuestions->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->DependentQuestions->aliasField('name').' LIKE' => '%' . $search . '%']];
+        }
     }
 
-    public function findSurveyRulesList(Query $query, array $options) 
+    public function findSurveyRulesList(Query $query, array $options)
     {
         $surveyFormId = $options['survey_form_id'];
 
@@ -164,7 +180,7 @@ class SurveyRulesTable extends ControllerActionTable
                 $this->aliasField('enabled') => 1
             ])
             ->select([
-                'question' => $this->aliasField('survey_question_id'), 
+                'question' => $this->aliasField('survey_question_id'),
                 'dependent' => $this->aliasField('dependent_question_id'),
                 'options' => $this->aliasField('show_options')
             ])

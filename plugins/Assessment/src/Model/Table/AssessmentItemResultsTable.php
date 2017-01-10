@@ -18,6 +18,9 @@ class AssessmentItemResultsTable extends AppTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index', 'add']
+        ]);
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -26,7 +29,8 @@ class AssessmentItemResultsTable extends AppTable {
 
     public function findResults(Query $query, array $options) {
         $academicPeriodId = $options['academic_period_id'];
-        $session = $options['_Session'];
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
 
         $studentId = -1;
         if ($session->check('Student.Results.student_id')) {

@@ -14,7 +14,7 @@ class StudentsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->model('Student.Students');
+		$this->ControllerAction->model('Institution.StudentUser');
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
@@ -118,12 +118,13 @@ class StudentsController extends AppController {
 			}
 
 			if (!empty($id)) {
-				$entity = $this->Students->get($id);
+				$entity = $this->StudentUser->get($id);
 				$name = $entity->name;
-				$header = $action == 'Results' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
+				$header = $action == 'Results' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
 			}
 		}
+
 		$this->set('contentHeader', $header);
 	}
 
@@ -160,6 +161,7 @@ class StudentsController extends AppController {
 			}
 
 			$idKey = $this->ControllerAction->getPrimaryKey($model);
+			$primaryKey = $model->primaryKey();
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -175,15 +177,14 @@ class StudentsController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
-					if (!$exists) {
+					if (!$model->exists($idKey)) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
@@ -195,15 +196,14 @@ class StudentsController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('student_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('student_id')] = $userId;
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
-					if (!$exists) {
+					if (!$model->exists($idKey)) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
@@ -279,7 +279,7 @@ class StudentsController extends AppController {
 	}
 
 	public function getAcademicTabElements($options = []) {
-		return TableRegistry::get('Student.Students')->getAcademicTabElements($options);
+		return TableRegistry::get('Institution.StudentUser')->getAcademicTabElements($options);
 	}
 
 	public function getFinanceTabElements($options = []) {

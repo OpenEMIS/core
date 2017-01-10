@@ -22,7 +22,7 @@ class InstitutionsTable extends AppTable  {
 
 	public $shiftTypes = [];
 
-	private $isAcademicOptions = [];
+	private $classificationOptions = [];
 
 	CONST SINGLE_OWNER = 1;
 	CONST SINGLE_OCCUPIER = 2;
@@ -90,7 +90,16 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->belongsToMany('ExamCentres', [
+			'className' => 'Examination.ExaminationCentres',
+			'joinTable' => 'examination_centres_institutions',
+			'foreignKey' => 'institution_id',
+			'targetForeignKey' => 'examination_centre_id',
+			'through' => 'Examination.ExaminationCentresInstitutions',
+			'dependent' => true
+		]);
 		$this->hasMany('ExaminationCentres',				['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
@@ -130,8 +139,11 @@ class InstitutionsTable extends AppTable  {
         $this->addBehavior('Institution.AdvancedProgrammeSearch');
 
         $this->shiftTypes = $this->getSelectOptions('Shifts.types'); //get from options trait
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index']
+        ]);
 
-        $this->isAcademicOptions = [
+        $this->classificationOptions = [
 			self::ACADEMIC => 'Academic Institution',
 			self::NON_ACADEMIC => 'Non-Academic Institution'
 		];
@@ -139,9 +151,6 @@ class InstitutionsTable extends AppTable  {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		$session = new Session();
-		$userId = $session->read('Auth.User.id');
-		$superAdmin = $session->read('Auth.User.super_admin');
 
 		$validator
 			->add('date_opened', [
@@ -171,6 +180,19 @@ class InstitutionsTable extends AppTable  {
 			// 		'last' => true
 			// 	])
 
+			->add('code', 'ruleCustomCode', [
+	        		'rule' => ['validateCustomPattern', 'institution_code'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('postal_code')
+			->add('postal_code', 'ruleCustomPostalCode', [
+	        		'rule' => ['validateCustomPattern', 'postal_code'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
 			->add('code', 'ruleUnique', [
 	        		'rule' => 'validateUnique',
 	        		'provider' => 'table',
@@ -183,8 +205,23 @@ class InstitutionsTable extends AppTable  {
 						'rule' => 'email'
 					]
 				])
+
+			->allowEmpty('telephone')
+			->add('telephone', 'ruleCustomTelephone', [
+	        		'rule' => ['validateCustomPattern', 'institution_telephone'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
+			->allowEmpty('fax')
+			->add('fax', 'ruleCustomFax', [
+	        		'rule' => ['validateCustomPattern', 'institution_fax'],
+	        		'provider' => 'table',
+	        		'last' => true
+			    ])
+
 			->add('area_id', 'ruleAuthorisedArea', [
-					'rule' => ['checkAuthorisedArea', $superAdmin, $userId]
+					'rule' => ['checkAuthorisedArea']
 				])
 			->add('institution_provider_id', 'ruleLinkedSector', [
 						'rule' => 'checkLinkedSector',
@@ -248,7 +285,7 @@ class InstitutionsTable extends AppTable  {
 				'plugin' => $this->controller->plugin,
 				'controller' => $this->controller->name,
 				'action' => 'dashboard',
-				'0' => $entity->id
+				'0' => $this->paramsEncode(['id' => $entity->id])
 			]);
 		}
 
@@ -413,7 +450,7 @@ class InstitutionsTable extends AppTable  {
 			$count = $institutionCount->count();
 			unset($institutionCount);
 
-			if ($this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
+			if (!$this->isAdvancedSearchEnabled()) { //function to determine whether dashboard should be shown or not
 				$this->controller->viewVars['indexElements']['mini_dashboard'] = [
 		            'name' => $indexDashboard,
 		            'data' => [
@@ -568,7 +605,7 @@ class InstitutionsTable extends AppTable  {
 			if ($data->count() == 1 && !$addAccess) {
 				$entity = $data->first();
 				$event->stopPropagation();
-				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $entity->id];
+				$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'dashboard', $this->paramsEncode(['id' => $entity->id])];
 				return $this->controller->redirect($action);
 			}
 		}
@@ -583,7 +620,7 @@ class InstitutionsTable extends AppTable  {
 	public function viewBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'shift_section',
@@ -612,7 +649,7 @@ class InstitutionsTable extends AppTable  {
 	public function addBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'is_academic', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'location_section',
@@ -629,10 +666,19 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
-		public function editBeforeAction(Event $event) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
+		$userId = $this->Session->read('Auth.User.id');
+		$superAdmin = $this->Session->read('Auth.User.super_admin');
+
+		$data['userId'] = $userId;
+		$data['superAdmin'] = $superAdmin;
+	}
+
+	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->setFieldOrder([
 			'information_section',
-			'name', 'alternative_name', 'code', 'institution_sector_id', 'institution_provider_id',  'institution_type_id',
+			'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
 			'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
 
 			'location_section',
@@ -649,12 +695,12 @@ class InstitutionsTable extends AppTable  {
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
-		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+		$this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity)
 	{
-		$this->ControllerAction->field('is_academic', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+		$this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
 
 	public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request) {
@@ -781,22 +827,22 @@ class InstitutionsTable extends AppTable  {
 **
 ******************************************************************************************************************/
 
-	public function onUpdateFieldIsAcademic(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldClassification(Event $event, array $attr, $action, Request $request) {
 
 		if ($action == 'add') {
 			$attr['select'] = false;
-			$attr['options'] = $this->isAcademicOptions;
+			$attr['options'] = $this->classificationOptions;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'disabled';
-			$attr['attr']['value'] = __($this->isAcademicOptions[$attr['entity']->is_academic]);
+			$attr['attr']['value'] = __($this->classificationOptions[$attr['entity']->classification]);
 		}
 		return $attr;
 	}
 
-	public function onGetIsAcademic(Event $event, Entity $entity)
+	public function onGetClassification(Event $event, Entity $entity)
 	{
-		$selectedIsAcademic = $entity->is_academic;
-		return __($this->isAcademicOptions[$selectedIsAcademic]);
+		$selectedClassification = $entity->classification;
+		return __($this->classificationOptions[$selectedClassification]);
 	}
 
 	/**

@@ -2,6 +2,9 @@
 #################################################
 datasource.php
 test_datasource.php
+app_extra.php
+private.key
+public.key
 tmp
 tmp/*
 tmp/Bake*
@@ -12,6 +15,7 @@ tmp/tests/*
 logs/*.log*
 webroot/export/*
 webroot/import/*
+webroot/img/product_list_logo/*
 webroot/analytics.txt
 /build
 /dist

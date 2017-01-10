@@ -57,6 +57,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'dependent' => true
         ]);
 
+        $this->belongsToMany('Rooms', [
+            'className' => 'Institution.InstitutionRooms',
+            'joinTable' => 'institution_subjects_rooms',
+            'foreignKey' => 'institution_subject_id',
+            'targetForeignKey' => 'institution_room_id',
+            'through' => 'Institution.InstitutionSubjectsRooms',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
         // this behavior restricts current user to see All Subjects or My Subjects
         $this->addBehavior('Security.InstitutionSubject');
 
@@ -68,6 +78,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getAssociatedRecordConditions'] = 'getAssociatedRecordConditions';
+        return $events;
     }
 
     public function validationDefault(Validator $validator)
@@ -119,8 +136,17 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'fieldNameKey' => 'teachers',
             'fieldName' => $this->alias() . '.teachers._ids',
             'placeholder' => $this->getMessage('Users.select_teacher'),
-            'valueWhenEmpty' => __('No Teacher Assigned'),
-            'visible' => ['index'=>true, 'view'=>true, 'edit'=>true]
+            'valueWhenEmpty' => '<span>&lt;'.__('No Teacher Assigned').'&gt;</span>',
+            'visible' => ['index' => true, 'view' => true, 'edit' => true]
+        ]);
+
+        $this->field('rooms', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'rooms',
+            'fieldName' => $this->alias() . '.rooms._ids',
+            'placeholder' => $this->getMessage('Users.select_room'),
+            'valueWhenEmpty' => '<span>&lt;'.__('No Room Allocated').'&gt;</span>',
+            'visible' => ['index' => true, 'view' => true, 'edit' => true]
         ]);
 
         $this->field('male_students', [
@@ -140,12 +166,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
 
         $this->setFieldOrder([
-            'name', 'education_subject_id', 'teachers', 'male_students', 'female_students','total_students',
+            'name', 'education_subject_id', 'teachers', 'rooms', 'male_students', 'female_students','total_students',
         ]);
 
         $academicPeriodOptions = $this->getAcademicPeriodOptions($extra['institution_id']);
-        if (empty($academicPeriodOptions)) {
-            $this->Alert->warning('InstitutionSubjects.noPeriods');
+        if (empty($academicPeriodOptions)) { //cant find programme which date range within available academic period
+            $this->Alert->warning('InstitutionSubjects.noProgrammes');
+            $extra['noProgrammes'] = true;
         }
 
         if (empty($this->request->query['academic_period_id'])) {
@@ -186,7 +213,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                     $Classes->aliasField('institution_id') => $institutionId
                                 ])
                                 ->toArray();
-        if (empty($classOptions)) {
+        if (empty($classOptions) && !isset($extra['noProgrammes'])) {
             $this->Alert->warning('Institutions.noClassRecords');
         }
         $selectedClassId = $this->queryString('class_id', $classOptions);
@@ -224,6 +251,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ];
         $extra['selectedClassId'] = $selectedClassId;
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
+
+        //to remove 'add' button if no class or programmes set
+        if (empty($classOptions) || isset($extra['noProgrammes'])) {
+            $this->toggle('add', false);
+        }
     }
 
     public function findByClasses(Query $query, array $options)
@@ -246,13 +278,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $query
         ->find('byClasses', ['selectedClassId' => $extra['selectedClassId']])
-        ->contain(['Teachers'])
+        ->contain(['Teachers', 'Rooms'])
         ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
     }
 
-    public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra)
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
-
         if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
             $this->Alert->warning($extra[$this->aliasField('notice')], ['reset'=>true]);
             unset($extra[$this->aliasField('notice')]);
@@ -276,7 +307,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ]);
         }
         $this->setFieldOrder([
-            'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'students',
+            'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'rooms', 'students',
         ]);
     }
 
@@ -285,6 +316,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $query->contain([
             'Classes',
             'Teachers',
+            'Rooms',
             'SubjectStudents' => [
                 'Users.Genders',
                 'ClassStudents.StudentStatuses'
@@ -318,6 +350,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->fields['name']['visible'] = false;
         $this->fields['teachers']['visible'] = false;
+        $this->fields['rooms']['visible'] = false;
         $this->fields['students']['visible'] = false;
         $this->fields['education_subject_id']['visible'] = false;
 
@@ -502,7 +535,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->setFieldOrder([
             'name', 'no_of_seats',
             'academic_period_id', 'education_subject_id',
-            'teachers', 'students',
+            'teachers', 'rooms', 'students',
         ]);
     }
 
@@ -512,6 +545,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'AcademicPeriods',
             'EducationSubjects',
             'Teachers',
+            'Rooms',
             'SubjectStaff',
             // 'SubjectStudents.Users.Genders',
             'SubjectStudents' => [
@@ -622,6 +656,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $collection = new Collection($students);
         $recordedStudentIds = (new Collection($collection->toArray()))->combine('student_id', 'status')->toArray();
         $teacherOptions = $this->getTeacherOptions($entity);
+        $roomOptions = $this->getRoomOptions($entity);
 
         /**
          * Check if the request is a page reload
@@ -706,6 +741,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (!empty($teacherOptions)) {
             $this->fields['teachers']['options'] = $teacherOptions;
         }
+        if (!empty($roomOptions)) {
+            $this->fields['rooms']['options'] = $roomOptions;
+        }
         $this->fields['students']['data'] = [
             'students' => $students,
             'studentOptions' => $studentOptions
@@ -731,6 +769,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->SubjectStaff->alias(),
             $this->Classes->alias()
         ];
+    }
+
+    public function getAssociatedRecordConditions(Event $event, Query $query, $assocTable, ArrayObject $extra)
+    {
+        if ($assocTable->alias() == 'InstitutionSubjectStudents') {
+            $query->where([
+                $assocTable->aliasField('status') => 1
+            ]);
+        }
+
     }
 
 /******************************************************************************************************************
@@ -871,7 +919,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
     }
 
-    private function getSubjectOptions($selectedClassId, $listOnly=false)
+    public function getSubjectOptions($selectedClassId, $listOnly=false)
     {
         $Grade = $this->InstitutionClassGrades;
         $gradeOptions = $Grade->find('list', [
@@ -913,7 +961,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
         if (empty($data)) {
             // $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
-            $this->Alert->warning('Institution.Institutions.noSubjectsInClass');
+            // $this->Alert->warning('Institution.Institutions.noSubjectsInClass');
         }
         return $data;
     }
@@ -977,6 +1025,23 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $options;
     }
 
+    protected function getRoomOptions($entity)
+    {
+        $options = [];
+
+        $rooms = $this->Rooms
+            ->find('inUse', ['institution_id' => $entity->institution_id, 'academic_period_id' => $entity->academic_period_id])
+            ->contain(['RoomTypes'])
+            ->order(['RoomTypes.order', $this->Rooms->aliasField('code'), $this->Rooms->aliasField('name')])
+            ->toArray();
+
+        foreach ($rooms as $key => $obj) {
+            $options[$obj->room_type->name][$obj->id] = $obj->code_name;
+        }
+
+        return $options;
+    }
+
     /**
      * Changed in PHPOE-1780 test fail re-work. major modification.
      * Previously, the grades where populated based on a selected classId.
@@ -1011,10 +1076,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->toArray();
 
         $Students = TableRegistry::get('Institution.InstitutionClassStudents');
-        $conditions = [
-            $Students->aliasField('institution_class_id').' IN' => $classKeys,
-            $Students->aliasField('education_grade_id').' IN' => $grades
-        ];
+        if (!empty($grades)) {
+            $conditions[$Students->aliasField('education_grade_id').' IN'] = $grades;
+        }
+
+        $conditions[$Students->aliasField('institution_class_id').' IN'] = $classKeys;
         /**
          * Attempt to improve performance by filtering out includedStudents in $studentOptions through SQL query
          */
@@ -1183,7 +1249,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffUser',
                             'view',
-                            $value->id
+                            $this->paramsEncode(['id' => $value->id])
                         ]);
                         break;
 
@@ -1203,6 +1269,20 @@ class InstitutionSubjectsTable extends ControllerActionTable
         }
     }
 
+    public function onGetRooms(Event $event, Entity $entity)
+    {
+        if ($entity->has('rooms')) {
+            $resultArray = [];
+
+            foreach ($entity->rooms as $key => $obj) {
+                $resultArray[] = $obj->code_name;
+            }
+
+            if (!empty($resultArray)) {
+                return implode(', ', $resultArray);
+            }
+        }
+    }
 
 /******************************************************************************************************************
 **
@@ -1252,7 +1332,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $table = TableRegistry::get('Institution.InstitutionSubjectStudents');
             $count = $table
                         ->find()
-                        ->where([$table->aliasField('institution_subject_id') => $entity->id])
+                        ->where([
+                            $table->aliasField('institution_subject_id') => $entity->id,
+                            $table->aliasField('status') .' > 0'
+                            ])
                         ->count();
             return $count;
         }
