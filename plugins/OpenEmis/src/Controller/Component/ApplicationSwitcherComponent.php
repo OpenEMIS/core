@@ -8,6 +8,7 @@ use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use OpenEmis\Model\Traits\ProductListsTrait;
 use Cake\Event\Event;
+use Cake\I18n\Time;
 
 class ApplicationSwitcherComponent extends Component {
     use ProductListsTrait;
@@ -37,6 +38,7 @@ class ApplicationSwitcherComponent extends Component {
                 ->select([
                     $ConfigProductLists->aliasField('name'),
                     $ConfigProductLists->aliasField('url'),
+                    $ConfigProductLists->aliasField('auto_login_url'),
                     $ConfigProductLists->aliasField('file_name'),
                     $ConfigProductLists->aliasField('file_content')
                 ])
@@ -50,7 +52,8 @@ class ApplicationSwitcherComponent extends Component {
                     'name' => $product,
                     'url' => '',
                     'deletable' => 0,
-                    'created_user_id' => 1
+                    'created_user_id' => 1,
+                    'created' => Time::now()
                 ];
                 $entity = $ConfigProductLists->newEntity($data);
                 $ConfigProductLists->save($entity);
@@ -63,6 +66,9 @@ class ApplicationSwitcherComponent extends Component {
             foreach ($productListOptions as $product) {
                 $name = $product['name'];
                 if (!empty($product['url'])) {
+                    if (!empty($product['auto_login_url'])) {
+                        $product['url'] = rtrim($product['auto_login_url'], '/');
+                    }
                     if (isset($productList[$name])) {
                         $displayProducts[$name] = [
                             'name' => $productList[$name]['name'],
