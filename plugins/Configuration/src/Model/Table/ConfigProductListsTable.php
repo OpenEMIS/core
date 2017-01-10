@@ -76,6 +76,8 @@ class ConfigProductListsTable extends ControllerActionTable {
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('auto_login_url', ['type' => 'string']);
+        $this->field('auto_logout_url', ['type' => 'string']);
         $this->field('deletable', ['type' => 'hidden', 'value' => 1]);
         $this->field('file_content', ['type' => 'image', 'defaultWidth' => 95]);
     }
