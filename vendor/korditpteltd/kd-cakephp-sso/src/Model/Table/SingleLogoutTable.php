@@ -13,6 +13,17 @@ class SingleLogoutTable extends Table {
 		parent::initialize($config);
 	}
 
+    public function implementedEvent()
+    {
+        $events = parent::implementedEvent();
+        $events['Model.SSO.SingleLogout.afterLogout'] = 'afterLogout';
+    }
+
+    public function afterLogout(Event $event, $user)
+    {
+        $username = isset($user['username']) ? $user['username'] : null;
+    }
+
     public function addRecord($url, $username, $sessionId)
     {
         $data = [

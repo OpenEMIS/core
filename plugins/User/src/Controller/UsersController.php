@@ -44,9 +44,16 @@ class UsersController extends AppController
         exec($shellCmd);
     }
 
-    public function captureLogin($userId, $encodedUrl, $sessionId)
+    public function captureLogin()
     {
-        $url = $this->ControllerAction->urlsafeB64Decode($encodedUrl);
+        if ($this->SSO->getAuthenticationType() != 'Local' && $this->request->is('post')) {
+            $url = $this->request->data('url');
+            $sessionId = $this->request->data('session_id');
+            $username = $this->request->data('username');
+            if (!empty($url) && !empty($sessionId) && !empty($username)) {
+                TableRegistry::get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
+            }
+        }
     }
 
     public function login()
@@ -98,10 +105,7 @@ class UsersController extends AppController
 
     public function afterLogout(Event $event, $user)
     {
-        $listeners = [
-            TableRegistry::get('SSO.SingleLogout')
-        ];
-        $this->Users->dispatchEventToModels('Model.Users.afterLogout', [$user], $this, $listeners);
+        TableRegistry::get('SSO.SingleLogout')->dispatchEvent('Model.SSO.SingleLogout.afterLogout', [$user], $this);
     }
 
     public function implementedEvents()
