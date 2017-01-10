@@ -68,12 +68,12 @@ class AppController extends Controller {
 				],
 			],
 			'loginAction' => [
-				'plugin' => 'SSO',
-            	'controller' => 'Login',
+				'plugin' => 'User',
+            	'controller' => 'Users',
             	'action' => 'login'
             ],
 			'logoutRedirect' => [
-				'plugin' => 'SSO',
+				'plugin' => null,
 				'controller' => 'Login',
 				'action' => 'login'
 			]
