@@ -104,7 +104,8 @@ class ExcelBehavior extends Behavior {
         $_settings = [
             'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
             'path' => WWW_ROOT . $this->config('folder') . DS,
-            'download' => true
+            'download' => true,
+            'purge' => true
         ];
         $_settings = new ArrayObject(array_merge($_settings, $settings));
 
@@ -134,6 +135,10 @@ class ExcelBehavior extends Behavior {
 
         if ($_settings['download']) {
             $this->download($filepath);
+        }
+
+        if ($_settings['purge']) {
+            $this->purge($filepath);
         }
     }
 
@@ -473,6 +478,13 @@ class ExcelBehavior extends Behavior {
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($path));
         echo file_get_contents($path);
+    }
+
+    private function purge($path) 
+    {
+        if (file_exists($path)) {
+            unlink($path);
+        }
     }
 
     public function implementedEvents() {
