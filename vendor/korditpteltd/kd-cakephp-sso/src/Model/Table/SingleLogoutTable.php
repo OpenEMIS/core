@@ -39,10 +39,12 @@ class SingleLogoutTable extends Table {
         if (!empty($username) && !empty($sessionId)) {
             $http = new Client();
             foreach ($autoLoginUrl as $url) {
-                try {
-                    $http->put($url, ['url' => rtrim(Router::url([], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
-                } catch (Exception $e) {
-                    Log::write('error', $e);
+                if (!empty($url)) {
+                    try {
+                        $http->put($url, ['url' => rtrim(Router::url([], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
+                    } catch (Exception $e) {
+                        Log::write('error', $e);
+                    }
                 }
             }
         }
