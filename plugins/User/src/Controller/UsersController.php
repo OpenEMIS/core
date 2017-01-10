@@ -105,7 +105,9 @@ class UsersController extends AppController
 
     public function afterLogout(Event $event, $user)
     {
-        TableRegistry::get('SSO.SingleLogout')->dispatchEvent('Model.SSO.SingleLogout.afterLogout', [$user], $this);
+        if ($this->SSO->getAuthenticationType() != 'Local') {
+            TableRegistry::get('SSO.SingleLogout')->dispatchEvent('Model.SSO.SingleLogout.afterLogout', [$user], $this);
+        }
     }
 
     public function implementedEvents()
@@ -179,6 +181,10 @@ class UsersController extends AppController
             $this->Users
         ];
         $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user, $this->request], $this, $listeners);
+
+        if ($this->SSO->getAuthenticationType() != 'Local') {
+            TableRegistry::get('SSO.SingleLogout')->dispatchEvent('Model.SSO.SingleLogout.afterLogin', [$user, $this->request], $this);
+        }
 
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
 
