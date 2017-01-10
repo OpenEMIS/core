@@ -62,10 +62,11 @@ class StudentClassesTable extends ControllerActionTable {
 		if (array_key_exists('view', $buttons)) {
 			$institutionId = $entity->institution_class->institution_id;
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'Classes',
-				'view', $entity->institution_class->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->institution_class->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
@@ -73,7 +74,7 @@ class StudentClassesTable extends ControllerActionTable {
 		return $buttons;
 	}
 
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
 		$options = ['type' => 'student'];
 		$tabElements = $this->controller->getAcademicTabElements($options);
 		$this->controller->set('tabElements', $tabElements);

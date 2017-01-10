@@ -73,6 +73,8 @@ class StaffTable extends AppTable {
 			'through' => 'Institution.Staff',
 			'dependent' => true
 		]);
+		$model->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		// class should never cascade delete
 		$model->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
@@ -102,7 +104,7 @@ class StaffTable extends AppTable {
 		$this->setupTabElements(['id' => $entity->id]);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		// fields are set in UserBehavior
 		$this->fields = []; // unset all fields first
 
@@ -165,7 +167,7 @@ class StaffTable extends AppTable {
 
 	public function addBeforeAction(Event $event) {
 		$openemisNo = $this->getUniqueOpenemisId(['model' => 'Staff']);
-		$this->ControllerAction->field('openemis_no', [ 
+		$this->ControllerAction->field('openemis_no', [
 			'attr' => ['value' => $openemisNo],
 			'value' => $openemisNo
 		]);
@@ -175,7 +177,7 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('is_staff', ['value' => 1]);
 	}
 
-	public function addAfterAction(Event $event) { 
+	public function addAfterAction(Event $event) {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
@@ -183,25 +185,25 @@ class StaffTable extends AppTable {
 		}
 		$highestOrder = max($allOrderValues);
 
-		// username and password is always last... 
+		// username and password is always last...
 		$this->ControllerAction->field('username', ['order' => ++$highestOrder, 'visible' => true]);
 		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function($model, $id, $options) {
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+		$process = function($model, $ids, $options) {
 			// classes are not to be deleted (cascade delete is not set and need to change id)
 			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 			$InstitutionClasses->updateAll(
 					['staff_id' => 0],
-					['staff_id' => $id]
+					$ids
 				);
 
-			$userQuery = $model->find()->where([$this->aliasField('id') => $id])->first();
+			$userQuery = $model->find()->where($ids)->first();
 
 			if (!empty($userQuery)) {
 				if ($userQuery->is_student || $userQuery->is_guardian) {
-					$model->updateAll(['is_staff' => 0], [$model->primaryKey() => $id]);
+					$model->updateAll(['is_staff' => 0], $ids);
 				} else {
 					$model->delete($userQuery);
 				}
@@ -246,7 +248,7 @@ class StaffTable extends AppTable {
 	        ];
 	    }
 	}
-	
+
 	private function setupTabElements($options) {
 		$this->controller->set('selectedAction', $this->alias);
 		$this->controller->set('tabElements', $this->controller->getUserTabElements($options));
@@ -288,7 +290,7 @@ class StaffTable extends AppTable {
 			'Classes' => ['text' => __('Classes')],
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
-			'Leave' => ['text' => __('Leave')],
+			'StaffLeave' => ['text' => __('Leave')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];
@@ -296,7 +298,43 @@ class StaffTable extends AppTable {
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
 		foreach ($studentTabElements as $key => $tab) {
-			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+			if ($key == 'StaffLeave') {
+				$studentUrl = array_key_exists('url', $options) ? $options['url'] : $studentUrl;
+				$userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
+
+				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index', 'user_id' => $userId]);
+			} else {
+				$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+				$tabElements[$key]['url'] = array_merge($studentUrl, ['action' => $key, 'index']);
+			}
+		}
+		return $tabElements;
+	}
+
+	public function getProfessionalDevelopmentTabElements($options = []) {
+		$tabElements = [];
+		$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+		$staffTabElements = [
+			'Qualifications' => ['text' => __('Qualifications')],
+			'Extracurriculars' => ['text' => __('Extracurriculars')],
+			'Memberships' => ['text' => __('Memberships')],
+			'Licenses' => ['text' => __('Licenses')],
+			'Trainings' => ['text' => __('Trainings')],
+			'StaffAppraisals' => ['text' => __('Appraisals')],
+		];
+
+		$tabElements = array_merge($tabElements, $staffTabElements);
+
+		foreach ($staffTabElements as $key => $tab) {
+			if ($key == 'StaffAppraisals') {
+				$staffUrl = array_key_exists('url', $options) ? $options['url'] : $staffUrl;
+				$userId = array_key_exists('user_id', $options) ? $options['user_id'] : 0;
+
+				$tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index', 'user_id' => $userId]);
+			} else {
+				$staffUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+				$tabElements[$key]['url'] = array_merge($staffUrl, ['action' => $key, 'index']);
+			}
 		}
 		return $tabElements;
 	}

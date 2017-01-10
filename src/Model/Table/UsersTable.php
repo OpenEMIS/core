@@ -15,6 +15,7 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 
 // this file is used solely for Preferences/Users
 class UsersTable extends AppTable {
+	private $loginLanguages = [];
 	public function initialize(array $config) {
 		$this->table('security_users');
 		$this->entityClass('User.User');
@@ -22,6 +23,8 @@ class UsersTable extends AppTable {
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -31,6 +34,13 @@ class UsersTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+		$ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+		$this->loginLanguages = $ConfigItemOptionsTable->find('list', [
+				'keyField' => 'value',
+				'valueField' => 'option'
+			])
+			->where([$ConfigItemOptionsTable->aliasField('option_type') => 'language'])
+			->toArray();
 	}
 
 	public function beforeAction(Event $event) {
@@ -49,10 +59,10 @@ class UsersTable extends AppTable {
 		$this->ControllerAction->field('is_student', ['visible' => false]);
 		$this->ControllerAction->field('is_staff', ['visible' => false]);
 		$this->ControllerAction->field('is_guardian', ['visible' => false]);
-		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
 
-		$userId = $this->Auth->user('id');
-		if ($userId != $this->request->pass[0] && $this->action != 'password') { // stop user from navigating to other profiles
+		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
+		$userId = $this->paramsEncode(['id' => $this->Auth->user('id')]);
+		if ($userId != current($this->ControllerAction->paramsPass()) && $this->action != 'password') { // stop user from navigating to other profiles
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
 		}
@@ -61,6 +71,15 @@ class UsersTable extends AppTable {
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'General');
+	}
+
+	public function onGetPreferredLanguage(Event $event, Entity $entity)
+	{
+		if (isset($this->loginLanguages[$entity->preferred_language])) {
+			return $this->loginLanguages[$entity->preferred_language];
+		} else {
+			return $entity->preferred_language;
+		}
 	}
 
 	public function viewBeforeAction(Event $event) {
@@ -91,6 +110,33 @@ class UsersTable extends AppTable {
 		if ($this->action == 'edit') {
 			$this->ControllerAction->field('identity_number', ['visible' => false]);
 		}
+	}
+
+	public function editAfterAction(Event $event, Entity $entity)
+	{
+		$this->ControllerAction->field('preferred_language', ['type' => 'select', 'entity' => $entity]);
+	}
+
+	public function onUpdateFieldPreferredLanguage(Event $event, array $attr, $action, Request $request)
+	{
+		$session = $this->request->session();
+		if ($session->read('System.language_menu')) {
+			$attr['options'] = $this->loginLanguages;
+		} else {
+			$attr['type'] = 'disabled';
+			$entity = $attr['entity'];
+			$attr['attr']['value'] = $this->loginLanguages[$entity->preferred_language];
+		}
+
+		return $attr;
+	}
+
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+	{
+		// To change the language of the UI
+		$url = $this->ControllerAction->url('view');
+		$url['lang'] = $entity->preferred_language;
+		return $this->controller->redirect($url);
 	}
 
 	public function password() {
@@ -207,7 +253,7 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
 	{
 		if ($field == 'identity_number') {
 			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');

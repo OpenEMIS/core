@@ -1,5 +1,5 @@
 /* 
-Core Theme: v.1.0.7
+Core Theme: v.1.0.8
 Product Color: #6699CC
 Darker Shade Color: #476B8F
 */
@@ -48,7 +48,10 @@ a:focus,
 }
 
 .selected,
-.switch-candy a {
+.switch-candy a,
+.datepicker-days .active.day,
+.datepicker table tr td span.active.active,
+.datepicker-years .year.active {
     background-color: #6699CC !important;
 }
 

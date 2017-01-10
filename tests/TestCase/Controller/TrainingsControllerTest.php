@@ -20,7 +20,6 @@ class TrainingsControllerTest extends AppTestCase
         'app.workflow_steps_roles',
         'app.workflow_steps',
         'app.workflow_actions',
-        'app.workflow_records',
         'app.workflow_comments',
         'app.workflow_transitions',
         'app.training_sessions',

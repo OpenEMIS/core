@@ -16,7 +16,7 @@ class StudentSurveysTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_student_surveys');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -173,7 +173,7 @@ class StudentSurveysTable extends AppTable {
 
 		if (!is_null($entity)) {
 			$tabElements['StudentSurveys']['url'][0] = 'view';
-			$tabElements['StudentSurveys']['url'][1] = $entity->id;
+			$tabElements['StudentSurveys']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
 		}
 
 		$this->controller->set('tabElements', $tabElements);
@@ -260,7 +260,7 @@ class StudentSurveysTable extends AppTable {
 
 	public function _redirect($institutionId=null, $studentId=null, $periodId=0, $formId=0) {
 		$currentAction = $this->ControllerAction->action();
-		$paramsPass = $this->ControllerAction->paramsPass();
+		$paramsPass = $this->paramsDecode($this->ControllerAction->paramsPass())['id'];
 
 		$results = $this
 			->find()
@@ -277,7 +277,7 @@ class StudentSurveysTable extends AppTable {
 			$this->request->query['status'] = $results->status_id;
 
 			$url = $this->ControllerAction->url('view');
-			$url[1] = $results->id;
+			$url[1] = $this->paramsEncode(['id' => $results->id]);
 
 			if ($currentAction == 'index') {
 				return $this->controller->redirect($url);

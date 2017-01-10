@@ -25,12 +25,22 @@ class ModificationBehavior extends Behavior
         }
         if (!is_null($userId)) {
             if (!$entity->isNew()) {
-                if (in_array('modified_user_id', $columns)) {
+                if (in_array('modified_user_id', $columns) && !$entity->has('modified_user_id')) {
                     $entity->modified_user_id = $userId;
                 }
             } else {
-                if (in_array('created_user_id', $columns)) {
+                if (in_array('created_user_id', $columns) && !$entity->has('created_user_id')) {
                     $entity->created_user_id = $userId;
+                }
+            }
+        } else { // set default user id to administrator
+            if (!$entity->isNew()) {
+                if (in_array('modified_user_id', $columns) && !$entity->has('modified_user_id')) {
+                    $entity->modified_user_id = 1;
+                }
+            } else {
+                if (in_array('created_user_id', $columns) && !$entity->has('created_user_id')) {
+                    $entity->created_user_id = 1;
                 }
             }
         }

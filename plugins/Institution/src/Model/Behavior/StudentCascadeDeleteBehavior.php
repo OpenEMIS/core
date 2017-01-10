@@ -33,7 +33,13 @@ class StudentCascadeDeleteBehavior extends Behavior {
 			$this->deleteStudentDropoutRecords($entity);
 			$this->deleteStudentAdmissionRecords($entity);
 		}
-	}
+
+        $listeners = [
+            TableRegistry::get('Institution.StudentAdmission'),
+            TableRegistry::get('Institution.StudentDropout')
+        ];
+        $this->_table->dispatchEventToModels('Model.Students.afterDelete', [$entity], $this->_table, $listeners);
+    }
 
 	private function deleteClassStudents(Entity $entity) {
 		if (!empty($this->classIds)) {

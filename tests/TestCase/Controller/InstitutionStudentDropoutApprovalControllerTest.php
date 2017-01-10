@@ -22,6 +22,7 @@ class InstitutionStudentDropoutApprovalControllerTest extends AppTestCase
         'app.survey_forms',
         'app.institution_custom_forms_fields',
         'app.institution_custom_forms_filters',
+        'app.institution_student_admission',
         'app.survey_rules',
         'app.education_programmes',
         'app.student_statuses',

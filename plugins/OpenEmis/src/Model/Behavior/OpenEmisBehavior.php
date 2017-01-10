@@ -4,6 +4,7 @@ namespace OpenEmis\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 
@@ -66,7 +67,7 @@ class OpenEmisBehavior extends Behavior {
             $modal['form'] = [
                 'model' => $model,
                 'formOptions' => ['type' => 'delete', 'url' => $model->url('remove')],
-                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
+                'fields' => ['primaryKey' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
             ];
 
             $modal['buttons'] = [
@@ -87,8 +88,38 @@ class OpenEmisBehavior extends Behavior {
         // end deprecated
 
         $this->attachEntityInfoToToolBar($extra);
+
+        $access = $model->AccessControl;
+        $toolbarButtons = $extra['toolbarButtons'];
+        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
+            if (array_key_exists('url', $buttons)) {
+                if ($buttons['url'] != '#' && !$access->check($buttons['url'])) {
+                    $toolbarButtons->offsetUnset($key);
+                }
+            }
+        }
+
+        $indexButtons = $extra['indexButtons'];
+        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
+            if ($buttons['url'] != '#' && array_key_exists('url', $buttons)) {
+                if (!$access->check($buttons['url'])) {
+                    $indexButtons->offsetUnset($key);
+                }
+            }
+        }
+
+        $extra['toolbarButtons'] = $toolbarButtons;
+        $extra['indexButtons'] = $indexButtons;
+
+        if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
+            $model->controller->set('reorder', true);
+        }
+
         if ($extra->offsetExists('indexButtons')) {
             $model->controller->set('indexButtons', $extra['indexButtons']);
+        }
+        if ($extra['toolbarButtons']->offsetExists('back')) {
+            $model->controller->set('backButton', $extra['toolbarButtons']['back']);
         }
     }
 
@@ -104,13 +135,24 @@ class OpenEmisBehavior extends Behavior {
                 $isDeleteButtonEnabled = $toolbarButtons->offsetExists('remove');
                 $isNotTransferOperation = $model->actions('remove') != 'transfer';
                 $isNotRestrictOperation = $model->actions('remove') != 'restrict';
-                $idKey = $model->getPrimaryKey();
-                $primaryKey = $entity->$idKey;
+                $primaryKey = $model->primaryKey();
+
+                $ids = [];
+                if (is_array($primaryKey)) {
+                    foreach ($primaryKey as $key) {
+                        $ids[$key] = $entity->$key;
+                    }
+                } else {
+                    $ids[$primaryKey] = $entity->$primaryKey;
+                }
+
+                $encodedIds = $model->paramsEncode($ids);
+
                 if ($isDeleteButtonEnabled && $isNotTransferOperation && $isNotRestrictOperation) {
                     // not checking existence of entity in $extra so that errors will be shown if entity is removed unexpectedly
                     // to attach primary key to the button attributes for delete operation
                     if (array_key_exists('remove', $toolbarButtons)) {
-                        $toolbarButtons['remove']['attr']['field-value'] = $primaryKey;
+                        $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
                     }
                 }
 
@@ -123,18 +165,30 @@ class OpenEmisBehavior extends Behavior {
                         }
                     }
                     if ($determineShow) {
-                        $toolbarButtons['download']['url'][] = $primaryKey;
+                        $toolbarButtons['download']['url'][] = $encodedIds;
                     } else {
                         $toolbarButtons->offsetUnset('download'); // removes download button
                     }
                 }
             }
+
+            $actions = ['index', 'add', 'edit', 'remove'];
+            $disabledActions = [];
+            foreach ($toolbarButtons as $action => $attr) {
+                if (in_array($action, $actions) && !$model->actions($action)) {
+                    $disabledActions[] = $action;
+                }
+            }
+            foreach ($disabledActions as $action) {
+                $toolbarButtons->offsetUnset($action);
+            }
             $model->controller->set('toolbarButtons', $toolbarButtons);
         }
     }
 
-    public function indexAfterAction(Event $event, ResultSet $resultSet, ArrayObject $extra) {
-        if ($resultSet->count() == 0) {
+    public function indexAfterAction(Event $event, Query $query, $resultSet, ArrayObject $extra)
+    {
+        if (count($resultSet) == 0) {
             $this->_table->Alert->info('general.noData');
         }
         $extra['config']['form'] = ['class' => ''];
@@ -305,6 +359,7 @@ class OpenEmisBehavior extends Behavior {
                 }
             }
 
+
         } else if ($action == 'transfer' || ($action == 'remove' && $model->actions('remove') == 'restrict')) {
             $toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
             $toolbarButtons['back']['type'] = 'button';
@@ -336,28 +391,13 @@ class OpenEmisBehavior extends Behavior {
             $indexButtons['remove']['attr'] = $indexAttr;
         }
 
-        if ($toolbarButtons->offsetExists('back')) {
-            $controller->set('backButton', $toolbarButtons['back']);
-        }
-
-        $access = $model->AccessControl;
-        foreach ($toolbarButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
-                    unset($toolbarButtons[$key]);
-                }
-            }
-        }
-        foreach ($indexButtons->getArrayCopy() as $key => $buttons) {
-            if (array_key_exists('url', $buttons)) {
-                if (!$access->check($buttons['url'])) {
-                    unset($indexButtons[$key]);
-                }
-            }
-        }
-
-        if ($model->actions('reorder') && $indexButtons->offsetExists('edit')) {
-            $controller->set('reorder', true);
+        $backButton = $extra->offsetExists('back') ? $extra['back'] : false;
+        if ($backButton) {
+            $toolbarButtons['back']['url'] = $backButton;
+            $toolbarButtons['back']['type'] = 'button';
+            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
+            $toolbarButtons['back']['attr'] = $toolbarAttr;
+            $toolbarButtons['back']['attr']['title'] = __('Back');
         }
 
         $extra['toolbarButtons'] = $toolbarButtons;
@@ -365,5 +405,9 @@ class OpenEmisBehavior extends Behavior {
 
         // entity information will be attached to toolbar in afterAction()
         // refer to attachEntityInfoToToolBar() in afterAction()
+    }
+
+    private function isCAv4() {
+        return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 }

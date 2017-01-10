@@ -24,7 +24,7 @@ class InstitutionProvidersFixture extends TestFixture
         ], [
             'id' => '2',
             'name' => 'Private',
-            'order' => '1',
+            'order' => '2',
             'visible' => '1',
             'editable' => '1',
             'default' => '0',
@@ -38,7 +38,7 @@ class InstitutionProvidersFixture extends TestFixture
         ], [
             'id' => '3',
             'name' => 'Government',
-            'order' => '2',
+            'order' => '3',
             'visible' => '1',
             'editable' => '1',
             'default' => '0',

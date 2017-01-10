@@ -53,7 +53,7 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$classId = $this->request->query['class_id'];
+		$classId = !empty($this->request->query['class_id']) ? $this->request->query['class_id'] : 0 ;
 		$query->where([$this->aliasField('institution_class_id') => $classId]);
 	}
 
@@ -64,7 +64,7 @@ class StudentAttendancesTable extends AppTable {
 		$endDate = $AcademicPeriodTable->get($academicPeriodId)->end_date->format('Y-m-d');
 		$months = $AcademicPeriodTable->generateMonthsByDates($startDate, $endDate);
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$classId = $this->request->query['class_id'];
+		$classId = !empty($this->request->query['class_id']) ? $this->request->query['class_id'] : 0 ;
 
 		foreach ($months as $month) {
 			$year = $month['year'];
@@ -348,7 +348,7 @@ class StudentAttendancesTable extends AppTable {
 			'controller' => 'Institutions',
 			'action' => 'StudentUser',
 			'view',
-			$entity->user->id
+			$this->paramsEncode(['id' => $entity->user->id])
 		]);
 
 		if ($timeError) {
@@ -612,7 +612,7 @@ class StudentAttendancesTable extends AppTable {
 					'controller' => $this->controller->name,
 					'action' => $StudentAbsences->alias(),
 					'view',
-					$entity->StudentAbsences['id']
+					$this->paramsEncode(['id' => $entity->StudentAbsences['id']])
 				]);
 			}
 		}
@@ -621,7 +621,8 @@ class StudentAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.index.beforeAction
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+    public function indexBeforeAction(Event $event, ArrayObject $settings) {
+        $query = $settings['query'];
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptionsData = $AcademicPeriod->getList();
@@ -820,6 +821,7 @@ class StudentAttendancesTable extends AppTable {
 			$indexDashboard = 'attendance';
 
 			$dataSet = $this->getNumberOfStudentByAttendance(['query' => $query, 'selectedDay' => $selectedDay]);
+
 			$present = 0;
 			$absent = 0;
 			$late = 0;

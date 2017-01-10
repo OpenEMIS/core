@@ -2,22 +2,33 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
+
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
-use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface;
+use Cake\Event\Event;
+
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class TrainingNeedsTable extends AppTable {
+class TrainingNeedsTable extends ControllerActionTable
+{
 	use OptionsTrait;
 
 	const CATALOGUE = 'CATALOGUE';
 	const NEED = 'NEED';
 
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
+
 	private $course = null;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('staff_training_needs');
 		parent::initialize($config);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
@@ -26,10 +37,16 @@ class TrainingNeedsTable extends AppTable {
 		$this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
 		$this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
 		$this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
+		$this->addBehavior('Workflow.Workflow', ['model' => 'Institution.StaffTrainingNeeds']);
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 
 		return $validator
@@ -85,9 +102,10 @@ class TrainingNeedsTable extends AppTable {
 			;
 	}
 
-	public function onGetType(Event $event, Entity $entity) {
+	public function onGetType(Event $event, Entity $entity)
+	{
 		list($typeOptions) = array_values($this->_getSelectOptions());
-		$currentAction = $this->ControllerAction->action();
+		$currentAction = $this->action;
 		if ($currentAction == 'index') {
 			$entity = $this->setupValues($entity);
 		}
@@ -95,32 +113,37 @@ class TrainingNeedsTable extends AppTable {
 		return $typeOptions[$entity->type];
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('type');
-		$this->ControllerAction->field('comments', ['visible' => false]);
-		$this->ControllerAction->field('course_id', ['visible' => false]);
-		$this->ControllerAction->field('course_description', ['visible' => false]);
-		$this->ControllerAction->field('training_need_category_id', ['visible' => false]);
-		$this->ControllerAction->field('training_requirement_id', ['visible' => false]);
-		$this->ControllerAction->field('training_priority_id', ['visible' => false]);
-		$this->ControllerAction->field('staff_id', ['visible' => false]);
-		$this->ControllerAction->setFieldOrder(['type', 'course_code', 'course_name']);
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('type');
+		$this->field('comments', ['visible' => false]);
+		$this->field('course_id', ['visible' => false]);
+		$this->field('course_description', ['visible' => false]);
+		$this->field('training_need_category_id', ['visible' => false]);
+		$this->field('training_requirement_id', ['visible' => false]);
+		$this->field('training_priority_id', ['visible' => false]);
+		$this->field('staff_id', ['visible' => false]);
+		$this->setFieldOrder(['type', 'course_code', 'course_name']);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$entity = $this->setupValues($entity);
 		$this->setupFields($entity);
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
+	public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$entity = $this->setupValues($entity);
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$entity = $this->setupValues($entity);
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+	{
 		if (array_key_exists('course_id', $data[$this->alias()])) {
 			$courseId = $data[$this->alias()]['course_id'];
 			if (!empty($courseId)) {
@@ -129,11 +152,13 @@ class TrainingNeedsTable extends AppTable {
 		}
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->setupFields($entity);
 	}
 
-	public function onUpdateFieldType(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldType(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
 			list($typeOptions, $selectedType) = array_values($this->_getSelectOptions());
 
@@ -149,7 +174,8 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldTrainingNeedCategoryId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'view') {
 			$selectedType = $attr['attr']['type_value'];
 			if ($selectedType == self::CATALOGUE) {
@@ -168,14 +194,16 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+	{
 		$dataArray = $data->getArrayCopy();
 		if (array_key_exists('type', $dataArray) && $dataArray['type'] != self::NEED) {
 			$data['training_need_category_id'] = 0;
 		}
 	}
 
-	public function onUpdateFieldCourseId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldCourseId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'view') {
 			$attr['visible'] = false;
 		} else if ($action == 'add' || $action == 'edit') {
@@ -206,7 +234,8 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCourseCode(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldCourseCode(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add' || $action == 'edit') {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
@@ -222,7 +251,8 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCourseName(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldCourseName(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add' || $action == 'edit') {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
@@ -238,7 +268,8 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldCourseDescription(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldCourseDescription(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add' || $action == 'edit') {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
@@ -253,7 +284,8 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldTrainingRequirementId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldTrainingRequirementId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add' || $action == 'edit') {
 			list(, $selectedType) = array_values($this->_getSelectOptions());
 
@@ -268,7 +300,8 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add' || $action == 'edit') {
 			$session = $request->session();
 			$sessionKey = 'Staff.Staff.id';
@@ -281,7 +314,8 @@ class TrainingNeedsTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['type']);
 		unset($request->query['course']);
@@ -298,7 +332,8 @@ class TrainingNeedsTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeCourse(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['type']);
 		unset($request->query['course']);
@@ -316,7 +351,8 @@ class TrainingNeedsTable extends AppTable {
 		}
 	}
 
-	public function setupValues(Entity $entity) {
+	public function setupValues(Entity $entity)
+	{
 		if (!isset($entity->id)) {	// new record
 			// list(, $selectedType) = array_values($this->_getSelectOptions());
 			$entity->type = '';
@@ -337,21 +373,22 @@ class TrainingNeedsTable extends AppTable {
 		return $entity;
 	}
 
-	public function setupFields(Entity $entity) {
-		$this->ControllerAction->field('type');
-		$this->ControllerAction->field('training_need_category_id', [
+	public function setupFields(Entity $entity)
+	{
+		$this->field('type');
+		$this->field('training_need_category_id', [
 			'type' => 'select',
 			'attr' => ['type_value' => $entity->type]
 		]);
-		$this->ControllerAction->field('course_id', ['type' => 'select']);
-		$this->ControllerAction->field('course_code');
-		$this->ControllerAction->field('course_name');
-		$this->ControllerAction->field('course_description');
-		$this->ControllerAction->field('training_requirement_id', ['type' => 'select']);
-		$this->ControllerAction->field('training_priority_id', ['type' => 'select']);
-		$this->ControllerAction->field('staff_id', ['type' => 'hidden']);
+		$this->field('course_id', ['type' => 'select']);
+		$this->field('course_code');
+		$this->field('course_name');
+		$this->field('course_description');
+		$this->field('training_requirement_id', ['type' => 'select']);
+		$this->field('training_priority_id', ['type' => 'select']);
+		$this->field('staff_id', ['type' => 'hidden']);
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'type', 'training_need_category_id',
 			'course_id', 'course_code', 'course_name', 'course_description',
 			'training_requirement_id', 'training_priority_id',
@@ -359,22 +396,96 @@ class TrainingNeedsTable extends AppTable {
 		]);
 	}
 
-	public function _getSelectOptions() {
+	public function _getSelectOptions()
+	{
 		//Return all required options and their key
-		$typeOptions = $this->getSelectOptions($this->aliasField('types'));
+		$typeOptions = $this->getSelectOptions('StaffTrainingNeeds.types');
 		// $selectedType = $this->queryString('type', $typeOptions);
 		$selectedType = array_key_exists('type', $this->request->query)? $this->request->query['type']: '';
 
 		return compact('typeOptions', 'selectedType');
 	}
-	
-	private function setupTabElements() {
+
+	private function setupTabElements()
+	{
 		$tabElements = $this->controller->getTrainingTabElements();
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra)
+	{
 		$this->setupTabElements();
+	}
+
+	public function findWorkbench(Query $query, array $options)
+	{
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
+		$userId = $session->read('Auth.User.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
+		$typeOptions = $this->getSelectOptions($this->aliasField('types'));
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('course_code'),
+				$this->aliasField('course_name'),
+				$this->aliasField('course_id'),
+				$this->aliasField('training_need_category_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Statuses->aliasField('name'),
+				$this->Courses->aliasField('code'),
+				$this->Courses->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->Courses->alias(), $this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) use ($typeOptions) {
+				return $results->map(function ($row) use ($typeOptions) {
+					$url = [
+						'plugin' => 'Staff',
+						'controller' => 'Staff',
+						'action' => 'TrainingNeeds',
+						'view',
+						$this->paramsEncode(['id' => $row->id])
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					if ($row->training_need_category_id == 0) {
+						$row->type = self::CATALOGUE;
+					} else {
+						$row->type = self::NEED;
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = $row->code_name.' '.__('from').' '.$typeOptions[$row->type];
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }

@@ -6,6 +6,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use ArrayObject;
 use Cake\Validation\Validator;
+use Cake\Utility\Security;
+use Cake\ORM\Entity;
 
 class ExaminationCentreSpecialNeedsTable extends AppTable {
 
@@ -14,5 +16,7 @@ class ExaminationCentreSpecialNeedsTable extends AppTable {
         parent::initialize($config);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('SpecialNeedTypes', ['className' => 'FieldOption.SpecialNeedTypes']);
+
+        $this->addBehavior('CompositeKey');
     }
 }
