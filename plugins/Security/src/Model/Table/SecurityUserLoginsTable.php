@@ -6,6 +6,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 use Cake\Utility\Text;
+use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class SecurityUserLoginsTable extends AppTable
@@ -24,12 +25,15 @@ class SecurityUserLoginsTable extends AppTable
         return $events;
     }
 
-    public function afterLogin(Event $event, Entity $userEntity)
+    public function afterLogin(Event $event, Entity $userEntity, Request $request)
     {
+        $request->trustProxy = true;
         $data = [
             'id' => Text::uuid(),
             'security_user_id' => $userEntity->id,
-            'login_date_time' => Time::now()
+            'login_date_time' => Time::now(),
+            'ip_address' => $request->clientIp(),
+            'session_id' => $request->session()->id()
         ];
 
         $this->save($this->newEntity($data));

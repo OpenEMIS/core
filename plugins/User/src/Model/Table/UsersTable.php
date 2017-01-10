@@ -89,7 +89,7 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function afterLogin(Event $event, Entity $userEntity)
+	public function afterLogin(Event $event, Entity $userEntity, Request $request)
     {
     	$userEntity->last_login = new Time();
     	$controller = $event->subject();

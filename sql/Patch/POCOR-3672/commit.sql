@@ -3,10 +3,8 @@ INSERT INTO `system_patches` ('issue', 'created') VALUES ('POCOR-3672', NOW());
 
 -- security_user_logins
 ALTER TABLE `security_user_logins`
-CHANGE COLUMN `security_user_id` `security_user_id` INT(11) NOT NULL COMMENT 'links to security_users.id' ,
-CHANGE COLUMN `login_date_time` `login_date_time` DATETIME NOT NULL ,
-ADD COLUMN `session_id` VARCHAR(45) NOT NULL AFTER `login_date_time`,
-ADD COLUMN `ip_address` VARCHAR(45) NOT NULL AFTER `session_id`;
+ADD COLUMN `session_id` VARCHAR(45) NULL AFTER `login_date_time`,
+ADD COLUMN `ip_address` VARCHAR(45) NULL AFTER `session_id`;
 
 -- single_logout
 CREATE TABLE `single_logout` (
