@@ -35,6 +35,13 @@ class LoginController extends Controller {
 
 	public function login() {
 		$this->viewBuilder()->layout(false);
+		if ($this->request->is('post')) {
+			$username = $this->request->data('username');
+			if (!empty($username)) {
+				$SingleLogoutTable = TableRegistry::get('SSO.SingleLogout');
+				$SingleLogout->removeLogoutRecord($username);
+			}
+		}
 		if ($this->Auth->user()) {
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }
