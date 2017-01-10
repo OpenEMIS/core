@@ -70,6 +70,8 @@ class ConfigProductListsTable extends ControllerActionTable {
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['file_content']['visible'] = false;
+        $this->fields['auto_login_url']['visible'] = false;
+        $this->fields['auto_logout_url']['visible'] = false;
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)

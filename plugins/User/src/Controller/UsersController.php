@@ -22,19 +22,16 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords', 'captureLogin']);
+        $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords']);
 
         $action = $this->request->params['action'];
         if ($action == 'login_remote') {
             $this->eventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', ['login_remote']);
         }
-    }
 
-    public function beforeFilter(Event $event)
-    {
         // For fall back
-        $this->controller->set('_sso', false);
+        $this->set('_sso', false);
     }
 
     public function patchPasswords()
@@ -48,18 +45,6 @@ class UsersController extends AppController
         $shellCmd = sprintf($nohup, $cmd, ROOT.DS);
         \Cake\Log\Log::write('debug', $shellCmd);
         exec($shellCmd);
-    }
-
-    public function captureLogin()
-    {
-        if ($this->SSO->getAuthenticationType() != 'Local' && $this->request->is('post')) {
-            $url = $this->request->data('url');
-            $sessionId = $this->request->data('session_id');
-            $username = $this->request->data('username');
-            if (!empty($url) && !empty($sessionId) && !empty($username)) {
-                TableRegistry::get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
-            }
-        }
     }
 
     public function login()
@@ -189,7 +174,8 @@ class UsersController extends AppController
         $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user, $this->request], $this, $listeners);
 
         if ($this->SSO->getAuthenticationType() != 'Local') {
-            TableRegistry::get('SSO.SingleLogout')->dispatchEvent('Model.SSO.SingleLogout.afterLogin', [$user, $this->request], $this);
+            $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_login_url'])->toArray();
+            TableRegistry::get('SSO.SingleLogout')->dispatchEvent('Model.SSO.SingleLogout.afterLogin', [$user, $productList, $this->request], $this);
         }
 
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
