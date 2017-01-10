@@ -134,9 +134,16 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	public function onApprove(Event $event, $id, Entity $workflowTransitionEntity) {
 		$data = $this->get($id)->toArray();
-		$newEntity = $this->patchStaffProfile($data);
+        
+        $newEntity = $this->patchStaffProfile($data);
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
 		$InstitutionStaff->save($newEntity);
+
+        //trigger update of end_date on institution_subject_staff
+        if ($data['staff_change_type_id'] == $this->staffChangeTypesList['END_OF_ASSIGNMENT']) {
+            $InstitutionSubjectStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
+            $InstitutionSubjectStaffTable->updateSubjectStaffEndDate($data['end_date']->format('Y-m-d'), $data['staff_id'], $data['institution_id']);
+        }
 	}
 
 	private function patchStaffProfile(array $data) {
@@ -149,8 +156,8 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$InstitutionStaff->aliasField('id') => $data['institution_staff_id']
 			])
 			->first();
-
-		// If the record exists
+		
+        // If the record exists
 		if (!empty($staffRecord)) {
 			unset($data['created']);
 			unset($data['created_user_id']);
