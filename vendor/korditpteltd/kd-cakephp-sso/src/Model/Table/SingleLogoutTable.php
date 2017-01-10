@@ -34,7 +34,9 @@ class SingleLogoutTable extends Table {
             foreach ($autoLogoutUrl as $url) {
                 if (!empty($url)) {
                     try {
-                        $http->put($url, ['url' => rtrim(Router::url([], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
+                        $url = rtrim($url, '/');
+                        $url = $url.'/';
+                        $response = $http->put($url, ['url' => rtrim(Router::url([], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }

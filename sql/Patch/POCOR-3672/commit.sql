@@ -1,5 +1,5 @@
 -- system_patches
-INSERT INTO `system_patches` ('issue', 'created') VALUES ('POCOR-3672', NOW());
+INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3672', NOW());
 
 -- security_user_logins
 ALTER TABLE `security_user_logins`
