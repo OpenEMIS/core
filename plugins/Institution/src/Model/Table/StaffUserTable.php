@@ -154,6 +154,7 @@ class StaffUserTable extends ControllerActionTable {
                 'provider' => 'table',
                 'last' => true
             ])
+            ->allowEmpty('photo_content')
             ;
         return $validator;
     }
