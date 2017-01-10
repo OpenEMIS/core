@@ -31,6 +31,12 @@ class UsersController extends AppController
         }
     }
 
+    public function beforeFilter(Event $event)
+    {
+        // For fall back
+        $this->controller->set('_sso', false);
+    }
+
     public function patchPasswords()
     {
         $this->autoRender = false;
