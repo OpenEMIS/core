@@ -10,9 +10,12 @@ use App\Model\Table\ControllerActionTable;
 class UserNationalitiesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
 	}
 
 	public function beforeAction(Event $event) {
@@ -25,8 +28,14 @@ class UserNationalitiesTable extends ControllerActionTable {
 	}
 
 	public function validationNonMandatory(Validator $validator) {
-		$this->validationDefault($validator);
+		$validator = $this->validationDefault($validator);
 		return $validator->allowEmpty('nationality_id');
+	}
+
+	public function validationAddByAssociation(Validator $validator)
+	{
+		$validator = $this->validationDefault($validator);
+		return $validator->requirePresence('security_user_id', false);
 	}
 
 	private function setupTabElements() {
@@ -50,6 +59,6 @@ class UserNationalitiesTable extends ControllerActionTable {
 
 	public function afterAction(Event $event) {
 		$this->setupTabElements();
-	}	
+	}
 
 }

@@ -20,12 +20,14 @@ class SecuritiesController extends AppController {
 		];
 	}
 
+	public function RefreshToken() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']); }
+
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
 		$header = 'Security';
 		$this->Navigation->addCrumb($header, ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index']);
 		$this->Navigation->addCrumb($this->request->action);
-		
+
 		$this->set('contentHeader', __($header));
 	}
 
@@ -47,12 +49,12 @@ class SecuritiesController extends AppController {
 
 		$tabElements = [
 			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $id],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
 				'text' => __('Details')
 			],
 			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')	
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
+				'text' => __('Account')
 			]
 		];
 

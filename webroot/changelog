@@ -1,3 +1,64 @@
+v3.8.5
+- System allows user to search for Textbook name
+- Implemented Institution and Grade filter in Students > Academic > Subjects page
+
+v3.8.4
+- System allows user to add Exam items manually
+- System allows user to link an Exam items to an existing Subject
+- Implemented version release management and approval feature
+
+v3.8.3
+- Implemented feature to allow user to create customised report in excel format in Institution>Student Results module
+
+v3.8.2
+- Added Education Grade column in Institution Staff Reports
+- Implemented Import for Examination rooms
+- Added Institution Code, Grade and Area in Institution Class Reports
+- System no longer requires classes and teachers to be mandatory for School Visits
+
+v3.8.1
+- Added Textbook Import feature
+- Added Textbook Report feature
+- Implmented a new option called "Time" for Grading Type in Assessment module
+- Implemented Textbook management module
+
+v3.7.5
+- System now allows additional products to be added to the application switcher list
+
+v3.7.4
+- Users can add classrooms to exam centers
+- Users can assign invigilators to exam centers
+- User is able to enter the student exam registration number or allow system to auto generate it
+- System allows user to manage student's examination results
+
+v3.7.2
+- Directory page will show Advanced Search by default
+- System allows user to search for all users regardless of user's permission
+- System allows Institutions to request visits
+- Staff > Professional Development > Appraisal Tab : Introduced an Appraisal feature
+- System allows user to apply for training courses
+- Admin is able to manage training course applicants
+
+v3.7.1.1
+- Introduced individual student promote/repeat feature that allows promote/repeat within the same year
+- Institution > Studentlist will show enrolled students by default
+- User is now able to perform Undo action on dropout and transferred students
+
+v3.7.1
+- There is a wizard now when user tries to add student workflow
+- Adding students to an Institution will trigger Pending Admission workflow
+- Student graphs are removed in Dashboard for Non-Academic Institution
+- Staff Type (Full Time/Part Time) column added in Staff > Position Page
+- System now allows Institution to withdraw Transfer Requests
+- System only allows transferring of students between two institutions
+- Introduced individual student promote/repeat feature that allows promote/repeat within the same year
+- There is a new field called Assignee when user tries to submit workflow items
+- System allows user to connect to an external database to add students to an Institution
+
+v3.6.7
+- The date and time in reports are fixed
+- System allows user to search for Institution by Area in Student Transfer page
+
 v3.6.6
 - System splits the permission to view Salary list page and Salary Details page
 - System now allows user to search accounts from different Identity types in Advanced Search option

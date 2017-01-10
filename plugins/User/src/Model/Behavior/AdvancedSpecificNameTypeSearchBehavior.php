@@ -52,7 +52,7 @@ class AdvancedSpecificNameTypeSearchBehavior extends Behavior {
 			$conditions = [];
 			foreach ($searches as $searchKey => $searchValue) {
 				if (!empty($searchValue)) {
-					$conditions[] = [$model->aliasField($searchKey).' LIKE' =>  '%' . $searchValue . '%'];
+					$conditions[] = [$model->aliasField($searchKey).' LIKE' => $searchValue . '%'];
 				}
 			}
 			$query->andWhere( $conditions );

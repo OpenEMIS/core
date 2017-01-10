@@ -16,9 +16,12 @@ class SpecialNeedTypesTable extends ControllerActionTable
         $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'foreignKey' => 'special_need_type_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
     }
 
-    public function findVisibleNeedTypes(array $options = [])
+    public function getVisibleNeedTypes(array $options = [])
     {
         $query = $this
             ->find('visible')

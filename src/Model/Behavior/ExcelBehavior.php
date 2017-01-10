@@ -75,16 +75,25 @@ class ExcelBehavior extends Behavior {
     }
 
     public function excel($id=0) {
-        $this->generateXLXS(['id' => $id]);
+        $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
+        $this->generateXLXS($ids);
     }
 
     public function excelV4(Event $mainEvent, ArrayObject $extra)
     {
         $id = 0;
-        if (isset($this->_table->request->pass[0])) {
-            $id = $this->_table->request->pass[0];
+        $break = false;
+        $action = $this->_table->action;
+        $pass = $this->_table->request->pass;
+        if (in_array($action, $pass)) {
+            unset($pass[array_search($action, $pass)]);
+            $pass = array_values($pass);
         }
-        $this->generateXLXS(['id' => $id]);
+        if (isset($pass[0])) {
+            $id = $pass[0];
+        }
+        $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
+        $this->generateXLXS($ids);
     }
 
     private function eventKey($key) {
@@ -171,7 +180,7 @@ class ExcelBehavior extends Behavior {
                     $initialLength = strlen($sheetName);
                 }
                 if (strlen($sheetName) > 23) {
-                	$sheetName = substr($sheetName,0,23).'('.$counter++.')';
+                    $sheetName = substr($sheetName,0,23).'('.$counter++.')';
                 } else {
                     $sheetName = $sheetName.'('.$counter++.')';
                 }
@@ -244,16 +253,16 @@ class ExcelBehavior extends Behavior {
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
 
-						if ($sheetRowCount >= $this->config('sheet_limit')) {
+                        if ($sheetRowCount >= $this->config('sheet_limit')) {
 
-							$sheetCount++;
-							$sheetName = $baseSheetName . '_' . $sheetCount;
+                            $sheetCount++;
+                            $sheetName = $baseSheetName . '_' . $sheetCount;
 
-							// rewrite header into new sheet
-							$writer->writeSheetRow($sheetName, $headerRow);
+                            // rewrite header into new sheet
+                            $writer->writeSheetRow($sheetName, $headerRow);
 
-						 	$sheetRowCount= 0;
-						}
+                            $sheetRowCount= 0;
+                        }
 
                         $settings['entity'] = $entity;
 
@@ -483,28 +492,29 @@ class ExcelBehavior extends Behavior {
 
     public function beforeAction(Event $event, ArrayObject $extra) {
         $action = $this->_table->action;
-        $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false,
-            'title' => __('Export')
-        ];
-
-        $toolbarButtons['export'] = [
-            'type' => 'button',
-            'label' => '<i class="fa kd-export"></i>',
-            'attr' => $toolbarAttr,
-            'url' => ''
-        ];
-
         if (in_array($action, $this->config('pages'))) {
+            $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
+            $toolbarAttr = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false,
+                'title' => __('Export')
+            ];
+
+            $toolbarButtons['export'] = [
+                'type' => 'button',
+                'label' => '<i class="fa kd-export"></i>',
+                'attr' => $toolbarAttr,
+                'url' => ''
+            ];
+
             $url = $this->_table->url($action);
             $url[0] = 'excel';
             $toolbarButtons['export']['url'] = $url;
+            $extra['toolbarButtons'] = $toolbarButtons;
         }
-        $extra['toolbarButtons'] = $toolbarButtons;
+
     }
 
     public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {

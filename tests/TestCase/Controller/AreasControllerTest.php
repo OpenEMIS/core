@@ -26,6 +26,7 @@ class AreasControllerTest extends AppTestCase
         'app.institution_providers',
         'app.institution_genders',
         'app.institution_network_connectivities',
+        'app.examination_centres',
 
         // needed by testDelete()
         'app.institutions',
@@ -249,13 +250,13 @@ class AreasControllerTest extends AppTestCase
 
     public function testUpdateAssociatedRecordAdministrativeBoundaries()
     {
-        $id = 13;
+        $id = 10;
 
         $requestData = ['Areas' => [
             'data_url' => '',
             'transfer_areas' => [
-                13 => [
-                    'area_id' => 13,
+                10 => [
+                    'area_id' => 10,
                     'new_area_id' => 2
                 ]
             ]
@@ -271,11 +272,11 @@ class AreasControllerTest extends AppTestCase
         $this->table->doUpdateAssociatedRecord($requestData);
 
         $resultInstitutionAreaId = $institutions->find()
-            ->where(['id' => $id])
+            ->where([$institutions->aliasField('id') => $id])
             ->first()->area_id;
 
         $resultSecurityAreaId = $securityGroupAreas->find()
-            ->where(['security_group_id' => $id])
+            ->where([$securityGroupAreas->aliasField('security_group_id') => $id])
             ->first()->area_id;
 
         $this->assertEquals($expectedSecurityAreaId, $resultSecurityAreaId);
@@ -284,13 +285,13 @@ class AreasControllerTest extends AppTestCase
 
     public function testDoReplaceAreaTableAdministrativeBoundaries()
     {
-        $missingAreaId = 13;
+        $missingAreaId = 10;
         $jsonAreaId = 1;
         $expectedJsonName = 'Lao PDR';
 
         $missingAreaArray = [
-            13 => [
-                'id' => 13,
+            10 => [
+                'id' => 10,
                 'parent_id' => 2,
                 'code' => 'SG001007',
                 'name' => 'Bishan',

@@ -123,6 +123,7 @@ class EducationGradesTable extends ControllerActionTable
 					$this->aliasField('education_programme_id') => $programmeId,
 					$this->aliasField('order').' > ' => $order
 				])
+				->order([$this->aliasField('order')])
 				->toArray();
 			// Default is to get the list of grades with the next programme grades
 			if ($getNextProgrammeGrades) {
@@ -141,11 +142,6 @@ class EducationGradesTable extends ControllerActionTable
 		$this->association('Institutions')->name('InstitutionProgrammes');
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
-		$this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
-		$this->_fieldOrder[] = 'subjects';
-	}
-
 	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->setFieldOrder($this->_fieldOrder);
 	}
@@ -158,6 +154,7 @@ class EducationGradesTable extends ControllerActionTable
 
 		$this->controller->set('toolbarElements', $toolbarElements);
 
+		$this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
 		$this->_fieldOrder = ['visible', 'name', 'code', 'education_programme_id', 'subjects'];
 	}
 
@@ -169,7 +166,13 @@ class EducationGradesTable extends ControllerActionTable
 		$query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query)
+	public function viewBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
+		$this->_fieldOrder[] = 'subjects';
+	}
+
+	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
 		$query->contain(['EducationSubjects']);
 	}
@@ -177,25 +180,6 @@ class EducationGradesTable extends ControllerActionTable
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('education_programme_id');
-	}
-
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-	{
-		// to be revisit
-		// $data[$this->alias()]['setVisible'] = true;
-
-		// To handle when delete all subjects
-		if (!array_key_exists('education_subjects', $data[$this->alias()])) {
-			$data[$this->alias()]['education_subjects'] = [];
-		}
-
-		// Required by patchEntity for associated data
-		$newOptions = [];
-		$newOptions['associated'] = $this->_contain;
-
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
 	}
 
 	public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[])
@@ -211,11 +195,27 @@ class EducationGradesTable extends ControllerActionTable
 			$tableHeaders = [__('Name'), __('Code'), __('Hours Required')];
 			$tableCells = [];
 
+			$EducationGradesSubjects = TableRegistry::get('EducationGradesSubjects');
+			$gradeSubjectData = $EducationGradesSubjects
+				->findByEducationGradeId($entity->id)
+				->find('list', ['keyField' =>  'education_subject_id', 'valueField' => 'id'])
+				->where([$EducationGradesSubjects->aliasField('visible') => 1])
+				->toArray();
+
 			$educationSubjects = $entity->extractOriginal(['education_subjects']);
 			foreach ($educationSubjects['education_subjects'] as $key => $obj) {
 				if ($obj->_joinData->visible == 1) {
+					$gradeSubjectId = $gradeSubjectData[$obj->id];
+
 					$rowData = [];
-					$rowData[] = $obj->name;
+					// link subject to GradeSubjects
+					$rowData[] = $event->subject()->Html->link(__($obj->name), [
+                        'plugin' => 'Education',
+                        'controller' => 'Educations',
+                        'action' => 'GradeSubjects',
+                        '0' => 'view',
+                        '1' => $this->paramsEncode(['id' => $gradeSubjectId])
+                    ]);
 					$rowData[] = $obj->code;
 					$rowData[] = $obj->_joinData->hours_required;
 					$tableCells[] = $rowData;
@@ -224,105 +224,6 @@ class EducationGradesTable extends ControllerActionTable
 
 			$attr['tableHeaders'] = $tableHeaders;
 	    	$attr['tableCells'] = $tableCells;
-		} else if ($action == 'edit') {
-			if (isset($entity->id)) {
-				$form = $event->subject()->Form;
-				// Build Education Subjects options
-				$subjectData = $this->EducationSubjects
-					->find()
-					->select([$this->EducationSubjects->aliasField($this->EducationSubjects->primaryKey()), $this->EducationSubjects->aliasField('name'), $this->EducationSubjects->aliasField('code')])
-					->find('visible')
-					->find('order')
-					->toArray();
-
-				$subjectOptions = [];
-				foreach ($subjectData as $key => $value) {
-					$subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
-				}
-				// End
-
-				$tableHeaders = [__('Name'), __('Code'), __('Hours Required'), ''];
-				$tableCells = [];
-				$cellCount = 0;
-
-				$arraySubjects = [];
-				if ($this->request->is(['get'])) {
-					$educationSubjects = $entity->extractOriginal(['education_subjects']);
-					foreach ($educationSubjects['education_subjects'] as $key => $obj) {
-						if ($obj->_joinData->visible == 1) {
-							$arraySubjects[] = [
-								'id' => $obj->_joinData->id,
-								'name' => $obj->name,
-								'code' => $obj->code,
-								'hours_required' => $obj->_joinData->hours_required,
-								'education_grade_id' => $obj->_joinData->education_grade_id,
-								'education_subject_id' => $obj->_joinData->education_subject_id,
-								'visible' => $obj->_joinData->visible
-							];
-						}
-					}
-				} else if ($this->request->is(['post', 'put'])) {
-					$requestData = $this->request->data;
-					if (array_key_exists('education_subjects', $requestData[$this->alias()])) {
-						foreach ($requestData[$this->alias()]['education_subjects'] as $key => $obj) {
-							$arraySubjects[] = $obj['_joinData'];
-						}
-					}
-
-					if (array_key_exists('education_subject_id', $requestData[$this->alias()])) {
-						$subjectId = $requestData[$this->alias()]['education_subject_id'];
-						$subjectObj = $this->EducationSubjects
-							->findById($subjectId)
-							->first();
-
-						$arraySubjects[] = [
-							'name' => $subjectObj->name,
-							'code' => $subjectObj->code,
-							'hours_required' => 0,
-							'education_grade_id' => $entity->id,
-							'education_subject_id' => $subjectObj->id,
-							'visible' => 1
-						];
-					}
-				}
-				$form->unlockField($attr['model'] . '.education_subjects');
-				foreach ($arraySubjects as $key => $obj) {
-					$fieldPrefix = $attr['model'] . '.education_subjects.' . $cellCount++;
-					$joinDataPrefix = $fieldPrefix . '._joinData';
-
-					$subjectId = $obj['education_subject_id'];
-					$subjectCode = $obj['code'];
-					$subjectName = $obj['name'];
-
-					$cellData = "";
-					$cellData .= $form->input($joinDataPrefix.".hours_required", ['label' => false, 'type' => 'number', 'value' => $obj['hours_required']]);
-					$cellData .= $form->hidden($fieldPrefix.".id", ['value' => $subjectId]);
-					$cellData .= $form->hidden($joinDataPrefix.".name", ['value' => $subjectName]);
-					$cellData .= $form->hidden($joinDataPrefix.".code", ['value' => $subjectCode]);
-					$cellData .= $form->hidden($joinDataPrefix.".education_grade_id", ['value' => $obj['education_grade_id']]);
-					$cellData .= $form->hidden($joinDataPrefix.".education_subject_id", ['value' => $subjectId]);
-					$cellData .= $form->hidden($joinDataPrefix.".visible", ['value' => $obj['visible']]);
-					if (isset($obj['id'])) {
-						$cellData .= $form->hidden($joinDataPrefix.".id", ['value' => $obj['id']]);
-					}
-
-					$rowData = [];
-					$rowData[] = $subjectName;
-					$rowData[] = $subjectCode;
-					$rowData[] = $cellData;
-					$rowData[] = '<button onclick="jsTable.doRemove(this)" aria-expanded="true" type="button" class="btn btn-dropdown action-toggle btn-single-action"><i class="fa fa-trash"></i>&nbsp;<span>'.__('Delete').'</span></button>';
-
-					$tableCells[] = $rowData;
-					unset($subjectOptions[$obj['education_subject_id']]);
-				}
-
-				$attr['tableHeaders'] = $tableHeaders;
-	    		$attr['tableCells'] = $tableCells;
-
-	    		$subjectOptions[0] = "-- ".__('Add Subject') ." --";
-	    		ksort($subjectOptions);
-	    		$attr['options'] = $subjectOptions;
-			}
 		}
 
 		return $event->subject()->renderElement('Education.subjects', ['attr' => $attr]);
@@ -374,4 +275,29 @@ class EducationGradesTable extends ControllerActionTable
 
 		return compact('levelOptions', 'selectedLevel', 'programmeOptions', 'selectedProgramme');
 	}
+
+    public function getEducationGradesByProgrammes($programmeId) 
+    {
+        $gradeOptions = $this
+                        ->find('list')
+                        ->find('visible')
+                        ->contain(['EducationProgrammes'])
+                        ->where([$this->aliasField('education_programme_id') => $programmeId])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->aliasField('order') => 'ASC'])
+                        ->toArray();
+
+        return $gradeOptions;
+    } 
+
+    public function findGradeSubjectsByProgramme(Query $query, $options)
+    {
+    	$educationProgrammeId = $options['education_programme_id'];
+    	$query
+    		->find('visible')
+    		->contain(['EducationSubjects'])
+    		->where([$this->aliasField('education_programme_id') => $educationProgrammeId])
+    		->order([$this->aliasField('order')]);
+
+    	return $query;
+    }
 }

@@ -4,10 +4,11 @@ namespace Institution\Model\Table;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Cake\ORM\TableRegistry;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
@@ -19,6 +20,9 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -27,7 +31,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
-		parent::beforeAction($event, $extra);		
+		parent::beforeAction($event, $extra);
 		$toolbarButtons = $extra['toolbarButtons'];
 
 		if ($this->action != 'index') {
@@ -44,13 +48,6 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		}
 	}
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
-
-		return $events;
-	}
-
 	public function indexBeforeQuery(Event $event, Query $query, $extra) {
 		$query->where([$this->aliasField('type') => self::TRANSFER]);
 		$extra['auto_contain_fields'] = ['PreviousInstitutions' => ['code']];
@@ -62,6 +59,15 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		parent::editAfterAction($event, $entity, $extra);
+
+        if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
+            $errors = $this->Session->read('Institution.StaffTransferRequests.errors');
+            $this->Alert->error('StaffTransferRequests.errorApproval');
+            foreach ($errors as $error) {
+                $this->Alert->error($error, ['type' => 'text']);
+            }
+            $this->Session->delete('Institution.StaffTransferRequests.errors');
+        }
 
 		$this->field('previous_institution_id', ['type' => 'readonly', 'after' => 'staff_id', 'attr' => ['value' => $entity->previous_institution->code_name]]);
 		$this->field('institution_position_id', ['type' => 'select', 'attr' => ['value' => $this->getEntityProperty($entity, 'institution_position_id')]]);
@@ -167,7 +173,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			} else {
 				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 			}
-			
+
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
 			$positionConditions = [];
@@ -205,7 +211,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			$attr['options'] = $options;
 			return $attr;
 		}
-		
+
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
@@ -217,79 +223,6 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			if ($this->request->data[$this->alias()]['status'] == self::APPROVED) {
 				$buttons[0]['name'] = '<i class="fa fa-check"></i> ' . __('Assign');
 				$buttons[0]['attr'] = ['class' => 'btn btn-default btn-save', 'div' => false, 'name' => 'submit', 'value' => 'assign'];
-			}
-		}
-	}
-
-	// Workbench.Model.onGetList
-	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		if ($AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
-			// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
-			$institutionIds = $AccessControl->getInstitutionsByUser();
-			$where = [
-				$this->aliasField('status') => self::APPROVED, 
-				$this->aliasField('type') => self::TRANSFER
-			];
-			if (!$AccessControl->isAdmin()) {
-				$userId = $event->subject()->Auth->user('id');
-				foreach ($institutionIds as $key => $val) {
-					$roles = $this->Institutions->getInstitutionRoles($userId, $val);
-					if (!$AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'], $roles)) {
-						unset($institutionIds[$key]);
-					}
-				}
-				$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
-			}
-
-			$resultSet = $this
-				->find()
-				->select([
-					$this->aliasField('id'),
-					$this->aliasField('institution_id'),
-					$this->aliasField('modified'),
-					$this->aliasField('created'),
-					'Users.openemis_no',
-					'Users.first_name',
-					'Users.middle_name',
-					'Users.third_name',
-					'Users.last_name',
-					'Users.preferred_name',
-					'Institutions.name',
-					'PreviousInstitutions.name',
-					'CreatedUser.username'
-				])
-				->contain(['Users', 'Institutions', 'PreviousInstitutions', 'CreatedUser'])
-				->where($where)
-				->order([
-					$this->aliasField('created') => 'DESC'
-				])
-				->limit(30)
-				->toArray();
-
-			foreach ($resultSet as $key => $obj) {
-				$requestTitle = sprintf('Staff Transfer Approved (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name);
-				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'StaffTransferRequests',
-					'edit',
-					$obj->id,
-					'institution_id' => $obj->institution_id
-				];
-
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
-				}
-				
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Staff Transfer')
-				];
 			}
 		}
 	}
@@ -330,17 +263,6 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		}
 	}
 
-	public function editBeforeAction(Event $event, $extra) {
-		if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
-			$errors = $this->Session->read('Institution.StaffTransferRequests.errors');
-			$this->Alert->error('StaffTransferRequests.errorApproval');
-			foreach ($errors as $error) {
-				$this->Alert->error($error, ['type' => 'text']);
-			}
-			$this->Session->delete('Institution.StaffTransferRequests.errors');
-		}
-	}
-
 	public function viewAfterAction(Event $event, Entity $entity, $extra) {
 		if ($this->Session->check('Institution.StaffTransferRequests.success')) {
 			$this->Alert->success('general.add.success');
@@ -352,5 +274,95 @@ class StaffTransferRequestsTable extends StaffTransfer {
 				unset($toolbarButtons['remove']);
 			}
 		}
+	}
+
+	public function findWorkbench(Query $query, array $options) {
+		$controller = $options['_controller'];
+		$controller->loadComponent('AccessControl');
+
+		$session = $controller->request->session();
+		$AccessControl = $controller->AccessControl;
+
+		$isAdmin = $session->read('Auth.User.super_admin');
+		$userId = $session->read('Auth.User.id');
+
+		$where = [
+			$this->aliasField('status') => self::APPROVED,
+			$this->aliasField('type') => self::TRANSFER
+		];
+
+		if (!$isAdmin) {
+			if ($AccessControl->check(['Institutions', 'StaffTransferRequests', 'edit'])) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
+
+				if (empty($institutionIds)) {
+					// return empty list if the user does not have access to any schools
+					return $query->where([$this->aliasField('id') => -1]);
+				} else {
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				}
+			} else {
+				// return empty list if the user does not permission to approve Staff Transfer Requests
+				return $query->where([$this->aliasField('id') => -1]);
+			}
+		}
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('institution_id'),
+				$this->aliasField('previous_institution_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Users->aliasField('openemis_no'),
+				$this->Users->aliasField('first_name'),
+				$this->Users->aliasField('middle_name'),
+				$this->Users->aliasField('third_name'),
+				$this->Users->aliasField('last_name'),
+				$this->Users->aliasField('preferred_name'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->PreviousInstitutions->aliasField('code'),
+				$this->PreviousInstitutions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+			->where($where)
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'StaffTransferRequests',
+						'edit',
+						$this->paramsEncode(['id' => $row->id]),
+						'institution_id' => $row->institution_id
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = __('Pending For Approval');
+	    			$row['request_title'] = __('Staff Transfer Approved of').' '.$row->user->name_with_id.' '.__('from').' '.$row->previous_institution->code_name;
+	    			$row['institution'] = $row->institution->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }

@@ -18,7 +18,10 @@ class GendersTable extends AppTable {
 		// $this->hasMany('CensusTeacherFtes', ['className' => 'User.CensusTeacherFtes']);
 		// $this->hasMany('CensusStaffs', ['className' => 'User.CensusStaffs']);
 		// $this->hasMany('CensusSanitations', ['className' => 'User.CensusSanitations']);
-		// $this->hasMany('CensusGraduates', ['className' => 'User.CensusGraduates']);	
+		// $this->hasMany('CensusGraduates', ['className' => 'User.CensusGraduates']);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {

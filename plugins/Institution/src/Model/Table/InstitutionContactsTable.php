@@ -48,7 +48,22 @@ class InstitutionContactsTable extends ControllerActionTable {
                     'ruleValidEmail' => [
                         'rule' => 'email'
                     ]
-            ]);
+                ])
+
+            ->allowEmpty('telephone')
+            ->add('telephone', 'ruleCustomTelephone', [
+                    'rule' => ['validateCustomPattern', 'institution_telephone'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+
+            ->allowEmpty('fax')
+            ->add('fax', 'ruleCustomFax', [
+                    'rule' => ['validateCustomPattern', 'institution_fax'],
+                    'provider' => 'table',
+                    'last' => true
+                ])
+            ;
         return $validator;
     }
 
@@ -71,10 +86,11 @@ class InstitutionContactsTable extends ControllerActionTable {
 
         // prevent users from manually accessing other insitution's pages
         if (isset($this->request->pass[1])) {
+            $passId = $this->paramsDecode($this->request->pass[1])['id'];
             $id = $this->Session->read('Institution.Institutions.id');
-            if ($this->request->pass[1] != $id) {
+            if ($passId != $id) {
                 $url = $this->url('view');
-                $url[1] = $id;
+                $url[1] = $this->paramsEncode(['id' => $id]);
                 $this->controller->redirect($url);
             }
         }

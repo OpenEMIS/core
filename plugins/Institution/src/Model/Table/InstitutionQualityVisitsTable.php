@@ -2,7 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -10,11 +10,14 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 
-class InstitutionQualityVisitsTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class InstitutionQualityVisitsTable extends ControllerActionTable
+{
 	private $SubjectStaff = null;
 
-	public function initialize(array $config) {
-		$this->table('institution_quality_visits');
+	public function initialize(array $config)
+	{
 		parent::initialize($config);
 
 		$this->belongsTo('QualityVisitTypes', ['className' => 'FieldOption.QualityVisitTypes', 'foreignKey' => 'quality_visit_type_id']);
@@ -32,60 +35,93 @@ class InstitutionQualityVisitsTable extends AppTable {
 			'allowable_file_types' => 'all',
 			'useDefaultName' => true
 		]);
+		$this->addBehavior('Institution.Visit');
+
+		// setting this up to be overridden in viewAfterAction(), this code is required
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			true
+		);
 
 		$this->SubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
 	}
 
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->allowEmpty('file_content');
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('comment', ['visible' => false]);
-		$this->ControllerAction->field('file_name', ['visible' => false]);
-		$this->ControllerAction->field('file_content', ['visible' => false]);
-		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
+	public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'VisitRequests'];
+    }
 
-		$this->ControllerAction->setFieldOrder([
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->field('comment', ['visible' => false]);
+		$this->field('file_name', ['visible' => false]);
+		$this->field('file_content', ['visible' => false]);
+		$this->field('academic_period_id', ['visible' => false]);
+
+		$this->setFieldOrder([
 			'date', 'institution_subject_id', 'staff_id', 'quality_visit_type_id'
 		]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		// determine if download button is shown
+		$showFunc = function() use ($entity) {
+			$filename = $entity->file_content;
+			return !empty($filename);
+		};
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			$showFunc
+		);
+		// End
+
 		$this->setupValues($entity);
 		$this->setupFields($entity);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		$query->contain(['CreatedUser']);
 	}
 
-	public function editOnInitialize(Event $event, Entity $entity) {
+	public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->setupValues($entity);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
 		$this->setupFields($entity);
 	}
 
-	public function onGetStaffId(Event $event, Entity $entity) {
-		if ($this->action == 'view') {
-			return $event->subject()->Html->link($entity->staff->name_with_id , [
-				'plugin' => 'Institution',
-				'controller' => 'Institutions',
-				'action' => 'StaffUser',
-				'view',
-				$entity->staff->id
-			]);
-		} else {
-			return $entity->staff->name_with_id;
-		}
+	public function onGetStaffId(Event $event, Entity $entity)
+	{
+        if ($entity->staff) {
+            if ($this->action == 'view') {
+                return $event->subject()->Html->link($entity->staff->name_with_id , [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'StaffUser',
+                    'view',
+                    $entity->staff->id
+                ]);
+            } else {
+                return $entity->staff->name_with_id;
+            }
+        }
 	}
 
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -116,7 +152,8 @@ class InstitutionQualityVisitsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldInstitutionSubjectId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -158,7 +195,8 @@ class InstitutionQualityVisitsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldStaffId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
 			$selectedClass = $request->query('subject');
@@ -184,7 +222,8 @@ class InstitutionQualityVisitsTable extends AppTable {
 		return $attr;
 	}
 
-	public function onUpdateFieldEvaluator(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldEvaluator(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'view') {
 		} else if ($action == 'add') {
 			// when add, is login user
@@ -204,7 +243,8 @@ class InstitutionQualityVisitsTable extends AppTable {
 		return $attr;
 	}
 
-	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangePeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['period']);
 		unset($request->query['subject']);
@@ -218,7 +258,8 @@ class InstitutionQualityVisitsTable extends AppTable {
 		}
 	}
 
-	public function addEditOnChangeSubject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnChangeSubject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+	{
 		$request = $this->request;
 		unset($request->query['subject']);
 
@@ -231,24 +272,27 @@ class InstitutionQualityVisitsTable extends AppTable {
 		}
 	}
 
-	public function setupFields(Entity $entity) {
-		$this->ControllerAction->field('academic_period_id', ['type' => 'select']);
-		$this->ControllerAction->field('institution_subject_id', ['type' => 'select']);
-		$this->ControllerAction->field('staff_id', ['type' => 'select']);
-		$this->ControllerAction->field('evaluator');
-		$this->ControllerAction->field('file_name', [
+	public function setupFields(Entity $entity)
+	{
+		$this->field('academic_period_id', ['type' => 'select']);
+		$this->field('institution_subject_id', ['type' => 'select']);
+		$this->field('staff_id', ['type' => 'select']);
+		$this->field('evaluator');
+		$this->field('quality_visit_type_id', ['type' => 'select']);
+		$this->field('file_name', [
 			'type' => 'hidden',
 			'visible' => ['view' => false, 'edit' => true]
 		]);
-		$this->ControllerAction->field('quality_visit_type_id', ['type' => 'select']);
+		$this->field('file_content', ['visible' => ['view' => false, 'edit' => true]]);
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'date', 'academic_period_id', 'institution_subject_id', 'staff_id',
 			'evaluator', 'quality_visit_type_id', 'comment', 'file_name', 'file_content'
 		]);
 	}
 
-	public function setupValues(Entity $entity) {
+	public function setupValues(Entity $entity)
+	{
 		$entity->evaluator = $entity->created_user->name;
 	}
 }
