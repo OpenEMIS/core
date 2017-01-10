@@ -423,6 +423,26 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
         }
+
+        // manually delete subject students
+        $currentStudentIds = (new Collection($entity->subject_students))->extract('student_id')->toArray();
+        $originalStudentIds = (new Collection($entity->getOriginal('subject_students')))->extract('student_id')->toArray();
+        $removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
+
+        if (!empty($removedStudentIds)) {
+            $subjectStudentsToBeDeleted = $this->SubjectStudents->find()
+                ->where([
+                    $this->SubjectStudents->aliasField('institution_id') => $entity->institution_id,
+                    $this->SubjectStudents->aliasField('institution_class_id') => $entity->class_subjects[0]->institution_class_id,
+                    $this->SubjectStudents->aliasField('academic_period_id') => $entity->academic_period_id,
+                    $this->SubjectStudents->aliasField('education_subject_id') => $entity->education_subject_id,
+                    $this->SubjectStudents->aliasField('student_id').' IN ' => $removedStudentIds
+                ])->toArray();
+
+            foreach ($subjectStudentsToBeDeleted as $key => $value) {
+                $this->SubjectStudents->delete($value);
+            }
+        }
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -573,34 +593,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
          * In students.ctp, we set the staff_id as the array keys for easy search and compare.
          * Assign back original record's id to the new list so as to preserve id numbers.
          */
-        foreach($entity->subject_students as $key => $record) {
-            $k = $record->student_id;
-            if (array_key_exists('subject_students', $data[$this->alias()])) {
-                if (!array_key_exists($k, $data[$this->alias()]['subject_students'])) {
-                    $data[$this->alias()]['subject_students'][$k] = [
-                        'id' => $record->id,
-                        'student_status_id' => $record->student_status_id,
-                        'student_id' => $k,
-                        'institution_class_id' => $record->institution_class_id,
-                        'institution_id' => $record->institution_id,
-                        'academic_period_id' => $record->academic_period_id,
-                        'education_subject_id' => $record->education_subject_id
-                    ];
-                } else {
-                    $data[$this->alias()]['subject_students'][$k]['id'] = $record->id;
-                }
-            } else {
-                $data[$this->alias()]['subject_students'][$k] = [
-                    'id' => $record->id,
-                    'student_status_id' => $record->student_status_id,
-                    'student_id' => $k,
-                    'institution_class_id' => $record->institution_class_id,
-                    'institution_id' => $record->institution_id,
-                    'academic_period_id' => $record->academic_period_id,
-                    'education_subject_id' => $record->education_subject_id
-                ];
-            }
-        }
 
         $checkedStaff = [];
         // POCOR-2781 - Remove 'status' from institution_subject_staff
@@ -657,7 +649,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $entity->academic_period_id;
         $students = $entity->subject_students;
         $collection = new Collection($students);
-        $recordedStudentIds = (new Collection($collection->toArray()))->combine('student_id', 'status')->toArray();
+        $recordedStudentIds = (new Collection($collection->toArray()))->combine('student_id', 'student_status_id')->toArray();
         $teacherOptions = $this->getTeacherOptions($entity);
         $roomOptions = $this->getRoomOptions($entity);
 
@@ -727,10 +719,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
 
         } else {
-            foreach ($recordedStudentIds as $key => $value) {
-                if ($value>0) {
-                    $includedStudents[] = $key;
-                }
+            foreach ($recordedStudentIds as $key => $status) {
+                $includedStudents[] = $key;
             }
             $studentOptions = $this->getStudentsOptions($entity, $includedStudents);
         }

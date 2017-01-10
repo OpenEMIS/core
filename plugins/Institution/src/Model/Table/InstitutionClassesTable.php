@@ -1024,9 +1024,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 $InstitutionStudentsTable->aliasField('student_id') => $id,
                 $InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id,
                 $InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
-                //this is to ensure that student is enrolled and have the correct education grade accordingly.
-                $InstitutionStudentsTable->aliasField('education_grade_id IN ') => $educationGrades,
-                $InstitutionStudentsTable->aliasField('student_status_id') => $enrolled
+                //this is to ensure that student have the correct education grade accordingly.
+                $InstitutionStudentsTable->aliasField('education_grade_id IN ') => $educationGrades
             ])
             ->first();
         
