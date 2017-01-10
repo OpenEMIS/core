@@ -36,6 +36,12 @@ class LoginController extends Controller {
 		$this->loadComponent('Localization.Localization');
 	}
 
+	public function beforeFilter(Event $event)
+	{
+		$ssoType = TableRegistry::get('Configuration.ConfigItems')->value('authentication_type');
+		$this->set('_sso', $ssoType != 'Local');
+	}
+
 	public function login() {
 		parent::login();
 		if ($this->Auth->user()) {
