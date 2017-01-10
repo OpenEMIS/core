@@ -39,7 +39,7 @@ class SingleLogoutTable extends Table {
                         $url = $url.'/';
                         // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
                         // http://php.net/manual/en/thread.start.php
-                        $response = $http->put($url, ['url' => rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true)), '/'), 'session_id' => $sessionId, 'username' => $username]);
+                        $response = $http->put($url, ['url' => rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }
