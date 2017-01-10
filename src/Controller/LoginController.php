@@ -7,6 +7,7 @@ use Cake\Routing\Router;
 use SSO\Controller\LoginController as Controller;
 
 class LoginController extends Controller {
+	private $sso = false;
 	public function initialize() {
 		parent::initialize();
 
@@ -39,11 +40,15 @@ class LoginController extends Controller {
 	public function beforeFilter(Event $event)
 	{
 		$ssoType = TableRegistry::get('Configuration.ConfigItems')->value('authentication_type');
-		$this->set('_sso', $ssoType != 'Local');
+		$this->sso = $ssoType != 'Local';
+		$this->set('_sso', $this->sso);
 	}
 
 	public function login() {
-		parent::login();
+		$this->viewBuilder()->layout(false);
+		if ($this->sso) {
+			parent::login();
+		}
 		if ($this->Auth->user()) {
             return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
         }

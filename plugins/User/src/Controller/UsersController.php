@@ -29,7 +29,6 @@ class UsersController extends AppController
             $this->eventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', ['login_remote']);
         }
-        $this->Security->config('unlockedActions', ['login']);
 
         // For fall back
         $this->set('_sso', false);

@@ -50,7 +50,8 @@ class SingleLogoutTable extends Table {
             'username' => $username,
             'session_id' => $sessionId
         ];
-        $this->save($data);
+        $newEntity = $this->newEntity($data);
+        $this->save($newEntity);
     }
 
 	private function getLogoutRecords($username)
@@ -58,7 +59,7 @@ class SingleLogoutTable extends Table {
         return $this->find()->where([$this->aliasField('username') => $username])->toArray();
 	}
 
-    private function removeLogoutRecord($username)
+    public function removeLogoutRecord($username)
     {
         $entities = $this->getLogoutRecords($username);
         foreach ($entities as $entity) {
