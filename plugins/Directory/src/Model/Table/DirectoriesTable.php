@@ -343,6 +343,14 @@ class DirectoriesTable extends ControllerActionTable {
 				$this->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 				break;
 		}
+        $this->setFieldOrder([
+                'information_section', 'photo_content', 'user_type', 'openemis_no', 'first_name', 'middle_name',
+                'third_name', 'last_name', 'preferred_name', 'gender_id', 'date_of_birth', 'nationality_id',
+                'identity_type_id', 'location_section', 'address', 'postal_code', 'address_area_section', 'address_area_id',
+                'birthplace_area_section', 'birthplace_area_id', 'other_information_section', 'contact_type', 'contact_value', 'nationality',
+                'identity_type', 'identity_number', 'special_need', 'special_need_difficulty', 'special_need_comment', 'special_need_date',
+                'username', 'password'
+            ]);
 	}
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
