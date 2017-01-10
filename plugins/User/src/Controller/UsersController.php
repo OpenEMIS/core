@@ -98,6 +98,9 @@ class UsersController extends AppController
 
     public function afterLogout(Event $event, $user)
     {
+        $listeners = [
+            TableRegistry::get('SSO.SingleLogout')
+        ];
         $this->Users->dispatchEventToModels('Model.Users.afterLogout', [$user], $this, $listeners);
     }
 
@@ -171,7 +174,7 @@ class UsersController extends AppController
             TableRegistry::get('Security.SecurityUserLogins'),
             $this->Users
         ];
-        $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+        $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user, $this->request], $this, $listeners);
 
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
 
