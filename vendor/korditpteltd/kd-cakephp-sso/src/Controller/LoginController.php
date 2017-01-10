@@ -19,6 +19,20 @@ class LoginController extends Controller {
 				$SingleLogoutTable = TableRegistry::get('SSO.SingleLogout');
 				$SingleLogout->removeLogoutRecord($username);
 			}
+		} else if ($this->request->is('put')) {
+			$this->captureLogin();
 		}
 	}
+
+    private function captureLogin()
+    {
+        if ($this->SSO->getAuthenticationType() != 'Local' && $this->request->is('post')) {
+            $url = $this->request->data('url');
+            $sessionId = $this->request->data('session_id');
+            $username = $this->request->data('username');
+            if (!empty($url) && !empty($sessionId) && !empty($username)) {
+                TableRegistry::get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
+            }
+        }
+    }
 }
