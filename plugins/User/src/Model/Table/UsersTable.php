@@ -89,21 +89,22 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function afterLogin(Event $event, Entity $userEntity, Request $request)
+	public function afterLogin(Event $event, $user, Request $request)
     {
-    	$userEntity->last_login = new Time();
+    	$user['last_login'] = new Time();
     	$controller = $event->subject();
     	$SSO = $controller->SSO;
     	$Cookie = $controller->Localization->getCookie();
     	$session = $controller->request->session();
     	if ($session->read('System.language_menu') && $SSO->getAuthenticationType() != 'Local') {
-    		if (empty($userEntity->preferred_language)) {
-    			$userEntity->preferred_language = 'en';
+    		if (empty($user['preferred_language'])) {
+    			$user['preferred_language'] = 'en';
     		}
-    		$Cookie->write('System.language', $userEntity->preferred_language);
+    		$Cookie->write('System.language', $user['preferred_language']);
     	} else {
-    		$userEntity->preferred_language = $session->read('System.language');
+    		$user['preferred_language'] = $session->read('System.language');
     	}
+    	$userEntity = $this->newEntity($user);
     	$this->save($userEntity);
     }
 
