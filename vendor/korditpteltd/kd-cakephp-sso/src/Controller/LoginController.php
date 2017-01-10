@@ -16,6 +16,9 @@ class LoginController extends Controller {
         Log::write('debug', $this->request);
 		if ($this->request->is('post')) {
 			$username = $this->request->data('username');
+            $sessionId = $this->request->data('session_id');
+            $this->request->session()->id($sessionId);
+            $this->request->session()->destroy();
 			if (!empty($username)) {
 				$SingleLogoutTable = TableRegistry::get('SSO.SingleLogout');
 				$SingleLogoutTable->removeLogoutRecord($username);
