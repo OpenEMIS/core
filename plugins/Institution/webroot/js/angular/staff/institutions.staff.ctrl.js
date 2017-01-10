@@ -603,6 +603,7 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
             } else if (counter == 1 && postResponse.data.error.hasOwnProperty('staff_assignment') && postResponse.data.error.staff_assignment.hasOwnProperty('ruleCheckStaffAssignment')) {
                 InstitutionsStaffSvc.getStaffData(staffId, startDate, endDate)
                 .then(function(response) {
+                    StaffController.selectedStaff = response.id;
                     StaffController.selectedStaffData['institution_staff'] = response.institution_staff;
                     var idName = StaffController.selectedStaffData.openemis_no + ' - ' + StaffController.selectedStaffData.name;
                     var institutionName = StaffController.selectedStaffData['institution_staff'][0]['institution']['code_name'];
