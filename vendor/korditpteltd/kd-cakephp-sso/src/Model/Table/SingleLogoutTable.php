@@ -35,6 +35,6 @@ class SingleLogoutTable extends Table {
     {
         $http = new Client();
         $url = $entity->url;
-        $http->post()
+        // $http->post()
     }
 }
