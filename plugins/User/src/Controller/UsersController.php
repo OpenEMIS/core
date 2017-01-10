@@ -142,6 +142,11 @@ class UsersController extends AppController
             $event->stopPropagation();
             return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
         } else {
+            if ($this->SSO->getAuthenticationType() != 'Local') {
+                $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
+                $user = $this->Auth->user();
+                TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
+            }
             // Labels
             $labels = TableRegistry::get('Labels');
             $labels->storeLabelsInCache();
@@ -172,11 +177,6 @@ class UsersController extends AppController
             $this->Users
         ];
         $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user, $this->request], $this, $listeners);
-
-        if ($this->SSO->getAuthenticationType() != 'Local') {
-            $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
-            TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
-        }
 
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
 
