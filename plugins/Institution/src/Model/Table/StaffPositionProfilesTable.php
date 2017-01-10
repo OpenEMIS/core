@@ -56,7 +56,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->belongsTo('StaffTypes',		['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => ['institution_position_id', 'academic_period_id']]);
+		$this->belongsTo('Positions', ['className' => 'Institution.InstitutionPositions']);
 		$this->staffChangeTypesList = $this->StaffChangeTypes->findCodeList();
 		$this->addBehavior('Institution.StaffValidation');
 		$this->addBehavior('Workflow.Workflow');
