@@ -174,7 +174,7 @@ class UsersController extends AppController
         $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user, $this->request], $this, $listeners);
 
         if ($this->SSO->getAuthenticationType() != 'Local') {
-            $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_login_url'])->toArray();
+            $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
             TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
         }
 

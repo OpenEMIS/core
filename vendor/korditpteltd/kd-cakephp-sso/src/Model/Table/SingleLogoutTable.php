@@ -25,13 +25,13 @@ class SingleLogoutTable extends Table {
         }
     }
 
-    public function afterLogin($user, $autoLoginUrl, Request $request)
+    public function afterLogin($user, $autoLogoutUrl, Request $request)
     {
         $sessionId = $request->session()->id();
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username) && !empty($sessionId)) {
             $http = new Client();
-            foreach ($autoLoginUrl as $url) {
+            foreach ($autoLogoutUrl as $url) {
                 if (!empty($url)) {
                     try {
                         $http->put($url, ['url' => rtrim(Router::url([], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
