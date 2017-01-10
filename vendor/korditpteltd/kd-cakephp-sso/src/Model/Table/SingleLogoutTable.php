@@ -81,10 +81,11 @@ class SingleLogoutTable extends Table {
             $url = rtrim($entity->url, '/');
             $url = $url . '/';
             $username = $entity->username;
+            $sessionId = $entity->session_id;
 
             // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
             // http://php.net/manual/en/thread.start.php
-            $http->post($url, ['username' => $username]);
+            $http->post($url, ['username' => $username, 'session_id' => $entity->session_id]);
         } catch (Exception $e) {
             Log::write('error', $e);
         }
