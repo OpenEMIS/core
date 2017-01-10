@@ -66,6 +66,10 @@ class StaffTransfer extends ControllerActionTable {
 		}
 	}
 
+	public function viewBeforeQuery(Event $event, Query $query, $extra) {
+		$query->contain(['Users']);
+	}
+
 	public function editBeforeQuery(Event $event, Query $query, $extra) {
 		$query->contain(['Users', 'Institutions', 'PreviousInstitutions', 'Positions']);
 	}
