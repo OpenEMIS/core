@@ -18,7 +18,7 @@ class LoginController extends Controller {
 			$username = $this->request->data('username');
 			if (!empty($username)) {
 				$SingleLogoutTable = TableRegistry::get('SSO.SingleLogout');
-				$SingleLogout->removeLogoutRecord($username);
+				$SingleLogoutTable->removeLogoutRecord($username);
 			}
 		} else if ($this->request->is('put')) {
 			$this->captureLogin();
