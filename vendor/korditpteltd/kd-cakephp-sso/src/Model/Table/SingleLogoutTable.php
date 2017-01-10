@@ -13,9 +13,14 @@ class SingleLogoutTable extends Table {
 		parent::initialize($config);
 	}
 
-    public function addRecord()
+    public function addRecord($url, $username, $sessionId)
     {
-
+        $data = [
+            'url' => $url,
+            'username' => $username,
+            'session_id' => $sessionId
+        ];
+        $this->save($data);
     }
 
 	public function getLogoutRecords($username)
@@ -35,6 +40,7 @@ class SingleLogoutTable extends Table {
     {
         $http = new Client();
         $url = $entity->url;
-        // $http->post()
+        $username = $entity->username;
+        $http->post($url, ['username' => $username]);
     }
 }
