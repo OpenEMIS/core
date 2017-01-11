@@ -9,8 +9,9 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Http\Client;
 use Cake\Network\Request;
-use Cake\Log\Log;
 use Cake\Routing\Router;
+use Cake\Utility\Text;
+use Cake\Log\Log;
 
 class SingleLogoutTable extends Table
 {
@@ -53,6 +54,7 @@ class SingleLogoutTable extends Table
     public function addRecord($url, $username, $sessionId)
     {
         $data = [
+            'id' => Text::uuid(),
             'url' => $url,
             'username' => $username,
             'session_id' => $sessionId
