@@ -29,6 +29,9 @@ class UsersController extends AppController
             $this->eventManager()->off($this->Csrf);
             $this->Security->config('unlockedActions', ['login_remote']);
         }
+
+        // For fall back
+        $this->set('_sso', false);
     }
 
     public function patchPasswords()
@@ -84,16 +87,25 @@ class UsersController extends AppController
         $this->SSO->doAuthentication();
     }
 
-    public function logout()
+    public function logout($sessionId = null)
     {
+        $this->request->session()->id($sessionId);
         $this->request->session()->destroy();
         return $this->redirect($this->Auth->logout());
+    }
+
+    public function afterLogout(Event $event, $user)
+    {
+        if ($this->SSO->getAuthenticationType() != 'Local') {
+            TableRegistry::get('SSO.SingleLogout')->afterLogout($user);
+        }
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
+        $events['Auth.logout'] = 'afterLogout';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
@@ -130,6 +142,17 @@ class UsersController extends AppController
             $event->stopPropagation();
             return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
         } else {
+            $user = $this->Auth->user();
+            if ($this->SSO->getAuthenticationType() != 'Local') {
+                $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
+                TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
+            }
+            $listeners = [
+                TableRegistry::get('Security.SecurityUserLogins'),
+                $this->Users
+            ];
+            $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
             // Labels
             $labels = TableRegistry::get('Labels');
             $labels->storeLabelsInCache();
@@ -155,11 +178,7 @@ class UsersController extends AppController
     {
         $user = $this->Users->get($user['id']);
 
-        $listeners = [
-            TableRegistry::get('Security.SecurityUserLogins'),
-            $this->Users
-        ];
-        $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
 
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
 
