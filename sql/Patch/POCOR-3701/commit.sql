@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
 
 INSERT INTO `assessments` (`id`, `code`, `name`, `description`, `excel_template_name`, `excel_template`, `type`, `academic_period_id`, `education_grade_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `Assessments`.`id`, `Assessments`.`code`, `Assessments`.`name`, `Assessments`.`description`, `ExcelTemplates`.`file_name`, `ExcelTemplates`.`file_content`, `Assessments`.`type`, `Assessments`.`academic_period_id`, `Assessments`.`education_grade_id`, `Assessments`.`modified_user_id`, `Assessments`.`modified`, `Assessments`.`created_user_id`, `Assessments`.`created`
-FROM `z_3701_assessments` AS `Assessments` JOIN `excel_templates` AS `ExcelTemplates`;
+FROM `z_3701_assessments` AS `Assessments` LEFT JOIN `excel_templates` AS `ExcelTemplates` ON 1 = 1;
 
 -- security_functions
 UPDATE `security_functions` SET `_execute` = 'Assessments.download' WHERE `id` = 5010;
