@@ -1,21 +1,23 @@
 <?php
 namespace SSO\Model\Table;
 
+use ArrayObject;
 use Exception;
-use Cake\ORM\Table;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Network\Http\Client;
 use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\Routing\Router;
-use ArrayObject;
 
-class SingleLogoutTable extends Table {
-	public function initialize(array $config) {
-		parent::initialize($config);
-	}
+class SingleLogoutTable extends Table
+{
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+    }
 
     public function afterLogout($user)
     {
@@ -59,10 +61,10 @@ class SingleLogoutTable extends Table {
         $this->save($newEntity);
     }
 
-	private function getLogoutRecords($username)
+    private function getLogoutRecords($username)
     {
         return $this->find()->where([$this->aliasField('username') => $username])->toArray();
-	}
+    }
 
     public function removeLogoutRecord($username)
     {
