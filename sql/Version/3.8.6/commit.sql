@@ -9,13 +9,14 @@ ADD COLUMN `ip_address` VARCHAR(45) NULL AFTER `session_id`;
 
 -- single_logout
 CREATE TABLE `single_logout` (
-  `username` VARCHAR(256) NOT NULL,
-  `url` VARCHAR(256) NOT NULL,
+  `id` CHAR(36) NOT NULL,
+  `username` VARCHAR(100) NOT NULL,
+  `url` VARCHAR(255) NOT NULL,
   `session_id` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`username`, `url`, `session_id`),
+  PRIMARY KEY (`id`),
   INDEX `username` (`username`),
-  INDEX `url` (`url`),
-  INDEX `session_id` (`session_id`));
+  INDEX `session_id` (`session_id`)
+);
 
 -- config_product_list
 CREATE TABLE `z_3672_config_product_lists` LIKE `config_product_lists`;
