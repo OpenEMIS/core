@@ -151,7 +151,7 @@ class UsersController extends AppController
                 TableRegistry::get('Security.SecurityUserLogins'),
                 $this->Users
             ];
-            $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user, $this->request], $this, $listeners);
+            $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
 
             // Labels
             $labels = TableRegistry::get('Labels');
