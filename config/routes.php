@@ -101,6 +101,9 @@ Router::scope('/restful', [], function ($routes) {
             ['action' => 'options', '_method' => 'OPTIONS']
         );
 
+        $routes->connect('/', ['action' => 'nothing']);
+        $routes->connect('/token', ['action' => 'token', '_method' => 'GET']);
+
         // Index
         $routes->connect( '/:version/:model',
             ['action' => 'index', '_method' => 'GET'],
