@@ -89,7 +89,7 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function afterLogin(Event $event, $user, Request $request)
+	public function afterLogin(Event $event, $user)
     {
     	$user['last_login'] = new Time();
     	$controller = $event->subject();
