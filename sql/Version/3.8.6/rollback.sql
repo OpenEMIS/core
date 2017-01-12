@@ -1,3 +1,8 @@
+-- POCOR-3550
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3550';
+
+
 -- POCOR-3711
 -- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3711', NOW());
