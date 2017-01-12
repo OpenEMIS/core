@@ -428,7 +428,8 @@ trait MessagesTrait {
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
-            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
+            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+            'invalidEndDate' => 'Transfer is disabled because student End Date is not valid.'
         ],
         'TransferApprovals' => [
             'existsInNewSchool' => 'Student is already exists in the new school',
