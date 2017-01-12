@@ -143,24 +143,27 @@ class UsersController extends AppController
             return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
         } else {
             $user = $this->Auth->user();
-            if ($this->SSO->getAuthenticationType() != 'Local') {
-                $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
-                TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
+
+            if (!empty($user)) {
+                if ($this->SSO->getAuthenticationType() != 'Local') {
+                    $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
+                    TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
+                }
+                $listeners = [
+                    TableRegistry::get('Security.SecurityUserLogins'),
+                    $this->Users
+                ];
+                $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
+                // Labels
+                $labels = TableRegistry::get('Labels');
+                $labels->storeLabelsInCache();
+
+                // Support Url
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $supportUrl = $ConfigItems->value('support_url');
+                $this->request->session()->write('System.help', $supportUrl);
             }
-            $listeners = [
-                TableRegistry::get('Security.SecurityUserLogins'),
-                $this->Users
-            ];
-            $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
-
-            // Labels
-            $labels = TableRegistry::get('Labels');
-            $labels->storeLabelsInCache();
-
-            // Support Url
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $supportUrl = $ConfigItems->value('support_url');
-            $this->request->session()->write('System.help', $supportUrl);
         }
     }
 
