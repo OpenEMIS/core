@@ -10,6 +10,7 @@ class ConfigurationsController extends AppController {
     public function initialize()
     {
         parent::initialize();
+        $this->loadComponent('Configuration.Configuration');
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
     }
 
