@@ -1,7 +1,6 @@
 -- POCOR-3550
 -- system_patches
-INSERT INTO `system_patches` (`issue`, `created`)
-VALUES('POCOR-3550', NOW());
+INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3550', NOW());
 
 -- security_functions
 UPDATE `security_functions`
