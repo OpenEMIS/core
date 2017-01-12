@@ -112,12 +112,14 @@ class InstitutionsController extends AppController
     // AngularJS
     public function Results()
     {
-        $session = $this->request->session();
+        $classId = $this->ControllerAction->getQueryString('class_id');
+        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
         $roles = [];
 
-        if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+        if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
-            $institutionId = $session->read('Institution.Institutions.id');
             $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         }
 
@@ -127,9 +129,8 @@ class InstitutionsController extends AppController
 
         $url = $this->ControllerAction->url('index');
 
-        $ExcelTemplates = TableRegistry::get('CustomExcel.ExcelTemplates');
-        $AssessmentResults = TableRegistry::get('CustomExcel.AssessmentResults');
-        $hasTemplate = $ExcelTemplates->checkIfHasTemplate($AssessmentResults->registryAlias());
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
 
         if ($hasTemplate) {
             $url['plugin'] = 'CustomExcel';
