@@ -4,12 +4,3 @@
     RewriteRule    ^$    webroot/    [L]
     RewriteRule    (.*) webroot/$1    [L]
 </IfModule>
-
-Order deny,allow
-Deny from all
-#Require all denied
-AuthType Basic
-AuthName TopSecret
-AuthUserFile /var/safe/.htpasswddev
-require valid-user
-Satisfy Any
