@@ -21,6 +21,13 @@ class ConfigurationsController extends AppController {
         $session = $this->request->session();
         $action = $this->request->params['action'];
 
+        $controller = $this->name;
+        $accessMap = [
+            "$controller.ProductLists" => "$controller.%s",
+            "$controller.Authentication" => "$controller.%s",
+        ];
+        $this->request->addParams(['accessMap' => $accessMap]);
+
         $this->set('contentHeader', __($header));
     }
 
