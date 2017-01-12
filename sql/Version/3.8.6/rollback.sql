@@ -1,3 +1,44 @@
+-- POCOR-3711
+-- system_patches
+INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3711', NOW());
+
+UPDATE `security_functions` SET `order` = `order` + 1 WHERE `id` < 2000 and `order` > 1016;
+UPDATE `security_functions` SET `order` = 1017 WHERE id = 1016;
+UPDATE `security_functions` SET `order` = 1018 WHERE id = 1044;
+UPDATE `security_functions` SET `order` = 1019 WHERE id = 1003;
+
+UPDATE `security_functions`
+SET
+`controller` = 'Institutions',
+`_view` = 'Staff.index|Staff.view',
+`_edit` = 'Staff.edit',
+`_add` = 'Staff.add|getInstitutionPositions',
+`_delete` = 'Staff.remove',
+`_execute` = 'Staff.excel'
+WHERE `id` = 1016;
+
+UPDATE `security_functions`
+SET
+`name` = 'Overview',
+`controller` = 'Institutions',
+`_view` = 'StaffUser.view',
+`_edit` = 'StaffUser.edit|StaffUser.pull',
+`_add` = NULL,
+`_delete` = NULL,
+`_execute` = 'StaffUser.excel'
+WHERE `id` = 3000;
+shasanuddin@ip-192-168-0-72 [11:30:57] /var/www/html/openemis.org/dmo-dev/core ]$
+shasanuddin@ip-192-168-0-72 [11:31:02] /var/www/html/openemis.org/dmo-dev/core ]$ vi sql/Version/3.8.6/
+shasanuddin@ip-192-168-0-72 [11:31:09] /var/www/html/openemis.org/dmo-dev/core ]$ vi sql/Version/3.8.6/commit.sql
+shasanuddin@ip-192-168-0-72 [11:31:16] /var/www/html/openemis.org/dmo-dev/core ]$
+shasanuddin@ip-192-168-0-72 [11:31:17] /var/www/html/openemis.org/dmo-dev/core ]$ cat /var/www/html/openemis.org/dmo-dev/core/sql/Patch/POCOR-3711/rollback.sql
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `id` < 2000 and `order` > 1016;
+UPDATE `security_functions` SET `order` = 1017 WHERE `id` = 1016;
+
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue`='POCOR-3711';
+
+
 -- POCOR-3701
 -- assessments
 DROP TABLE IF EXISTS `assessments`;
