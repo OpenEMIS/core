@@ -9,6 +9,7 @@ class ConfigurationsController extends AppController {
     public function initialize()
     {
         parent::initialize();
+        $this->loadComponent('Configuration.Configuration');
         $this->ControllerAction->model('Configuration.ConfigItems', ['index', 'view', 'edit']);
     }
 
@@ -20,13 +21,6 @@ class ConfigurationsController extends AppController {
         $this->Navigation->addCrumb($header, ['plugin' => null, 'controller' => $this->name, 'action' => 'index']);
         $session = $this->request->session();
         $action = $this->request->params['action'];
-
-        $controller = $this->name;
-        $accessMap = [
-            "$controller.ProductLists" => "$controller.%s",
-            "$controller.Authentication" => "$controller.%s",
-        ];
-        $this->request->addParams(['accessMap' => $accessMap]);
 
         $this->set('contentHeader', __($header));
     }
