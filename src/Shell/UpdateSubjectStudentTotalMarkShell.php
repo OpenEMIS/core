@@ -12,16 +12,12 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
         parent::initialize();
         $this->loadModel('Institution.InstitutionSubjectStudents');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
-        $this->loadModel('Institution.Institutions');
-        $this->loadModel('Institution.InstitutionClasses');
-        $this->loadModel('Institution.InstitutionClassGrades');
         $this->loadModel('Assessment.AssessmentItemResults');
         $this->loadModel('Assessment.AssessmentItems');
         $this->loadModel('Assessment.AssessmentGradingTypes');
         $this->loadModel('Assessment.AssessmentGradingOptions');
         $this->loadModel('Assessment.AssessmentPeriods');
         $this->loadModel('Assessment.Assessments');
-
     }
 
     public function main() {
@@ -29,7 +25,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
         $selectedAssessmentId = !empty($this->args[1]) ? $this->args[1] : 0;
         $selectedSubjectId = !empty($this->args[2]) ? $this->args[2] : 0;
 
-        $PAGE_LIMIT = 1000;
+        $PAGE_LIMIT = 1500;
         $pid = getmypid();
 
         $this->out($pid.': Initialize Update Subject Student Total mark ('. Time::now() .')');
@@ -68,7 +64,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                             $this->AssessmentItemResults->aliasField('student_id'),
                             $this->AssessmentItemResults->aliasField('education_subject_id'),
                             $this->AssessmentItemResults->aliasField('academic_period_id'),
-                            'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)'),
+                            'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
                         ])
                         ->matching('AssessmentPeriods')
                         ->matching('AssessmentGradingOptions.AssessmentGradingTypes')
@@ -85,18 +81,19 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                         ]);
 
                     $resultsCount = $resultsQuery->count();
-                    $this->out($pid.': Total number records to save: '. $resultsCount);
+                    $this->out($pid.': Total number records to process: '. $resultsCount .' ('. Time::now() .')');
 
                     if ($resultsCount > 0) {
                         $totalPages = ceil($resultsCount / $PAGE_LIMIT);
-                        $this->out($pid.': Total number of pages to save: '. $totalPages .' pages with '. $PAGE_LIMIT .' records each');
+                        $this->out($pid.': Total number of pages to process: '. $totalPages .' pages with '. $PAGE_LIMIT .' records each');
 
                         for ($page = 1; $page <= $totalPages; $page++) {
+                            $this->out($pid.': Processing PAGE '.$page.' ('. Time::now() .')');
                             $offset = ($page-1)*$PAGE_LIMIT;
                             $resultPageData = $resultsQuery->limit($PAGE_LIMIT)->offset($offset)->toArray();
-                            $this->out($pid.': Processing PAGE '.$page.' with '. count($resultPageData) .' records ('. Time::now() .')');
+                            $this->out($pid.': test finish query ('. Time::now() .')');
+                            // $this->out($pid.': Processing PAGE '.$page.' with '. count($resultPageData) .' records ('. Time::now() .')');
 
-                            $saveError = 0;
                             $updateEntities = [];
                             foreach ($resultPageData as $result) {
                                 $subjectStudents = $this->InstitutionSubjectStudents->find()
@@ -120,7 +117,6 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                             } catch (\Exception $e) {
                                 $this->out($pid.': Error encoutered saving ACADEMIC PERIOD ID '. $periodId .', ASSESSMENT ID '. $assessmentId .', SUBJECT ID '. $educationSubjectId .' PAGE '. $page .' ('.Time::now() .')');
                                 $this->out($e->getMessage());
-                                $saveError = 1;
                             }
 
                             $this->out($pid.': End processing PAGE '.$page.' ('. Time::now() .')');
