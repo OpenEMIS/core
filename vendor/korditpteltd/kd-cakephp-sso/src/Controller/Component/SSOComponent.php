@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Security;
 use Cake\I18n\Time;
 use SSO\ProcessToken;
+use Cake\Event\Event;
 
 class SSOComponent extends Component {
     private $controller;
