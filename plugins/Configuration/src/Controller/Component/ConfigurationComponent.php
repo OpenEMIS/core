@@ -25,7 +25,11 @@ class ConfigurationComponent extends Component
 {
     private $controller;
     private $configOptions = [
-        'ProductLists' => ['className' => 'Configuration.ProductLists']
+        'AdministrativeBoundaries'  => ['className' => 'Configuration.AdministrativeBoundaries'],
+        'Authentication'            => ['className' => 'Configuration.Authentication'],
+        'CustomValidation'          => ['className' => 'Configuration.CustomValidation'],
+        'ExternalDataSource'        => ['className' => 'Configuration.ExternalDataSource'],
+        'ProductLists'              => ['className' => 'Configuration.ProductLists']
     ];
 
     // Is called before the controller's beforeFilter method.
@@ -34,7 +38,7 @@ class ConfigurationComponent extends Component
         $this->controller = $this->_registry->getController();
         $controller = $this->controller->name;
         $accessMap = [];
-        foreach ($this->fieldOptions as $key => $className) {
+        foreach ($this->configOptions as $key => $className) {
             $accessMap["$controller.$key"] = "$controller.%s";
         }
         $this->request->addParams(['accessMap' => $accessMap]);
