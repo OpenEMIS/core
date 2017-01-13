@@ -1,3 +1,6 @@
+v3.8.6
+- There is a wizard now when user tries to add Staff to an Institution
+
 v3.8.5
 - System allows user to search for Textbook name
 - Implemented Institution and Grade filter in Students > Academic > Subjects page

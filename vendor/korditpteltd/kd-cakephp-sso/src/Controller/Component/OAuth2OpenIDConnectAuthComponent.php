@@ -34,8 +34,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         if (!$this->controller->Auth->user()) {
             $http = new Client();
             $responseBody = [];
-            $responseBody[] = $http->post($oAuthAttributes['openid_configuration']);
-            $responseBody[] = $http->get($oAuthAttributes['openid_configuration']);
+            $responseBody[] = $http->get($oAuthAttributes['openid_configuration'], [], ['redirect' => 3]);
 
             foreach ($responseBody as $response) {
                 if ($response->statusCode() == 200) {
