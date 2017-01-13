@@ -623,7 +623,7 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
-        
+
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -951,7 +951,10 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ]
+                ],
+                'email' => [
+                    'ruleValidEmail' => 'Please enter a valid Email'
+                ],
             ],
             'Accounts' => [
                 'username' => [
