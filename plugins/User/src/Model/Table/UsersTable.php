@@ -485,6 +485,12 @@ class UsersTable extends AppTable {
 			// password validation now in behavior
 			->allowEmpty('password')
 			->allowEmpty('photo_content')
+			->allowEmpty('email')
+			->add('email', [
+				'ruleValidEmail' => [
+					'rule' => 'email'
+				]
+			])
 			;
 
 		$thisModel = ($thisModel == null)? $this: $thisModel;
@@ -499,6 +505,7 @@ class UsersTable extends AppTable {
 		$thisModel->setValidationCode('password.ruleNoSpaces', 'User.Users');
 		$thisModel->setValidationCode('password.ruleMinLength', 'User.Users');
 		$thisModel->setValidationCode('date_of_birth.ruleValidDate', 'User.Users');
+		$thisModel->setValidationCode('email.ruleValidEmail', 'User.Users');
 		return $validator;
 	}
 
