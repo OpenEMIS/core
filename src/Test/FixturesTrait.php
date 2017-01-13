@@ -7,7 +7,7 @@ trait FixturesTrait {
         'app.academic_period_levels',
         'app.academic_periods',
         'app.alert_logs',
-        'app.alert_roles',
+        'app.alerts_roles',
         'app.alerts',
         'app.api_authorizations',
         'app.area_administrative_levels',

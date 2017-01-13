@@ -12,12 +12,13 @@ class AlertsController extends AppController
 		parent::initialize();
 
 		$this->ControllerAction->models = [
-			'Responses'	=> ['className' => 'Alert.SmsResponses', 'actions' => ['index']],
-			'Logs'		=> ['className' => 'Alert.AlertLogs', 'actions' => ['index']]
+			'Responses'	=> ['className' => 'Alert.SmsResponses', 'actions' => ['index']]
 		];
     }
 
+    public function AlertTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertTypes']); }
     public function Questions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.SmsMessages']); }
+    public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
