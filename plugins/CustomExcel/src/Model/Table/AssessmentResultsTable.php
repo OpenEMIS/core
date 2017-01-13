@@ -214,7 +214,33 @@ class AssessmentResultsTable extends AppTable
                 ->group([$AssessmentItemsGradingTypes->aliasField('education_subject_id'), 'AssessmentPeriods.academic_term'])
                 ->hydrate(false)
                 ->all();
-            return $results->toArray();
+            // return $results->toArray();
+
+            $assessmentItemsGradingTypeResults = $results->toArray();
+            $averageAssessmentItemsGradingTypes = [];
+            foreach ($assessmentItemsGradingTypeResults as $key => $obj) {
+                $educationSubjectId = $obj['education_subject_id'];
+                $academicTermMax = $obj['academic_term_max'];
+                if (array_key_exists($educationSubjectId, $averageAssessmentItemsGradingTypes)) {
+                    $averageAssessmentItemsGradingTypes[$educationSubjectId]['total_academic_term_max'] += $academicTermMax;
+                    $averageAssessmentItemsGradingTypes[$educationSubjectId]['count'] += 1;
+                } else {
+                    $averageAssessmentItemsGradingTypes[$educationSubjectId] = [
+                        'total_academic_term_max' => $academicTermMax,
+                        'count' => 1
+                    ];
+                }
+            }
+
+            foreach ($averageAssessmentItemsGradingTypes as $key => $obj) {
+                $assessmentItemsGradingTypeResults[] = [
+                    'education_subject_id' => $key,
+                    'academic_term' => __('Average'),
+                    'academic_term_max' => $obj['total_academic_term_max'] / $obj['count']
+                ];
+            }
+
+            return $assessmentItemsGradingTypeResults;
         }
     }
 
@@ -257,7 +283,45 @@ class AssessmentResultsTable extends AppTable
                 ])
                 ->hydrate(false)
                 ->all();
-            return $results->toArray();
+            // return $results->toArray();
+
+            $studentSubjectResults = $results->toArray();
+            $averageStudentSubjectResults = [];
+            foreach ($studentSubjectResults as $key => $obj) {
+                $studentId = $obj['student_id'];
+                $educationSubjectId = $obj['education_subject_id'];
+                $academicTermMarks = $obj['academic_term_marks'];
+                if (array_key_exists($studentId, $averageStudentSubjectResults) && array_key_exists($educationSubjectId, $averageStudentSubjectResults[$studentId])) {
+                    $averageStudentSubjectResults[$studentId][$educationSubjectId]['total_academic_term_marks'] += $academicTermMarks;
+                    $averageStudentSubjectResults[$studentId][$educationSubjectId]['count'] += 1;
+                } else {
+                    $averageStudentSubjectResults[$studentId][$educationSubjectId] = [
+                        'institution_id' => $obj['institution_id'],
+                        'academic_period_id' => $obj['academic_period_id'],
+                        'assessment_id' => $obj['assessment_id'],
+                        'total_academic_term_marks' => $academicTermMarks,
+                        'count' => 1
+                    ];
+                }
+            }
+
+            foreach ($averageStudentSubjectResults as $studentKey => $studentObj) {
+                foreach ($studentObj as $subjectKey => $subjectObj) {
+                    $averageMark = $subjectObj['count'] > 1 ? $subjectObj['total_academic_term_marks'] / $subjectObj['count'] : '';
+                    $averageObj = [
+                        'institution_id' => $subjectObj['institution_id'],
+                        'academic_period_id' => $subjectObj['academic_period_id'],
+                        'assessment_id' => $subjectObj['assessment_id'],
+                        'student_id' => $studentKey,
+                        'education_subject_id' => $subjectKey,
+                        'academic_term' => __('Average'),
+                        'academic_term_marks' => $averageMark
+                    ];
+                    $studentSubjectResults[] = $averageObj;
+                }
+            }
+
+            return $studentSubjectResults;
         }
     }
 
@@ -275,7 +339,20 @@ class AssessmentResultsTable extends AppTable
                 ->group([$AssessmentPeriods->aliasField('academic_term')])
                 ->hydrate(false)
                 ->all();
-            return $results->toArray();
+            // return $results->toArray();
+
+            $academicTermResults = $results->toArray();
+            $totalPeriodWeight = 0;
+            foreach ($academicTermResults as $key => $obj) {
+                $totalPeriodWeight += $obj['total_period_weight'];
+            }
+
+            $academicTermResults[] = [
+                'total_period_weight' => $totalPeriodWeight,
+                'academic_term' => __('Average')
+            ];
+
+            return $academicTermResults;
         }
     }
 
