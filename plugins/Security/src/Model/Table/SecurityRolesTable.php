@@ -18,6 +18,8 @@ class SecurityRolesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 
+        $this->hasMany('AlertsRoles', ['className' => 'Alert.AlertsRoles']);
+
 		$this->belongsToMany('SecurityFunctions', [
 			'className' => 'Security.SecurityFunctions',
 			'through' => 'Security.SecurityRoleFunctions'

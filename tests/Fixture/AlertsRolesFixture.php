@@ -3,9 +3,9 @@ namespace App\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
 
-class AlertRolesFixture extends TestFixture
+class AlertsRolesFixture extends TestFixture
 {
-    public $import = ['table' => 'alert_roles'];
+    public $import = ['table' => 'alerts_roles'];
     public $records = [];
 }
 

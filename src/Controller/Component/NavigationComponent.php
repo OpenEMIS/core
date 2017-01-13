@@ -905,6 +905,13 @@ class NavigationComponent extends Component
 				'link' => false,
 			],
 
+				'Alerts.AlertTypes' => [
+						'title' => 'Alerts',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.AlertTypes']
+					],
+
 				'Alerts.Questions' => [
 					'title' => 'Questions',
 					'parent' => 'Administration.Communications',
