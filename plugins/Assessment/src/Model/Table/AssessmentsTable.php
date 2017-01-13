@@ -50,9 +50,29 @@ class AssessmentsTable extends ControllerActionTable {
             'cascadeCallbacks' => true
         ]);
 
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'excel_template_name',
+            'content' => 'excel_template',
+            'size' => '10MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'document',
+            'useDefaultName' => true
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'view']
         ]);
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            true
+        );
+        $this->behaviors()->get('Download')->config(
+            'name',
+            'excel_template_name'
+        );
+        $this->behaviors()->get('Download')->config(
+            'content',
+            'excel_template'
+        );
         $this->setDeleteStrategy('restrict');
     }
 
@@ -74,9 +94,17 @@ class AssessmentsTable extends ControllerActionTable {
                         return $this->action == 'add';
                     }
                 ]
-            ]);
+            ])
+            ->allowEmpty('excel_template');
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('excel_template_name', ['visible' => false]);
+        $this->field('excel_template', ['visible' => true]);
+
+        $this->setFieldOrder(['code', 'name', 'description', 'excel_template_name', 'excel_template', 'academic_period_id', 'education_grade_id']);
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -95,7 +123,6 @@ class AssessmentsTable extends ControllerActionTable {
         $this->field('type', [
             'visible' => false
         ]);
-
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -116,6 +143,17 @@ class AssessmentsTable extends ControllerActionTable {
         usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
         $entity->assessment_items = $assessmentItems;
+
+        // determine if download button is shown
+        $showFunc = function() use ($entity) {
+            $filename = $entity->excel_template;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
 
         $this->setupFields($entity);
     }
@@ -155,7 +193,6 @@ class AssessmentsTable extends ControllerActionTable {
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        // pr($entity);
         $errors = $entity->errors();
         if (!empty($errors)) {
             if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
@@ -170,6 +207,22 @@ class AssessmentsTable extends ControllerActionTable {
             $this->AssessmentItems->alias(),
             $this->GradingTypes->alias()
         ];
+    }
+
+    public function onGetExcelTemplate(Event $event, Entity $entity)
+    {
+        if ($entity->has('excel_template_name')) {
+            return $entity->excel_template_name;
+        }
+    }
+
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'index' || $action == 'view') {
+            $attr['type'] = 'string';
+        }
+
+        return $attr;
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -327,5 +380,17 @@ class AssessmentsTable extends ControllerActionTable {
         }
 
         return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function checkIfHasTemplate($assessmentId=0)
+    {
+        $hasTemplate = false;
+
+        if (!empty($assessmentId)) {
+            $entity = $this->get($assessmentId);
+            $hasTemplate = !empty($entity->excel_template) ? true : false;
+        }
+
+        return $hasTemplate;
     }
 }
