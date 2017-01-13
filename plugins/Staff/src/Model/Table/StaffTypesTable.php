@@ -20,5 +20,8 @@ class StaffTypesTable extends ControllerActionTable
         $this->hasMany('Positions', ['className' => 'Staff.Positions']);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Staff' => ['index']
+        ]);
     }
 }
