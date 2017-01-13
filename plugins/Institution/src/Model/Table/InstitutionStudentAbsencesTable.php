@@ -46,6 +46,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
+		$this->addBehavior('Alert.Alerts');
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -695,5 +696,44 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		// End
 
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
+	}
+
+	public function getValueIndex($institutionId, $studentId, $academicPeriodId, $isAlert)
+	{
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
+		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+
+		$conditions = [
+			$this->aliasField('institution_id') => $institutionId,
+			$this->aliasField('student_id') => $studentId,
+			$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate->format('Y-m-d'),
+			$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d'),
+		];
+
+		if ($isAlert) {
+			$conditions = [
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('absence_type_id') => 2, // 2 == UNEXCUSED
+				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate->format('Y-m-d'),
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d'),
+			];
+		}
+
+		$absenceResults = $this
+			->find()
+			->where([$conditions])
+			->all();
+
+		$absenceDay = 0;
+		foreach ($absenceResults as $key => $obj) {
+			$endDate = $obj->end_date;
+			$startDate = $obj->start_date;
+			$interval = $endDate->diff($startDate);
+			$absenceDay = $absenceDay + $interval->days + 1;
+		}
+
+		return $valueIndex = $absenceDay;
 	}
 }
