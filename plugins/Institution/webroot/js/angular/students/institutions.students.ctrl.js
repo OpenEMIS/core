@@ -123,7 +123,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.onChangeAcademicPeriod();
             }
             promises.push(InstitutionsStudentsSvc.getAddNewStudentConfig());
-            promises.push(InstitutionsStudentsSvc.getDefaultIdentityType());
 
             return $q.all(promises);
         }, function(error) {
@@ -156,16 +155,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             }
             if (StudentController.StudentSpecialNeeds != 2) {
                 promises[4] = InstitutionsStudentsSvc.getSpecialNeedTypes();
-            }
-            var defaultIdentityType = promisesObj[1];
-            if (defaultIdentityType.length > 0) {
-                StudentController.defaultIdentityTypeName = defaultIdentityType[0].name;
-                StudentController.defaultIdentityTypeId = defaultIdentityType[0].id;
-                StudentController.Student.identity_type_id = StudentController.defaultIdentityTypeId;
-                StudentController.Student.identity_type_name = StudentController.defaultIdentityTypeName;
-            } else {
-                StudentController.Student.identity_type_id = null;
-                StudentController.Student.identity_type_name = 'No default identity set';
             }
             promises[0] = InstitutionsStudentsSvc.getGenders();
 
@@ -466,6 +455,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             studentRecords[key]['identity_type_name'] = studentRecords[key][mapping.identity_type_mapping];
             studentRecords[key]['identity_number'] = studentRecords[key][mapping.identity_number_mapping];
             studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
+            studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
+            studentRecords[key]['address'] = studentRecords[key][mapping.address_mapping];
+            studentRecords[key]['postal_code'] = studentRecords[key][mapping.postal_mapping];
             studentRecords[key]['name'] = '';
             if (studentRecords[key].hasOwnProperty(mapping.first_name_mapping)) {
                 studentRecords[key]['name'] = studentRecords[key][mapping.first_name_mapping];

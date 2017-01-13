@@ -11,14 +11,14 @@
 			$this->Form->templates($template);
 
 			if (!empty($periodOptions)) {
-				echo $this->Form->input('academic_period_id', array(
+				echo $this->Form->input('period_id', [
 					'class' => 'form-control',
 					'label' => false,
 					'options' => $periodOptions,
 					'url' => $baseUrl,
 					'data-named-key' => 'academic_period_id',
 					'data-named-group' => 'position, staff_status_id'
-				));
+				]);
 			}
 
 			if (!empty($positionOptions)) {
