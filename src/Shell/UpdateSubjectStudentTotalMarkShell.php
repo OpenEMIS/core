@@ -22,7 +22,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
 
         try {
             $connection = ConnectionManager::get('default');
-            $connection->query("CREATE TABLE IF NOT EXISTS updated_students (`id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL, `student_id` int(11) NOT NULL, `education_subject_id` int(11) NOT NULL, `institution_class_id` int(11) NOT NULL, `institution_id` int(11) NOT NULL, `academic_period_id` int(11) NOT NULL, PRIMARY KEY (`student_id`, `education_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`), KEY `student_id` (`student_id`), KEY `education_subject_id` (`education_subject_id`), KEY `institution_class_id` (`institution_class_id`), KEY `institution_id` (`institution_id`), KEY `academic_period_id` (`academic_period_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+            $connection->query("CREATE TABLE IF NOT EXISTS updated_students (`id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL, `student_id` int(11) NOT NULL, `education_subject_id` int(11) NOT NULL, `institution_class_id` int(11) NOT NULL, `institution_id` int(11) NOT NULL, `academic_period_id` int(11) NOT NULL, `updated` int(1) NOT NULL, PRIMARY KEY (`student_id`, `education_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`), KEY `student_id` (`student_id`), KEY `education_subject_id` (`education_subject_id`), KEY `institution_class_id` (`institution_class_id`), KEY `institution_id` (`institution_id`), KEY `academic_period_id` (`academic_period_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
         } catch (Exception $e) {
             $this->out($e->getMessage());
         }
@@ -45,8 +45,6 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
         foreach ($academicPeriods as $periodId) {
             $this->out($pid.': Processing ACADEMIC PERIOD ID '. $periodId .' ('. Time::now() .')');
 
-            $subquery = $this->UpdatedStudents->find();
-
             // get all institution_subject_student within selected academic period
             $subjectStudentsQuery = $this->InstitutionSubjectStudents->find()
                 ->select([
@@ -57,23 +55,29 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                     $this->InstitutionSubjectStudents->aliasField('institution_id'),
                 ])
                 ->where([
-                    'NOT EXISTS ('.$this->UpdatedStudents->find().')',
+                    'NOT EXISTS ('.
+                        $this->UpdatedStudents->find()
+                            ->where([
+                                $this->UpdatedStudents->aliasField('student_id').' = '.$this->InstitutionSubjectStudents->aliasField('student_id'),
+                                $this->UpdatedStudents->aliasField('education_subject_id').' = '.$this->InstitutionSubjectStudents->aliasField('education_subject_id'),
+                                $this->UpdatedStudents->aliasField('academic_period_id').' = '.$this->InstitutionSubjectStudents->aliasField('academic_period_id'),
+                                $this->UpdatedStudents->aliasField('institution_class_id').' = '.$this->InstitutionSubjectStudents->aliasField('institution_class_id'),
+                                $this->UpdatedStudents->aliasField('institution_id').' = '.$this->InstitutionSubjectStudents->aliasField('institution_id'),
+                            ])
+                    .')',
                     $this->InstitutionSubjectStudents->aliasField('academic_period_id') => $periodId,
                     $this->InstitutionSubjectStudents->aliasField('status') => 1
                 ]);
 
             $studentCount = $subjectStudentsQuery->count();
             $this->out($pid.': Total number records to process: '. $studentCount .' ('. Time::now() .')');
+            $processedRecordCount = 0;
+            $loop = ($studentCount > 0);
 
-            if ($studentCount > 0) {
-                $totalPages = ceil($studentCount / $PAGE_LIMIT);
-                $this->out($pid.': Total number of pages to process: '. $totalPages .' pages with '. $PAGE_LIMIT .' records each');
+            while ($loop) {
+                $studentPageData = $subjectStudentsQuery->limit($PAGE_LIMIT)->toArray();
 
-                for ($page = 1; $page <= $totalPages; $page++) {
-                    $this->out($pid.': Processing PAGE '.$page.' ('. Time::now() .')');
-                    $offset = ($page-1)*$PAGE_LIMIT;
-                    $studentPageData = $subjectStudentsQuery->limit($PAGE_LIMIT)->offset($offset)->toArray();
-
+                if (!empty($studentPageData)) {
                     foreach ($studentPageData as $student) {
                         // calculate total marks from AssessmentItemResults for each student record
                         $query = $this->AssessmentItemResults->find();
@@ -101,26 +105,46 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                                 $student->total_mark = $resultsQuery->calculated_total;
                                 $this->InstitutionSubjectStudents->save($student);
 
-                                // update updated_students table
+                                // updated_students
                                 $updatedStudent = [
                                     'id' => Text::uuid(),
                                     'student_id' => $student->student_id,
                                     'academic_period_id' => $student->academic_period_id,
                                     'education_subject_id' => $student->education_subject_id,
                                     'institution_class_id' => $student->institution_class_id,
-                                    'institution_id' => $student->institution_id
+                                    'institution_id' => $student->institution_id,
+                                    'updated' => 1
                                 ];
-                                $updatedStudentEntity = $this->UpdatedStudents->newEntity($updatedStudent);
-                                $this->UpdatedStudents->save($updatedStudentEntity);
 
                             } catch (\Exception $e) {
-                                $this->out($pid.': Error encoutered saving ACADEMIC PERIOD ID '. $periodId .', STUDENT ID '. $student['student_id'] .' ('.Time::now() .')');
+                                $this->out($pid.': Error encoutered saving ACADEMIC PERIOD ID: '. $periodId .', STUDENT ID: '. $student->student_id .', EDUCATION SUBJECT ID: '. $student->education_subject_id .' ('.Time::now() .')');
                                 $this->out($e->getMessage());
                             }
+                        } else {
+                            // updated_students
+                            $updatedStudent = [
+                                'id' => Text::uuid(),
+                                'student_id' => $student->student_id,
+                                'academic_period_id' => $student->academic_period_id,
+                                'education_subject_id' => $student->education_subject_id,
+                                'institution_class_id' => $student->institution_class_id,
+                                'institution_id' => $student->institution_id,
+                                'updated' => 0
+                            ];
                         }
+
+                        $updatedStudentEntity = $this->UpdatedStudents->newEntity($updatedStudent);
+                        $this->UpdatedStudents->save($updatedStudentEntity);
                     }
 
-                    $this->out($pid.': End processing PAGE '.$page.' ('. Time::now() .')');
+                    $processedRecordCount += count($studentPageData);
+                    // $this->out($pid.': End processing '.$processedRecordCount.' records ('. Time::now() .')');
+
+                    $percentage = ($processedRecordCount*100) / $studentCount;
+                    $this->out($pid.': '.$percentage.'% of records processed ('. Time::now() .')');
+
+                } else {
+                    $loop = false;
                 }
             }
 
