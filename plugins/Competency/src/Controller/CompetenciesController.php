@@ -16,9 +16,9 @@ class CompetenciesController extends AppController
 	}
 
 	// CAv4
-	public function Templates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.Templates']); }
+	public function Templates() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.Templates']); }
 	public function AssessmentPeriods() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.AssessmentPeriods']); }
-	public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.AssessmentGradingTypes']); }
+	public function GradingTypes() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.GradingTypes']); }
 	// End
 
 	public function beforeFilter(Event $event) {
