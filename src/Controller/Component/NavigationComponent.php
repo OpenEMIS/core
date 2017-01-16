@@ -958,6 +958,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Assessment'],
                 'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
             ],
+            'Competencies.Templates' => [
+                'title' => 'Competencies',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Competency'],
+                'selected' => ['Competencies.Templates', 'Competencies.AssessmentPeriods', 'Competencies.GradingTypes']
+            ],
 			'Administration.Examinations' => [
 					'title' => 'Examinations',
 					'parent' => 'Administration',
