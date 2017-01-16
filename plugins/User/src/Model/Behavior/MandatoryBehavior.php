@@ -108,27 +108,26 @@ class MandatoryBehavior extends Behavior {
 
 	public function addBeforeAction(Event $event) {
 		// mandatory associated fields
-
 		$i = 30;
 		if (array_key_exists('Contacts', $this->_info) && $this->_info['Contacts'] != 'Excluded') {
-			$this->_table->ControllerAction->field('contact_type', ['order' => $i++]);
-			$this->_table->ControllerAction->field('contact_value', ['order' => $i++]);
+			$this->_table->field('contact_type', ['order' => $i++]);
+			$this->_table->field('contact_value', ['order' => $i++]);
 		}
 
 		if (array_key_exists('Nationalities', $this->_info) && $this->_info['Nationalities'] != 'Excluded') {
-			$this->_table->ControllerAction->field('nationality', ['order' => $i++]);
+			$this->_table->field('nationality', ['order' => $i++]);
 		}
 
 		if (array_key_exists('Identities', $this->_info) && $this->_info['Identities'] != 'Excluded') {
-			$this->_table->ControllerAction->field('identity_type', ['order' => $i++]);
-			$this->_table->ControllerAction->field('identity_number', ['order' => $i++]);
+			$this->_table->field('identity_type', ['order' => $i++]);
+			$this->_table->field('identity_number', ['order' => $i++]);
 		}
 
 		if (array_key_exists('SpecialNeeds', $this->_info) && $this->_info['SpecialNeeds'] != 'Excluded') {
-			$this->_table->ControllerAction->field('special_need', ['order' => $i++]);
-			$this->_table->ControllerAction->field('special_need_difficulty', ['order' => $i++]);
-			$this->_table->ControllerAction->field('special_need_comment', ['order' => $i++]);
-			$this->_table->ControllerAction->field('special_need_date', ['order' => $i++]);
+			$this->_table->field('special_need', ['order' => $i++]);
+			$this->_table->field('special_need_difficulty', ['order' => $i++]);
+			$this->_table->field('special_need_comment', ['order' => $i++]);
+			$this->_table->field('special_need_date', ['order' => $i++]);
 		}
 
 		// need to set the handling for non-mandatory require = false here
@@ -136,9 +135,10 @@ class MandatoryBehavior extends Behavior {
 			if ($value == 'Non-Mandatory') {
 				// need to set the relevant non-mandatory fields and set it to required = false to remove *
 				$singularAndLowerKey = strtolower(Inflector::singularize(Inflector::tableize($key)));
-				foreach ($event->subject()->model->fields as $fkey => $fvalue) {
+				$model = $this->_table;
+				foreach ($model->fields as $fkey => $fvalue) {
 					if (strpos($fkey, $singularAndLowerKey)!==false) {
-						$event->subject()->model->fields[$fkey]['attr']['required'] = false;
+						$model->fields[$fkey]['attr']['required'] = false;
 					}
 				}
 			}
