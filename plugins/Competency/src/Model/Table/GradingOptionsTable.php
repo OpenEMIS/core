@@ -3,12 +3,12 @@ namespace Competency\Model\Table;
 
 use Cake\Validation\Validator;
 
-class CompetencyGradingOptionsTable extends CompetenciesAppTable {
+class GradingOptionsTable extends CompetenciesAppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('CompetencyGradingTypes', ['className' => 'Competency.CompetencyGradingTypes']);
+		$this->belongsTo('CompetencyGradingTypes', ['className' => 'Competency.GradingTypes']);
 		// $this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->fields['competency_grading_type_id']['type'] = 'hidden';

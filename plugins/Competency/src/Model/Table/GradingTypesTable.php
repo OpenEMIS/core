@@ -13,14 +13,14 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
 
-class CompetencyGradingTypesTable extends ControllerActionTable {
+class GradingTypesTable extends ControllerActionTable {
 	use MessagesTrait;
 	use OptionsTrait;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->hasMany('GradingOptions', ['className' => 'Competency.CompetencyGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		// $this->belongsToMany('EducationSubjects', [
   //           'className' => 'Education.EducationSubjects',
@@ -129,13 +129,13 @@ class CompetencyGradingTypesTable extends ControllerActionTable {
 	public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
 	{
 		// $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
-		$CompetencyGradingOptions = TableRegistry::get('Competency.CompetencyGradingOptions');
+		$GradingOptions = TableRegistry::get('Competency.GradingOptions');
 		$gradingOptions = [];
 		if (!is_null($entity->grading_options)) {
 			foreach ($entity->grading_options as $key => $gradingOption) {
 				$gradingOptionId = $gradingOption->id;
 				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($CompetencyGradingOptions, $gradingOption, $extra)) {
+				if ($this->hasAssociatedRecords($GradingOptions, $gradingOption, $extra)) {
 					$gradingOptions[$gradingOptionId] = 1;
 				}
 			}
@@ -169,8 +169,8 @@ class CompetencyGradingTypesTable extends ControllerActionTable {
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// get the array of the original gradeOptions
-		$CompetencyGradingOptions = TableRegistry::get('Competency.CompetencyGradingOptions');
-		$query = $CompetencyGradingOptions
+		$GradingOptions = TableRegistry::get('Competency.GradingOptions');
+		$query = $GradingOptions
 			->find()
 			->where(['competency_grading_type_id' => $entity->id])
 			->toArray();
@@ -180,7 +180,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable {
 			foreach ($query as $key => $gradingOption) {
 				$gradingOptionId = $gradingOption->id;
 				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($CompetencyGradingOptions, $gradingOption, $extra)) {
+				if ($this->hasAssociatedRecords($GradingOptions, $gradingOption, $extra)) {
 					$gradingOptions[$gradingOptionId] = 1;
 				}
 			}
@@ -206,7 +206,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable {
 				$this->GradingOptions->deleteAll([
 					$this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
 				]);
-			} else if ((!array_key_exists('grading_options', $requestData['CompetencyGradingTypes'])) && (!$allowedDeleteAll)){
+			} else if ((!array_key_exists('grading_options', $requestData['GradingTypes'])) && (!$allowedDeleteAll)){
 				$this->GradingOptions->deleteAll([
 					$this->GradingOptions->aliasField('competency_grading_type_id') => $entity->id
 				]);
