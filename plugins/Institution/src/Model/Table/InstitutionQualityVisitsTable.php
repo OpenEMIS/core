@@ -157,8 +157,13 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$selectedPeriod = $request->query('period');
 			$SubjectStaff = $this->SubjectStaff;
+
+            if ($action == 'add') {
+                $selectedPeriod = $request->query('period');
+            } else if ($action == 'edit') {
+                $selectedPeriod = $attr['entity']->academic_period_id;
+            }
 
 			$classOptions = [];
 			if (!is_null($selectedPeriod)) {
@@ -199,7 +204,12 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 	{
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
-			$selectedClass = $request->query('subject');
+			
+            if ($action == 'add') {
+                $selectedClass = $request->query('subject');
+            } else if ($action == 'edit') {
+                $selectedClass = $attr['entity']->institution_subject_id;
+            }
 
 			$staffOptions = [];
 			if (!is_null($selectedClass)) {
@@ -234,11 +244,10 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 			$attr['type'] = 'readonly';
 			$attr['value'] = $evaluator;
 			$attr['attr']['value'] = $evaluator;
+		} else if ($action == 'edit') {
+			// when edit, is created user
+			$attr['type'] = 'readonly';
 		}
-		// else if ($action == 'edit') {
-		// 	// when edit, is created user
-		// 	$attr['type'] = 'readonly';
-		// }
 
 		return $attr;
 	}
@@ -275,8 +284,14 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 	public function setupFields(Entity $entity)
 	{
 		$this->field('academic_period_id', ['type' => 'select']);
-		$this->field('institution_subject_id', ['type' => 'select']);
-		$this->field('staff_id', ['type' => 'select']);
+		$this->field('institution_subject_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+		$this->field('staff_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
 		$this->field('evaluator');
 		$this->field('quality_visit_type_id', ['type' => 'select']);
 		$this->field('file_name', [
