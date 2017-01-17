@@ -31,13 +31,17 @@ class SendingAlertShell extends Shell
                 'created' . ' <= ' => $today //date and now() timing
             ])
             ->all();
-
+pr($alertLogsList->toArray());
         foreach ($alertLogsList as $key => $obj) {
             // sending Email
+            // $email = new Email('openemis');
             $email = new Email();
+            // $email->from(['hsuhendra@kordit.com' => 'Testing the sendingAlertShell'])
             $email->from(['hsuhendra@kordit.com' => 'Testing the sendingAlertShell'])
-                ->to('hsuhendra@kordit.com')
-                ->subject($obj->destination)
+            // $email
+                // ->to('hsuhendra@kordit.com')
+                ->to($obj->destination)
+                ->subject($obj->subject)
                 ->send($obj->message);
 
             // update the alertLog

@@ -427,17 +427,18 @@ class SecurityGroupUsersTable extends AppTable {
             ])
             ->all();
 
-        $userNameListByRoles = [];
+        $userEmailListByRoles = [];
         if (!empty($securityUserList)) {
             foreach ($securityUserList as $key => $obj) {
                 $securityUserId = $obj->security_user_id;
-                $firstName = $this->Users->get($securityUserId)->first_name;
-                $lastName = $this->Users->get($securityUserId)->last_name;
+                $email = $this->Users->get($securityUserId)->email;
 
-                $userNameListByRoles[$securityUserId] = $firstName . ' ' . $lastName;
+                if (!empty($email)) {
+                    $userEmailListByRoles[$securityUserId] = $email;
+                }
             }
         }
 
-        return $userNameListByRoles;
+        return $userEmailListByRoles;
     }
 }

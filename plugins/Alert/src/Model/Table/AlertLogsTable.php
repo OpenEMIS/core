@@ -48,13 +48,12 @@ class AlertLogsTable extends ControllerActionTable
 
         $AlertTypes = TableRegistry::get('Alert.AlertTypes');
         $Users = TableRegistry::get('Security.Users');
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $AlertModel = TableRegistry::get($alertKey);
         $alias = $AlertModel->alias();
 
         $studentId = $afterSaveOrDeleteEntity->student_id;
         $institutionId = $afterSaveOrDeleteEntity->institution_id;
-
-        $studentName = $Users->get($studentId)->first_name . ' ' . $Users->get($studentId)->last_name;
 
         // to get the academicPeriodId
         if (isset($afterSaveOrDeleteEntity->academic_period_id)) {
@@ -66,12 +65,12 @@ class AlertLogsTable extends ControllerActionTable
 
         $isAlert = true;
 
-        $code = $AlertTypes->getAlertTypeDetailsByAlias($alias)['code'];
+        $feature = $AlertTypes->getAlertTypeDetailsByAlias($alias)['feature'];
         $placeholder = $AlertTypes->getAlertTypeDetailsByAlias($alias)['placeholder'];
 
         $AlertTypesData = $AlertTypes->find()
             ->contain(['SecurityRoles'])
-            ->where(['code' => $code])
+            ->where(['feature' => $feature])
             ->all();
 
         foreach ($AlertTypesData as $AlertTypesKey => $AlertTypesObj) {
@@ -90,27 +89,93 @@ class AlertLogsTable extends ControllerActionTable
 
                             if (!empty($emailList)) {
                                 foreach ($emailList as $emailListKey => $emailListObj) {
-                                    $message = str_replace($placeholder, [$studentName], $AlertTypesObj->message);
-                                    $this->updateAlertLog($AlertTypesObj, $emailListObj, $message);
+
+                                    //for placeholder
+                                    $studentName = $Users->get($studentId)->first_name . ' ' . $Users->get($studentId)->last_name;
+                                    $staffName = $Users->get($emailListKey)->first_name . ' ' . $Users->get($emailListKey)->last_name;
+                                    $institutionName = $Institutions->get($institutionId)->name;
+
+                                    $messageArray = explode(" ", $AlertTypesObj->message);
+                                    $subjectArray = explode(" ", $AlertTypesObj->subject);
+
+
+
+
+
+
+
+        //         $stringReplace = [];
+
+        // foreach ($placeholder as $placeholderKey => $placeholderObj) {
+        //     if (in_array($placeholderKey, $messageArray) || in_array($placeholderKey, $subjectArray)) {
+        //         pr('placeholder '. $placeholderKey);
+        //         switch ($placeholderKey) {
+        //             case '{student.name}':
+        //                 // $message = str_replace($placeholderKey, $studentName, $AlertTypesObj->message);
+        //                 // $subject = str_replace($placeholderKey, $studentName, $AlertTypesObj->subject);
+        //                 $stringReplace['{student.name}'] = $studentName;
+        //                 break;
+
+        //             case '{staff.name}':
+        //                 // $message = str_replace($placeholderKey, $staffName, $AlertTypesObj->message);
+        //                 // $subject = str_replace($placeholderKey, $staffName, $AlertTypesObj->subject);
+        //                 $stringReplace['{staff.name}'] = $staffName;
+        //                 break;
+
+        //             case '{institution.name}':
+        //                 // $message = str_replace($placeholderKey, $institutionName, $AlertTypesObj->message);
+        //                 // $subject = str_replace($placeholderKey, $institutionName, $AlertTypesObj->subject);
+        //                 $stringReplace['{institution.name}'] = $institutionName;
+        //                 break;
+
+        //             case '{threshold.value}':
+        //                 // $message = str_replace($placeholderKey, $threshold, $AlertTypesObj->message);
+        //                 // $subject = str_replace($placeholderKey, $threshold, $AlertTypesObj->subject);
+        //                 $stringReplace['{threshold.value}'] = $threshold;
+        //                 break;
+        //         }
+        //     }
+        // }
+        // pr($placeholder);
+        // pr($stringReplace);
+        // $message = str_replace($placeholder, [$stringReplace], $AlertTypesObj->message);
+
+
+
+
+        // pr('herer to explode the message and find the placeholder');
+        // // pr($AlertTypesObj->message);
+        // pr($messageArray);
+        // pr($placeholder);
+        // pr($emailListKey);
+        // pr($emailListObj);
+        // pr($staffName);
+        // pr($institutionName);
+        // pr($threshold);
+        pr($message);
+        // pr($subject);
+        die;
+                                    // $message = str_replace($placeholder, [$studentName], $AlertTypesObj->message);
+                                    $this->updateAlertLog($AlertTypesObj, $emailListObj, $subject, $message);
                                 }
 
                                 // trigger shell
                                 $this->triggerSendingAlertShell('SendingAlert');
                             } else {
                                 // user no email.
-                                $this->updateAlertLog($AlertTypesObj, 'No Email', 'No Email');
+                                $this->updateAlertLog($AlertTypesObj, 'No Email', 'No Email', 'No Email');
                             }
                         }
                     } else {
                         // no security role means no email.
-                        $this->updateAlertLog($AlertTypesObj, 'No Security Role', 'No Security Role');
+                        $this->updateAlertLog($AlertTypesObj, 'No Security Role', 'No Security Role', 'No Security Role');
                     }
                 }
             }
         }
     }
 
-    public function updateAlertLog($AlertTypesObj, $emailListObj, $message=null)
+    public function updateAlertLog($AlertTypesObj, $emailListObj, $subject=null, $message=null)
     {
         $today = Time::now();
         $todayDate = Date::now();
@@ -119,7 +184,7 @@ class AlertLogsTable extends ControllerActionTable
             ->where([
                 $this->aliasField('method') => $AlertTypesObj->method,
                 $this->aliasField('destination') => $emailListObj,
-                $this->aliasField('subject') => $AlertTypesObj->subject,
+                $this->aliasField('subject') => $subject,
                 $this->aliasField('message') => $message,
                 $this->aliasField('created') . ' >= ' => $todayDate,
                 $this->aliasField('created') . ' <= ' => $today,
