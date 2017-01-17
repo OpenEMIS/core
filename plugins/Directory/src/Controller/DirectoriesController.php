@@ -13,8 +13,6 @@ use App\Controller\AppController;
 class DirectoriesController extends AppController {
 	public function initialize() {
 		parent::initialize();
-
-		$this->ControllerAction->model('Directory.Directories', ['!search']);
 		$this->ControllerAction->models = [
 			// Users
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -62,6 +60,8 @@ class DirectoriesController extends AppController {
 
 		$this->set('contentHeader', 'Directories');
 	}
+
+	public function Directories() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Directories']); }
 
 	// CAv4
 	public function StudentFees() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
@@ -126,11 +126,11 @@ class DirectoriesController extends AppController {
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		$this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
+		$this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']);
 		$header = __('Directory');
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
-		if ($action == 'index') {
+		if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
 			$session->delete('Directory.Directories');
 			$session->delete('Staff.Staff.id');
 			$session->delete('Staff.Staff.name');
@@ -139,7 +139,7 @@ class DirectoriesController extends AppController {
 		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-				$id = $this->ControllerAction->paramsDecode($this->request->pass[0]);
+				$id = $this->ControllerAction->paramsDecode($this->request->pass[0])['id'];
 			} else if ($session->check('Directory.Directories.id')) {
 				$id = $session->read('Directory.Directories.id');
 			}
@@ -147,7 +147,7 @@ class DirectoriesController extends AppController {
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
 				$header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
 			}
 		}
 
@@ -244,7 +244,7 @@ class DirectoriesController extends AppController {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Users') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
-			} else {
+			} else if ($model->alias() != 'Directories') {
 				$this->Alert->warning('general.notExists');
 				$event->stopPropagation();
 				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
@@ -296,7 +296,7 @@ class DirectoriesController extends AppController {
 
 		$tabElements = [
 			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
+				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
 				'text' => __('Overview')
 			],
 			'Accounts' => [
