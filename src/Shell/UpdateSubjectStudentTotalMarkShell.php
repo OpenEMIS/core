@@ -34,32 +34,14 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
         $pid = getmypid();
         $PAGE_LIMIT = 5000;
         $selectedPeriodId = !empty($this->args[0]) ? $this->args[0] : 0;
-        $restartFlag = !empty($this->args[1]) ? $this->args[1] : 0;
+        $selectedInsitutionId = !empty($this->args[1]) ? $this->args[1] : 0;
 
         $this->out($pid.': Initialize Update Subject Student Total mark ('. Time::now() .')');
 
-        // truncate table if restart is required
-        if ($restartFlag == 1) {
-            $this->out($pid.': RESTARTING UPDATE ('. Time::now() .')');
-            try {
-                $this->out($pid.': TRUNCATING updated_subject_students table ('. Time::now() .')');
-                $connection = ConnectionManager::get('default');
-                $connection->query("TRUNCATE TABLE `updated_subject_students`");
-            } catch (Exception $e) {
-                $this->out($e->getMessage());
-            }
-        }
+        if ($selectedPeriodId != 0 && $selectedInsitutionId != 0) {
+            $this->out($pid.': Processing ACADEMIC PERIOD ID '.$selectedPeriodId.' and INSTITUTION ID '.$selectedInsitutionId.' ('. Time::now() .')');
 
-        // get all academic periods unless user specifies which academic period
-        $academicPeriods = $this->AcademicPeriods->find()->extract('id');
-        if ($selectedPeriodId != 0) {
-            $academicPeriods = [$selectedPeriodId];
-        }
-
-        foreach ($academicPeriods as $periodId) {
-            $this->out($pid.': Processing ACADEMIC PERIOD ID '. $periodId .' ('. Time::now() .')');
-
-            // get all institution_subject_student within selected academic period that are not already processed in updated_subject_students
+            // get students that are not already processed in updated_subject_students
             $subjectStudentsQuery = $this->InstitutionSubjectStudents->find()
                 ->select([
                     $this->InstitutionSubjectStudents->aliasField('student_id'),
@@ -79,15 +61,16 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                                 $this->UpdatedSubjectStudents->aliasField('institution_id').' = '.$this->InstitutionSubjectStudents->aliasField('institution_id'),
                             ])
                     .')',
-                    $this->InstitutionSubjectStudents->aliasField('academic_period_id') => $periodId,
+                    $this->InstitutionSubjectStudents->aliasField('academic_period_id') => $selectedPeriodId,
+                    $this->InstitutionSubjectStudents->aliasField('institution_id') => $selectedInsitutionId,
                     $this->InstitutionSubjectStudents->aliasField('status') => 1
                 ]);
 
             $studentCount = $subjectStudentsQuery->count();
             $this->out($pid.': Records to process: '. $studentCount .' ('. Time::now() .')');
             $processedRecordCount = 0;
-
             $loop = ($studentCount > 0);
+
             while ($loop) {
                 $studentPageData = $subjectStudentsQuery->limit($PAGE_LIMIT)->toArray();
 
@@ -120,7 +103,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                                 $this->InstitutionSubjectStudents->save($student);
 
                             } catch (\Exception $e) {
-                                $this->out($pid.': Error encoutered saving ACADEMIC PERIOD ID: '. $periodId .', STUDENT ID: '. $student->student_id .', EDUCATION SUBJECT ID: '. $student->education_subject_id .' ('.Time::now() .')');
+                                $this->out($pid.': Error encoutered saving ACADEMIC PERIOD ID: '. $selectedPeriodId .', INSTITUTION ID: '. $student->institution_id .' STUDENT ID: '. $student->student_id .' ('.Time::now() .')');
                                 $this->out($e->getMessage());
                             }
                         }
@@ -144,19 +127,18 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                     }
 
                     $processedRecordCount += count($studentPageData);
-                    // $this->out($pid.': End processing '.$processedRecordCount.' records ('. Time::now() .')');
+                    $this->out($pid.': Total records processed: '.$processedRecordCount.' ('. Time::now() .')');
 
-                    $percentage = ($processedRecordCount*100) / $studentCount;
-                    $formattedPercentage = number_format($percentage, 2);
-                    $this->out($pid.': '.$formattedPercentage.'% of records processed ('. Time::now() .')');
                 } else {
                     $loop = false;
                 }
             }
 
-            $this->out($pid.': End processing ACADEMIC PERIOD ID '. $periodId .' ('. Time::now() .')');
+            $this->out($pid.': End processing ACADEMIC PERIOD ID '. $selectedPeriodId .' and INSTITUTION ID '.$selectedInsitutionId.' ('. Time::now() .')');
         }
 
+        // remove file
+        exec('rm tmp/shellFiles/'.$pid.'.txt');
         $this->out($pid.': End Update Subject Student Total mark ('. Time::now() .')');
     }
 }
