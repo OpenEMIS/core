@@ -20,13 +20,18 @@ class AlertTypesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    private $alertTypeCodes = [
+    private $alertTypeFeatures = [
         'InstitutionStudentAbsences' => [
-            'code' => 'Attendance',
+            'feature' => 'Attendance',
             'name' => 'Student Absent',
             'method' => 'Email',
             'threshold' => ['type' => 'integer'],
-            'placeholder' => ['{name}']
+            'placeholder' => [
+                '{student.name}' => 'Name of the student',
+                '{staff.name}' => 'Name of the staff',
+                '{institution.name}' => 'Name of the institution',
+                '{threshold.value}' => 'Value of the threshold',
+            ]
         ],
     ];
 
@@ -66,11 +71,12 @@ class AlertTypesTable extends ControllerActionTable
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
+        $this->field('alert_features', ['type' => 'custom_criterias', 'after' => 'message']);
 
         if ($this->action == 'add') {
             $this->field('enabled', ['visible' => false]);
         } elseif ($this->action == 'edit') {
-            $this->field('code', ['type' => 'readOnly']);
+            $this->field('feature', ['type' => 'readOnly']);
         }
     }
 
@@ -79,13 +85,13 @@ class AlertTypesTable extends ControllerActionTable
         $query->contain(['SecurityRoles']);
     }
 
-    public function getAlertTypeDetailsByCode($code)
+    public function getAlertTypeDetailsByFeature($feature)
     {
         $alertTypeDetails = [];
-        foreach ($this->alertTypeCodes as $key => $obj) {
-            if ($obj['code'] == $code) {
-                $alertTypeDetails[$obj['code']] = $obj;
-                $alertTypeDetails[$obj['code']]['model'] = $key;
+        foreach ($this->alertTypeFeatures as $key => $obj) {
+            if ($obj['feature'] == $feature) {
+                $alertTypeDetails[$obj['feature']] = $obj;
+                $alertTypeDetails[$obj['feature']]['model'] = $key;
             }
         }
 
@@ -94,36 +100,36 @@ class AlertTypesTable extends ControllerActionTable
 
     public function getAlertTypeDetailsByAlias($alias)
     {
-        return $this->alertTypeCodes[$alias];
+        return $this->alertTypeFeatures[$alias];
     }
 
-    public function getCodeOptions()
+    public function getFeatureOptions()
     {
-        $codeOptions = [];
-        foreach ($this->alertTypeCodes as $key => $obj) {
-            $codeOptions[$obj['code']] = __($obj['code']);
+        $featureOptions = [];
+        foreach ($this->alertTypeFeatures as $key => $obj) {
+            $featureOptions[$obj['feature']] = __($obj['feature']);
         }
 
-        return $codeOptions;
+        return $featureOptions;
     }
 
-    public function getMethod($code)
+    public function getMethod($feature)
     {
         $method = '';
-        if (!empty($code)) {
-            $alertTypeDetails = $this->getAlertTypeDetailsByCode($code);
-            $method = $alertTypeDetails[$code]['method'];
+        if (!empty($feature)) {
+            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+            $method = $alertTypeDetails[$feature]['method'];
         }
 
         return $method;
     }
 
-    public function getThresholdType($code)
+    public function getThresholdType($feature)
     {
         $type = '';
-        if (!empty($code)) {
-            $alertTypeDetails = $this->getAlertTypeDetailsByCode($code);
-            $type = $alertTypeDetails[$code]['threshold']['type'];
+        if (!empty($feature)) {
+            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+            $type = $alertTypeDetails[$feature]['threshold']['type'];
         }
 
         return $type;
@@ -133,30 +139,30 @@ class AlertTypesTable extends ControllerActionTable
         return $entity->enabled == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $attr['options'] = $this->getCodeOptions();
-            $attr['onChangeReload'] = 'changeCode';
+            $attr['options'] = $this->getFeatureOptions();
+            $attr['onChangeReload'] = 'changeFeature';
         }
 
         return $attr;
     }
 
-    public function addEditOnChangeCode(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeFeature(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data)) {
-            $code = $data[$this->alias()]['code'];
-            $data[$this->alias()]['method'] = $this->getMethod($code);
+            $feature = $data[$this->alias()]['feature'];
+            $data[$this->alias()]['method'] = $this->getMethod($feature);
         }
     }
 
     public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['code'])) {
-                $code = $request->data[$this->alias()]['code'];
-                $type = $this->getThresholdType($code);
+            if (isset($request->data[$this->alias()]['feature'])) {
+                $feature = $request->data[$this->alias()]['feature'];
+                $type = $this->getThresholdType($feature);
             } else {
                 $type = 'hidden';
             }
@@ -218,12 +224,40 @@ class AlertTypesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
-        $this->field('code', ['type' => 'select']);
+        $this->field('feature', ['type' => 'select']);
         $this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
         $this->field('threshold', ['after' => 'name']);
         $this->field('security_roles', ['after' => 'method']);
 
-        $this->setFieldOrder('enabled', 'code', 'name', 'subject', 'message');
+        $this->setFieldOrder('enabled', 'feature', 'name', 'subject', 'message');
+    }
+
+    public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        $tableHeaders =['Keyword', 'Remarks'];
+        $tableCells = [];
+        $fieldKey = 'alert_features';
+
+        if (!empty($entity->feature)) {
+            $featureKey = $entity->feature;
+            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($featureKey);
+            $placeholder = $alertTypeDetails[$featureKey]['placeholder'];
+
+            if (!empty($placeholder)) {
+                foreach ($placeholder as $placeholderKey => $placeholderObj) {
+                    $rowData = [];
+                    $rowData[] = __($placeholderKey);
+                    $rowData[] = __($placeholderObj);
+
+                    $tableCells[] = $rowData;
+                }
+            }
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+        }
+
+        return $event->subject()->renderElement('Alert/' . $fieldKey, ['attr' => $attr]);
     }
 }
