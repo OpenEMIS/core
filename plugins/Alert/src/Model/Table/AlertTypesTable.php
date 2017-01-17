@@ -177,7 +177,6 @@ class AlertTypesTable extends ControllerActionTable
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
     {
-        // pr('onUpdateFieldRole');die;
         switch ($action) {
             case 'add':
             case 'edit':
@@ -191,9 +190,6 @@ class AlertTypesTable extends ControllerActionTable
                 $attr['type'] = 'chosenSelect';
                 $attr['options'] = $roleOptions;
                 break;
-            default:
-                # code...
-                break;
         }
 
         return $attr;
@@ -204,11 +200,10 @@ class AlertTypesTable extends ControllerActionTable
         if (!$entity->has('security_roles')) {
             $query = $this->find()
             ->where([$this->aliasField($this->primaryKey()) => $entity->id])
-            ->contain(['SecurityRoles'])
-            ;
+            ->contain(['SecurityRoles']);
+
             $data = $query->first();
-        }
-        else {
+        } else {
             $data = $entity;
         }
 
