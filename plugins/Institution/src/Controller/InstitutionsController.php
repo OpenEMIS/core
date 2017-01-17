@@ -9,11 +9,15 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
-
+use Cake\I18n\Date;
+use ControllerAction\Model\Traits\UtilityTrait;
+use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
 
 class InstitutionsController extends AppController
 {
+    use OptionsTrait;
+    use UtilityTrait;
     public $activeObj = null;
 
     public function initialize()
@@ -29,13 +33,10 @@ class InstitutionsController extends AppController
             'Rooms'             => ['className' => 'Institution.InstitutionRooms', 'options' => ['deleteStrategy' => 'restrict']],
 
             'Staff'             => ['className' => 'Institution.Staff'],
-            'StaffUser'         => ['className' => 'Institution.StaffUser', 'actions' => ['add', 'view', 'edit']],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
             'StaffAttendances'  => ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 
             'StaffBehaviours'   => ['className' => 'Institution.StaffBehaviours'],
-
-            'Students'          => ['className' => 'Institution.Students'],
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
             'StudentSurveys'    => ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
             'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
@@ -94,6 +95,7 @@ class InstitutionsController extends AppController
     public function Contacts()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
     public function IndividualPromotion()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.IndividualPromotion']); }
     public function StudentUser()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']); }
+    public function StaffUser()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffUser']); }
     public function TransferRequests()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
     public function StaffTrainingResults()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']); }
     public function StaffTrainingNeeds()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']); }
@@ -116,24 +118,28 @@ class InstitutionsController extends AppController
     // AngularJS
     public function Results()
     {
-        $session = $this->request->session();
+        $classId = $this->ControllerAction->getQueryString('class_id');
+        $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
+        $institutionId = $this->ControllerAction->getQueryString('institution_id');
+        $academicPeriodId = $this->ControllerAction->getQueryString('academic_period_id');
         $roles = [];
 
-        if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+        if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
-            $institutionId = $session->read('Institution.Institutions.id');
             $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         }
 
         $this->set('_roles', $roles);
         $this->set('_edit', $this->AccessControl->check(['Institutions', 'Results', 'edit'], $roles));
         $this->set('_excel', $this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles));
-
         $url = $this->ControllerAction->url('index');
+        $url['plugin'] = 'Institution';
+        $url['controller'] = 'Institutions';
+        $url['action'] = 'ClassStudents';
+        $url[0] = 'excel';
 
-        $ExcelTemplates = TableRegistry::get('CustomExcel.ExcelTemplates');
-        $AssessmentResults = TableRegistry::get('CustomExcel.AssessmentResults');
-        $hasTemplate = $ExcelTemplates->checkIfHasTemplate($AssessmentResults->registryAlias());
+        $Assessments = TableRegistry::get('Assessment.Assessments');
+        $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
 
         if ($hasTemplate) {
             $url['plugin'] = 'CustomExcel';
@@ -174,6 +180,31 @@ class InstitutionsController extends AppController
             $this->render('studentAdd');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
+        }
+    }
+
+    public function Staff($pass = 'index') {
+        if ($pass == 'add') {
+            $session = $this->request->session();
+            $roles = [];
+
+            if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
+                $userId = $this->Auth->user('id');
+                $institutionId = $session->read('Institution.Institutions.id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            }
+            $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
+            $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
+            $externalDataSource = false;
+            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
+            if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
+                $externalDataSource = true;
+            }
+            $this->set('externalDataSource', $externalDataSource);
+            $this->render('staffAdd');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Staff']);
         }
     }
 
@@ -321,6 +352,17 @@ class InstitutionsController extends AppController
 	                    ]);
 	                }
             	}
+                break;
+            case 'Staff':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'add') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'institutions.staff.ctrl',
+                            'institutions.staff.svc'
+                        ]);
+                    }
+                }
                 break;
 		}
 	}
@@ -713,5 +755,93 @@ class InstitutionsController extends AppController
     public function getProfessionalDevelopmentTabElements($options = []) {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
+    }
+
+    public function getInstitutionPositions($institutionId, $fte, $startDate, $endDate = '')
+    {
+        $this->autoRender= false;
+        $StaffTable = TableRegistry::get('Institution.Staff');
+        $positionTable = TableRegistry::get('Institution.InstitutionPositions');
+        $userId = $this->Auth->user('id');
+
+        $selectedFTE = empty($fte) ? 0 : $fte;
+        $excludePositions = $StaffTable->find();
+
+        $startDate = new Date($startDate);
+
+        $excludePositions = $excludePositions
+            ->select([
+                'position_id' => $StaffTable->aliasField('institution_position_id'),
+            ])
+            ->where([
+                $StaffTable->aliasField('institution_id') => $institutionId,
+            ])
+            ->group($StaffTable->aliasField('institution_position_id'))
+            ->having([
+                'OR' => [
+                    'SUM('.$StaffTable->aliasField('FTE') .') >= ' => 1,
+                    'SUM('.$StaffTable->aliasField('FTE') .') > ' => (1-$selectedFTE),
+                ]
+            ])
+            ->hydrate(false);
+
+        if (!empty($endDate)) {
+            $endDate = new Date($endDate);
+            $excludePositions = $excludePositions->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate]);
+        } else {
+            $orCondition = [
+                $StaffTable->aliasField('end_date') . ' >= ' => $startDate,
+                $StaffTable->aliasField('end_date') . ' IS NULL'
+            ];
+            $excludePositions = $excludePositions->where([
+                    'OR' => $orCondition
+                ]);
+        }
+
+        if ($this->AccessControl->isAdmin()) {
+            $userId = null;
+            $roles = [];
+        } else {
+            $roles = $StaffTable->Institutions->getInstitutionRoles($userId, $institutionId);
+        }
+
+        // Filter by active status
+        $activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
+        $positionConditions = [];
+        $positionConditions[$StaffTable->Positions->aliasField('institution_id')] = $institutionId;
+        if (!empty($activeStatusId)) {
+            $positionConditions[$StaffTable->Positions->aliasField('status_id').' IN '] = $activeStatusId;
+        }
+
+        if ($selectedFTE > 0) {
+            $staffPositionsOptions = $StaffTable->Positions
+                ->find()
+                ->innerJoinWith('StaffPositionTitles.SecurityRoles')
+                ->where($positionConditions)
+                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+                ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
+                ->autoFields(true)
+                ->toArray();
+        } else {
+            $staffPositionsOptions = [];
+        }
+
+        // Filter by role previlege
+        $SecurityRolesTable = TableRegistry::get('Security.SecurityRoles');
+        $roleOptions = $SecurityRolesTable->getRolesOptions($userId, $roles);
+        $roleOptions = array_keys($roleOptions);
+        $staffPositionRoles = $this->array_column($staffPositionsOptions, 'security_role_id');
+        $staffPositionsOptions = array_intersect_key($staffPositionsOptions, array_intersect($staffPositionRoles, $roleOptions));
+
+        // Adding the opt group
+        $types = $this->getSelectOptions('Staff.position_types');
+        $options = [];
+        $excludePositions = array_column($excludePositions->toArray(), 'position_id');
+        foreach ($staffPositionsOptions as $position) {
+            $type = __($types[$position->type]);
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name, 'disabled' => in_array($position->id, $excludePositions)];
+        }
+
+        echo json_encode($options);
     }
 }
