@@ -216,19 +216,19 @@ class NavigationComponent extends Component
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
 		} elseif ($controller->name == 'Directories' && $action != 'index') {
-			$navigations = $this->appendNavigation('Directories.index', $navigations, $this->getDirectoryNavigation());
+			$navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
 			$session = $this->request->session();
 			$isStudent = $session->read('Directory.Directories.is_student');
 			$isStaff = $session->read('Directory.Directories.is_staff');
 
 			if ($isStaff) {
-				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+				$navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
 				$session->write('Directory.Directories.reload', true);
 			}
 
 			if ($isStudent) {
-				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+				$navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
 				$session->write('Directory.Directories.reload', true);
 			}
 		}
@@ -269,11 +269,11 @@ class NavigationComponent extends Component
 				'selected' => ['Institutions.add', 'Institutions.ImportInstitutions.add', 'Institutions.ImportInstitutions.results']
 			],
 
-			'Directories.index' => [
+			'Directories.Directories.index' => [
 				'title' => 'Directory',
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
 				'params' => ['plugin' => 'Directory'],
-				'selected' => ['Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
+				'selected' => ['Directories.Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
 			],
 
 			'Reports' => [
@@ -392,7 +392,7 @@ class NavigationComponent extends Component
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.ImportStaff', 'Institutions.Staff']
+				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferRequests']
 			],
 
 			'Institution.Attendance' => [
@@ -613,16 +613,16 @@ class NavigationComponent extends Component
 	public function getDirectoryNavigation()
 	{
 		$navigation = [
-			'Directories.view' => [
+			'Directories.Directories.view' => [
 				'title' => 'General',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'params' => ['plugin' => 'Directory'],
-				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments',
+				'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments',
 					'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
 			],
 			'Directories.Healths' => [
 				'title' => 'Health',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'params' => ['plugin' => 'Directory'],
 				'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests']
 			]
@@ -638,7 +638,7 @@ class NavigationComponent extends Component
 		$navigation = [
 			'Directories.Staff' => [
 				'title' => 'Staff',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'link' => false,
 			],
 				'Directories.StaffEmployments' => [
@@ -677,7 +677,7 @@ class NavigationComponent extends Component
 		$navigation = [
 			'Directories.Student' => [
 				'title' => 'Student',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'link' => false,
 			],
 				'Directories.StudentGuardians' => [
@@ -823,12 +823,6 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Infrastructure'],
 						'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
 					],
-				'CustomExcels.ExcelTemplates' => [
-					'title' => 'Excel Templates',
-					'parent' => 'SystemSetup',
-					'params' => ['plugin' => 'CustomExcel'],
-					'selected' => ['CustomExcels.ExcelTemplates']
-				],
 				'Labels.index' => [
 					'title' => 'Labels',
 					'parent' => 'SystemSetup',
