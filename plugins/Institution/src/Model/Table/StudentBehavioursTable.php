@@ -449,9 +449,9 @@ class StudentBehavioursTable extends AppTable
 		$getValueIndex = [];
 		foreach ($behaviourResults as $key => $behaviourResultsObj) {
 			$studentBehaviourCategoryId = $behaviourResultsObj->student_behaviour_category_id;
-			$classificationId = $this->StudentBehaviourCategories->get($studentBehaviourCategoryId)->classification_id;
-			$getValueIndex[$classificationId] = !empty($getValueIndex[$classificationId]) ? $getValueIndex[$classificationId] : 0;
-			$getValueIndex[$classificationId] = $getValueIndex[$classificationId] + 1;
+			$behaviourClassificationId = $this->StudentBehaviourCategories->get($studentBehaviourCategoryId)->behaviour_classification_id;
+			$getValueIndex[$behaviourClassificationId] = !empty($getValueIndex[$behaviourClassificationId]) ? $getValueIndex[$behaviourClassificationId] : 0;
+			$getValueIndex[$behaviourClassificationId] = $getValueIndex[$behaviourClassificationId] + 1;
 		}
 
 		return $getValueIndex;
@@ -459,7 +459,7 @@ class StudentBehavioursTable extends AppTable
 
 	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 	{
-		$classificationId = $threshold; // it will classified by the classification id
+		$behaviourClassificationId = $threshold; // it will classified by the classification id
 		$behaviourResults = $this
 			->find()
 			->contain(['StudentBehaviourCategories'])
@@ -467,7 +467,7 @@ class StudentBehavioursTable extends AppTable
 				$this->aliasField('institution_id') => $institutionId,
 				$this->aliasField('student_id') => $studentId,
 				$this->aliasField('academic_period_id') => $academicPeriodId,
-				'classification_id' => $classificationId
+				'behaviour_classification_id' => $behaviourClassificationId
 			])
 			->all();
 

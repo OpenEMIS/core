@@ -35,7 +35,7 @@ class IndexesTable extends ControllerActionTable
         'Institution.StudentBehaviours' => [
             'name' => 'Behaviour',
             'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.Classifications']
+            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.BehaviourClassifications']
         ],
         // dropout will used the institution.students, while repeated will used Institution.IndividualPromotion
         'Institution.Students' => [

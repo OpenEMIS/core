@@ -3,9 +3,9 @@ namespace App\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
 
-class ClassificationsFixture extends TestFixture
+class BehaviourClassificationsFixture extends TestFixture
 {
-    public $import = ['table' => 'classifications'];
+    public $import = ['table' => 'behaviour_classifications'];
     public $records = [
         [
             'id' => '1',
