@@ -24,7 +24,7 @@ trait FixturesTrait {
         'app.authentication_type_attributes',
         'app.bank_branches',
         'app.banks',
-        'app.classifications',
+        'app.behaviour_classifications',
         'app.comment_types',
         'app.competencies',
         'app.competency_sets',

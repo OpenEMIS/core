@@ -12,11 +12,11 @@ use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
-class ClassificationsTable extends ControllerActionTable
+class BehaviourClassificationsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('classifications');
+        $this->table('behaviour_classifications');
         parent::initialize($config);
 
         $this->hasMany('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories', 'dependent' => true, 'cascadeCallbacks' => true]);

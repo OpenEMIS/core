@@ -20,24 +20,24 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
 
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);
 
-        $this->belongsTo('Classifications', ['className' => 'Student.Classifications', 'foreignKey' => 'classification_id']);
+        $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('classification_id', ['after' => 'editable', 'type' => 'select']);
+        $this->field('behaviour_classification_id', ['after' => 'editable', 'type' => 'select']);
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('classification_id', ['after' => 'name']);
+        $this->field('behaviour_classification_id', ['after' => 'name']);
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('classification_id', ['after' => 'name']);
+        $this->field('behaviour_classification_id', ['after' => 'name']);
     }
 
     public function getUnusedStudentBehaviourCategories($id)
@@ -45,12 +45,12 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
         if (!empty($id)) {
             $where = [
                 'OR' => [
-                    [$this->aliasField('classification_id') => $id],
-                    [$this->aliasField('classification_id') => 0]
+                    [$this->aliasField('behaviour_classification_id') => $id],
+                    [$this->aliasField('behaviour_classification_id') => 0]
                 ]
             ];
         } else {
-            $where = [$this->aliasField('classification_id') => 0];
+            $where = [$this->aliasField('behaviour_classification_id') => 0];
         }
 
         $unusedList = $this
