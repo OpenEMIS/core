@@ -89,73 +89,15 @@ class AlertLogsTable extends ControllerActionTable
 
                             if (!empty($emailList)) {
                                 foreach ($emailList as $emailListKey => $emailListObj) {
-
-                                    //for placeholder
+                                    //for placeholder string replacement
                                     $studentName = $Users->get($studentId)->first_name . ' ' . $Users->get($studentId)->last_name;
                                     $staffName = $Users->get($emailListKey)->first_name . ' ' . $Users->get($emailListKey)->last_name;
                                     $institutionName = $Institutions->get($institutionId)->name;
 
-                                    $messageArray = explode(" ", $AlertTypesObj->message);
-                                    $subjectArray = explode(" ", $AlertTypesObj->subject);
+                                    // subject and message for alert email
+                                    $subject = $this->replaceMessage($AlertTypesObj->subject, $studentName, $staffName, $institutionName, $threshold);
+                                    $message = $this->replaceMessage($AlertTypesObj->message, $studentName, $staffName, $institutionName, $threshold);
 
-
-
-
-
-
-
-        //         $stringReplace = [];
-
-        // foreach ($placeholder as $placeholderKey => $placeholderObj) {
-        //     if (in_array($placeholderKey, $messageArray) || in_array($placeholderKey, $subjectArray)) {
-        //         pr('placeholder '. $placeholderKey);
-        //         switch ($placeholderKey) {
-        //             case '{student.name}':
-        //                 // $message = str_replace($placeholderKey, $studentName, $AlertTypesObj->message);
-        //                 // $subject = str_replace($placeholderKey, $studentName, $AlertTypesObj->subject);
-        //                 $stringReplace['{student.name}'] = $studentName;
-        //                 break;
-
-        //             case '{staff.name}':
-        //                 // $message = str_replace($placeholderKey, $staffName, $AlertTypesObj->message);
-        //                 // $subject = str_replace($placeholderKey, $staffName, $AlertTypesObj->subject);
-        //                 $stringReplace['{staff.name}'] = $staffName;
-        //                 break;
-
-        //             case '{institution.name}':
-        //                 // $message = str_replace($placeholderKey, $institutionName, $AlertTypesObj->message);
-        //                 // $subject = str_replace($placeholderKey, $institutionName, $AlertTypesObj->subject);
-        //                 $stringReplace['{institution.name}'] = $institutionName;
-        //                 break;
-
-        //             case '{threshold.value}':
-        //                 // $message = str_replace($placeholderKey, $threshold, $AlertTypesObj->message);
-        //                 // $subject = str_replace($placeholderKey, $threshold, $AlertTypesObj->subject);
-        //                 $stringReplace['{threshold.value}'] = $threshold;
-        //                 break;
-        //         }
-        //     }
-        // }
-        // pr($placeholder);
-        // pr($stringReplace);
-        // $message = str_replace($placeholder, [$stringReplace], $AlertTypesObj->message);
-
-
-
-
-        // pr('herer to explode the message and find the placeholder');
-        // // pr($AlertTypesObj->message);
-        // pr($messageArray);
-        // pr($placeholder);
-        // pr($emailListKey);
-        // pr($emailListObj);
-        // pr($staffName);
-        // pr($institutionName);
-        // pr($threshold);
-        pr($message);
-        // pr($subject);
-        die;
-                                    // $message = str_replace($placeholder, [$studentName], $AlertTypesObj->message);
                                     $this->updateAlertLog($AlertTypesObj, $emailListObj, $subject, $message);
                                 }
 
@@ -202,13 +144,47 @@ class AlertLogsTable extends ControllerActionTable
                 'method' => $AlertTypesObj->method,
                 'destination' => $emailListObj,
                 'status' => 0,
-                'subject' => $AlertTypesObj->subject,
+                'subject' => $subject,
                 'message' => $message
             ]);
             $this->save($entity);
         }
+    }
 
-        // $this->save($entity);
+    public function replaceMessage($message, $studentName, $staffName, $institutionName, $threshold)
+    {
+        // Regex to get the string within {} and put it as an array
+        preg_match_all('/{([^}]*)}/', $message, $stringArray);
+
+        $stringReplace = [];
+        //messageArray[0] are all the place holder in the message
+        foreach ($stringArray[0] as $stringArrayKey => $stringArrayObj) {
+            switch ($stringArrayObj) {
+                case '{student.name}':
+                    $stringReplace [] = $studentName;
+                    break;
+
+                case '{staff.name}':
+                    $stringReplace [] = $staffName;
+                    break;
+
+                case '{institution.name}':
+                    $stringReplace [] = $institutionName;
+                    break;
+
+                case '{threshold.value}':
+                    $stringReplace [] = $threshold;
+                    break;
+
+                default:
+                    $stringReplace [] = $stringArrayObj;
+                    break;
+            }
+        }
+
+        $message = str_replace($stringArray[0], $stringReplace, $message);
+
+        return $message;
     }
 
     public function onGetStatus(Event $event, Entity $entity)
