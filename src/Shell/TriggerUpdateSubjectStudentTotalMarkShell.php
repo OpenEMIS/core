@@ -51,7 +51,7 @@ class TriggerUpdateSubjectStudentTotalMarkShell extends Shell {
 
                     try {
                         $pid = exec($shellCmd);
-                        $file[$j] = new File('tmp/shellFiles/'.$pid.'.txt', true);
+                        $file[$j] = new File('webroot/shellFiles/'.$pid.'.log', true);
 
                     } catch(\Exception $ex) {
                         $this->out($e->getMessage());

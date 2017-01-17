@@ -138,7 +138,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
         }
 
         // remove file
-        exec('rm tmp/shellFiles/'.$pid.'.txt');
+        exec('rm webroot/shellFiles/'.$pid.'.log');
         $this->out($pid.': End Update Subject Student Total mark ('. Time::now() .')');
     }
 }
