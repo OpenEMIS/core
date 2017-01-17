@@ -207,7 +207,7 @@ class AssessmentResultsTable extends AppTable
                 ->select([
                     $AssessmentItemsGradingTypes->aliasField('education_subject_id'),
                     'academic_term' => 'AssessmentPeriods.academic_term',
-                    'academic_term_max' => $query->func()->sum('AssessmentGradingTypes.max')
+                    'academic_term_max' => $query->func()->sum('AssessmentGradingTypes.max * AssessmentPeriods.weight')
                 ])
                 ->contain(['AssessmentGradingTypes', 'AssessmentPeriods', 'EducationSubjects'])
                 ->where([$AssessmentItemsGradingTypes->aliasField('assessment_id') => $params['assessment_id']])
@@ -231,7 +231,7 @@ class AssessmentResultsTable extends AppTable
                     $AssessmentItemResults->aliasField('student_id'),
                     $AssessmentItemResults->aliasField('education_subject_id'),
                     'academic_term' => 'AssessmentPeriods.academic_term',
-                    'academic_term_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks'))
+                    'academic_term_marks' => $query->func()->sum($AssessmentItemResults->aliasField('marks') . ' * AssessmentPeriods.weight')
                 ])
                 ->innerJoin(
                     [$this->alias() => $this->table()],
