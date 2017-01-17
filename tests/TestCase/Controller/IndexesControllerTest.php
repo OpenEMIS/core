@@ -21,7 +21,7 @@ class IndexesControllerTest extends AppTestCase
         'app.config_product_lists',
         'app.security_users',
         'app.labels',
-        'app.classifications',
+        'app.behaviour_classifications',
         'app.student_behaviours',
         'app.student_behaviour_categories',
     ];

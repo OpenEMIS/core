@@ -37,8 +37,8 @@ ALTER TABLE `indexes_criterias`
     ADD KEY `index_id` (`index_id`);
 
 
--- Table structure for table `classifications`
-CREATE TABLE IF NOT EXISTS `classifications` (
+-- Table structure for table `behaviour_classifications`
+CREATE TABLE IF NOT EXISTS `behaviour_classifications` (
     `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name` varchar(50) NOT NULL,
     `order` int(3) NOT NULL,
@@ -54,8 +54,8 @@ CREATE TABLE IF NOT EXISTS `classifications` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 -- Adding new column student_behaviour_categories
-ALTER TABLE `student_behaviour_categories` ADD `classification_id` INT(11) NOT NULL COMMENT 'links to classification.id' AFTER `national_code`;
-ALTER TABLE `student_behaviour_categories` ADD KEY `classification_id` (`classification_id`);
+ALTER TABLE `student_behaviour_categories` ADD `behaviour_classification_id` INT(11) NOT NULL COMMENT 'links to behaviour_classifications.id' AFTER `national_code`;
+ALTER TABLE `student_behaviour_categories` ADD KEY `behaviour_classification_id` (`behaviour_classification_id`);
 
 
 -- Table structure for table `institution_student_indexes`
