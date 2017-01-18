@@ -435,6 +435,26 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
+			'Institution.Competencies' => [
+				'title' => 'Competencies',
+				'parent' => 'Institutions.index',
+				'link' => false
+			],
+
+				'Institutions.StudentCompetencies.index' => [
+					'title' => 'Students',
+					'parent' => 'Institution.Competencies',
+					'selected' => ['Institutions.StudentCompetencies'],
+					'params' => ['plugin' => 'Institution']
+				],
+
+				'Institutions.StaffCompetencies.index' => [
+					'title' => 'Staff',
+					'parent' => 'Institution.Competencies',
+					'selected' => ['Institutions.StaffCompetencies'],
+					'params' => ['plugin' => 'Institution']
+				],
+
 			'Institutions.Assessments.index' => [
 				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
@@ -956,7 +976,7 @@ class NavigationComponent extends Component
                 'title' => 'Competencies',
                 'parent' => 'Administration',
                 'params' => ['plugin' => 'Competency'],
-                'selected' => ['Competencies.Templates', 'Competencies.AssessmentPeriods', 'Competencies.GradingTypes']
+                'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias', 'Competencies.Periods', 'Competencies.GradingTypes']
             ],
 			'Administration.Examinations' => [
 					'title' => 'Examinations',
