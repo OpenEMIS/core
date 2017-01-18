@@ -313,7 +313,7 @@ class StudentCompetenciesTable extends ControllerActionTable {
             $url = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
-                'action' => 'StudentCompetencyResults'
+                'action' => 'StudentCompetencyResults/edit'
             ];
 
             $buttons['view']['url'] = $this->setQueryString($url, [
