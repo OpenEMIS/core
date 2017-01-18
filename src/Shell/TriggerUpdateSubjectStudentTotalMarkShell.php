@@ -74,7 +74,7 @@ class TriggerUpdateSubjectStudentTotalMarkShell extends Shell {
                         break;
                     }
 
-                    sleep(20);
+                    sleep(10);
                 }
             }
         }

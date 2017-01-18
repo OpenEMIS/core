@@ -13,6 +13,7 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
     public function initialize() {
         parent::initialize();
         $this->loadModel('Institution.InstitutionSubjectStudents');
+        $this->loadModel('Institution.InstitutionStudents');
         $this->loadModel('AcademicPeriod.AcademicPeriods');
         $this->loadModel('Assessment.AssessmentItemResults');
         $this->loadModel('Assessment.AssessmentGradingTypes');
@@ -49,7 +50,16 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                     $this->InstitutionSubjectStudents->aliasField('academic_period_id'),
                     $this->InstitutionSubjectStudents->aliasField('institution_class_id'),
                     $this->InstitutionSubjectStudents->aliasField('institution_id'),
+                    $this->InstitutionStudents->aliasField('education_grade_id')
                 ])
+                ->innerJoin(
+                    [$this->InstitutionStudents->alias() => $this->InstitutionStudents->table()],
+                    [
+                        $this->InstitutionStudents->aliasField('institution_id = ') . $this->InstitutionSubjectStudents->aliasField('institution_id'),
+                        $this->InstitutionStudents->aliasField('academic_period_id = ') . $this->InstitutionSubjectStudents->aliasField('academic_period_id'),
+                        $this->InstitutionStudents->aliasField('student_id = ') . $this->InstitutionSubjectStudents->aliasField('student_id'),
+                    ]
+                )
                 ->where([
                     'NOT EXISTS ('.
                         $this->UpdatedSubjectStudents->find()
@@ -82,13 +92,15 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
                             ->select([
                                 'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
                             ])
+                            ->matching('Assessments')
                             ->matching('AssessmentPeriods')
                             ->matching('AssessmentGradingOptions.AssessmentGradingTypes')
                             ->where([
                                     $this->AssessmentItemResults->aliasField('student_id') => $student->student_id,
                                     $this->AssessmentItemResults->aliasField('academic_period_id') => $student->academic_period_id,
                                     $this->AssessmentItemResults->aliasField('education_subject_id') => $student->education_subject_id,
-                                    $this->AssessmentGradingTypes->aliasField('result_type') => 'MARKS'
+                                    $this->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
+                                    $this->Assessments->aliasField('education_grade_id') => $student->InstitutionStudents['education_grade_id']
                             ])
                             ->group([
                                 $this->AssessmentItemResults->aliasField('student_id'),
