@@ -10,28 +10,57 @@ use App\Model\Table\ControllerActionTable;
 
 class StudentCompetencyResultsTable extends ControllerActionTable {
     public function initialize(array $config) {
-        $this->table('competency_student_results');
+        $this->table('competency_templates');
         parent::initialize($config);
 
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        // $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        // $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        // $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
+        // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 
-        $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
-        $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
-        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
+        // $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
+        // $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
+        // $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true]);
 
-        $this->behaviors()->get('ControllerAction')->config('actions.add', false);
-        $this->behaviors()->get('ControllerAction')->config('actions.search', false);
-        $this->addBehavior('Excel', [
-            'pages' => ['index'],
-            'orientation' => 'landscape'
-        ]);
+        // $this->behaviors()->get('ControllerAction')->config('actions.add', false);
+        // $this->behaviors()->get('ControllerAction')->config('actions.search', false);
+        // $this->addBehavior('Excel', [
+        //     'pages' => ['index'],
+        //     'orientation' => 'landscape'
+        // ]);
 
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
+        // $this->toggle('edit', false);
+        // $this->toggle('remove', false);
+
+        // $classId = $this->getQueryString('class_id');
+        // $assessmentId = $this->getQueryString('assessment_id');
+        // $institutionId = $this->getQueryString('institution_id');
+        // $academicPeriodId = $this->getQueryString('academic_period_id');
+
+        // pr($classId);
     }
+
+    // public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    // {
+    //     pr($entity);
+    //     if ($entity->student_id) { //retrieve student grade and class
+    //         $studentClassGrade = $this->InstitutionSubjectStudents->getStudentClassGradeDetails($entity->academic_period_id, $this->institutionId, $entity->student_id, $entity->education_subject_id);
+    //         $entity->education_grade_id = $studentClassGrade[0]->education_grade_id;
+    //         $entity->institution_class_id = $studentClassGrade[0]->institution_class_id;
+    //         // pr($entity);
+    //     } else { //if no student assigned to the book, then use the textbook details
+    //         $entity->education_grade_id = $entity->textbook->education_grade_id;
+    //         $entity->institution_class_id = '';
+    //     }
+    // }
+
+
+    // public function editAfterAction(Event $event, Entity $entity) {
+        // if ($entity->has('is_system_defined') && !empty($entity->is_system_defined)) {
+        //     $this->Alert->info($this->aliasField('systemDefined'));
+        // }
+        // pr('111');die;
+    // }
 
     // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
     //     $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -85,245 +114,245 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
     //     }
     // }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
-        $this->field('class_number', ['visible' => false]);
-        $this->field('staff_id', ['visible' => false]);
-        $this->field('institution_shift_id', ['visible' => false]);
-    }
+    // public function beforeAction(Event $event, ArrayObject $extra) {
+    //     $this->field('class_number', ['visible' => false]);
+    //     $this->field('staff_id', ['visible' => false]);
+    //     $this->field('institution_shift_id', ['visible' => false]);
+    // }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
-        $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => [], 'options' => [], 'order' => 1];
+    // public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    //     $extra['elements']['controls'] = ['name' => 'Institution.Competencies/controls', 'data' => [], 'options' => [], 'order' => 1];
 
-        $this->field('competency_template');
-        $this->field('education_grade');
-        // $this->field('subjects');
-        // $this->field('male_students');
-        // $this->field('female_students');
+    //     $this->field('competency_template');
+    //     $this->field('education_grade');
+    //     // $this->field('subjects');
+    //     // $this->field('male_students');
+    //     // $this->field('female_students');
 
-        $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
-    }
+    //     $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
+    // }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $session = $this->request->session();
-        $institutionId = $session->read('Institution.Institutions.id');
+    // public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    //     $session = $this->request->session();
+    //     $institutionId = $session->read('Institution.Institutions.id');
 
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $Competencies = TableRegistry::get('Competency.Templates');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+    //     $Classes = TableRegistry::get('Institution.InstitutionClasses');
+    //     $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+    //     $Competencies = TableRegistry::get('Competency.Templates');
+    //     $EducationGrades = TableRegistry::get('Education.EducationGrades');
+    //     $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
-        $query
-            ->select([
-                'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
-                'education_grade_id' => $Competencies->aliasField('education_grade_id'),
-                'competency_template_id' => $Competencies->aliasField('id'),
-                'competency_template' => $query->func()->concat([
-                    $Competencies->aliasField('code') => 'literal',
-                    " - ",
-                    $Competencies->aliasField('name') => 'literal'
-                ])
-            ])
-            ->innerJoin(
-                [$ClassGrades->alias() => $ClassGrades->table()],
-                [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
-            )
-            ->innerJoin(
-                [$Competencies->alias() => $Competencies->table()],
-                [
-                    $Competencies->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $Competencies->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
-                ]
-            )
-            ->innerJoin(
-                [$EducationGrades->alias() => $EducationGrades->table()],
-                [$EducationGrades->aliasField('id = ') . $Competencies->aliasField('education_grade_id')]
-            )
-            ->innerJoin(
-                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
-                [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
-            )
-            ->group([
-                $ClassGrades->aliasField('institution_class_id'),
-                $Competencies->aliasField('id')
-            ])
-            ->autoFields(true)
-            ;
+    //     $query
+    //         ->select([
+    //             'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
+    //             'education_grade_id' => $Competencies->aliasField('education_grade_id'),
+    //             'competency_template_id' => $Competencies->aliasField('id'),
+    //             'competency_template' => $query->func()->concat([
+    //                 $Competencies->aliasField('code') => 'literal',
+    //                 " - ",
+    //                 $Competencies->aliasField('name') => 'literal'
+    //             ])
+    //         ])
+    //         ->innerJoin(
+    //             [$ClassGrades->alias() => $ClassGrades->table()],
+    //             [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
+    //         )
+    //         ->innerJoin(
+    //             [$Competencies->alias() => $Competencies->table()],
+    //             [
+    //                 $Competencies->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+    //                 $Competencies->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+    //             ]
+    //         )
+    //         ->innerJoin(
+    //             [$EducationGrades->alias() => $EducationGrades->table()],
+    //             [$EducationGrades->aliasField('id = ') . $Competencies->aliasField('education_grade_id')]
+    //         )
+    //         ->innerJoin(
+    //             [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+    //             [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
+    //         )
+    //         ->group([
+    //             $ClassGrades->aliasField('institution_class_id'),
+    //             $Competencies->aliasField('id')
+    //         ])
+    //         ->autoFields(true)
+    //         ;
 
-        $extra['options']['order'] = [
-            $EducationProgrammes->aliasField('order') => 'asc',
-            $EducationGrades->aliasField('order') => 'asc',
-            $Competencies->aliasField('code') => 'asc',
-            $Competencies->aliasField('name') => 'asc',
-            $this->aliasField('name') => 'asc'
-        ];
+    //     $extra['options']['order'] = [
+    //         $EducationProgrammes->aliasField('order') => 'asc',
+    //         $EducationGrades->aliasField('order') => 'asc',
+    //         $Competencies->aliasField('code') => 'asc',
+    //         $Competencies->aliasField('name') => 'asc',
+    //         $this->aliasField('name') => 'asc'
+    //     ];
 
-        // For filtering all classes and my classes
-        // $AccessControl = $this->AccessControl;
-        // $userId = $session->read('Auth.User.id');
-        // $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
-        // if (!$AccessControl->isAdmin())
-        // {
-        //     if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles) )
-        //     {
-        //         $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-        //         $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-        //         if (!$classPermission && !$subjectPermission)
-        //         {
-        //             $query->where(['1 = 0'], [], true);
-        //         } else
-        //         {
-        //             $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-        //                 'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
-        //                 ])
-        //                 ;
+    //     // For filtering all classes and my classes
+    //     // $AccessControl = $this->AccessControl;
+    //     // $userId = $session->read('Auth.User.id');
+    //     // $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+    //     // if (!$AccessControl->isAdmin())
+    //     // {
+    //     //     if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles) )
+    //     //     {
+    //     //         $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
+    //     //         $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
+    //     //         if (!$classPermission && !$subjectPermission)
+    //     //         {
+    //     //             $query->where(['1 = 0'], [], true);
+    //     //         } else
+    //     //         {
+    //     //             $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
+    //     //                 'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
+    //     //                 ])
+    //     //                 ;
 
-        //             // If only class permission is available but no subject permission available
-        //             if ($classPermission && !$subjectPermission) {
-        //                 $query->where(['InstitutionClasses.staff_id' => $userId]);
-        //             } else {
-        //                 $query
-        //                     ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-        //                         'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
-        //                         'InstitutionClassSubjects.status =   1'
-        //                     ])
-        //                     ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-        //                         'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-        //                     ]);
+    //     //             // If only class permission is available but no subject permission available
+    //     //             if ($classPermission && !$subjectPermission) {
+    //     //                 $query->where(['InstitutionClasses.staff_id' => $userId]);
+    //     //             } else {
+    //     //                 $query
+    //     //                     ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
+    //     //                         'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
+    //     //                         'InstitutionClassSubjects.status =   1'
+    //     //                     ])
+    //     //                     ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
+    //     //                         'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
+    //     //                     ]);
 
-        //                 // If both class and subject permission is available
-        //                 if ($classPermission && $subjectPermission) {
-        //                     $query->where([
-        //                         'OR' => [
-        //                             ['InstitutionClasses.staff_id' => $userId],
-        //                             ['InstitutionSubjectStaff.staff_id' => $userId]
-        //                         ]
-        //                     ]);
-        //                 }
-        //                 // If only subject permission is available
-        //                 else {
-        //                     $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+    //     //                 // If both class and subject permission is available
+    //     //                 if ($classPermission && $subjectPermission) {
+    //     //                     $query->where([
+    //     //                         'OR' => [
+    //     //                             ['InstitutionClasses.staff_id' => $userId],
+    //     //                             ['InstitutionSubjectStaff.staff_id' => $userId]
+    //     //                         ]
+    //     //                     ]);
+    //     //                 }
+    //     //                 // If only subject permission is available
+    //     //                 else {
+    //     //                     $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
+    //     //                 }
+    //     //             }
+    //     //         }
+    //     //     }
+    //     // }
 
-        // Academic Periods
-        $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
-        if (is_null($this->request->query('period'))) {
-            // default to current Academic Period
-            $this->request->query['period'] = $this->AcademicPeriods->getCurrent();
-        }
-        $selectedPeriod = $this->queryString('period', $periodOptions);
-        // $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-        //     'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
-        //     'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId) {
-        //         return $Classes
-        //             ->find()
-        //             ->innerJoin(
-        //                 [$ClassGrades->alias() => $ClassGrades->table()],
-        //                 [
-        //                     $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id')
-        //                 ]
-        //             )
-        //             ->innerJoin(
-        //                 [$Assessments->alias() => $Assessments->table()],
-        //                 [
-        //                     $Assessments->aliasField('academic_period_id = ') . $Classes->aliasField('academic_period_id'),
-        //                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
-        //                 ]
-        //             )
-        //             ->where([
-        //                 $Classes->aliasField('institution_id') => $institutionId,
-        //                 $Classes->aliasField('academic_period_id') => $id
-        //             ])
-        //             ->count();
-        //     }
-        // ]);
-        $this->controller->set(compact('periodOptions', 'selectedPeriod'));
-        // End
+    //     // Academic Periods
+    //     $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+    //     if (is_null($this->request->query('period'))) {
+    //         // default to current Academic Period
+    //         $this->request->query['period'] = $this->AcademicPeriods->getCurrent();
+    //     }
+    //     $selectedPeriod = $this->queryString('period', $periodOptions);
+    //     // $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
+    //     //     'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
+    //     //     'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId) {
+    //     //         return $Classes
+    //     //             ->find()
+    //     //             ->innerJoin(
+    //     //                 [$ClassGrades->alias() => $ClassGrades->table()],
+    //     //                 [
+    //     //                     $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id')
+    //     //                 ]
+    //     //             )
+    //     //             ->innerJoin(
+    //     //                 [$Assessments->alias() => $Assessments->table()],
+    //     //                 [
+    //     //                     $Assessments->aliasField('academic_period_id = ') . $Classes->aliasField('academic_period_id'),
+    //     //                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+    //     //                 ]
+    //     //             )
+    //     //             ->where([
+    //     //                 $Classes->aliasField('institution_id') => $institutionId,
+    //     //                 $Classes->aliasField('academic_period_id') => $id
+    //     //             ])
+    //     //             ->count();
+    //     //     }
+    //     // ]);
+    //     $this->controller->set(compact('periodOptions', 'selectedPeriod'));
+    //     // End
 
-        if (!empty($selectedPeriod)) {
-            $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
+    //     if (!empty($selectedPeriod)) {
+    //         $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
 
-            // Assessments
-            $competencyOptions = $Competencies
-                ->find('list')
-                ->where([$Competencies->aliasField('academic_period_id') => $selectedPeriod])
-                ->toArray();
-            $competencyOptions = ['-1' => __('All Competencies')] + $competencyOptions;
-            $selectedCompetency = $this->queryString('competency', $competencyOptions);
-            // $this->advancedSelectOptions($assessmentOptions, $selectedAssessment, [
-            //     'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-            //     'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId, $selectedPeriod) {
-            //         if ($id == -1) { return 1; }
-            //         $selectedGrade = $Assessments->get($id)->education_grade_id;
-            //         return $Classes
-            //             ->find()
-            //             ->innerJoin(
-            //                 [$ClassGrades->alias() => $ClassGrades->table()],
-            //                 [
-            //                     $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id'),
-            //                     $ClassGrades->aliasField('education_grade_id') => $selectedGrade
-            //                 ]
-            //             )
-            //             ->where([
-            //                 $Classes->aliasField('institution_id') => $institutionId,
-            //                 $Classes->aliasField('academic_period_id') => $selectedPeriod
-            //             ])
-            //             ->count();
-            //     }
-            // ]);
-            $this->controller->set(compact('competencyOptions', 'selectedCompetency'));
-            // End
+    //         // Assessments
+    //         $competencyOptions = $Competencies
+    //             ->find('list')
+    //             ->where([$Competencies->aliasField('academic_period_id') => $selectedPeriod])
+    //             ->toArray();
+    //         $competencyOptions = ['-1' => __('All Competencies')] + $competencyOptions;
+    //         $selectedCompetency = $this->queryString('competency', $competencyOptions);
+    //         // $this->advancedSelectOptions($assessmentOptions, $selectedAssessment, [
+    //         //     'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
+    //         //     'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId, $selectedPeriod) {
+    //         //         if ($id == -1) { return 1; }
+    //         //         $selectedGrade = $Assessments->get($id)->education_grade_id;
+    //         //         return $Classes
+    //         //             ->find()
+    //         //             ->innerJoin(
+    //         //                 [$ClassGrades->alias() => $ClassGrades->table()],
+    //         //                 [
+    //         //                     $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id'),
+    //         //                     $ClassGrades->aliasField('education_grade_id') => $selectedGrade
+    //         //                 ]
+    //         //             )
+    //         //             ->where([
+    //         //                 $Classes->aliasField('institution_id') => $institutionId,
+    //         //                 $Classes->aliasField('academic_period_id') => $selectedPeriod
+    //         //             ])
+    //         //             ->count();
+    //         //     }
+    //         // ]);
+    //         $this->controller->set(compact('competencyOptions', 'selectedCompetency'));
+    //         // End
 
-            if ($selectedCompetency != '-1') {
-                $query->where([$Competencies->aliasField('id') => $selectedCompetency]);
-            }
-        }
+    //         if ($selectedCompetency != '-1') {
+    //             $query->where([$Competencies->aliasField('id') => $selectedCompetency]);
+    //         }
+    //     }
 
-        // $assessmentId = $this->request->query('assessment_id');
+    //     // $assessmentId = $this->request->query('assessment_id');
 
-        // if ($assessmentId == -1 || !$assessmentId || !$this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles)) {
-        //     if (isset($extra['toolbarButtons']['export'])) {
-        //         unset($extra['toolbarButtons']['export']);
-        //     }
-        // }
-    }
+    //     // if ($assessmentId == -1 || !$assessmentId || !$this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles)) {
+    //     //     if (isset($extra['toolbarButtons']['export'])) {
+    //     //         unset($extra['toolbarButtons']['export']);
+    //     //     }
+    //     // }
+    // }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'name') {
-            return __('Class Name');
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
+    // public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
+    //     if ($field == 'name') {
+    //         return __('Class Name');
+    //     } else {
+    //         return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+    //     }
+    // }
 
-    public function onGetEducationGrade(Event $event, Entity $entity) {
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $grade = $EducationGrades->get($entity->education_grade_id);
+    // public function onGetEducationGrade(Event $event, Entity $entity) {
+    //     $EducationGrades = TableRegistry::get('Education.EducationGrades');
+    //     $grade = $EducationGrades->get($entity->education_grade_id);
 
-        return $grade->programme_grade_name;
-    }
+    //     return $grade->programme_grade_name;
+    // }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (isset($buttons['view']['url'])) {
-            $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
-                'action' => 'StudentCompetencyResults'
-            ];
+    // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    //     $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+    //     if (isset($buttons['view']['url'])) {
+    //         $url = [
+    //             'plugin' => $this->controller->plugin,
+    //             'controller' => $this->controller->name,
+    //             'action' => 'StudentCompetencyResults'
+    //         ];
 
-            $buttons['view']['url'] = $this->setQueryString($url, [
-                'class_id' => $entity->institution_class_id,
-                'competency_template_id' => $entity->competency_template_id,
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id
-            ]);
-        }
+    //         $buttons['view']['url'] = $this->setQueryString($url, [
+    //             'class_id' => $entity->institution_class_id,
+    //             'competency_template_id' => $entity->competency_template_id,
+    //             'institution_id' => $entity->institution_id,
+    //             'academic_period_id' => $entity->academic_period_id
+    //         ]);
+    //     }
 
-        return $buttons;
-    }
+    //     return $buttons;
+    // }
 }
