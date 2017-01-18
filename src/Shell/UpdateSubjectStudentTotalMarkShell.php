@@ -2,15 +2,16 @@
 namespace App\Shell;
 
 use Exception;
-use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Console\Shell;
 use Cake\I18n\Time;
 use Cake\Utility\Text;
+use Cake\Filesystem\File;
 
 class UpdateSubjectStudentTotalMarkShell extends Shell {
-    public function initialize() {
+    public function initialize()
+    {
         parent::initialize();
         $this->loadModel('Institution.InstitutionSubjectStudents');
         $this->loadModel('Institution.InstitutionStudents');
@@ -20,69 +21,30 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
         $this->loadModel('Assessment.AssessmentGradingOptions');
         $this->loadModel('Assessment.AssessmentPeriods');
         $this->loadModel('Assessment.Assessments');
-
-        // temporary table to log institution_subject_students that have been processed
-        try {
-            $connection = ConnectionManager::get('default');
-            $connection->query("CREATE TABLE IF NOT EXISTS `updated_subject_students` (`id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL, `student_id` int(11) NOT NULL, `education_subject_id` int(11) NOT NULL, `institution_class_id` int(11) NOT NULL, `institution_id` int(11) NOT NULL, `academic_period_id` int(11) NOT NULL, PRIMARY KEY (`student_id`, `education_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`), KEY `student_id` (`student_id`), KEY `education_subject_id` (`education_subject_id`), KEY `institution_class_id` (`institution_class_id`), KEY `institution_id` (`institution_id`), KEY `academic_period_id` (`academic_period_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-        } catch (Exception $e) {
-            $this->out($e->getMessage());
-        }
         $this->loadModel('UpdatedSubjectStudents');
     }
 
-    public function main() {
+    public function main()
+    {
+        $threadNum = $this->args[0];
+        $selectedPeriodId = !empty($this->args[1]) ? $this->args[1] : 0;
+        $selectedInsitutionId = !empty($this->args[2]) ? $this->args[2] : 0;
+
         $pid = getmypid();
-        $PAGE_LIMIT = 5000;
-        $selectedPeriodId = !empty($this->args[0]) ? $this->args[0] : 0;
-        $selectedInsitutionId = !empty($this->args[1]) ? $this->args[1] : 0;
+        $PAGE_LIMIT = 2500;
 
         $this->out($pid.': Initialize Update Subject Student Total mark ('. Time::now() .')');
 
         if ($selectedPeriodId != 0 && $selectedInsitutionId != 0) {
             $this->out($pid.': Processing ACADEMIC PERIOD ID '.$selectedPeriodId.' and INSTITUTION ID '.$selectedInsitutionId.' ('. Time::now() .')');
 
-            // get students that are not already processed in updated_subject_students
-            $subjectStudentsQuery = $this->InstitutionSubjectStudents->find()
-                ->select([
-                    $this->InstitutionSubjectStudents->aliasField('student_id'),
-                    $this->InstitutionSubjectStudents->aliasField('education_subject_id'),
-                    $this->InstitutionSubjectStudents->aliasField('academic_period_id'),
-                    $this->InstitutionSubjectStudents->aliasField('institution_class_id'),
-                    $this->InstitutionSubjectStudents->aliasField('institution_id'),
-                    $this->InstitutionStudents->aliasField('education_grade_id')
-                ])
-                ->innerJoin(
-                    [$this->InstitutionStudents->alias() => $this->InstitutionStudents->table()],
-                    [
-                        $this->InstitutionStudents->aliasField('institution_id = ') . $this->InstitutionSubjectStudents->aliasField('institution_id'),
-                        $this->InstitutionStudents->aliasField('academic_period_id = ') . $this->InstitutionSubjectStudents->aliasField('academic_period_id'),
-                        $this->InstitutionStudents->aliasField('student_id = ') . $this->InstitutionSubjectStudents->aliasField('student_id'),
-                    ]
-                )
-                ->where([
-                    'NOT EXISTS ('.
-                        $this->UpdatedSubjectStudents->find()
-                            ->where([
-                                $this->UpdatedSubjectStudents->aliasField('student_id').' = '.$this->InstitutionSubjectStudents->aliasField('student_id'),
-                                $this->UpdatedSubjectStudents->aliasField('education_subject_id').' = '.$this->InstitutionSubjectStudents->aliasField('education_subject_id'),
-                                $this->UpdatedSubjectStudents->aliasField('academic_period_id').' = '.$this->InstitutionSubjectStudents->aliasField('academic_period_id'),
-                                $this->UpdatedSubjectStudents->aliasField('institution_class_id').' = '.$this->InstitutionSubjectStudents->aliasField('institution_class_id'),
-                                $this->UpdatedSubjectStudents->aliasField('institution_id').' = '.$this->InstitutionSubjectStudents->aliasField('institution_id'),
-                            ])
-                    .')',
-                    $this->InstitutionSubjectStudents->aliasField('academic_period_id') => $selectedPeriodId,
-                    $this->InstitutionSubjectStudents->aliasField('institution_id') => $selectedInsitutionId,
-                    $this->InstitutionSubjectStudents->aliasField('status') => 1
-                ]);
-
-            $studentCount = $subjectStudentsQuery->count();
+            $studentCount = count($this->getInstitutionSubjectStudents($selectedPeriodId, $selectedInsitutionId));
             $this->out($pid.': Records to process: '. $studentCount .' ('. Time::now() .')');
             $processedRecordCount = 0;
             $loop = ($studentCount > 0);
 
             while ($loop) {
-                $studentPageData = $subjectStudentsQuery->limit($PAGE_LIMIT)->toArray();
+                $studentPageData = $this->getInstitutionSubjectStudents($selectedPeriodId, $selectedInsitutionId, $PAGE_LIMIT);
 
                 if (!empty($studentPageData)) {
                     foreach ($studentPageData as $student) {
@@ -111,11 +73,20 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
 
                         if (!empty($itemResults)) {
                             try {
-                                $student->total_mark = $itemResults->calculated_total;
-                                $this->InstitutionSubjectStudents->save($student);
+                                $this->InstitutionSubjectStudents->query()
+                                    ->update()
+                                    ->set(['total_mark' => $itemResults->calculated_total])
+                                    ->where([
+                                        'student_id' => $student->student_id,
+                                        'academic_period_id' => $student->academic_period_id,
+                                        'education_subject_id' => $student->education_subject_id,
+                                        'institution_class_id' => $student->institution_class_id,
+                                        'institution_id' => $student->institution_id
+                                    ])
+                                    ->execute();
 
                             } catch (\Exception $e) {
-                                $this->out($pid.': Error encoutered saving ACADEMIC PERIOD ID: '. $selectedPeriodId .', INSTITUTION ID: '. $student->institution_id .' STUDENT ID: '. $student->student_id .' ('.Time::now() .')');
+                                $this->out($pid.': Error encoutered saving ACADEMIC PERIOD ID: '. $selectedPeriodId .', INSTITUTION ID: '. $student->institution_id .', STUDENT ID: '. $student->student_id .' ('.Time::now() .')');
                                 $this->out($e->getMessage());
                             }
                         }
@@ -150,7 +121,53 @@ class UpdateSubjectStudentTotalMarkShell extends Shell {
         }
 
         // remove file
-        exec('rm webroot/shellFiles/'.$pid.'.log');
+        $file = new File('webroot/shellFiles/thread'.$threadNum.'.log');
+        $file->delete();
+
         $this->out($pid.': End Update Subject Student Total mark ('. Time::now() .')');
+    }
+
+    private function getInstitutionSubjectStudents($academicPeriodId, $insitutionId, $limit=0)
+    {
+        // get students that are not already processed in updated_subject_students
+        $query = $this->InstitutionSubjectStudents->find()
+            ->select([
+                $this->InstitutionSubjectStudents->aliasField('student_id'),
+                $this->InstitutionSubjectStudents->aliasField('education_subject_id'),
+                $this->InstitutionSubjectStudents->aliasField('academic_period_id'),
+                $this->InstitutionSubjectStudents->aliasField('institution_class_id'),
+                $this->InstitutionSubjectStudents->aliasField('institution_id'),
+                $this->InstitutionStudents->aliasField('education_grade_id')
+            ])
+            ->innerJoin(
+                [$this->InstitutionStudents->alias() => $this->InstitutionStudents->table()],
+                [
+                    $this->InstitutionStudents->aliasField('institution_id = ') . $this->InstitutionSubjectStudents->aliasField('institution_id'),
+                    $this->InstitutionStudents->aliasField('academic_period_id = ') . $this->InstitutionSubjectStudents->aliasField('academic_period_id'),
+                    $this->InstitutionStudents->aliasField('student_id = ') . $this->InstitutionSubjectStudents->aliasField('student_id'),
+                ]
+            )
+            ->where([
+                'NOT EXISTS ('.
+                    $this->UpdatedSubjectStudents->find()
+                        ->where([
+                            $this->UpdatedSubjectStudents->aliasField('student_id').' = '.$this->InstitutionSubjectStudents->aliasField('student_id'),
+                            $this->UpdatedSubjectStudents->aliasField('education_subject_id').' = '.$this->InstitutionSubjectStudents->aliasField('education_subject_id'),
+                            $this->UpdatedSubjectStudents->aliasField('academic_period_id').' = '.$this->InstitutionSubjectStudents->aliasField('academic_period_id'),
+                            $this->UpdatedSubjectStudents->aliasField('institution_class_id').' = '.$this->InstitutionSubjectStudents->aliasField('institution_class_id'),
+                            $this->UpdatedSubjectStudents->aliasField('institution_id').' = '.$this->InstitutionSubjectStudents->aliasField('institution_id'),
+                        ])
+                .')',
+                $this->InstitutionSubjectStudents->aliasField('academic_period_id') => $academicPeriodId,
+                $this->InstitutionSubjectStudents->aliasField('institution_id') => $insitutionId,
+                $this->InstitutionSubjectStudents->aliasField('status') => 1
+            ]);
+
+        if ($limit != 0) {
+            $query->limit($limit);
+        }
+
+        $subjectStudents = $query->toArray();
+        return $subjectStudents;
     }
 }
