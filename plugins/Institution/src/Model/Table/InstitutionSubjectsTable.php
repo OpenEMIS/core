@@ -769,6 +769,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->SubjectStaff->alias(),
             $this->Classes->alias()
         ];
+
+        //check textbook
+        $InstitutionTextbooks = TableRegistry::get('Textbook.InstitutionTextbooks');
+        $associatedTextbooksCount = $InstitutionTextbooks->find()
+            ->where([
+                $InstitutionTextbooks->aliasField('education_subject_id') => $entity->education_subject_id,
+                $InstitutionTextbooks->aliasField('academic_period_id') => $entity->academic_period_id
+            ])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'Institution Textbooks', 'count' => $associatedTextbooksCount];
     }
 
     public function getAssociatedRecordConditions(Event $event, Query $query, $assocTable, ArrayObject $extra)
