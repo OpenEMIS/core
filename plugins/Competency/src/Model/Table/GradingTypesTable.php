@@ -14,15 +14,18 @@ use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\OptionsTrait;
 
 class GradingTypesTable extends ControllerActionTable {
-	use MessagesTrait;
-	use OptionsTrait;
+    use MessagesTrait;
+    use OptionsTrait;
 
-	public function initialize(array $config) {
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        $this->table('competency_grading_types');
+        
+        parent::initialize($config);
+        
+        $this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-		// $this->belongsToMany('EducationSubjects', [
+        // $this->belongsToMany('EducationSubjects', [
   //           'className' => 'Education.EducationSubjects',
   //           'joinTable' => 'assessment_items_grading_types',
   //           'foreignKey' => 'assessment_grading_type_id',
@@ -32,63 +35,63 @@ class GradingTypesTable extends ControllerActionTable {
   //           'cascadeCallbacks' => true
   //       ]);
 
-		// $this->belongsToMany('AssessmentPeriods', [
-		// 	'className' => 'Assessment.AssessmentPeriods',
-		// 	'joinTable' => 'assessment_items_grading_types',
-		// 	'foreignKey' => 'assessment_grading_type_id',
-		// 	'targetForeignKey' => 'assessment_period_id',
-		// 	'through' => 'Assessment.AssessmentItemsGradingTypes',
-		// 	'dependent' => true,
-		// 	'cascadeCallbacks' => true
-		// ]);
+        // $this->belongsToMany('AssessmentPeriods', [
+        //  'className' => 'Assessment.AssessmentPeriods',
+        //  'joinTable' => 'assessment_items_grading_types',
+        //  'foreignKey' => 'assessment_grading_type_id',
+        //  'targetForeignKey' => 'assessment_period_id',
+        //  'through' => 'Assessment.AssessmentItemsGradingTypes',
+        //  'dependent' => true,
+        //  'cascadeCallbacks' => true
+        // ]);
 
-		// $this->belongsToMany('Assessments', [
-		// 	'className' => 'Assessment.Assessments',
-		// 	'joinTable' => 'assessment_items_grading_types',
-		// 	'foreignKey' => 'assessment_grading_type_id',
-		// 	'targetForeignKey' => 'assessment_id',
-		// 	'through' => 'Assessment.AssessmentItemsGradingTypes',
-		// 	'dependent' => true,
-		// 	'cascadeCallbacks' => true
-		// ]);
+        // $this->belongsToMany('Assessments', [
+        //  'className' => 'Assessment.Assessments',
+        //  'joinTable' => 'assessment_items_grading_types',
+        //  'foreignKey' => 'assessment_grading_type_id',
+        //  'targetForeignKey' => 'assessment_id',
+        //  'through' => 'Assessment.AssessmentItemsGradingTypes',
+        //  'dependent' => true,
+        //  'cascadeCallbacks' => true
+        // ]);
 
-		$this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index']
-        ]);
+//      $this->addBehavior('Restful.RestfulAccessControl', [
+//             'Results' => ['index']
+//         ]);
 
-		$this->setDeleteStrategy('restrict');
-	}
+//      $this->setDeleteStrategy('restrict');
+    }
 
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
+//  public function validationDefault(Validator $validator) {
+//      $validator = parent::validationDefault($validator);
 
-		$validator
-			->allowEmpty('code')
-			->add('code', 'ruleUniqueCode', [
-			    'rule' => ['checkUniqueCode', null]
-			])
-			->add('pass_mark', [
-				'ruleNotMoreThanMax' => [
-			    	'rule' => ['checkMinNotMoreThanMax'],
-				],
-				'ruleIsDecimal' => [
-				    'rule' => ['decimal', null],
-				],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-			])
-			->add('max', [
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ])
-			;
-		return $validator;
-	}
+//      $validator
+//          ->allowEmpty('code')
+//          ->add('code', 'ruleUniqueCode', [
+//              'rule' => ['checkUniqueCode', null]
+//          ])
+//          ->add('pass_mark', [
+//              'ruleNotMoreThanMax' => [
+//                  'rule' => ['checkMinNotMoreThanMax'],
+//              ],
+//              'ruleIsDecimal' => [
+//                  'rule' => ['decimal', null],
+//              ],
+//                 'ruleRange' => [
+//                     'rule' => ['range', 0, 9999.99]
+//                 ]
+//          ])
+//          ->add('max', [
+//                 'ruleIsDecimal' => [
+//                     'rule' => ['decimal', null],
+//                 ],
+//                 'ruleRange' => [
+//                     'rule' => ['range', 0, 9999.99]
+//                 ]
+//             ])
+//          ;
+//      return $validator;
+//  }
 
 
 /******************************************************************************************************************
@@ -96,18 +99,19 @@ class GradingTypesTable extends ControllerActionTable {
 ** cakephp events
 **
 ******************************************************************************************************************/
-	public function beforeAction(Event $event, ArrayObject $extra) {
-		$this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
-		$this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
-		$this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
-		$this->field('grading_options', [
-			'type' => 'element',
-			'element' => 'Competency.Gradings/grading_options',
-			'visible' => ['view'=>true, 'edit'=>true],
-			'fields' => $this->GradingOptions->fields,
-			'formFields' => []
-		]);
-	}
+    public function beforeAction(Event $event, ArrayObject $extra) 
+    {
+        $this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions('CompetencyGradingTypes.result_type')]);
+        $this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
+        $this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
+        $this->field('grading_options', [
+            'type' => 'element',
+            'element' => 'Competency.grading_options',
+            'visible' => ['view'=>true, 'edit'=>true],
+            'fields' => $this->GradingOptions->fields,
+            'formFields' => []
+        ]);
+    }
 
 
 /******************************************************************************************************************
@@ -115,50 +119,50 @@ class GradingTypesTable extends ControllerActionTable {
 ** addEdit action events
 **
 ******************************************************************************************************************/
-	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
-		if ($this->action=='edit') {
-			$this->fields['visible']['visible'] = false;
-		}
-		$this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields());
+    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+        if ($this->action=='edit') {
+            $this->fields['visible']['visible'] = false;
+        }
+        $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields());
 
-		$this->setFieldOrder([
-			'code', 'name', 'result_type', 'max', 'pass_mark', 'grading_options',
-		]);
-	}
+        $this->setFieldOrder([
+            'code', 'name', 'result_type', 'max', 'pass_mark', 'grading_options',
+        ]);
+    }
 
-	public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
-	{
-		// $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
-		$GradingOptions = TableRegistry::get('Competency.GradingOptions');
-		$gradingOptions = [];
-		if (!is_null($entity->grading_options)) {
-			foreach ($entity->grading_options as $key => $gradingOption) {
-				$gradingOptionId = $gradingOption->id;
-				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($GradingOptions, $gradingOption, $extra)) {
-					$gradingOptions[$gradingOptionId] = 1;
-				}
-			}
-		}
+    public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
+        // $GradingOptions = TableRegistry::get('Competency.GradingOptions');
+        $gradingOptions = [];
+        if (!is_null($entity->grading_options)) {
+            foreach ($entity->grading_options as $key => $gradingOption) {
+                $gradingOptionId = $gradingOption->id;
+                $gradingOptions[$gradingOptionId] = 0;
+                if ($this->hasAssociatedRecords($this->GradingOptions, $gradingOption, $extra)) {
+                    $gradingOptions[$gradingOptionId] = 1;
+                }
+            }
+        }
 
-		// to passed the array of the association to the view (grading_options.ctp).
-		$this->controller->set('gradingOptions', $gradingOptions);
-	}
+        // to passed the array of the association to the view (grading_options.ctp).
+        $this->controller->set('gradingOptions', $gradingOptions);
+    }
 
-	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
-		$groupOptionData = $this->GradingOptions->getFormFields();
-		if (!empty($entity->id)) {
-			$groupOptionData['competency_grading_type_id'] = $entity->id;
-		}
-		$newGroupOption = $this->GradingOptions->newEntity($groupOptionData);
-		$requestData[$this->alias()]['grading_options'][] = $newGroupOption->toArray();
-		$newOptions = [$this->GradingOptions->alias() => ['validate'=>false]];
-		if (isset($patchOptions['associated'])) {
-			$patchOptions['associated'] = array_merge($patchOptions['associated'], $newOptions);
-		} else {
-			$patchOptions['associated'] = $newOptions;
-		}
-	}
+    public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+        $groupOptionData = $this->GradingOptions->getFormFields();
+        if (!empty($entity->id)) {
+            $groupOptionData['competency_grading_type_id'] = $entity->id;
+        }
+        $newGroupOption = $this->GradingOptions->newEntity($groupOptionData);
+        $requestData[$this->alias()]['grading_options'][] = $newGroupOption->toArray();
+        $newOptions = [$this->GradingOptions->alias() => ['validate'=>false]];
+        if (isset($patchOptions['associated'])) {
+            $patchOptions['associated'] = array_merge($patchOptions['associated'], $newOptions);
+        } else {
+            $patchOptions['associated'] = $newOptions;
+        }
+    }
 
 
 /******************************************************************************************************************
@@ -166,66 +170,66 @@ class GradingTypesTable extends ControllerActionTable {
 ** edit action events
 **
 ******************************************************************************************************************/
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-	{
-		// get the array of the original gradeOptions
-		$GradingOptions = TableRegistry::get('Competency.GradingOptions');
-		$query = $GradingOptions
-			->find()
-			->where(['competency_grading_type_id' => $entity->id])
-			->toArray();
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        // get the array of the original gradeOptions
+        $GradingOptions = TableRegistry::get('Competency.GradingOptions');
+        $query = $GradingOptions
+            ->find()
+            ->where(['competency_grading_type_id' => $entity->id])
+            ->toArray();
 
-		if (!empty($query)) {
-			$gradingOptions = [];
-			foreach ($query as $key => $gradingOption) {
-				$gradingOptionId = $gradingOption->id;
-				$gradingOptions[$gradingOptionId] = 0;
-				if ($this->hasAssociatedRecords($GradingOptions, $gradingOption, $extra)) {
-					$gradingOptions[$gradingOptionId] = 1;
-				}
-			}
+        if (!empty($query)) {
+            $gradingOptions = [];
+            foreach ($query as $key => $gradingOption) {
+                $gradingOptionId = $gradingOption->id;
+                $gradingOptions[$gradingOptionId] = 0;
+                if ($this->hasAssociatedRecords($GradingOptions, $gradingOption, $extra)) {
+                    $gradingOptions[$gradingOptionId] = 1;
+                }
+            }
 
-			// it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
-			$allowedDeleteAll = max($gradingOptions);
+            // it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
+            $allowedDeleteAll = max($gradingOptions);
 
-			$currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
-			$originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
-			$tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
+            $currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
+            $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
+            $tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
 
-			// get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
-			$removedGradingOptionIds = [];
-			foreach ($tempRemovedGradingOptionIds as $key => $value) {
-				if (!$gradingOptions[$value]) {
-					$removedGradingOptionIds[$key] = $value;
-				}
-			}
+            // get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
+            $removedGradingOptionIds = [];
+            foreach ($tempRemovedGradingOptionIds as $key => $value) {
+                if (!$gradingOptions[$value]) {
+                    $removedGradingOptionIds[$key] = $value;
+                }
+            }
 
-			// remove the gradeOption inside the removed gradeOptions array.
-			// remove all the gradeOptions if no in-use gradeOption.
-			if (!empty($removedGradingOptionIds)) {
-				$this->GradingOptions->deleteAll([
-					$this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
-				]);
-			} else if ((!array_key_exists('grading_options', $requestData['GradingTypes'])) && (!$allowedDeleteAll)){
-				$this->GradingOptions->deleteAll([
-					$this->GradingOptions->aliasField('competency_grading_type_id') => $entity->id
-				]);
-			}
-		}
-	}
+            // remove the gradeOption inside the removed gradeOptions array.
+            // remove all the gradeOptions if no in-use gradeOption.
+            if (!empty($removedGradingOptionIds)) {
+                $this->GradingOptions->deleteAll([
+                    $this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
+                ]);
+            } else if ((!array_key_exists('grading_options', $requestData['GradingTypes'])) && (!$allowedDeleteAll)){
+                $this->GradingOptions->deleteAll([
+                    $this->GradingOptions->aliasField('competency_grading_type_id') => $entity->id
+                ]);
+            }
+        }
+    }
 
 /******************************************************************************************************************
 **
 ** view action events
 **
 ******************************************************************************************************************/
-	public function viewBeforeAction(Event $event, ArrayObject $extra) {
-		$this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
+    public function viewBeforeAction(Event $event, ArrayObject $extra) {
+        $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
-		$this->setFieldOrder([
-			'code', 'name', 'pass_mark', 'max', 'result_type', 'grading_options', 'visible',
-		]);
-	}
+        $this->setFieldOrder([
+            'code', 'name', 'pass_mark', 'max', 'result_type', 'grading_options', 'visible',
+        ]);
+    }
 
 
 /******************************************************************************************************************
@@ -233,18 +237,18 @@ class GradingTypesTable extends ControllerActionTable {
 ** viewEdit action events
 **
 ******************************************************************************************************************/
-	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-		$query->contain([
-			$this->GradingOptions->alias()
-		]);
-	}
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+        $query->contain([
+            $this->GradingOptions->alias()
+        ]);
+    }
 
 /******************************************************************************************************************
 **
 ** delete action events
 **
 ******************************************************************************************************************/
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
             $this->GradingOptions->alias()
@@ -257,18 +261,18 @@ class GradingTypesTable extends ControllerActionTable {
 ** viewEdit action events
 **
 ******************************************************************************************************************/
-	public function getCustomList($params = []) {
-		if (array_key_exists('keyField', $params)) {
-			$keyField = $params['keyField'];
-		} else {
-			$keyField = 'id';
-		}
-		if (array_key_exists('valueField', $params)) {
-			$valueField = $params['valueField'];
-		} else {
-			$valueField = 'name';
-		}
- 		$query = $this->find('list', ['keyField' => $keyField, 'valueField' => $valueField]);
-		return $this->getList($query);
-	}
+    public function getCustomList($params = []) {
+        if (array_key_exists('keyField', $params)) {
+            $keyField = $params['keyField'];
+        } else {
+            $keyField = 'id';
+        }
+        if (array_key_exists('valueField', $params)) {
+            $valueField = $params['valueField'];
+        } else {
+            $valueField = 'name';
+        }
+        $query = $this->find('list', ['keyField' => $keyField, 'valueField' => $valueField]);
+        return $this->getList($query);
+    }
 }
