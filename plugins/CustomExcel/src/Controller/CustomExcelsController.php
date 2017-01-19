@@ -41,10 +41,6 @@ class CustomExcelsController extends AppController
         }
     }
 
-    // CAv4
-    public function ExcelTemplates() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'CustomExcel.ExcelTemplates']); }
-    // End
-
     public function export($model) { $this->ExcelReport->renderExcel(['className' => "$this->plugin.$model"]); }
     public function viewVars($model) { $this->ExcelReport->viewVars(['className' => "$this->plugin.$model"]); }
 }
