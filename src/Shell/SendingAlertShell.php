@@ -40,12 +40,6 @@ class SendingAlertShell extends Shell
                     ->subject($obj->subject)
                     ->send($obj->message);
 
-                // $email = new Email();
-                // $email->from(['hsuhendra@kordit.com' => 'Testing the sendingAlertShell'])
-                //     ->to($obj->destination)
-                //     ->subject($obj->subject)
-                //     ->send($obj->message);
-
                 // update the alertLog
                 $this->AlertLogs->query()
                     ->update()

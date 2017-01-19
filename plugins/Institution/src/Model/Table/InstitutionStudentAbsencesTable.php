@@ -46,7 +46,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
-		$this->addBehavior('Alert.Alerts');
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -711,16 +710,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d'),
 		];
 
-		if ($isAlert) {
-			$conditions = [
-				$this->aliasField('institution_id') => $institutionId,
-				$this->aliasField('student_id') => $studentId,
-				$this->aliasField('absence_type_id') => 2, // 2 == UNEXCUSED
-				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate->format('Y-m-d'),
-				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d'),
-			];
-		}
-
 		$absenceResults = $this
 			->find()
 			->where([$conditions])
@@ -735,5 +724,38 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		}
 
 		return $valueIndex = $absenceDay;
+	}
+
+	public function getUnexcusedAbsenceData()
+	{
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$currentAcademicPeriodId = $AcademicPeriods->getCurrent();
+		$currentPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date;
+		$currentPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date;
+
+		$unexcusedAbsenceResults = $this
+			->find()
+			->where([
+				// unexcused and current academic period
+				'absence_type_id' => 2,
+				'start_date' . ' >='  => $currentPeriodStartDate->format('Y-m-d'),
+				'end_date' . ' <='  => $currentPeriodEndDate->format('Y-m-d'),
+			])
+			->all();
+
+		$unexcusedAbsenceData = [];
+		foreach ($unexcusedAbsenceResults as $unexcusedAbsenceResultsKey => $unexcusedAbsenceResultsObj) {
+			$studentId = $unexcusedAbsenceResultsObj->student_id;
+			$institutionId = $unexcusedAbsenceResultsObj->institution_id;
+			$endDate = $unexcusedAbsenceResultsObj->end_date;
+			$startDate = $unexcusedAbsenceResultsObj->start_date;
+			$interval = $endDate->diff($startDate);
+
+			// institutionId => [studentId => [absenceDay]]
+			$unexcusedAbsenceData[$institutionId][$studentId] = !empty($unexcusedAbsenceData[$institutionId][$studentId]) ? $unexcusedAbsenceData[$institutionId][$studentId] : 0;
+			$unexcusedAbsenceData[$institutionId][$studentId] = $unexcusedAbsenceData[$institutionId][$studentId]+$interval->days+1;
+		}
+
+		return $unexcusedAbsenceData;
 	}
 }
