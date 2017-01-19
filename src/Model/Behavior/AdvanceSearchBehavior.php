@@ -52,7 +52,7 @@ class AdvanceSearchBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 
-	public function afterAction(Event $event)
+	public function afterAction(Event $event, $extra)
 	{
         $order = $this->config('order');
 		if ($this->_table->action == 'index') {
@@ -72,11 +72,10 @@ class AdvanceSearchBehavior extends Behavior {
             $includedFields = new ArrayObject(); //new type of advance search, field from the database table.
 
 			foreach ($fields as $key) {
+				$label = $labels->getLabel($this->_table->alias(), $key, $language);
 				if (!in_array($key , $this->config('exclude'))) {
 
 					$selected = (isset($advanceSearchModelData['belongsTo']) && isset($advanceSearchModelData['belongsTo'][$key])) ? $advanceSearchModelData['belongsTo'][$key] : '' ;
-
-                    $label = $labels->getLabel($this->_table->alias(), $key, $language);
 
 					if ($this->isForeignKey($key)) {
 						$relatedModel = $this->getAssociatedBelongsToModel($key);
@@ -120,11 +119,11 @@ class AdvanceSearchBehavior extends Behavior {
 
                 if (in_array($key , $this->config('include'))) {
                     $includedFields[$key] = [
-                        'label' => ($label) ? $label : $this->_table->getHeader($relatedModel->alias()),
+                        'label' => ($label) ? $label : Inflector::humanize($key),
                         'value' => (isset($advanceSearchModelData['tableField']) && isset($advanceSearchModelData['tableField'][$key])) ? $advanceSearchModelData['tableField'][$key] : '',
                     ];
                 }
-			}   
+			}
 
             if (array_key_exists('belongsTo', $advanceSearchModelData)) {
                 foreach ($advanceSearchModelData['belongsTo'] as $field => $value) {
@@ -157,22 +156,8 @@ class AdvanceSearchBehavior extends Behavior {
 			// trigger events for additional searchable fields
 	        $this->_table->dispatchEvent('AdvanceSearch.onSetupFormField', [$searchables, $advanceSearchModelData], $this);
             $showOnLoad = $this->config('showOnLoad');
-            if($this->isCAv4()) {
-                $this->_table->controller->viewVars['advanced_search'] = [
-                    'name' => 'advanced_search',
-                    'data' => compact('filters', 'searchables', 'includedFields', 'advancedSearch', 'showOnLoad'),
-                    'options' => [],
-                    'order' => 0
-                ];
-            }
 
-            // adding of the indexElement
-            $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
-                'name' => 'advanced_search',
-                'data' => compact('filters', 'searchables', 'includedFields', 'advancedSearch', 'showOnLoad'),
-                'options' => [],
-                'order' => 0
-            ];
+
             if (empty($order)) { //if no order declared, then build the default order.
                 foreach ($filters as $key=>$filter) {
                     $order[] = $key;
@@ -182,12 +167,22 @@ class AdvanceSearchBehavior extends Behavior {
                 }
             }
 
-            $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
-	            'name' => 'advanced_search',
-	            'data' => compact('filters', 'searchables', 'includedFields', 'order', 'advancedSearch', 'showOnLoad'),
-	            'options' => [],
-	            'order' => 0
-	        ];
+            if($this->isCAv4()) {
+                $extra['elements']['advanced_search'] = [
+                    'name' => 'advanced_search',
+                    'data' => compact('filters', 'searchables', 'includedFields', 'order', 'advancedSearch', 'showOnLoad'),
+                    'options' => [],
+                    'order' => 0
+                ];
+                $this->_table->controller->set('advanced_search', true);
+            } else {
+                $this->_table->controller->viewVars['indexElements']['advanced_search'] = [
+                    'name' => 'advanced_search',
+                    'data' => compact('filters', 'searchables', 'includedFields', 'order', 'advancedSearch', 'showOnLoad'),
+                    'options' => [],
+                    'order' => 0
+                ];
+            }
 		}
 	}
 
