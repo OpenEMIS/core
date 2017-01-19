@@ -9,12 +9,14 @@ use Cake\I18n\Time;
 use Cake\Filesystem\File;
 
 class TriggerUpdateSubjectStudentTotalMarkShell extends Shell {
-    public function initialize() {
+    public function initialize()
+    {
         parent::initialize();
         $this->loadModel('Institution.Institutions');
     }
 
-    public function main() {
+    public function main()
+    {
         $selectedPeriodId = !empty($this->args[0]) ? $this->args[0] : 0;
         $restartFlag = !empty($this->args[1]) ? $this->args[1] : 0;
 
@@ -49,10 +51,12 @@ class TriggerUpdateSubjectStudentTotalMarkShell extends Shell {
                 ->toArray();
 
             $files = [];
+            for ($i=0; $i<$THREAD_NUM; $i++) {
+                $files[$i] = new File('webroot/shellFiles/thread'.$i.'.log');
+            }
+
             while (!empty($institutions)) {
                 for ($i=0; $i<$THREAD_NUM; $i++) {
-                    $files[$i] = new File('webroot/shellFiles/thread'.$i.'.log');
-
                     if (!$files[$i]->exists()) {
                         $institutionId = array_pop($institutions);
                         if (!empty($institutionId)) {
