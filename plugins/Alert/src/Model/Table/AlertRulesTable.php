@@ -16,7 +16,7 @@ use Cake\Log\Log;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
-class AlertTypesTable extends ControllerActionTable
+class AlertRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
@@ -37,13 +37,13 @@ class AlertTypesTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('alerts');
+        $this->table('alert_rules');
         parent::initialize($config);
 
         $this->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
             'joinTable' => 'alerts_roles',
-            'foreignKey' => 'alert_id',
+            'foreignKey' => 'alert_rule_id',
             'targetForeignKey' => 'security_role_id',
             'through' => 'Alert.AlertsRoles',
             'dependent' => true,

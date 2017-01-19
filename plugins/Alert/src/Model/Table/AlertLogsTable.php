@@ -46,7 +46,7 @@ class AlertLogsTable extends ControllerActionTable
     {
         $alertKey = $afterSaveOrDeleteEntity->source();
 
-        $AlertTypes = TableRegistry::get('Alert.AlertTypes');
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
         $Users = TableRegistry::get('Security.Users');
         $Institutions = TableRegistry::get('Institution.Institutions');
         $AlertModel = TableRegistry::get($alertKey);
@@ -65,25 +65,25 @@ class AlertLogsTable extends ControllerActionTable
 
         $isAlert = true;
 
-        $feature = $AlertTypes->getAlertTypeDetailsByAlias($alias)['feature'];
-        $placeholder = $AlertTypes->getAlertTypeDetailsByAlias($alias)['placeholder'];
+        $feature = $AlertRules->getAlertTypeDetailsByAlias($alias)['feature'];
+        $placeholder = $AlertRules->getAlertTypeDetailsByAlias($alias)['placeholder'];
 
-        $AlertTypesData = $AlertTypes->find()
+        $AlertRulesData = $AlertRules->find()
             ->contain(['SecurityRoles'])
             ->where(['feature' => $feature])
             ->all();
 
-        foreach ($AlertTypesData as $AlertTypesKey => $AlertTypesObj) {
-            $thresholdType = $AlertTypes->getAlertTypeDetailsByAlias($alias)['threshold']['type'];
-            $threshold = $AlertTypesObj->threshold;
+        foreach ($AlertRulesData as $AlertRulesKey => $AlertRulesObj) {
+            $thresholdType = $AlertRules->getAlertTypeDetailsByAlias($alias)['threshold']['type'];
+            $threshold = $AlertRulesObj->threshold;
             $valueIndex = $AlertModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $isAlert);
 
             if ($thresholdType == 'integer') {
                 if ($valueIndex >= $threshold) { // to check if fulfilled the condition of the alert
-                    if (!empty($AlertTypesObj['security_roles'])) {
+                    if (!empty($AlertRulesObj['security_roles'])) {
                         $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
-                        foreach ($AlertTypesObj['security_roles'] as $securityRolesKey => $securityRolesObj) {
+                        foreach ($AlertRulesObj['security_roles'] as $securityRolesKey => $securityRolesObj) {
                             $securityRoleId = $securityRolesObj->id;
                             $emailList = $SecurityGroupUsers->getEmailListByRoles($securityRoleId, $institutionId);
 
@@ -95,36 +95,36 @@ class AlertLogsTable extends ControllerActionTable
                                     $institutionName = $Institutions->get($institutionId)->name;
 
                                     // subject and message for alert email
-                                    $subject = $this->replaceMessage($AlertTypesObj->subject, $studentName, $staffName, $institutionName, $threshold);
-                                    $message = $this->replaceMessage($AlertTypesObj->message, $studentName, $staffName, $institutionName, $threshold);
+                                    $subject = $this->replaceMessage($AlertRulesObj->subject, $studentName, $staffName, $institutionName, $threshold);
+                                    $message = $this->replaceMessage($AlertRulesObj->message, $studentName, $staffName, $institutionName, $threshold);
 
-                                    $this->updateAlertLog($AlertTypesObj, $emailListObj, $subject, $message);
+                                    $this->updateAlertLog($AlertRulesObj, $emailListObj, $subject, $message);
                                 }
 
                                 // trigger shell
                                 $this->triggerSendingAlertShell('SendingAlert');
                             } else {
                                 // user no email.
-                                $this->updateAlertLog($AlertTypesObj, 'No Email', 'No Email', 'No Email');
+                                $this->updateAlertLog($AlertRulesObj, 'No Email', 'No Email', 'No Email');
                             }
                         }
                     } else {
                         // no security role means no email.
-                        $this->updateAlertLog($AlertTypesObj, 'No Security Role', 'No Security Role', 'No Security Role');
+                        $this->updateAlertLog($AlertRulesObj, 'No Security Role', 'No Security Role', 'No Security Role');
                     }
                 }
             }
         }
     }
 
-    public function updateAlertLog($AlertTypesObj, $emailListObj, $subject=null, $message=null)
+    public function updateAlertLog($AlertRulesObj, $emailListObj, $subject=null, $message=null)
     {
         $today = Time::now();
         $todayDate = Date::now();
 
         $alertLogsResults = $this->find()
             ->where([
-                $this->aliasField('method') => $AlertTypesObj->method,
+                $this->aliasField('method') => $AlertRulesObj->method,
                 $this->aliasField('destination') => $emailListObj,
                 $this->aliasField('subject') => $subject,
                 $this->aliasField('message') => $message,
@@ -141,7 +141,7 @@ class AlertLogsTable extends ControllerActionTable
             }
         } else {
             $entity = $this->newEntity([
-                'method' => $AlertTypesObj->method,
+                'method' => $AlertRulesObj->method,
                 'destination' => $emailListObj,
                 'status' => 0,
                 'subject' => $subject,
