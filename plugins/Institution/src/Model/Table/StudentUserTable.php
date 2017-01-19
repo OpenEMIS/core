@@ -194,7 +194,7 @@ class StudentUserTable extends ControllerActionTable
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$institutionStudentId = $this->request->query('id') ? $this->request->query('id') : $this->Session->read('Institution.Students.id');
+		$institutionStudentId = $this->request->query('id');
 
 		// this is required if the student link is clicked from the Institution Classes or Subjects
 		if (empty($institutionStudentId)) {
@@ -214,7 +214,7 @@ class StudentUserTable extends ControllerActionTable
 			}
 		}
 
-		$this->Session->write('Institution.Students.id', $institutionStudentId );
+		$this->Session->write('Institution.Students.id', $institutionStudentId);
 		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
 			$event->stopPropagation();
 			return $this->controller->redirect(['action' => 'Students', 'index']);
