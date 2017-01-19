@@ -28,6 +28,8 @@ class PullBehavior extends Behavior
     private $nationalityMapping = null;
     private $identityTypeMapping = null;
     private $identityNumberMapping = null;
+    private $addressMapping = null;
+    private $postalMapping = null;
     private $userEndpoint = null;
     private $authEndpoint = null;
     private $changes = false;
@@ -56,7 +58,6 @@ class PullBehavior extends Behavior
                     $ExternalDataSourceAttributesTable->aliasField('external_data_source_type') => $this->type
                 ])
                 ->toArray();
-
             $this->firstNameMapping = $this->attributes['first_name_mapping'];
             $this->middleNameMapping = $this->attributes['middle_name_mapping'];
             $this->thirdNameMapping = $this->attributes['third_name_mapping'];
@@ -66,6 +67,8 @@ class PullBehavior extends Behavior
             $this->nationalityMapping = $this->attributes['nationality_mapping'];
             $this->identityTypeMapping = $this->attributes['identity_type_mapping'];
             $this->identityNumberMapping = $this->attributes['identity_number_mapping'];
+            $this->addressMapping = $this->attributes['address_mapping'];
+            $this->postalMapping = $this->attributes['postal_mapping'];
             $this->authEndpoint = $this->attributes['token_uri'];
             $this->userEndpoint = $this->attributes['user_endpoint_uri'];
         }
@@ -89,6 +92,8 @@ class PullBehavior extends Behavior
         $events['ControllerAction.Model.onGetLastName'] = ['callable' => 'onGetLastName', 'priority' => 15];
         $events['ControllerAction.Model.onGetGenderId'] = ['callable' => 'onGetGenderId', 'priority' => 15];
         $events['ControllerAction.Model.onGetDateOfBirth'] = ['callable' => 'onGetDateOfBirth', 'priority' => 15];
+        $events['ControllerAction.Model.onGetAddress'] = ['callable' => 'onGetAddress', 'priority' => 15];
+        $events['ControllerAction.Model.onGetPostal'] = ['callable' => 'onGetPostal', 'priority' => 15];
         return $events;
     }
 
@@ -300,11 +305,16 @@ class PullBehavior extends Behavior
         if (!empty($externalReference)) {
         	if ($this->type != 'None') {
 	            $http = new Client();
-	            $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($this->type);
+                $clientId = $this->attributes['client_id'];
+                $scope = $this->attributes['scope'];
+                $tokenUri = $this->attributes['token_uri'];
+                $privateKey = $this->attributes['private_key'];
+	            $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
 	            $data = [
 	                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
 	                'assertion' => $credentialToken
 	            ];
+
 	            try {
 	                // Getting access token
 	                $response = $http->post($this->authEndpoint, $data);
@@ -340,6 +350,8 @@ class PullBehavior extends Behavior
 	                $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping));
 	                $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping));
 	                $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping));
+                    $this->newValues['address'] = $this->setChanges($entity->address, $this->getValue($body['data'], $this->addressMapping));
+                    $this->newValues['postal_code'] = $this->setChanges($entity->postal_code, $this->getValue($body['data'], $this->postalMapping));
 	                $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
 	                $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
 	                $nationalityArr = [
@@ -428,6 +440,8 @@ class PullBehavior extends Behavior
     	                	'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
     	                	'gender_id' => $genderArr['id'],
     	                	'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
+                            'address' => $this->getValue($body['data'], $this->addressMapping),
+                            'postal_code' => $this->getValue($body['data'], $this->postalMapping),
     	                	'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
     	                	'identity_type_id' => $identityTypeArr['id'],
     	                	'nationality_id' => $nationalityArr['id']
@@ -516,6 +530,20 @@ class PullBehavior extends Behavior
     {
     	if (isset($this->newValues['gender_id'])) {
             return $this->newValues['gender_id'];
+        }
+    }
+
+    public function onGetAddress(Event $events, Entity $entity)
+    {
+        if (isset($this->newValues['address'])) {
+            return $this->newValues['address'];
+        }
+    }
+
+    public function onGetPostalCode(Event $events, Entity $entity)
+    {
+        if (isset($this->newValues['postal_code'])) {
+            return $this->newValues['postal_code'];
         }
     }
 

@@ -124,6 +124,7 @@ class ReportListBehavior extends Behavior {
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
 			['id' => $process->id]
 		);
+		$settings['purge'] = false; //for report, dont purge after download.
 	}
 
 	protected function _generate($data) {
