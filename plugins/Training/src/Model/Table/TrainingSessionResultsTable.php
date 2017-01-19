@@ -85,6 +85,12 @@ class TrainingSessionResultsTable extends ControllerActionTable
 		return $process;
 	}
 
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
+	{
+		// redirect back to edit page
+		return $this->controller->redirect($this->url('edit'));
+	}
+
 	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		// To manually clear all records in training_session_trainee_results when delete
