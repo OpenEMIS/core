@@ -200,18 +200,17 @@ class StudentUserTable extends ControllerActionTable
 		if (empty($institutionStudentId)) {
 			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 			$institutionId = $this->Session->read('Institution.Institutions.id');
-			$studentId = !empty($this->paramsPass(0)) ? $this->paramsDecode($this->paramsPass(0))['id'] : '';
+			$studentId = !empty($this->paramsPass(0)) ? $this->paramsDecode($this->paramsPass(0))['id'] : 0;
 
-			if (!empty($studentId)) {
-				$institutionStudentId = $InstitutionStudentsTable->find()
-	                ->where([
-	                    $InstitutionStudentsTable->aliasField('student_id') => $studentId,
-	                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionId,
-	                ])
-	                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
-	                ->extract('id')
-	                ->first();
-			}
+			// get the id of the latest student record in the current institution
+			$institutionStudentId = $InstitutionStudentsTable->find()
+                ->where([
+                    $InstitutionStudentsTable->aliasField('student_id') => $studentId,
+                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionId,
+                ])
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+                ->extract('id')
+                ->first();
 		}
 
 		$this->Session->write('Institution.Students.id', $institutionStudentId);
