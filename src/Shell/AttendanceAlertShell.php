@@ -23,24 +23,18 @@ class AttendanceAlertShell extends Shell
 
     public function main()
     {
-        $dir = new Folder(ROOT . DS . 'webroot' . DS . 'shellprocesses'); // path
-        $filesArray = $dir->find('AttendanceAlert.stop');
+        $dir = new Folder(ROOT . DS . 'tmp'); // path
 
-        while (empty($filesArray)) {
-            // no shell stop will keep on running until the shell stop created.
-            pr('shell stop not exist');
-            $shellCmd = 'ps -ef | grep AttendanceAlert';
-            // $shellCmd = 'pkill AttendanceAlert'; // to kill the shell
-            $pid = exec($shellCmd);
-            pr($pid);
+        do {
+            $shellData = $this->InstitutionStudentAbsences->getUnexcusedAbsenceData();
+            $alias = $this->InstitutionStudentAbsences->alias();
+
+            // inserting data to alert_log table and trigger the sending alert
+            $this->AlertLogs->shellDataProcess($shellData, $alias);
+
             sleep(5);
 
-
-
-
-
-            // to check if the shell stop is exist. every shell process will have their own file.
             $filesArray = $dir->find('AttendanceAlert.stop');
-        }
+        } while (empty($filesArray));
     }
 }

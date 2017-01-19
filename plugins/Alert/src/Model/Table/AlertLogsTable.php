@@ -33,37 +33,11 @@ class AlertLogsTable extends ControllerActionTable
         $this->toggle('edit', false);
     }
 
-    public function implementedEvents()
+    public function shellDataProcess($shellData, $alias)
     {
-        $events = parent::implementedEvents();
-        // student absence and attendance
-        $events['Model.InstitutionStudentAbsences.afterSave'] = 'afterSaveOrDelete';
-        $events['Model.InstitutionStudentAbsences.afterDelete'] = 'afterSaveOrDelete';
-        return $events;
-    }
-
-    public function afterSaveOrDelete(Event $mainEvent, Entity $afterSaveOrDeleteEntity)
-    {
-        $alertKey = $afterSaveOrDeleteEntity->source();
-
         $AlertRules = TableRegistry::get('Alert.AlertRules');
         $Users = TableRegistry::get('Security.Users');
         $Institutions = TableRegistry::get('Institution.Institutions');
-        $AlertModel = TableRegistry::get($alertKey);
-        $alias = $AlertModel->alias();
-
-        $studentId = $afterSaveOrDeleteEntity->student_id;
-        $institutionId = $afterSaveOrDeleteEntity->institution_id;
-
-        // to get the academicPeriodId
-        if (isset($afterSaveOrDeleteEntity->academic_period_id)) {
-            $academicPeriodId = $afterSaveOrDeleteEntity->academic_period_id;
-        } else {
-            // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, model also have different date
-            $academicPeriodId = $this->getAcademicPeriodId($AlertModel, $afterSaveOrDeleteEntity);
-        }
-
-        $isAlert = true;
 
         $feature = $AlertRules->getAlertTypeDetailsByAlias($alias)['feature'];
         $placeholder = $AlertRules->getAlertTypeDetailsByAlias($alias)['placeholder'];
@@ -76,48 +50,45 @@ class AlertLogsTable extends ControllerActionTable
         foreach ($AlertRulesData as $AlertRulesKey => $AlertRulesObj) {
             $thresholdType = $AlertRules->getAlertTypeDetailsByAlias($alias)['threshold']['type'];
             $threshold = $AlertRulesObj->threshold;
-            $valueIndex = $AlertModel->getValueIndex($institutionId, $studentId, $academicPeriodId, $isAlert);
 
             if ($thresholdType == 'integer') {
-                if ($valueIndex >= $threshold) { // to check if fulfilled the condition of the alert
-                    if (!empty($AlertRulesObj['security_roles'])) {
-                        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+                foreach ($shellData as $institutionId => $shellDataObj) { // institutionId is the key
+                    foreach ($shellDataObj as $studentId => $dataObj) { // studentId is the key
+                        if ($dataObj >= $threshold) { // to check if fulfilled the condition of the alert
+                            if (!empty($AlertRulesObj['security_roles'])) { //check if the alertRule have security role
+                                $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 
-                        foreach ($AlertRulesObj['security_roles'] as $securityRolesKey => $securityRolesObj) {
-                            $securityRoleId = $securityRolesObj->id;
-                            $emailList = $SecurityGroupUsers->getEmailListByRoles($securityRoleId, $institutionId);
+                                foreach ($AlertRulesObj['security_roles'] as $securityRolesKey => $securityRolesObj) {
+                                    $securityRoleId = $securityRolesObj->id;
+                                    $emailList = $SecurityGroupUsers->getEmailListByRoles($securityRoleId, $institutionId);
 
-                            if (!empty($emailList)) {
-                                foreach ($emailList as $emailListKey => $emailListObj) {
-                                    //for placeholder string replacement
-                                    $studentName = $Users->get($studentId)->first_name . ' ' . $Users->get($studentId)->last_name;
-                                    $staffName = $Users->get($emailListKey)->first_name . ' ' . $Users->get($emailListKey)->last_name;
-                                    $institutionName = $Institutions->get($institutionId)->name;
+                                    if (!empty($emailList)) {
+                                        foreach ($emailList as $emailListKey => $emailListObj) {
+                                            //for placeholder string replacement
+                                            $studentName = $Users->get($studentId)->first_name . ' ' . $Users->get($studentId)->last_name;
+                                            $staffName = $Users->get($emailListKey)->first_name . ' ' . $Users->get($emailListKey)->last_name;
+                                            $institutionName = $Institutions->get($institutionId)->name;
 
-                                    // subject and message for alert email
-                                    $subject = $this->replaceMessage($AlertRulesObj->subject, $studentName, $staffName, $institutionName, $threshold);
-                                    $message = $this->replaceMessage($AlertRulesObj->message, $studentName, $staffName, $institutionName, $threshold);
+                                            // subject and message for alert email
+                                            $subject = $this->replaceMessage($AlertRulesObj->subject, $studentName, $staffName, $institutionName, $threshold);
+                                            $message = $this->replaceMessage($AlertRulesObj->message, $studentName, $staffName, $institutionName, $threshold);
 
-                                    $this->updateAlertLog($AlertRulesObj, $emailListObj, $subject, $message);
+                                            $this->insertAlertLog($AlertRulesObj, $emailListObj, $subject, $message);
+                                        }
+                                    }
                                 }
-
-                                // trigger shell
-                                $this->triggerSendingAlertShell('SendingAlert');
-                            } else {
-                                // user no email.
-                                $this->updateAlertLog($AlertRulesObj, 'No Email', 'No Email', 'No Email');
                             }
                         }
-                    } else {
-                        // no security role means no email.
-                        $this->updateAlertLog($AlertRulesObj, 'No Security Role', 'No Security Role', 'No Security Role');
                     }
                 }
             }
         }
+
+        // trigger shell
+        $this->triggerSendingAlertShell('SendingAlert');
     }
 
-    public function updateAlertLog($AlertRulesObj, $emailListObj, $subject=null, $message=null)
+    public function insertAlertLog($AlertRulesObj, $emailListObj, $subject=null, $message=null)
     {
         $today = Time::now();
         $todayDate = Date::now();

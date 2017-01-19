@@ -30,7 +30,6 @@ class AlertsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->toggle('view', false);
         $this->toggle('add', false);
         $this->toggle('remove', false);
     }
@@ -49,17 +48,52 @@ class AlertsTable extends ControllerActionTable
         $this->field('status', ['after' => 'name']);
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $shellName = $entity->process_name;
+        if ($this->isShellStopExist($shellName)) {
+            $icon = '<i class="fa fa-play"></i>';
+            $label = 'Start'; // if have the file, process not running
+        } else {
+            $icon = '<i class="fa fa-stop"></i>';
+            $label = 'Stop';
+        }
+
+        // process buttons
+        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+        $url = [
+            'plugin' => $this->controller->plugin,
+            'controller' => $this->controller->name,
+            'process'
+        ];
+        $toolbarButtonsArray['edit']['label'] = $icon;
+        $toolbarButtonsArray['edit']['attr']['title'] = __($label);
+        $toolbarButtonsArray['edit']['url'] = $this->setQueryString($url, [
+            'shell_name' => $shellName,
+            'action' => 'view'
+        ]);
+
+        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
+        // end generate buttons
+    }
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
         $shellName = $entity->process_name;
 
+        if (array_key_exists('view', $buttons)) {
+            $newButtons['view'] = $buttons['view'];
+        }
+
         if (array_key_exists('edit', $buttons)) {
             if ($this->isShellStopExist($shellName)) {
-                    $label = 'Start'; // if have the file, process not running
-                } else {
-                    $label = 'Stop';
-                }
+                $icon = '<i class="fa fa-play"></i>';
+                $label = 'Start'; // if have the file, process not running
+            } else {
+                $icon = '<i class="fa fa-stop"></i>';
+                $label = 'Stop';
+            }
 
             $url = [
                 'plugin' => $this->controller->plugin,
@@ -67,10 +101,11 @@ class AlertsTable extends ControllerActionTable
                 'process'
             ];
             $processButtons = $buttons['edit'];
-            $processButtons['label'] = __($label);
+            $processButtons['label'] = $icon.__($label);
             $newButtons['processButtons'] = $processButtons;
             $newButtons['processButtons']['url'] = $this->setQueryString($url, [
-                'shell_name' => $shellName
+                'shell_name' => $shellName,
+                'action' => 'index'
             ]);
         }
 
@@ -85,23 +120,46 @@ class AlertsTable extends ControllerActionTable
             $params = $this->paramsDecode($requestQuery['queryString']);
         }
 
-        $this->addRemoveShellStop($params['shell_name']);
-        $this->triggerSendingAlertFeatureShell($params['shell_name']);
+        $this->addRemoveShellStop($params['shell_name']); // create and remove the shell stop of the shell
+        $this->triggerAlertFeatureShell($params['shell_name']); // trigger the feature shell
 
-        // redirect to index page
-        // sleep(1); // to let the shell process finished the changes then redirect
-        $url = $this->url('index');
+        // redirect to respective page from params['action']
+        $url = $this->url($params['action']);
         $event->stopPropagation();
         return $this->controller->redirect($url);
     }
 
     public function onGetStatus(Event $event, Entity $entity)
     {
+        $today = Time::now();
         $shellName = $entity->process_name;
         if ($this->isShellStopExist($shellName)) {
             $status = 0;
+
+            // update the pid and time
+            $this->query()
+                ->update()
+                ->where(['process_name' => $shellName])
+                ->set([
+                    'process_id' => null,
+                    'modified' => $today
+                ])
+                ->execute();
         } else {
             $status = 1;
+
+            // update the pid and time
+            $shellCmd = "ps -ef | grep " . $shellName . " | grep apache | awk '{print $2}'";
+            $pid = exec($shellCmd);
+
+            $this->query()
+                ->update()
+                ->where(['process_name' => $shellName])
+                ->set([
+                    'process_id' => $pid,
+                    'modified' => $today
+                ])
+                ->execute();
         }
 
         return $this->statusTypes[$status];
@@ -110,7 +168,7 @@ class AlertsTable extends ControllerActionTable
     public function isShellStopExist($shellName)
     {
         // folder to the shellprocesses.
-        $dir = new Folder(ROOT . DS . 'webroot' . DS . 'shellprocesses'); // path
+        $dir = new Folder(ROOT . DS . 'tmp'); // path
         $filesArray = $dir->find($shellName.'.stop');
 
         if (!empty($filesArray)) {
@@ -124,8 +182,7 @@ class AlertsTable extends ControllerActionTable
 
     public function addRemoveShellStop($shellName)
     {
-        $dir = new Folder(ROOT . DS . 'webroot' . DS . 'shellprocesses'); // path
-        // $file = new File($dir->path.'/' . $shellName . '.stop', true);
+        $dir = new Folder(ROOT . DS . 'tmp'); // path
 
         if ($this->isShellStopExist($shellName)) {
             // shell stop file exist, remove the shell stop
@@ -138,7 +195,7 @@ class AlertsTable extends ControllerActionTable
     }
 
 
-    public function triggerSendingAlertFeatureShell($shellName)
+    public function triggerAlertFeatureShell($shellName)
     {
         $args = '';
 
