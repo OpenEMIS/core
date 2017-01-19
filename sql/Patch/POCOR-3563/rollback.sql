@@ -1,8 +1,7 @@
 -- institution_subject_staff
-ALTER TABLE `institution_subject_staff`
-  DROP `start_date`,
-  DROP `end_date`,
-  DROP `institution_id`;
+DROP TABLE `institution_subject_staff`;
+
+RENAME TABLE `z_3563_institution_subject_staff` TO `institution_subject_staff`;
 
 -- labels
 DELETE FROM `labels` WHERE 

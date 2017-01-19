@@ -137,13 +137,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
         
         $newEntity = $this->patchStaffProfile($data);
 		$InstitutionStaff = TableRegistry::get('Institution.Staff');
-		$InstitutionStaff->save($newEntity);
-
-        //trigger update of end_date on institution_subject_staff
-        if ($data['staff_change_type_id'] == $this->staffChangeTypesList['END_OF_ASSIGNMENT']) {
-            $InstitutionSubjectStaffTable = TableRegistry::get('Institution.InstitutionSubjectStaff');
-            $InstitutionSubjectStaffTable->updateSubjectStaffEndDate($data['end_date']->format('Y-m-d'), $data['staff_id'], $data['institution_id']);
-        }
+		$InstitutionStaff->save($newEntity);        
 	}
 
 	private function patchStaffProfile(array $data) {
@@ -166,6 +160,13 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			unset($data['id']);
 			$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data, ['validate' => "AllowPositionType"]);
 		}
+
+		if ($newEntity->dirty('end_date')) { //if any changes on end_date, need to update subject_staff table also
+            $listeners = [
+                TableRegistry::get('Institution.InstitutionSubjectStaff')
+            ];
+            $this->dispatchEventToModels('Model.StaffPositionProfiles.onApprove', [$newEntity], $this, $listeners);
+        }
 
 		return $newEntity;
 	}
