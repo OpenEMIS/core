@@ -103,6 +103,13 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 		$this->setupFields($entity);
 	}
 
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
+        //clear querystring after add so it wont effected the next add / edit process
+        unset($extra['redirect']['period']);
+        unset($extra['redirect']['subject']);
+    }
+
 	public function onGetStaffId(Event $event, Entity $entity)
 	{
         if ($entity->staff) {
