@@ -16,7 +16,8 @@ class AlertsController extends AppController
 		];
     }
 
-    public function AlertTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertTypes']); }
+    public function Alerts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Alerts']); }
+    public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
     public function Questions() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.SmsMessages']); }
     public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
 

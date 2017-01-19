@@ -14,8 +14,7 @@ class SendingAlertShell extends Shell
     {
         parent::initialize();
         $this->loadModel('Alert.AlertLogs');
-        $this->loadModel('Alert.AlertTypes');
-
+        $this->loadModel('Alert.AlertRules');
     }
 
     public function main()
@@ -33,27 +32,29 @@ class SendingAlertShell extends Shell
             ->all();
 
         foreach ($alertLogsList as $key => $obj) {
-            // sending Email
-            $email = new Email('openemis');
-            $email
-                ->to($obj->destination)
-                ->subject($obj->subject)
-                ->send($obj->message);
+            if ($obj->destination != 'No Email' || $obj->destination != 'No Security Role') {
+                // sending Email if the destination email is exist
+                $email = new Email('openemis');
+                $email
+                    ->to($obj->destination)
+                    ->subject($obj->subject)
+                    ->send($obj->message);
 
-            // $email = new Email();
-            // $email->from(['hsuhendra@kordit.com' => 'Testing the sendingAlertShell'])
-            //     ->to($obj->destination)
-            //     ->subject($obj->subject)
-            //     ->send($obj->message);
+                // $email = new Email();
+                // $email->from(['hsuhendra@kordit.com' => 'Testing the sendingAlertShell'])
+                //     ->to($obj->destination)
+                //     ->subject($obj->subject)
+                //     ->send($obj->message);
 
-            // update the alertLog
-            $this->AlertLogs->query()
-                ->update()
-                ->set([
-                    'status' => 1,
-                    'created' => $today
-                ])
-                ->execute();
+                // update the alertLog
+                $this->AlertLogs->query()
+                    ->update()
+                    ->set([
+                        'status' => 1,
+                        'created' => $today
+                    ])
+                    ->execute();
+            }
         }
     }
 }
