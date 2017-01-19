@@ -140,10 +140,10 @@ class OpenEmisBehavior extends Behavior {
                 $ids = [];
                 if (is_array($primaryKey)) {
                     foreach ($primaryKey as $key) {
-                        $ids[$key] = $entity->$key;
+                        $ids[$key] = $entity->getOriginal($key);
                     }
                 } else {
-                    $ids[$primaryKey] = $entity->$primaryKey;
+                    $ids[$primaryKey] = $entity->getOriginal($primaryKey);
                 }
 
                 $encodedIds = $model->paramsEncode($ids);

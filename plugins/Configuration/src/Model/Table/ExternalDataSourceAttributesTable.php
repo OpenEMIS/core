@@ -14,7 +14,8 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Students' => ['index']
+        	'Students' => ['index'],
+            'Staff' => ['index']
         ]);
 	}
 
@@ -58,19 +59,9 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable {
 			]);
 	}
 
-    public function generateServerAuthorisationToken($externalDataSourceType)
+    public function generateServerAuthorisationToken($clientId, $scope, $tokenUri, $encryptedPrivateKey)
     {
-        $records = $this
-            ->find('list', [
-                'keyField' => 'attribute_field',
-                'valueField' => 'value'
-            ])
-            ->where([
-                $this->aliasField('external_data_source_type') => $externalDataSourceType
-            ])
-            ->toArray();
-
-        $keyAndSecret = explode('.', $records['private_key']);
+        $keyAndSecret = explode('.', $encryptedPrivateKey);
         $privateKey = '';
         if (count($keyAndSecret) == 2) {
             list($privateKey, $secret) = $keyAndSecret;
@@ -83,9 +74,9 @@ class ExternalDataSourceAttributesTable extends ControllerActionTable {
         $iat = Time::now()->toUnixString();
 
         $payload = [
-            'iss' => $records['client_id'],
-            'scope' => $records['scope'],
-            'aud' => $records['token_uri'],
+            'iss' => $clientId,
+            'scope' => $scope,
+            'aud' => $tokenUri,
             'exp' => $exp,
             'iat' => $iat
         ];
