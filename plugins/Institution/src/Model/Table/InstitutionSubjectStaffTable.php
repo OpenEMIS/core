@@ -6,6 +6,7 @@ use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\I18n\time;
 use Cake\ORM\TableRegistry;
+use Cake\Event\Event;
 
 class InstitutionSubjectStaffTable extends AppTable {
 	public function initialize(array $config) {
@@ -16,7 +17,13 @@ class InstitutionSubjectStaffTable extends AppTable {
 
 	}
 
-    public function addStaffToSubject($staffId, $institutionSubjectId) 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.StaffPositionProfiles.onApprove'] = 'StaffPositionProfilesOnApprove';
+        return $events;
+    }
+
+    public function addStaffToSubject($staffId, $institutionSubjectId, $institutionId) 
     {
         $result = false;
         $existingRecord = $this->find()
@@ -34,7 +41,8 @@ class InstitutionSubjectStaffTable extends AppTable {
             $institutionStaff = $InstitutionStaffTable
                                 ->find()
                                 ->where([
-                                    $InstitutionStaffTable->aliasField('staff_id') => $staffId
+                                    $InstitutionStaffTable->aliasField('staff_id') => $staffId,
+                                    $InstitutionStaffTable->aliasField('institution_id') => $institutionId
                                 ])
                                 ->first();
             
@@ -48,7 +56,7 @@ class InstitutionSubjectStaffTable extends AppTable {
                 'start_date' => $todayDate,
                 'end_date' => $endDate, //institution_staff end_date as default value.
                 'staff_id' => $staffId,
-                'institution_id' => $institutionStaff->institution_id,
+                'institution_id' => $institutionId,
                 'institution_subject_id' => $institutionSubjectId
             ]);
             $result = $this->save($entity);
@@ -81,15 +89,14 @@ class InstitutionSubjectStaffTable extends AppTable {
         return $deleteCount;
     }
 
-    public function updateSubjectStaffEndDate($endData, $staffId, $institutionId) 
+    public function StaffPositionProfilesOnApprove(Event $event, $staff)
     {
         $this->updateAll( 
-            ['end_date' => $endData],
+            ['end_date' => $staff->end_date],
             [
-                'staff_id' => $staffId,
-                'institution_id' => $institutionId
+                'staff_id' => $staff->staff_id,
+                'institution_id' => $staff->institution_id
             ]
         );
     }
-
 }
