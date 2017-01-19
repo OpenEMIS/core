@@ -194,9 +194,27 @@ class StudentUserTable extends ControllerActionTable
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$id = $this->request->query('id') ? $this->request->query('id') : $this->Session->read('Institution.Students.id');
-		$this->Session->write('Institution.Students.id', $id);
-		$institutionStudentId = $id;
+		$institutionStudentId = $this->request->query('id') ? $this->request->query('id') : $this->Session->read('Institution.Students.id');
+
+		// this is required if the student link is clicked from the Institution Classes or Subjects
+		if (empty($institutionStudentId)) {
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+			$institutionId = $this->Session->read('Institution.Institutions.id');
+			$studentId = !empty($this->paramsPass(0)) ? $this->paramsDecode($this->paramsPass(0))['id'] : '';
+
+			if (!empty($studentId)) {
+				$institutionStudentId = $InstitutionStudentsTable->find()
+	                ->where([
+	                    $InstitutionStudentsTable->aliasField('student_id') => $studentId,
+	                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionId,
+	                ])
+	                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+	                ->extract('id')
+	                ->first();
+			}
+		}
+
+		$this->Session->write('Institution.Students.id', $institutionStudentId );
 		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
 			$event->stopPropagation();
 			return $this->controller->redirect(['action' => 'Students', 'index']);
