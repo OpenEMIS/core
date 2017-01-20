@@ -18,7 +18,8 @@ INNER JOIN `institution_staff` `IST`
     ON (
         `ISS`.`staff_id` = `IST`.`staff_id`
         AND `IS`.`institution_id` = `IST`.`institution_id`
-    );
+    )
+GROUP BY `IST`.`staff_id`, `IST`.`institution_id`, `IS`.`id`;
 
 RENAME TABLE `institution_subject_staff` TO `z_3563_institution_subject_staff`;
 
