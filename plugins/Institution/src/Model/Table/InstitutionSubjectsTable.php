@@ -11,6 +11,8 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
+use Cake\I18n\Time;
+use Cake\I18n\Date;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -139,6 +141,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'valueWhenEmpty' => '<span>&lt;'.__('No Teacher Assigned').'&gt;</span>',
             'visible' => ['index' => true, 'view' => true, 'edit' => true]
         ]);
+
+        $this->field('past_teachers', [
+            'type' => 'element',
+            'element' => 'Institution.Subjects/past_teachers',
+            'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => false]
+        ]);  
 
         $this->field('rooms', [
             'type' => 'chosenSelect',
@@ -307,7 +315,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ]);
         }
         $this->setFieldOrder([
-            'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'rooms', 'students',
+            'academic_period_id', 'class_name', 'name', 'education_subject_code', 'education_subject_id', 'teachers', 'past_teachers', 'rooms', 'students',
         ]);
     }
 
@@ -328,6 +336,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $entity->class_name = implode(', ', (new Collection($entity->classes))->extract('name')->toArray());
         $this->fields['students']['data']['students'] = $entity->subject_students;
+        $this->fields['past_teachers']['data'] = $this->getPastTeachers($entity);
         return $entity;
     }
 
@@ -413,7 +422,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (!empty($subjectId) && !empty($subjectStaffData)) {
             foreach ($subjectStaffData as $key => $value) {
                 if ($value['status'] == 1) {
-                    $this->SubjectStaff->addStaffToSubject($value['staff_id'], $subjectId);
+                    $this->SubjectStaff->addStaffToSubject($value['staff_id'], $subjectId, $entity->institution_id);
                 }  else {
                     $this->SubjectStaff->removeStaffFromSubject($value['staff_id'], $subjectId);
                 }
@@ -535,7 +544,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->setFieldOrder([
             'name', 'no_of_seats',
             'academic_period_id', 'education_subject_id',
-            'teachers', 'rooms', 'students',
+            'teachers', 'past_teachers', 'rooms', 'students',
         ]);
     }
 
@@ -602,6 +611,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $checkedStaff = [];
         // POCOR-2781 - Remove 'status' from institution_subject_staff
         // note that this has been converted from saving of 'association data' to saving using editAfterSave
+        
+        $todayDate = new Date();
         foreach($entity->subject_staff as $key => $record) {
             $k = $record->staff_id;
             if (    array_key_exists('teachers', $data[$this->alias()])
@@ -609,11 +620,17 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 &&  !empty($data[$this->alias()]['teachers']['_ids'])
             ) {
                 if (!in_array($k, $data[$this->alias()]['teachers']['_ids'])) {
-                    $data[$this->alias()]['_subject_staff_data'][$k] = [
-                        'id' => $record->id,
-                        'staff_id' => $k,
-                        'status' => 0
-                    ];
+
+                    //check for end_date, if not yet end, it can be removed, else it will stay as past teacher
+                    $staffEndDate = $entity->subject_staff[$key]->end_date;
+                    if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
+                        $data[$this->alias()]['_subject_staff_data'][$k] = [
+                            'id' => $record->id,
+                            'staff_id' => $k,
+                            'status' => 0
+                        ];
+                    }
+
                 } else {
                     $checkedStaff[] = $k;
                     $data[$this->alias()]['_subject_staff_data'][$k] = [
@@ -623,11 +640,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ];
                 }
             } else {
-                $data[$this->alias()]['_subject_staff_data'][$k] = [
-                    'id' => $record->id,
-                    'staff_id' => $k,
-                    'status' => 0
-                ];
+
+                //check for end_date, if not yet end, it can be removed, else it will stay as past teacher
+                $staffEndDate = $entity->subject_staff[$key]->end_date;
+                if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
+                    $data[$this->alias()]['_subject_staff_data'][$k] = [
+                        'id' => $record->id,
+                        'staff_id' => $k,
+                        'status' => 0
+                    ];
+                }
             }
         }
         if (    array_key_exists('teachers', $data[$this->alias()])
@@ -757,6 +779,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
          */
         $this->fields['education_subject_id']['type'] = 'readonly';
         $this->fields['education_subject_id']['attr']['value'] = $this->EducationSubjects->get($entity->education_subject_id)->name;
+
+        $this->fields['past_teachers']['data'] = $this->getPastTeachers($entity);
 
         return $entity;
     }
@@ -1013,7 +1037,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->find('byPositions', ['Institutions.id' => $entity->institution_id, 'type' => 1]) // refer to OptionsTrait for type options
                         ->find('AcademicPeriod', ['academic_period_id'=>$entity->academic_period_id])
                         ->where([
-                            $Staff->aliasField('institution_position_id')
+                            $Staff->aliasField('institution_position_id'),
+                            'OR' => [ //check teacher end date
+                                [$Staff->aliasField('end_date').' >= ' => new Date()],
+                                [$Staff->aliasField('end_date').' IS NULL']
+                            ]
                         ])
                         ;
         $options = [];
@@ -1241,30 +1269,38 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         if ($entity->has('teachers')) {
             $resultArray = [];
+            $todayDate = new Date();
+            
             foreach ($entity->teachers as $key => $value) {
-                switch ($this->action) {
-                    case 'view':
-                        $resultArray[] = $event->subject()->Html->link($value->name_with_id , [
-                            'plugin' => 'Institution',
-                            'controller' => 'Institutions',
-                            'action' => 'StaffUser',
-                            'view',
-                            $this->paramsEncode(['id' => $value->id])
-                        ]);
-                        break;
+                $staffEndDate = $value->_joinData->end_date;
+                
+                if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
+                    switch ($this->action) {
+                        case 'view':
+                            $resultArray[] = $event->subject()->Html->link($value->name_with_id , [
+                                'plugin' => 'Institution',
+                                'controller' => 'Institutions',
+                                'action' => 'StaffUser',
+                                'view',
+                                $this->paramsEncode(['id' => $value->id])
+                            ]);
+                            break;
 
-                    case 'index':
-                        $resultArray[] = $value->name_with_id;
-                        break;
+                        case 'index':
+                            $resultArray[] = $value->name_with_id;
+                            break;
 
-                    default:
-                        $resultArray = null;
-                        break;
-                }
+                        default:
+                            $resultArray = null;
+                            break;
+                    }
+                } else {
+                    unset($entity->teachers[$key]); //if teacher end date is earlier than today, then unset from entity
+                }     
             }
         }
-
-        if (is_array($resultArray)) {
+        
+        if (!empty($resultArray)) {
             return implode(', ', $resultArray);
         }
     }
@@ -1345,4 +1381,26 @@ class InstitutionSubjectsTable extends ControllerActionTable
     // public function getSearchableFields(Event $event, $fields, ArrayObject $searchableFields) {
     //  $searchableFields[] = "education_subject_id";
     // }
+
+    public function getPastTeachers($entity)
+    {
+        $todayDate = new Date();
+        $data = [];
+        if ($entity->has('teachers')) {            
+            foreach ($entity->teachers as $key => $value) {
+                if ($value->has('_joinData')) {
+                    if (!empty($value->_joinData->end_date)) {
+                        $endDate = $value->_joinData->end_date;
+                        if ($endDate < $todayDate){ //for end of assignment teachers
+                            $data[$key]['id'] = $value->id;
+                            $data[$key]['name'] = $value->name_with_id;
+                            $data[$key]['start_date'] = $value->_joinData->start_date->format('d-m-Y');;
+                            $data[$key]['end_date'] = $value->_joinData->end_date->format('d-m-Y');;                            
+                        }
+                    }
+                }
+            }
+        }
+        return $data;       
+    }
 }
