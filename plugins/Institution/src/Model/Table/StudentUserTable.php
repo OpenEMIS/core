@@ -197,12 +197,13 @@ class StudentUserTable extends ControllerActionTable
 		$institutionStudentId = $this->request->query('id');
 
 		// this is required if the student link is clicked from the Institution Classes or Subjects
-		if (empty($institutionStudentId)) {
-			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
-			$institutionId = !empty($this->paramsPass(0)) ? $this->paramsDecode($this->paramsPass(0))['institution_id'] : 0;
-			$studentId = !empty($this->paramsPass(0)) ? $this->paramsDecode($this->paramsPass(0))['id'] : 0;
+		if (empty($institutionStudentId) && !empty($this->paramsPass(0))) {
+			$params = $this->paramsDecode($this->paramsPass(0));
+			$institutionId = isset($params['institution_id']) ? $params['institution_id'] : 0;
+			$studentId = isset($params['id']) ? $params['id'] : 0;
 
 			// get the id of the latest student record in the current institution
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
 			$institutionStudentId = $InstitutionStudentsTable->find()
                 ->where([
                     $InstitutionStudentsTable->aliasField('student_id') => $studentId,
@@ -218,6 +219,7 @@ class StudentUserTable extends ControllerActionTable
 			$event->stopPropagation();
 			return $this->controller->redirect(['action' => 'Students', 'index']);
 		} else {
+			$this->request->query['id'] = $institutionStudentId;
 			$extra['institutionStudentId'] = $institutionStudentId;
 		}
 	}
