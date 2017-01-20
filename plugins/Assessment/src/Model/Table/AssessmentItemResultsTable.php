@@ -24,7 +24,9 @@ class AssessmentItemResultsTable extends AppTable {
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-        $entity->id = Text::uuid();
+        if ($entity->isNew()) {
+            $entity->id = Text::uuid();
+        }
     }
 
     public function findResults(Query $query, array $options) {
