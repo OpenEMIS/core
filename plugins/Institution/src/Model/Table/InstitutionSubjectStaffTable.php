@@ -19,7 +19,7 @@ class InstitutionSubjectStaffTable extends AppTable {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
-        $events['Model.StaffPositionProfiles.onApprove'] = 'StaffPositionProfilesOnApprove';
+        $events['Model.Staff.afterSave'] = 'staffAfterSave';
         return $events;
     }
 
@@ -89,14 +89,17 @@ class InstitutionSubjectStaffTable extends AppTable {
         return $deleteCount;
     }
 
-    public function StaffPositionProfilesOnApprove(Event $event, $staff)
+    public function staffAfterSave(Event $event, $staff)
     {
-        $this->updateAll( 
-            ['end_date' => $staff->end_date],
-            [
-                'staff_id' => $staff->staff_id,
-                'institution_id' => $staff->institution_id
-            ]
-        );
+        $this->log($staff, 'debug');
+        if ($staff->dirty('end_date')) {        
+            $this->updateAll( 
+                ['end_date' => $staff->end_date],
+                [
+                    'staff_id' => $staff->staff_id,
+                    'institution_id' => $staff->institution_id
+                ]
+            );
+        }
     }
 }
