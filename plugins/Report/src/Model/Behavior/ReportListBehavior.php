@@ -61,7 +61,10 @@ class ReportListBehavior extends Behavior {
 
 		$query = $this->ReportProgress->find()
 			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
-			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);
 
 		return $query;
 	}
