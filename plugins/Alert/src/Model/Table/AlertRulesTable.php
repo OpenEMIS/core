@@ -76,6 +76,7 @@ class AlertRulesTable extends ControllerActionTable
         if ($this->action == 'add') {
             $this->field('enabled', ['visible' => false]);
         } elseif ($this->action == 'edit') {
+            $this->field('enabled', ['select' => false]);
             $this->field('feature', ['type' => 'readOnly']);
         }
     }

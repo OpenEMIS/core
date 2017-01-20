@@ -59,22 +59,27 @@ class AlertsTable extends ControllerActionTable
             $label = 'Stop';
         }
 
-        // process buttons
+        // process Toolbar buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $url = [
-            'plugin' => $this->controller->plugin,
-            'controller' => $this->controller->name,
-            'process'
-        ];
-        $toolbarButtonsArray['edit']['label'] = $icon;
-        $toolbarButtonsArray['edit']['attr']['title'] = __($label);
-        $toolbarButtonsArray['edit']['url'] = $this->setQueryString($url, [
-            'shell_name' => $shellName,
-            'action' => 'view'
-        ]);
+        if (array_key_exists('edit', $toolbarButtonsArray)) {
+            if ($this->AccessControl->check(['Alerts', 'Alerts', 'edit'])) { // to check edit permission
+                $url = [
+                    'plugin' => 'Alert',
+                    'controller' => 'Alerts',
+                    'action' => 'Alerts',
+                    'process'
+                ];
+                $toolbarButtonsArray['edit']['label'] = $icon;
+                $toolbarButtonsArray['edit']['attr']['title'] = __($label);
+                $toolbarButtonsArray['edit']['url'] = $this->setQueryString($url, [
+                    'shell_name' => $shellName,
+                    'action' => 'view'
+                ]);
+            }
+        }
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // end generate buttons
+        // end process toolbar buttons
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -87,26 +92,29 @@ class AlertsTable extends ControllerActionTable
         }
 
         if (array_key_exists('edit', $buttons)) {
-            if ($this->isShellStopExist($shellName)) {
-                $icon = '<i class="fa fa-play"></i>';
-                $label = 'Start'; // if have the file, process not running
-            } else {
-                $icon = '<i class="fa fa-stop"></i>';
-                $label = 'Stop';
-            }
+            if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
+                if ($this->isShellStopExist($shellName)) {
+                    $icon = '<i class="fa fa-play"></i>';
+                    $label = 'Start'; // if have the file, process not running
+                } else {
+                    $icon = '<i class="fa fa-stop"></i>';
+                    $label = 'Stop';
+                }
 
-            $url = [
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
-                'process'
-            ];
-            $processButtons = $buttons['edit'];
-            $processButtons['label'] = $icon.__($label);
-            $newButtons['processButtons'] = $processButtons;
-            $newButtons['processButtons']['url'] = $this->setQueryString($url, [
-                'shell_name' => $shellName,
-                'action' => 'index'
-            ]);
+                $url = [
+                    'plugin' => 'Alert',
+                    'controller' => 'Alerts',
+                    'action' => 'Alerts',
+                    'process'
+                ];
+                $processButtons = $buttons['edit'];
+                $processButtons['label'] = $icon.__($label);
+                $newButtons['processButtons'] = $processButtons;
+                $newButtons['processButtons']['url'] = $this->setQueryString($url, [
+                    'shell_name' => $shellName,
+                    'action' => 'index'
+                ]);
+            }
         }
 
         return $newButtons;
