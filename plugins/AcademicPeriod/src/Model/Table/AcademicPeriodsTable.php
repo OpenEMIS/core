@@ -811,23 +811,4 @@ class AcademicPeriodsTable extends AppTable
             return 0;
         }
     }
-
-    public function getAcademicPeriodId($startDate, $endDate)
-    {
-        // get the academic period id from startDate and endDate (e.g. delete the absence records not showing the academic period id)
-        $startDate = $startDate->format('Y-m-d');
-        $endDate = $endDate->format('Y-m-d');
-
-        $academicPeriod = $this->find()
-            ->where([
-                $this->aliasField('start_date') . ' <= ' => $startDate,
-                $this->aliasField('end_date') . ' >= ' => $endDate,
-                $this->aliasField('code') . ' <> ' => 'all'
-            ])
-            ->first();
-
-        $academicPeriodId = $academicPeriod->id;
-
-        return $academicPeriodId;
-    }
 }

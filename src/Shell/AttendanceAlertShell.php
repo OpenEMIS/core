@@ -1,8 +1,6 @@
 <?php
 namespace App\Shell;
 
-// use Cake\I18n\Date;
-// use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Console\Shell;
@@ -23,7 +21,7 @@ class AttendanceAlertShell extends Shell
 
     public function main()
     {
-        $dir = new Folder(ROOT . DS . 'tmp'); // path
+        $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
 
         do {
             $shellData = $this->InstitutionStudentAbsences->getUnexcusedAbsenceData();

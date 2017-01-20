@@ -68,6 +68,43 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('security_roles', ['after' => 'method']);
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // element control
+        $featureOptions = $this->getFeatureOptions();
+        if (!empty($featureOptions)) {
+            $featureOptions = [0 => 'All Features'] + $featureOptions;
+        }
+
+        $selectedFeature = $this->queryString('feature', $featureOptions);
+        $extra['selectedFeature'] = $selectedFeature;
+
+        $extra['elements']['control'] = [
+            'name' => 'Alert/controls',
+            'data' => [
+                'featureOptions'=>$featureOptions,
+                'selectedFeature'=>$selectedFeature,
+            ],
+            'options' => [],
+            'order' => 3
+        ];
+        // end element control
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $selectedFeature = $extra['selectedFeature'];
+
+        $conditions = [];
+        if ($selectedFeature != 0) {
+            $conditions = [
+                'feature' => $selectedFeature
+            ];
+        }
+
+        return $query->where([$conditions]);
+    }
+
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);

@@ -202,7 +202,6 @@ class AlertsTable extends ControllerActionTable
         }
     }
 
-
     public function triggerAlertFeatureShell($shellName)
     {
         $args = '';
