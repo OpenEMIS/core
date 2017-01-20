@@ -44,7 +44,10 @@ class AlertLogsTable extends ControllerActionTable
 
         $AlertRulesData = $AlertRules->find()
             ->contain(['SecurityRoles'])
-            ->where(['feature' => $feature])
+            ->where([
+                'feature' => $feature,
+                'enabled' => 1
+            ])
             ->all();
 
         foreach ($AlertRulesData as $AlertRulesKey => $AlertRulesObj) {
@@ -98,9 +101,7 @@ class AlertLogsTable extends ControllerActionTable
                 $this->aliasField('method') => $AlertRulesObj->method,
                 $this->aliasField('destination') => $emailListObj,
                 $this->aliasField('subject') => $subject,
-                $this->aliasField('message') => $message,
-                $this->aliasField('created') . ' >= ' => $todayDate,
-                $this->aliasField('created') . ' <= ' => $today,
+                $this->aliasField('message') => $message
             ])
             ->all();
 
