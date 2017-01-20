@@ -272,6 +272,16 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'InstitutionSubjectStudents', 'count' => $associatedSubjectStudentsCount];
+
+        //check textbook
+        $Textbooks = TableRegistry::get('Textbook.Textbooks');
+        $associatedTextbooksCount = $Textbooks->find()
+            ->where([
+                $Textbooks->aliasField('education_subject_id') => $subjectId,
+                $Textbooks->aliasField('education_grade_id') => $gradeId
+            ])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'Textbooks', 'count' => $associatedTextbooksCount];
     }
 
     public function _getSelectOptions()
