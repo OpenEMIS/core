@@ -26,12 +26,13 @@ ALTER TABLE `security_users` ADD `email` VARCHAR(100) NULL AFTER `preferred_name
 DELETE FROM `contact_options` WHERE `name` = 'Email';
 
 -- Security functions (permission)
-UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` BETWEEN 5031 AND 5062;
 UPDATE `security_functions` SET `_view` = 'Logs.index|Logs.view' WHERE `id` = 5031;
 UPDATE `security_functions` SET `_delete` = 'Logs.remove' WHERE `id` = 5031;
+UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` BETWEEN 5031 AND 5062;
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES ('5062', 'AlertRules', 'Alerts', 'Administration', 'Communications', '5000', 'AlertRules.index|AlertRules.view', 'AlertRules.edit', 'AlertRules.add', 'AlertRules.remove', NULL, '5031', '1', NULL, NULL, '1', NOW());
+VALUES  ('5062', 'Alerts', 'Alerts', 'Administration', 'Communications', '5000', 'Alerts.index|Alerts.view', 'Alerts.edit', NULL, NULL, 'Alerts.process', '5031', '1', NULL, NULL, '1', NOW()),
+    ('5063', 'AlertRules', 'Alerts', 'Administration', 'Communications', '5000', 'AlertRules.index|AlertRules.view', 'AlertRules.edit', 'AlertRules.add', 'AlertRules.remove', NULL, '5032', '1', NULL, NULL, '1', NOW());
 
 -- Table structure for table `alerts`
 CREATE TABLE IF NOT EXISTS `alerts` (

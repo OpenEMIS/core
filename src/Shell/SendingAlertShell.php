@@ -26,8 +26,8 @@ class SendingAlertShell extends Shell
         $alertLogsList = $this->AlertLogs->find()
             ->where([
                 'status' => 0, // pending
-                'created' . ' >= ' => $todayDate, // Date only
-                'created' . ' <= ' => $today //date and now() timing
+                // 'created' . ' >= ' => $todayDate, // Date only
+                // 'created' . ' <= ' => $today //date and now() timing
             ])
             ->all();
 

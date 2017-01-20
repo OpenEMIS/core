@@ -5,7 +5,8 @@ ALTER TABLE `security_users` DROP `email` ;
 UPDATE `security_functions` SET `_view` = 'Logs.index' WHERE `id` = 5031;
 UPDATE `security_functions` SET `_delete` = NULL WHERE `id` = 5031;
 DELETE FROM `security_functions` WHERE `id` = 5062;
-UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN 5032 AND 5062;
+DELETE FROM `security_functions` WHERE `id` = 5063;
+UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` BETWEEN 5033 AND 5062;
 
 -- contact_options
 INSERT INTO `contact_options` (`id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES ('4', 'Email', '4', '1', NULL, NULL, NULL, NULL, '1', NOW());
