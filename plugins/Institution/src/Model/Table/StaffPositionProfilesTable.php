@@ -161,13 +161,6 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$newEntity = $InstitutionStaff->patchEntity($staffRecord, $data, ['validate' => "AllowPositionType"]);
 		}
 
-		if ($newEntity->dirty('end_date')) { //if any changes on end_date, need to update subject_staff table also
-            $listeners = [
-                TableRegistry::get('Institution.InstitutionSubjectStaff')
-            ];
-            $this->dispatchEventToModels('Model.StaffPositionProfiles.onApprove', [$newEntity], $this, $listeners);
-        }
-
 		return $newEntity;
 	}
 
