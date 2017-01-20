@@ -32,7 +32,7 @@ class AttendanceAlertShell extends Shell
             // inserting data to alert_log table and trigger the sending alert
             $this->AlertLogs->shellDataProcess($shellData, $alias);
 
-            sleep(5);
+            sleep(15); // 15 seconds
 
             $filesArray = $dir->find('AttendanceAlert.stop');
         } while (empty($filesArray));
