@@ -16,7 +16,7 @@ ALTER TABLE `staff_trainings`                   CHANGE `staff_training_category_
 ALTER TABLE `student_behaviours`                CHANGE `student_behaviour_category_id` `student_behaviour_category_id` INT(11) NOT NULL COMMENT 'links to student_behaviour_categories.id';
 ALTER TABLE `training_courses`                  CHANGE `training_field_of_study_id` `training_field_of_study_id` INT(11) NOT NULL COMMENT 'links to training_field_of_studies.id';
 ALTER TABLE `training_courses`                  CHANGE `training_course_type_id` `training_course_type_id` INT(11) NOT NULL COMMENT 'links to training_course_types.id';
-ALTER TABLE `training_courses`                  CHANGE `training_mode_of_delivery_id` `training_mode_of_delivery_id` INT(11) NOT NULL COMMENT 'links to training_mode_of_deliveries.id';
+ALTER TABLE `training_courses`                  CHANGE `training_mode_of_delivery_id` `training_mode_of_delivery_id` INT(11) NOT NULL COMMENT 'links to training_mode_deliveries.id';
 ALTER TABLE `training_courses`                  CHANGE `training_requirement_id` `training_requirement_id` INT(11) NOT NULL COMMENT 'links to training_requirements.id';
 ALTER TABLE `training_courses`                  CHANGE `training_level_id` `training_level_id` INT(11) NOT NULL COMMENT 'links to training_levels.id';
 ALTER TABLE `training_courses_providers`        CHANGE `training_provider_id` `training_provider_id` INT(11) NOT NULL COMMENT 'links to training_providers.id';
