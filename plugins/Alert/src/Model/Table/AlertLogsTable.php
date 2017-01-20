@@ -169,21 +169,6 @@ class AlertLogsTable extends ControllerActionTable
         $this->field('status', ['after' => 'message']);
     }
 
-    public function getAcademicPeriodId($AlertModel, $afterSaveOrDeleteEntity)
-    {
-        // afterDelete $afterSaveOrDeleteEntity doesnt have academicPeriodId, every model also have different date
-        switch ($AlertModel->alias()) {
-            case 'InstitutionStudentAbsences': // have start date and end date
-                $startDate = $afterSaveOrDeleteEntity->start_date;
-                $endDate = $afterSaveOrDeleteEntity->end_date;
-                $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                $academicPeriodId = $AcademicPeriods->getAcademicPeriodId($startDate, $endDate);
-                break;
-        }
-
-        return $academicPeriodId;
-    }
-
     public function triggerSendingAlertShell($shellName)
     {
         $args = '';
