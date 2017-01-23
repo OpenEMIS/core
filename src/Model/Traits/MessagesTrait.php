@@ -624,7 +624,8 @@ trait MessagesTrait {
             'noRecords' => 'No Records'
         ],
         'Competencies' => [
-            'noCompetencyCriterias' => 'Please setup competency criterias for the selected item'
+            'noCompetencyCriterias' => 'Please setup competency criterias for the selected item',
+            'noClassStudents' => 'The class does not have students'
         ],
 
         // Validation Messages
