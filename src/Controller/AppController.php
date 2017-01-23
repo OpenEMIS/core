@@ -31,7 +31,7 @@ use Cake\ORM\TableRegistry;
 class AppController extends Controller {
 	use ControllerActionTrait;
 
-
+	private $productName = 'OpenEmis Core';
 	public $helpers = [
 		'Text',
 
@@ -85,7 +85,7 @@ class AppController extends Controller {
 		// Custom Components
 		$this->loadComponent('Navigation');
 		$this->loadComponent('Localization.Localization', [
-			'productName' => 'OpenEMIS Core'
+			'productName' => $this->productName
 		]);
 		$this->loadComponent('OpenEmis.OpenEmis', [
 			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
@@ -94,12 +94,12 @@ class AppController extends Controller {
 					'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
 				]
 			],
-			'productName' => 'OpenEMIS Core',
+			'productName' => $this->productName,
 			'theme' => 'core'
 		]);
 
 		$this->loadComponent('OpenEmis.ApplicationSwitcher', [
-			'productName' => 'OpenEMIS Core'
+			'productName' => $this->productName
 		]);
 
 		// Angular initialization
