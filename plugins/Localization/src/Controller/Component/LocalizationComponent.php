@@ -52,7 +52,7 @@ class LocalizationComponent extends Component {
     public function initialize(array $config) {
         $session = $this->request->session();
         $this->controller = $this->_registry->getController();
-        $this->Cookie->name = str_replace(' ', '_', $this->controller->_productName) . '_COOKIE';
+        $this->Cookie->name = str_replace(' ', '_', $config['productName']) . '_COOKIE';
         $this->Cookie->time = 3600 * 24 * 30; // expires after one month
         list($this->language, $this->showLanguage) = $this->detectLanguage();
         $this->Session = $session;
