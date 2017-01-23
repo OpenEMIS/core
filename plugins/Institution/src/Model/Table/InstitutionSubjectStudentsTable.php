@@ -21,6 +21,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 
 		$this->belongsTo('ClassStudents', [
@@ -44,6 +45,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
     {
         $events = parent::implementedEvents();
         $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        $events['Model.AssessmentResults.afterSave'] = 'assessmentResultsAfterSave';
         return $events;
     }
 
@@ -75,6 +77,32 @@ class InstitutionSubjectStudentsTable extends AppTable {
                 }
                 $this->saveMany($subjectStudents);
             }
+        }
+    }
+
+    public function assessmentResultsAfterSave(Event $event, $results)
+    {
+        $studentId = $results->student_id;
+        $academicPeriodId = $results->academic_period_id;
+        $educationSubjectId = $results->education_subject_id;
+        $educationGradeId = $results->education_grade_id;
+        $institutionId = $results->institution_id;
+
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId);
+
+        if (!empty($totalMark)) {
+            $this->query()
+                ->update()
+                ->set(['total_mark' => $totalMark->calculated_total])
+                ->where([
+                    'student_id' => $studentId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_subject_id' => $educationSubjectId,
+                    'education_grade_id' => $educationGradeId,
+                    'institution_id' => $institutionId
+                ])
+                ->execute();
         }
     }
 

@@ -802,7 +802,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             }
         },
 
-        saveRowData: function(subject, gradingTypes, results, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
+        saveRowData: function(subject, gradingTypes, results, assessmentId, educationSubjectId, educationGradeId, institutionId, academicPeriodId) {
             var promises = [];
 
             angular.forEach(results, function(result, studentId) {
@@ -838,6 +838,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         "assessment_grading_option_id" : gradingOptionId,
                         "assessment_id" : assessmentId,
                         "education_subject_id" : educationSubjectId,
+                        "education_grade_id" : educationGradeId,
                         "institution_id" : institutionId,
                         "academic_period_id" : academicPeriodId,
                         "student_id" : parseInt(studentId),
@@ -849,22 +850,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             }, this);
 
             return $q.all(promises);
-        },
-
-        saveTotal: function(row, studentId, classId, institutionId, academicPeriodId, educationSubjectId) {
-            var totalMark = this.calculateTotal(row);
-            totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
-
-            var data = {
-                "total_mark" : totalMark,
-                "student_id" : studentId,
-                "institution_class_id" : classId,
-                "institution_id" : institutionId,
-                "academic_period_id" : academicPeriodId,
-                "education_subject_id" : educationSubjectId
-            };
-
-            InstitutionSubjectStudentsTable.save(data);
         }
     }
 });

@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Model\Table\AppTable;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 
@@ -13,6 +14,7 @@ class AssessmentItemResultsTable extends AppTable {
         parent::initialize($config);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AssessmentGradingOptions', ['className' => 'Assessment.AssessmentGradingOptions']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
@@ -27,6 +29,15 @@ class AssessmentItemResultsTable extends AppTable {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Institution.InstitutionSubjectStudents')
+        ];
+
+        $this->dispatchEventToModels('Model.AssessmentResults.afterSave', [$entity], $this, $listeners);
     }
 
     public function findResults(Query $query, array $options) {
@@ -107,5 +118,31 @@ class AssessmentItemResultsTable extends AppTable {
                 ];
         }
         return $returnArray;
+    }
+
+    public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId) {
+        $query = $this->find();
+        $totalMarks = $query
+            ->select([
+                'calculated_total' => $query->newExpr('SUM(AssessmentItemResults.marks * AssessmentPeriods.weight)')
+            ])
+            ->matching('Assessments')
+            ->matching('AssessmentPeriods')
+            ->matching('AssessmentGradingOptions.AssessmentGradingTypes')
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
+                $this->Assessments->aliasField('education_grade_id') => $educationGradeId
+            ])
+            ->group([
+                $this->aliasField('student_id'),
+                $this->aliasField('assessment_id'),
+                $this->aliasField('education_subject_id')
+            ])
+            ->first();
+
+        return $totalMarks;
     }
 }
