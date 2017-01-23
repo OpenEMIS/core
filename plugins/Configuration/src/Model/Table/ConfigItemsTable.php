@@ -13,6 +13,8 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 
 class ConfigItemsTable extends AppTable {
 	use OptionsTrait;
@@ -110,7 +112,7 @@ class ConfigItemsTable extends AppTable {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
 	{
-		$session = $this->request->session();
+
 		if ($entity->code == 'language') {
 			if ($entity->value != 'en') {
 				$entity = $this->find()
@@ -122,10 +124,25 @@ class ConfigItemsTable extends AppTable {
 				$entity->value = 0;
 				$this->save($entity);
 			}
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		} else if ($entity->code == 'language_menu') {
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		}
+	}
+
+	private function deleteLanguageCacheFile()
+	{
+		$dir = new Folder(TMP . 'cache'. DS . 'language_menu', true);
+    	$filesAndFolders = $dir->read();
+    	$files = $filesAndFolders[1];
+
+    	if (in_array('language', $files)) {
+    		$languagePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
+    		$languageFile = new File($languagePath);
+    		$languageFile->delete();
+    	}
+    	$session = $this->request->session();
+		$session->delete('System.language_menu');
 	}
 
 	public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
