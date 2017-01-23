@@ -81,4 +81,17 @@ class StudentClassesTable extends ControllerActionTable {
 		$this->controller->set('selectedAction', 'Classes');
 	}
 
+    public function getClassStudents($classId, $periodId, $institutionId)
+    {
+        return $this->find()
+                ->contain('Users')
+                ->where([
+                    $this->aliasField('institution_class_id') => $classId,
+                    $this->aliasField('academic_period_id') => $periodId,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('student_status_id') => 1
+                ])
+                ->toArray();
+    }
+
 }
