@@ -623,6 +623,9 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
+        'Competencies' => [
+            'noCompetencyCriterias' => 'Please setup competency criterias for the selected item'
+        ],
 
         // Validation Messages
         'Institution' => [

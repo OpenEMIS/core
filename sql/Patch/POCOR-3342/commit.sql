@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS `competency_criteria_results` (
   `competency_grading_option_id` int(11) DEFAULT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `competency_template_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
-  `competency_items_id` int(11) NOT NULL COMMENT 'links to competency_items.id',
+  `competency_item_id` int(11) NOT NULL COMMENT 'links to competency_items.id',
   `competency_criteria_id` int(11) NOT NULL COMMENT 'links to competency_criterias.id',
   `competency_period_id` int(11) NOT NULL COMMENT 'links to competency_periods.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
@@ -174,7 +174,7 @@ CREATE TABLE IF NOT EXISTS `competency_criteria_results` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the competency results for an individual student in an institution';
 
 ALTER TABLE `competency_criteria_results`
-  ADD PRIMARY KEY (`student_id`, `competency_template_id`, `competency_items_id`, `competency_criteria_id`, `competency_period_id`, `institution_id`, `academic_period_id`),
+  ADD PRIMARY KEY (`student_id`, `competency_template_id`, `competency_item_id`, `competency_criteria_id`, `competency_period_id`, `institution_id`, `academic_period_id`),
   ADD KEY `competency_grading_option_id` (`competency_grading_option_id`),
   ADD KEY `modified_user_id` (`modified_user_id`),
   ADD KEY `created_user_id` (`created_user_id`);

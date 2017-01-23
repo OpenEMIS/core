@@ -480,4 +480,15 @@ class CriteriasTable extends ControllerActionTable {
 
         return compact('periodOptions', 'selectedPeriod');
     }
+
+    public function getCompetencyCriterias($competencyItemId, $academicPeriodId) 
+    {
+        return $this->find()
+                ->contain('GradingTypes.GradingOptions')
+                ->where([
+                    $this->aliasField('competency_item_id') => $competencyItemId,
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                ])
+                ->toArray();
+    }
 }
