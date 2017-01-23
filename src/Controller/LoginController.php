@@ -33,11 +33,14 @@ class LoginController extends Controller
                     'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
                 ]
             ],
+            'productName' => 'OpenEMIS Core',
             'theme' => 'core'
         ]);
 
         $this->Auth->allow('login');
-        $this->loadComponent('Localization.Localization');
+        $this->loadComponent('Localization.Localization', [
+            'productName' => 'OpenEMIS Core'
+        ]);
     }
 
     public function beforeFilter(Event $event)
