@@ -913,20 +913,6 @@ class NavigationComponent extends Component
 						'selected' => ['Alerts.AlertRules']
 					],
 
-				'Alerts.Questions' => [
-					'title' => 'Questions',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Questions']
-				],
-
-				'Alerts.Responses' => [
-					'title' => 'Responses',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Responses']
-				],
-
 				'Alerts.Logs' => [
 					'title' => 'Logs',
 					'parent' => 'Administration.Communications',
