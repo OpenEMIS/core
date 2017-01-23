@@ -416,4 +416,29 @@ class SecurityGroupUsersTable extends AppTable {
 
 		return $assigneeId;
 	}
+
+    public function getEmailListByRoles($securityRoleId, $institutionId)
+    {
+        // will get the email
+        $securityUserList = $this->find()
+            ->where([
+                'security_group_id' => $institutionId,
+                'security_role_id' => $securityRoleId
+            ])
+            ->all();
+
+        $userEmailListByRoles = [];
+        if (!empty($securityUserList)) {
+            foreach ($securityUserList as $key => $obj) {
+                $securityUserId = $obj->security_user_id;
+                $email = $this->Users->get($securityUserId)->email;
+
+                if (!empty($email)) {
+                    $userEmailListByRoles[$securityUserId] = $email;
+                }
+            }
+        }
+
+        return $userEmailListByRoles;
+    }
 }
