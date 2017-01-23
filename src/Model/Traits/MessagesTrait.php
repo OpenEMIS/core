@@ -955,7 +955,10 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ]
+                ],
+                'email' => [
+                    'ruleValidEmail' => 'Please enter a valid Email'
+                ],
             ],
             'Accounts' => [
                 'username' => [
