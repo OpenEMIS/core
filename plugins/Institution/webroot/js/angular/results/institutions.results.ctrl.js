@@ -204,26 +204,18 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
             var assessmentId = $scope.gridOptions.context.assessment_id;
             var educationSubjectId = $scope.gridOptions.context.education_subject_id;
+            var educationGradeId = $scope.gridOptions.context.education_grade_id;
             var institutionId = $scope.gridOptions.context.institution_id;
             var academicPeriodId = $scope.gridOptions.context.academic_period_id;
             var classId = $scope.gridOptions.context.class_id;
 
             UtilsSvc.isAppendSpinner(true, 'institution-result-table');
-            InstitutionsResultsSvc.saveRowData($scope.subject, $scope.gradingTypes, $scope.results, assessmentId, educationSubjectId, institutionId, academicPeriodId)
+            InstitutionsResultsSvc.saveRowData($scope.subject, $scope.gradingTypes, $scope.results, assessmentId, educationSubjectId, educationGradeId, institutionId, academicPeriodId)
             .then(function(response) {
             }, function(error) {
                 console.log(error);
             })
             .finally(function() {
-                // Only Marks type will run this logic to update total_mark
-                $scope.gridOptions.api.forEachNode(function(row) {
-                    if (row.data.is_dirty) {
-                        InstitutionsResultsSvc.saveTotal(row.data, row.data.student_id, classId, institutionId, academicPeriodId, educationSubjectId);
-                        // reset dirty flag
-                        row.data.is_dirty = false;
-                    }
-                });
-
                 $scope.action = 'view';
                 // reset results object
                 $scope.results = {};
