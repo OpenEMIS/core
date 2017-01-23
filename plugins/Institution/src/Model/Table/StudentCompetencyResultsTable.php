@@ -5,18 +5,23 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Event\Event;
 use App\Model\Table\ControllerActionTable;
 
 class StudentCompetencyResultsTable extends ControllerActionTable {
     public function initialize(array $config) {
-        $this->table('competency_templates');
+        $this->table('competency_results');
         parent::initialize($config);
 
-        // $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('CompetencyTemplates', ['className' => 'Competency.Templates']);
+        $this->belongsTo('CompetencyItems', ['className' => 'Competency.Items']);
+        $this->belongsTo('CompetencyCriterias', ['className' => 'Competency.Criterias']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         // $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         // $this->belongsTo('InstitutionShifts', ['className' => 'Institution.InstitutionShifts']);
-        // $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        
 
         // $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades', 'dependent' => true]);
         // $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'dependent' => true]);
@@ -32,12 +37,293 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         // $this->toggle('edit', false);
         // $this->toggle('remove', false);
 
-        // $classId = $this->getQueryString('class_id');
-        // $assessmentId = $this->getQueryString('assessment_id');
-        // $institutionId = $this->getQueryString('institution_id');
-        // $academicPeriodId = $this->getQueryString('academic_period_id');
+        $this->classId = $this->getQueryString('class_id');
+        $this->competencyTemplateId = $this->getQueryString('competency_template_id');
+        $this->institutionId = $this->getQueryString('institution_id');
+        $this->academicPeriodId = $this->getQueryString('academic_period_id');
 
-        // pr($classId);
+        $this->InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $this->StudentClasses = TableRegistry::get('Student.StudentClasses');
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+
+        $this->field('marks', ['visible' => false]);
+        $this->field('competency_grading_option_id', ['visible' => false]);
+
+        // if ($this->action == 'add') {
+        //     $this->field('code', ['visible' => false]);
+        //     $this->field('comment', ['visible' => false]);
+        //     $this->field('textbook_status_id', ['visible' => false]);
+        //     $this->field('textbook_condition_id', ['visible' => false]);
+        //     $this->field('student_id', ['visible' => false]);
+        // } else {
+        //     $this->field('textbooks_students', ['visible' => false]);
+        // }
+    }
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['attr']['value'] = $this->AcademicPeriods->get($this->academicPeriodId)->name;
+        $attr['value'] = $this->academicPeriodId;
+            
+        return $attr;
+    }
+
+    public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['attr']['value'] = $this->CompetencyTemplates->get([$this->competencyTemplateId, $this->academicPeriodId])->code_name;
+        $attr['value'] = $this->competencyTemplateId;
+            
+        return $attr;
+    }
+
+    public function onUpdateFieldCompetencyItemId(Event $event, array $attr, $action, Request $request)
+    {
+        $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($this->competencyTemplateId, $this->academicPeriodId);
+        $attr['options'] = $itemOptions;
+        $attr['onChangeReload'] = 'changeCompetencyItem';
+        return $attr;
+    }
+
+    public function addEditOnChangeCompetencyItem(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        $request->query['item'] = '-1';
+        
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('competency_item_id', $request->data[$this->alias()])) {
+                    $request->query['item'] = $request->data[$this->alias()]['competency_item_id'];
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['attr']['value'] = $this->Institutions->get([$this->institutionId])->code_name;
+        $attr['value'] = $this->institutionId;
+            
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionClassId(Event $event, array $attr, $action, Request $request)
+    {
+        $institutionClass = $this->InstitutionClasses->find()
+                            ->where([
+                                $this->InstitutionClasses->aliasField('id') => $this->classId,
+                                $this->InstitutionClasses->aliasField('institution_id') => $this->institutionId,
+                                $this->InstitutionClasses->aliasField('academic_period_id') => $this->academicPeriodId
+                            ])
+                            ->first();
+        // pr($institutionClass->toArray());
+        $attr['attr']['value'] = $institutionClass['name'];
+        $attr['value'] = $institutionClass['id'];
+
+        return $attr;
+    }
+
+    public function onGetCustomCompetencyResultsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        if (array_key_exists('item', $this->request->query) && ($this->request->query['item'])) {
+
+            $selectedCompetencyItem = $this->request->query['item'];
+            $criteriaList = $this->CompetencyCriterias->getCompetencyCriterias($selectedCompetencyItem, $this->academicPeriodId);
+            // pr($criteriaList);
+            if (!empty($criteriaList)) {
+
+                $tableHeaders[] = _('OpenEMIS ID');
+                $tableHeaders[] = _('Student');
+                foreach ($criteriaList as $key => $value) {
+                    $tableHeaders[] = $value->name;
+                }
+                // pr($tableHeaders);
+
+                // $tableHeaders = [$this->getMessage($this->aliasField('trainer_type')), $this->getMessage($this->aliasField('trainer'))];
+
+                // $header[] = [
+                //     'title' => 'Textbook ID',
+                //     'desc' => 'Textbook ID is unique to each book within the school, Leave empty for autogenerated code.'
+                // ];
+                // $header[] = [
+                //     'title' => 'Status',
+                //     'desc' => 'Available means physically book exists while Not Available means it is missing.'
+                // ];
+                // $header[] = [
+                //     'title' => 'Condition',
+                //     'desc' => 'Condition of each available book.'
+                // ];
+                // $header[] = [
+                //     'title' => 'Comment',
+                //     'desc' => 'Comments about each book regardless of availability.'
+                // ];
+                // $header[] = [
+                //     'title' => 'Allocated To',
+                //     'desc' => 'Each book can be optionally allocated to an individual student.'
+                // ];
+
+                // foreach ($header as $key => $value) {
+                //     $tableHeaders[] = 
+                //         __($value['title']) . "
+                //         <div class='tooltip-desc' style='display: inline-block;'>
+                //             <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" .  __($value['desc']) . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
+                //         </div>";
+                // }
+
+                $alias = $this->alias();
+                $fieldKey = 'competency_results';
+                $Form = $event->subject()->Form;
+
+                // $classEntity = $this->InstitutionClasses->get($this->classId);
+                // $studentList = $this->InstitutionClasses->getStudentsOptions($classEntity);
+                $studentList = $this->StudentClasses->getClassStudents($this->classId, $this->academicPeriodId, $this->institutionId);
+                // pr($studentList);
+
+                if (!empty($studentList)) {
+                    $tableCells = [];
+                    foreach ($studentList as $key => $value) {
+                        $rowData = [];
+                        
+                        $rowData[] = $value->user->openemis_no;
+                        $rowData[] = $value->user->name;
+                        foreach ($criteriaList as $key1 => $value1) {
+                            $gradingOptions = $value1->grading_type->grading_options;
+                            if (count($gradingOptions)){ //if got option
+                                $optionList = [];
+                                foreach ($gradingOptions as $key2 => $value2) {
+                                    $optionList[$value2->id] = $value2->name;
+                                }
+                                if (count($optionList)) {
+                                    $rowData[] = $Form->input("$alias.$fieldKey.$key.$value1->id.grading_option_id", ['type' => 'select', 'label' => false, 'options' => $optionList]);
+                                } 
+                            } else {
+                                $rowData[] = $Form->input("$alias.$fieldKey.$key.$value1->id.grading_option_id", ['type' => 'string', 'label' => false]);
+                            }
+                        }
+                        $tableCells[] = $rowData;
+                    }
+
+                }
+                
+                // //generate textbook condition and status
+                // $textbookConditionOptions = $this->TextbookConditions->getTextbookConditionOptions();
+                // $textbookStatusOptions = $this->TextbookStatuses->getSelectOptions();
+
+                // if (!count($textbookConditionOptions) || !count($textbookStatusOptions)) { //if no condition / status created.
+                //     $this->Alert->error('Textbooks.noTextbookStatusCondition');
+                // } else {
+
+                //     //generate `list`
+                //     $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($entity->academic_period_id, $entity->institution_class_id, $entity->education_subject_id);
+
+                //     $studentOptions = array('null' => __('-- Select --')) + $studentOptions; //additional default option
+
+                //     if ($action == 'add' || $action == 'edit') {
+                //         $tableHeaders[] = ''; // for delete column
+                //         $Form = $event->subject()->Form;
+                //         $Form->unlockField('InstitutionTextbooks.textbooks_students');
+
+                //         // refer to addEditOnAddTextbooksStudents for http post
+                //         if ($this->request->data("$alias.$fieldKey")) {
+                //             $associated = $this->request->data("$alias.$fieldKey");
+
+                //             foreach ($associated as $key => $obj) {
+                //                 $code = $obj['code'];
+                //                 $textbook_status_id = $obj['textbook_status_id'];
+                //                 $textbook_condition_id = $obj['textbook_condition_id'];
+                //                 $comment = $obj['comment'];
+                //                 $student_id = $obj['student_id'];
+
+                //                 $rowData = [];
+
+                //                 //to insert error message if validation kicked in.
+                //                 $tempRowData = $Form->input("$alias.$fieldKey.$key.code", ['label' => false]);
+
+                //                 if ($entity->errors("textbooks_students.$key") && isset($entity->errors("textbooks_students.$key")['code'])) {
+
+                //                     $tempRowData .= "<ul class='error-message'>";
+                //                     foreach ($entity->errors("textbooks_students.$key")['code'] as $error) {
+                //                         $tempRowData .= __($error);
+                //                     }
+                //                     $tempRowData .= "</ul>";
+
+                //                 }   
+
+                //                 $rowData[] = $tempRowData;
+                //                 $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_status_id", ['type' => 'select', 'label' => false, 'options' => $textbookStatusOptions]);
+                //                 $rowData[] = $Form->input("$alias.$fieldKey.$key.textbook_condition_id", ['type' => 'select', 'label' => false, 'options' => $textbookConditionOptions]);
+                //                 $rowData[] = $Form->input("$alias.$fieldKey.$key.comment", ['type' => 'text', 'label' => false]);
+                //                 $rowData[] = $Form->input("$alias.$fieldKey.$key.student_id", ['type' => 'select', 'label' => false, 'options' => $studentOptions]);
+                               
+                //                 $rowData[] = $this->getDeleteButton();
+                                // $tableCells[] = $rowData;
+                //             }
+                //         }
+                //     }
+
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
+
+                    return $event->subject()->renderElement('Institution.Competencies/'.$fieldKey, ['attr' => $attr]);
+                // }
+
+            } else {
+                $this->Alert->warning('Competencies.noCompetencyCriterias', ['reset'=>true]);
+            }
+        }
+    }
+
+    private function setupFields(Entity $entity)
+    {
+        $this->field('academic_period_id', [
+            'type' => 'readonly', 
+            'entity' => $entity
+        ]);
+
+        $this->field('competency_template_id', [
+            'type' => 'readonly',
+            'entity' => $entity
+        ]);
+
+        $this->field('competency_item_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+
+        // $this->field('education_grade_id', [
+        //     'type' => 'select', 
+        //     'entity' => $entity
+        // ]);
+        $this->field('institution_id', [
+            'type' => 'readonly', 
+            'entity' => $entity
+        ]);
+
+        $this->field('institution_class_id', [
+            'type' => 'readonly', 
+            'entity' => $entity
+        ]);
+
+        $this->field('competency_results', [
+            'type' => 'custom_competency_results',
+            'valueClass' => 'table-full-width'
+        ]);
+
+        // $this->field('student_id', [
+        //     'type' => 'chosenSelect',
+        //     'attr' => [
+        //         'multiple' => false
+        //     ],
+        //     'select' => true,
+        //     'entity' => $entity
+        // ]);
+
+        $fieldOrder = [
+            'academic_period_id', 'competency_template_id', 'competency_item_id', 'institution_id', 'institution_class_id'
+        ];
     }
 
     // public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
