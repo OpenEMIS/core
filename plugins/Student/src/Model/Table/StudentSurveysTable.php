@@ -270,9 +270,9 @@ class StudentSurveysTable extends ControllerActionTable {
 				return $this->controller->redirect($url);
 			} else {
 				$paramsPass = $this->paramsDecode($this->paramsPass(0))['id'];
-				// if ($results->id != current($paramsPass)) {
-					// return $this->controller->redirect($url);
-				// }
+				if ($results->id != current($paramsPass)) {
+					return $this->controller->redirect($url);
+				}
 			}
 		} else {
 			$url = $this->url('index');
