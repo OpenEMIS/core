@@ -10,6 +10,7 @@ use SSO\Controller\LoginController as Controller;
 class LoginController extends Controller
 {
     private $sso = false;
+    private $productName = 'OpenEmis Core';
     public function initialize()
     {
         parent::initialize();
@@ -33,13 +34,13 @@ class LoginController extends Controller
                     'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
                 ]
             ],
-            'productName' => 'OpenEMIS Core',
+            'productName' => $this->productName,
             'theme' => 'core'
         ]);
 
         $this->Auth->allow('login');
         $this->loadComponent('Localization.Localization', [
-            'productName' => 'OpenEMIS Core'
+            'productName' => $this->productName
         ]);
     }
 
