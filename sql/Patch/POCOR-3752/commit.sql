@@ -11,3 +11,6 @@ ALTER TABLE `staff_appraisals` CHANGE `final_rating` `final_rating` DECIMAL(7,2)
 -- staff_appraisals adding file upload
 ALTER TABLE `staff_appraisals` ADD `file_name` VARCHAR(250) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL AFTER `comment`;
 ALTER TABLE `staff_appraisals` ADD `file_content` LONGBLOB NULL DEFAULT NULL AFTER `file_name`;
+
+-- permission for download appraisal attachment
+UPDATE `security_functions` SET `_execute` = 'StaffAppraisals.download' WHERE `id` = 3037
