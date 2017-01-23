@@ -50,7 +50,7 @@ class ReportListBehavior extends Behavior {
 		$fields['params']['visible'] = false;
 		$fields['pid']['visible'] = false;
 		$fields['created']['visible'] = true;
-		$fields['modified']['visible'] = true;
+        $fields['modified']['visible'] = true;
 
 		$this->_table->fields = $fields;
 
@@ -60,6 +60,7 @@ class ReportListBehavior extends Behavior {
 		$this->ReportProgress->purge();
 
 		$query = $this->ReportProgress->find()
+            ->contain('CreatedUser')
 			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
 			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
 
