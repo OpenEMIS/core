@@ -560,7 +560,8 @@ class InstitutionClassesTable extends ControllerActionTable
                         'institution_class_id' => $classStudent['institution_class_id'],
                         'institution_id' => $subjectEntity->institution_id,
                         'academic_period_id' => $subjectEntity->academic_period_id,
-                        'education_subject_id' => $subjectEntity->education_subject_id
+                        'education_subject_id' => $subjectEntity->education_subject_id,
+                        'education_grade_id' => $classStudent['education_grade_id']
                     ];
                 }
             }
