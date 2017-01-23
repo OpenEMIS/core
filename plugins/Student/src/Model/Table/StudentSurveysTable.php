@@ -4,9 +4,9 @@ namespace Student\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class StudentSurveysTable extends AppTable {
+class StudentSurveysTable extends ControllerActionTable {
 	// Default Status
 	const EXPIRED = -1;
 
@@ -41,21 +41,18 @@ class StudentSurveysTable extends AppTable {
 			'fieldValueClass' => ['className' => 'Student.StudentSurveyAnswers', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true],
 			'tableCellClass' => ['className' => 'Student.StudentSurveyTableCells', 'foreignKey' => 'institution_student_survey_id', 'dependent' => true, 'cascadeCallbacks' => true]
 		]);
+
+		$this->toggle('add', false);
+		$this->toggle('edit', false);
+        $this->toggle('remove', false);
 	}
 
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
-
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		//Add controls filter to index, view and edit page
-		$toolbarElements = [
-			['name' => 'Student.StudentSurveys/controls', 'data' => [], 'options' => []]
+		$indexElements = [
+			['name' => 'Student.StudentSurveys/controls', 'data' => [], 'options' => [], 'order' => 1]
 		];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
+		$extra['elements'] = array_merge($extra['elements'], $indexElements);
 
 		$session = $this->controller->request->session();
 		if ($session->check('Institution.Institutions.id')) {
@@ -64,7 +61,7 @@ class StudentSurveysTable extends AppTable {
 		$studentId = $this->Session->read('Student.Students.id');
 
 		// Build Survey Records
-		$currentAction = $this->ControllerAction->action();
+		$currentAction = $this->action;
 		if ($currentAction == 'index') {
 			// Disabled auto-insert New Survey for Student until there is a better solution
 			// $this->_buildSurveyRecords($studentId);
@@ -115,11 +112,11 @@ class StudentSurveysTable extends AppTable {
 		$this->controller->set('formOptions', $formOptions);
 		// End
 
-		$this->ControllerAction->field('student_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('survey_form_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('parent_form_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('status_id', ['type' => 'hidden']);
+		$this->field('student_id', ['type' => 'hidden']);
+		$this->field('academic_period_id', ['type' => 'hidden']);
+		$this->field('survey_form_id', ['type' => 'hidden']);
+		$this->field('parent_form_id', ['type' => 'hidden']);
+		$this->field('status_id', ['type' => 'hidden']);
 
 		$this->surveyInstitutionId = $institutionId;
 		$this->studentId = $studentId;
@@ -129,33 +126,24 @@ class StudentSurveysTable extends AppTable {
 		$this->_redirect($institutionId, $studentId, $selectedPeriod, $selectedForm);
 	}
 
-	public function afterAction(Event $event) {
+	public function afterAction(Event $event, ArrayObject $extra) {
 		$indexElements = [];
-		$this->controller->set('indexElements', $indexElements);
-	}
-
-	public function indexBeforeAction(Event $event) {
-		$this->setupTabElements();
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+		$toolbarButtons = $extra['toolbarButtons'];
 		if (isset($toolbarButtons['list'])) {
 			unset($toolbarButtons['list']);
 		}
 		if (isset($toolbarButtons['back'])) {
 			unset($toolbarButtons['back']);
 		}
-		if (isset($toolbarButtons['edit'])) {
-			unset($toolbarButtons['edit']);
-		}
+		$this->controller->set('indexElements', $indexElements);
+	}
+
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->setupTabElements();
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->setupTabElements($entity);
 	}
 
 	private function setupTabElements($entity=null) {
@@ -259,8 +247,7 @@ class StudentSurveysTable extends AppTable {
 	*/
 
 	public function _redirect($institutionId=null, $studentId=null, $periodId=0, $formId=0) {
-		$currentAction = $this->ControllerAction->action();
-		$paramsPass = $this->paramsDecode($this->ControllerAction->paramsPass())['id'];
+		$currentAction = $this->action;
 
 		$results = $this
 			->find()
@@ -276,18 +263,19 @@ class StudentSurveysTable extends AppTable {
 		if (!empty($results)) {
 			$this->request->query['status'] = $results->status_id;
 
-			$url = $this->ControllerAction->url('view');
+			$url = $this->url('view');
 			$url[1] = $this->paramsEncode(['id' => $results->id]);
 
 			if ($currentAction == 'index') {
 				return $this->controller->redirect($url);
 			} else {
-				if ($results->id != current($paramsPass)) {
-					return $this->controller->redirect($url);
-				}
+				$paramsPass = $this->paramsDecode($this->paramsPass(0))['id'];
+				// if ($results->id != current($paramsPass)) {
+					// return $this->controller->redirect($url);
+				// }
 			}
 		} else {
-			$url = $this->ControllerAction->url('index');
+			$url = $this->url('index');
 
 			if ($currentAction == 'view' || $currentAction == 'edit') {
 				return $this->controller->redirect($url);
