@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -21,14 +22,35 @@ class CompetenciesTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('min', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 100]
+                ]
+            ])
+            ->add('max', [
+                'ruleCompare' => [
+                    'rule' => ['compareValues', 'min'],
+                    'last' => true
+                ],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 100]
+                ]
+            ])
+            ;
+    }
+
     public function beforeAction(Event $event, arrayObject $extra)
     {
         $this->field('default', ['visible' => false]);
         $this->field('editable', ['visible' => false]);
         $this->field('international_code', ['visible' => false]);
         $this->field('national_code', ['visible' => false]);
-        $this->field('min', ['type' => 'readonly', 'after' => 'visible', 'attr' => ['value' => $this->fields['min']['default']]]);
-        $this->field('max', ['type' => 'readonly', 'after' => 'min', 'attr' => ['value' => $this->fields['max']['default']]]);
+        $this->field('min', ['type' => 'integer', 'after' => 'visible', 'attr'=>['min' => 0, 'max' => 100, 'step' => 1]]);
+        $this->field('max', ['type' => 'integer', 'after' => 'min', 'attr'=>['min' => 0, 'max' => 100, 'step' => 1]]);
     }
 
     public function indexBeforeAction(Event $event, arrayObject $extra)
