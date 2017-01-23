@@ -30,6 +30,12 @@ UPDATE `security_functions` SET `_view` = 'Logs.index|Logs.view' WHERE `id` = 50
 UPDATE `security_functions` SET `_delete` = 'Logs.remove' WHERE `id` = 5031;
 UPDATE `security_functions` SET `order` = `order` + 2 WHERE `order` BETWEEN 5031 AND 5062;
 
+DELETE FROM `security_functions` WHERE `id` = 5029;
+DELETE FROM `security_functions` WHERE `id` = 5030;
+DELETE FROM `security_role_functions` WHERE `security_function_id` = 5029;
+DELETE FROM `security_role_functions` WHERE `security_function_id` = 5030;
+
+
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 VALUES  ('5062', 'Alerts', 'Alerts', 'Administration', 'Communications', '5000', 'Alerts.index|Alerts.view', 'Alerts.edit', NULL, NULL, 'Alerts.process', '5031', '1', NULL, NULL, '1', NOW()),
     ('5063', 'AlertRules', 'Alerts', 'Administration', 'Communications', '5000', 'AlertRules.index|AlertRules.view', 'AlertRules.edit', 'AlertRules.add', 'AlertRules.remove', NULL, '5032', '1', NULL, NULL, '1', NOW());
@@ -48,3 +54,12 @@ CREATE TABLE IF NOT EXISTS `alerts` (
 
 INSERT INTO `alerts` (`name`, `process_name`, `process_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 VALUES ('Attendance', 'AttendanceAlert', NULL, NULL, NULL, '1', NOW());
+
+-- Drop table related to SMS
+DROP TABLE sms_logs;
+DROP TABLE sms_messages;
+DROP TABLE sms_responses;
+
+
+
+
