@@ -529,6 +529,7 @@ class InstitutionClassStudentsTable extends AppTable {
                 'institution_id' => $data['institution_id'],
                 'academic_period_id' => $data['academic_period_id'],
                 'education_subject_id' => $classSubjects['education_subject_id'],
+                'education_grade_id' => $data['education_grade_id']
             ];
         }
 
