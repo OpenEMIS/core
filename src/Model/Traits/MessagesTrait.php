@@ -30,7 +30,8 @@ trait MessagesTrait {
             'assessmentGradingType' => 'Assessment Grading Type',
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
-            'periodWeight' => 'Period Weight'
+            'periodWeight' => 'Period Weight',
+            'classification' => 'Classification'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -1249,6 +1250,15 @@ trait MessagesTrait {
                 'value' => 'Value',
                 'final_rating' => 'Final Rating',
                 'deleted_competencies' => 'This competency has been removed'
+            ],
+            'Competencies' => [
+                'min' => [
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ],
+                'max' => [
+                    'ruleCompare' => 'Max value must be greater than min value',
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ]
             ],
         ],
         'AcademicPeriod' => [
