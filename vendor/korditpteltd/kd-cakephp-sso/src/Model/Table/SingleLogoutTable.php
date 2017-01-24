@@ -33,21 +33,32 @@ class SingleLogoutTable extends Table
         $sessionId = $request->session()->id();
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username) && !empty($sessionId)) {
-            $http = new Client();
             foreach ($autoLogoutUrl as $url) {
                 if (!empty($url)) {
                     try {
                         // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
                         $url = rtrim($url, '/');
                         $url = $url.'/';
-                        // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
-                        // http://php.net/manual/en/thread.start.php
-                        $response = $http->put($url, ['url' => rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
+                        $this->putLogin($url, rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), '/'), $sessionId, $username);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }
                 }
             }
+        }
+    }
+
+    private function putLogin($targetUrl, $sourceUrl, $sessionId, $username)
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake Login ' . $targetUrl . ' ' . $sourceUrl . ' ' . $sessionId . ' ' . $username;
+        $logs = ROOT . DS . 'logs' . DS . 'Login.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
     }
 
