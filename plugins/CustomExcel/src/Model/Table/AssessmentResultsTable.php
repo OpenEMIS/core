@@ -222,6 +222,7 @@ class AssessmentResultsTable extends AppTable
                         ELSE '.$EducationSubjects->aliasField('name').'
                         END
                     )',
+                'subject_order' => $query->func()->min($EducationSubjects->aliasField('order')),
                 'total_subject_weight' => $query->func()->sum($AssessmentItems->aliasField('weight'))
             ];
 
@@ -229,7 +230,7 @@ class AssessmentResultsTable extends AppTable
                 ->select($selectedColumns)
                 ->contain([$EducationSubjects->alias()])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $params['assessment_id']])
-                ->order([$EducationSubjects->aliasField('order'), 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
+                ->order(['subject_order', 'subject_classification', $EducationSubjects->aliasField('code'), $EducationSubjects->aliasField('name')])
                 ->group(['subject_classification'])
                 ->hydrate(false)
                 ->all();
