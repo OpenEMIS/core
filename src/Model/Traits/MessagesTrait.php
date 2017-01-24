@@ -1530,6 +1530,34 @@ trait MessagesTrait {
                 ]
             ],
         ],
+        'Competency' => [
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ],
+                'point' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+             'GradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
+            'Criterias' => [
+                'percentage' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'Templates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
+        ],
         'Configuration' => [
         	'ConfigProductLists' => [
         		'name' => [
