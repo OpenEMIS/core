@@ -30,7 +30,9 @@ class TemplatesTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-        $this->hasMany('Items', ['className' => 'Competency.Items', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Items', ['className' => 'Competency.Items', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Periods', ['className' => 'Competency.Periods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
 
         // $this->belongsToMany('GradingTypes', [
         //     'className' => 'Assessment.AssessmentGradingTypes',
@@ -55,7 +57,7 @@ class TemplatesTable extends ControllerActionTable {
         // $this->addBehavior('Restful.RestfulAccessControl', [
         //     'Results' => ['index', 'view']
         // ]);
-        // $this->setDeleteStrategy('restrict');
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator) {

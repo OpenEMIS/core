@@ -10,7 +10,7 @@ class GradingOptionsTable extends CompetenciesAppTable {
         parent::initialize($config);
 
         $this->belongsTo('GradingTypes', ['className' => 'Competency.GradingTypes']);
-        // $this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        // $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_grading_option_id', 'academic_period_id']]);
 
         $this->fields['competency_grading_type_id']['type'] = 'hidden';
         $this->fields['id']['type'] = 'hidden';
