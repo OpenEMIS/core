@@ -856,7 +856,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (strtolower($persona)=='students') {
             $userData = $this->Institutions->Students->find()
                 ->contain(['Users.Genders', 'StudentStatuses'])
-                ->where(['student_id'=>$id])
+                ->where([
+                    $this->Institutions->Students->aliasField('student_id') => $id,
+                    $this->Institutions->Students->aliasField('institution_id') => $entity->institution_id,
+                    $this->Institutions->Students->aliasField('academic_period_id') => $entity->academic_period_id
+                ])
                 ->order([$this->Institutions->Students->aliasField('created') => 'DESC'])
                 ->first();
 
