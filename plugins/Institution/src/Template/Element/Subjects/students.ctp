@@ -69,6 +69,7 @@
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_id", [ 'value' => $obj->institution_id ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.academic_period_id", [ 'value' => $obj->academic_period_id ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.education_subject_id", [ 'value' => $obj->education_subject_id ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.education_grade_id", [ 'value' => $obj->education_grade_id ]);
 
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.id", [ 'value' => $n ]);
 						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
