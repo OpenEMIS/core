@@ -91,6 +91,8 @@ class UsersTable extends ControllerActionTable {
 			'visible' => ['index' => false, 'view' => true, 'edit' => false],
 			'order' => 100
 		]);
+
+		$this->setFieldOrder(['username', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth', 'nationality_id', 'identity_type_id', 'identity_number', 'last_login', 'preferred_language', 'modified_user_id', 'modified', 'created_user_id', 'created', 'roles']);
 	}
 
 	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
