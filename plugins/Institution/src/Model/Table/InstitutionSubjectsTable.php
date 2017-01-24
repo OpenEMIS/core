@@ -215,6 +215,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
         ]);
 
+        $AccessControl = $this->AccessControl;
+        $userId = $this->Auth->user('id');
+        $controller = $this->controller;
+
+
         $classOptions = $Classes->find('list')
                                 ->where([
                                     $Classes->aliasField('academic_period_id') => $selectedAcademicPeriodId,
@@ -227,7 +232,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $selectedClassId = $this->queryString('class_id', $classOptions);
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
-            'callable' => function($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId) {
+            'callable' => function($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId, $AccessControl, $userId, $controller) {
                 $query = $Subjects->find()
                                 ->join([
                                     [
@@ -242,7 +247,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                 ->where([
                                     $Subjects->aliasField('institution_id') => $institutionId,
                                     $Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
-                                ]);
+                                ])
+                                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $controller]);;
                 return $query->count();
             }
         ]);
