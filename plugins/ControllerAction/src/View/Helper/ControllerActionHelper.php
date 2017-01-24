@@ -291,7 +291,9 @@ class ControllerActionHelper extends Helper {
 				$row[] = $value;
 			}
 		}
-		$primaryKeys = $table->primaryKey();
+
+		$model = TableRegistry::get($entity->source());
+		$primaryKeys = $model->primaryKey();
 		$primaryKeyValue = [];
 		if (is_array($primaryKeys)) {
 			foreach ($primaryKeys as $key) {
