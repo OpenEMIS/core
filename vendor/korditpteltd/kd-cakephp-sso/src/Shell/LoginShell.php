@@ -1,5 +1,5 @@
 <?php
-namespace App\Shell;
+namespace SSO\Shell;
 
 use Cake\Console\Shell;
 use Cake\Event\Event;
