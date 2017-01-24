@@ -14,10 +14,7 @@ class PreferencesController extends AppController {
 
 	public function initialize() {
 		parent::initialize();
-
-		$this->ControllerAction->model('Users');
 		$this->ControllerAction->models = [
-			'Users' 				=> ['className' => 'Users'],
 			'Account' 				=> ['className' => 'UserAccounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 		=> ['className' => 'User.Nationalities'],
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -44,6 +41,7 @@ class PreferencesController extends AppController {
     public function Comments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Contacts()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'UserContacts']); }
     public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
+    public function Users()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Users']);}
     // End
 
 	public function beforeFilter(Event $event) {
@@ -51,7 +49,7 @@ class PreferencesController extends AppController {
 		$header = __('Preferences');
 
 		$action = $this->request->params['action'];
-		$this->activeObj = $this->Users->get($this->Auth->user('id'));
+		$this->activeObj = TableRegistry::get('Users')->get($this->Auth->user('id'));
 
 		$this->Navigation->addCrumb('Preferences', ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']);
 
@@ -64,7 +62,6 @@ class PreferencesController extends AppController {
 				$model->fields['security_user_id']['type'] = 'hidden';
 				$model->fields['security_user_id']['value'] = $this->activeObj->id;
 			}
-
 		}
 	}
 
@@ -80,7 +77,7 @@ class PreferencesController extends AppController {
 		$userId = $this->Auth->user('id');
 		$tabElements = [
 			'General' => [
-				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
+				'url' => ['plugin' => null, 'controller' => $this->name, 'action' => 'Users' ,'view', $this->ControllerAction->paramsEncode(['id' => $userId])],
 				'text' => __('General')
 			],
 			'Account' => [
