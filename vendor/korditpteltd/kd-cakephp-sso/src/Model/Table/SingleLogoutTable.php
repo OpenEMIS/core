@@ -53,7 +53,19 @@ class SingleLogoutTable extends Table
         $cmd = ROOT . DS . 'bin' . DS . 'cake Login ' . $targetUrl . ' ' . $sourceUrl . ' ' . $sessionId . ' ' . $username;
         $logs = ROOT . DS . 'logs' . DS . 'Login.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when login : '. $ex);
+        }
+    }
 
+    private function postLogout($targetUrl, $sessionId, $username)
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake Logout ' . $targetUrl . ' ' . $sessionId . ' ' . $username;
+        $logs = ROOT . DS . 'logs' . DS . 'Logout.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
             Log::write('debug', $shellCmd);
@@ -97,10 +109,7 @@ class SingleLogoutTable extends Table
             $url = $url . '/';
             $username = $entity->username;
             $sessionId = $entity->session_id;
-
-            // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
-            // http://php.net/manual/en/thread.start.php
-            $http->post($url, ['username' => $username, 'session_id' => $entity->session_id]);
+            $this->postLogout($url, $entity->session_id, $username);
         } catch (Exception $e) {
             Log::write('error', $e);
         }
