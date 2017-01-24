@@ -21,6 +21,22 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->table('staff_appraisals');
         parent::initialize($config);
 
+        // for file upload
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
+
+        // setting this up to be overridden in viewAfterAction(), this code is required for file download
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            true
+        );
+
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('StaffAppraisalTypes', ['className' => 'Staff.StaffAppraisalTypes']);
@@ -49,6 +65,7 @@ class StaffAppraisalsTable extends ControllerActionTable
                     'rule' => ['compareDate', 'to', false]
                 ]
             ])
+            ->allowEmpty('file_content')
         ;
     }
 
@@ -98,6 +115,8 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('comment', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('competency_set_id', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
 
         $this->setFieldOrder(['staff_appraisal_type_id', 'title', 'from', 'to', 'final_rating']);
     }
@@ -124,6 +143,17 @@ class StaffAppraisalsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // determine if download button is shown
+        $showFunc = function() use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
+
         $this->setupFields($entity);
     }
 
@@ -186,6 +216,8 @@ class StaffAppraisalsTable extends ControllerActionTable
     {
         if ($field == 'staff_appraisal_type_id') {
             return __('Type');
+        } elseif ($field == 'file_content') {
+            return __('Attachment');
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -560,8 +592,13 @@ class StaffAppraisalsTable extends ControllerActionTable
         $this->field('competency_set_id');
         $this->field('rating', ['type' => 'custom_rating']);
         $this->field('final_rating', ['type' => 'hidden']);
+        $this->field('file_name', [
+            'type' => 'hidden',
+            'visible' => ['view' => false, 'edit' => true]
+        ]);
+        $this->field('file_content', ['visible' => ['view' => false, 'edit' => true]]);
 
-        $this->setFieldOrder(['title', 'academic_period_id', 'from', 'to', 'staff_appraisal_type_id', 'competency_set_id', 'rating', 'final_rating', 'comment']);
+        $this->setFieldOrder(['title', 'academic_period_id', 'from', 'to', 'staff_appraisal_type_id', 'competency_set_id', 'rating', 'final_rating', 'comment', 'file_name', 'file_content']);
     }
 
     public function getMissingCompetency($competencySetId, $staffAppraisalId)
