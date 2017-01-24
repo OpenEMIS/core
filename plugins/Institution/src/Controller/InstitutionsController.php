@@ -38,7 +38,6 @@ class InstitutionsController extends AppController
 
             'StaffBehaviours'   => ['className' => 'Institution.StaffBehaviours'],
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
-            'StudentSurveys'    => ['className' => 'Student.StudentSurveys', 'actions' => ['index', 'view', 'edit']],
             'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
             'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
             'AttendanceExport'  => ['className' => 'Institution.AttendanceExport', 'actions' => ['excel']],
@@ -108,6 +107,7 @@ class InstitutionsController extends AppController
     public function Programmes()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']); }
     public function StaffAbsences()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
     public function Textbooks()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
+    public function StudentSurveys()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
     // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     // End
 
