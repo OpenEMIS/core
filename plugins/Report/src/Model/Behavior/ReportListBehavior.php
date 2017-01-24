@@ -62,7 +62,10 @@ class ReportListBehavior extends Behavior {
 		$query = $this->ReportProgress->find()
             ->contain('CreatedUser') //association declared on AppTable
 			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
-			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);
 
 		return $query;
 	}
