@@ -10,6 +10,7 @@
             <thead>
                 <th><?= $this->Label->get('Assessments.educationSubject'); ?></th>
                 <th><?= $this->Label->get('Assessments.subjectWeight'); ?></th>
+                <th><?= $this->Label->get('Assessments.classification'); ?></th>
             </thead>
             <?php if (isset($data['assessment_items'])) : ?>
                 <tbody>
@@ -17,6 +18,7 @@
                         <tr>
                             <td><?= $item->education_subject->code . ' - ' . $item->education_subject->name; ?></td>
                             <td><?= $item->weight; ?></td>
+                            <td><?= $item->classification; ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -32,6 +34,7 @@
                     <thead>
                         <th><?= $this->Label->get('Assessments.educationSubject'); ?></th>
                         <th><?= $this->Label->get('Assessments.subjectWeight'); ?></th>
+                        <th><?= $this->Label->get('Assessments.classification'); ?></th>
                     </thead>
                     <?php if (isset($data['assessment_items'])) : ?>
                         <tbody>
@@ -56,6 +59,14 @@
                                                 'label' => false,
                                                 'onblur' => "return utility.checkDecimal(this, 2);",
                                                 'onkeypress' => "return utility.floatCheck(event)",
+                                            ]);
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                            echo $this->Form->input("$fieldPrefix.classification", [
+                                                'type' => 'string',
+                                                'label' => false
                                             ]);
                                         ?>
                                     </td>
