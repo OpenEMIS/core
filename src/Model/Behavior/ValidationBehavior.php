@@ -524,6 +524,18 @@ class ValidationBehavior extends Behavior {
 
 	}
 
+	public static function compareValues($field, $compareField, array $globalData)
+	{
+		$max = $globalData['data'][$globalData['field']];
+		$min = $globalData['data'][$compareField];
+
+		if($max > $min) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/**
 	 * To check whether given input is within given start and end dates
 	 * @param  mixed   	$field        			current field value
