@@ -124,10 +124,8 @@ var Autocomplete = {
 		var length = this.element.attr('length');
 		if (length === undefined) length = 5;
 
-		if (request.term.length >= length) {
-			clearTimeout(Autocomplete.timer);
-			Autocomplete.timer = setTimeout(function() {
-				$.ajax({
+		var triggerAjax = function () {
+	    		$.ajax({
 		            url: url,
 		            dataType: "json",
 		            data: {
@@ -140,6 +138,20 @@ var Autocomplete = {
 		                response(false);
 		            }
 		        });
+		    };
+
+		this.element.keypress(function(event) {
+		    var keycode = (event.keyCode ? event.keyCode : event.which);
+		    if(keycode == '13'){
+		    	triggerAjax();
+		        event.preventDefault();
+		    }
+		});
+
+		if (request.term.length >= length) {
+			clearTimeout(Autocomplete.timer);
+			Autocomplete.timer = setTimeout(function() {
+				triggerAjax();
 			}, 1000);
 	    } else {
 	    	response(false);
