@@ -433,7 +433,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $subjectStudentsToBeDeleted = $this->SubjectStudents->find()
                 ->where([
                     $this->SubjectStudents->aliasField('institution_id') => $entity->institution_id,
-                    $this->SubjectStudents->aliasField('institution_class_id') => $entity->class_subjects[0]->institution_class_id,
+                    $this->SubjectStudents->aliasField('institution_class_id') => $entity->classes[0]->id,
                     $this->SubjectStudents->aliasField('academic_period_id') => $entity->academic_period_id,
                     $this->SubjectStudents->aliasField('education_subject_id') => $entity->education_subject_id,
                     $this->SubjectStudents->aliasField('student_id').' IN ' => $removedStudentIds
@@ -570,6 +570,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'EducationSubjects',
             'Teachers',
             'Rooms',
+            'Classes',
             'SubjectStaff',
             'SubjectStudents' => [
                 'Users.Genders',
@@ -862,15 +863,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
             if (empty($userData)) {
                 $this->Alert->warning($this->alias().".studentRemovedFromInstitution");
             } else {
-                $data['user'] = [];
-                $data['student_status'] = [];
                 $data['student_status_id'] = $userData->student_status_id;
-
-                if (!empty($requestData)) {
-                    if (array_key_exists('education_grade_id', $requestData)) {
-                        $data['education_grade_id'] = $requestData['education_grade_id'];
-                    }
-                }
+                $data['education_grade_id'] = $userData->education_grade_id;
+                $data['user'] = [];
+                $data['student_status'] = []; // student status entity (to retrieve student status name)
             }
         } else {
             $userData = $this->Institutions->Staff->find()->contain(['Users'=>['Genders']])->where(['staff_id'=>$id])->first();
@@ -1297,8 +1293,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->contain('Users')
                         ->where([
                             'Users.gender_id' => $gender_id,
-                            $table->aliasField('institution_subject_id') => $entity->id,
-                            $table->aliasField('student_status_id') => $this->enrolledStatus
+                            $table->aliasField('institution_subject_id') => $entity->id
                             ])
                         ->count();
             return $count;
@@ -1315,8 +1310,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->contain('Users')
                         ->where([
                             'Users.gender_id' => $gender_id,
-                            $table->aliasField('institution_subject_id') => $entity->id,
-                            $table->aliasField('student_status_id') => $this->enrolledStatus
+                            $table->aliasField('institution_subject_id') => $entity->id
                             ])
                         ->count();
             return $count;
@@ -1330,8 +1324,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $count = $table
                         ->find()
                         ->where([
-                            $table->aliasField('institution_subject_id') => $entity->id,
-                            $table->aliasField('student_status_id') => $this->enrolledStatus
+                            $table->aliasField('institution_subject_id') => $entity->id
                             ])
                         ->count();
             return $count;

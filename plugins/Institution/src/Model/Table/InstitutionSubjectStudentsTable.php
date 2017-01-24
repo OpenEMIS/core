@@ -61,27 +61,27 @@ class InstitutionSubjectStudentsTable extends AppTable {
         if (!$student->isNew()) {
             // to update student status in subject if student status in school has been changed
             $subjectStudents = $this->find()
-                ->matching('InstitutionClasses.ClassGrades')
                 ->where([
                     $this->aliasField('institution_id') => $student->institution_id,
                     $this->aliasField('academic_period_id') => $student->academic_period_id,
                     $this->aliasField('student_id') => $student->student_id,
-                    'ClassGrades.education_grade_id' => $student->education_grade_id
+                    $this->aliasField('education_grade_id') => $student->education_grade_id
                 ])->toArray();
 
             if (!empty($subjectStudents)) {
-                foreach ($subjectStudents as $key => $subjectStudent) {
-                    if ($subjectStudent->student_status_id != $student->student_status_id) {
-                        $subjectStudent->student_status_id = $student->student_status_id;
+                foreach ($subjectStudents as $subjectStudentToSave) {
+                    if ($subjectStudentToSave->student_status_id != $student->student_status_id) {
+                        $subjectStudentToSave->student_status_id = $student->student_status_id;
+                        $this->save($subjectStudentToSave);
                     }
                 }
-                $this->saveMany($subjectStudents);
             }
         }
     }
 
     public function assessmentResultsAfterSave(Event $event, $results)
     {
+        // used to update total mark whenever an assessment mark is added or updated
         $studentId = $results->student_id;
         $academicPeriodId = $results->academic_period_id;
         $educationSubjectId = $results->education_subject_id;
@@ -92,6 +92,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
         $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId);
 
         if (!empty($totalMark)) {
+            // update all records of student regardless of institution
             $this->query()
                 ->update()
                 ->set(['total_mark' => $totalMark->calculated_total])
@@ -219,16 +220,10 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				$AssessmentItemResults->aliasField('student_id') => $entity->student_id,
 				$AssessmentItemResults->aliasField('institution_id') => $institutionClassData->institution_id,
 				$AssessmentItemResults->aliasField('academic_period_id') => $institutionClassData->academic_period_id,
-                $AssessmentItemResults->aliasField('education_subject_id') => $institutionClassData->education_subject_id
+                $AssessmentItemResults->aliasField('education_subject_id') => $institutionClassData->education_subject_id,
+                $AssessmentItemResults->aliasField('education_grade_id') => $entity->education_grade_id
 			])
 			;
-
-		if (!empty($gradeArray)) {
-			$deleteAssessmentItemResults->matching('Assessments', function ($q) use ($gradeArray) {
-			    return $q->where(['Assessments.education_grade_id IN ' => $gradeArray]);
-			})
-			;
-		}
 
 		foreach ($deleteAssessmentItemResults as $key => $value) {
 			$AssessmentItemResults->delete($value);
