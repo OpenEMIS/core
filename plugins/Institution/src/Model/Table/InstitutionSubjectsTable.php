@@ -869,14 +869,17 @@ class InstitutionSubjectsTable extends ControllerActionTable
         ];
 
         if (strtolower($persona)=='students') {
-            $userData = $this->Institutions->Students->find()
+            // find the latest student status id of student in the class
+            $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $userData = $ClassStudents->find()
                 ->contain(['Users.Genders', 'StudentStatuses'])
                 ->where([
-                    $this->Institutions->Students->aliasField('student_id') => $id,
-                    $this->Institutions->Students->aliasField('institution_id') => $entity->institution_id,
-                    $this->Institutions->Students->aliasField('academic_period_id') => $entity->academic_period_id
+                    $ClassStudents->aliasField('student_id') => $id,
+                    $ClassStudents->aliasField('institution_id') => $entity->institution_id,
+                    $ClassStudents->aliasField('institution_class_id') => $entity->classes[0]->id,
+                    $ClassStudents->aliasField('academic_period_id') => $entity->academic_period_id
                 ])
-                ->order([$this->Institutions->Students->aliasField('created') => 'DESC'])
+                ->order([$ClassStudents->aliasField('created') => 'DESC'])
                 ->first();
 
             if (empty($userData)) {
