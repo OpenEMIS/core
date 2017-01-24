@@ -159,6 +159,12 @@ class ConfigItemsTable extends AppTable {
 								'ConfigItemOptions.visible' => 1
 							])
 							->toArray();
+						if (in_array($entity->option_type, ['date_format'])) {
+							foreach ($options as $key => $value) {
+								$options[$key] = date($key);
+							}
+						}
+
 						$attr['options'] = $options;
 					}
 
@@ -259,8 +265,8 @@ class ConfigItemsTable extends AppTable {
 					])
 					->first();
 				if (is_object($value)) {
-					if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-						return date($value->$valueField);
+					if ($entity->code == 'date_format') {
+						return date($entity->$valueField);
 					} else {
 						return $value->option;
 					}
