@@ -19,8 +19,6 @@ use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
 
 /**
  * Application Controller
@@ -142,28 +140,15 @@ class AppController extends Controller {
 	// Controller.Localization.getLanguageOptions
     public function getLanguageOptions(Event $event)
     {
-        $dir = new Folder(TMP . 'cache'. DS . 'language_menu', true);
-        $filesAndFolders = $dir->read();
-        $files = $filesAndFolders[1];
-        $languagePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
-        $languageFile = new File($languagePath, true);
-        if (!in_array('language', $files)) {
-            $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
-            $showLanguage = $ConfigItemsTable->value('language_menu');
-            $systemLanguage = $ConfigItemsTable->value('language');
-            $languageArr = ['language_menu' => $showLanguage, 'language' => $systemLanguage];
-            $status = $languageFile->write(json_encode($languageArr));
-        }
-        $languageArr = json_decode($languageFile->read(), true);
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
         $systemLanguage = $languageArr['language'];
         $showLanguage = $languageArr['language_menu'];
-        $session = $event->subject()->request->session();
-
-        if ($session->check('System.language_menu')) {
+        $session = $this->request->session();
+        if (!$session->check('System.language_menu')) {
         	$session->write('System.language', $systemLanguage);
         	$session->write('System.language_menu', $showLanguage);
         }
-
         return [$showLanguage, $systemLanguage];
     }
 
