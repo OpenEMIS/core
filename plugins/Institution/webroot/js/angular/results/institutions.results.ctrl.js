@@ -173,7 +173,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         // resetColumnDefs
         .then(function(response) {
             if (response) {
-                return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id);
+                return InstitutionsResultsSvc.getRowData($scope.gradingTypes, $scope.periods, $scope.institution_id, $scope.class_id, $scope.assessment_id, $scope.academic_period_id, $scope.education_subject_id, $scope.education_grade_id);
             }
         })
         // getRowData
