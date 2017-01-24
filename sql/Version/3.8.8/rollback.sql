@@ -1,3 +1,16 @@
+-- POCOR-3737
+-- system_patches
+UPDATE `security_functions` SET `_edit`= 'StudentSurveys.edit' WHERE `id`='1012';
+
+UPDATE `security_role_functions`
+INNER JOIN `z_3737_security_role_functions` ON `z_3737_security_role_functions`.`id` = `security_role_functions`.`id`
+SET `security_role_functions`.`_edit` = `z_3737_security_role_functions`.`_edit`;
+
+DROP TABLE `z_3737_security_role_functions`;
+
+DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3737';
+
+
 -- POCOR-3748
 ALTER TABLE `institution_staff_leave`           CHANGE `staff_leave_type_id` `staff_leave_type_id` INT(11) NOT NULL COMMENT 'links to field_option_values.id';
 ALTER TABLE `institution_student_admission`     CHANGE `student_transfer_reason_id` `student_transfer_reason_id` INT(11) NOT NULL COMMENT 'links to field_option_values.id';

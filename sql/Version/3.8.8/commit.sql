@@ -1,3 +1,14 @@
+-- POCOR-3737
+- system_patches
+INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3737', NOW());
+
+-- security_role_functions
+-- clean up of unused _edit
+CREATE TABLE `z_3737_security_role_functions` LIKE `security_role_functions`;
+
+INSERT INTO `z_3737_security_role_functions`
+
+
 -- POCOR-3748
 -- db_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3748', NOW());
