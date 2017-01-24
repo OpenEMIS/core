@@ -30,7 +30,8 @@ trait MessagesTrait {
             'assessmentGradingType' => 'Assessment Grading Type',
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
-            'periodWeight' => 'Period Weight'
+            'periodWeight' => 'Period Weight',
+            'classification' => 'Classification'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
