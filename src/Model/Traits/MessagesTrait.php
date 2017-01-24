@@ -1255,7 +1255,7 @@ trait MessagesTrait {
                     'ruleRange' => 'Value must be within 0 to 100'
                 ],
                 'max' => [
-                    'ruleCompare' => 'Min value must be less than max value',
+                    'ruleCompare' => 'Max value must be greater than min value',
                     'ruleRange' => 'Value must be within 0 to 100'
                 ]
             ],
