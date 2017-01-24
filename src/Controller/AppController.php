@@ -138,23 +138,19 @@ class AppController extends Controller {
 
 	// Triggered from LocalizationComponent
 	// Controller.Localization.getLanguageOptions
-	public function getLanguageOptions(Event $event)
-	{
-		$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
-		$session = $event->subject()->request->session();
-		$showLanguage = $session->read('System.language_menu');
-		$systemLanguage = $session->read('System.language');
-
-		// Check if the language menu is enabled
-		if (!$session->check('System.language_menu')) {
-			$showLanguage = $ConfigItemsTable->value('language_menu');
-			$systemLanguage = $ConfigItemsTable->value('language');
-			$session->write('System.language', $systemLanguage);
-			$session->write('System.language_menu', $showLanguage);
-		}
-
-		return [$showLanguage, $systemLanguage];
-	}
+    public function getLanguageOptions(Event $event)
+    {
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
+        $systemLanguage = $languageArr['language'];
+        $showLanguage = $languageArr['language_menu'];
+        $session = $this->request->session();
+        if (!$session->check('System.language_menu')) {
+        	$session->write('System.language', $systemLanguage);
+        	$session->write('System.language_menu', $showLanguage);
+        }
+        return [$showLanguage, $systemLanguage];
+    }
 
 	// Triggered from Localization component
 	// Controller.Localization.updateLoginLanguage

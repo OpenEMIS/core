@@ -1,3 +1,29 @@
+-- POCOR-3563
+-- institution_subject_staff
+DROP TABLE `institution_subject_staff`;
+
+RENAME TABLE `z_3563_institution_subject_staff` TO `institution_subject_staff`;
+
+-- labels
+DELETE FROM `labels` WHERE
+`id` IN ('1ebef019-d3df-11e6-907e-525400b263eb, 74436ffe-d63e-11e6-ad42-525400b263eb, 9c0c7533-d63e-11e6-ad42-525400b263eb, f94ed6be-d63e-11e6-ad42-525400b263eb');
+
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3563';
+
+-- POCOR-3737
+-- system_patches
+UPDATE `security_functions` SET `_edit`= 'StudentSurveys.edit' WHERE `id`='1012';
+
+UPDATE `security_role_functions`
+INNER JOIN `z_3737_security_role_functions` ON `z_3737_security_role_functions`.`id` = `security_role_functions`.`id`
+SET `security_role_functions`.`_edit` = `z_3737_security_role_functions`.`_edit`;
+
+DROP TABLE `z_3737_security_role_functions`;
+
+DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3737';
+
+
 -- POCOR-3748
 ALTER TABLE `institution_staff_leave`           CHANGE `staff_leave_type_id` `staff_leave_type_id` INT(11) NOT NULL COMMENT 'links to field_option_values.id';
 ALTER TABLE `institution_student_admission`     CHANGE `student_transfer_reason_id` `student_transfer_reason_id` INT(11) NOT NULL COMMENT 'links to field_option_values.id';
