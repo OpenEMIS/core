@@ -30,6 +30,8 @@ class PeriodsTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Items',           ['className' => 'Competency.Items', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
         $this->belongsTo('Templates',       ['className' => 'Competency.Templates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
+
+        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
         
         // $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -56,7 +58,7 @@ class PeriodsTable extends ControllerActionTable {
         // $this->addBehavior('Restful.RestfulAccessControl', [
         //     'Results' => ['index', 'view']
         // ]);
-        // $this->setDeleteStrategy('restrict');
+        $this->setDeleteStrategy('restrict');
     }
 
     // public function validationDefault(Validator $validator) {

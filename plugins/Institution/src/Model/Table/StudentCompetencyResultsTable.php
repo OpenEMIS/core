@@ -145,17 +145,32 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
 
             $selectedCompetencyItem = $this->request->query['item'];
 
-            // pr($this->getExistingCompetencyResult($this->competencyTemplateId, $selectedCompetencyItem, $this->competencyPeriodId, $this->academicPeriodId, $this->institutionId));
+            //get existing result so saved value can be maintained
+            $existingCompetencyResult = $this->getExistingCompetencyResult($this->competencyTemplateId, $selectedCompetencyItem, $this->competencyPeriodId, $this->academicPeriodId, $this->institutionId);
+            if (!empty($existingCompetencyResult)) {
+                //massage array so can be accessed easier later.
+                $existing_competency_results = [];
+                foreach ($existingCompetencyResult as $key => $value) {
+                    $existing_competency_results[$value->student_id][$value->competency_criteria_id] = $value->competency_grading_option_id;
+                }
+                // pr($existing_competency_results);
+            }
             // die;
 
             $criteriaList = $this->CompetencyCriterias->getCompetencyCriterias($selectedCompetencyItem, $this->academicPeriodId);
             // pr($criteriaList);
             if (!empty($criteriaList)) {
 
+                //fix header
                 $tableHeaders[] = _('OpenEMIS ID');
                 $tableHeaders[] = _('Student');
+                //dynamic header based on the criterias set up.
                 foreach ($criteriaList as $key => $value) {
-                    $tableHeaders[] = $value->name;
+                    $tableHeaders[] = 
+                        substr(__($value->name), 0, 35) . '...' .
+                        "<div class='tooltip-desc' style='display: inline-block;'>
+                            <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" .  __($value->name) . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
+                        </div>";
                 }
 
                 $alias = $this->alias();
@@ -167,24 +182,35 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                 
                 if (!empty($studentList)) {
                     $tableCells = [];
-                    foreach ($studentList as $key => $value) {
+                    foreach ($studentList as $key => $value) { //loop through student
                         $studentId = $value->student_id;
                         $rowData = [];
                         
                         $rowData[] = $value->user->openemis_no;
                         $rowData[] = $value->user->name;
-                        foreach ($criteriaList as $key1 => $value1) {
+                        foreach ($criteriaList as $key1 => $value1) { //loop through criterias
                             $criteriaId = $value1->id;
                             $gradingOptions = $value1->grading_type->grading_options;
-                            if (count($gradingOptions)){ //if got option
+                            if (count($gradingOptions)){ //for grading type with option
                                 $optionList = [];
                                 foreach ($gradingOptions as $key2 => $value2) {
                                     $optionList[$value2->id] = $value2->name;
                                 }
+                                $selectedGradingOption = -1;
                                 if (count($optionList)) {
-                                    $rowData[] = $Form->input("$alias.$fieldKey.$studentId.$criteriaId.grading_option_id", ['type' => 'select', 'label' => false, 'options' => $optionList]);
+                                    //check existing array for saved value, set default selected grading option
+                                    if (array_key_exists($studentId, $existing_competency_results)) {
+                                        if (array_key_exists($criteriaId, $existing_competency_results[$studentId])) {
+                                            $selectedGradingOption = $existing_competency_results[$studentId][$criteriaId];
+                                        }
+                                    }
+                                    $rowData[] = $Form
+                                                ->input("$alias.$fieldKey.$studentId.$criteriaId.grading_option_id", [
+                                                        'type' => 'select', 'label' => false, 
+                                                        'options' => $optionList, 'default' => $selectedGradingOption
+                                                ]);
                                 } 
-                            } else {
+                            } else { //if no option declared, then show string input.
                                 $rowData[] = $Form->input("$alias.$fieldKey.$studentId.$criteriaId.grading_option_id", ['type' => 'string', 'label' => false]);
                             }
                         }
@@ -282,10 +308,11 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         // // pr($textbookCode); 
         // }
 
-        // pr($data);die;
+        // pr($data);
 
         // pr($entity);die;
 
+        //redefine after save redirect.
         $extra['redirect'] = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies', 'index'];
 
         $process = function ($model, $entity) use ($data) {
@@ -344,6 +371,9 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                             //     $counterNo = $newEntity['counterNo'];
                             //     $entity->errors("competency_results.$counterNo", ['code' => $textbookStudentEntity->errors('code')]);
                             // }
+
+                            //check whether student still on the class
+
                             if (!$this->save($studentCompetencyResultEntity)) {
                                 $return = false;
                             } else { 
@@ -366,8 +396,8 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                     return $success;
                 }
             } else { //if no textbook student added and user try to save
-                $entity->errors('textbooks_students', __('There are no textbook added'));
-                $this->Alert->error('Textbooks.noTextbookStudent', ['reset'=>true]);
+                $entity->errors('competency_results', __('There are no results added'));
+                $this->Alert->error('Competencies.noResultsAdded', ['reset'=>true]);
             }
         };
         return $process;
@@ -375,7 +405,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
 
     private function getExistingCompetencyResult($template, $item, $period, $academicPeriod, $institutionId)
     {
-        $query = $this->find()
+        return  $this->find()
                 // ->contain([
                 //     'CompetencyCriterias', 'Students'
                 // ])
@@ -385,9 +415,10 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                     $this->aliasField('competency_period_id') => $period,
                     $this->aliasField('institution_id') => $institutionId,
                     $this->aliasField('academic_period_id') => $academicPeriod
-                ]);
+                ])
+                ->toArray();
 
-        pr($query->toArray());
+        //pr($query->toArray());
     }
 
     private function setupFields(Entity $entity)
