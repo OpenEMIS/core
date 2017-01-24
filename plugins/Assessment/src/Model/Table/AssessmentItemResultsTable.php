@@ -95,12 +95,11 @@ class AssessmentItemResultsTable extends AppTable {
      *  @return array The assessment results group field - institution id, key field - student id
      *      value field - assessment item id with array containing marks, grade name and grade code
      */
-    public function getAssessmentItemResults($institutionId, $academicPeriodId, $assessmentId, $subjectId) {
+    public function getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId) {
         $results = $this
             ->find()
             ->contain(['AssessmentGradingOptions'])
             ->where([
-                $this->aliasField('institution_id') => $institutionId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('assessment_id') => $assessmentId,
                 $this->aliasField('education_subject_id') => $subjectId
@@ -111,7 +110,7 @@ class AssessmentItemResultsTable extends AppTable {
             ->toArray();
         $returnArray = [];
         foreach ($results as $result) {
-            $returnArray[$result['institution_id']][$result['student_id']][$subjectId][$result['assessment_period_id']] = [
+            $returnArray[$result['student_id']][$subjectId][$result['assessment_period_id']] = [
                     'marks' => $result['marks'],
                     'grade_name' => $result['grade_name'],
                     'grade_code' => $result['grade_code']
