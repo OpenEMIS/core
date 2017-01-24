@@ -409,7 +409,7 @@ class InstitutionsController extends AppController
             $requestQuery = $this->request->query;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
-                    $ids = $this->ControllerAction->paramsDecode($params['pass'][1]);
+                    $ids = $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
                 }
             } else if (isset($requestQuery['user_id'][1])) {
