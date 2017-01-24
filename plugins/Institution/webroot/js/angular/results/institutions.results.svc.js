@@ -650,7 +650,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return cols;
         },
 
-        getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
+        getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
@@ -753,7 +753,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 class_id: classId,
                 assessment_id: assessmentId,
                 academic_period_id: academicPeriodId,
-                subject_id: educationSubjectId
+                subject_id: educationSubjectId,
+                grade_id: educationGradeId
             })
             .ajax({success: success, defer: true})
             ;

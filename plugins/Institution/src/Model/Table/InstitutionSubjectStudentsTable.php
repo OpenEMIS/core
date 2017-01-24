@@ -112,6 +112,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$assessmentId = $options['assessment_id'];
 		$periodId = $options['academic_period_id'];
 		$subjectId = $options['subject_id'];
+        $gradeId = $options['grade_id'];
 
 		$Users = $this->Users;
 		$InstitutionSubjects = $this->InstitutionSubjects;
@@ -153,7 +154,8 @@ class InstitutionSubjectStudentsTable extends AppTable {
 					$ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
 					$ItemResults->aliasField('assessment_id') => $assessmentId,
 					$ItemResults->aliasField('academic_period_id') => $periodId,
-					$ItemResults->aliasField('education_subject_id') => $subjectId
+					$ItemResults->aliasField('education_subject_id') => $subjectId,
+                    $ItemResults->aliasField('education_grade_id') => $gradeId
 				]
 			)
 			->where([
