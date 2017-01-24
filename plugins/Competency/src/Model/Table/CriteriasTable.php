@@ -31,6 +31,8 @@ class CriteriasTable extends ControllerActionTable {
         $this->belongsTo('Items',           ['className' => 'Competency.Items', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
         $this->belongsTo('GradingTypes',    ['className' => 'Competency.GradingTypes', 'foreignKey' => 'competency_grading_type_id']);
 
+        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
+
         $this->Templates = TableRegistry::get('Competency.Templates');
         
         // $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -58,7 +60,7 @@ class CriteriasTable extends ControllerActionTable {
         // $this->addBehavior('Restful.RestfulAccessControl', [
         //     'Results' => ['index', 'view']
         // ]);
-        // $this->setDeleteStrategy('restrict');
+        $this->setDeleteStrategy('restrict');
     }
 
     // public function validationDefault(Validator $validator) {

@@ -154,9 +154,9 @@ ALTER TABLE `competency_periods`
 ALTER TABLE `competency_periods`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
--- Table structure for table `competency_criteria_results`
-DROP TABLE IF EXISTS `competency_criteria_results`;
-CREATE TABLE IF NOT EXISTS `competency_criteria_results` (
+-- Table structure for table `competency_results`
+DROP TABLE IF EXISTS `competency_results`;
+CREATE TABLE IF NOT EXISTS `competency_results` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `marks` decimal(6,2) DEFAULT NULL,
   `competency_grading_option_id` int(11) DEFAULT NULL,
@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS `competency_criteria_results` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the competency results for an individual student in an institution';
 
-ALTER TABLE `competency_criteria_results`
+ALTER TABLE `competency_results`
   ADD PRIMARY KEY (`student_id`, `competency_template_id`, `competency_item_id`, `competency_criteria_id`, `competency_period_id`, `institution_id`, `academic_period_id`),
   ADD KEY `competency_grading_option_id` (`competency_grading_option_id`),
   ADD KEY `modified_user_id` (`modified_user_id`),

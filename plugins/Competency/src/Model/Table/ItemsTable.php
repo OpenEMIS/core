@@ -30,7 +30,9 @@ class ItemsTable extends ControllerActionTable {
         $this->belongsTo('Templates',       ['className' => 'Competency.Templates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
-        $this->hasMany('Criterias', ['className' => 'Competency.Criterias', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Criterias', ['className' => 'Competency.Criterias', 'foreignKey' => ['competency_item_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Periods', ['className' => 'Competency.Periods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
         
         // $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -57,7 +59,7 @@ class ItemsTable extends ControllerActionTable {
         // $this->addBehavior('Restful.RestfulAccessControl', [
         //     'Results' => ['index', 'view']
         // ]);
-        // $this->setDeleteStrategy('restrict');
+        $this->setDeleteStrategy('restrict');
     }
 
     // public function validationDefault(Validator $validator) {

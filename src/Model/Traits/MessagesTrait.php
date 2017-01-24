@@ -625,6 +625,7 @@ trait MessagesTrait {
         ],
         'Competencies' => [
             'noCompetencyCriterias' => 'Please setup competency criterias for the selected item',
+            'noResultsAdded' => 'There are no results added',
             'noClassStudents' => 'The class does not have students'
         ],
 

@@ -23,7 +23,7 @@ class GradingTypesTable extends ControllerActionTable {
         
         parent::initialize($config);
         
-        $this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'foreignKey' => 'competency_grading_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         // $this->belongsToMany('EducationSubjects', [
   //           'className' => 'Education.EducationSubjects',
@@ -59,7 +59,7 @@ class GradingTypesTable extends ControllerActionTable {
 //             'Results' => ['index']
 //         ]);
 
-//      $this->setDeleteStrategy('restrict');
+        $this->setDeleteStrategy('restrict');
     }
 
 //  public function validationDefault(Validator $validator) {
@@ -250,9 +250,9 @@ class GradingTypesTable extends ControllerActionTable {
 ******************************************************************************************************************/
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $extra['excludedModels'] = [
-            $this->GradingOptions->alias()
-        ];
+        // $extra['excludedModels'] = [
+        //     $this->GradingOptions->alias()
+        // ];
     }
 
 
