@@ -20,6 +20,8 @@ class ConfigItemsTable extends AppTable {
 	use OptionsTrait;
 
 	private $configurations = [];
+	private $languagePath = TMP . 'cache'. DS . 'language_menu';
+	private $languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -132,13 +134,12 @@ class ConfigItemsTable extends AppTable {
 
 	private function deleteLanguageCacheFile()
 	{
-		$dir = new Folder(TMP . 'cache'. DS . 'language_menu', true);
+		$dir = new Folder($this->languagePath, true);
     	$filesAndFolders = $dir->read();
     	$files = $filesAndFolders[1];
 
     	if (in_array('language', $files)) {
-    		$languagePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
-    		$languageFile = new File($languagePath);
+    		$languageFile = new File($this->languageFilePath);
     		$languageFile->delete();
     	}
     	$session = $this->request->session();
@@ -350,6 +351,24 @@ class ConfigItemsTable extends AppTable {
 			}
 		}
 		return $model;
+	}
+
+	public function getSystemLanguageOptions()
+	{
+		$dir = new Folder($this->languagePath, true);
+        $filesAndFolders = $dir->read();
+        $files = $filesAndFolders[1];
+        $languageFilePath = $this->languageFilePath;
+        $languageFile = new File($languageFilePath, true);
+        if (!in_array('language', $files)) {
+            $showLanguage = $this->value('language_menu');
+            $systemLanguage = $this->value('language');
+            $languageArr = ['language_menu' => $showLanguage, 'language' => $systemLanguage];
+            $status = $languageFile->write(json_encode($languageArr));
+        }
+        $languageArr = json_decode($languageFile->read(), true);
+
+        return $languageArr;
 	}
 
 
