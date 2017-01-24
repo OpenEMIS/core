@@ -34,29 +34,6 @@ class TemplatesTable extends ControllerActionTable {
         $this->hasMany('Periods', ['className' => 'Competency.Periods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
 
-        // $this->belongsToMany('GradingTypes', [
-        //     'className' => 'Assessment.AssessmentGradingTypes',
-        //     'joinTable' => 'assessment_items_grading_types',
-        //     'foreignKey' => 'assessment_id',
-        //     'targetForeignKey' => 'assessment_grading_type_id',
-        //     'through' => 'Assessment.AssessmentItemsGradingTypes',
-        //     'dependent' => true,
-        //     'cascadeCallbacks' => true
-        // ]);
-
-        // $this->belongsToMany('AssessmentPeriods', [
-        //     'className' => 'Assessment.AssessmentPeriods',
-        //     'joinTable' => 'assessment_items_grading_types',
-        //     'foreignKey' => 'assessment_id',
-        //     'targetForeignKey' => 'assessment_period_id',
-        //     'through' => 'Assessment.AssessmentItemsGradingTypes',
-        //     'dependent' => true,
-        //     'cascadeCallbacks' => true
-        // ]);
-
-        // $this->addBehavior('Restful.RestfulAccessControl', [
-        //     'Results' => ['index', 'view']
-        // ]);
         $this->setDeleteStrategy('restrict');
     }
 
@@ -69,15 +46,6 @@ class TemplatesTable extends ControllerActionTable {
                     'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
                     'provider' => 'table'
                 ]
-            // ])
-            // ->requirePresence('assessment_items')
-            // ->add('education_grade_id', [
-            //     'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
-            //         'rule' => ['assessmentExistByGradeAcademicPeriod'],
-            //         'on' => function ($context) {
-            //             return $this->action == 'add';
-            //         }
-            //     ]
             ]);
     }
 
@@ -107,74 +75,10 @@ class TemplatesTable extends ControllerActionTable {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedPeriod']]);
     }
 
-    // public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    // {
-    //     $query->contain(['AssessmentItems.EducationSubjects']);
-    // }
-
-    // public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    // {
-    //     $assessmentItems = $entity->assessment_items;
-
-    //     //this is to sort array based on certain value on subarray, in this case based on education order value
-    //     usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
-
-    //     $entity->assessment_items = $assessmentItems;
-
-    //     $this->setupFields($entity);
-    // }
-
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // if ($this->action == 'edit')
-        // {
-        //     $assessmentItems = $entity->assessment_items;
-
-        //     //this is to sort array based on certain value on subarray, in this case based on education order value
-        //     usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
-
-        //     $entity->assessment_items = $assessmentItems;
-        // }
-
         $this->setupFields($entity);
     }
-
-    // public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    // {
-    //     //patch data to handle fail save because of validation error.
-    //     if (array_key_exists($this->alias(), $requestData)) {
-    //         if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
-    //             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-    //             foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
-    //                 $subjectId = $item['education_subject_id'];
-    //                 $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
-    //             }
-    //         } else { //logic to capture error if no subject inside the grade.
-    //             $errorMessage = $this->aliasField('noSubjects');
-    //             $requestData['errorMessage'] = $errorMessage;
-    //         }
-    //     }
-
-    // }
-
-    // public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
-    // {
-    //     // pr($entity);
-    //     $errors = $entity->errors();
-    //     if (!empty($errors)) {
-    //         if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
-    //             $this->Alert->error($requestData['errorMessage'], ['reset'=>true]);
-    //         }
-    //     }
-    // }
-
-    // public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
-    // {
-    //     $extra['excludedModels'] = [ //this will exclude checking during remove restrict
-    //         $this->AssessmentItems->alias(),
-    //         $this->GradingTypes->alias()
-    //     ];
-    // }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
@@ -231,7 +135,7 @@ class TemplatesTable extends ControllerActionTable {
     {
         $request = $this->request;
         unset($request->query['programme']);
-        // unset($data['Assessments']['assessment_items']);
+        
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
@@ -260,8 +164,7 @@ class TemplatesTable extends ControllerActionTable {
                 }
 
                 $attr['options'] = $gradeOptions;
-                // $attr['onChangeReload'] = 'changeEducationGrade';
-
+                
             } else {
 
                 $attr['type'] = 'readonly';
@@ -271,24 +174,6 @@ class TemplatesTable extends ControllerActionTable {
 
         return $attr;
     }
-
-    // public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    // {
-    //     $request = $this->request;
-    //     unset($request->query['grade']);
-
-    //     if ($request->is(['post', 'put'])) {
-    //         if (array_key_exists($this->alias(), $request->data)) {
-    //             if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-    //                 $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
-    //                 $request->query['grade'] = $selectedGrade;
-
-    //                 $assessmentItems = $this->AssessmentItems->populateAssessmentItemsArray($selectedGrade);
-    //                 $data[$this->alias()]['assessment_items'] = $assessmentItems;
-    //             }
-    //         }
-    //     }
-    // }
 
     public function setupFields(Entity $entity)
     {
@@ -305,10 +190,6 @@ class TemplatesTable extends ControllerActionTable {
             'type' => 'select',
             'entity' => $entity
         ]);
-        // $this->field('assessment_items', [
-        //     'type' => 'element',
-        //     'element' => 'Assessment.assessment_items'
-        // ]);
 
         $this->setFieldOrder([
             'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id'//, 'assessment_items'

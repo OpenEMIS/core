@@ -25,73 +25,22 @@ class GradingTypesTable extends ControllerActionTable {
         
         $this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'foreignKey' => 'competency_grading_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        // $this->belongsToMany('EducationSubjects', [
-  //           'className' => 'Education.EducationSubjects',
-  //           'joinTable' => 'assessment_items_grading_types',
-  //           'foreignKey' => 'assessment_grading_type_id',
-  //           'targetForeignKey' => 'education_subject_id',
-  //           'through' => 'Assessment.AssessmentItemsGradingTypes',
-  //           'dependent' => true,
-  //           'cascadeCallbacks' => true
-  //       ]);
-
-        // $this->belongsToMany('AssessmentPeriods', [
-        //  'className' => 'Assessment.AssessmentPeriods',
-        //  'joinTable' => 'assessment_items_grading_types',
-        //  'foreignKey' => 'assessment_grading_type_id',
-        //  'targetForeignKey' => 'assessment_period_id',
-        //  'through' => 'Assessment.AssessmentItemsGradingTypes',
-        //  'dependent' => true,
-        //  'cascadeCallbacks' => true
-        // ]);
-
-        // $this->belongsToMany('Assessments', [
-        //  'className' => 'Assessment.Assessments',
-        //  'joinTable' => 'assessment_items_grading_types',
-        //  'foreignKey' => 'assessment_grading_type_id',
-        //  'targetForeignKey' => 'assessment_id',
-        //  'through' => 'Assessment.AssessmentItemsGradingTypes',
-        //  'dependent' => true,
-        //  'cascadeCallbacks' => true
-        // ]);
-
-//      $this->addBehavior('Restful.RestfulAccessControl', [
-//             'Results' => ['index']
-//         ]);
-
         $this->setDeleteStrategy('restrict');
     }
 
-//  public function validationDefault(Validator $validator) {
-//      $validator = parent::validationDefault($validator);
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
 
-//      $validator
-//          ->allowEmpty('code')
-//          ->add('code', 'ruleUniqueCode', [
-//              'rule' => ['checkUniqueCode', null]
-//          ])
-//          ->add('pass_mark', [
-//              'ruleNotMoreThanMax' => [
-//                  'rule' => ['checkMinNotMoreThanMax'],
-//              ],
-//              'ruleIsDecimal' => [
-//                  'rule' => ['decimal', null],
-//              ],
-//                 'ruleRange' => [
-//                     'rule' => ['range', 0, 9999.99]
-//                 ]
-//          ])
-//          ->add('max', [
-//                 'ruleIsDecimal' => [
-//                     'rule' => ['decimal', null],
-//                 ],
-//                 'ruleRange' => [
-//                     'rule' => ['range', 0, 9999.99]
-//                 ]
-//             ])
-//          ;
-//      return $validator;
-//  }
+        $validator
+            ->allowEmpty('code')
+            ->add('code', [
+                'ruleUniqueCode' => [
+                    'rule' => ['checkUniqueCode', ''],
+                    'provider' => 'table'
+                ]
+            ]);
+        return $validator;
+    }
 
 
 /******************************************************************************************************************
@@ -102,8 +51,6 @@ class GradingTypesTable extends ControllerActionTable {
     public function beforeAction(Event $event, ArrayObject $extra) 
     {
         $this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions('CompetencyGradingTypes.result_type')]);
-        $this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
-        $this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
         $this->field('grading_options', [
             'type' => 'element',
             'element' => 'Competency.grading_options',
@@ -126,7 +73,7 @@ class GradingTypesTable extends ControllerActionTable {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields());
 
         $this->setFieldOrder([
-            'code', 'name', 'result_type', 'max', 'pass_mark', 'grading_options',
+            'code', 'name', 'result_type', 'grading_options',
         ]);
     }
 
@@ -227,7 +174,7 @@ class GradingTypesTable extends ControllerActionTable {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
         $this->setFieldOrder([
-            'code', 'name', 'pass_mark', 'max', 'result_type', 'grading_options', 'visible',
+            'code', 'name', 'result_type', 'grading_options', 'visible',
         ]);
     }
 
@@ -242,19 +189,6 @@ class GradingTypesTable extends ControllerActionTable {
             $this->GradingOptions->alias()
         ]);
     }
-
-/******************************************************************************************************************
-**
-** delete action events
-**
-******************************************************************************************************************/
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
-    {
-        // $extra['excludedModels'] = [
-        //     $this->GradingOptions->alias()
-        // ];
-    }
-
 
 /******************************************************************************************************************
 **
