@@ -639,6 +639,11 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
         }
         unset($data[$this->alias()]['teachers']);
+
+        // ensure that all students are removed from entity if all students are deleted
+        if (!array_key_exists('subject_students', $data[$this->alias()])) {
+            $data[$this->alias()]['subject_students'] = [];
+        }
     }
 
     /**
