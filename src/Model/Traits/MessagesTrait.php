@@ -1557,6 +1557,11 @@ trait MessagesTrait {
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
             ],
+            'Periods' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
         ],
         'Configuration' => [
         	'ConfigProductLists' => [
