@@ -352,9 +352,9 @@ class InstitutionClassStudentsTable extends AppTable {
         $resultType = $attr['resultType'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
         $assessmentItemResults = $this->assessmentItemResults;
-        if (!(isset($assessmentItemResults[$institutionId][$studentId][$subjectId][$assessmentPeriodId]))) {
+        if (!(isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId]))) {
             $AssessmentItemResultsTable = TableRegistry::get('Assessment.AssessmentItemResults');
-            $this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($institutionId, $academicPeriodId, $assessmentId, $subjectId);
+            $this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId);
             $assessmentItemResults = $this->assessmentItemResults;
         }
         $allSubjectsPermission = $this->allSubjectsPermission;
@@ -391,8 +391,8 @@ class InstitutionClassStudentsTable extends AppTable {
         }
 
         if ($renderResult) {
-            if (isset($assessmentItemResults[$institutionId][$studentId][$subjectId][$assessmentPeriodId])) {
-                $result = $assessmentItemResults[$institutionId][$studentId][$subjectId][$assessmentPeriodId];
+            if (isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
+                $result = $assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId];
                 switch($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
