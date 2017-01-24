@@ -133,8 +133,8 @@ class AssessmentItemResultsTable extends AppTable {
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('education_subject_id') => $educationSubjectId,
+                $this->aliasField('education_grade_id') => $educationGradeId,
                 $this->AssessmentGradingOptions->AssessmentGradingTypes->aliasField('result_type') => 'MARKS',
-                $this->Assessments->aliasField('education_grade_id') => $educationGradeId
             ])
             ->group([
                 $this->aliasField('student_id'),

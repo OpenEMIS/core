@@ -99,8 +99,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
                     'student_id' => $studentId,
                     'academic_period_id' => $academicPeriodId,
                     'education_subject_id' => $educationSubjectId,
-                    'education_grade_id' => $educationGradeId,
-                    'institution_id' => $institutionId
+                    'education_grade_id' => $educationGradeId
                 ])
                 ->execute();
         }
