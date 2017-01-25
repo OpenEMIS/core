@@ -266,7 +266,15 @@ class InstitutionsController extends AppController
         // this is to cater for back links
         $query = $this->request->query;
 
-        if (array_key_exists('institution_id', $query)) {
+        if ($this->ControllerAction->getQueryString('institution_id')) {
+            $institutionId = $this->ControllerAction->getQueryString('institution_id');
+            //check for permission
+            $this->checkInstitutionAccess($institutionId, $event);
+            if ($event->isStopped()) {
+                return false;
+            }
+            $session->write('Institution.Institutions.id', $institutionId);
+        } else if (array_key_exists('institution_id', $query)) {
             //check for permission
             $this->checkInstitutionAccess($query['institution_id'], $event);
             if ($event->isStopped()) {
@@ -277,6 +285,10 @@ class InstitutionsController extends AppController
 
         if ($action == 'index') {
             $session->delete('Institution.Institutions');
+        } else if ($action == 'StudentUser') {
+            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
+        } else if ($action == 'StaffUser') {
+            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         }
 
         if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
@@ -409,7 +421,7 @@ class InstitutionsController extends AppController
             $requestQuery = $this->request->query;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
-                    $ids = $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
+                    $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
                 }
             } else if (isset($requestQuery['user_id'][1])) {

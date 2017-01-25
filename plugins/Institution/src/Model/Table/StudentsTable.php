@@ -608,7 +608,7 @@ class StudentsTable extends ControllerActionTable
                 'Users.last_name',
                 'Users.preferred_name'
             ]);
-        
+
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
@@ -868,7 +868,8 @@ class StudentsTable extends ControllerActionTable
         if (isset($buttons['view'])) {
             $url = $this->url('view');
             $userId = $this->paramsEncode(['id' => $entity->_matchingData['Users']->id]);
-            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', 'id' => $entity->id, $userId]);
+            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', $userId]);
+            $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
         }
 
         // Remove in POCOR-3010
