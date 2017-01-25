@@ -131,7 +131,7 @@ class ConfigProductListsTable extends ControllerActionTable {
     {
         if (!$entity->deletable) {
             $entity->auto_login_url = rtrim($entity->url, '/').'/Login';
-            $entity->auto_logout_url = $entity->url;
+            $entity->auto_logout_url = $entity->url. '/';
         }
     }
 

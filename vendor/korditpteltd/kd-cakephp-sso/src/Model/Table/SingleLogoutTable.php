@@ -20,11 +20,11 @@ class SingleLogoutTable extends Table
         parent::initialize($config);
     }
 
-    public function afterLogout($user)
+    public function afterLogout($user, array $autoLogoutUrl)
     {
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username)) {
-            $this->removeLogoutRecord($username);
+            $this->removeLogoutRecord($username, $autoLogoutUrl);
         }
     }
 
@@ -91,10 +91,11 @@ class SingleLogoutTable extends Table
         return $this->find()->where([$this->aliasField('username') => $username])->toArray();
     }
 
-    public function removeLogoutRecord($username)
+    public function removeLogoutRecord($username, array $autoLogoutUrl)
     {
         $entities = $this->getLogoutRecords($username);
         foreach ($entities as $entity) {
+            $entity->autoLogoutUrl = $autoLogoutUrl;
             $this->delete($entity);
         }
     }
@@ -105,11 +106,13 @@ class SingleLogoutTable extends Table
             $http = new Client();
 
             // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
-            $url = rtrim($entity->url, '/');
-            $url = $url . '/';
+            $url = $entity->url;
             $username = $entity->username;
             $sessionId = $entity->session_id;
-            $this->postLogout($url, $entity->session_id, $username);
+            $autoLogoutUrl = $entity->autoLogoutUrl;
+            if (in_array($url, $autoLogoutUrl)) {
+                $this->postLogout($url, $entity->session_id, $username);
+            }
         } catch (Exception $e) {
             Log::write('error', $e);
         }
