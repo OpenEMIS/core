@@ -356,7 +356,7 @@ class InstitutionPositionsTable extends ControllerActionTable {
 		$session = $this->Session;
 		$pass = $this->request->param('pass');
 		if (is_array($pass) && !empty($pass)) {
-			$id = $pass[1];
+			$id = $this->paramsDecode($pass[1])['id'];
 		}
 		if (!isset($id)) {
 			if ($session->check($this->registryAlias() . '.id')) {
@@ -367,15 +367,23 @@ class InstitutionPositionsTable extends ControllerActionTable {
 		if (!isset($id)) {
 			die('no position id specified');
 		}
-		// pr($id);die;
 		// start Current Staff List field
 		$Staff = $this->Institutions->Staff;
-		$currentStaff = $Staff ->findAllByInstitutionIdAndInstitutionPositionId($session->read('Institution.Institutions.id'), $id)
-							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
-							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo');
-
-		$this->fields['current_staff_list']['data'] = $currentStaff;
+		$currentStaff = $Staff
+                        ->find('withBelongsTo')
+                        ->where([
+                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_position_id') => $id,
+                            'OR' => [
+                                $Staff->aliasField('end_date').' IS NULL',
+                                'AND' => [
+                                    $Staff->aliasField('end_date').' IS NOT NULL',
+                                    $Staff->aliasField('end_date').' >= DATE(NOW())'
+                                ]
+                            ]
+						])
+                        ->order([$Staff->aliasField('start_date')]);
+        $this->fields['current_staff_list']['data'] = $currentStaff;
 		$totalCurrentFTE = '0.00';
 		if (count($currentStaff)>0) {
 			foreach ($currentStaff as $cs) {
@@ -386,13 +394,16 @@ class InstitutionPositionsTable extends ControllerActionTable {
 		// end Current Staff List field
 
 		// start PAST Staff List field
-		$pastStaff = $Staff ->findAllByInstitutionIdAndInstitutionPositionId($session->read('Institution.Institutions.id'), $id)
-							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
-							->andWhere([$Staff->aliasField('end_date').' < DATE(NOW())'])
-							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo');
-
-		$this->fields['past_staff_list']['data'] = $pastStaff;
+		$pastStaff  = $Staff
+                    ->find('withBelongsTo')
+                    ->where([
+                        $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                        $Staff->aliasField('institution_position_id') => $id,
+                        $Staff->aliasField('end_date').' IS NOT NULL',
+                        $Staff->aliasField('end_date').' < DATE(NOW())'
+                    ])
+                    ->order([$Staff->aliasField('start_date')]);
+        $this->fields['past_staff_list']['data'] = $pastStaff;
 		// end Current Staff List field
 
 		return true;
