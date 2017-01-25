@@ -3,18 +3,34 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Database\ValueBinder;
 use App\Model\Table\ControllerActionTable;
 
-class LicensesTable extends ControllerActionTable {
-	public function initialize(array $config) {
+class LicensesTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
 		$this->table('staff_licenses');
 		parent::initialize($config);
 		
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
+
+		$this->belongsToMany('Classifications', [
+            'className' => 'FieldOption.LicenseClassifications',
+            'joinTable' => 'staff_licenses_classifications',
+            'foreignKey' => 'staff_license_id',
+            'targetForeignKey' => 'license_classification_id',
+            'through' => 'Staff.StaffLicensesClassifications',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('HighChart', [
 			'institution_staff_licenses' => [
@@ -23,11 +39,8 @@ class LicensesTable extends ControllerActionTable {
 		]);
 	}
 
-	public function beforeAction() {
-		$this->fields['license_type_id']['type'] = 'select';
-	}
-
-	public function validationDefault(Validator $validator) {
+	public function validationDefault(Validator $validator)
+	{
 		$validator = parent::validationDefault($validator);
 		
 		return $validator
@@ -36,8 +49,41 @@ class LicensesTable extends ControllerActionTable {
 			]);
 	}
 
+	public function viewEditBeforeQuery(Event $event, Query $query)
+	{
+		$query->contain(['Users', 'LicenseTypes', 'Classifications']);
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity)
+	{
+		$this->setupFields($entity);
+	}
+
+	public function addEditAfterAction(Event $event, Entity $entity)
+	{
+		$this->setupFields($entity);
+	}
+
+	public function afterAction(Event $event, ArrayObject $extra)
+	{
+		$this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
+		$this->setupTabElements();
+	}
+
+	public function onUpdateFieldClassifications(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add' || $action == 'edit') {
+			$classificationOptions = $this->Classifications->getList();
+
+			$attr['options'] = $classificationOptions;
+		}
+
+		return $attr;
+	}
+
 	// Use for Mini dashboard (Institution Staff)
-	public function getNumberOfStaffByLicenses($params=[]){
+	public function getNumberOfStaffByLicenses($params=[])
+	{
 		$query = $params['query'];
 		$table = $params['table'];
 
@@ -73,14 +119,22 @@ class LicensesTable extends ControllerActionTable {
 		return $params;
 	}
 
-	private function setupTabElements() {
+	private function setupTabElements()
+	{
 		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
 
-	public function afterAction(Event $event, ArrayObject $extra) {
-		$this->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
-		$this->setupTabElements();
+	private function setupFields(Entity $entity)
+	{
+		$this->field('license_type_id', ['type' => 'select']);
+		$this->field('classifications', [
+            'type' => 'chosenSelect',
+            'fieldNameKey' => 'classifications',
+            'fieldName' => $this->alias() . '.classifications._ids',
+            'placeholder' => $this->getMessage($this->aliasField('select_classification')),
+            // 'valueWhenEmpty' => '<span>&lt;'.__('No Classification Allocated').'&gt;</span>'
+        ]);
 	}
 }

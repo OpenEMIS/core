@@ -625,6 +625,9 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
+        ],
 
         // Validation Messages
         'Institution' => [
