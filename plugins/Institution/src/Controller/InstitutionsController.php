@@ -277,6 +277,10 @@ class InstitutionsController extends AppController
 
         if ($action == 'index') {
             $session->delete('Institution.Institutions');
+        } else if ($action == 'StudentUser') {
+            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
+        } else if ($action == 'StaffUser') {
+            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         }
 
         if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
@@ -409,7 +413,7 @@ class InstitutionsController extends AppController
             $requestQuery = $this->request->query;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
-                    $ids = $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
+                    $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
                 }
             } else if (isset($requestQuery['user_id'][1])) {
