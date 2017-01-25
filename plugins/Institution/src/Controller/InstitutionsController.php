@@ -266,7 +266,15 @@ class InstitutionsController extends AppController
         // this is to cater for back links
         $query = $this->request->query;
 
-        if (array_key_exists('institution_id', $query)) {
+        if ($this->ControllerAction->getQueryString('institution_id')) {
+            $institutionId = $this->ControllerAction->getQueryString('institution_id');
+            //check for permission
+            $this->checkInstitutionAccess($institutionId, $event);
+            if ($event->isStopped()) {
+                return false;
+            }
+            $session->write('Institution.Institutions.id', $institutionId);
+        } else if (array_key_exists('institution_id', $query)) {
             //check for permission
             $this->checkInstitutionAccess($query['institution_id'], $event);
             if ($event->isStopped()) {
