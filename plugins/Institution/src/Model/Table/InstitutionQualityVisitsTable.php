@@ -292,11 +292,9 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 	{
 		$this->field('academic_period_id', ['type' => 'select']);
 		$this->field('institution_subject_id', [
-            'type' => 'select',
             'entity' => $entity
         ]);
 		$this->field('staff_id', [
-            'type' => 'select',
             'entity' => $entity
         ]);
 		$this->field('evaluator');
