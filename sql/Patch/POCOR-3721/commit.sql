@@ -81,6 +81,7 @@ CREATE TABLE `staff_licenses` (
   `issue_date` date NOT NULL,
   `expiry_date` date DEFAULT NULL,
   `issuer` varchar(100) NOT NULL,
+  `comments` text COLLATE utf8mb4_unicode_ci,
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
   `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `license_type_id` int(11) NOT NULL COMMENT 'links to license_types.id',
