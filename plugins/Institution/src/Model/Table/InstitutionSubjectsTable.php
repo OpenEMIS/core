@@ -222,25 +222,38 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->Alert->warning('Institutions.noClassRecords');
         }
         $selectedClassId = $this->queryString('class_id', $classOptions);
+
+        if (!$this->Auth->user('super_admin')) {
+            $authorisedClass = $Subjects
+                ->find('list', ['keyField' => 'class_id', 'valueField' => 'class_name'])
+                ->innerJoinWith('Classes')
+                ->select(['class_id' => 'Classes.id', 'class_name' => 'Classes.name'])
+                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $controller])
+                ->group(['class_id'])
+                ->hydrate(false)
+                ->toArray();
+
+            $classOptions = array_intersect_key($classOptions, $authorisedClass);
+        }
+
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
             'callable' => function($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId, $AccessControl, $userId, $controller) {
                 $query = $Subjects->find()
-                                ->join([
-                                    [
-                                        'table' => 'institution_class_subjects',
-                                        'alias' => 'InstitutionClassSubjects',
-                                        'conditions' => [
-                                            'InstitutionClassSubjects.institution_subject_id = ' . $Subjects->aliasField('id'),
-                                            'InstitutionClassSubjects.institution_class_id' => $id
-                                        ]
-                                    ]
-                                ])
-                                ->where([
-                                    $Subjects->aliasField('institution_id') => $institutionId,
-                                    $Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
-                                ])
-                                ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $controller]);;
+                    ->join([
+                        [
+                            'table' => 'institution_class_subjects',
+                            'alias' => 'InstitutionClassSubjects',
+                            'conditions' => [
+                                'InstitutionClassSubjects.institution_subject_id = ' . $Subjects->aliasField('id'),
+                                'InstitutionClassSubjects.institution_class_id' => $id
+                            ]
+                        ]
+                    ])
+                    ->where([
+                        $Subjects->aliasField('institution_id') => $institutionId,
+                        $Subjects->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+                    ]);
                 return $query->count();
             }
         ]);
