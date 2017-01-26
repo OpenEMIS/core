@@ -187,9 +187,9 @@ class NavigationComponent extends Component
 
 			if ($currentInstitution) {
 				$isAcademic = $currentInstitution->classification;
-				$navigationParentList = $this->array_column($navigations, 'parent');
 
 				if (!$isAcademic) {
+					// navigation items to exclude from non-academic institutions
 					$academicArray = [
 						'Institution.Academic',
 						'Institutions.Students.index',
@@ -201,6 +201,7 @@ class NavigationComponent extends Component
 						'Institutions.StudentFees'
 					];
 
+					$navigationParentList = $this->array_column($navigations, 'parent');
 					foreach ($navigationParentList as $navigationKey => $parent) {
 						// unset navigation item and all children if in academicArray
 						if (in_array($parent, $academicArray) || in_array($navigationKey, $academicArray)) {
