@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
@@ -17,9 +18,11 @@ class LicensesTable extends ControllerActionTable
 	{
 		$this->table('staff_licenses');
 		parent::initialize($config);
-		
+
+		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 
 		$this->belongsToMany('Classifications', [
             'className' => 'FieldOption.LicenseClassifications',
@@ -31,6 +34,7 @@ class LicensesTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+		$this->addBehavior('Workflow.Workflow');
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('HighChart', [
 			'institution_staff_licenses' => [
@@ -49,6 +53,11 @@ class LicensesTable extends ControllerActionTable
 			]);
 	}
 
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+		$this->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
+    }
+
 	public function viewEditBeforeQuery(Event $event, Query $query)
 	{
 		$query->contain(['Users', 'LicenseTypes', 'Classifications']);
@@ -66,7 +75,6 @@ class LicensesTable extends ControllerActionTable
 
 	public function afterAction(Event $event, ArrayObject $extra)
 	{
-		$this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
 		$this->setupTabElements();
 	}
 
@@ -133,8 +141,9 @@ class LicensesTable extends ControllerActionTable
             'type' => 'chosenSelect',
             'fieldNameKey' => 'classifications',
             'fieldName' => $this->alias() . '.classifications._ids',
-            'placeholder' => $this->getMessage($this->aliasField('select_classification')),
-            // 'valueWhenEmpty' => '<span>&lt;'.__('No Classification Allocated').'&gt;</span>'
+            'placeholder' => $this->getMessage($this->aliasField('select_classification'))
         ]);
+
+        $this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
 	}
 }
