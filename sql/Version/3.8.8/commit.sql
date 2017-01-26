@@ -35,7 +35,7 @@ INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `cod
 
 
 -- POCOR-3737
-- system_patches
+-- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3737', NOW());
 
 -- security_role_functions
