@@ -81,13 +81,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.Model.getAssociatedRecordConditions'] = 'getAssociatedRecordConditions';
-        return $events;
-    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -655,7 +648,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $entity->academic_period_id;
         $students = $entity->subject_students;
         $collection = new Collection($students);
-        $recordedStudentIds = (new Collection($collection->toArray()))->combine('student_id', 'student_status_id')->toArray();
+        $recordedStudentIds = (new Collection($collection->toArray()))->extract('student_id')->toArray();
         $teacherOptions = $this->getTeacherOptions($entity);
         $roomOptions = $this->getRoomOptions($entity);
 
@@ -664,7 +657,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
          * Populate records in the UI table & unset the record from studentOptions
          * Changed in PHPOE-1799-2 for PHPOE-1780. convert security_users_id to student_id
          */
-        $includedStudents = [];
         if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
             $studentOptions = $this->getStudentsOptions($entity);
             /**
@@ -681,7 +673,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                          * Attempt to improve performance by not creating an entity with User record attached [@see $this->createVirtualEntity()],
                          * since student record with its User record attached already exists in the $students array.
                          */
-                        if (!array_key_exists($id, $recordedStudentIds)) {
+                        if (!in_array($id, $recordedStudentIds)) {
                             $student = $this->createVirtualEntity($id, $entity, 'students');
                             if ( !empty( $student->user ) ) {
                                 $students[] = $student;
@@ -725,10 +717,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             }
 
         } else {
-            foreach ($recordedStudentIds as $key => $status) {
-                $includedStudents[] = $key;
-            }
-            $studentOptions = $this->getStudentsOptions($entity, $includedStudents);
+            $studentOptions = $this->getStudentsOptions($entity, $recordedStudentIds);
         }
 
         /**
@@ -779,16 +768,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ])
             ->count();
         $extra['associatedRecords'][] = ['model' => 'Institution Textbooks', 'count' => $associatedTextbooksCount];
-    }
-
-    public function getAssociatedRecordConditions(Event $event, Query $query, $assocTable, ArrayObject $extra)
-    {
-        if ($assocTable->alias() == 'InstitutionSubjectStudents') {
-            $query->where([
-                $assocTable->aliasField('student_status_id') => $this->enrolledStatus
-            ]);
-        }
-
     }
 
 /******************************************************************************************************************
