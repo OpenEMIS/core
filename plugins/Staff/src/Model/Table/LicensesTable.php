@@ -55,6 +55,7 @@ class LicensesTable extends ControllerActionTable
 
 	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
+    	$this->field('comments', ['visible' => false]);
 		$this->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
     }
 
