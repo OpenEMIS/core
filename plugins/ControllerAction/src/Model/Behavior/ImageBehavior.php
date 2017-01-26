@@ -26,28 +26,43 @@ class ImageBehavior extends Behavior
 
         $base64Format = (array_key_exists('base64', $this->_table->controller->request->query))? $this->_table->controller->request->query['base64']: false;
 
-        $this->_table->controller->autoRender = false;
-        $this->_table->controller->ControllerAction->autoRender = false;
+        $model->controller->autoRender = false;
+        $model->controller->ControllerAction->autoRender = false;
 
-        $currModel = $this->_table;
-        $idKeys = $model->getIdKeys($currModel, $ids);
-        $photoData = $currModel->find()
-            ->contain('Users')
-            ->select(['Users.photo_content'])
-            ->where($idKeys)
-            ->first()
-            ;
+        $idKeys = $model->getIdKeys($model, $ids);
 
-        if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
-            $phpResourceFile = $photoData->Users->photo_content;
+        if ($model->table() == 'security_users') {
+            $photoData = $model->get($idKeys);
+            if ($photoData->has('photo_content')) {
+                $phpResourceFile = $photoData->photo_content;
 
-            if ($base64Format) {
-                echo base64_encode(stream_get_contents($phpResourceFile));
-            } else {
-                $this->_table->controller->response->type('jpg');
-                $this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+                if ($base64Format) {
+                    echo base64_encode(stream_get_contents($phpResourceFile));
+                } else {
+                    $this->_table->controller->response->type('jpg');
+                    $this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+                }
+            }
+        } else if ($model->association('Users')) {
+            $photoData = $model->find()
+                ->contain('Users')
+                ->select(['Users.photo_content'])
+                ->where($idKeys)
+                ->first()
+                ;
+
+            if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
+                $phpResourceFile = $photoData->Users->photo_content;
+
+                if ($base64Format) {
+                    echo base64_encode(stream_get_contents($phpResourceFile));
+                } else {
+                    $model->controller->response->type('jpg');
+                    $model->controller->response->body(stream_get_contents($phpResourceFile));
+                }
             }
         }
+
         // required so it doesnt go to MissingActionException in ControllerActionV4Trait
         return true;
     }
