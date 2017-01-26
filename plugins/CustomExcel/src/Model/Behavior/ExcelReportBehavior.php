@@ -71,6 +71,8 @@ class ExcelReportBehavior extends Behavior
 
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
+        ini_set('max_execution_time', 180);
+
         $model = $this->_table;
         $params = $model->getQueryString();
         $extra['vars'] = $this->getVars($params, $extra);
