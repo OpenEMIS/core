@@ -24,66 +24,9 @@ class StudentCompetenciesTable extends ControllerActionTable {
 
         $this->behaviors()->get('ControllerAction')->config('actions.add', false);
         $this->behaviors()->get('ControllerAction')->config('actions.search', false);
-        $this->addBehavior('Excel', [
-            'pages' => ['index'],
-            'orientation' => 'landscape'
-        ]);
-
-        $this->toggle('edit', false);
+        
         $this->toggle('remove', false);
     }
-
-    // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
-    //     $institutionId = $this->Session->read('Institution.Institutions.id');
-    //     $institutionCode = $this->Institutions->get($institutionId)->code;
-    //     $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'_Results', $settings['file']);
-    // }
-
-    // public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
-    //     $InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
-    //     $query = $InstitutionClassStudentsTable->find();
-
-    //     // For filtering all classes and my classes
-    //     $AccessControl = $this->AccessControl;
-    //     $userId = $this->Session->read('Auth.User.id');
-    //     $institutionId = $this->Session->read('Institution.Institutions.id');
-    //     $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
-
-    //     $allSubjectsPermission = true;
-    //     $mySubjectsPermission = true;
-    //     $allClassesPermission = true;
-    //     $myClassesPermission = true;
-
-    //     if (!$AccessControl->isAdmin())
-    //     {
-    //         if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles) ) {
-    //             $allSubjectsPermission = false;
-    //             $mySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-    //         }
-
-    //         if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles)) {
-    //             $allClassesPermission = false;
-    //             $myClassesPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-    //         }
-    //     }
-
-    //     $assessmentId = $this->request->query('assessment_id');
-    //     if($assessmentId) {
-    //         $sheets[] = [
-    //             'name' => $this->alias(),
-    //             'table' => $InstitutionClassStudentsTable,
-    //             'query' => $query,
-    //             'assessmentId' => $assessmentId,
-    //             'staffId' => $userId,
-    //             'institutionId' => $institutionId,
-    //             'mySubjectsPermission' => $mySubjectsPermission,
-    //             'allSubjectsPermission' => $allSubjectsPermission,
-    //             'allClassesPermission' => $allClassesPermission,
-    //             'myClassesPermission' => $myClassesPermission,
-    //             'orientation' => 'landscape'
-    //         ];
-    //     }
-    // }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
         $this->field('class_number', ['visible' => false]);
@@ -96,9 +39,6 @@ class StudentCompetenciesTable extends ControllerActionTable {
 
         $this->field('competency_template');
         $this->field('education_grade');
-        // $this->field('subjects');
-        // $this->field('male_students');
-        // $this->field('female_students');
 
         $this->setFieldOrder(['name', 'assessment', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
     }
@@ -158,138 +98,34 @@ class StudentCompetenciesTable extends ControllerActionTable {
             $this->aliasField('name') => 'asc'
         ];
 
-        // For filtering all classes and my classes
-        // $AccessControl = $this->AccessControl;
-        // $userId = $session->read('Auth.User.id');
-        // $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
-        // if (!$AccessControl->isAdmin())
-        // {
-        //     if (!$AccessControl->check(['Institutions', 'AllClasses', 'index'], $roles) && !$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles) )
-        //     {
-        //         $classPermission = $AccessControl->check(['Institutions', 'Classes', 'index'], $roles);
-        //         $subjectPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
-        //         if (!$classPermission && !$subjectPermission)
-        //         {
-        //             $query->where(['1 = 0'], [], true);
-        //         } else
-        //         {
-        //             $query->innerJoin(['InstitutionClasses' => 'institution_classes'], [
-        //                 'InstitutionClasses.id = '.$ClassGrades->aliasField('institution_class_id'),
-        //                 ])
-        //                 ;
-
-        //             // If only class permission is available but no subject permission available
-        //             if ($classPermission && !$subjectPermission) {
-        //                 $query->where(['InstitutionClasses.staff_id' => $userId]);
-        //             } else {
-        //                 $query
-        //                     ->innerJoin(['InstitutionClassSubjects' => 'institution_class_subjects'], [
-        //                         'InstitutionClassSubjects.institution_class_id = InstitutionClasses.id',
-        //                         'InstitutionClassSubjects.status =   1'
-        //                     ])
-        //                     ->leftJoin(['InstitutionSubjectStaff' => 'institution_subject_staff'], [
-        //                         'InstitutionSubjectStaff.institution_subject_id = InstitutionClassSubjects.institution_subject_id'
-        //                     ]);
-
-        //                 // If both class and subject permission is available
-        //                 if ($classPermission && $subjectPermission) {
-        //                     $query->where([
-        //                         'OR' => [
-        //                             ['InstitutionClasses.staff_id' => $userId],
-        //                             ['InstitutionSubjectStaff.staff_id' => $userId]
-        //                         ]
-        //                     ]);
-        //                 }
-        //                 // If only subject permission is available
-        //                 else {
-        //                     $query->where(['InstitutionSubjectStaff.staff_id' => $userId]);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
-
         // Academic Periods
         $periodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
         if (is_null($this->request->query('period'))) {
             // default to current Academic Period
             $this->request->query['period'] = $this->AcademicPeriods->getCurrent();
         }
+
         $selectedPeriod = $this->queryString('period', $periodOptions);
-        // $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
-        //     'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noAssessments')),
-        //     'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId) {
-        //         return $Classes
-        //             ->find()
-        //             ->innerJoin(
-        //                 [$ClassGrades->alias() => $ClassGrades->table()],
-        //                 [
-        //                     $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id')
-        //                 ]
-        //             )
-        //             ->innerJoin(
-        //                 [$Assessments->alias() => $Assessments->table()],
-        //                 [
-        //                     $Assessments->aliasField('academic_period_id = ') . $Classes->aliasField('academic_period_id'),
-        //                     $Assessments->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
-        //                 ]
-        //             )
-        //             ->where([
-        //                 $Classes->aliasField('institution_id') => $institutionId,
-        //                 $Classes->aliasField('academic_period_id') => $id
-        //             ])
-        //             ->count();
-        //     }
-        // ]);
+        
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
 
         if (!empty($selectedPeriod)) {
             $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
 
-            // Assessments
+            // Competencies
             $competencyOptions = $Competencies
                 ->find('list')
                 ->where([$Competencies->aliasField('academic_period_id') => $selectedPeriod])
                 ->toArray();
             $competencyOptions = ['-1' => __('All Competencies')] + $competencyOptions;
             $selectedCompetency = $this->queryString('competency', $competencyOptions);
-            // $this->advancedSelectOptions($assessmentOptions, $selectedAssessment, [
-            //     'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-            //     'callable' => function($id) use ($Classes, $ClassGrades, $Assessments, $institutionId, $selectedPeriod) {
-            //         if ($id == -1) { return 1; }
-            //         $selectedGrade = $Assessments->get($id)->education_grade_id;
-            //         return $Classes
-            //             ->find()
-            //             ->innerJoin(
-            //                 [$ClassGrades->alias() => $ClassGrades->table()],
-            //                 [
-            //                     $ClassGrades->aliasField('institution_class_id = ') . $Classes->aliasField('id'),
-            //                     $ClassGrades->aliasField('education_grade_id') => $selectedGrade
-            //                 ]
-            //             )
-            //             ->where([
-            //                 $Classes->aliasField('institution_id') => $institutionId,
-            //                 $Classes->aliasField('academic_period_id') => $selectedPeriod
-            //             ])
-            //             ->count();
-            //     }
-            // ]);
             $this->controller->set(compact('competencyOptions', 'selectedCompetency'));
-            // End
 
             if ($selectedCompetency != '-1') {
                 $query->where([$Competencies->aliasField('id') => $selectedCompetency]);
             }
         }
-
-        // $assessmentId = $this->request->query('assessment_id');
-
-        // if ($assessmentId == -1 || !$assessmentId || !$this->AccessControl->check(['Institutions', 'Assessments', 'excel'], $roles)) {
-        //     if (isset($extra['toolbarButtons']['export'])) {
-        //         unset($extra['toolbarButtons']['export']);
-        //     }
-        // }
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
@@ -313,10 +149,25 @@ class StudentCompetenciesTable extends ControllerActionTable {
             $url = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
-                'action' => 'StudentCompetencyResults/add'
+                'action' => 'StudentCompetencyResults/viewResults'
             ];
 
             $buttons['view']['url'] = $this->setQueryString($url, [
+                'class_id' => $entity->institution_class_id,
+                'competency_template_id' => $entity->competency_template_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id
+            ]);
+        }
+
+        if (isset($buttons['edit']['url'])) {
+            $url = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => 'StudentCompetencyResults/add'
+            ];
+
+            $buttons['edit']['url'] = $this->setQueryString($url, [
                 'class_id' => $entity->institution_class_id,
                 'competency_template_id' => $entity->competency_template_id,
                 'institution_id' => $entity->institution_id,

@@ -538,7 +538,11 @@ class InstitutionClassStudentsTable extends AppTable {
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
         // PHPOE-2338 - implement afterDelete in InstitutionClassStudentsTable.php to delete from InstitutionSubjectStudentsTable
         $this->_autoDeleteSubjectStudent($entity);
-        $this->_autoDeletesStudentCompetencyResults($entity);
+
+        $listeners = [
+            TableRegistry::get('Institution.StudentCompetencyResults')
+        ];
+        $this->dispatchEventToModels('Model.InstitutionClassStudents.afterDelete', [$entity], $this, $listeners);
     }
 
     private function _autoDeleteSubjectStudent(Entity $entity) {
@@ -553,22 +557,6 @@ class InstitutionClassStudentsTable extends AppTable {
         // have to delete one by one so that InstitutionSubjectStudents->afterDelete() will be triggered
         foreach ($deleteSubjectStudent as $key => $value) {
             $InstitutionSubjectStudentsTable->delete($value);
-        }
-    }
-
-    private function _autoDeletesStudentCompetencyResults(Entity $entity) 
-    {
-        // $this->log($entity, 'debug');
-        $StudentCompetencyResultsTable = TableRegistry::get('Institution.StudentCompetencyResults');
-        $removeCompetencyResults = $StudentCompetencyResultsTable->find()
-                                    ->where([
-                                        $StudentCompetencyResultsTable->aliasField('student_id') => $entity->student_id,
-                                        $StudentCompetencyResultsTable->aliasField('institution_id') => $entity->institution_id,
-                                        $StudentCompetencyResultsTable->aliasField('academic_period_id') => $entity->academic_period_id
-                                    ])
-                                    ->toArray();
-        foreach ($removeCompetencyResults as $key => $value) {
-            $StudentCompetencyResultsTable->delete($value);
         }
     }
 }
