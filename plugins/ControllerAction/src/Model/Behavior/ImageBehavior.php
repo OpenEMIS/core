@@ -31,17 +31,12 @@ class ImageBehavior extends Behavior
 
         $idKeys = $model->getIdKeys($model, $ids);
 
+        $phpResourceFile= null;
+
         if ($model->table() == 'security_users') {
             $photoData = $model->get($idKeys);
             if ($photoData->has('photo_content')) {
                 $phpResourceFile = $photoData->photo_content;
-
-                if ($base64Format) {
-                    echo base64_encode(stream_get_contents($phpResourceFile));
-                } else {
-                    $this->_table->controller->response->type('jpg');
-                    $this->_table->controller->response->body(stream_get_contents($phpResourceFile));
-                }
             }
         } else if ($model->association('Users')) {
             $photoData = $model->find()
@@ -53,13 +48,15 @@ class ImageBehavior extends Behavior
 
             if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
                 $phpResourceFile = $photoData->Users->photo_content;
+            }
+        }
 
-                if ($base64Format) {
-                    echo base64_encode(stream_get_contents($phpResourceFile));
-                } else {
-                    $model->controller->response->type('jpg');
-                    $model->controller->response->body(stream_get_contents($phpResourceFile));
-                }
+        if (is_resource($phpResourceFile)) {
+            if ($base64Format) {
+                echo base64_encode(stream_get_contents($phpResourceFile));
+            } else {
+                $model->controller->response->type('jpg');
+                $model->controller->response->body(stream_get_contents($phpResourceFile));
             }
         }
 
