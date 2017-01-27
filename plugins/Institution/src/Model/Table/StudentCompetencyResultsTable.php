@@ -246,21 +246,19 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
             $this->advancedSelectOptions($periodOptions, $selectedPeriod, [
                 'message' => '{{label}} - ' . $this->getMessage($this->aliasField('periodNotAvailable')),
                 'callable' => function($id) use ($selectedCompetencyItem) {
+                    if ($id > 0) {
                     $query = $this->CompetencyPeriods
                             ->find()
                             ->where([
                                 $this->CompetencyPeriods->aliasField('competency_item_id') => $selectedCompetencyItem,
                                 $this->CompetencyPeriods->aliasField('date_enabled <= ') => date('Y-m-d'),
-                                $this->CompetencyPeriods->aliasField('date_disabled > ') => date('Y-m-d')
+                                $this->CompetencyPeriods->aliasField('date_disabled > ') => date('Y-m-d'),
+                                $this->CompetencyPeriods->aliasField('id') => $id
                             ]);
-                    if ($id > 0) {
-                        $query = $query
-                                ->where([
-                                    $this->CompetencyPeriods->aliasField('id') => $id
-                                ]);
+                        return $query->count();
+                    } else {
+                        return true;
                     }
-
-                    return $query->count();
                 }
             ]);
         }
@@ -574,7 +572,6 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
 
     public function institutionClassStudentsAfterDelete(Event $event, Entity $entity)
     {
-        // $this->log($entity, 'debug');
         $removeCompetencyResults = $this->find()
                                     ->where([
                                         $this->aliasField('student_id') => $entity->student_id,
