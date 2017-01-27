@@ -175,6 +175,21 @@ class TemplatesTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (empty($entity->errors())) {
+            $extra['redirect'] = [
+                'plugin' => 'Competency',
+                'controller' => 'Competencies',
+                'action' => 'Items',
+                '0' => 'index',
+                'template' => $entity->id,
+                'period' => $entity->academic_period_id
+            ];
+            $this->Alert->info('Templates.addSuccess', ['reset'=>true]);
+        }
+    }
+
     public function setupFields(Entity $entity)
     {
         $this->field('academic_period_id', [

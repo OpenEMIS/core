@@ -269,4 +269,16 @@ class PeriodsTable extends ControllerActionTable {
 
         return compact('periodOptions', 'selectedPeriod');
     }
+
+    public function getPeriodByTemplateItemAcademicPeriod($selectedTemplate, $selectedItem, $selectedPeriod)
+    {
+        return $this
+                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                ->where([
+                    $this->aliasField('academic_period_id') => $selectedPeriod,
+                    $this->aliasField('competency_template_id') => $selectedTemplate,
+                    $this->aliasField('competency_item_id') => $selectedItem,
+                ])
+                ->toArray();
+    }
 }

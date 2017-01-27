@@ -18,7 +18,7 @@
 		<div class="clearfix">
 		<?php
 			echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Option').'</span>', [
-				'label' => __('Grading Options'),
+				'label' => __('Criteria Grading Options'),
 				'type' => 'button',
 				'class' => 'btn btn-default',
 				'aria-expanded' => 'true',

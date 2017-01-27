@@ -34,7 +34,6 @@ class ItemsTable extends ControllerActionTable {
         $this->hasMany('Periods', ['className' => 'Competency.Periods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
         
-        
         $this->setDeleteStrategy('restrict');
     }
 
@@ -149,11 +148,20 @@ class ItemsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldMandatory(Event $event, array $attr, $action, Request $request)
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        $attr['options'] = $this->getSelectOptions('general.yesno');
-        
-        return $attr;
+        if (empty($entity->errors())) {
+            $extra['redirect'] = [
+                'plugin' => 'Competency',
+                'controller' => 'Competencies',
+                'action' => 'Criterias',
+                '0' => 'index',
+                'item' => $entity->id,
+                'template' => $entity->competency_template_id,
+                'period' => $entity->academic_period_id
+            ];
+            $this->Alert->info('Items.addSuccess', ['reset'=>true]);
+        }
     }
 
     public function setupFields(Entity $entity)
@@ -162,17 +170,17 @@ class ItemsTable extends ControllerActionTable {
             'type' => 'select',
             'entity' => $entity
         ]);
-        $this->field('mandatory', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
         $this->field('academic_period_id', [
             'type' => 'select',
             'entity' => $entity
         ]);
+        $this->field('name', [
+            'type' => 'text',
+            'entity' => $entity
+        ]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'competency_template_id', 'name', 'mandatory'
+            'academic_period_id', 'competency_template_id', 'name'
         ]);
     }
 

@@ -20,9 +20,9 @@ class GradingOptionsTable extends CompetenciesAppTable {
 
     public function getFormFields($action = 'edit') {
         if ($action=='edit') {
-            return ['code'=>'', 'name'=>'', 'description'=>'', 'point'=>'', 'competency_grading_type_id'=>'', 'id'=>''];
+            return ['code'=>'', 'name'=>'', 'competency_grading_type_id'=>'', 'id'=>''];
         } else {
-            return ['code'=>'', 'name'=>'', 'description'=>'', 'point'=>''];
+            return ['code'=>'', 'name'=>''];
         }
     }
 
@@ -41,16 +41,7 @@ class GradingOptionsTable extends CompetenciesAppTable {
                 'rule' => ['checkUniqueCodeWithinForm', $this->GradingTypes],
                
             ])
-            ->requirePresence('name')
-            ->allowEmpty('point')
-            ->add('point', [
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 9999.99]
-                ]
-            ]);
+            ->requirePresence('name');
         return $validator;
     }
 }

@@ -448,13 +448,6 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
-				'Institutions.StaffCompetencies.index' => [
-					'title' => 'Staff',
-					'parent' => 'Institution.Competencies',
-					'selected' => ['Institutions.StaffCompetencies'],
-					'params' => ['plugin' => 'Institution']
-				],
-
 			'Institutions.Assessments.index' => [
 				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
