@@ -623,10 +623,19 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
-        'Competencies' => [
+        'Templates' => [
+            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
+        ],
+        'Items' => [
+            'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
+        ],
+        'StudentCompetencyResults' => [
+            'noCompetencyItems' => 'Please setup competency items for the selected template',
             'noCompetencyCriterias' => 'Please setup competency criterias for the selected item',
             'noResultsAdded' => 'There are no results added',
-            'noClassStudents' => 'The class does not have students'
+            'noClassStudents' => 'The class does not have students',
+            'periodNotAvailable' => 'Not Available',
+            'noResult' => 'No Result'
         ],
 
         // Validation Messages

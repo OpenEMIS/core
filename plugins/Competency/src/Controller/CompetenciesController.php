@@ -45,7 +45,7 @@ class CompetenciesController extends AppController
             ],
             'GradingTypes' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
-                'text' => __('Grading Types')
+                'text' => __('Criteria Grading Types')
             ],
         ];
 

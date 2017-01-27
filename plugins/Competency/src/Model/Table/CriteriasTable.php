@@ -38,22 +38,6 @@ class CriteriasTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator) {
-        $validator = parent::validationDefault($validator);
-
-        $validator
-            ->allowEmpty('percentage')
-            ->add('percentage', [
-                'ruleIsDecimal' => [
-                    'rule' => ['decimal', null],
-                ],
-                'ruleRange' => [
-                    'rule' => ['range', 0, 100]
-                ]
-            ]);
-        return $validator;
-    }
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $request = $this->request;

@@ -6,9 +6,7 @@ DROP TABLE IF EXISTS `competency_grading_types`;
 CREATE TABLE IF NOT EXISTS `competency_grading_types` (
   `id` int(11) NOT NULL,
   `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `result_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
+  `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -29,11 +27,7 @@ DROP TABLE IF EXISTS `competency_grading_options`;
 CREATE TABLE IF NOT EXISTS `competency_grading_options` (
   `id` int(11) NOT NULL,
   `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `name` varchar(80) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci,
-  `point` decimal(6,2) DEFAULT NULL,
-  `order` int(3) NOT NULL,
-  `visible` int(1) NOT NULL DEFAULT '1',
+  `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `competency_grading_type_id` int(11) NOT NULL COMMENT 'links to competency_grading_types.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
@@ -56,7 +50,7 @@ DROP TABLE IF EXISTS `competency_templates`;
 CREATE TABLE IF NOT EXISTS `competency_templates` (
   `id` int(11) NOT NULL,
   `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text COLLATE utf8mb4_unicode_ci,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
@@ -79,8 +73,7 @@ ALTER TABLE `competency_templates`
 DROP TABLE IF EXISTS `competency_items`;
 CREATE TABLE IF NOT EXISTS `competency_items` (
   `id` int(11) NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `mandatory` int(1) NOT NULL DEFAULT '1',
+  `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `competency_template_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
   `modified_user_id` int(11) DEFAULT NULL,
@@ -102,8 +95,7 @@ ALTER TABLE `competency_items`
 DROP TABLE IF EXISTS `competency_criterias`;
 CREATE TABLE IF NOT EXISTS `competency_criterias` (
   `id` int(11) NOT NULL,
-  `name` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `percentage` decimal(6,2) DEFAULT NULL,
+  `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `competency_item_id` int(11) NOT NULL COMMENT 'links to competency_items.id',  
   `competency_grading_type_id` int(11) NOT NULL COMMENT 'links to competency_grading_types.id',
@@ -128,7 +120,7 @@ DROP TABLE IF EXISTS `competency_periods`;
 CREATE TABLE IF NOT EXISTS `competency_periods` (
   `id` int(11) NOT NULL,
   `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
   `date_enabled` date NOT NULL,
@@ -156,7 +148,6 @@ ALTER TABLE `competency_periods`
 DROP TABLE IF EXISTS `competency_results`;
 CREATE TABLE IF NOT EXISTS `competency_results` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `marks` decimal(6,2) DEFAULT NULL,
   `competency_grading_option_id` int(11) DEFAULT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `competency_template_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
@@ -176,3 +167,7 @@ ALTER TABLE `competency_results`
   ADD KEY `competency_grading_option_id` (`competency_grading_option_id`),
   ADD KEY `modified_user_id` (`modified_user_id`),
   ADD KEY `created_user_id` (`created_user_id`);
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+VALUES ('0e77e3d5-e39d-11e6-a064-525400b263eb', 'Criterias', 'competency_grading_type_id', 'Administration -> Competencies -> Criterias', 'Criteria Grading Type', NULL, NULL, '1', NULL, NULL, '1', '2017-01-26 00:00:00');

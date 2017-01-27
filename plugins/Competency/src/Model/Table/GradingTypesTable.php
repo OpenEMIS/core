@@ -50,14 +50,17 @@ class GradingTypesTable extends ControllerActionTable {
 ******************************************************************************************************************/
     public function beforeAction(Event $event, ArrayObject $extra) 
     {
-        $this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions('CompetencyGradingTypes.result_type')]);
-        $this->field('grading_options', [
-            'type' => 'element',
-            'element' => 'Competency.grading_options',
-            'visible' => ['view'=>true, 'edit'=>true],
-            'fields' => $this->GradingOptions->fields,
-            'formFields' => []
-        ]);
+        if ($this->action == 'add' || $this->action == 'edit' || $this->action == 'view') {
+            $this->field('grading_options', [
+                'type' => 'element',
+                'element' => 'Competency.grading_options',
+                'fields' => $this->GradingOptions->fields,
+                'formFields' => [],
+                'attr' => [
+                    'label' => 'Criteria Grading Options'
+                ]
+            ]); 
+        }
     }
 
 
@@ -66,14 +69,12 @@ class GradingTypesTable extends ControllerActionTable {
 ** addEdit action events
 **
 ******************************************************************************************************************/
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) {
-        if ($this->action=='edit') {
-            $this->fields['visible']['visible'] = false;
-        }
+    public function addEditBeforeAction(Event $event, ArrayObject $extra) 
+    {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields());
 
         $this->setFieldOrder([
-            'code', 'name', 'result_type', 'grading_options',
+            'code', 'name', 'grading_options',
         ]);
     }
 
@@ -174,7 +175,7 @@ class GradingTypesTable extends ControllerActionTable {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
         $this->setFieldOrder([
-            'code', 'name', 'result_type', 'grading_options', 'visible',
+            'code', 'name', 'grading_options'
         ]);
     }
 
