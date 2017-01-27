@@ -352,9 +352,9 @@ class InstitutionClassStudentsTable extends AppTable {
         $resultType = $attr['resultType'];
         $assessmentPeriodId = $attr['assessmentPeriodId'];
         $assessmentItemResults = $this->assessmentItemResults;
-        if (!(isset($assessmentItemResults[$institutionId][$studentId][$subjectId][$assessmentPeriodId]))) {
+        if (!(isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId]))) {
             $AssessmentItemResultsTable = TableRegistry::get('Assessment.AssessmentItemResults');
-            $this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($institutionId, $academicPeriodId, $assessmentId, $subjectId);
+            $this->assessmentItemResults = $AssessmentItemResultsTable->getAssessmentItemResults($academicPeriodId, $assessmentId, $subjectId);
             $assessmentItemResults = $this->assessmentItemResults;
         }
         $allSubjectsPermission = $this->allSubjectsPermission;
@@ -391,8 +391,8 @@ class InstitutionClassStudentsTable extends AppTable {
         }
 
         if ($renderResult) {
-            if (isset($assessmentItemResults[$institutionId][$studentId][$subjectId][$assessmentPeriodId])) {
-                $result = $assessmentItemResults[$institutionId][$studentId][$subjectId][$assessmentPeriodId];
+            if (isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
+                $result = $assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId];
                 switch($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
@@ -522,13 +522,14 @@ class InstitutionClassStudentsTable extends AppTable {
         foreach ($classSubjectsData as $classSubjects) {
 
             $subjectStudents[] = [
-                'status' => 1,
+                'student_status_id' => $data['student_status_id'],
                 'student_id' => $data['student_id'],
                 'institution_subject_id' => $classSubjects['institution_subject_id'],
                 'institution_class_id' => $data['institution_class_id'],
                 'institution_id' => $data['institution_id'],
                 'academic_period_id' => $data['academic_period_id'],
                 'education_subject_id' => $classSubjects['education_subject_id'],
+                'education_grade_id' => $data['education_grade_id']
             ];
         }
 
