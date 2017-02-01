@@ -12,7 +12,7 @@ use Cake\Utility\Text;
 
 class StudentCompetencyResultsTable extends ControllerActionTable {
     public function initialize(array $config) {
-        $this->table('competency_results');
+        // $this->table('competency_results');
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
