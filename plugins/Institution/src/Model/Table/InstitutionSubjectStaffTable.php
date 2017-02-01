@@ -7,8 +7,10 @@ use Cake\Validation\Validator;
 use Cake\I18n\time;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use App\Model\Traits\OptionsTrait;
 
 class InstitutionSubjectStaffTable extends AppTable {
+    use OptionsTrait;
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
@@ -91,14 +93,64 @@ class InstitutionSubjectStaffTable extends AppTable {
 
     public function staffAfterSave(Event $event, $staff)
     {
-        if ($staff->dirty('end_date')) {        
-            $this->updateAll( 
-                ['end_date' => $staff->end_date],
-                [
-                    'staff_id' => $staff->staff_id,
-                    'institution_id' => $staff->institution_id
-                ]
-            );
+        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+
+        if ($staff->dirty('end_date')) {
+
+            //get the entire information of the staff
+            $InstitutionStaff = TableRegistry::get('Institution.Staff');
+            $StaffData = $InstitutionStaff
+                        ->find('withBelongsTo')
+                        ->find('byInstitution', ['Institutions.id' => $staff->institution_id])
+                        ->where([
+                            'Users.id' => $staff->staff_id,
+                            $InstitutionStaff->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED')
+                        ])
+                        ->toArray();
+
+            $updateEndDate = false;
+
+
+            // use case: Teacher holding one teaching position, teaching position will be ended
+            // expected: Teaching subject will be ended based on the position
+            if (count($StaffData) == 1) {
+                if ($StaffData[0]->position->staff_position_title->type == 1) { //if teaching position
+                    $updateEndDate = true;
+                    $endDate = $staff->end_date;
+                }
+            } else {
+                // use case: Teacher holding one teaching position and one non-teaching position, teaching position will be ended
+                // expected: Teaching subject will be ended based on the teaching position
+                $endDate = '';
+                foreach ($StaffData as $key => $value) { //loop through position
+                    if ($value->position->staff_position_title->type == 1) { //if teaching position
+                        $updateEndDate = true;
+                        
+                        if (is_null($value->end_date)) { //if null, then always get it.
+                            $endDate = $value->end_date;
+                            break;
+                        } else {
+                            if (!empty($endDate)) {
+                                if ($endDate < $value->end_date) {
+                                    $endDate = $value->end_date;
+                                }
+                            } else {
+                                $endDate = $value->end_date;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if ($updateEndDate && $endDate) {
+                $this->updateAll( 
+                    ['end_date' => $endDate],
+                    [
+                        'staff_id' => $staff->staff_id,
+                        'institution_id' => $staff->institution_id
+                    ]
+                );
+            }
         }
     }
 }
