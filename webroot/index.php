@@ -30,6 +30,7 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Routing\DispatcherFactory;
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 
 $dispatcher = DispatcherFactory::create();
 
@@ -39,7 +40,7 @@ try {
 	    new Response()
 	);
 } catch (Exception $ex) {
-	Log::write('error', '[URL] ' . $_SERVER['REQUEST_URI']);
-    Log::write('error', $ex->getMessage());
-	throw $ex;
+    $ErrorTable = TableRegistry::get('System.SystemErrors');
+    $ErrorTable->insertError($ex);
+    Log::write('error', $ex);
 }
