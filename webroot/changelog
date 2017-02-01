@@ -1,3 +1,8 @@
+v3.8.8
+- System now displays users who generated the report
+- System now sorts report by date
+- Institutions > Subjects : Users can only filter by classes of the subject based on their permission
+
 v3.8.7
 - Institutions > Position : System now correctly displays list of current and past staffs
 
