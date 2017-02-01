@@ -127,7 +127,6 @@ CREATE TABLE IF NOT EXISTS `competency_periods` (
   `date_disabled` date NOT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `competency_template_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
-  `competency_item_id` int(11) NOT NULL COMMENT 'links to competency_items.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -137,16 +136,37 @@ CREATE TABLE IF NOT EXISTS `competency_periods` (
 ALTER TABLE `competency_periods`
   ADD PRIMARY KEY (`id`, `academic_period_id`),
   ADD KEY `competency_template_id` (`competency_template_id`),
-  ADD KEY `competency_item_id` (`competency_item_id`),
   ADD KEY `modified_user_id` (`modified_user_id`),
   ADD KEY `created_user_id` (`created_user_id`);
 
 ALTER TABLE `competency_periods`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
--- Table structure for table `competency_results`
-DROP TABLE IF EXISTS `competency_results`;
-CREATE TABLE IF NOT EXISTS `competency_results` (
+-- Table structure for table `competency_items_periods`
+DROP TABLE IF EXISTS `competency_items_periods`;
+CREATE TABLE IF NOT EXISTS `competency_items_periods` (
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `competency_item_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
+  `competency_period_id` int(11) NOT NULL COMMENT 'links to competency_periods.id',
+  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `competency_items_periods`
+  ADD PRIMARY KEY (`competency_item_id`,`competency_period_id`,`academic_period_id`),
+  ADD UNIQUE KEY `id` (`id`),
+  ADD KEY `modified_user_id` (`modified_user_id`),
+  ADD KEY `created_user_id` (`created_user_id`),
+  ADD KEY `competency_item_id` (`competency_item_id`),
+  ADD KEY `competency_period_id` (`competency_period_id`),
+  ADD KEY `academic_period_id` (`academic_period_id`);
+
+-- Table structure for table `student_competency_results`
+DROP TABLE IF EXISTS `student_competency_results`;
+CREATE TABLE IF NOT EXISTS `student_competency_results` (
   `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
   `competency_grading_option_id` int(11) DEFAULT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
@@ -162,12 +182,35 @@ CREATE TABLE IF NOT EXISTS `competency_results` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the competency results for an individual student in an institution';
 
-ALTER TABLE `competency_results`
+ALTER TABLE `student_competency_results`
   ADD PRIMARY KEY (`student_id`, `competency_template_id`, `competency_item_id`, `competency_criteria_id`, `competency_period_id`, `institution_id`, `academic_period_id`),
   ADD KEY `competency_grading_option_id` (`competency_grading_option_id`),
   ADD KEY `modified_user_id` (`modified_user_id`),
-  ADD KEY `created_user_id` (`created_user_id`);
+  ADD KEY `created_user_id` (`created_user_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `competency_template_id` (`competency_template_id`),
+  ADD KEY `competency_item_id` (`competency_item_id`),
+  ADD KEY `competency_criteria_id` (`competency_criteria_id`),
+  ADD KEY `competency_period_id` (`competency_period_id`),
+  ADD KEY `institution_id` (`institution_id`),
+  ADD KEY `academic_period_id` (`academic_period_id`);
 
 -- labels
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
 VALUES ('0e77e3d5-e39d-11e6-a064-525400b263eb', 'Criterias', 'competency_grading_type_id', 'Administration -> Competencies -> Criterias', 'Criteria Grading Type', NULL, NULL, '1', NULL, NULL, '1', '2017-01-26 00:00:00');
+
+-- security_functions
+UPDATE `security_functions`
+SET `order` = `order` + 5
+WHERE `order` >= 5056 AND `order` < 6000;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+VALUES
+(5061, 'Templates', 'Competencies', 'Administration', 'Competencies', 5000, 'Templates.index|Templates.view', 'Templates.edit', 'Templates.add', 'Templates.remove', NULL, 5056, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
+(5062, 'Items', 'Competencies', 'Administration', 'Competencies', 5000, 'Items.index|Items.view', 'Items.edit', 'Items.add', 'Items.remove', NULL, 5057, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
+(5063, 'Criterias', 'Competencies', 'Administration', 'Competencies', 5000, 'Criterias.index|Criterias.view', 'Criterias.edit', 'Criterias.add', 'Criterias.remove', NULL, 5058, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
+(5064, 'Periods', 'Competencies', 'Administration', 'Competencies', 5000, 'Periods.index|Periods.view', 'Periods.edit', 'Periods.add', 'Periods.remove', NULL, 5059, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
+(5065, 'GradingTypes', 'Competencies', 'Administration', 'Competencies', 5000, 'GradingTypes.index|GradingTypes.view', 'GradingTypes.edit', 'GradingTypes.add', 'GradingTypes.remove', NULL, 5060, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00');
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+VALUES ('1053', 'Competency Results', 'Institutions', 'Institutions', 'Students', '8', 'StudentCompetencies.index|StudentCompetencyResults.view', 'StudentCompetencyResults.edit', 'StudentCompetencyResults.add', NULL, NULL, '1054', '1', NULL, NULL, NULL, '1', '2017-01-27 00:00:00');

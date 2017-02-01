@@ -31,7 +31,18 @@ class ItemsTable extends ControllerActionTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
         $this->hasMany('Criterias', ['className' => 'Competency.Criterias', 'foreignKey' => ['competency_item_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Periods', ['className' => 'Competency.Periods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        // $this->hasMany('ItemsPeriods', ['className' => 'Competency.ItemsPeriods']);
+        
+        $this->belongsToMany('Periods', [
+            'className' => 'Competency.Periods',
+            'joinTable' => 'competency_items_periods',
+            'foreignKey' => ['competency_item_id', 'academic_period_id'],
+            'targetForeignKey' => 'competency_period_id',
+            'through' => 'Competency.ItemsPeriods',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
         
         $this->setDeleteStrategy('restrict');
