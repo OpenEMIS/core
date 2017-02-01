@@ -138,6 +138,8 @@ class FieldOptionBehavior extends Behavior {
         if ($entity->has('editable') && $entity->editable == false) {
             $model->fields['name']['type'] = 'disabled';
             $model->fields['visible']['type'] = 'disabled';
+            $model->fields['international_code']['type'] = 'disabled';
+            $model->fields['national_code']['type'] = 'disabled';
         }
     }
 
