@@ -261,16 +261,8 @@ class PeriodsTable extends ControllerActionTable {
                 $attr['options'] = $itemOptions;
                 
             } else {
-                $selectedTemplate = $attr['entity']->competency_template_id;
-                // pr($attr['entity']);
-                $attr['type'] = 'readonly';
-                foreach ($attr['entity']->competency_items as $key => $value) {
-                    $arrayValue['value'][$key] = $attr['entity']->competency_items->id;
-                    $arrayAttrValue['attr']['value'][$key] = $attr['entity']->competency_items->name;
-                }
-                $attr['value'] = $arrayValue;
-                $attr['attr']['value'] = $arrayAttrValue;
-
+                $attr['type'] = 'element';
+                $attr['element'] = 'Competency.competency_items';
             }
         }
         return $attr;
