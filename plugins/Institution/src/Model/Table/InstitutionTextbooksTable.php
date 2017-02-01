@@ -409,7 +409,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $entity = $attr['entity'];
         $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($entity->academic_period_id, $entity->institution_class_id, $entity->education_subject_id);
         $studentOptions = [null => __('-- Select --')] + $studentOptions; //additional default option
-        pr($studentOptions);
+        $attr['options'] = $studentOptions;
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        return $attr;
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
