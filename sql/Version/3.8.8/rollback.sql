@@ -1,3 +1,10 @@
+-- POCOR-3706
+DROP TABLE `system_errors`;
+
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue`='POCOR-3706';
+
+
 -- POCOR-3563
 -- institution_subject_staff
 DROP TABLE `institution_subject_staff`;
