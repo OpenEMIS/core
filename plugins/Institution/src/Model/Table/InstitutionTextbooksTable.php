@@ -30,6 +30,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->belongsTo('Textbooks', ['className' => 'Textbook.Textbooks', 'foreignKey' => ['textbook_id', 'academic_period_id']]);
         $this->belongsTo('TextbookStatuses', ['className' => 'Textbook.TextbookStatuses']);
         $this->belongsTo('TextbookConditions', ['className' => 'Textbook.TextbookConditions']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -234,6 +235,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'string']);
         $this->field('comment', ['visible' => false]);
         $this->field('education_subject_id', ['visible' => false]);
+        $this->field('education_grade_id', ['visible' => false]);
 
         $this->setFieldOrder([
             'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id'
@@ -1007,9 +1009,26 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $selectedClass = $attr['entity']->institution_class_id;
 
+            $textbookStudents = $this->find('list', [
+                    'keyField' => 'student_id',
+                    'valueField' => 'student_id'
+                ])
+                ->where([
+                    $this->aliasField('textbook_id') => $attr['entity']->textbook_id,
+                ])
+                ->select([
+                    $this->aliasField('student_id')
+                ])
+                ->distinct(['student_id']);
+
+            if ($attr['entity']->student_id) {
+                $textbookStudents = $textbookStudents->where([$this->aliasField('student_id').' <> ' => $attr['entity']->student_id]);
+            }
+
             $studentOptions = [];
             if ($selectedPeriod && $selectedClass && $selectedSubject) {
                 $studentOptions = $this->InstitutionSubjectStudents->getEnrolledStudentBySubject($selectedPeriod, $selectedClass, $selectedSubject);
+                $studentOptions = array_diff_key($studentOptions, $textbookStudents->toArray());
             }
             $attr['options'] = $studentOptions;
 
