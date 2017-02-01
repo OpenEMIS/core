@@ -54,6 +54,7 @@ VALUES ('4', 'Email', '4', '1', NULL, NULL, NULL, NULL, '1', NOW());
 
 -- alert_roles table
 RENAME TABLE `alerts_roles` TO `alert_roles`;
+ALTER TABLE `alerts_roles` CHANGE `alert_rule_id` `alert_id` INT(11) NOT NULL COMMENT 'links to alerts.id';
 
 ALTER TABLE `alert_roles`
     DROP PRIMARY KEY,
