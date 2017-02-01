@@ -143,6 +143,18 @@ class PeriodsTable extends ControllerActionTable {
         ]);
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('competency_items', [
+            'type' => 'element',
+            'element' => 'Competency.competency_items'
+        ]);
+
+        $this->setFieldOrder([
+            'academic_period_id', 'competency_template_id', 'competency_items', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
+        ]);
+    }
+
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
