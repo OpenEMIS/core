@@ -28,8 +28,18 @@ class PeriodsTable extends ControllerActionTable {
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Items',           ['className' => 'Competency.Items', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
+        // $this->belongsTo('Items',           ['className' => 'Competency.Items', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
         $this->belongsTo('Templates',       ['className' => 'Competency.Templates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
+
+        $this->belongsToMany('CompetencyItems', [
+            'className' => 'Competency.Items',
+            'joinTable' => 'competency_items_periods',
+            'foreignKey' => ['competency_period_id', 'academic_period_id'],
+            'targetForeignKey' => ['competency_item_id', 'academic_period_id'],
+            'through' => 'Competency.ItemsPeriods',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
         
@@ -47,6 +57,7 @@ class PeriodsTable extends ControllerActionTable {
                     'provider' => 'table'
                 ]
             ])
+            ->requirePresence('competency_items')
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', true]
             ])
@@ -86,7 +97,7 @@ class PeriodsTable extends ControllerActionTable {
         //item filter
         if ($selectedPeriod && $selectedTemplate) {
 
-            $itemOptions = $this->Items->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
+            $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
 
             $itemOptions = array(-1 => __('-- Select Item --')) + $itemOptions;
 
@@ -116,11 +127,11 @@ class PeriodsTable extends ControllerActionTable {
             }
         }
 
-        if (array_key_exists('selectedItem', $extra)) {
-            if ($extra['selectedItem']) {
-                $conditions[] = $this->aliasField('competency_item_id = ') . $extra['selectedItem'];
-            }
-        }
+        // if (array_key_exists('selectedItem', $extra)) {
+        //     if ($extra['selectedItem']) {
+        //         $conditions[] = $this->aliasField('competency_item_id = ') . $extra['selectedItem'];
+        //     }
+        // }
 
         $query->where([$conditions]);
     }
@@ -128,13 +139,34 @@ class PeriodsTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'Items','Templates'
+            'CompetencyItems','Templates'
         ]);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
+    }
+
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        //massage data to match many to many data format.
+        if (array_key_exists($this->alias(), $requestData)) {
+            if (array_key_exists('competency_items', $requestData[$this->alias()])) {
+                foreach ($requestData[$this->alias()]['competency_items']['_ids'] as $key => $item) {
+                    $requestData[$this->alias()]['competency_items'][$key]['id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
+                    $requestData[$this->alias()]['competency_items'][$key]['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                    $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_item_id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
+                    $requestData[$this->alias()]['competency_items'][$key]['_joinData']['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                }
+                unset($requestData[$this->alias()]['competency_items']['_ids']);
+            }
+        }
+        // pr($requestData[$this->alias()]);die;
+        $newOptions = ['associated' => ['CompetencyItems']]; //so during patch entity, it can get the necessary datas
+        $arrayOptions = $patchOptions->getArrayCopy();
+        $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
+        $patchOptions->exchangeArray($arrayOptions);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -212,7 +244,7 @@ class PeriodsTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldCompetencyItemId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldCompetencyItems(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
@@ -220,17 +252,24 @@ class PeriodsTable extends ControllerActionTable {
                 list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
                 $selectedTemplate = $request->query('template');
+                    
                 $itemOptions = [];
                 if ($selectedTemplate) {
-                    $itemOptions = $this->Items->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
+                    $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
                 }
                 
                 $attr['options'] = $itemOptions;
                 
             } else {
+                $selectedTemplate = $attr['entity']->competency_template_id;
+                // pr($attr['entity']);
                 $attr['type'] = 'readonly';
-                $attr['value'] = $attr['entity']->competency_item_id;
-                $attr['attr']['value'] = $attr['entity']->item->name;
+                foreach ($attr['entity']->competency_items as $key => $value) {
+                    $arrayValue['value'][$key] = $attr['entity']->competency_items->id;
+                    $arrayAttrValue['attr']['value'][$key] = $attr['entity']->competency_items->name;
+                }
+                $attr['value'] = $arrayValue;
+                $attr['attr']['value'] = $arrayAttrValue;
 
             }
         }
@@ -247,13 +286,13 @@ class PeriodsTable extends ControllerActionTable {
             'type' => 'select',
             'entity' => $entity
         ]);
-        $this->field('competency_item_id', [
-            'type' => 'select',
+        $this->field('competency_items', [
+            'type' => 'chosenSelect',
             'entity' => $entity
         ]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'competency_template_id', 'competency_item_id', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
+            'academic_period_id', 'competency_template_id', 'competency_items', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
         ]);
     }
 
@@ -270,15 +309,15 @@ class PeriodsTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
-    public function getPeriodByTemplateItemAcademicPeriod($selectedTemplate, $selectedItem, $selectedPeriod)
-    {
-        return $this
-                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->where([
-                    $this->aliasField('academic_period_id') => $selectedPeriod,
-                    $this->aliasField('competency_template_id') => $selectedTemplate,
-                    $this->aliasField('competency_item_id') => $selectedItem,
-                ])
-                ->toArray();
-    }
+    // public function getPeriodByTemplateItemAcademicPeriod($selectedTemplate, $selectedItem, $selectedPeriod)
+    // {
+    //     return $this
+    //             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+    //             ->where([
+    //                 $this->aliasField('academic_period_id') => $selectedPeriod,
+    //                 $this->aliasField('competency_template_id') => $selectedTemplate,
+    //                 $this->aliasField('competency_item_id') => $selectedItem,
+    //             ])
+    //             ->toArray();
+    // }
 }
