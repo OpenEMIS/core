@@ -1,7 +1,7 @@
 <?php if (!empty($attr['data'])) { ?>
 <div class="input clearfix">
     <?php if ($action != 'view') { ?>
-        <label><?= $this->Label->get('InstitutionSubjects.inactive_teachers'); ?></label>
+        <label><?= $this->Label->get('InstitutionSubjects.past_teachers'); ?></label>
     <?php } ?>
     <div class="form-input table-full-width">
         <div class="table-wrapper">
