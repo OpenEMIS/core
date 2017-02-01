@@ -3,20 +3,12 @@ namespace Alert\Model\Table;
 
 use ArrayObject;
 
-use Cake\I18n\Date;
-use Cake\I18n\Time;
-use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\ORM\ResultSet;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
-use Cake\Network\Request;
-use Cake\Utility\Inflector;
-use Cake\Log\Log;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\Log\Log;
 
-use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
 class AlertsTable extends ControllerActionTable
@@ -31,6 +23,7 @@ class AlertsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->toggle('add', false);
+        $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
 
@@ -61,22 +54,21 @@ class AlertsTable extends ControllerActionTable
 
         // process Toolbar buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        if (array_key_exists('edit', $toolbarButtonsArray)) {
-            if ($this->AccessControl->check(['Alerts', 'Alerts', 'edit'])) { // to check edit permission
-                $url = [
-                    'plugin' => 'Alert',
-                    'controller' => 'Alerts',
-                    'action' => 'Alerts',
-                    'process'
-                ];
-                $toolbarButtonsArray['edit']['label'] = $icon;
-                $toolbarButtonsArray['edit']['attr']['title'] = __($label);
-                $toolbarButtonsArray['edit']['url'] = $this->setQueryString($url, [
-                    'shell_name' => $shellName,
-                    'action' => 'view'
-                ]);
-            }
-        }
+
+        $url = [
+            'plugin' => 'Alert',
+            'controller' => 'Alerts',
+            'action' => 'Alerts',
+            'process'
+        ];
+
+        $toolbarButtonsArray['process'] = $this->getButtonTemplate();
+        $toolbarButtonsArray['process']['label'] = $icon;
+        $toolbarButtonsArray['process']['attr']['title'] = __($label);
+        $toolbarButtonsArray['process']['url'] = $this->setQueryString($url, [
+            'shell_name' => $shellName,
+            'action' => 'view'
+        ]);
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end process toolbar buttons
@@ -88,11 +80,7 @@ class AlertsTable extends ControllerActionTable
         $shellName = $entity->process_name;
 
         if (array_key_exists('view', $buttons)) {
-            $newButtons['view'] = $buttons['view'];
-        }
-
-        if (array_key_exists('edit', $buttons)) {
-            if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
+            // if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
                 if ($this->isShellStopExist($shellName)) {
                     $icon = '<i class="fa fa-play"></i>';
                     $label = 'Start'; // if have the file, process not running
@@ -107,17 +95,17 @@ class AlertsTable extends ControllerActionTable
                     'action' => 'Alerts',
                     'process'
                 ];
-                $processButtons = $buttons['edit'];
-                $processButtons['label'] = $icon.__($label);
-                $newButtons['processButtons'] = $processButtons;
-                $newButtons['processButtons']['url'] = $this->setQueryString($url, [
+
+                $buttons['process'] = $buttons['view'];
+                $buttons['process']['label'] = $icon . __($label);
+                $buttons['process']['url'] = $this->setQueryString($url, [
                     'shell_name' => $shellName,
                     'action' => 'index'
                 ]);
-            }
+            // }
         }
 
-        return $newButtons;
+        return $buttons;
     }
 
     public function process(Event $event, ArrayObject $extra)
@@ -128,7 +116,7 @@ class AlertsTable extends ControllerActionTable
             $params = $this->paramsDecode($requestQuery['queryString']);
         }
 
-        $this->addRemoveShellStop($params['shell_name']); // create and remove the shell stop of the shell
+        $this->stopShell($params['shell_name']); // create and remove the shell stop of the shell
         $this->triggerAlertFeatureShell($params['shell_name']); // trigger the feature shell
 
         // redirect to respective page from params['action']
@@ -139,35 +127,11 @@ class AlertsTable extends ControllerActionTable
 
     public function onGetStatus(Event $event, Entity $entity)
     {
-        $today = Time::now();
         $shellName = $entity->process_name;
         if ($this->isShellStopExist($shellName)) {
-            $status = 0;
-
-            // update the pid and time
-            $this->query()
-                ->update()
-                ->where(['process_name' => $shellName])
-                ->set([
-                    'process_id' => null,
-                    'modified' => $today
-                ])
-                ->execute();
+            $status = 0; // Stopped
         } else {
-            $status = 1;
-
-            // update the pid and time
-            $shellCmd = "ps -ef | grep " . $shellName . " | grep apache | awk '{print $2}'";
-            $pid = exec($shellCmd);
-
-            $this->query()
-                ->update()
-                ->where(['process_name' => $shellName])
-                ->set([
-                    'process_id' => $pid,
-                    'modified' => $today
-                ])
-                ->execute();
+            $status = 1; // Running
         }
 
         return $this->statusTypes[$status];
@@ -179,26 +143,26 @@ class AlertsTable extends ControllerActionTable
         $dir = new Folder(ROOT . DS . 'tmp'); // path
         $filesArray = $dir->find($shellName.'.stop');
 
-        if (!empty($filesArray)) {
-            $exists = true;
-        } else {
-            $exists = false;
-        }
-
-        return $exists;
+        return !empty($filesArray);
     }
 
-    public function addRemoveShellStop($shellName)
+    public function stopShell($shellName)
     {
         $dir = new Folder(ROOT . DS . 'tmp'); // path
 
+        // if ($this->isShellStopExist($shellName)) {
+        //     // shell stop file exist, remove the shell stop
+        //     $file = new File($dir->path.'/' . $shellName . '.stop', true);
+        //     $file->delete();
+        // } else {
+        //     // shell stop not exists, adding shell stop
+        //     $file = new File($dir->path.'/' . $shellName . '.stop', true);
+        // }
+
+        $file = new File($dir->path.'/' . $shellName . '.stop', true);
         if ($this->isShellStopExist($shellName)) {
             // shell stop file exist, remove the shell stop
-            $file = new File($dir->path.'/' . $shellName . '.stop', true);
             $file->delete();
-        } else {
-            // shell stop not exists, adding shell stop
-            $file = new File($dir->path.'/' . $shellName . '.stop', true);
         }
     }
 
@@ -209,7 +173,7 @@ class AlertsTable extends ControllerActionTable
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$args;
         $logs = ROOT . DS . 'logs' . DS . $shellName.'.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
-        $pid = exec($shellCmd);
+        exec($shellCmd);
         Log::write('debug', $shellCmd);
     }
 }
