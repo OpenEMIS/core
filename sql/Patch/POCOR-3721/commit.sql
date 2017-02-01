@@ -60,7 +60,21 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingRecommendationStatusId, @notRecommendedStatusId, 1, NOW()),
 ('Approve', NULL, 0, 1, 0, 0, NULL, @pendingStatusId, @awardedStatusId, 1, NOW()),
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingStatusId, @notAwardedStatusId, 1, NOW()),
-('Reopen', NULL, NULL, 1, 0, 0, NULL, @cancelledStatusId, @openStatusId, 1, NOW());
+('Approve', NULL, 0, 0, 0, 0, NULL, @cancelledStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @cancelledStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @cancelledStatusId, @openStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @rejectedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @rejectedStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @rejectedStatusId, @openStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @notRecommendedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @notRecommendedStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @notRecommendedStatusId, @openStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @awardedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @awardedStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @awardedStatusId, @openStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @notAwardedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @notAwardedStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @notAwardedStatusId, @openStatusId, 1, NOW());
 
 -- license_types
 INSERT INTO `license_types` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
