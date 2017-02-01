@@ -535,6 +535,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
                     $request->query['period'] = $request->data[$this->alias()]['academic_period_id'];
                 }
+                if (isset($data[$this->alias()]['textbooks_students'])) {
+                    unset($data[$this->alias()]['textbooks_students']);
+                }
             }
         }
     }
@@ -579,6 +582,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 if (array_key_exists('education_level_id', $request->data[$this->alias()])) {
                     $request->query['level'] = $request->data[$this->alias()]['education_level_id'];
                 }
+
+                if (isset($data[$this->alias()]['textbooks_students'])) {
+                    unset($data[$this->alias()]['textbooks_students']);
+                }
             }
         }
     }
@@ -621,6 +628,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
                     $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
                 }
+            }
+
+            if (isset($data[$this->alias()]['textbooks_students'])) {
+                unset($data[$this->alias()]['textbooks_students']);
             }
         }
     }
@@ -669,6 +680,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
                 if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
                     $request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
+                }
+
+                if (isset($data[$this->alias()]['textbooks_students'])) {
+                    unset($data[$this->alias()]['textbooks_students']);
                 }
             }
         }
@@ -724,6 +739,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 }
                 if (array_key_exists('institution_class_id', $request->data[$this->alias()])) {
                     $request->query['class'] = $request->data[$this->alias()]['institution_class_id'];
+                }
+
+                if (isset($data[$this->alias()]['textbooks_students'])) {
+                    unset($data[$this->alias()]['textbooks_students']);
                 }
             }
         }
@@ -781,6 +800,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 }
                 if (array_key_exists('education_subject_id', $request->data[$this->alias()])) {
                     $request->query['subject'] = $request->data[$this->alias()]['education_subject_id'];
+                }
+
+                if (isset($data[$this->alias()]['textbooks_students'])) {
+                    unset($data[$this->alias()]['textbooks_students']);
                 }
             }
         }
@@ -840,6 +863,9 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
                 if (array_key_exists('textbook_id', $request->data[$this->alias()])) {
                     $request->query['textbook'] = $request->data[$this->alias()]['textbook_id'];
+                }
+                if (isset($data[$this->alias()]['textbooks_students'])) {
+                    unset($data[$this->alias()]['textbooks_students']);
                 }
             }
         }
