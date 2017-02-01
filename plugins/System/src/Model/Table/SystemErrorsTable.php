@@ -50,7 +50,7 @@ class SystemErrorsTable extends ControllerActionTable {
             'id' => Text::uuid(),
             'error_message' => $msg,
             'request_url' => $_SERVER['REQUEST_URI'],
-            'referrer_url' => $_SERVER['HTTP_REFERER'],
+            'referrer_url' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
             'client_ip' => $_SERVER['REMOTE_ADDR'],
             'client_browser' => $_SERVER['HTTP_USER_AGENT'],
             'triggered_from' => $file . ' (Line: ' . $line . ')',
