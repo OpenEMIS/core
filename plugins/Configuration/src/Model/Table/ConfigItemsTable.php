@@ -367,23 +367,18 @@ class ConfigItemsTable extends AppTable {
 		return $model;
 	}
 
-	public function areaLevelAfterDelete(Event $event, $areaLevel) {
-		$configAreaLevel = $this->value('institution_area_level_id');
-    	$deletedAreaLevel = $areaLevel->level;
+    public function areaLevelAfterDelete(Event $event, $areaLevel)
+    {
+        $entity = $this->findByCode('institution_area_level_id')->first();
+        $configValue = strlen($entity->value) ? $entity->value : $entity->default_value;
 
-    	// if area level used for institution_area_level_id config is deleted
-    	if ($configAreaLevel == $deletedAreaLevel) {
-    		$config = $this->findByCode('institution_area_level_id')->first();
-			$defaultAreaLevel = $config->default_value;
-
-			// update institution_area_level_id config to default level
-    		$this->query()
-				->update()
-				->set(['value' => $defaultAreaLevel])
-				->where(['code' => 'institution_area_level_id'])
-				->execute();
-    	}
-	}
+        // if area level used for institution_area_level_id config is deleted
+        if ($areaLevel->level == $configValue) {
+            // update institution_area_level_id config to default level
+            $entity->value = $entity->default_value;
+            $this->save($entity);
+        }
+    }
 
 	public function getSystemLanguageOptions()
 	{
