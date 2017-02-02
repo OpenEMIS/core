@@ -248,20 +248,7 @@ class ConfigItemsTable extends AppTable {
 				$optionsModel = TableRegistry::get($model);
 
 				if ($entity->code == 'institution_area_level_id') {
-					// if the area level has been deleted, update value to default level
-					if (!$optionsModel->exists([$optionsModel->aliasField('level') => $entity->$valueField])) {
-						$valueField = 'default_value';
-	                    $this->query()
-	                        ->update()
-	                        ->set(['value' => $entity->default_value])
-	                        ->where([
-	                            'code' => $entity->code,
-	                            'type' => $entity->type
-	                         ])
-	                         ->execute();
-	                }
-
-	                // get corresponding level from value
+	                // get area level from value
 	                $value = $optionsModel->find()
 	                    ->where([$optionsModel->aliasField('level') => $entity->$valueField])
 	                    ->first();
