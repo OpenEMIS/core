@@ -554,13 +554,14 @@ class InstitutionClassesTable extends ControllerActionTable
             foreach ($entity->institution_subjects as $key => $subjectEntity) {
                 foreach ($data['class_students'] as $classStudent) {
                     $subjectStudents[] = [
-                        'status' => 1,
+                        'student_status_id' => $classStudent['student_status_id'],
                         'student_id' => $classStudent['student_id'],
                         'institution_subject_id' => $subjectEntity->id,
                         'institution_class_id' => $classStudent['institution_class_id'],
                         'institution_id' => $subjectEntity->institution_id,
                         'academic_period_id' => $subjectEntity->academic_period_id,
-                        'education_subject_id' => $subjectEntity->education_subject_id
+                        'education_subject_id' => $subjectEntity->education_subject_id,
+                        'education_grade_id' => $classStudent['education_grade_id']
                     ];
                 }
             }
@@ -1024,9 +1025,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 $InstitutionStudentsTable->aliasField('student_id') => $id,
                 $InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id,
                 $InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
-                //this is to ensure that student is enrolled and have the correct education grade accordingly.
-                $InstitutionStudentsTable->aliasField('education_grade_id IN ') => $educationGrades,
-                $InstitutionStudentsTable->aliasField('student_status_id') => $enrolled
+                //this is to ensure that student have the correct education grade accordingly.
+                $InstitutionStudentsTable->aliasField('education_grade_id IN ') => $educationGrades
             ])
             ->first();
         

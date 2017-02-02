@@ -24,6 +24,7 @@ class StudentSubjectsTable extends ControllerActionTable {
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -33,7 +34,7 @@ class StudentSubjectsTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->fields['status']['visible'] = false;
+        $this->fields['student_status_id']['visible'] = false;
 
         $this->field('academic_period_id', ['type' => 'integer', 'order' => 0]);
         $this->field('institution_id', ['type' => 'integer', 'after' => 'academic_period_id']);
@@ -108,7 +109,6 @@ class StudentSubjectsTable extends ControllerActionTable {
         }
         // End
 
-        $where[$this->aliasField('status > ')] = '0';
         $query
             ->matching('InstitutionClasses.ClassGrades')
             ->where($where);
