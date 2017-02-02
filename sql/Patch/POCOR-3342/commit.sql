@@ -131,18 +131,20 @@ CREATE TABLE `competency_items_periods` (
   `competency_item_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
   `competency_period_id` int(11) NOT NULL COMMENT 'links to competency_periods.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+  `competency_template_id` int(11) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
-  PRIMARY KEY (`competency_item_id`,`competency_period_id`,`academic_period_id`),
+  PRIMARY KEY (`competency_item_id`,`competency_period_id`,`academic_period_id`,`competency_template_id`),
   UNIQUE KEY `id` (`id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`),
   KEY `competency_item_id` (`competency_item_id`),
   KEY `competency_period_id` (`competency_period_id`),
   KEY `academic_period_id` (`academic_period_id`),
-  KEY `id_index` (`id`)
+  KEY `id_index` (`id`),
+  KEY `competency_template_id` (`competency_template_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of competency items for a specific competency period';
 
 -- Table structure for table `student_competency_results`

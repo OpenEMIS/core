@@ -30,14 +30,14 @@ class ItemsTable extends ControllerActionTable {
         $this->belongsTo('Templates',       ['className' => 'Competency.Templates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
-        $this->hasMany('Criterias', ['className' => 'Competency.Criterias', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Criterias', ['className' => 'Competency.Criterias', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
         // $this->hasMany('ItemsPeriods', ['className' => 'Competency.ItemsPeriods']);
 
         $this->belongsToMany('Periods', [
             'className' => 'Competency.Periods',
             'joinTable' => 'competency_items_periods',
-            'foreignKey' => ['competency_item_id', 'academic_period_id'],
-            'targetForeignKey' => 'competency_period_id',
+            'foreignKey' => ['competency_item_id', 'academic_period_id', 'competency_template_id'],
+            'targetForeignKey' => ['competency_period_id', 'academic_period_id'],
             'through' => 'Competency.ItemsPeriods',
             'dependent' => true,
             'cascadeCallbacks' => true
