@@ -48,7 +48,23 @@ class SystemUpdatesTable extends ControllerActionTable {
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $query = $this->find();
-        $maxId = $query->select(['max' => $query->func()->max('id')])->hydrate(false)->first();
+        $latestVersion = $query
+            ->order([$this->aliasField('id') => 'desc'])
+            ->first();
+
+        $maxId = $latestVersion->id;
+        if ($latestVersion->status == 2) {
+            $this->updateAll(
+                [
+                    'date_approved' => $latestVersion->date_approved,
+                    'approved_by' => 1,
+                    'status' => 2
+                ], [
+                    'id <' => $maxId,
+                    'status' => 1
+                ]
+            );
+        }
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $domain = $ConfigItems->value('version_api_domain');
