@@ -246,7 +246,29 @@ class ConfigItemsTable extends AppTable {
 				$model = Inflector::pluralize($exp[1]);
 				$model = $this->getActualModeLocation($model);
 				$optionsModel = TableRegistry::get($model);
-				$value = $optionsModel->get($entity->$valueField);
+
+				if ($entity->code == 'institution_area_level_id') {
+					// if the area level has been deleted, update value to default level
+					if (!$optionsModel->exists([$optionsModel->aliasField('level') => $entity->$valueField])) {
+						$valueField = 'default_value';
+	                    $this->query()
+	                        ->update()
+	                        ->set(['value' => $entity->default_value])
+	                        ->where([
+	                            'code' => $entity->code,
+	                            'type' => $entity->type
+	                         ])
+	                         ->execute();
+	                }
+
+	                // get corresponding level from value
+	                $value = $optionsModel->find()
+	                    ->where([$optionsModel->aliasField('level') => $entity->$valueField])
+	                    ->first();
+				} else {
+					$value = $optionsModel->get($entity->$valueField);
+				}
+
 				if (is_object($value)) {
 					return $value->name;
 				} else {
