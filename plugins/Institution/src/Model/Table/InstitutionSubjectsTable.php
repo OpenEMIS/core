@@ -1052,7 +1052,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ->where([
                             $Staff->aliasField('institution_position_id'),
                             'OR' => [ //check teacher end date
-                                [$Staff->aliasField('end_date').' >= ' => new Date()],
+                                [$Staff->aliasField('end_date').' > ' => new Date()],
                                 [$Staff->aliasField('end_date').' IS NULL']
                             ]
                         ])
