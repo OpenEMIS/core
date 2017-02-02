@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS `competency_results`;
 DELETE FROM `labels` WHERE `id` = '0e77e3d5-e39d-11e6-a064-525400b263eb';
 
 -- security_functions
-DELETE FROM `security_functions` WHERE `id` IN (5061, 5062, 5063, 5064, 5065);
+DELETE FROM `security_functions` WHERE `id` IN (5061, 5062, 5063, 5064, 5065, 1053);
 
 UPDATE `security_functions`
 SET `order` = `order` - 5
