@@ -6,8 +6,9 @@ use App\Model\Table\AppTable;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-use App\Model\Table\ControllerActionTable;
+use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use App\Model\Table\ControllerActionTable;
 
 class AreaLevelsTable extends ControllerActionTable
 {
@@ -56,4 +57,24 @@ class AreaLevelsTable extends ControllerActionTable
 
 		return $attr;
 	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	{
+		// cannot delete area level 1
+		$areaLevel = $entity->level;
+		if ($areaLevel == 1) {
+			$event->stopPropagation();
+			$this->Alert->warning('general.delete.restrictDelete');
+			return $this->controller->redirect($this->url('index'));
+		}
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Configuration.ConfigItems')
+        ];
+
+        $this->dispatchEventToModels('Model.AreaLevel.afterDelete', [$entity], $this, $listeners);
+    }
 }
