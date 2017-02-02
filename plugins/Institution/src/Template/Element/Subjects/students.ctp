@@ -105,7 +105,7 @@
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id])
+									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id, 'institution_id' => $obj->institution_id])
 								]) ?>
 						</td>
 						<td><?= $obj->student_name ?></td>
