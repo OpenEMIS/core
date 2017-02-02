@@ -53,31 +53,9 @@ class ExcelReportBehavior extends Behavior
 	public function implementedEvents()
 	{
 		$events = parent::implementedEvents();
-        $events['ExcelTemplates.Model.initializeData'] = 'initializeExcelTemplateData';
         $events['ExcelTemplates.Model.onRenderExcelTemplate'] = 'onRenderExcelTemplate';
         $events['ExcelTemplates.Model.onGetExcelTemplateVars'] = 'onGetExcelTemplateVars';
 		return $events;
-    }
-
-    public function initializeExcelTemplateData(Event $event, ArrayObject $extra)
-    {
-        $model = $this->_table;
-        $registryAlias = $model->registryAlias();
-
-        $ExcelTemplates = TableRegistry::get('CustomExcel.ExcelTemplates');
-        $excelTemplateResults = $ExcelTemplates->find()
-            ->where([$ExcelTemplates->aliasField('module') => $registryAlias])
-            ->all();
-
-        if ($excelTemplateResults->isEmpty()) {
-            $excelTemplateEntity = $ExcelTemplates->newEntity([
-                'module' => $registryAlias
-            ]);
-
-            if (!$ExcelTemplates->save($excelTemplateEntity)) {
-                Log::write('debug', $excelTemplateEntity->errors());
-            }
-        }
     }
 
     public function onGetExcelTemplateVars(Event $event, ArrayObject $extra)
@@ -93,6 +71,8 @@ class ExcelReportBehavior extends Behavior
 
     public function onRenderExcelTemplate(Event $event, ArrayObject $extra)
     {
+        ini_set('max_execution_time', 180);
+
         $model = $this->_table;
         $params = $model->getQueryString();
         $extra['vars'] = $this->getVars($params, $extra);
@@ -124,19 +104,19 @@ class ExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $ExcelTemplates = TableRegistry::get('CustomExcel.ExcelTemplates');
-        $results = $ExcelTemplates->find()->where([$ExcelTemplates->aliasField('module') => $model->registryAlias()]);
+        $assessmentId = $model->getQueryString('assessment_id');
+        $Assessments = TableRegistry::get('Assessments.Assessments');
 
-        if ($results->isEmpty()) {
+        if (empty($assessmentId)) {
             $objPHPExcel = new \PHPExcel();
         } else {
             // Read from excel template attachment then create as temporary file in server so that can read back the same file and read as PHPExcel object
-            $entity = $results->first();
+            $entity = $Assessments->get($assessmentId);
 
-            if ($entity->has('file_name')) {
-                $pathInfo = pathinfo($entity->file_name);
+            if ($entity->has('excel_template_name')) {
+                $pathInfo = pathinfo($entity->excel_template_name);
                 $filename = $this->config('filename') . '_Template_' . date('Ymd') . 'T' . date('His') . '.' . $pathInfo['extension'];
-                $file = $this->getFile($entity->file_content);
+                $file = $this->getFile($entity->excel_template);
 
                 // Create a temporary file
                 $filepath = $extra['path'] . DS . $filename;

@@ -30,7 +30,8 @@ trait MessagesTrait {
             'assessmentGradingType' => 'Assessment Grading Type',
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
-            'periodWeight' => 'Period Weight'
+            'periodWeight' => 'Period Weight',
+            'classification' => 'Classification'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -428,7 +429,8 @@ trait MessagesTrait {
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
-            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
+            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.'
         ],
         'TransferApprovals' => [
             'existsInNewSchool' => 'Student is already exists in the new school',
@@ -623,7 +625,7 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
-        
+
         // Validation Messages
         'Institution' => [
             'Institutions' => [
@@ -812,7 +814,10 @@ trait MessagesTrait {
                     'ruleInstitutionStaffId' => 'Staff has already been added.'
                 ],
                 'institution_position_id' => [
-                    'ruleCheckFTE' => 'No available FTE.',
+                    'ruleCheckFTE' => 'No available FTE.'
+                ],
+                'staff_assignment' => [
+                    'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
                     'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
@@ -1246,6 +1251,15 @@ trait MessagesTrait {
                 'final_rating' => 'Final Rating',
                 'deleted_competencies' => 'This competency has been removed'
             ],
+            'Competencies' => [
+                'min' => [
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ],
+                'max' => [
+                    'ruleCompare' => 'Max value must be greater than min value',
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ]
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
@@ -1447,11 +1461,13 @@ trait MessagesTrait {
                     'ruleUnique' => 'Please enter a unique name for this examination centre room'
                 ],
                 'size' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value',
+                    'ruleRoomSize' => 'Room size is out of range'
                 ],
                 'number_of_seats' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
-                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available'
+                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available',
+                    'ruleSeatsNumber' => 'Number of seats is out of range'
                 ]
             ],
             'ExaminationItems' => [

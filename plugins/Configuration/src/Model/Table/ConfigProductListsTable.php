@@ -70,10 +70,14 @@ class ConfigProductListsTable extends ControllerActionTable {
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['file_content']['visible'] = false;
+        $this->fields['auto_login_url']['visible'] = false;
+        $this->fields['auto_logout_url']['visible'] = false;
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('auto_login_url', ['type' => 'string']);
+        $this->field('auto_logout_url', ['type' => 'string']);
         $this->field('deletable', ['type' => 'hidden', 'value' => 1]);
         $this->field('file_content', ['type' => 'image', 'defaultWidth' => 95]);
     }
@@ -110,10 +114,21 @@ class ConfigProductListsTable extends ControllerActionTable {
     {
         if ($entity->deletable) {
             $this->field('file_content', ['type' => 'image']);
+            $this->field('auto_login_url', ['type' => 'string']);
+            $this->field('auto_logout_url', ['type' => 'string']);
         } else {
             $this->field('file_content', ['visible' => false]);
+            $this->field('auto_login_url', ['type' => 'hidden']);
+            $this->field('auto_logout_url', ['type' => 'hidden']);
         }
+    }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->deletable) {
+            $entity->auto_login_url = rtrim($entity->url, '/').'/Login';
+            $entity->auto_logout_url = $entity->url;
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)

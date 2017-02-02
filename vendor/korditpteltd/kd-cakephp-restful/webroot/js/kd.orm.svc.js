@@ -265,7 +265,13 @@ angular.module('kd.orm.svc', [])
         customAjax: customAjax
     };
 
-    function customAjax (url, options={method: 'GET', headers: {'Content-Type': 'application/json'}}, data={}) {
+    function customAjax (url, options, data) {
+        if (!angular.isDefined(options)) {
+            options = {method: 'GET', headers: {'Content-Type': 'application/json'}};
+        }
+        if (!angular.isDefined(data)) {
+            data = {};
+        }
         var deferred = $q.defer();
         var success = function(response) {
             if (angular.isDefined(response.data.error)) {
