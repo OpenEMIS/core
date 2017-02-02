@@ -2,11 +2,7 @@
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
-                $baseUrl = $this->Url->build([
-                    'plugin' => $this->request->params['plugin'],
-                    'controller' => $this->request->params['controller'],
-                    'action' => $this->request->params['action']
-                ]);
+                $baseUrl = $this->Url->build($baseUrl);
                 $template = $this->ControllerAction->getFormTemplate();
                 $this->Form->templates($template);
 
@@ -32,18 +28,6 @@
                         'data-named-group' => 'period'
                     ));
                 }
-
-                // if (!empty($itemOptions)) {
-                //     echo $this->Form->input('items', array(
-                //         'class' => 'form-control',
-                //         'label' => false,
-                //         'options' => $itemOptions,
-                //         'default' => $selectedItem,
-                //         'url' => $baseUrl,
-                //         'data-named-key' => 'item',
-                //         'data-named-group' => 'period,template'
-                //     ));
-                // }
             ?>
         </div>
     </div>

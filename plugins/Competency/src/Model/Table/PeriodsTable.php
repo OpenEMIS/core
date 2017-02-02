@@ -35,7 +35,7 @@ class PeriodsTable extends ControllerActionTable {
             'className' => 'Competency.Items',
             'joinTable' => 'competency_items_periods',
             'foreignKey' => ['competency_period_id', 'academic_period_id'],
-            'targetForeignKey' => ['competency_item_id', 'academic_period_id'],
+            'targetForeignKey' => ['competency_item_id', 'academic_period_id', 'competency_template_id'],
             'through' => 'Competency.ItemsPeriods',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -66,7 +66,6 @@ class PeriodsTable extends ControllerActionTable {
             ]);
     }
 
-
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $request = $this->request;
@@ -81,39 +80,23 @@ class PeriodsTable extends ControllerActionTable {
         $templateOptions = $this->Templates->getTemplateByAcademicPeriod($selectedPeriod);
 
         if ($templateOptions) {
-            $templateOptions = array(-1 => __('-- Select Template --')) + $templateOptions;
+            $templateOptions = [0 => __('-- Select Template --')] + $templateOptions;
         }
 
         if ($request->query('template')) {
             $selectedTemplate = $request->query('template');
         } else {
-            $selectedTemplate = -1;
+            $selectedTemplate = 0;
         }
 
         $extra['selectedTemplate'] = $selectedTemplate;
         $data['templateOptions'] = $templateOptions;
         $data['selectedTemplate'] = $selectedTemplate;
 
-        //item filter
-        if ($selectedPeriod && $selectedTemplate) {
-
-            $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
-
-            $itemOptions = array(-1 => __('-- Select Item --')) + $itemOptions;
-
-            if ($request->query('item')) {
-                $selectedItem = $request->query('item');
-            } else {
-                $selectedItem = -1;
-            }
-
-            $extra['selectedItem'] = $selectedItem;
-            $data['itemOptions'] = $itemOptions;
-            $data['selectedItem'] = $selectedItem;
-        }
+        $data['baseUrl'] = $this->url('index');
 
         $extra['elements']['control'] = [
-            'name' => 'Competency.criterias_controls',
+            'name' => 'Competency.periods_controls',
             'data' => $data,
             'order' => 3
         ];
@@ -123,17 +106,33 @@ class PeriodsTable extends ControllerActionTable {
     {
         if (array_key_exists('selectedPeriod', $extra)) {
             if ($extra['selectedPeriod']) {
-                $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                $conditions[$this->aliasField('academic_period_id')] = $extra['selectedPeriod'];
             }
         }
 
-        // if (array_key_exists('selectedItem', $extra)) {
-        //     if ($extra['selectedItem']) {
-        //         $conditions[] = $this->aliasField('competency_item_id = ') . $extra['selectedItem'];
-        //     }
-        // }
+        if (array_key_exists('selectedTemplate', $extra)) {
+            if ($extra['selectedTemplate']) {
+                $conditions[$this->aliasField('competency_template_id')] = $extra['selectedTemplate'];
+            }
+        }
 
         $query->where([$conditions]);
+    }
+
+    public function addOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($this->request->query('queryString') && !$this->request->query('period') && !$this->request->query('template')) {
+            $queryString = $this->getQueryString();
+            $this->request->data[$this->alias()]['academic_period_id'] = $queryString['academic_period_id'];
+            $this->request->data[$this->alias()]['competency_template_id'] = $queryString['competency_template_id'];
+        } else {
+            if ($this->request->query('period')) {
+                $this->request->data[$this->alias()]['academic_period_id'] = $this->request->query('period');
+            }
+            if ($this->request->query('template')) {
+                $this->request->data[$this->alias()]['competency_template_id'] = $this->request->query('template');
+            }
+        }
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -168,17 +167,19 @@ class PeriodsTable extends ControllerActionTable {
                 foreach ($requestData[$this->alias()]['competency_items']['_ids'] as $key => $item) {
                     $requestData[$this->alias()]['competency_items'][$key]['id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
                     $requestData[$this->alias()]['competency_items'][$key]['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                    $requestData[$this->alias()]['competency_items'][$key]['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
                     $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_item_id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
                     $requestData[$this->alias()]['competency_items'][$key]['_joinData']['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                    $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
                 }
                 unset($requestData[$this->alias()]['competency_items']['_ids']);
             }
         }
-        // pr($requestData[$this->alias()]);die;
         $newOptions = ['associated' => ['CompetencyItems']]; //so during patch entity, it can get the necessary datas
         $arrayOptions = $patchOptions->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $patchOptions->exchangeArray($arrayOptions);
+
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
