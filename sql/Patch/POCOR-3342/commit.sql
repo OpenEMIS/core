@@ -213,4 +213,5 @@ VALUES
 (5065, 'GradingTypes', 'Competencies', 'Administration', 'Competencies', 5000, 'GradingTypes.index|GradingTypes.view', 'GradingTypes.edit', 'GradingTypes.add', 'GradingTypes.remove', NULL, 5060, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00');
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-VALUES ('1053', 'Competency Results', 'Institutions', 'Institutions', 'Students', '8', 'StudentCompetencies.index|StudentCompetencyResults.view', 'StudentCompetencyResults.edit', 'StudentCompetencyResults.add', NULL, NULL, '1054', '1', NULL, NULL, NULL, '1', '2017-01-27 00:00:00');
+VALUES
+(1053, 'Competency Results', 'Institutions', 'Institutions', 'Students', 8, 'StudentCompetencies.index|StudentCompetencies.view|StudentCompetencyResults.viewResults', 'StudentCompetencies.edit|StudentCompetencyResults.edit', 'StudentCompetencies.add|StudentCompetencyResults.add', NULL, NULL, 1054, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00');
