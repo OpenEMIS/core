@@ -189,7 +189,8 @@ class InstitutionSubjectStudentsTable extends AppTable {
                     ->where([
                         $this->aliasField('academic_period_id') => $period,
                         $this->aliasField('institution_class_id') => $class,
-                        $this->aliasField('education_subject_id') => $subject
+                        $this->aliasField('education_subject_id') => $subject,
+                        $this->aliasField('status') => 1
                     ])
                     ->select([
                         $this->aliasField('student_id'),
@@ -199,8 +200,9 @@ class InstitutionSubjectStudentsTable extends AppTable {
                         $Users->aliasField('third_name'),
                         $Users->aliasField('last_name'),
                         $Users->aliasField('preferred_name')
-                    ])->toArray();
-        
+                    ])
+                    ->toArray();
+
         $studentList = [];
         foreach ($students as $key => $value) {
             $studentList[$value->student_id] = $value->_matchingData['Users']['name_with_id'];
