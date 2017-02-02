@@ -30,9 +30,9 @@ class ItemsTable extends ControllerActionTable {
         $this->belongsTo('Templates',       ['className' => 'Competency.Templates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
-        $this->hasMany('Criterias', ['className' => 'Competency.Criterias', 'foreignKey' => ['competency_item_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Criterias', ['className' => 'Competency.Criterias', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
         // $this->hasMany('ItemsPeriods', ['className' => 'Competency.ItemsPeriods']);
-        
+
         $this->belongsToMany('Periods', [
             'className' => 'Competency.Periods',
             'joinTable' => 'competency_items_periods',
@@ -44,55 +44,47 @@ class ItemsTable extends ControllerActionTable {
         ]);
 
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
-        
+
         $this->setDeleteStrategy('restrict');
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $request = $this->request;
+        $queryString = $this->request->query('queryString');
+        if ($queryString) {
+            $this->controller->getCompetencyTabs(['queryString' => $queryString]);
+            $queryStringArr = $this->getQueryString();
+            $academicPeriodId = $queryStringArr['academic_period_id'];
+            $competencyTemplateId = $queryStringArr['competency_template_id'];
 
-        //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-        $extra['selectedPeriod'] = $selectedPeriod;
-        $data['periodOptions'] = $periodOptions;
-        $data['selectedPeriod'] = $selectedPeriod;
+            $extra['selectedPeriod'] = $academicPeriodId;
+            $extra['selectedTemplate'] = $competencyTemplateId;
 
-        //template filter
-        $templateOptions = $this->Templates->getTemplateByAcademicPeriod($selectedPeriod);
+            $extra['queryString'] = $queryString;
 
-        if ($templateOptions) {
-            $templateOptions = array(-1 => __('-- Select Template --')) + $templateOptions;
-        }
+            $name = $this->Templates->get(['id' => $competencyTemplateId, 'academic_period_id' => $academicPeriodId])->name;
+            $header = $name . ' - ' . __($this->alias());
+            $this->controller->set('contentHeader', $header);
+            $this->controller->Navigation->substituteCrumb($this->alias(), $header);
 
-        if ($request->query('template')) {
-            $selectedTemplate = $request->query('template');
         } else {
-            $selectedTemplate = -1;
+            $event->stopPropagation();
+            $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Templates']);
         }
-
-        $extra['selectedTemplate'] = $selectedTemplate;
-        $data['templateOptions'] = $templateOptions;
-        $data['selectedTemplate'] = $selectedTemplate;
-        
-        $extra['elements']['control'] = [
-            'name' => 'Competency.items_controls',
-            'data' => $data,
-            'order' => 3
-        ];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $this->fields['competency_template_id']['type'] = 'integer';
         if (array_key_exists('selectedPeriod', $extra)) {
             if ($extra['selectedPeriod']) {
-                $conditions[] = $this->aliasField('academic_period_id = ') . $extra['selectedPeriod'];
+                $conditions[$this->aliasField('academic_period_id')] = $extra['selectedPeriod'];
             }
         }
 
         if (array_key_exists('selectedTemplate', $extra)) {
             if ($extra['selectedTemplate']) {
-                $conditions[] = $this->aliasField('competency_template_id = ') . $extra['selectedTemplate'];
+                $conditions[$this->aliasField('competency_template_id')] = $extra['selectedTemplate'];
             }
         }
 
@@ -101,22 +93,19 @@ class ItemsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($entity);
+        $this->setupFields($entity, $extra);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
             if ($action == 'add') {
-                $attr['default'] = $selectedPeriod;
-                $attr['options'] = $periodOptions;
-                $attr['onChangeReload'] = 'changeAcademicPeriod';
+                $attr['type'] = 'readonly';
+                $attr['value'] = $attr['extra']['selectedPeriod'];
+                $attr['attr']['value'] = $this->AcademicPeriods->get($attr['extra']['selectedPeriod'])->name;
             } else if ($action == 'edit') {
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $periodOptions[$attr['entity']->academic_period_id];
+                $attr['attr']['value'] = $this->AcademicPeriods->get([$attr['entity']->academic_period_id])->name;
                 $attr['value'] = $attr['entity']->academic_period_id;
             }
         }
@@ -127,7 +116,7 @@ class ItemsTable extends ControllerActionTable {
     {
         $request = $this->request;
         $request->query['template'] = '-1';
-        
+
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
@@ -142,12 +131,10 @@ class ItemsTable extends ControllerActionTable {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
 
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
+                $attr['type'] = 'readonly';
+                $attr['attr']['value'] = $this->Templates->get(['id' => $attr['extra']['selectedTemplate'], 'academic_period_id' => $attr['extra']['selectedPeriod']])->code_name;
+                $attr['value'] = $attr['extra']['selectedTemplate'];
 
-                $templateOptions = $this->Templates->getTemplateByAcademicPeriod($selectedPeriod);
-                
-                $attr['options'] = $templateOptions;
-                
             } else {
 
                 $attr['type'] = 'readonly';
@@ -168,22 +155,23 @@ class ItemsTable extends ControllerActionTable {
                 'action' => 'Criterias',
                 '0' => 'index',
                 'item' => $entity->id,
-                'template' => $entity->competency_template_id,
-                'period' => $entity->academic_period_id
+                'queryString' => $extra['queryString']
             ];
-            $this->Alert->info('Items.addSuccess', ['reset'=>true]);
+            $this->Alert->success('Items.addSuccess', ['reset'=>true]);
         }
     }
 
-    public function setupFields(Entity $entity)
+    public function setupFields(Entity $entity, ArrayObject $extra)
     {
         $this->field('competency_template_id', [
-            'type' => 'select',
-            'entity' => $entity
+            'type' => 'hidden',
+            'entity' => $entity,
+            'extra' => $extra
         ]);
         $this->field('academic_period_id', [
             'type' => 'select',
-            'entity' => $entity
+            'entity' => $entity,
+            'extra' => $extra
         ]);
         $this->field('name', [
             'type' => 'text',

@@ -20,9 +20,9 @@ class GradingTypesTable extends ControllerActionTable {
     public function initialize(array $config)
     {
         $this->table('competency_grading_types');
-        
+
         parent::initialize($config);
-        
+
         $this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'foreignKey' => 'competency_grading_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
@@ -48,8 +48,9 @@ class GradingTypesTable extends ControllerActionTable {
 ** cakephp events
 **
 ******************************************************************************************************************/
-    public function beforeAction(Event $event, ArrayObject $extra) 
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
+
         if ($this->action == 'add' || $this->action == 'edit' || $this->action == 'view') {
             $this->field('grading_options', [
                 'type' => 'element',
@@ -59,7 +60,7 @@ class GradingTypesTable extends ControllerActionTable {
                 'attr' => [
                     'label' => 'Criteria Grading Options'
                 ]
-            ]); 
+            ]);
         }
     }
 
@@ -69,7 +70,7 @@ class GradingTypesTable extends ControllerActionTable {
 ** addEdit action events
 **
 ******************************************************************************************************************/
-    public function addEditBeforeAction(Event $event, ArrayObject $extra) 
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields());
 

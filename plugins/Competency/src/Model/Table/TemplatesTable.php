@@ -67,7 +67,24 @@ class TemplatesTable extends ControllerActionTable {
         $this->field('type', [
             'visible' => false
         ]);
+    }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $queryString = ['queryString' => $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
+        $this->controller->getCompetencyTabs($queryString);
+        $header = $entity->name . ' - ' . __('Overview');
+        $this->controller->set('contentHeader', $header);
+        $this->controller->Navigation->substituteCrumb($this->alias(), $header);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $queryString = ['queryString' => $this->paramsEncode(['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id])];
+        $this->controller->getCompetencyTabs($queryString);
+        $header = $entity->name . ' - ' . __('Overview');
+        $this->controller->set('contentHeader', $header);
+        $this->controller->Navigation->substituteCrumb($this->alias(), $header);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -135,7 +152,7 @@ class TemplatesTable extends ControllerActionTable {
     {
         $request = $this->request;
         unset($request->query['programme']);
-        
+
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
@@ -164,7 +181,7 @@ class TemplatesTable extends ControllerActionTable {
                 }
 
                 $attr['options'] = $gradeOptions;
-                
+
             } else {
 
                 $attr['type'] = 'readonly';
@@ -186,7 +203,13 @@ class TemplatesTable extends ControllerActionTable {
                 'template' => $entity->id,
                 'period' => $entity->academic_period_id
             ];
-            $this->Alert->info('Templates.addSuccess', ['reset'=>true]);
+
+            $pass = $this->paramsEncode(['id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
+            $url = $this->url('view');
+            $url[] = $pass;
+            $url = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
+            $extra['redirect'] = $url;
+            $this->Alert->success('Templates.addSuccess', ['reset'=>true]);
         }
     }
 
