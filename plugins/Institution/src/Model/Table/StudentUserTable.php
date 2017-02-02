@@ -52,7 +52,6 @@ class StudentUserTable extends ControllerActionTable
 		$this->addBehavior('Configuration.Pull');
 
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
-		$this->hasMany('InstitutionStudents', ['className' => 'Institution.Students', 'foreignKey' => 'student_id']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add']
         ]);
@@ -117,6 +116,7 @@ class StudentUserTable extends ControllerActionTable
 		]);
 
         $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students',    'foreignKey' => 'student_id', 'dependent' => true]);
+        $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff',    'foreignKey' => 'staff_id', 'dependent' => true]);
 		$model->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionSiteStudentAbsences',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$model->hasMany('StudentBehaviours', ['className' => 'Institution.StudentBehaviours',	'foreignKey' => 'student_id', 'dependent' => true]);
 		$model->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults',	'foreignKey' => 'student_id', 'dependent' => true]);
@@ -189,18 +189,37 @@ class StudentUserTable extends ControllerActionTable
 		$toolbarButtons = $extra['toolbarButtons'];
 
 		// Back button does not contain the pass
-		if (isset($this->request->pass[1])) {
-			$toolbarButtons['back']['url'][1] = $this->request->pass[1];
+		if ($this->action == 'edit' && !empty($this->paramsPass(0))) {
+			$toolbarButtons['back']['url'][1] = $this->paramsPass(0)	;
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$id = $this->request->query('id') ? $this->request->query('id') : $this->Session->read('Institution.Students.id');
-		$this->Session->write('Institution.Students.id', $id);
-		$institutionStudentId = $id;
+		$institutionStudentId = $this->request->query('id');
+
+		// this is required if the student link is clicked from the Institution Classes or Subjects
+		if (empty($institutionStudentId) && !empty($this->paramsPass(0))) {
+			$params = $this->paramsDecode($this->paramsPass(0));
+			$institutionId = isset($params['institution_id']) ? $params['institution_id'] : 0;
+			$studentId = isset($params['id']) ? $params['id'] : 0;
+
+			// get the id of the latest student record in the current institution
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+			$institutionStudentId = $InstitutionStudentsTable->find()
+                ->where([
+                    $InstitutionStudentsTable->aliasField('student_id') => $studentId,
+                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionId,
+                ])
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+                ->extract('id')
+                ->first();
+		}
+
+		$this->Session->write('Institution.Students.id', $institutionStudentId);
 		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
 			$event->stopPropagation();
 			return $this->controller->redirect(['action' => 'Students', 'index']);
 		} else {
+			$this->request->query['id'] = $institutionStudentId;
 			$extra['institutionStudentId'] = $institutionStudentId;
 		}
 	}

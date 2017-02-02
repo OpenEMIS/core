@@ -50,7 +50,7 @@ class ReportListBehavior extends Behavior {
 		$fields['params']['visible'] = false;
 		$fields['pid']['visible'] = false;
 		$fields['created']['visible'] = true;
-		$fields['modified']['visible'] = true;
+        $fields['modified']['visible'] = true;
 
 		$this->_table->fields = $fields;
 
@@ -60,8 +60,12 @@ class ReportListBehavior extends Behavior {
 		$this->ReportProgress->purge();
 
 		$query = $this->ReportProgress->find()
+            ->contain('CreatedUser') //association declared on AppTable
 			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
-			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);
 
 		return $query;
 	}
@@ -124,6 +128,7 @@ class ReportListBehavior extends Behavior {
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
 			['id' => $process->id]
 		);
+		$settings['purge'] = false; //for report, dont purge after download.
 	}
 
 	protected function _generate($data) {

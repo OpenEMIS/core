@@ -434,6 +434,18 @@ class TransferRequestsTable extends ControllerActionTable
     }
     */
 
+    public function onGetFormButtons(Event $event, ArrayObject $buttons) 
+    {
+        $todayDate = Time::now();
+        $studentEndDate = new Time($this->request->data[$this->alias()]['end_date']);
+
+        if ($studentEndDate < $todayDate) { //disable save transfer request if student end_date is already passed.
+            $this->Alert->warning('TransferRequests.invalidEndDate');
+            unset($buttons[0]);
+            unset($buttons[1]);
+        }
+    }
+
     public function onUpdateFieldTransferStatus(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {

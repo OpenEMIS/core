@@ -648,8 +648,8 @@ class ImportBehavior extends Behavior {
         foreach ($header as $key=>$value) {
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue( $alpha . "2", $value);
+            $activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
             if (strlen($value)<50) {
-                $activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
                 // if the $value is in $dateHeader array, it is a date format.
                 if (in_array($value, $dateHeader)) {
                     $activeSheet->getStyle( $alpha )
@@ -657,7 +657,6 @@ class ImportBehavior extends Behavior {
                         ->setFormatCode('dd/mm/yyyy');
                 }
             } else {
-                $activeSheet->getColumnDimension( $alpha )->setWidth(35);
                 $currentRowHeight = $this->suggestRowHeight( strlen($value), $currentRowHeight );
                 $activeSheet->getRowDimension(2)->setRowHeight( $currentRowHeight );
                 $activeSheet->getStyle( $alpha . "2" )->getAlignment()->setWrapText(true);
