@@ -367,7 +367,6 @@ class ConfigItemsTable extends AppTable {
 		return $model;
 	}
 
-<<<<<<< HEAD
 	public function areaLevelAfterDelete(Event $event, $areaLevel) {
 		$configAreaLevel = $this->value('institution_area_level_id');
     	$deletedAreaLevel = $areaLevel->level;
@@ -385,7 +384,7 @@ class ConfigItemsTable extends AppTable {
 				->execute();
     	}
 	}
-=======
+
 	public function getSystemLanguageOptions()
 	{
 		$dir = new Folder($this->languagePath, true);
@@ -404,7 +403,6 @@ class ConfigItemsTable extends AppTable {
         return $languageArr;
 	}
 
->>>>>>> 1852c9b2d246473b72a3e29166b9334513f27c97
 
 /******************************************************************************************************************
 **
