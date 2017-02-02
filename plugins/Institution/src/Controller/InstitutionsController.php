@@ -105,14 +105,10 @@ class InstitutionsController extends AppController
     public function StaffAppraisals()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']); }
     public function Programmes()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']); }
     public function StaffAbsences()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
-<<<<<<< HEAD
     public function Textbooks()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
     public function StudentCompetencies()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']); }
     public function StudentCompetencyResults()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']); }
-=======
-    public function Textbooks()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
     public function StudentSurveys()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
->>>>>>> 1852c9b2d246473b72a3e29166b9334513f27c97
     // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     // End
 
