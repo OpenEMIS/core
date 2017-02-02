@@ -13,11 +13,15 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 
 class ConfigItemsTable extends AppTable {
 	use OptionsTrait;
 
 	private $configurations = [];
+	private $languagePath = TMP . 'cache'. DS . 'language_menu';
+	private $languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
 
 	public function initialize(array $config) {
 		parent::initialize($config);
@@ -115,7 +119,7 @@ class ConfigItemsTable extends AppTable {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
 	{
-		$session = $this->request->session();
+
 		if ($entity->code == 'language') {
 			if ($entity->value != 'en') {
 				$entity = $this->find()
@@ -127,10 +131,24 @@ class ConfigItemsTable extends AppTable {
 				$entity->value = 0;
 				$this->save($entity);
 			}
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		} else if ($entity->code == 'language_menu') {
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		}
+	}
+
+	private function deleteLanguageCacheFile()
+	{
+		$dir = new Folder($this->languagePath, true);
+    	$filesAndFolders = $dir->read();
+    	$files = $filesAndFolders[1];
+
+    	if (in_array('language', $files)) {
+    		$languageFile = new File($this->languageFilePath);
+    		$languageFile->delete();
+    	}
+    	$session = $this->request->session();
+		$session->delete('System.language_menu');
 	}
 
 	public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
@@ -349,6 +367,7 @@ class ConfigItemsTable extends AppTable {
 		return $model;
 	}
 
+<<<<<<< HEAD
 	public function areaLevelAfterDelete(Event $event, $areaLevel) {
 		$configAreaLevel = $this->value('institution_area_level_id');
     	$deletedAreaLevel = $areaLevel->level;
@@ -366,6 +385,26 @@ class ConfigItemsTable extends AppTable {
 				->execute();
     	}
 	}
+=======
+	public function getSystemLanguageOptions()
+	{
+		$dir = new Folder($this->languagePath, true);
+        $filesAndFolders = $dir->read();
+        $files = $filesAndFolders[1];
+        $languageFilePath = $this->languageFilePath;
+        $languageFile = new File($languageFilePath, true);
+        if (!in_array('language', $files)) {
+            $showLanguage = $this->value('language_menu');
+            $systemLanguage = $this->value('language');
+            $languageArr = ['language_menu' => $showLanguage, 'language' => $systemLanguage];
+            $status = $languageFile->write(json_encode($languageArr));
+        }
+        $languageArr = json_decode($languageFile->read(), true);
+
+        return $languageArr;
+	}
+
+>>>>>>> 1852c9b2d246473b72a3e29166b9334513f27c97
 
 /******************************************************************************************************************
 **
