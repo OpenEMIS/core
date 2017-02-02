@@ -94,22 +94,27 @@ class InstitutionSubjectStaffTable extends AppTable {
     public function staffAfterSave(Event $event, $staff)
     {
         $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
 
-        if ($staff->dirty('end_date')) {
+        // if ($staff->dirty('end_date')) {
+            $selectConditions = [];
+            if ($staff->isNew()) {
+                $selectConditions = [
+                    $InstitutionStaff->aliasField('id') => $staff->id,
+                    $InstitutionStaff->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED')
+                ];           
+            } else {
+                $selectConditions = ['Users.id' => $staff->staff_id];
+            }
 
             //get the entire information of the staff
-            $InstitutionStaff = TableRegistry::get('Institution.Staff');
             $StaffData = $InstitutionStaff
                         ->find('withBelongsTo')
                         ->find('byInstitution', ['Institutions.id' => $staff->institution_id])
-                        ->where([
-                            'Users.id' => $staff->staff_id,
-                            $InstitutionStaff->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED')
-                        ])
+                        ->where($selectConditions)
                         ->toArray();
 
             $updateEndDate = false;
-
 
             // use case: Teacher holding one teaching position, teaching position will be ended
             // expected: Teaching subject will be ended based on the position
@@ -142,15 +147,32 @@ class InstitutionSubjectStaffTable extends AppTable {
                 }
             }
 
-            if ($updateEndDate && $endDate) {
+            $updateConditions = [];
+            if ($updateEndDate) {
+
+                $updateConditions = [
+                    'staff_id' => $staff->staff_id,
+                    'institution_id' => $staff->institution_id
+                ];
+
+                if ($staff->isNew()) {
+                    if (!is_null($endDate)) {
+                        $updateConditions['AND'] = [
+                            'end_date IS NOT NULL',
+                            'end_date > ' => $staff->start_date->format('Y-m-d'),
+                            'end_date < ' => $endDate->format('Y-m-d')
+                        ];
+                    } else {
+                        $endDate = null;
+                        $updateConditions ['end_date > '] = $staff->start_date->format('Y-m-d');
+                    }
+                }
+
                 $this->updateAll( 
                     ['end_date' => $endDate],
-                    [
-                        'staff_id' => $staff->staff_id,
-                        'institution_id' => $staff->institution_id
-                    ]
+                    $updateConditions
                 );
             }
-        }
+        // }
     }
 }
