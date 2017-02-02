@@ -4,8 +4,8 @@ namespace Institution\Model\Entity;
 use Cake\ORM\Entity;
 
 class InstitutionSubjectStudent extends Entity {
-	protected $_virtual = ['name', 'student_status', 'student_user_id', 'student_openemis_no', 'student_gender'];
-	
+	protected $_virtual = ['name', 'student_user_id', 'student_openemis_no', 'student_gender'];
+
 	protected function _getStudentName() {
 		$value = '';
 		if ($this->has('user')) {
@@ -49,16 +49,6 @@ class InstitutionSubjectStudent extends Entity {
 				if (array_key_exists('gender', $this->user)) {
 					$value = __($this->user['gender']['name']);
 				}
-			}
-		}
-		return $value;
-	}
-
-	protected function _getStudentStatus() {
-		$value = '';
-		if ($this->has('class_student')) {
-			if ($this->class_student->has('student_status')) {
-				$value = __($this->class_student->student_status->name);
 			}
 		}
 		return $value;
