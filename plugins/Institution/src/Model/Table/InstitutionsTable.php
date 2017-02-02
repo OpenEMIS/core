@@ -535,10 +535,11 @@ class InstitutionsTable extends AppTable  {
 				if ($areaId > 0) {
 					$path = $this->Areas
 						->find('path', ['for' => $areaId])
+						->contain('AreaLevels')
 						->toArray();
 
 					foreach($path as $value){
-						if ($value['area_level_id'] == $areaLevel) {
+						if ($value['area_level']['level'] == $areaLevel) {
 							$areaName = $value['name'];
 						}
 					}
@@ -564,7 +565,15 @@ class InstitutionsTable extends AppTable  {
 				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 				$AreaTable = TableRegistry::get('Area.AreaLevels');
-				return $AreaTable->get($areaLevel)->name;
+				$value = $AreaTable->find()
+					->where([$AreaTable->aliasField('level') => $areaLevel])
+					->first();
+
+				if (is_object($value)) {
+					return $value->name;
+				} else {
+					return $areaLevel;
+				}
 			} else {
 				return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 			}
