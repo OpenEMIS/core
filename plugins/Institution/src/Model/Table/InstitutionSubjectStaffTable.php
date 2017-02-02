@@ -7,8 +7,10 @@ use Cake\Validation\Validator;
 use Cake\I18n\time;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use App\Model\Traits\OptionsTrait;
 
 class InstitutionSubjectStaffTable extends AppTable {
+    use OptionsTrait;
 	public function initialize(array $config) {
 		parent::initialize($config);
 		
@@ -91,14 +93,86 @@ class InstitutionSubjectStaffTable extends AppTable {
 
     public function staffAfterSave(Event $event, $staff)
     {
-        if ($staff->dirty('end_date')) {        
-            $this->updateAll( 
-                ['end_date' => $staff->end_date],
-                [
+        $StaffStatusesTable = TableRegistry::get('Staff.StaffStatuses');
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+
+        // if ($staff->dirty('end_date')) {
+            $selectConditions = [];
+            if ($staff->isNew()) {
+                $selectConditions = [
+                    $InstitutionStaff->aliasField('id') => $staff->id,
+                    $InstitutionStaff->aliasField('staff_status_id') => $StaffStatusesTable->getIdByCode('ASSIGNED')
+                ];           
+            } else {
+                $selectConditions = ['Users.id' => $staff->staff_id];
+            }
+
+            //get the entire information of the staff
+            $StaffData = $InstitutionStaff
+                        ->find('withBelongsTo')
+                        ->find('byInstitution', ['Institutions.id' => $staff->institution_id])
+                        ->where($selectConditions)
+                        ->toArray();
+
+            $updateEndDate = false;
+
+            // use case: Teacher holding one teaching position, teaching position will be ended
+            // expected: Teaching subject will be ended based on the position
+            if (count($StaffData) == 1) {
+                if ($StaffData[0]->position->staff_position_title->type == 1) { //if teaching position
+                    $updateEndDate = true;
+                    $endDate = $staff->end_date;
+                }
+            } else {
+                // use case: Teacher holding one teaching position and one non-teaching position, teaching position will be ended
+                // expected: Teaching subject will be ended based on the teaching position
+                $endDate = '';
+                foreach ($StaffData as $key => $value) { //loop through position
+                    if ($value->position->staff_position_title->type == 1) { //if teaching position
+                        $updateEndDate = true;
+                        
+                        if (is_null($value->end_date)) { //if null, then always get it.
+                            $endDate = $value->end_date;
+                            break;
+                        } else {
+                            if (!empty($endDate)) {
+                                if ($endDate < $value->end_date) {
+                                    $endDate = $value->end_date;
+                                }
+                            } else {
+                                $endDate = $value->end_date;
+                            }
+                        }
+                    }
+                }
+            }
+
+            $updateConditions = [];
+            if ($updateEndDate) {
+
+                $updateConditions = [
                     'staff_id' => $staff->staff_id,
                     'institution_id' => $staff->institution_id
-                ]
-            );
-        }
+                ];
+
+                if ($staff->isNew()) {
+                    if (!is_null($endDate)) {
+                        $updateConditions['AND'] = [
+                            'end_date IS NOT NULL',
+                            'end_date > ' => $staff->start_date->format('Y-m-d'),
+                            'end_date < ' => $endDate->format('Y-m-d')
+                        ];
+                    } else {
+                        $endDate = null;
+                        $updateConditions ['end_date > '] = $staff->start_date->format('Y-m-d');
+                    }
+                }
+
+                $this->updateAll( 
+                    ['end_date' => $endDate],
+                    $updateConditions
+                );
+            }
+        // }
     }
 }
