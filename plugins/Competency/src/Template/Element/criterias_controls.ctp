@@ -32,18 +32,6 @@
                         'data-named-group' => 'period'
                     ));
                 }
-
-                if (!empty($itemOptions)) {
-                    echo $this->Form->input('items', array(
-                        'class' => 'form-control',
-                        'label' => false,
-                        'options' => $itemOptions,
-                        'default' => $selectedItem,
-                        'url' => $baseUrl,
-                        'data-named-key' => 'item',
-                        'data-named-group' => 'period,template'
-                    ));
-                }
             ?>
         </div>
     </div>
