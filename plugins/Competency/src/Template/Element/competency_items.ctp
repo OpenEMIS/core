@@ -1,17 +1,21 @@
 <?php
     $alias = $ControllerAction['table']->alias();
-    $this->Form->unlockField('Competency.competency_items');
     // pr($data);
 ?>
 
-<?php if ($ControllerAction['action'] == 'view') { ?>
+<?php if ($ControllerAction['action'] == 'view') {?>
     <div class="table-in-view">
         <table class="table">
             <?php if (isset($data['competency_items'])) : ?>
+                <thead>
+                    <th><?= __('Name')?></th>
+                    <th><?= __('Criterias')?></th>
+                </thead>
                 <tbody>
                     <?php foreach ($data['competency_items'] as $i => $item) : ?>
                         <tr>
                             <td><?= $item->name; ?></td>
+                            <td><?= count($item->criterias); ?></td>
                         </tr>
                     <?php endforeach ?>
                 </tbody>
@@ -25,10 +29,15 @@
             <div class="table-in-view">
                 <table class="table">
                     <?php if (isset($data['competency_items'])) : ?>
+                        <thead>
+                            <th><?= __('Name')?></th>
+                            <th><?= __('Criterias')?></th>
+                        </thead>
                         <tbody>
                             <?php foreach ($data['competency_items'] as $i => $item) : ?>
                                 <tr>
                                     <td><?= $item->name; ?></td>
+                                    <td><?= count($item->criterias); ?></td>
                                 </tr>
                             <?php endforeach ?>
                         </tbody>

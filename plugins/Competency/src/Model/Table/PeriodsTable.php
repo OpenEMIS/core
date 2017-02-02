@@ -42,7 +42,7 @@ class PeriodsTable extends ControllerActionTable {
         ]);
 
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
-        
+
         $this->setDeleteStrategy('restrict');
     }
 
@@ -57,7 +57,7 @@ class PeriodsTable extends ControllerActionTable {
                     'provider' => 'table'
                 ]
             ])
-            ->requirePresence('competency_items')
+            ->requirePresence('competency_items', 'create')
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', true]
             ])
@@ -111,7 +111,7 @@ class PeriodsTable extends ControllerActionTable {
             $data['itemOptions'] = $itemOptions;
             $data['selectedItem'] = $selectedItem;
         }
-        
+
         $extra['elements']['control'] = [
             'name' => 'Competency.criterias_controls',
             'data' => $data,
@@ -139,7 +139,7 @@ class PeriodsTable extends ControllerActionTable {
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'CompetencyItems','Templates'
+            'CompetencyItems.Criterias','Templates'
         ]);
     }
 
@@ -205,7 +205,7 @@ class PeriodsTable extends ControllerActionTable {
         $request = $this->request;
         $request->query['template'] = '-1';
         $request->query['item'] = '-1';
-        
+
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('academic_period_id', $request->data[$this->alias()])) {
@@ -224,10 +224,10 @@ class PeriodsTable extends ControllerActionTable {
                 list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
                 $templateOptions = $this->Templates->getTemplateByAcademicPeriod($selectedPeriod);
-                
+
                 $attr['options'] = $templateOptions;
                 $attr['onChangeReload'] = 'changeCompetencyTemplate';
-                
+
             } else {
                 $attr['type'] = 'readonly';
                 $attr['value'] = $attr['entity']->competency_template_id;
@@ -264,14 +264,14 @@ class PeriodsTable extends ControllerActionTable {
                 list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
                 $selectedTemplate = $request->query('template');
-                    
+
                 $itemOptions = [];
                 if ($selectedTemplate) {
                     $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
                 }
-                
+
                 $attr['options'] = $itemOptions;
-                
+
             } else {
                 $attr['type'] = 'element';
                 $attr['element'] = 'Competency.competency_items';
