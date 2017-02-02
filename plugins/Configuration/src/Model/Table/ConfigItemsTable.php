@@ -13,18 +13,23 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 
 class ConfigItemsTable extends AppTable {
 	use OptionsTrait;
 
 	private $configurations = [];
+	private $languagePath = TMP . 'cache'. DS . 'language_menu';
+	private $languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Students' => ['index']
+        	'Students' => ['index'],
+        	'Staff' => ['index'],
         ]);
 	}
 
@@ -109,7 +114,7 @@ class ConfigItemsTable extends AppTable {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
 	{
-		$session = $this->request->session();
+
 		if ($entity->code == 'language') {
 			if ($entity->value != 'en') {
 				$entity = $this->find()
@@ -121,10 +126,24 @@ class ConfigItemsTable extends AppTable {
 				$entity->value = 0;
 				$this->save($entity);
 			}
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		} else if ($entity->code == 'language_menu') {
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		}
+	}
+
+	private function deleteLanguageCacheFile()
+	{
+		$dir = new Folder($this->languagePath, true);
+    	$filesAndFolders = $dir->read();
+    	$files = $filesAndFolders[1];
+
+    	if (in_array('language', $files)) {
+    		$languageFile = new File($this->languageFilePath);
+    		$languageFile->delete();
+    	}
+    	$session = $this->request->session();
+		$session->delete('System.language_menu');
 	}
 
 	public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
@@ -158,6 +177,12 @@ class ConfigItemsTable extends AppTable {
 								'ConfigItemOptions.visible' => 1
 							])
 							->toArray();
+						if (in_array($entity->option_type, ['date_format'])) {
+							foreach ($options as $key => $value) {
+								$options[$key] = date($key);
+							}
+						}
+
 						$attr['options'] = $options;
 					}
 
@@ -258,8 +283,8 @@ class ConfigItemsTable extends AppTable {
 					])
 					->first();
 				if (is_object($value)) {
-					if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-						return date($value->$valueField);
+					if ($entity->code == 'date_format') {
+						return date($entity->$valueField);
 					} else {
 						return $value->option;
 					}
@@ -326,6 +351,24 @@ class ConfigItemsTable extends AppTable {
 			}
 		}
 		return $model;
+	}
+
+	public function getSystemLanguageOptions()
+	{
+		$dir = new Folder($this->languagePath, true);
+        $filesAndFolders = $dir->read();
+        $files = $filesAndFolders[1];
+        $languageFilePath = $this->languageFilePath;
+        $languageFile = new File($languageFilePath, true);
+        if (!in_array('language', $files)) {
+            $showLanguage = $this->value('language_menu');
+            $systemLanguage = $this->value('language');
+            $languageArr = ['language_menu' => $showLanguage, 'language' => $systemLanguage];
+            $status = $languageFile->write(json_encode($languageArr));
+        }
+        $languageArr = json_decode($languageFile->read(), true);
+
+        return $languageArr;
 	}
 
 

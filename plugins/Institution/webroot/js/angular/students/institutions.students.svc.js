@@ -18,7 +18,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getExternalStudentRecords: getExternalStudentRecords,
         setInstitutionId: setInstitutionId,
         getInstitutionId: getInstitutionId,
-        getDefaultIdentityType: getDefaultIdentityType,
         getAcademicPeriods: getAcademicPeriods,
         getEducationGrades: getEducationGrades,
         getClasses: getClasses,
@@ -35,7 +34,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getInternalIdentityTypes: getInternalIdentityTypes,
         addIdentityType: addIdentityType,
         setExternalSourceUrl: setExternalSourceUrl,
-        getAccessToken: getAccessToken,
         resetExternalVariable: resetExternalVariable,
         getGenders: getGenders,
         getUniqueOpenEmisId: getUniqueOpenEmisId,
@@ -96,78 +94,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return this.externalSourceMapping;
     }
 
-    function getAccessToken()
-    {
-        var deferred = $q.defer();
-        var vm = this;
-        this.init(angular.baseUrl);
-        ConfigItems
-        .select()
-        .where({
-            code: 'external_data_source_type'
-        })
-        .ajax({defer: true})
-        .then(function(response) {
-            var externalDataSourceType = response.data[0]['value'];
-            ExternalDataSourceAttributes
-            .select()
-            .where({
-                external_data_source_type: externalDataSourceType
-            })
-            .ajax({defer: true})
-            .then(function(response) {
-                var data = response.data;
-                var externalDataSourceObject = new Object;
-                for(var i = 0; i < data.length; i++) {
-                    externalDataSourceObject[data[i].attribute_field] = data[i].value;
-                }
-                delete externalDataSourceObject.private_key;
-                delete externalDataSourceObject.public_key;
-                vm.externalSourceMapping = externalDataSourceObject;
-                if (externalDataSourceObject.hasOwnProperty('token_uri')) {
-                    var tokenUri = externalDataSourceObject.token_uri;
-
-                    if (tokenUri != '') {
-                        delete externalDataSourceObject.token_uri;
-                        delete externalDataSourceObject.record_uri;
-                        delete externalDataSourceObject.redirect_uri;
-
-                        var url = angular.baseUrl + '/Configurations/generateServerAuthorisationToken?external_data_source_type=' + externalDataSourceType;
-                        $http({
-                            method: 'GET',
-                            url: url,
-                            headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-                        }).then(function (jwt) {
-                            var postData = 'grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer';
-                            postData = postData + '&assertion=' + jwt.data;
-                            $http({
-                                method: 'POST',
-                                url: tokenUri,
-                                data: postData,
-                                headers: {'Content-Type': 'application/x-www-form-urlencoded'}
-                            }).then(function(res) {
-                                deferred.resolve(res.data.access_token);
-                            }, function(error) {
-                                deferred.reject(error);
-                            });
-                        }, function(error) {
-                            deferred.reject(error);
-                        });
-                    } else {
-                        var error = 'No Token URI';
-                        deferred.reject(error);
-                    }
-                }
-            }, function(error){
-                deferred.reject(error);
-            });
-        }, function(error) {
-            deferred.reject(error);
-        });
-
-        return deferred.promise;
-    }
-
     function getExternalSourceAttributes() {
         return ExternalDataSourceAttributes
             .find('attributes')
@@ -190,88 +116,67 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var deferred = $q.defer();
         var vm = this;
 
-        this.getExternalSourceUrl()
-        .then(function(sourceUrl) {
-            var source = sourceUrl.data;
-            vm.getAccessToken()
-            .then(function(token){
-                var sourceUrl = null;
-                if (source.length > 0) {
-                    sourceUrl = source[0].value;
-                    externalSource = sourceUrl;
-                    externalToken = token;
-                } else {
-                    sourceUrl = source.record_uri;
-                }
-                var pageParams = {
-                    limit: options['endRow'] - options['startRow'],
-                    page: options['endRow'] / (options['endRow'] - options['startRow']),
-                };
+        vm.getExternalSourceAttributes()
+        .then(function(attributes) {
+            var attr = attributes.data;
+            delete attr.private_key;
+            delete attr.public_key;
+            vm.externalSourceMapping = attr;
+            var url = angular.baseUrl + '/Configurations/getExternalUsers?page={page}&limit={limit}&first_name={first_name}&last_name={last_name}&identity_number={identity_number}&date_of_birth={date_of_birth}';
+            var pageParams = {
+                limit: options['endRow'] - options['startRow'],
+                page: options['endRow'] / (options['endRow'] - options['startRow']),
+            };
 
-                var params = {};
-                params['super_admin'] = 0;
+            var params = {};
+            params['super_admin'] = 0;
 
-                // Get url from user input
-                var replaceURL = sourceUrl;
-                var replacement = {
-                    "{page}": pageParams.page,
-                    "{limit}": pageParams.limit,
-                    "{first_name}": '',
-                    "{last_name}": '',
-                    "{identity_number}": '',
-                    "{date_of_birth}": ''
-                }
+            // Get url from user input
+            var replaceURL = url;
+            var replacement = {
+                "{page}": pageParams.page,
+                "{limit}": pageParams.limit,
+                "{first_name}": '',
+                "{last_name}": '',
+                "{identity_number}": '',
+                "{date_of_birth}": ''
+            }
 
-                var conditionsCount = 0;
+            var conditionsCount = 0;
 
-                if (options.hasOwnProperty('conditions')) {
-                    for (var key in options['conditions']) {
-                        if (typeof options['conditions'][key] == 'string') {
-                            options['conditions'][key] = options['conditions'][key].trim();
-                            if (key != 'date_of_birth') {
-                                params[key] = options['conditions'][key];
-                            } else {
-                                params[key] = vm.formatDate(options['conditions'][key]);
-                            }
-                            var replaceKey = '{'+key+'}';
-                            replacement[replaceKey] = params[key];
-                            conditionsCount++;
+            if (options.hasOwnProperty('conditions')) {
+                for (var key in options['conditions']) {
+                    if (typeof options['conditions'][key] == 'string') {
+                        options['conditions'][key] = options['conditions'][key].trim();
+                        if (key != 'date_of_birth') {
+                            params[key] = options['conditions'][key];
+                        } else {
+                            params[key] = vm.formatDate(options['conditions'][key]);
                         }
+                        var replaceKey = '{'+key+'}';
+                        replacement[replaceKey] = params[key];
+                        conditionsCount++;
                     }
                 }
-                var url = replaceURL.replace(/{\w+}/g, function(all) {
-                    return all in replacement ? replacement[all] : all;
-                });
-
-                var authorizationHeader = 'Bearer ' + token;
-
-                var success = function(response, deferred) {
-                    var studentData = response.data;
-                    studentData['conditionsCount'] = conditionsCount;
-                    if (angular.isObject(studentData)) {
-                        deferred.resolve(studentData);
-                    } else {
-                        deferred.reject('Error getting student records');
-                    }
-                };
-
-                var opt = {
-                    method: 'GET',
-                    headers: {'Content-Type': 'application/json', 'Authorization': authorizationHeader}
-                }
-                return KdOrmSvc.customAjax(url, opt);
-            }, function(error){
-                deferred.reject(error);
-            })
-            .then(function(response){
-                deferred.resolve(response);
-            }, function(error){
-                deferred.reject(error);
+            }
+            var url = replaceURL.replace(/{\w+}/g, function(all) {
+                return all in replacement ? replacement[all] : all;
             });
+            externalSource = true;
+
+            var opt = {
+                method: 'GET'
+            }
+            return KdOrmSvc.customAjax(url, opt);
         }, function(error) {
-            console.log(error);
+            deferred.reject(error);
+        })
+        .then(function(response) {
+            deferred.resolve(response);
+        }, function(error) {
             deferred.reject(error);
         });
+
         return deferred.promise;
     };
 
@@ -435,6 +340,12 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 }
                 if (typeof userRecord[attr['identity_type_mapping']] != 'undefined') {
                     identityType = userRecord[attr['identity_type_mapping']];
+                }
+                if (typeof userRecord[attr['address_mapping']] != 'undefined') {
+                    newUserRecord['address'] = userRecord[attr['address_mapping']];
+                }
+                if (typeof userRecord[attr['postal_mapping']] != 'undefined') {
+                    newUserRecord['postal_code'] = userRecord[attr['postal_mapping']];
                 }
 
                 vm.getUserRecord(newUserRecord['external_reference'])
@@ -678,21 +589,6 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
 
     function getInstitutionId() {
         return this.institutionId;
-    };
-
-    function getDefaultIdentityType() {
-        var success = function(response, deferred) {
-            var defaultIdentityType = response.data.data;
-            if (angular.isObject(defaultIdentityType) && defaultIdentityType.length > 0) {
-                deferred.resolve(defaultIdentityType);
-            } else {
-                deferred.resolve(defaultIdentityType);
-            }
-        };
-
-        return IdentityTypes
-            .find('DefaultIdentityType')
-            .ajax({success: success, defer: true});
     };
 
     function makeDate(datetime) {
