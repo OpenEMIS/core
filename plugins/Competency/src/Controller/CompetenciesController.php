@@ -23,13 +23,12 @@ class CompetenciesController extends AppController
     public function GradingTypes()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.GradingTypes']); }
     // End
 
-    public function beforeFilter(Event $event) {
-        parent::beforeFilter($event);
-
+    public function getCompetencyTabs($params = [])
+    {
         $tabElements = [
             'Templates' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates'],
-                'text' => __('Templates')
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Templates', 0 => 'view'],
+                'text' => __('Overview')
             ],
             'Items' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Items'],
@@ -38,24 +37,19 @@ class CompetenciesController extends AppController
             'Criterias' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Criterias'],
                 'text' => __('Criterias')
-            ],
-            'Periods' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Periods'],
-                'text' => __('Periods')
-            ],
-            'GradingTypes' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'GradingTypes'],
-                'text' => __('Criteria Grading Types')
-            ],
+            ]
         ];
+        $queryString = $this->ControllerAction->getQueryString();
+        if (isset($queryString['competency_template_id']) && isset($queryString['academic_period_id'])) {
+            $tabElements['Templates']['url'][1] = $this->ControllerAction->paramsEncode(['id' => $queryString['competency_template_id'], 'academic_period_id' => $queryString['academic_period_id']]);
+        }
+
+        foreach ($tabElements as $key => $value) {
+            $tabElements[$key]['url'] = array_merge($value['url'], $params);
+        }
 
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
-
-        // if ($this->request->action=='addNewAssessmentPeriod') {
-        //  $this->request->params['_ext'] = 'json';
-        // }
-
     }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
