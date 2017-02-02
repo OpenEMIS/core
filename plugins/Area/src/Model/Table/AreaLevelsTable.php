@@ -69,24 +69,12 @@ class AreaLevelsTable extends ControllerActionTable
 		}
     }
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-    	$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-		$configAreaLevel = $ConfigItems->value('institution_area_level_id');
-    	$deletedAreaLevel = $entity->level;
+        $listeners = [
+            TableRegistry::get('Configuration.ConfigItems')
+        ];
 
-    	// if area level used for institution_area_level_id config is deleted
-    	if ($configAreaLevel == $deletedAreaLevel) {
-    		// get default area level
-    		$config = $ConfigItems->findByCode('institution_area_level_id')->first();
-			$defaultAreaLevel = $config->default_value;
-
-			// update institution_area_level_id config to default level
-    		$ConfigItems->query()
-                        ->update()
-                        ->set(['value' => $defaultAreaLevel])
-                        ->where(['code' => 'institution_area_level_id'])
-                         ->execute();
-    	}
+        $this->dispatchEventToModels('Model.AreaLevel.afterDelete', [$entity], $this, $listeners);
     }
 }

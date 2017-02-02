@@ -44,6 +44,11 @@ class ConfigItemsTable extends AppTable {
 		$this->ControllerAction->field('value', ['visible' => true]);
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.AreaLevel.afterDelete'] = 'areaLevelAfterDelete';
+		return $events;
+	}
 
 /******************************************************************************************************************
 **
@@ -344,6 +349,23 @@ class ConfigItemsTable extends AppTable {
 		return $model;
 	}
 
+	public function areaLevelAfterDelete(Event $event, $areaLevel) {
+		$configAreaLevel = $this->value('institution_area_level_id');
+    	$deletedAreaLevel = $areaLevel->level;
+
+    	// if area level used for institution_area_level_id config is deleted
+    	if ($configAreaLevel == $deletedAreaLevel) {
+    		$config = $this->findByCode('institution_area_level_id')->first();
+			$defaultAreaLevel = $config->default_value;
+
+			// update institution_area_level_id config to default level
+    		$this->query()
+				->update()
+				->set(['value' => $defaultAreaLevel])
+				->where(['code' => 'institution_area_level_id'])
+				->execute();
+    	}
+	}
 
 /******************************************************************************************************************
 **
