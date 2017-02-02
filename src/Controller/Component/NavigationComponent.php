@@ -2,6 +2,7 @@
 namespace App\Controller\Component;
 
 use Cake\Controller\Component;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class NavigationComponent extends Component
@@ -175,6 +176,43 @@ class NavigationComponent extends Component
 		}
 	}
 
+	public function checkClassification(array &$navigations)
+	{
+		$session = $this->request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+
+		if (!empty($institutionId)) {
+			$Institutions = TableRegistry::get('Institution.Institutions');
+			$currentInstitution = $Institutions->get($institutionId);
+
+			if ($currentInstitution) {
+				$isAcademic = $currentInstitution->classification;
+
+				if (!$isAcademic) {
+					// navigation items to exclude from non-academic institutions
+					$academicArray = [
+						'Institution.Academic',
+						'Institutions.Students.index',
+						'Institutions.StudentAttendances.index',
+						'Institutions.StudentBehaviours.index',
+						'Institutions.Assessments.index',
+						'Institutions.Examinations',
+						'Institutions.Fees',
+						'Institutions.StudentFees'
+					];
+
+					$navigationParentList = $this->array_column($navigations, 'parent');
+					foreach ($navigationParentList as $navigationKey => $parent) {
+						// unset navigation item and all children if in academicArray
+						if (in_array($parent, $academicArray) || in_array($navigationKey, $academicArray)) {
+							unset($navigations[$navigationKey]);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// PHP 5.5 array_column alternative
 	public function array_column($array, $column_name)
 	{
@@ -204,17 +242,19 @@ class NavigationComponent extends Component
 		$institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
 		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
 
-
 		if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+			$this->checkClassification($navigations);
 		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
+			$this->checkClassification($navigations);
 		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+			$this->checkClassification($navigations);
 		} elseif ($controller->name == 'Directories' && $action != 'index') {
 			$navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
