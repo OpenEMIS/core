@@ -31,7 +31,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
+        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_period_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -201,7 +201,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
                 $attr['onChangeReload'] = 'changeAcademicPeriod';
             } else if ($action == 'edit') {
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $periodOptions[$attr['entity']->academic_period_id];
+                $attr['attr']['value'] = $this->AcademicPeriods->get([$attr['entity']->academic_period_id])->name;
                 $attr['value'] = $attr['entity']->academic_period_id;
             }
         }
