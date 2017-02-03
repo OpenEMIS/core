@@ -19,6 +19,7 @@ class StudentCompetenciesTable extends ControllerActionTable
     private $competencyTemplateId = null;
     private $competencyPeriodId = null;
     private $competencyItemId = null;
+    private $competencyCriteriaCount = 0;
 
     public function initialize(array $config)
     {
@@ -322,6 +323,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $value = '';
         $form = $event->subject()->Form;
 
+        $competencyPeriodCount = 0;
         $tableHeaders = [];
         $tableCells = [];
 
@@ -337,12 +339,14 @@ class StudentCompetenciesTable extends ControllerActionTable
             ->where([
                 $CompetencyPeriods->aliasField('academic_period_id') => $this->academicPeriodId,
                 $CompetencyPeriods->aliasField('competency_template_id') => $this->competencyTemplateId,
-                $CompetencyPeriods->aliasField('date_enabled < ') => $today,
-                $CompetencyPeriods->aliasField('date_disabled > ') => $today
+                $CompetencyPeriods->aliasField('date_enabled <= ') => $today,
+                $CompetencyPeriods->aliasField('date_disabled >= ') => $today
             ])
             ->all();
 
         if (!$competencyPeriodResults->isEmpty()) {
+            $competencyPeriodCount = $competencyPeriodResults->count();
+
             $params = $this->getQueryString();
             // must reset
             unset($params['competency_item_id']);
@@ -368,14 +372,9 @@ class StudentCompetenciesTable extends ControllerActionTable
 
                 $tableCells[$periodKey] = $rowData;
             }
-        } else {
-            $rowData = [];
-            $rowData[] = $this->getMessage('general.noRecords');
-            $rowData[] = '';
-
-            $tableCells[] = $rowData;
         }
 
+        $attr['competencyPeriodCount'] = $competencyPeriodCount;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
@@ -392,19 +391,14 @@ class StudentCompetenciesTable extends ControllerActionTable
         $value = '';
         $form = $event->subject()->Form;
 
+        $competencyItemCount = 0;
         $tableHeaders = [];
         $tableCells = [];
 
         $tableHeaders[] = [__('Active') => ['width' => '80']];
         $tableHeaders[] = __('Item');
 
-        if (is_null($this->competencyPeriodId)) {
-            $rowData = [];
-            $rowData[] = $this->getMessage('general.noRecords');
-            $rowData[] = '';
-
-            $tableCells[] = $rowData;
-        } else {
+        if (!is_null($this->competencyPeriodId)) {
             $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
             $competencyPeriodEntity = $CompetencyPeriods
                 ->find()
@@ -421,6 +415,8 @@ class StudentCompetenciesTable extends ControllerActionTable
                 $this->competencyItemId = $this->getQueryString('competency_item_id');
 
                 foreach ($competencyPeriodEntity->competency_items as $itemKey => $itemObj) {
+                    $competencyItemCount++;
+
                     $rowData = [];
                     if (is_null($this->competencyItemId) || $this->competencyItemId == $itemObj->id) {
                         $inputHtml = $itemObj->name;
@@ -441,15 +437,10 @@ class StudentCompetenciesTable extends ControllerActionTable
 
                     $tableCells[$itemKey] = $rowData;
                 }
-            } else {
-                $rowData = [];
-                $rowData[] = $this->getMessage('general.noRecords');
-                $rowData[] = '';
-
-                $tableCells[] = $rowData;
             }
         }
 
+        $attr['competencyItemCount'] = $competencyItemCount;
         $attr['tableHeaders'] = $tableHeaders;
         $attr['tableCells'] = $tableCells;
 
@@ -492,9 +483,14 @@ class StudentCompetenciesTable extends ControllerActionTable
 
             if ($competencyItemEntity->has('criterias')) {
                 foreach ($competencyItemEntity->criterias as $colKey => $criteriaObj) {
+                    $this->competencyCriteriaCount++;
+
                     $tableHeaders[$colKey + $colOffset] = $criteriaObj['name'];
                 }
             }
+        }
+        if ($action == 'edit' && $this->competencyCriteriaCount == 0) {
+            $this->Alert->warning('StudentCompetencies.noCriterias');
         }
 
         if (!is_null($this->classId)) {
@@ -685,6 +681,14 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         return $buttons;
+    }
+
+    public function onGetFormButtons(Event $event, ArrayObject $buttons)
+    {
+        if ($this->action == 'edit' && $this->competencyCriteriaCount == 0) {
+            // hide save and cancel buttons
+            $buttons->exchangeArray([]);
+        }
     }
 
     private function getCompetencyGradingTypes() {
