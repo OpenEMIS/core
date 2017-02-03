@@ -10,25 +10,22 @@ use Cake\Validation\Validator;
 use Cake\Collection\Collection;
 
 use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\MessagesTrait;
-use App\Model\Traits\OptionsTrait;
 
-class GradingTypesTable extends ControllerActionTable {
-    use MessagesTrait;
-    use OptionsTrait;
-
+class CompetencyGradingTypesTable extends ControllerActionTable
+{
     public function initialize(array $config)
     {
         $this->table('competency_grading_types');
 
         parent::initialize($config);
 
-        $this->hasMany('GradingOptions', ['className' => 'Competency.GradingOptions', 'foreignKey' => 'competency_grading_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('GradingOptions', ['className' => 'Competency.CompetencyGradingOptions', 'foreignKey' => 'competency_grading_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
 
         $validator
@@ -42,12 +39,6 @@ class GradingTypesTable extends ControllerActionTable {
         return $validator;
     }
 
-
-/******************************************************************************************************************
-**
-** cakephp events
-**
-******************************************************************************************************************/
     public function beforeAction(Event $event, ArrayObject $extra)
     {
 
@@ -64,12 +55,6 @@ class GradingTypesTable extends ControllerActionTable {
         }
     }
 
-
-/******************************************************************************************************************
-**
-** addEdit action events
-**
-******************************************************************************************************************/
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields());
@@ -82,7 +67,7 @@ class GradingTypesTable extends ControllerActionTable {
     public function addEditAfterAction (Event $event, Entity $entity, ArrayObject $extra)
     {
         // $gradingOptions will contain the GradeOptionId and the association.(1 for true and 0 for false)
-        // $GradingOptions = TableRegistry::get('Competency.GradingOptions');
+        // $GradingOptions = TableRegistry::get('Competency.CompetencyGradingOptions');
         $gradingOptions = [];
         if (!is_null($entity->grading_options)) {
             foreach ($entity->grading_options as $key => $gradingOption) {
@@ -98,7 +83,8 @@ class GradingTypesTable extends ControllerActionTable {
         $this->controller->set('gradingOptions', $gradingOptions);
     }
 
-    public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
+    public function addEditOnReload(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
+    {
         $groupOptionData = $this->GradingOptions->getFormFields();
         if (!empty($entity->id)) {
             $groupOptionData['competency_grading_type_id'] = $entity->id;
@@ -113,16 +99,10 @@ class GradingTypesTable extends ControllerActionTable {
         }
     }
 
-
-/******************************************************************************************************************
-**
-** edit action events
-**
-******************************************************************************************************************/
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         // get the array of the original gradeOptions
-        $GradingOptions = TableRegistry::get('Competency.GradingOptions');
+        $GradingOptions = TableRegistry::get('Competency.CompetencyGradingOptions');
         $query = $GradingOptions
             ->find()
             ->where(['competency_grading_type_id' => $entity->id])
@@ -167,12 +147,8 @@ class GradingTypesTable extends ControllerActionTable {
         }
     }
 
-/******************************************************************************************************************
-**
-** view action events
-**
-******************************************************************************************************************/
-    public function viewBeforeAction(Event $event, ArrayObject $extra) {
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
         $this->fields['grading_options']['formFields'] = array_keys($this->GradingOptions->getFormFields('view'));
 
         $this->setFieldOrder([
@@ -180,23 +156,13 @@ class GradingTypesTable extends ControllerActionTable {
         ]);
     }
 
-
-/******************************************************************************************************************
-**
-** viewEdit action events
-**
-******************************************************************************************************************/
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         $query->contain([
             $this->GradingOptions->alias()
         ]);
     }
 
-/******************************************************************************************************************
-**
-** viewEdit action events
-**
-******************************************************************************************************************/
     public function getCustomList($params = []) {
         if (array_key_exists('keyField', $params)) {
             $keyField = $params['keyField'];

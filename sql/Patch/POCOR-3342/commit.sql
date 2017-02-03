@@ -127,7 +127,7 @@ CREATE TABLE `competency_periods` (
 -- Table structure for table `competency_items_periods`
 DROP TABLE IF EXISTS `competency_items_periods`;
 CREATE TABLE `competency_items_periods` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `competency_item_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
   `competency_period_id` int(11) NOT NULL COMMENT 'links to competency_periods.id',
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -189,14 +189,21 @@ VALUES ('d24f6444-e922-11e6-b872-525400b263eb', 'Criterias', 'name', 'Administra
 
 -- security_functions
 UPDATE `security_functions`
-SET `order` = `order` + 5
+SET `order` = `order` + 3
 WHERE `order` >= 5056 AND `order` < 6000;
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 VALUES
+<<<<<<< HEAD
 (5061, 'Templates', 'Competencies', 'Administration', 'Competencies', 5000, 'Templates.index|Templates.view', 'Templates.edit', 'Templates.add', 'Templates.remove', NULL, 5056, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
 (5062, 'Items', 'Competencies', 'Administration', 'Competencies', 5000, 'Items.index|Items.view', 'Items.edit', 'Items.add', 'Items.remove', NULL, 5057, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
 (5063, 'Criterias', 'Competencies', 'Administration', 'Competencies', 5000, 'Criterias.index|Criterias.view', 'Criterias.edit', 'Criterias.add', 'Criterias.remove', NULL, 5058, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
 (5064, 'Periods', 'Competencies', 'Administration', 'Competencies', 5000, 'Periods.index|Periods.view', 'Periods.edit', 'Periods.add', 'Periods.remove', NULL, 5059, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
 (5065, 'GradingTypes', 'Competencies', 'Administration', 'Competencies', 5000, 'GradingTypes.index|GradingTypes.view', 'GradingTypes.edit', 'GradingTypes.add', 'GradingTypes.remove', NULL, 5060, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
 (1053, 'Competency Results', 'Institutions', 'Institutions', 'Students', 8, 'StudentCompetencies.index|StudentCompetencies.view', 'StudentCompetencies.edit', NULL, 'StudentCompetencies.remove', NULL, 1054, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00');
+=======
+(5061, 'Competency Setup', 'Competencies', 'Administration', 'Competencies', 5000, 'Templates.index|Templates.view|Items.index|Items.view|Criterias.index|Criterias.view', 'Templates.edit|Items.edit|Criterias.edit', 'Templates.add|Items.add|Criterias.add', 'Templates.remove|Items.remove|Criterias.remove', NULL, 5056, 1, NULL, NULL, NULL, 1, NOW()),
+(5062, 'Periods', 'Competencies', 'Administration', 'Competencies', 5000, 'Periods.index|Periods.view', 'Periods.edit', 'Periods.add', 'Periods.remove', NULL, 5057, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
+(5063, 'GradingTypes', 'Competencies', 'Administration', 'Competencies', 5000, 'GradingTypes.index|GradingTypes.view', 'GradingTypes.edit', 'GradingTypes.add', 'GradingTypes.remove', NULL, 5058, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
+(1053, 'Competency Results', 'Institutions', 'Institutions', 'Students', 8, 'StudentCompetencies.index|StudentCompetencies.view|StudentCompetencyResults.viewResults', 'StudentCompetencies.edit|StudentCompetencyResults.edit', 'StudentCompetencies.add|StudentCompetencyResults.add', NULL, NULL, 1054, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00');
+>>>>>>> 94b92422fbcadfba5246b3088d256db39472f38a
