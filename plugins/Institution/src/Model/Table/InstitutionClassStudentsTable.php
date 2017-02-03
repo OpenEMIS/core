@@ -538,6 +538,11 @@ class InstitutionClassStudentsTable extends AppTable {
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
         // PHPOE-2338 - implement afterDelete in InstitutionClassStudentsTable.php to delete from InstitutionSubjectStudentsTable
         $this->_autoDeleteSubjectStudent($entity);
+
+        $listeners = [
+            TableRegistry::get('Institution.StudentCompetencyResults')
+        ];
+        $this->dispatchEventToModels('Model.InstitutionClassStudents.afterDelete', [$entity], $this, $listeners);
     }
 
     private function _autoDeleteSubjectStudent(Entity $entity) {
@@ -554,5 +559,4 @@ class InstitutionClassStudentsTable extends AppTable {
             $InstitutionSubjectStudentsTable->delete($value);
         }
     }
-
 }
