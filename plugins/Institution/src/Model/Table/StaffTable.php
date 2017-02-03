@@ -577,7 +577,7 @@ class StaffTable extends ControllerActionTable {
 			'id' => $entity->id,
 			'userId' => $entity->staff_id
 		];
-		$tabElements = TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
+		$tabElements = $this->controller->getCareerTabElements($options);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Positions');
