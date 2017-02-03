@@ -466,7 +466,8 @@ class StudentCompetenciesTable extends ControllerActionTable
         // Build table header
         $tableHeaders[] = __('OpenEMIS ID');
         $tableHeaders[] = __('Student Name');
-        $colOffset = 2; // 0 -> OpenEMIS ID, 1 -> Student Name
+        $tableHeaders[] = __('Student Status');
+        $colOffset = 3; // 0 -> OpenEMIS ID, 1 -> Student Name, 2 -> Student Status
 
         $competencyItemEntity = null;
         if (!is_null($this->competencyItemId)) {
@@ -496,6 +497,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         if (!is_null($this->classId)) {
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
             $Users = $ClassStudents->Users;
+            $StudentStatuses = $ClassStudents->StudentStatuses;
             $CompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
             $students = $ClassStudents
                 ->find()
@@ -503,6 +505,8 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $CompetencyResults->aliasField('competency_grading_option_id'),
                     $CompetencyResults->aliasField('competency_criteria_id'),
                     $ClassStudents->aliasField('student_id'),
+                    $ClassStudents->aliasField('student_status_id'),
+                    $StudentStatuses->aliasField('name'),
                     $Users->aliasField('openemis_no'),
                     $Users->aliasField('first_name'),
                     $Users->aliasField('middle_name'),
@@ -511,6 +515,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $Users->aliasField('preferred_name')
                 ])
                 ->matching('Users')
+                ->matching('StudentStatuses')
                 ->leftJoin(
                     [$CompetencyResults->alias() => $CompetencyResults->table()],
                     [
@@ -549,6 +554,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                 }
 
                 $userObj = $studentObj->_matchingData['Users'];
+                $studentStatusObj = $studentObj->_matchingData['StudentStatuses'];
 
                 if ($studentId != $currentStudentId) {
                     if ($studentId != null) {
@@ -571,9 +577,11 @@ class StudentCompetenciesTable extends ControllerActionTable
                         // ]);
                         $rowData[] = $userObj->openemis_no;
                         $rowData[] = $userObj->name;
+                        $rowData[] = $studentStatusObj->name;
                     } else if ($action == 'edit') {
                         $rowData[] = $userObj->openemis_no . $rowInput;
                         $rowData[] = $userObj->name;
+                        $rowData[] = $studentStatusObj->name;
                     }
 
                     $studentId = $currentStudentId;
