@@ -18,8 +18,8 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         $this->table('competency_grading_types');
 
         parent::initialize($config);
-
-        $this->hasMany('GradingOptions', ['className' => 'Competency.CompetencyGradingOptions', 'foreignKey' => 'competency_grading_type_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias']);
+        $this->hasMany('GradingOptions', ['className' => 'Competency.CompetencyGradingOptions', 'foreignKey' => 'competency_grading_type_id']);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -52,6 +52,19 @@ class CompetencyGradingTypesTable extends ControllerActionTable
                     'label' => 'Criteria Grading Options'
                 ]
             ]);
+        }
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $criteriaForm = $this->getQueryString(null, 'criteriaForm');
+        if ($criteriaForm) {
+            $toolbarButtons = $extra['toolbarButtons'];
+            if ($toolbarButtons->offsetExists('back')) {
+                $toolbarButtons['back']['url']['action'] = 'Criterias';
+                $toolbarButtons['back']['url'][0] = 'add';
+            }
+            $extra['criteriaForm'] = $criteriaForm;
         }
     }
 
@@ -112,6 +125,18 @@ class CompetencyGradingTypesTable extends ControllerActionTable
                     break;
                 }
             }
+        }
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if ($extra->offsetExists('criteriaForm')) {
+            $url = $this->url('add');
+            $url['action'] = 'Criterias';
+            $criteriaForm = $extra['criteriaForm'];
+            $criteriaForm['competency_grading_type_id'] = $entity->id;
+            $url = $this->setQueryString($url, $criteriaForm, 'criteriaForm');
+            $extra['redirect'] = $url;
         }
     }
 
@@ -177,6 +202,13 @@ class CompetencyGradingTypesTable extends ControllerActionTable
                 ]);
             }
         }
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->GradingOptions->alias()
+        ];
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)

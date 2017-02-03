@@ -14,8 +14,7 @@ CREATE TABLE `competency_grading_types` (
   PRIMARY KEY (`id`),
   KEY `code` (`code`),
   KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`),
-  KEY `id` (`id`)
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of grading types that can be used for an assessable competency';
 
 -- competency_grading_options
@@ -32,8 +31,7 @@ CREATE TABLE `competency_grading_options` (
   PRIMARY KEY (`id`),
   KEY `competency_grading_type_id` (`competency_grading_type_id`),
   KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`),
-  KEY `id` (`id`)
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all options linked to a specific grading type for competency';
 
 
@@ -51,11 +49,11 @@ CREATE TABLE `competency_templates` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`,`academic_period_id`),
+  KEY `id` (`id`),
+  KEY `academic_period_id` (`academic_period_id`),
   KEY `education_grade_id` (`education_grade_id`),
   KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`),
-  KEY `academic_period_id` (`academic_period_id`),
-  KEY `id` (`id`)
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the competency template for a specific grade';
 
 -- Table structure for table `competency_items`
@@ -91,9 +89,9 @@ CREATE TABLE `competency_criterias` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`,`academic_period_id`, `competency_item_id`, `competency_template_id`),
-  KEY `competency_item_id` (`competency_item_id`),
-  KEY `academic_period_id` (`academic_period_id`),
   KEY `id` (`id`),
+  KEY `academic_period_id` (`academic_period_id`),
+  KEY `competency_item_id` (`competency_item_id`),
   KEY `competency_template_id` (`competency_template_id`),
   KEY `competency_grading_type_id` (`competency_grading_type_id`),
   KEY `modified_user_id` (`modified_user_id`),
@@ -117,11 +115,11 @@ CREATE TABLE `competency_periods` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`,`academic_period_id`),
+  KEY `id` (`id`),
+  KEY `academic_period_id` (`academic_period_id`),
   KEY `competency_template_id` (`competency_template_id`),
   KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`),
-  KEY `academic_period_id` (`academic_period_id`),
-  KEY `id` (`id`)
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of periods for a specific competency';
 
 -- Table structure for table `competency_items_periods`
@@ -138,13 +136,13 @@ CREATE TABLE `competency_items_periods` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`competency_item_id`,`competency_period_id`,`academic_period_id`,`competency_template_id`),
   UNIQUE KEY `id` (`id`),
-  KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`),
+  KEY `id_index` (`id`),
   KEY `competency_item_id` (`competency_item_id`),
   KEY `competency_period_id` (`competency_period_id`),
   KEY `academic_period_id` (`academic_period_id`),
-  KEY `id_index` (`id`),
-  KEY `competency_template_id` (`competency_template_id`)
+  KEY `competency_template_id` (`competency_template_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of competency items for a specific competency period';
 
 -- Table structure for table `student_competency_results`
@@ -164,9 +162,7 @@ CREATE TABLE `student_competency_results` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`student_id`,`competency_template_id`,`competency_item_id`,`competency_criteria_id`,`competency_period_id`,`institution_id`,`academic_period_id`),
-  KEY `competency_grading_option_id` (`competency_grading_option_id`),
-  KEY `modified_user_id` (`modified_user_id`),
-  KEY `created_user_id` (`created_user_id`),
+  KEY `id` (`id`),
   KEY `student_id` (`student_id`),
   KEY `competency_template_id` (`competency_template_id`),
   KEY `competency_item_id` (`competency_item_id`),
@@ -174,7 +170,9 @@ CREATE TABLE `student_competency_results` (
   KEY `competency_period_id` (`competency_period_id`),
   KEY `institution_id` (`institution_id`),
   KEY `academic_period_id` (`academic_period_id`),
-  KEY `id` (`id`)
+  KEY `competency_grading_option_id` (`competency_grading_option_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the competency results for an individual student in an institution';
 
 -- labels
