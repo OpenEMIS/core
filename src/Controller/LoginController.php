@@ -63,4 +63,20 @@ class LoginController extends Controller
         $this->set('username', $username);
         $this->set('password', $password);
     }
+
+    // Triggered from LocalizationComponent
+    // Controller.Localization.getLanguageOptions
+    public function getLanguageOptions(Event $event)
+    {
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
+        $systemLanguage = $languageArr['language'];
+        $showLanguage = $languageArr['language_menu'];
+        $session = $this->request->session();
+        if (!$session->check('System.language_menu')) {
+            $session->write('System.language', $systemLanguage);
+            $session->write('System.language_menu', $showLanguage);
+        }
+        return [$showLanguage, $systemLanguage];
+    }
 }

@@ -194,13 +194,32 @@ class StudentUserTable extends ControllerActionTable
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$id = $this->request->query('id') ? $this->request->query('id') : $this->Session->read('Institution.Students.id');
-		$this->Session->write('Institution.Students.id', $id);
-		$institutionStudentId = $id;
+		$institutionStudentId = $this->request->query('id');
+
+		// this is required if the student link is clicked from the Institution Classes or Subjects
+		if (empty($institutionStudentId) && !empty($this->paramsPass(0))) {
+			$params = $this->paramsDecode($this->paramsPass(0));
+			$institutionId = isset($params['institution_id']) ? $params['institution_id'] : 0;
+			$studentId = isset($params['id']) ? $params['id'] : 0;
+
+			// get the id of the latest student record in the current institution
+			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
+			$institutionStudentId = $InstitutionStudentsTable->find()
+                ->where([
+                    $InstitutionStudentsTable->aliasField('student_id') => $studentId,
+                    $InstitutionStudentsTable->aliasField('institution_id') => $institutionId,
+                ])
+                ->order([$InstitutionStudentsTable->aliasField('created') => 'DESC'])
+                ->extract('id')
+                ->first();
+		}
+
+		$this->Session->write('Institution.Students.id', $institutionStudentId);
 		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
 			$event->stopPropagation();
 			return $this->controller->redirect(['action' => 'Students', 'index']);
 		} else {
+			$this->request->query['id'] = $institutionStudentId;
 			$extra['institutionStudentId'] = $institutionStudentId;
 		}
 	}
