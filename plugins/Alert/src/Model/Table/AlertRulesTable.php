@@ -5,11 +5,8 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\ORM\ResultSet;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
 
@@ -40,8 +37,8 @@ class AlertRulesTable extends ControllerActionTable
                 '${user.postal_code}' => 'Student postal code.',
                 '${user.date_of_birth}' => 'Student date of birth.',
                 '${user.identity_number}' => 'Student identity number.',
-                '${user.photo_name}' => 'Student photo name.',
-                '${user.photo_content}' => 'Student photo content.',
+                // '${user.photo_name}' => 'Student photo name.',
+                // '${user.photo_content}' => 'Student photo content.',
                 '${user.main_identity_type.name}' => 'Student identity type.',
                 '${user.main_nationality.name}' => 'Student nationality.',
                 '${user.gender.name}' => 'Student gender.',
@@ -60,7 +57,6 @@ class AlertRulesTable extends ControllerActionTable
 
     public function initialize(array $config)
     {
-        $this->table('alert_rules');
         parent::initialize($config);
 
         $this->belongsToMany('SecurityRoles', [
@@ -118,14 +114,9 @@ class AlertRulesTable extends ControllerActionTable
     {
         $selectedFeature = $extra['selectedFeature'];
 
-        $conditions = [];
         if ($selectedFeature != 0) {
-            $conditions = [
-                'feature' => $selectedFeature
-            ];
+            $query->where(['feature' => $selectedFeature]);
         }
-
-        return $query->where([$conditions]);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -135,7 +126,7 @@ class AlertRulesTable extends ControllerActionTable
 
         if ($this->action == 'add') {
             $this->field('enabled', ['visible' => false]);
-        } elseif ($this->action == 'edit') {
+        } else if ($this->action == 'edit') {
             $this->field('enabled', ['select' => false]);
             $this->field('feature', ['type' => 'readOnly']);
         }
