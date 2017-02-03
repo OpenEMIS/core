@@ -72,7 +72,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
                     ->toArray();
 
         if ($templateOptions) {
-            $templateOptions = [0 => __('-- Select Template --')] + $templateOptions;
+            $templateOptions = ['0' => '-- '.__('All Templates').' --'] + $templateOptions;
         }
 
         if ($request->query('template')) {
