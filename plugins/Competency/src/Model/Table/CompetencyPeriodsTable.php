@@ -4,23 +4,13 @@ namespace Competency\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Collection\Collection;
 use Cake\Validation\Validator;
-use Cake\View\Helper\UrlHelper;
-
-use App\Model\Traits\OptionsTrait;
-use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\MessagesTrait;
 
-class PeriodsTable extends ControllerActionTable {
-    use MessagesTrait;
-    use HtmlTrait;
-    use OptionsTrait;
-
+class CompetencyPeriodsTable extends ControllerActionTable
+{
     public function initialize(array $config)
     {
         $this->table('competency_periods');
@@ -28,15 +18,15 @@ class PeriodsTable extends ControllerActionTable {
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        // $this->belongsTo('Items',           ['className' => 'Competency.Items', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
-        $this->belongsTo('Templates',       ['className' => 'Competency.Templates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
+        // $this->belongsTo('Items',           ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
+        $this->belongsTo('Templates',       ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
 
         $this->belongsToMany('CompetencyItems', [
-            'className' => 'Competency.Items',
+            'className' => 'Competency.CompetencyItems',
             'joinTable' => 'competency_items_periods',
             'foreignKey' => ['competency_period_id', 'academic_period_id'],
             'targetForeignKey' => ['competency_item_id', 'academic_period_id', 'competency_template_id'],
-            'through' => 'Competency.ItemsPeriods',
+            'through' => 'Competency.CompetencyItemsPeriods',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -71,13 +61,15 @@ class PeriodsTable extends ControllerActionTable {
         $request = $this->request;
 
         //academic period filter
-        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-        $extra['selectedPeriod'] = $selectedPeriod;
-        $data['periodOptions'] = $periodOptions;
-        $data['selectedPeriod'] = $selectedPeriod;
+        $extra['selectedPeriod'] = !empty($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+        $data['periodOptions'] = $this->AcademicPeriods->getYearList();
+        $data['selectedPeriod'] = $extra['selectedPeriod'];
 
         //template filter
-        $templateOptions = $this->Templates->getTemplateByAcademicPeriod($selectedPeriod);
+        $templateOptions = $this->Templates
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                    ->where([$this->Templates->aliasField('academic_period_id') => $extra['selectedPeriod']])
+                    ->toArray();
 
         if ($templateOptions) {
             $templateOptions = [0 => __('-- Select Template --')] + $templateOptions;
@@ -156,7 +148,22 @@ class PeriodsTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($entity);
+        $this->field('academic_period_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+        $this->field('competency_template_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+        $this->field('competency_items', [
+            'type' => 'chosenSelect',
+            'entity' => $entity
+        ]);
+
+        $this->setFieldOrder([
+            'academic_period_id', 'competency_template_id', 'competency_items', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
+        ]);
     }
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
@@ -185,12 +192,12 @@ class PeriodsTable extends ControllerActionTable {
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-
-            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
             if ($action == 'add') {
-                $attr['default'] = $selectedPeriod;
-                $attr['options'] = $periodOptions;
+                $attr['default'] = !empty($this->request->query('period')) ? $this->request->query('period') : $this->AcademicPeriods->getCurrent();
+                if (!$request->data($this->aliasField('academic_period_id'))) {
+                    $request->data[$this->alias()]['academic_period_id'] = $attr['default'];
+                }
+                $attr['options'] = $this->AcademicPeriods->getYearList();
                 $attr['onChangeReload'] = 'changeAcademicPeriod';
             } else if ($action == 'edit') {
                 $attr['type'] = 'readonly';
@@ -218,23 +225,25 @@ class PeriodsTable extends ControllerActionTable {
 
     public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
+            $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
+            $templateOptions = [];
 
-            if ($action == 'add') {
-
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-                $templateOptions = $this->Templates->getTemplateByAcademicPeriod($selectedPeriod);
-
-                $attr['options'] = $templateOptions;
-                $attr['onChangeReload'] = 'changeCompetencyTemplate';
-
-            } else {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $attr['entity']->competency_template_id;
-                $attr['attr']['value'] = $attr['entity']->template->code_name;
-
+            if ($selectedPeriod) {
+                $templateOptions = $this->Templates
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                    ->where([$this->Templates->aliasField('academic_period_id') => $selectedPeriod])
+                    ->toArray();
             }
+
+            $attr['options'] = $templateOptions;
+            $attr['onChangeReload'] = 'changeCompetencyTemplate';
+
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->competency_template_id;
+            $attr['attr']['value'] = $attr['entity']->template->code_name;
+
         }
         return $attr;
     }
@@ -262,13 +271,11 @@ class PeriodsTable extends ControllerActionTable {
         if ($action == 'add' || $action == 'edit') {
             if ($action == 'add') {
 
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-                $selectedTemplate = $request->query('template');
-
+                $selectedTemplate = $request->data($this->aliasField('competency_template_id'));
+                $selectedPeriod = $request->data($this->aliasField('academic_period_id'));
                 $itemOptions = [];
-                if ($selectedTemplate) {
-                    $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
+                if ($selectedTemplate && $selectedPeriod) {
+                    $itemOptions = $this->CompetencyItems->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
                 }
 
                 $attr['options'] = $itemOptions;
@@ -281,48 +288,10 @@ class PeriodsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function setupFields(Entity $entity)
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
-        $this->field('academic_period_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-        $this->field('competency_template_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-        $this->field('competency_items', [
-            'type' => 'chosenSelect',
-            'entity' => $entity
-        ]);
-
-        $this->setFieldOrder([
-            'academic_period_id', 'competency_template_id', 'competency_items', 'code', 'name', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
-        ]);
+        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
+            $this->CompetencyItems->alias(),
+        ];
     }
-
-    public function getAcademicPeriodOptions($querystringPeriod)
-    {
-        $periodOptions = $this->AcademicPeriods->getYearList();
-
-        if ($querystringPeriod) {
-            $selectedPeriod = $querystringPeriod;
-        } else {
-            $selectedPeriod = $this->AcademicPeriods->getCurrent();
-        }
-
-        return compact('periodOptions', 'selectedPeriod');
-    }
-
-    // public function getPeriodByTemplateItemAcademicPeriod($selectedTemplate, $selectedItem, $selectedPeriod)
-    // {
-    //     return $this
-    //             ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-    //             ->where([
-    //                 $this->aliasField('academic_period_id') => $selectedPeriod,
-    //                 $this->aliasField('competency_template_id') => $selectedTemplate,
-    //                 $this->aliasField('competency_item_id') => $selectedItem,
-    //             ])
-    //             ->toArray();
-    // }
 }

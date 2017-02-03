@@ -12,10 +12,10 @@ DROP TABLE IF EXISTS `competency_results`;
 DELETE FROM `labels` WHERE `id` IN ('0e77e3d5-e39d-11e6-a064-525400b263eb', '7daa7045-e920-11e6-b872-525400b263eb', 'd24f6444-e922-11e6-b872-525400b263eb');
 
 -- security_functions
-DELETE FROM `security_functions` WHERE `id` IN (1053, 5061, 5062, 5063, 5064, 5065);
+DELETE FROM `security_functions` WHERE `id` IN (1053, 5061, 5062, 5063);
 
 UPDATE `security_functions`
-SET `order` = `order` - 5
+SET `order` = `order` - 3
 WHERE `order` >= 5056 AND `order` < 6000;
 
 -- system_patches

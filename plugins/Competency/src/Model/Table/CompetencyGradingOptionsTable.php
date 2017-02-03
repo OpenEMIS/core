@@ -3,14 +3,12 @@ namespace Competency\Model\Table;
 
 use Cake\Validation\Validator;
 
-class GradingOptionsTable extends CompetenciesAppTable {
+class CompetencyGradingOptionsTable extends CompetenciesAppTable {
 
-    public function initialize(array $config) 
+    public function initialize(array $config)
     {
-        $this->table('competency_grading_options');
         parent::initialize($config);
-
-        $this->belongsTo('GradingTypes', ['className' => 'Competency.GradingTypes']);
+        $this->belongsTo('GradingTypes', ['className' => 'Competency.CompetencyGradingTypes']);
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => 'competency_grading_option_id']);
 
         $this->fields['competency_grading_type_id']['type'] = 'hidden';
@@ -39,7 +37,7 @@ class GradingOptionsTable extends CompetenciesAppTable {
             ])
             ->add('code', 'ruleUniqueCodeWithinForm', [
                 'rule' => ['checkUniqueCodeWithinForm', $this->GradingTypes],
-               
+
             ])
             ->requirePresence('name');
         return $validator;

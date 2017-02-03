@@ -7,37 +7,27 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Collection\Collection;
 use Cake\Validation\Validator;
-use Cake\View\Helper\UrlHelper;
 
-use App\Model\Traits\OptionsTrait;
-use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\MessagesTrait;
 
-class TemplatesTable extends ControllerActionTable {
-    use MessagesTrait;
-    use HtmlTrait;
-    use OptionsTrait;
-
+class CompetencyTemplatesTable extends ControllerActionTable
+{
     public function initialize(array $config)
     {
-        $this->table('competency_templates');
-
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-
-        $this->hasMany('Items', ['className' => 'Competency.Items', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('Periods', ['className' => 'Competency.Periods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Items', ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Periods', ['className' => 'Competency.CompetencyPeriods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
 
         $this->setDeleteStrategy('restrict');
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
 
         return $validator
@@ -48,7 +38,6 @@ class TemplatesTable extends ControllerActionTable {
                 ]
             ]);
     }
-
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -94,56 +83,64 @@ class TemplatesTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($entity);
+        $this->field('academic_period_id', [
+            'type' => 'select',
+            'select' => false,
+            'entity' => $entity
+        ]);
+        $this->field('education_programme_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+        $this->field('education_grade_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+
+        $this->setFieldOrder([
+            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id'//, 'assessment_items'
+        ]);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
+        if ($action == 'add') {
+            list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
-                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
-
-                $attr['options'] = $periodOptions;
-                $attr['default'] = $selectedPeriod;
-
-            } else {
-
-                $attr['type'] = 'readonly';
-                $attr['value'] = $attr['entity']->academic_period_id;
-                $attr['attr']['value'] = $this->AcademicPeriods->get($attr['entity']->academic_period_id)->name;
-
-            }
+            $attr['options'] = $periodOptions;
+            $attr['default'] = $selectedPeriod;
+        } else if ($action == 'edit') {
+            $academicPeriodId = $attr['entity']->academic_period_id;
+            $attr['type'] = 'readonly';
+            $attr['value'] = $academicPeriodId;
+            $attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriodId)->name;
         }
         return $attr;
     }
 
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
     {
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
         if ($action == 'view') {
             $attr['visible'] = false;
-        } else if ($action == 'add' || $action == 'edit') {
+        } else if ($action == 'add') {
+            $programmeOptions = $EducationProgrammes
+                ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                ->find('visible')
+                ->contain(['EducationCycles'])
+                ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                ->toArray();
 
-            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+            $attr['options'] = $programmeOptions;
+            $attr['onChangeReload'] = 'changeEducationProgrammeId';
 
-            if ($action == 'add') {
-                $programmeOptions = $EducationProgrammes
-                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-                    ->find('visible')
-                    ->contain(['EducationCycles'])
-                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
-                    ->toArray();
-
-                $attr['options'] = $programmeOptions;
-                $attr['onChangeReload'] = 'changeEducationProgrammeId';
-
-            } else {
-                //since programme_id is not stored, then during edit need to get from grade
-                $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
-                $attr['type'] = 'readonly';
-                $attr['value'] = $programmeId;
-                $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
-            }
+        } else if ($action == 'edit') {
+            //since programme_id is not stored, then during edit need to get from grade
+            $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
+            $attr['type'] = 'readonly';
+            $attr['value'] = $programmeId;
+            $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
         }
         return $attr;
     }
@@ -164,29 +161,26 @@ class TemplatesTable extends ControllerActionTable {
 
     public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
 
-            if ($action == 'add') {
-
-                $selectedProgramme = $request->query('programme');
-                $gradeOptions = [];
-                if (!is_null($selectedProgramme)) {
-                    $gradeOptions = $this->EducationGrades
-                        ->find('list')
-                        ->find('visible')
-                        ->contain(['EducationProgrammes'])
-                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-                        ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
-                        ->toArray();
-                }
-
-                $attr['options'] = $gradeOptions;
-
-            } else {
-
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
+            $selectedProgramme = $request->query('programme');
+            $gradeOptions = [];
+            if (!is_null($selectedProgramme)) {
+                $gradeOptions = $this->EducationGrades
+                    ->find('list')
+                    ->find('visible')
+                    ->contain(['EducationProgrammes'])
+                    ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
+                    ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                    ->toArray();
             }
+
+            $attr['options'] = $gradeOptions;
+
+        } else if ($action == 'edit') {
+
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
         }
 
         return $attr;
@@ -207,31 +201,9 @@ class TemplatesTable extends ControllerActionTable {
             $pass = $this->paramsEncode(['id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
             $url = $this->url('view');
             $url[] = $pass;
-            $url = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
-            $extra['redirect'] = $url;
-            $this->Alert->success('Templates.addSuccess', ['reset'=>true]);
+            $extra['redirect'] = $this->setQueryString($url, ['competency_template_id' => $entity->id, 'academic_period_id' => $entity->academic_period_id]);
+            $this->Alert->success('Templates.addSuccess', ['reset' => true]);
         }
-    }
-
-    public function setupFields(Entity $entity)
-    {
-        $this->field('academic_period_id', [
-            'type' => 'select',
-            'select' => false,
-            'entity' => $entity
-        ]);
-        $this->field('education_programme_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-        $this->field('education_grade_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
-        $this->setFieldOrder([
-            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id'//, 'assessment_items'
-        ]);
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
@@ -245,15 +217,5 @@ class TemplatesTable extends ControllerActionTable {
         }
 
         return compact('periodOptions', 'selectedPeriod');
-    }
-
-    public function getTemplateByAcademicPeriod($academicPeriod)
-    {
-        return $this
-                ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->where([
-                    $this->aliasField('academic_period_id') => $academicPeriod
-                ])
-                ->toArray();
     }
 }
