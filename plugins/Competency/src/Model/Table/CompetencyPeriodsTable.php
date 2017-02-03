@@ -201,7 +201,7 @@ class CompetencyPeriodsTable extends ControllerActionTable
                 $attr['onChangeReload'] = 'changeAcademicPeriod';
             } else if ($action == 'edit') {
                 $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $periodOptions[$attr['entity']->academic_period_id];
+                $attr['attr']['value'] = $this->AcademicPeriods->get([$attr['entity']->academic_period_id])->name;
                 $attr['value'] = $attr['entity']->academic_period_id;
             }
         }
