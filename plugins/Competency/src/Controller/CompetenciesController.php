@@ -1,26 +1,22 @@
 <?php
 namespace Competency\Controller;
 
-use App\Controller\AppController;
 use ArrayObject;
+
 use Cake\Event\Event;
-use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 
+use App\Controller\AppController;
+
 class CompetenciesController extends AppController
 {
-    public function initialize() {
-        parent::initialize();
-        $this->loadComponent('Paginator');
-    }
-
     // CAv4
-    public function Templates()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.Templates']); }
-    public function Items()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.Items']); }
-    public function Criterias()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.Criterias']); }
-    public function Periods()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.Periods']); }
-    public function GradingTypes()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.GradingTypes']); }
+    public function Templates()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyTemplates']); }
+    public function Items()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyItems']); }
+    public function Criterias()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyCriterias']); }
+    public function Periods()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyPeriods']); }
+    public function GradingTypes()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Competency.CompetencyGradingTypes']); }
     // End
 
     public function getCompetencyTabs($params = [])
