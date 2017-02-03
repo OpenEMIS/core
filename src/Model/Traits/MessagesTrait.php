@@ -90,6 +90,7 @@ trait MessagesTrait {
             'academicPeriod' => [
                 'notEditable' => 'The chosen academic period is not editable',
             ],
+            'uniqueCodeForm' => 'Code must be unique from other codes in this form',
             'invalidTime' => 'You have entered an invalid time.',
             'invalidDate' => 'You have entered an invalid date.',
             'invalidUrl' => 'You have entered an invalid URL.',
@@ -1561,23 +1562,24 @@ trait MessagesTrait {
                     'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ],
-             'GradingTypes' => [
+            'CompetencyGradingTypes' => [
                 'code' => [
-                    'ruleUniqueCode' => 'Code must be unique'
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
                 ],
             ],
-            'Criterias' => [
+            'CompetencyCriterias' => [
                 'percentage' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ],
-            'Templates' => [
+            'CompetencyTemplates' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
             ],
-            'Periods' => [
+            'CompetencyPeriods' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
