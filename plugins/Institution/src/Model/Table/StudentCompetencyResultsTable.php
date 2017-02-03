@@ -16,10 +16,10 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         parent::initialize($config);
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('CompetencyTemplates', ['className' => 'Competency.Templates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
-        $this->belongsTo('CompetencyItems', ['className' => 'Competency.Items', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
-        $this->belongsTo('CompetencyCriterias', ['className' => 'Competency.Criterias', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
-        $this->belongsTo('CompetencyPeriods', ['className' => 'Competency.Periods', 'foreignKey' => ['competency_period_id', 'academic_period_id']]);
+        $this->belongsTo('CompetencyTemplates', ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
+        $this->belongsTo('CompetencyItems', ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
+        $this->belongsTo('CompetencyCriterias', ['className' => 'Competency.CompetencyCriterias', 'foreignKey' => ['competency_criteria_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
+        $this->belongsTo('CompetencyPeriods', ['className' => 'Competency.CompetencyPeriods', 'foreignKey' => ['competency_period_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Students', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 
@@ -56,7 +56,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         $this->fields = [];
 
         //competency items filter control
-        $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($this->competencyTemplateId, $this->academicPeriodId);
+        $itemOptions = $this->CompetencyItems->find('ItemList', ['templateId' => $this->competencyTemplateId, 'academicPeriodId' => $this->academicPeriodId])->toArray();
         if (count($itemOptions)) {
             $itemOptions = array(-1 => __('-- Select Competency Item --')) + $itemOptions;
         }
@@ -135,15 +135,15 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['back']['attr']['title'] = __('Back');
         $toolbarButtonsArray['back']['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentCompetencies'];
-        
+
         // edit button
         $toolbarButtonsArray['edit']['type'] = 'button';
         $toolbarButtonsArray['edit']['label'] = '<i class="fa kd-edit"></i>';
         $toolbarButtonsArray['edit']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['edit']['attr']['title'] = __('Edit');
         $toolbarButtonsArray['edit']['url'] = [
-            'plugin' => 'Institution', 
-            'controller' => 'Institutions', 
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
             'action' => 'StudentCompetencyResults',
             '0' => 'add',
             'queryString' => $request->query('queryString'),
@@ -173,7 +173,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         } else {
             $attr['value'] = $this->academicPeriodId;
             $attr['attr']['value'] = $this->AcademicPeriods->get($this->academicPeriodId)->name;
-        }   
+        }
         return $attr;
     }
 
@@ -184,13 +184,13 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         } else {
             $attr['value'] = $this->competencyTemplateId;
             $attr['attr']['value'] = $this->CompetencyTemplates->get([$this->competencyTemplateId, $this->academicPeriodId])->code_name;
-        }   
+        }
         return $attr;
     }
 
     public function onUpdateFieldCompetencyItemId(Event $event, array $attr, $action, Request $request)
     {
-        $itemOptions = $this->CompetencyItems->getItemByTemplateAcademicPeriod($this->competencyTemplateId, $this->academicPeriodId);
+        $itemOptions = $this->CompetencyItems->find('ItemList', ['templateId' => $this->competencyTemplateId, 'academicPeriodId' => $this->academicPeriodId])->toArray();
 
         $attr['options'] = $itemOptions;
         $attr['onChangeReload'] = 'changeCompetencyItem';
@@ -202,7 +202,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         if (!count($itemOptions)) {
             $this->Alert->warning('StudentCompetencyResults.noCompetencyItems', ['reset'=>true]);
         }
-        
+
         return $attr;
     }
 
@@ -211,7 +211,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         $request = $this->request;
         unset($request->query['item']);
         unset($request->query['period']);
-        
+
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('competency_item_id', $request->data[$this->alias()])) {
@@ -276,7 +276,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
     {
         $request = $this->request;
         unset($request->query['period']);
-        
+
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('competency_item_id', $request->data[$this->alias()])) {
@@ -299,7 +299,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         } else {
             $attr['attr']['value'] = $this->Institutions->get([$this->institutionId])->code_name;
             $attr['value'] = $this->institutionId;
-        }            
+        }
         return $attr;
     }
 
@@ -313,7 +313,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                             ])
                             ->first();
         // pr($institutionClass->toArray());
-        
+
 
         if ($action == 'viewResults') {
             $attr['value'] = $institutionClass['name'];
@@ -331,7 +331,13 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
 
             $selectedCompetencyItem = $this->request->query['item'];
 
-            $criteriaList = $this->CompetencyCriterias->getCompetencyCriterias($selectedCompetencyItem, $this->academicPeriodId);
+            $criteriaList = $this->CompetencyCriterias->find()
+                ->contain('GradingTypes.GradingOptions')
+                ->where([
+                    $this->CompetencyCriterias->aliasField('competency_item_id') => $selectedCompetencyItem,
+                    $this->CompetencyCriterias->aliasField('academic_period_id') => $this->academicPeriodId,
+                ])
+                ->toArray();
             // pr($criteriaList);
             if (!empty($criteriaList)) {
 
@@ -347,7 +353,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                     $tableHeaders[] = _('Student');
                     //dynamic header based on the criterias set up.
                     foreach ($criteriaList as $key => $value) {
-                        $tableHeaders[] = 
+                        $tableHeaders[] =
                             substr(__($value->name), 0, 30) . '...' .
                             "<div class='tooltip-desc' style='display: inline-block;'>
                                 <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" .  __($value->name) . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
@@ -360,13 +366,13 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                     $Form = $event->subject()->Form;
 
                     $studentList = $this->StudentClasses->getClassStudents($this->classId, $this->academicPeriodId, $this->institutionId);
-                    
+
                     if ((!empty($studentList)) && ($selectedCompetencyPeriod > -1) && ($selectedCompetencyItem > -1)) {
                         $tableCells = [];
                         foreach ($studentList as $key => $value) { //loop through student
                             $studentId = $value->student_id;
                             $rowData = [];
-                            
+
                             $rowData[] = $value->user->openemis_no;
                             $rowData[] = $value->user->name;
                             foreach ($criteriaList as $key1 => $value1) { //loop through criterias
@@ -387,7 +393,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                                                 // pr($selectedGradingOption);
                                             }
                                         }
-                                        
+
                                         if ($action == 'view') {
                                             if ($selectedGradingOption == -1) {
                                                 // $rowData[] = __($this->getMessage($this->aliasField('noResult')));
@@ -395,15 +401,15 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                                             } else {
                                                 $rowData[] = $optionList[$selectedGradingOption];
                                             }
-                                        
+
                                         } else if ($action == 'edit') {
                                             $rowData[] = $Form
                                                         ->input("$alias.$fieldKey.$studentId.$criteriaId.$selectedCompetencyPeriod.grading_option_id", [
-                                                                'type' => 'select', 'label' => false, 
+                                                                'type' => 'select', 'label' => false,
                                                                 'options' => $optionList, 'default' => $selectedGradingOption
                                                         ]);
                                         }
-                                    } 
+                                    }
                                 }
                             }
                             $tableCells[] = $rowData;
@@ -449,7 +455,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
 
                             //check whether this record has value before, if yes then need to remove that record.
                             $existingCompetencyResult = $this->getExistingCompetencyResult($dataResults['competency_template_id'], $dataResults['competency_item_id'], $dataResults['competency_period_id'], $dataResults['academic_period_id'], $dataResults['institution_id']);
-                            
+
                             if (array_key_exists($student, $existingCompetencyResult)) {
                                 if (array_key_exists($criteria, $existingCompetencyResult[$student])) {
                                     //get ID of record to be removed.
@@ -460,7 +466,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
                         }
                     }
                 }
-                
+
                 if (count($results)) {
                     foreach ($results as $student => $result) {
                         if (count($student)) { //if student has criteria filled.
@@ -530,7 +536,7 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
     private function setupFields(Entity $entity)
     {
         $this->field('academic_period_id', [
-            'type' => 'readonly', 
+            'type' => 'readonly',
             'entity' => $entity
         ]);
 
@@ -551,12 +557,12 @@ class StudentCompetencyResultsTable extends ControllerActionTable {
         ]);
 
         $this->field('institution_id', [
-            'type' => 'readonly', 
+            'type' => 'readonly',
             'entity' => $entity
         ]);
 
         $this->field('institution_class_id', [
-            'type' => 'readonly', 
+            'type' => 'readonly',
             'entity' => $entity
         ]);
 
