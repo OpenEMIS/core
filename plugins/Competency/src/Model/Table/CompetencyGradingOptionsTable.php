@@ -8,7 +8,7 @@ class CompetencyGradingOptionsTable extends CompetenciesAppTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('GradingTypes', ['className' => 'Competency.CompetencyGradingTypes']);
+        $this->belongsTo('GradingTypes', ['className' => 'Competency.CompetencyGradingTypes', 'foreignKey' => 'competency_grading_type_id']);
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => 'competency_grading_option_id']);
 
         $this->fields['competency_grading_type_id']['type'] = 'hidden';
@@ -31,13 +31,9 @@ class CompetencyGradingOptionsTable extends CompetenciesAppTable {
             ->allowEmpty('code')
             ->add('code', [
                 'ruleUniqueCode' => [
-                    'rule' => ['checkUniqueCode', ''],
+                    'rule' => ['validateUnique', ['scope' => 'competency_grading_type_id']],
                     'provider' => 'table'
                 ]
-            ])
-            ->add('code', 'ruleUniqueCodeWithinForm', [
-                'rule' => ['checkUniqueCodeWithinForm', $this->GradingTypes],
-
             ])
             ->requirePresence('name');
         return $validator;
