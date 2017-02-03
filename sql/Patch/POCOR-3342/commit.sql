@@ -150,7 +150,7 @@ CREATE TABLE `competency_items_periods` (
 -- Table structure for table `student_competency_results`
 DROP TABLE IF EXISTS `student_competency_results`;
 CREATE TABLE `student_competency_results` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `competency_grading_option_id` int(11) DEFAULT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `competency_template_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',

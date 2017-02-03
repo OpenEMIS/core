@@ -3,7 +3,7 @@ namespace Competency\Model\Entity;
 
 use Cake\ORM\Entity;
 
-class GradingOption extends Entity
+class CompetencyTemplate extends Entity
 {
     protected $_virtual = ['code_name'];
 
