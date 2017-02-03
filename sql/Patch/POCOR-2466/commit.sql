@@ -23,9 +23,6 @@ ALTER TABLE `alerts_roles`
 -- security_user table
 ALTER TABLE `security_users` ADD `email` VARCHAR(100) NULL AFTER `preferred_name`;
 
--- contact_options
-DELETE FROM `contact_options` WHERE `name` = 'Email';
-
 -- Security functions (permission)
 UPDATE `security_functions` SET `_view` = 'Logs.index|Logs.view' WHERE `id` = 5031;
 UPDATE `security_functions` SET `_delete` = 'Logs.remove' WHERE `id` = 5031;
@@ -38,7 +35,7 @@ DELETE FROM `security_role_functions` WHERE `security_function_id` = 5030;
 
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES  ('5062', 'Alerts', 'Alerts', 'Administration', 'Communications', '5000', 'Alerts.index|Alerts.view', 'Alerts.edit', NULL, NULL, 'Alerts.process', '5031', '1', NULL, NULL, '1', NOW()),
+VALUES  ('5062', 'Alerts', 'Alerts', 'Administration', 'Communications', '5000', 'Alerts.index|Alerts.view', NULL, NULL, NULL, 'Alerts.process', '5031', '1', NULL, NULL, '1', NOW()),
     ('5063', 'AlertRules', 'Alerts', 'Administration', 'Communications', '5000', 'AlertRules.index|AlertRules.view', 'AlertRules.edit', 'AlertRules.add', 'AlertRules.remove', NULL, '5032', '1', NULL, NULL, '1', NOW());
 
 -- Table structure for table `alerts`

@@ -31,10 +31,12 @@ class SendingAlertShell extends Shell
 
         foreach ($alertLogsList as $key => $obj) {
             if ($obj->destination != 'No Email' || $obj->destination != 'No Security Role') {
+                $emailArray = explode(', ', $obj->destination); // also can used
+
                 // sending Email if the destination email is exist
                 $email = new Email('openemis');
                 $email
-                    ->to($obj->destination)
+                    ->to($emailArray)
                     ->subject($obj->subject)
                     ->send($obj->message);
 

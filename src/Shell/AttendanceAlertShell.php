@@ -14,10 +14,13 @@ class AttendanceAlertShell extends Shell
     public function initialize()
     {
         parent::initialize();
-        $this->loadModel('Alert.AlertLogs');
-        $this->loadModel('Alert.AlertRules');
         $this->loadModel('Alert.Alerts');
+        $this->loadModel('Alert.AlertRules');
+        $this->loadModel('Alert.AlertLogs');
+        $this->loadModel('Institution.Institutions');
         $this->loadModel('Institution.InstitutionStudentAbsences');
+        $this->loadModel('Security.Users');
+        $this->loadModel('Security.SecurityGroupUsers');
     }
 
     public function main()
@@ -27,12 +30,6 @@ class AttendanceAlertShell extends Shell
         $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
 
         do {
-            $data = $this->InstitutionStudentAbsences->getUnexcusedAbsenceData();
-            $alias = $this->InstitutionStudentAbsences->alias();
-
-            // inserting data to alert_log table and trigger the sending alert
-            // $this->AlertLogs->shellDataProcess($shellData, $alias);
-
             $rules = $this->AlertRules->find()
                 ->contain(['SecurityRoles'])
                 ->where([
@@ -42,12 +39,35 @@ class AttendanceAlertShell extends Shell
                 ->all();
 
             foreach ($rules as $rule) {
-                foreach ($data as $institutionId => $record) {
+                $threshold = $rule->threshold;
+                $data = $this->InstitutionStudentAbsences->getUnexcusedAbsenceData($threshold);
 
+                foreach ($data as $key => $vars) {
+                    if (!empty($rule['security_roles'])) { //check if the alertRule have security role
+                        foreach ($rule['security_roles'] as $securityRolesObj) {
+                            $securityRoleId = $securityRolesObj->id;
+                            $institutionId = $vars['institution']['id'];
+                            $emailList = $this->SecurityGroupUsers->getEmailListByRoles($securityRoleId, $institutionId);
+
+                            if (!empty($emailList)) {
+                                $vars['threshold'] = $rule->threshold;
+                                $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+
+                                // subject and message for alert email
+                                $subject = $this->AlertLogs->replaceMessage($rule->subject, $vars);
+                                $message = $this->AlertLogs->replaceMessage($rule->message, $vars);
+
+                                // insert record to  the alertLog
+                                $this->AlertLogs->insertAlertLog($rule, $email, $subject, $message);
+                            }
+                        }
+                    }
                 }
             }
-
             sleep(15); // 15 seconds
+
+            // trigger the send email shell
+            $this->AlertLogs->triggerSendingAlertShell('SendingAlert');
 
             $filesArray = $dir->find('AttendanceAlert.stop');
         } while (empty($filesArray));

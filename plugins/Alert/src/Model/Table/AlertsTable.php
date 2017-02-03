@@ -80,7 +80,7 @@ class AlertsTable extends ControllerActionTable
         $shellName = $entity->process_name;
 
         if (array_key_exists('view', $buttons)) {
-            // if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
+            if ($this->AccessControl->check(['Alerts', 'Alerts', 'process'])) { // to check execute permission
                 if ($this->isShellStopExist($shellName)) {
                     $icon = '<i class="fa fa-play"></i>';
                     $label = 'Start'; // if have the file, process not running
@@ -102,7 +102,7 @@ class AlertsTable extends ControllerActionTable
                     'shell_name' => $shellName,
                     'action' => 'index'
                 ]);
-            // }
+            }
         }
 
         return $buttons;
@@ -150,19 +150,13 @@ class AlertsTable extends ControllerActionTable
     {
         $dir = new Folder(ROOT . DS . 'tmp'); // path
 
-        // if ($this->isShellStopExist($shellName)) {
-        //     // shell stop file exist, remove the shell stop
-        //     $file = new File($dir->path.'/' . $shellName . '.stop', true);
-        //     $file->delete();
-        // } else {
-        //     // shell stop not exists, adding shell stop
-        //     $file = new File($dir->path.'/' . $shellName . '.stop', true);
-        // }
-
-        $file = new File($dir->path.'/' . $shellName . '.stop', true);
         if ($this->isShellStopExist($shellName)) {
             // shell stop file exist, remove the shell stop
+            $file = new File($dir->path.'/' . $shellName . '.stop', true);
             $file->delete();
+        } else {
+            // shell stop not exists, adding shell stop
+            $file = new File($dir->path.'/' . $shellName . '.stop', true);
         }
     }
 
