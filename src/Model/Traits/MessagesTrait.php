@@ -627,7 +627,7 @@ trait MessagesTrait {
             'noRecords' => 'No Records'
         ],
         'Templates' => [
-            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items by clicking on the Template.'
+            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
         ],
         'Items' => [
             'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
