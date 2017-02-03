@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
-use ArrayObject;
+use ArrayObject; 
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
