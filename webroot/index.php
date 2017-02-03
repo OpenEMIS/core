@@ -43,4 +43,5 @@ try {
     $ErrorTable = TableRegistry::get('System.SystemErrors');
     $ErrorTable->insertError($ex);
     Log::write('error', $ex);
+    throw $ex;
 }
