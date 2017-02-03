@@ -30,8 +30,8 @@ class InstitutionsTable extends AppTable  {
 	CONST MULTIPLE_OCCUPIER = 4;
 
 	// For Academic / Non-Academic Institution type
-	const ACADEMIC = 1;
-	const NON_ACADEMIC = 0;
+	CONST ACADEMIC = 1;
+	CONST NON_ACADEMIC = 2;
 
 	public function initialize(array $config) {
 		$this->table('institutions');
@@ -929,10 +929,7 @@ class InstitutionsTable extends AppTable  {
             ],
             'classification' => [
                 'label' => __('Classification'),
-                'options' => [
-                    1 => 'Academic Institution',
-                    2 => 'Non-Academic Institution'
-                ]
+                'options' => $this->classificationOptions
             ]
 
 		];
