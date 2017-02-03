@@ -646,7 +646,7 @@ class InstitutionsTable extends AppTable  {
         $this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 
         // hide shift section if institution is non-academic
-        if (!$entity->classification) {
+        if ($entity->classification == self::NON_ACADEMIC) {
             $this->ControllerAction->field('shift_section', ['visible' => false]);
             $this->ControllerAction->field('shift_type', ['visible' => false]);
             $this->ControllerAction->field('shift_details', ['visible' => false]);

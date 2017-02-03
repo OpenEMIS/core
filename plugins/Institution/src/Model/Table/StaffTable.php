@@ -940,8 +940,10 @@ class StaffTable extends ControllerActionTable {
 
         $query = $this->find('all');
 
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $classification = isset($conditions['classification']) ? $conditions['classification'] : '';
-        if ($classification) {
+
+        if ($classification == $Institutions::ACADEMIC) {
             $staffByPositions = $query
                 ->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
                 ->contain(['Users.Genders','Positions.StaffPositionTitles'])
@@ -1006,7 +1008,7 @@ class StaffTable extends ControllerActionTable {
         foreach ($staffByPositions as $key => $staffByPosition) {
             if ($staffByPosition->has('position')) {
 
-                if ($classification) {
+                if ($classification == $Institutions::ACADEMIC) {
                     $positionType = $staffByPosition->position->staff_position_title->type;
                 } else {
                     $positionType = $staffByPosition->position->staff_position_title->id;
