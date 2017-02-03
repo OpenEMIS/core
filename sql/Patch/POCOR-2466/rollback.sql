@@ -48,10 +48,6 @@ DELETE FROM `security_functions` WHERE `id` = 5062;
 DELETE FROM `security_functions` WHERE `id` = 5063;
 UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` BETWEEN 5033 AND 5062;
 
--- contact_options
-INSERT INTO `contact_options` (`id`, `name`, `order`, `visible`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES ('4', 'Email', '4', '1', NULL, NULL, NULL, NULL, '1', NOW());
-
 -- alert_roles table
 RENAME TABLE `alerts_roles` TO `alert_roles`;
 ALTER TABLE `alerts_roles` CHANGE `alert_rule_id` `alert_id` INT(11) NOT NULL COMMENT 'links to alerts.id';

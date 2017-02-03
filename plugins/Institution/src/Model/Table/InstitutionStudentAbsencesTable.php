@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -24,6 +25,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
 
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
@@ -704,32 +706,52 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$currentPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date;
 		$currentPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date;
 
-		$unexcusedAbsenceResults = $this
-			->find()
+		// will do the comparison with threshold when retrieving the absence data
+		$unexcusedAbsenceResults = $this->find()
+			->select([
+				'total_days' => $this->find()->func()->sum(
+					'DATEDIFF(end_date, start_date)+1' // MYSQL:-SPECIFIC CODE
+				),
+				'Institutions.id',
+				'Institutions.name',
+				'Institutions.code',
+				'Institutions.address',
+	            'Institutions.postal_code',
+	            'Institutions.contact_person',
+	            'Institutions.telephone',
+	            'Institutions.fax',
+	            'Institutions.email',
+	            'Institutions.website',
+	            'Users.id',
+	            'Users.openemis_no',
+	            'Users.first_name',
+	            'Users.middle_name',
+	            'Users.third_name',
+	            'Users.last_name',
+	            'Users.preferred_name',
+	            'Users.email',
+	            'Users.address',
+	            'Users.postal_code',
+	            'Users.date_of_birth',
+	            'Users.identity_number',
+	            'Users.photo_name',
+	            'Users.photo_content',
+	            'MainNationalities.name',
+	            'MainIdentityTypes.name',
+	            'Genders.name'
+			])
+			->contain(['Institutions', 'Users', 'Users.Genders', 'Users.MainNationalities', 'Users.MainIdentityTypes'])
 			->where([
 				// unexcused and current academic period
 				'absence_type_id' => 2,
 				'start_date' . ' >='  => $currentPeriodStartDate->format('Y-m-d'),
 				'end_date' . ' <='  => $currentPeriodEndDate->format('Y-m-d'),
-				// datediff > $threshold
 			])
-			->all();
+			->group(['institution_id', 'student_id', 'absence_type_id'])
+			->having(['total_days >= ' => $threshold])
+			->hydrate(false)
+			;
 
-		$unexcusedAbsenceData = [];
-		foreach ($unexcusedAbsenceResults as $studentAbsence) {
-			$studentId = $studentAbsence->student_id;
-			$institutionId = $studentAbsence->institution_id;
-			$endDate = $studentAbsence->end_date;
-			$startDate = $studentAbsence->start_date;
-			$interval = $endDate->diff($startDate);
-
-			$studentAbsence = $interval->days+1;
-
-			// institutionId => [studentId => [absenceDay]]
-			$unexcusedAbsenceData[$institutionId][$studentId] = !empty($unexcusedAbsenceData[$institutionId][$studentId]) ? $unexcusedAbsenceData[$institutionId][$studentId] : 0;
-			$unexcusedAbsenceData[$institutionId][$studentId] = $unexcusedAbsenceData[$institutionId][$studentId]+$interval->days+1;
-		}
-
-		return $unexcusedAbsenceData;
+		return $unexcusedAbsenceResults->toArray();
 	}
 }
