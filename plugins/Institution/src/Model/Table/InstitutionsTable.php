@@ -641,6 +641,18 @@ class InstitutionsTable extends AppTable  {
 		]);
 	}
 
+    public function viewAfterAction(Event $event, Entity $entity)
+    {
+        $this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+
+        // hide shift section if institution is non-academic
+        if (!$entity->classification) {
+            $this->ControllerAction->field('shift_section', ['visible' => false]);
+            $this->ControllerAction->field('shift_type', ['visible' => false]);
+            $this->ControllerAction->field('shift_details', ['visible' => false]);
+        }
+    }
+
 /******************************************************************************************************************
 **
 ** add / addEdit action methods
@@ -696,11 +708,6 @@ class InstitutionsTable extends AppTable  {
 	public function addEditAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('institution_type_id', ['type' => 'select']);
 		$this->ControllerAction->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
-		$this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity)
-	{
 		$this->ControllerAction->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
 	}
 
