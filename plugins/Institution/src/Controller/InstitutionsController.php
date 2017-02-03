@@ -568,7 +568,7 @@ class InstitutionsController extends AppController
 
         //Staffs By Position for current year, only shows assigned staff
         $params = array(
-            'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
+            'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus, 'classification' => $classification)
         );
         $InstitutionStaff = TableRegistry::get('Institution.Staff');
         $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
