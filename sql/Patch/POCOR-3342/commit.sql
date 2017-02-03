@@ -150,7 +150,7 @@ CREATE TABLE `competency_items_periods` (
 -- Table structure for table `student_competency_results`
 DROP TABLE IF EXISTS `student_competency_results`;
 CREATE TABLE `student_competency_results` (
-  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `competency_grading_option_id` int(11) DEFAULT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
   `competency_template_id` int(11) NOT NULL COMMENT 'links to competency_templates.id',
@@ -197,4 +197,4 @@ VALUES
 (5061, 'Competency Setup', 'Competencies', 'Administration', 'Competencies', 5000, 'Templates.index|Templates.view|Items.index|Items.view|Criterias.index|Criterias.view', 'Templates.edit|Items.edit|Criterias.edit', 'Templates.add|Items.add|Criterias.add', 'Templates.remove|Items.remove|Criterias.remove', NULL, 5056, 1, NULL, NULL, NULL, 1, NOW()),
 (5062, 'Periods', 'Competencies', 'Administration', 'Competencies', 5000, 'Periods.index|Periods.view', 'Periods.edit', 'Periods.add', 'Periods.remove', NULL, 5057, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
 (5063, 'GradingTypes', 'Competencies', 'Administration', 'Competencies', 5000, 'GradingTypes.index|GradingTypes.view', 'GradingTypes.edit', 'GradingTypes.add', 'GradingTypes.remove', NULL, 5058, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00'),
-(1053, 'Competency Results', 'Institutions', 'Institutions', 'Students', 8, 'StudentCompetencies.index|StudentCompetencies.view|StudentCompetencyResults.viewResults', 'StudentCompetencies.edit|StudentCompetencyResults.edit', 'StudentCompetencies.add|StudentCompetencyResults.add', NULL, NULL, 1054, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00');
+(1053, 'Competency Results', 'Institutions', 'Institutions', 'Students', 8, 'StudentCompetencies.index|StudentCompetencies.view', 'StudentCompetencies.edit', NULL, 'StudentCompetencies.remove', NULL, 1054, 1, NULL, NULL, NULL, 1, '2017-01-27 00:00:00');
