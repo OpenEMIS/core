@@ -24,7 +24,7 @@ class StudentCompetenciesTable extends ControllerActionTable {
 
         $this->behaviors()->get('ControllerAction')->config('actions.add', false);
         $this->behaviors()->get('ControllerAction')->config('actions.search', false);
-        
+
         $this->toggle('remove', false);
     }
 
@@ -49,7 +49,7 @@ class StudentCompetenciesTable extends ControllerActionTable {
 
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $Competencies = TableRegistry::get('Competency.Templates');
+        $Competencies = TableRegistry::get('Competency.CompetencyTemplates');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
@@ -106,7 +106,7 @@ class StudentCompetenciesTable extends ControllerActionTable {
         }
 
         $selectedPeriod = $this->queryString('period', $periodOptions);
-        
+
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
 

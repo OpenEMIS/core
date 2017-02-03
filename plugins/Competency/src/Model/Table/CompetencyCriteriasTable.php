@@ -4,39 +4,23 @@ namespace Competency\Model\Table;
 use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use Cake\Collection\Collection;
 use Cake\Validation\Validator;
-use Cake\View\Helper\UrlHelper;
-
-use App\Model\Traits\OptionsTrait;
-use App\Model\Traits\HtmlTrait;
 use App\Model\Table\ControllerActionTable;
-use App\Model\Traits\MessagesTrait;
 
-class CriteriasTable extends ControllerActionTable {
-    use MessagesTrait;
-    use HtmlTrait;
-    use OptionsTrait;
+class CompetencyCriteriasTable extends ControllerActionTable {
 
     private $itemOptions;
 
     public function initialize(array $config)
     {
-        $this->table('competency_criterias');
-
         parent::initialize($config);
-
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Items',           ['className' => 'Competency.Items', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id']]);
-        $this->belongsTo('GradingTypes',    ['className' => 'Competency.GradingTypes', 'foreignKey' => 'competency_grading_type_id']);
-
+        $this->belongsTo('Items',           ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id']]);
+        $this->belongsTo('GradingTypes',    ['className' => 'Competency.CompetencyGradingTypes', 'foreignKey' => 'competency_grading_type_id']);
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
-
-        $this->Templates = TableRegistry::get('Competency.Templates');
-
+        $this->belongsTo('Templates', ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
         $this->setDeleteStrategy('restrict');
     }
 
@@ -58,7 +42,7 @@ class CriteriasTable extends ControllerActionTable {
             $this->controller->Navigation->substituteCrumb($this->alias(), $header);
         } else {
             $event->stopPropagation();
-            $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Templates']);
+            return $this->controller->redirect(['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Templates']);
         }
     }
 
@@ -74,7 +58,7 @@ class CriteriasTable extends ControllerActionTable {
         //item filter
         if ($selectedPeriod && $selectedTemplate) {
 
-            $itemOptions = $this->Items->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
+            $itemOptions = $this->Items->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
             $this->itemOptions = $itemOptions;
 
             $itemOptions = array(-1 => __('-- Select Item --')) + $itemOptions;
@@ -139,7 +123,33 @@ class CriteriasTable extends ControllerActionTable {
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields($entity, $extra);
+        $this->field('academic_period_id', [
+            'type' => 'select',
+            'entity' => $entity,
+            'extra' => $extra
+        ]);
+        $this->field('competency_template_id', [
+            'type' => 'select',
+            'entity' => $entity,
+            'extra' => $extra
+        ]);
+        $this->field('competency_item_id', [
+            'type' => 'select',
+            'entity' => $entity,
+            'extra' => $extra
+        ]);
+        $this->field('name', [
+            'type' => 'text',
+            'entity' => $entity
+        ]);
+        $this->field('competency_grading_type_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+
+        $this->setFieldOrder([
+            'academic_period_id', 'competency_template_id', 'competency_item_id', 'name', 'percentage', 'competency_grading_type_id'
+        ]);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -175,20 +185,17 @@ class CriteriasTable extends ControllerActionTable {
 
     public function onUpdateFieldCompetencyTemplateId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
 
-            if ($action == 'add') {
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $this->Templates->get(['id' => $attr['extra']['selectedTemplate'], 'academic_period_id' => $attr['extra']['selectedPeriod']])->code_name;
+            $attr['value'] = $attr['extra']['selectedTemplate'];
 
-                $attr['type'] = 'readonly';
-                $attr['attr']['value'] = $this->Templates->get(['id' => $attr['extra']['selectedTemplate'], 'academic_period_id' => $attr['extra']['selectedPeriod']])->code_name;
-                $attr['value'] = $attr['extra']['selectedTemplate'];
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->item->competency_template_id;
+            $attr['attr']['value'] = $attr['entity']->item->template->code_name;
 
-            } else {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $attr['entity']->item->competency_template_id;
-                $attr['attr']['value'] = $attr['entity']->item->template->code_name;
-
-            }
         }
         return $attr;
     }
@@ -213,78 +220,21 @@ class CriteriasTable extends ControllerActionTable {
 
     public function onUpdateFieldCompetencyItemId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
-                $selectedPeriod = $attr['extra']['selectedPeriod'];
-                $selectedTemplate = $attr['extra']['selectedTemplate'];
-                $itemOptions = [];
-                if ($selectedTemplate) {
-                    $itemOptions = $this->Items->getItemByTemplateAcademicPeriod($selectedTemplate, $selectedPeriod);
-                }
-
-                $attr['options'] = $itemOptions;
-            } else {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $attr['entity']->competency_item_id;
-                $attr['attr']['value'] = $attr['entity']->item->name;
-
+        if ($action == 'add') {
+            $selectedPeriod = $attr['extra']['selectedPeriod'];
+            $selectedTemplate = $attr['extra']['selectedTemplate'];
+            $itemOptions = [];
+            if ($selectedTemplate) {
+                $itemOptions = $this->Items->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
             }
+
+            $attr['options'] = $itemOptions;
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->competency_item_id;
+            $attr['attr']['value'] = $attr['entity']->item->name;
+
         }
         return $attr;
-    }
-
-    public function setupFields(Entity $entity, ArrayObject $extra)
-    {
-        $this->field('academic_period_id', [
-            'type' => 'select',
-            'entity' => $entity,
-            'extra' => $extra
-        ]);
-        $this->field('competency_template_id', [
-            'type' => 'select',
-            'entity' => $entity,
-            'extra' => $extra
-        ]);
-        $this->field('competency_item_id', [
-            'type' => 'select',
-            'entity' => $entity,
-            'extra' => $extra
-        ]);
-        $this->field('name', [
-            'type' => 'text',
-            'entity' => $entity
-        ]);
-        $this->field('competency_grading_type_id', [
-            'type' => 'select',
-            'entity' => $entity
-        ]);
-
-        $this->setFieldOrder([
-            'academic_period_id', 'competency_template_id', 'competency_item_id', 'name', 'percentage', 'competency_grading_type_id'
-        ]);
-    }
-
-    public function getAcademicPeriodOptions($querystringPeriod)
-    {
-        $periodOptions = $this->AcademicPeriods->getYearList();
-
-        if ($querystringPeriod) {
-            $selectedPeriod = $querystringPeriod;
-        } else {
-            $selectedPeriod = $this->AcademicPeriods->getCurrent();
-        }
-
-        return compact('periodOptions', 'selectedPeriod');
-    }
-
-    public function getCompetencyCriterias($competencyItemId, $academicPeriodId)
-    {
-        return $this->find()
-                ->contain('GradingTypes.GradingOptions')
-                ->where([
-                    $this->aliasField('competency_item_id') => $competencyItemId,
-                    $this->aliasField('academic_period_id') => $academicPeriodId,
-                ])
-                ->toArray();
     }
 }
