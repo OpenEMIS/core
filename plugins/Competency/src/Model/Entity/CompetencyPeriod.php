@@ -3,7 +3,7 @@ namespace Competency\Model\Entity;
 
 use Cake\ORM\Entity;
 
-class Period extends Entity
+class CompetencyPeriod extends Entity
 {
     protected $_virtual = ['code_name'];
 
