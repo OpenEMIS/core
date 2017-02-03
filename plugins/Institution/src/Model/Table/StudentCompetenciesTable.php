@@ -198,7 +198,13 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['AcademicPeriods']);
+        $query
+            ->contain(['AcademicPeriods'])
+            ->where([
+                $this->aliasField('id') => $this->getQueryString('class_id'),
+                $this->aliasField('institution_id') => $this->getQueryString('institution_id'),
+                $this->aliasField('academic_period_id') => $this->getQueryString('academic_period_id')
+            ]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -238,7 +244,6 @@ class StudentCompetenciesTable extends ControllerActionTable
                     foreach ($data[$model->alias()]['student_competency_results'] as $studentId => $criteriaResults) {
                         foreach ($criteriaResults as $criteriaKey => $criteriaValue) {
                             $studentData = [
-                                // 'competency_grading_option_id' => NULL,
                                 'student_id' => $studentId,
                                 'competency_template_id' => $competencyTemplateId,
                                 'competency_period_id' => $competencyPeriodId,
@@ -249,17 +254,26 @@ class StudentCompetenciesTable extends ControllerActionTable
                             ];
 
                             if (!empty($criteriaValue)) {
+                                // new or update
                                 $studentData['competency_grading_option_id'] = $criteriaValue;
                                 $studentEntity = $StudentCompetencyResults->newEntity($studentData);
                                 $StudentCompetencyResults->save($studentEntity);
                             } else {
-                                $studentEntity = $StudentCompetencyResults->newEntity($studentData);
-                                $StudentCompetencyResults->delete($studentEntity);
+                                // delete
+                                $studentResults = $StudentCompetencyResults
+                                    ->find()
+                                    ->where($studentData)
+                                    ->all();
+
+                                if (!$studentResults->isEmpty()) {
+                                    $studentEntity = $studentResults->first();
+                                    $StudentCompetencyResults->delete($studentEntity);
+                                }
                             }
                         }
                     }
                 } else {
-                    // delete all
+                    // no action
                 }
 
                 return true;
@@ -311,6 +325,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $tableHeaders = [];
         $tableCells = [];
 
+        $tableHeaders[] = [__('Active') => ['width' => '80']];
         $tableHeaders[] = __('Period');
 
         $todayDate = Time::now();
@@ -339,6 +354,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $inputHtml = $periodObj->code_name;
                     $inputHtml .= $form->hidden($attr['model'].'.competency_period', ['value' => $periodObj->id]);
 
+                    $rowData[] = '<i class="fa fa-check"></i>';
                     $rowData[] = $inputHtml;
                     $this->competencyPeriodId = $periodObj->id;
                 } else {
@@ -346,6 +362,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $baseUrl = $this->url($action, false);
                     $url = $this->setQueryString($baseUrl, $params);
 
+                    $rowData[] = '';
                     $rowData[] = $event->subject->Html->link($periodObj->code_name, $url);
                 }
 
@@ -354,6 +371,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         } else {
             $rowData = [];
             $rowData[] = $this->getMessage('general.noRecords');
+            $rowData[] = '';
 
             $tableCells[] = $rowData;
         }
@@ -377,11 +395,13 @@ class StudentCompetenciesTable extends ControllerActionTable
         $tableHeaders = [];
         $tableCells = [];
 
+        $tableHeaders[] = [__('Active') => ['width' => '80']];
         $tableHeaders[] = __('Item');
 
         if (is_null($this->competencyPeriodId)) {
             $rowData = [];
             $rowData[] = $this->getMessage('general.noRecords');
+            $rowData[] = '';
 
             $tableCells[] = $rowData;
         } else {
@@ -403,10 +423,10 @@ class StudentCompetenciesTable extends ControllerActionTable
                 foreach ($competencyPeriodEntity->competency_items as $itemKey => $itemObj) {
                     $rowData = [];
                     if (is_null($this->competencyItemId) || $this->competencyItemId == $itemObj->id) {
-                        // $rowData[] = $itemObj->name;
                         $inputHtml = $itemObj->name;
                         $inputHtml .= $form->hidden($attr['model'].'.competency_item', ['value' => $itemObj->id]);
 
+                        $rowData[] = '<i class="fa fa-check"></i>';
                         $rowData[] = $inputHtml;
                         $this->competencyItemId = $itemObj->id;
                     } else {
@@ -415,6 +435,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                         $baseUrl = $this->url($action, false);
                         $url = $this->setQueryString($baseUrl, $params);
 
+                        $rowData[] = '';
                         $rowData[] = $event->subject->Html->link($itemObj->name, $url);
                     }
 
@@ -423,6 +444,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             } else {
                 $rowData = [];
                 $rowData[] = $this->getMessage('general.noRecords');
+                $rowData[] = '';
 
                 $tableCells[] = $rowData;
             }
@@ -441,20 +463,7 @@ class StudentCompetenciesTable extends ControllerActionTable
 
     public function onGetCustomStudentsElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $CompetencyGradingTypes = TableRegistry::get('Competency.CompetencyGradingTypes');
-        $competencyGradingTypeResults = $CompetencyGradingTypes
-            ->find()
-            ->contain(['GradingOptions'])
-            ->toArray();
-
-        $gradingTypes = [];
-        foreach ($competencyGradingTypeResults as $gradingTypeEntity) {
-            $gradingOptions = [];
-            foreach ($gradingTypeEntity->grading_options as $gradingOptionEntity) {
-                $gradingOptions[$gradingOptionEntity->id] = $gradingOptionEntity->code_name;
-            }
-            $gradingTypes[$gradingTypeEntity->id] = $gradingOptions;
-        }
+        $gradingTypes = $this->getCompetencyGradingTypes();
 
         $value = '';
         $form = $event->subject()->Form;
@@ -490,44 +499,103 @@ class StudentCompetenciesTable extends ControllerActionTable
 
         if (!is_null($this->classId)) {
             $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+            $Users = $ClassStudents->Users;
+            $CompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
             $students = $ClassStudents
                 ->find()
-                ->contain(['Users'])
+                ->select([
+                    $CompetencyResults->aliasField('competency_grading_option_id'),
+                    $CompetencyResults->aliasField('competency_criteria_id'),
+                    $ClassStudents->aliasField('student_id'),
+                    $Users->aliasField('openemis_no'),
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('middle_name'),
+                    $Users->aliasField('third_name'),
+                    $Users->aliasField('last_name'),
+                    $Users->aliasField('preferred_name')
+                ])
+                ->matching('Users')
+                ->leftJoin(
+                    [$CompetencyResults->alias() => $CompetencyResults->table()],
+                    [
+                        $CompetencyResults->aliasField('student_id = ') . $ClassStudents->aliasField('student_id'),
+                        $CompetencyResults->aliasField('institution_id') => $this->institutionId,
+                        $CompetencyResults->aliasField('academic_period_id') => $this->academicPeriodId,
+                        $CompetencyResults->aliasField('competency_template_id') => $this->competencyTemplateId,
+                        $CompetencyResults->aliasField('competency_period_id') => $this->competencyPeriodId,
+                        $CompetencyResults->aliasField('competency_item_id') => $this->competencyItemId
+                    ]
+                )
                 ->where([$ClassStudents->aliasField('institution_class_id') => $this->classId])
+                ->group([
+                    $ClassStudents->aliasField('student_id'),
+                    $CompetencyResults->aliasField('competency_criteria_id')
+                ])
+                ->order([
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('last_name')
+                ])
                 ->toArray();
 
-            foreach ($students as $rowKey => $studentObj) {
-                $studentId = $studentObj->student_id;
-                $rowPrefix = "$fieldPrefix.$studentId";
-                
-                $rowData = [];
-                $rowInput = "";
+            $studentId = null;
+            $currentStudentId = null;
+            $answerObj = null;
+            $rowData = [];
+            $rowInput = "";
+            $rowCount = 0;
 
-                if ($action == 'view') {
-                    $rowData[] = $event->subject->Html->link($studentObj->user->openemis_no, [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'StudentUser',
-                        'view',
-                        $this->paramsEncode(['institution_id' => $this->institutionId, 'id' => $studentObj->user->id])
-                    ]);
-                    $rowData[] = $studentObj->user->name;
-                } else if ($action == 'edit') {
-                    $rowData[] = $studentObj->user->openemis_no . $rowInput;
-                    $rowData[] = $studentObj->user->name;
+            foreach ($students as $rowKey => $studentObj) {
+                $currentStudentId = $studentObj->student_id;
+                $savedGradingOptionId = $studentObj->{$CompetencyResults->alias()}['competency_grading_option_id'];
+                $savedCriteriaId = $studentObj->{$CompetencyResults->alias()}['competency_criteria_id'];
+                if (!is_null($savedCriteriaId) && !is_null($savedGradingOptionId)) {
+                    $answerObj[$currentStudentId][$savedCriteriaId] = $savedGradingOptionId;
+                }
+
+                $userObj = $studentObj->_matchingData['Users'];
+
+                if ($studentId != $currentStudentId) {
+                    if ($studentId != null) {
+                        $tableCells[$rowCount] = $rowData;
+                        $rowCount++;
+                    }
+
+                    $rowPrefix = "$fieldPrefix.$currentStudentId";
+                    
+                    $rowData = [];
+                    $rowInput = "";
+
+                    if ($action == 'view') {
+                        // $rowData[] = $event->subject->Html->link($userObj->openemis_no, [
+                        //     'plugin' => 'Institution',
+                        //     'controller' => 'Institutions',
+                        //     'action' => 'StudentUser',
+                        //     'view',
+                        //     $this->paramsEncode(['id' => $userObj->id])
+                        // ]);
+                        $rowData[] = $userObj->openemis_no;
+                        $rowData[] = $userObj->name;
+                    } else if ($action == 'edit') {
+                        $rowData[] = $userObj->openemis_no . $rowInput;
+                        $rowData[] = $userObj->name;
+                    }
+
+                    $studentId = $currentStudentId;
                 }
 
                 if (!is_null($competencyItemEntity) && $competencyItemEntity->has('criterias')) {
                     foreach ($competencyItemEntity->criterias as $colKey => $criteriaObj) {
                         $competencyCriteriaId = $criteriaObj['id'];
+
                         $cellPrefix = "$rowPrefix.$competencyCriteriaId";
                         $cellInput = "";
                         $cellValue = "";
 
                         $cellOptions = ['label' => false, 'value' => ''];
-                        $answerObj = null;
-
                         $answerValue = null;
+                        if (isset($answerObj[$currentStudentId][$competencyCriteriaId]) && !is_null($answerObj[$currentStudentId][$competencyCriteriaId])) {
+                            $answerValue = $answerObj[$currentStudentId][$competencyCriteriaId];
+                        }
                         $dropdownOptions = $gradingTypes[$criteriaObj['competency_grading_type_id']];
                         $dropdownDefault = null;
 
@@ -551,8 +619,10 @@ class StudentCompetenciesTable extends ControllerActionTable
                         }
                     }
                 }
+            }
 
-                $tableCells[$rowKey] = $rowData;
+            if (!empty($rowData)) {
+                $tableCells[$rowCount] = $rowData;
             }
         }
 
@@ -615,5 +685,24 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         return $buttons;
+    }
+
+    private function getCompetencyGradingTypes() {
+        $CompetencyGradingTypes = TableRegistry::get('Competency.CompetencyGradingTypes');
+        $competencyGradingTypeResults = $CompetencyGradingTypes
+            ->find()
+            ->contain(['GradingOptions'])
+            ->toArray();
+
+        $gradingTypes = [];
+        foreach ($competencyGradingTypeResults as $gradingTypeEntity) {
+            $gradingOptions = [];
+            foreach ($gradingTypeEntity->grading_options as $gradingOptionEntity) {
+                $gradingOptions[$gradingOptionEntity->id] = $gradingOptionEntity->code_name;
+            }
+            $gradingTypes[$gradingTypeEntity->id] = $gradingOptions;
+        }
+
+        return $gradingTypes;
     }
 }
