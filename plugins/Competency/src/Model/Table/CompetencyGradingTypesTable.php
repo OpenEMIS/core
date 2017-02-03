@@ -99,6 +99,38 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         }
     }
 
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
+            $gradingOptions = $requestData[$this->alias()]['grading_options'];
+            $codes = array_column($gradingOptions, 'code');
+            $vals = array_count_values($codes);
+            foreach ($vals as $count) {
+                if ($count > 1) {
+                    $entity->errors('grading_options', __('Duplicated Code'));
+                    $this->Alert->error('general.uniqueCodeForm');
+                    break;
+                }
+            }
+        }
+    }
+
+    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
+            $gradingOptions = $requestData[$this->alias()]['grading_options'];
+            $codes = array_column($gradingOptions, 'code');
+            $vals = array_count_values($codes);
+            foreach ($vals as $count) {
+                if ($count > 1) {
+                    $entity->errors('grading_options', __('Duplicated Code'));
+                    $this->Alert->error('general.uniqueCodeForm');
+                    break;
+                }
+            }
+        }
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
         // get the array of the original gradeOptions
@@ -139,7 +171,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
                 $this->GradingOptions->deleteAll([
                     $this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
                 ]);
-            } else if ((!array_key_exists('grading_options', $requestData['GradingTypes'])) && (!$allowedDeleteAll)){
+            } else if ((!array_key_exists('grading_options', $requestData['CompetencyGradingTypes'])) && (!$allowedDeleteAll)){
                 $this->GradingOptions->deleteAll([
                     $this->GradingOptions->aliasField('competency_grading_type_id') => $entity->id
                 ]);
