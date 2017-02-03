@@ -61,7 +61,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
             $itemOptions = $this->Items->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
             $this->itemOptions = $itemOptions;
 
-            $itemOptions = array(-1 => __('-- Select Item --')) + $itemOptions;
+            $itemOptions = ['0' => '-- '.__('All Items').' --'] + $itemOptions;
 
             if ($request->query('item')) {
                 $selectedItem = $request->query('item');
@@ -118,6 +118,10 @@ class CompetencyCriteriasTable extends ControllerActionTable {
     {
         if ($this->request->query('item')) {
             $this->request->data[$this->alias()]['competency_item_id'] = $this->request->query('item');
+        } else if ($this->request->query('criteriaForm')) {
+            $this->request->data[$this->alias()]['competency_item_id'] = $this->getQueryString('competency_item_id', 'criteriaForm');
+            $this->request->data[$this->alias()]['name'] = $this->getQueryString('name', 'criteriaForm');
+            $this->request->data[$this->alias()]['competency_grading_type_id'] = $this->getQueryString('competency_grading_type_id', 'criteriaForm');
         }
     }
 
@@ -218,6 +222,30 @@ class CompetencyCriteriasTable extends ControllerActionTable {
         }
     }
 
+    public function addEditOnChangeGradingType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $competencyGradingTypeId = $data[$this->alias()]['competency_grading_type_id'];
+        if ($competencyGradingTypeId == 'createNew') {
+            $url = $this->url('add');
+            $url['action'] = 'GradingTypes';
+            $url = $this->setQueryString($url, ['competency_item_id' => $data[$this->alias()]['competency_item_id'], 'name' => $data[$this->alias()]['name']], 'criteriaForm');
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
+    }
+
+    public function onUpdateFieldCompetencyGradingTypeId(Event $event, array $attr, $action, Request $request)
+    {
+        $options = ['' => '-- '.__('Select').' --', 'createNew' => '-- '.__('Create New'). ' --'];
+        $gradingTypeOptions = $this->GradingTypes->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])->toArray();
+        $options = $options + $gradingTypeOptions;
+        $attr['options'] = $options;
+        $attr['type'] = 'chosenSelect';
+        $attr['attr']['multiple'] = false;
+        $attr['onChangeReload'] = 'ChangeGradingType';
+        return $attr;
+    }
+
     public function onUpdateFieldCompetencyItemId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -227,7 +255,6 @@ class CompetencyCriteriasTable extends ControllerActionTable {
             if ($selectedTemplate) {
                 $itemOptions = $this->Items->find('ItemList', ['templateId' => $selectedTemplate, 'academicPeriodId' => $selectedPeriod])->toArray();
             }
-
             $attr['options'] = $itemOptions;
         } else if ($action == 'edit') {
             $attr['type'] = 'readonly';
