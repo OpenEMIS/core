@@ -292,9 +292,6 @@ class AdvanceSearchBehavior extends Behavior {
 							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 					}
-				} else if ($key == 'classification') {
-                    $value = ($value == 2) ? 0 : $value;
-                    $conditions[$model->aliasField($key)] = $value;
                 } else {
                     $modifiedCondition = $model->dispatchEvent('AdvanceSearch.onModifyConditions', [$key, $value], $this);
                     if ($modifiedCondition->result) {

@@ -186,9 +186,9 @@ class NavigationComponent extends Component
 			$currentInstitution = $Institutions->get($institutionId);
 
 			if ($currentInstitution) {
-				$isAcademic = $currentInstitution->classification;
+				$classification = $currentInstitution->classification;
 
-				if (!$isAcademic) {
+				if ($classification == $Institutions::NON_ACADEMIC) {
 					// navigation items to exclude from non-academic institutions
 					$academicArray = [
 						'Institution.Academic',
