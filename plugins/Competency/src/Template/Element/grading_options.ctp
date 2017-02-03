@@ -25,7 +25,7 @@
 				'onclick' => "$('#reload').val('reload').click();",
 				'required' =>'required'
 			]);
-			$this->Form->unlockField('GradingTypes.grading_options');
+			$this->Form->unlockField('CompetencyGradingTypes.grading_options');
 		?>
 		</div>
 		<div class="table-wrapper full-width">
@@ -79,7 +79,7 @@
 						$fieldAttributes = isset($field['attr']) ? $field['attr'] : [];
 						$options = array_merge([
 										'label'=>false,
-										'name'=>'GradingTypes[grading_options]['.$key.']['.$field['field'].']',
+										'name'=>'CompetencyGradingTypes[grading_options]['.$key.']['.$field['field'].']',
 										'class'=>$fieldClass,
 										'value'=>$record->$field['field']
 									],
