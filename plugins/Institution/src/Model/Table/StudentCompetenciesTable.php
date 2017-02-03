@@ -325,7 +325,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $tableHeaders = [];
         $tableCells = [];
 
-        $tableHeaders[] = __('Active');
+        $tableHeaders[] = [__('Active') => ['width' => '80']];
         $tableHeaders[] = __('Period');
 
         $todayDate = Time::now();
@@ -371,6 +371,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         } else {
             $rowData = [];
             $rowData[] = $this->getMessage('general.noRecords');
+            $rowData[] = '';
 
             $tableCells[] = $rowData;
         }
@@ -394,12 +395,13 @@ class StudentCompetenciesTable extends ControllerActionTable
         $tableHeaders = [];
         $tableCells = [];
 
-        $tableHeaders[] = __('Active');
+        $tableHeaders[] = [__('Active') => ['width' => '80']];
         $tableHeaders[] = __('Item');
 
         if (is_null($this->competencyPeriodId)) {
             $rowData = [];
             $rowData[] = $this->getMessage('general.noRecords');
+            $rowData[] = '';
 
             $tableCells[] = $rowData;
         } else {
@@ -442,6 +444,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             } else {
                 $rowData = [];
                 $rowData[] = $this->getMessage('general.noRecords');
+                $rowData[] = '';
 
                 $tableCells[] = $rowData;
             }
@@ -528,7 +531,10 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $ClassStudents->aliasField('student_id'),
                     $CompetencyResults->aliasField('competency_criteria_id')
                 ])
-                ->order([$ClassStudents->aliasField('student_id')])
+                ->order([
+                    $Users->aliasField('first_name'),
+                    $Users->aliasField('last_name')
+                ])
                 ->toArray();
 
             $studentId = null;
@@ -560,13 +566,14 @@ class StudentCompetenciesTable extends ControllerActionTable
                     $rowInput = "";
 
                     if ($action == 'view') {
-                        $rowData[] = $event->subject->Html->link($userObj->openemis_no, [
-                            'plugin' => 'Institution',
-                            'controller' => 'Institutions',
-                            'action' => 'StudentUser',
-                            'view',
-                            $this->paramsEncode(['institution_id' => $this->institutionId, 'id' => $userObj->id])
-                        ]);
+                        // $rowData[] = $event->subject->Html->link($userObj->openemis_no, [
+                        //     'plugin' => 'Institution',
+                        //     'controller' => 'Institutions',
+                        //     'action' => 'StudentUser',
+                        //     'view',
+                        //     $this->paramsEncode(['id' => $userObj->id])
+                        // ]);
+                        $rowData[] = $userObj->openemis_no;
                         $rowData[] = $userObj->name;
                     } else if ($action == 'edit') {
                         $rowData[] = $userObj->openemis_no . $rowInput;
