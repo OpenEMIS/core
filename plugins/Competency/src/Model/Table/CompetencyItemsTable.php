@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -19,7 +20,7 @@ class CompetencyItemsTable extends ControllerActionTable
 
         parent::initialize($config);
 
-        $this->belongsTo('Templates',       ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
+        $this->belongsTo('Templates',       ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 
         $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -28,13 +29,14 @@ class CompetencyItemsTable extends ControllerActionTable
             'className' => 'Competency.CompetencyPeriods',
             'joinTable' => 'competency_items_periods',
             'foreignKey' => ['competency_item_id', 'academic_period_id', 'competency_template_id'],
+            'bindingKey' => ['id', 'academic_period_id', 'competency_template_id'],
             'targetForeignKey' => ['competency_period_id', 'academic_period_id'],
             'through' => 'Competency.CompetencyItemsPeriods',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
 
-        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_criteria_id', 'academic_period_id']]);
+        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_item_id', 'competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'competency_template_id', 'academic_period_id']]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -54,7 +56,7 @@ class CompetencyItemsTable extends ControllerActionTable
             $extra['queryString'] = $queryString;
 
             $name = $this->Templates->get(['id' => $competencyTemplateId, 'academic_period_id' => $academicPeriodId])->name;
-            $header = $name . ' - ' . __($this->alias());
+            $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
             $this->controller->set('contentHeader', $header);
             $this->controller->Navigation->substituteCrumb($this->alias(), $header);
 

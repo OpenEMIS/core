@@ -19,12 +19,13 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         // $this->belongsTo('Items',           ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
-        $this->belongsTo('Templates',       ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
+        $this->belongsTo('Templates',       ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
 
         $this->belongsToMany('CompetencyItems', [
             'className' => 'Competency.CompetencyItems',
             'joinTable' => 'competency_items_periods',
             'foreignKey' => ['competency_period_id', 'academic_period_id'],
+            'bindingKey' => ['id', 'academic_period_id'],
             'targetForeignKey' => ['competency_item_id', 'academic_period_id', 'competency_template_id'],
             'through' => 'Competency.CompetencyItemsPeriods',
             'dependent' => true,
@@ -156,9 +157,12 @@ class CompetencyPeriodsTable extends ControllerActionTable
             'type' => 'select',
             'entity' => $entity
         ]);
+
+        // Added required flag as a workaround to show asterix
         $this->field('competency_items', [
             'type' => 'chosenSelect',
-            'entity' => $entity
+            'entity' => $entity,
+            'attr' => ['required' => true]
         ]);
 
         $this->setFieldOrder([
@@ -171,13 +175,15 @@ class CompetencyPeriodsTable extends ControllerActionTable
         //massage data to match many to many data format.
         if (array_key_exists($this->alias(), $requestData)) {
             if (array_key_exists('competency_items', $requestData[$this->alias()])) {
-                foreach ($requestData[$this->alias()]['competency_items']['_ids'] as $key => $item) {
-                    $requestData[$this->alias()]['competency_items'][$key]['id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
-                    $requestData[$this->alias()]['competency_items'][$key]['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
-                    $requestData[$this->alias()]['competency_items'][$key]['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
-                    $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_item_id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
-                    $requestData[$this->alias()]['competency_items'][$key]['_joinData']['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
-                    $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
+                if (is_array($requestData[$this->alias()]['competency_items']['_ids'])) {
+                    foreach ($requestData[$this->alias()]['competency_items']['_ids'] as $key => $item) {
+                        $requestData[$this->alias()]['competency_items'][$key]['id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
+                        $requestData[$this->alias()]['competency_items'][$key]['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                        $requestData[$this->alias()]['competency_items'][$key]['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
+                        $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_item_id'] = $requestData[$this->alias()]['competency_items']['_ids'][$key];
+                        $requestData[$this->alias()]['competency_items'][$key]['_joinData']['academic_period_id'] = $requestData[$this->alias()]['academic_period_id'];
+                        $requestData[$this->alias()]['competency_items'][$key]['_joinData']['competency_template_id'] = $requestData[$this->alias()]['competency_template_id'];
+                    }
                 }
                 unset($requestData[$this->alias()]['competency_items']['_ids']);
             }
