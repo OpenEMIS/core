@@ -923,15 +923,14 @@ class InstitutionsTable extends AppTable  {
 	public function getCustomFilter(Event $event)
 	{
 		$filters = [
-            'shift_type' => [
-    			'label' => __('Shift Type'),
-    			'options' => $this->shiftTypes
-            ],
-            'classification' => [
-                'label' => __('Classification'),
-                'options' => $this->classificationOptions
-            ]
-
+			'shift_type' => [
+				'label' => __('Shift Type'),
+				'options' => $this->shiftTypes
+			],
+			'classification' => [
+				'label' => __('Classification'),
+				'options' => $this->classificationOptions
+			]
 		];
 		return $filters;
 	}

@@ -1034,13 +1034,13 @@ class StaffTable extends ControllerActionTable {
                 ->toArray();
 
 		$positionTypes = [];
-        foreach ($staffByPositions as $staffPosition) {
-            if ($staffPosition->has('position') && $staffPosition->position->has('staff_position_title')) {
-                $id = $staffPosition->position->staff_position_title->id;
-                $name = $staffPosition->position->staff_position_title->name;
-                $positionTypes[$id] = $name;
-            }
-        }
+		foreach ($staffByPositions as $staffPosition) {
+			if ($staffPosition->has('position') && $staffPosition->position->has('staff_position_title')) {
+				$id = $staffPosition->position->staff_position_title->id;
+				$name = $staffPosition->position->staff_position_title->name;
+				$positionTypes[$id] = $name;
+			}
+		}
 
 		$genderOptions = $this->Users->Genders->getList();
 		$dataSet = array();

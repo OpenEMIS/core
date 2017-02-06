@@ -298,12 +298,12 @@ class StaffTable extends AppTable {
 		// unset classes and subjects if institution is non-academic
 		if (array_key_exists('institution_id', $options)) {
 			$institutionId = $options['institution_id'];
-	        $InstitutionTable = TableRegistry::get('Institution.Institutions');
-	        $classification = $InstitutionTable->get($institutionId)->classification;
-	        if ($classification == $InstitutionTable::NON_ACADEMIC) {
-	            unset($studentTabElements['Classes']);
-	            unset($studentTabElements['Subjects']);
-	        }
+			$InstitutionTable = TableRegistry::get('Institution.Institutions');
+			$classification = $InstitutionTable->get($institutionId)->classification;
+			if ($classification == $InstitutionTable::NON_ACADEMIC) {
+				unset($studentTabElements['Classes']);
+				unset($studentTabElements['Subjects']);
+			}
 		}
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
