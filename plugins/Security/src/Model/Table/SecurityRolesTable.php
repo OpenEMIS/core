@@ -18,8 +18,6 @@ class SecurityRolesTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('SecurityGroups', ['className' => 'Security.UserGroups']);
 
-        $this->hasMany('AlertsRoles', ['className' => 'Alert.AlertsRoles']);
-
 		$this->belongsToMany('SecurityFunctions', [
 			'className' => 'Security.SecurityFunctions',
 			'through' => 'Security.SecurityRoleFunctions'
@@ -33,6 +31,17 @@ class SecurityRolesTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+		$this->belongsToMany('AlertRules', [
+            'className' => 'Alert.AlertRules',
+            'joinTable' => 'alerts_roles',
+            'foreignKey' => 'security_role_id',
+            'targetForeignKey' => 'alert_rule_id',
+            'through' => 'Alert.AlertsRoles',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
 					'filter' => 'security_group_id'

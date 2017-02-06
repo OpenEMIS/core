@@ -1,3 +1,6 @@
+-- alertRole to composite id
+ALTER TABLE `alerts_roles` CHANGE `id` `id` CHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
 -- sms_logs table
 CREATE TABLE `sms_logs` (
     `id` int(11) NOT NULL AUTO_INCREMENT,

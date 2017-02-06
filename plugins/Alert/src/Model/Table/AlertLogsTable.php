@@ -97,6 +97,11 @@ class AlertLogsTable extends ControllerActionTable
         $this->field('status', ['after' => 'message']);
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('message', ['type' => 'hidden']);
+    }
+
     public function triggerSendingAlertShell($shellName)
     {
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName;
