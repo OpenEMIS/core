@@ -68,14 +68,14 @@ class StaffTable extends ControllerActionTable {
         ]);
 
 		$this->addBehavior('HighChart', [
-	      	'number_of_staffs_by_type' => [
-        		'_function' => 'getNumberOfStaffsByType',
+	      	'number_of_staff_by_type' => [
+        		'_function' => 'getNumberOfStaffByType',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => __('Position Type')]],
 				'yAxis' => ['title' => ['text' => __('Total')]]
 			],
-			'number_of_staffs_by_position_title' => [
-        		'_function' => 'getNumberOfStaffsByPositionTitle',
+			'number_of_staff_by_position' => [
+        		'_function' => 'getNumberOfStaffByPosition',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
 				'xAxis' => ['title' => ['text' => __('Position Type')]],
 				'yAxis' => ['title' => ['text' => __('Total')]]
@@ -918,7 +918,7 @@ class StaffTable extends ControllerActionTable {
 	}
 
 	// Function used by the Dashboard (For Institution Dashboard and Home Page)
-	public function getNumberOfStaffsByType($params=[]) {
+	public function getNumberOfStaffByType($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
 		foreach ($conditions as $key => $value) {
@@ -994,7 +994,7 @@ class StaffTable extends ControllerActionTable {
 	}
 
 	// Function used by the Dashboard (For Institution Dashboard and Home Page)
-	public function getNumberOfStaffsByPositionTitle($params=[]) {
+	public function getNumberOfStaffByPosition($params=[]) {
 		$conditions = isset($params['conditions']) ? $params['conditions'] : [];
 		$_conditions = [];
 		foreach ($conditions as $key => $value) {
