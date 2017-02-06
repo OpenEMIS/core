@@ -186,9 +186,9 @@ class NavigationComponent extends Component
 			$currentInstitution = $Institutions->get($institutionId);
 
 			if ($currentInstitution) {
-				$isAcademic = $currentInstitution->classification;
+				$classification = $currentInstitution->classification;
 
-				if (!$isAcademic) {
+				if ($classification == $Institutions::NON_ACADEMIC) {
 					// navigation items to exclude from non-academic institutions
 					$academicArray = [
 						'Institution.Academic',
@@ -198,7 +198,9 @@ class NavigationComponent extends Component
 						'Institutions.Assessments.index',
 						'Institutions.Examinations',
 						'Institutions.Fees',
-						'Institutions.StudentFees'
+						'Institutions.StudentFees',
+						'Institutions.Rubrics',
+						'Institutions.VisitRequests'
 					];
 
 					$navigationParentList = $this->array_column($navigations, 'parent');
