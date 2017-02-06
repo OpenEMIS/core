@@ -868,6 +868,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     public function onUpdateFieldLinkedInstitutions(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
+            $Institutions = TableRegistry::get('Institution.Institutions');
             $options = $this->Institutions->find()
                     ->innerJoinWith('InstitutionGrades', function ($q) use ($attr) {
                         return $q->where(['InstitutionGrades.education_grade_id' => $attr['education_grade_id']]);
@@ -876,7 +877,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         'ExaminationCentresInstitutions.institution_id = '.$this->Institutions->aliasField('id'),
                         'ExaminationCentresInstitutions.examination_id' => $attr['examination_id']
                     ])
-                    ->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('classification') => 1])
+                    ->where(['ExaminationCentresInstitutions.institution_id IS NULL', $this->Institutions->aliasField('classification') => $Institutions::ACADEMIC])
                     ->group([$this->Institutions->aliasField('id')]);
 
             if ($action == 'edit') {
