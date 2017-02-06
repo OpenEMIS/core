@@ -106,13 +106,14 @@ class AdvanceSearchBehavior extends Behavior {
 
 					if ($customFilter->result) {
 						$result = $customFilter->result;
-						$customFilterKey = key($result);
-						if ($key == $customFilterKey) {
-							$filters[$customFilterKey] = [
-								'label' => $result[$customFilterKey]['label'],
-								'options' => $result[$customFilterKey]['options'],
-								'selected' => $selected
-							];
+						foreach ($result as $customFilterKey => $item) {
+							if ($key == $customFilterKey) {
+								$filters[$customFilterKey] = [
+									'label' => $item['label'],
+									'options' => $item['options'],
+									'selected' => $selected
+								];
+							}
 						}
 					}
 				}
@@ -291,7 +292,7 @@ class AdvanceSearchBehavior extends Behavior {
 							$query->find('Areas', ['id' => $id, 'columnName' => $key, 'table' => $tableName]);
 							break;
 					}
-				} else {
+                } else {
                     $modifiedCondition = $model->dispatchEvent('AdvanceSearch.onModifyConditions', [$key, $value], $this);
                     if ($modifiedCondition->result) {
                         $result = $modifiedCondition->result;
