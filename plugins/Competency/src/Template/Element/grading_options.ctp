@@ -117,11 +117,11 @@
 											if ($gradingOptions[$data->grading_options[$key]['id']]) {
 												echo __('In use');
 											} else {
-												echo $this->Form->input('<i class="fa fa-trash"></i> <span>Delete</span>', [
+												echo $this->Form->input('<i class="fa fa-trash"></i> <span>'.__('Delete').'</span>', [
 													'label' => false,
 													'type' => 'button',
 													'class' => 'btn btn-dropdown action-toggle btn-single-action',
-													'title' => "Delete",
+													'title' => __('Delete'),
 													'aria-expanded' => 'true',
 													'onclick' => "jsTable.doRemove(this); "
 												]);
