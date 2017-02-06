@@ -77,7 +77,7 @@ class StaffTable extends ControllerActionTable {
 			'number_of_staff_by_position' => [
         		'_function' => 'getNumberOfStaffByPosition',
 				'chart' => ['type' => 'column', 'borderWidth' => 1],
-				'xAxis' => ['title' => ['text' => __('Position Type')]],
+				'xAxis' => ['title' => ['text' => __('Position Title')]],
 				'yAxis' => ['title' => ['text' => __('Total')]]
 			],
 			'institution_staff_gender' => [
