@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -114,41 +115,55 @@ class IdentitiesTable extends ControllerActionTable
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$this->Users->updateIdentityNumber($entity->security_user_id); //update identity_number field on security_user table on add/edit action
+        $listeners = [
+            TableRegistry::get('User.Users')
+        ];
+        $this->dispatchEventToModels('Model.UserIdentities.afterSave', [$entity], $this, $listeners);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$this->Users->updateIdentityNumber($entity->security_user_id); //update identity_number field on security_user table on delete action
+		// $this->Users->updateIdentityNumber($entity->security_user_id); //update identity_number field on security_user table on delete action
+        $listeners = [
+            TableRegistry::get('User.Users')
+        ];
+        $this->dispatchEventToModels('Model.UserIdentities.afterDelete', [$entity], $this, $listeners);
 	}
 
-	public function getLatestDefaultIdentityNo($userId)
+	public function getLatestDefaultIdentityNo($userId) 
 	{
+        //check identity type that ties to the nationality
 		$UserNationalityTable = TableRegistry::get('User.UserNationalities');
+
+        $nationalityId = null;
 		$identityType = $UserNationalityTable
 			->find()
 			->matching('NationalitiesLookUp')
 			->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
 			->where([
-				'security_user_id' => $userId
+				'security_user_id' => $userId,
+                'preferred' => 1
 			])
-			->first();
-		$result = null;
+            ->first();
 
-		if ($identityType) {
+		//get the latest record according to identity type
+        $result = null;
+        if ($identityType) {
+            $nationalityId = $identityType->nationality_id;
 			$result = $this
 				->find()
 				->where([
 					$this->aliasField('security_user_id') => $userId,
-					$this->aliasField('identity_type_id') => $identityType['identityTypeId']
+					$this->aliasField('identity_type_id') => $identityType->identityTypeId
 				])
+                ->order('created DESC')
 				->first();
 		}
 
 		if (!empty($result)) {
-			return ['identity_type_id' => $result->identity_type_id, 'identity_no' => $result->number];
+			return ['nationality_id' => $nationalityId, 'identity_type_id' => $result->identity_type_id, 'identity_no' => $result->number];
 		} else {
-			return ['identity_type_id' => null, 'identity_no' => null];
+			return ['nationality_id' => $nationalityId, 'identity_type_id' => null, 'identity_no' => null];
 		}
 	}
 }

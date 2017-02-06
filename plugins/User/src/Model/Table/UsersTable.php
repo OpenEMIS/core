@@ -73,7 +73,11 @@ class UsersTable extends AppTable {
 		$newEvent = [
 			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser',
 			'Model.Users.afterLogin' => 'afterLogin',
-			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage'
+			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage',
+			'Model.UserNationalities.afterSave' => 'userNationalitiesIdentitiesAfterSaveDelete',
+			'Model.UserNationalities.afterDelete' => 'userNationalitiesIdentitiesAfterSaveDelete',
+			'Model.UserIdentities.afterSave' => 'userNationalitiesIdentitiesAfterSaveDelete',
+			'Model.UserIdentities.afterDelete' => 'userNationalitiesIdentitiesAfterSaveDelete'
 		];
 
 		$events = array_merge($events, $newEvent);
@@ -654,6 +658,20 @@ class UsersTable extends AppTable {
 			}
 		}
 	}
+
+	public function userNationalitiesIdentitiesAfterSaveDelete(Event $event, Entity $entity)
+    {
+        //update nationality and identity info
+        list($nationalityId, $identityTypeId, $identityNumber) = array_values($this->Identities->getLatestDefaultIdentityNo($entity->security_user_id));
+        $this->updateAll(
+            [
+                'nationality_id' => $nationalityId,
+                'identity_type_id' => $identityTypeId,
+                'identity_number' => $identityNumber
+            ], 
+            ['id' => $entity->security_user_id]
+        );
+    }
 
 	public function updateAllIdentityNumber($nationalityType)
 	{
