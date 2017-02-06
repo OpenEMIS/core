@@ -554,6 +554,11 @@ class StaffTable extends ControllerActionTable {
 			$this->addStaffRole($entity);
 			$this->updateStaffStatus($entity, $this->assigned);
 		}
+
+		$listeners = [
+			TableRegistry::get('Institution.InstitutionSubjectStaff')
+		];
+		$this->dispatchEventToModels('Model.Staff.afterSave', [$entity], $this, $listeners);
 	}
 
 	private function updateStaffStatus($entity, $staffStatuses) {
@@ -1072,7 +1077,7 @@ class StaffTable extends ControllerActionTable {
 
 	public function findWithBelongsTo(Query $query, array $options) {
 		return $query
-			->contain(['Users', 'Institutions', 'Positions', 'StaffTypes', 'StaffStatuses']);
+			->contain(['Users', 'Institutions', 'Positions.StaffPositionTitles', 'StaffTypes', 'StaffStatuses']);
 	}
 
     public function findStaffRecords(Query $query, array $options)
