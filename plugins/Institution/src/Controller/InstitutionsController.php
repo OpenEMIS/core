@@ -543,8 +543,12 @@ class InstitutionsController extends AppController
         // $highChartDatas = ['{"chart":{"type":"column","borderWidth":1},"xAxis":{"title":{"text":"Position Type"},"categories":["Non-Teaching","Teaching"]},"yAxis":{"title":{"text":"Total"}},"title":{"text":"Number Of Staff"},"subtitle":{"text":"For Year 2015-2016"},"series":[{"name":"Male","data":[0,2]},{"name":"Female","data":[0,1]}]}'];
         $highChartDatas = [];
 
-        // only show student charts if institution is academic
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
+        $InstitutionStaff = TableRegistry::get('Institution.Staff');
+
         if ($classification == $Institutions::ACADEMIC) {
+            // only show student charts if institution is academic
             $InstitutionStudents = TableRegistry::get('Institution.Students');
             $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
             $statuses = $StudentStatuses->findCodeList();
@@ -562,17 +566,21 @@ class InstitutionsController extends AppController
             );
 
             $highChartDatas[] = $InstitutionStudents->getHighChart('number_of_students_by_grade', $params);
+
+            //Staffs By Position Type for current year, only shows assigned staff
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
+            );
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staffs_by_type', $params);
+
+        } else if ($classification == $Institutions::NON_ACADEMIC) {
+
+            //Staffs By Position Title for current year, only shows assigned staff
+            $params = array(
+                'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
+            );
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staffs_by_position_title', $params);
         }
-
-        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
-        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
-
-        //Staffs By Position for current year, only shows assigned staff
-        $params = array(
-            'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus, 'classification' => $classification)
-        );
-        $InstitutionStaff = TableRegistry::get('Institution.Staff');
-        $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff', $params);
 
         $this->set('highChartDatas', $highChartDatas);
     }
