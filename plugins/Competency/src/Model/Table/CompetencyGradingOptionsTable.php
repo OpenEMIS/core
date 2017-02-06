@@ -18,9 +18,9 @@ class CompetencyGradingOptionsTable extends CompetenciesAppTable {
 
     public function getFormFields($action = 'edit') {
         if ($action=='edit') {
-            return ['code'=>'', 'name'=>'', 'competency_grading_type_id'=>'', 'id'=>''];
+            return ['code'=>'', 'name'=>'', 'description' => '', 'competency_grading_type_id'=>'', 'id'=>''];
         } else {
-            return ['code'=>'', 'name'=>''];
+            return ['code'=>'', 'name'=>'', 'description' => ''];
         }
     }
 
