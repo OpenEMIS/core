@@ -58,6 +58,9 @@ DROP TABLE sms_logs;
 DROP TABLE sms_messages;
 DROP TABLE sms_responses;
 
+-- alertRole to composite id
+ALTER TABLE `alerts_roles` CHANGE `id` `id` CHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
 
 
 
