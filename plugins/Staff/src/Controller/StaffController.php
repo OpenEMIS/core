@@ -221,9 +221,9 @@ class StaffController extends AppController {
 			$options['user_id'] = $userId;
 		}
 		if ($session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
-            $options['institution_id'] = $institutionId;
-        }
+			$institutionId = $session->read('Institution.Institutions.id');
+			$options['institution_id'] = $institutionId;
+		}
 
 		return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 	}
