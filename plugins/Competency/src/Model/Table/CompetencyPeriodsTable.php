@@ -156,9 +156,12 @@ class CompetencyPeriodsTable extends ControllerActionTable
             'type' => 'select',
             'entity' => $entity
         ]);
+
+        // Added required flag as a workaround to show asterix
         $this->field('competency_items', [
             'type' => 'chosenSelect',
-            'entity' => $entity
+            'entity' => $entity,
+            'attr' => ['required' => true]
         ]);
 
         $this->setFieldOrder([
