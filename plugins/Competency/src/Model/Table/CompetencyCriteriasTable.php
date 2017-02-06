@@ -46,6 +46,18 @@ class CompetencyCriteriasTable extends ControllerActionTable {
         }
     }
 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $toolbarButtons = $extra['toolbarButtons'];
+        if ($toolbarButtons->offsetExists('back')) {
+            $url = $this->url('index');
+            if (isset($url['criteriaForm'])) {
+                unset($url['criteriaForm']);
+            }
+            $toolbarButtons['back']['url'] = $url;
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $request = $this->request;
@@ -124,6 +136,15 @@ class CompetencyCriteriasTable extends ControllerActionTable {
             $this->request->data[$this->alias()]['name'] = $this->getQueryString('name', 'criteriaForm');
             $this->request->data[$this->alias()]['competency_grading_type_id'] = $this->getQueryString('competency_grading_type_id', 'criteriaForm');
         }
+    }
+
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $url = $this->url('index');
+        if (isset($url['criteriaForm'])) {
+            unset($url['criteriaForm']);
+        }
+        $extra['redirect'] = $url;
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
