@@ -324,11 +324,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $form = $event->subject()->Form;
 
         $competencyPeriodCount = 0;
-        $tableHeaders = [];
-        $tableCells = [];
-
-        $tableHeaders[] = [__('Active') => ['width' => '80']];
-        $tableHeaders[] = __('Period');
+        $competencyPeriodOptions = [];
 
         $todayDate = Time::now();
         $today = $todayDate->format('Y-m-d');
@@ -353,30 +349,28 @@ class StudentCompetenciesTable extends ControllerActionTable
             $this->competencyPeriodId = $this->getQueryString('competency_period_id');
 
             foreach ($competencyPeriodResults as $periodKey => $periodObj) {
-                $rowData = [];
-                if (is_null($this->competencyPeriodId) || $this->competencyPeriodId == $periodObj->id) {
-                    $inputHtml = $periodObj->code_name;
-                    $inputHtml .= $form->hidden($attr['model'].'.competency_period', ['value' => $periodObj->id]);
+                $periodData = [];
+                $periodData['id'] = $periodObj->id;
+                $periodData['code_name'] = $periodObj->code_name;
 
-                    $rowData[] = '<i class="fa fa-check"></i>';
-                    $rowData[] = $inputHtml;
+                $params['competency_period_id'] = $periodObj->id;
+                $baseUrl = $this->url($action, false);
+                $url = $this->setQueryString($baseUrl, $params);
+                $periodData['url'] = $url;
+
+                if (is_null($this->competencyPeriodId) || $this->competencyPeriodId == $periodObj->id) {
+                    $periodData['checked'] = true;
                     $this->competencyPeriodId = $periodObj->id;
                 } else {
-                    $params['competency_period_id'] = $periodObj->id;
-                    $baseUrl = $this->url($action, false);
-                    $url = $this->setQueryString($baseUrl, $params);
-
-                    $rowData[] = '';
-                    $rowData[] = $event->subject->Html->link($periodObj->code_name, $url);
+                    $periodData['checked'] = false;
                 }
 
-                $tableCells[$periodKey] = $rowData;
+                $competencyPeriodOptions[] = $periodData;
             }
         }
 
         $attr['competencyPeriodCount'] = $competencyPeriodCount;
-        $attr['tableHeaders'] = $tableHeaders;
-        $attr['tableCells'] = $tableCells;
+        $attr['competencyPeriodOptions'] = $competencyPeriodOptions;
 
         if ($action == 'view' || $action == 'edit') {
             $value = $event->subject()->renderElement('Institution.StudentCompetencies/competency_period', ['attr' => $attr]);
@@ -392,11 +386,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         $form = $event->subject()->Form;
 
         $competencyItemCount = 0;
-        $tableHeaders = [];
-        $tableCells = [];
-
-        $tableHeaders[] = [__('Active') => ['width' => '80']];
-        $tableHeaders[] = __('Item');
+        $competencyItemOptions = [];
 
         if (!is_null($this->competencyPeriodId)) {
             $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
@@ -417,32 +407,30 @@ class StudentCompetenciesTable extends ControllerActionTable
                 foreach ($competencyPeriodEntity->competency_items as $itemKey => $itemObj) {
                     $competencyItemCount++;
 
-                    $rowData = [];
-                    if (is_null($this->competencyItemId) || $this->competencyItemId == $itemObj->id) {
-                        $inputHtml = $itemObj->name;
-                        $inputHtml .= $form->hidden($attr['model'].'.competency_item', ['value' => $itemObj->id]);
+                    $itemData = [];
+                    $itemData['id'] = $itemObj->id;
+                    $itemData['name'] = $itemObj->name;
 
-                        $rowData[] = '<i class="fa fa-check"></i>';
-                        $rowData[] = $inputHtml;
+                    $params['competency_period_id'] = $this->competencyPeriodId;
+                    $params['competency_item_id'] = $itemObj->id;
+                    $baseUrl = $this->url($action, false);
+                    $url = $this->setQueryString($baseUrl, $params);
+                    $itemData['url'] = $url;
+
+                    if (is_null($this->competencyItemId) || $this->competencyItemId == $itemObj->id) {
+                        $itemData['checked'] = true;
                         $this->competencyItemId = $itemObj->id;
                     } else {
-                        $params['competency_period_id'] = $this->competencyPeriodId;
-                        $params['competency_item_id'] = $itemObj->id;
-                        $baseUrl = $this->url($action, false);
-                        $url = $this->setQueryString($baseUrl, $params);
-
-                        $rowData[] = '';
-                        $rowData[] = $event->subject->Html->link($itemObj->name, $url);
+                        $itemData['checked'] = false;
                     }
 
-                    $tableCells[$itemKey] = $rowData;
+                    $competencyItemOptions[] = $itemData;
                 }
             }
         }
 
         $attr['competencyItemCount'] = $competencyItemCount;
-        $attr['tableHeaders'] = $tableHeaders;
-        $attr['tableCells'] = $tableCells;
+        $attr['competencyItemOptions'] = $competencyItemOptions;
 
         if ($action == 'view' || $action == 'edit') {
             $value = $event->subject()->renderElement('Institution.StudentCompetencies/competency_item', ['attr' => $attr]);

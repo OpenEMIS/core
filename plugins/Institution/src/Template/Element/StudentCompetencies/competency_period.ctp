@@ -1,19 +1,27 @@
 <?php
 	$competencyPeriodCount = isset($attr['competencyPeriodCount']) ? $attr['competencyPeriodCount'] : 0;
-	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
-	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+	$competencyPeriodOptions = isset($attr['competencyPeriodOptions']) ? $attr['competencyPeriodOptions'] : [];
+	$alias = $ControllerAction['table']->alias();
+	$this->Form->unlockField('competency_period');
 ?>
 <?php if ($ControllerAction['action'] == 'view') : ?>
 	<?php if ($competencyPeriodCount == 0) : ?>
 		<?php echo $this->Label->get('StudentCompetencies.noPeriod'); ?>
 	<?php else : ?>
-		<div class="table-wrapper">
-			<div class="table-in-view">
-				<table class="table">
-					<thead><?= $this->Html->tableHeaders($tableHeaders); ?></thead>
-					<tbody><?= $this->Html->tableCells($tableCells); ?></tbody>
-				</table>
-			</div>
+		<div class="input-selection">
+			<?php foreach($competencyPeriodOptions as $i => $obj) : ?>
+				<?php
+					$name = $obj['code_name'];
+					$url = $obj['url'];
+				?>
+				<div class="input">
+					<?php if ($obj['checked'] == true) : ?>
+						<input kd-checkbox-radio="<?= $name; ?>" type="radio" name="competency_period" checked>
+					<?php else : ?>
+						<input kd-checkbox-radio="<?= $name; ?>" type="radio" name="competency_period" onclick="window.location.href='<?= $this->Url->build($url); ?>'">
+					<?php endif ?>
+				</div>
+			<?php endforeach ?>
 		</div>
 	<?php endif ?>
 <?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
@@ -28,15 +36,23 @@
 	<?php else : ?>
 		<div class="input">
 			<label><?= $attr['label']; ?></label>
-			<div class="input-form-wrapper">
-				<div class="table-wrapper">
-					<div class="table-responsive">
-						<table class="table table-curved row-align-top">
-							<thead><?= $this->Html->tableHeaders($tableHeaders); ?></thead>
-							<tbody><?= $this->Html->tableCells($tableCells); ?></tbody>
-						</table>
+			<div class="input-selection">
+				<?php foreach($competencyPeriodOptions as $i => $obj) : ?>
+					<?php
+						$name = $obj['code_name'];
+						$url = $obj['url'];
+					?>
+					<div class="input">
+						<?php if ($obj['checked'] == true) : ?>
+							<input kd-checkbox-radio="<?= $name; ?>" type="radio" name="competency_period" checked>
+							<?php
+								echo $this->Form->hidden("$alias.competency_period", ['value' => $obj['id']]);
+							?>
+						<?php else : ?>
+							<input kd-checkbox-radio="<?= $name; ?>" type="radio" name="competency_period" onclick="window.location.href='<?= $this->Url->build($url); ?>'">
+						<?php endif ?>
 					</div>
-				</div>
+				<?php endforeach ?>
 			</div>
 		</div>
 	<?php endif ?>
