@@ -8,6 +8,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Utility\Inflector;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -21,7 +22,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->hasMany('Items', ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Periods', ['className' => 'Competency.CompetencyPeriods', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
+        $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -64,7 +65,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->controller->getCompetencyTabs($queryString);
         $header = $entity->name . ' - ' . __('Overview');
         $this->controller->set('contentHeader', $header);
-        $this->controller->Navigation->substituteCrumb($this->alias(), $header);
+        $this->controller->Navigation->substituteCrumb(Inflector::humanize(Inflector::underscore($this->alias())), $header);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
