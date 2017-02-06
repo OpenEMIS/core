@@ -12,8 +12,11 @@ use Cake\Network\Request;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
+use App\Model\Traits\OptionsTrait;
 
 class UserNationalitiesTable extends ControllerActionTable {
+    use OptionsTrait;
+    use MessagesTrait;
 
 	public function initialize(array $config) 
     {
@@ -42,7 +45,12 @@ class UserNationalitiesTable extends ControllerActionTable {
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		return $validator->add('nationality_id', 'notBlank', ['rule' => 'notBlank']);
+		return $validator
+            ->add('nationality_id', 'notBlank', ['rule' => 'notBlank'])
+            ->add('preferred', 'ruleValidatePreferredNationality', [
+                'rule' => ['validatePreferredNationality'],
+                'provider' => 'table'
+            ]);
 	}
 
 	public function validationNonMandatory(Validator $validator) {
@@ -86,6 +94,72 @@ class UserNationalitiesTable extends ControllerActionTable {
 		$this->setupTabElements();
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($entity->dirty('preferred')) {
+            if ($entity->preferred == 1) { //if set as preferred
+                // update the rest of user nationality to not preferred
+                $this->updateAll( 
+                    ['preferred' => 0],
+                    [
+                        'security_user_id' => $entity->security_user_id,
+                        'nationality_id <> ' => $entity->nationality_id,
+                        'preferred' => 1
+                    ]
+                );
+
+                //update information on security user table
+                $listeners = [
+                    TableRegistry::get('User.Users')
+                ];
+                $this->dispatchEventToModels('Model.UserNationalities.afterSave', [$entity], $this, $listeners);
+            }
+        }
+    }
+
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        //check whether has minimum one nationality record.
+        $query = $this
+                ->find()
+                ->where([
+                    $this->aliasfield('security_user_id') => $entity->security_user_id,
+                    $this->aliasfield('id <> ') => $entity->id
+                ])
+                ->count();
+
+        if (!$query) {
+            $this->Alert->warning('UserNationalities.noRecordRemain');
+            return false;
+        }
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($entity->preferred == 1) { //if the preferred nationality deleted
+
+            //get the next latest nationality to be set as preferred
+            $query = $this->find()
+                    ->where([
+                        $this->aliasfield('security_user_id') => $entity->security_user_id
+                    ])
+                    ->order('created DESC')
+                    ->first();
+
+            if (!empty($query)) {
+                $query->preferred = 1;
+                $this->save($query);
+                $entity->nationality_id = $query->nationality_id; //send the new preferred nationality
+
+                //update information on security user table
+                $listeners = [
+                    TableRegistry::get('User.Users')
+                ];
+                $this->dispatchEventToModels('Model.UserNationalities.afterDelete', [$entity], $this, $listeners);
+            }
+        }
+    }
+
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
@@ -123,10 +197,27 @@ class UserNationalitiesTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onGetPreferred(Event $event, Entity $entity) {
+        $preferredOptions = $this->getSelectOptions('general.yesno');
+        return $preferredOptions[$entity->preferred];
+    }
+
+    public function onUpdateFieldPreferred(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['options'] = $this->getSelectOptions('general.yesno');
+        return $attr;
+    }
+
     private function setupFields(Entity $entity)
     {
         $this->field('nationality_id', [
             'type' => 'select', 
+            'entity' => $entity
+        ]);
+
+        $this->field('preferred', [
+            'type' => 'select',
+            'select' => false,
             'entity' => $entity
         ]);
     }

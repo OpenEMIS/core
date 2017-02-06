@@ -625,6 +625,9 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
+        'UserNationalities' => [
+            'noRecordRemain' => 'There should be at least one Nationality record'
+        ],
 
         // Validation Messages
         'Institution' => [
@@ -1073,6 +1076,11 @@ trait MessagesTrait {
                 ],
                 'bank_branch_id' => [
                     'ruleNotBlank' => 'Please select a Bank Branch'
+                ]
+            ],
+            'UserNationalities' => [
+                'preferred' => [
+                    'ruleValidatePreferredNationality' => 'There must be at least one Preferred Nationality'
                 ]
             ],
         ],
