@@ -1,6 +1,7 @@
 <?php
 namespace Education\Model\Table;
 
+use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class EducationSubjectsTable extends ControllerActionTable {
@@ -19,6 +20,16 @@ class EducationSubjectsTable extends ControllerActionTable {
 		]);
         $this->setDeleteStrategy('restrict');
 	}
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->add('code', 'ruleUniqueCode', [
+                'rule' => ['checkUniqueCode', null]
+            ]);
+        return $validator;
+    }
 
     public function getEducationSubjectsByGrades($gradeId)
     {
