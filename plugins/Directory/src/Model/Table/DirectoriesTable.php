@@ -68,6 +68,7 @@ class DirectoriesTable extends ControllerActionTable {
 		]);
         $this->addBehavior('Configuration.Pull');
         $this->addBehavior('Import.ImportLink', ['import_model'=>'ImportUsers']);
+        $this->addBehavior('ControllerAction.Image');
 
 		$this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Directory.Directories.id']);
         $this->toggle('search', false);
