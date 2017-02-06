@@ -1439,6 +1439,7 @@ class ValidationBehavior extends Behavior {
         return $count==0;
     }
 
+    // Function is deprecated, please do not use this validation function
 	public static function checkUniqueCodeWithinForm($code, $parentModel, array $globalData) {
 		$model = $globalData['providers']['table'];
 		$count = 0;
