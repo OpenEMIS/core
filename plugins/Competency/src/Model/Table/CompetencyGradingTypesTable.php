@@ -19,7 +19,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
 
         parent::initialize($config);
         $this->hasMany('Criterias', ['className' => 'Competency.CompetencyCriterias']);
-        $this->hasMany('GradingOptions', ['className' => 'Competency.CompetencyGradingOptions', 'foreignKey' => 'competency_grading_type_id']);
+        $this->hasMany('GradingOptions', ['className' => 'Competency.CompetencyGradingOptions', 'foreignKey' => 'competency_grading_type_id', 'saveStrategy' => 'replace']);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -152,54 +152,6 @@ class CompetencyGradingTypesTable extends ControllerActionTable
                     $this->Alert->error('general.uniqueCodeForm');
                     break;
                 }
-            }
-        }
-    }
-
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        // get the array of the original gradeOptions
-        $GradingOptions = TableRegistry::get('Competency.CompetencyGradingOptions');
-        $query = $GradingOptions
-            ->find()
-            ->where(['competency_grading_type_id' => $entity->id])
-            ->toArray();
-
-        if (!empty($query)) {
-            $gradingOptions = [];
-            foreach ($query as $key => $gradingOption) {
-                $gradingOptionId = $gradingOption->id;
-                $gradingOptions[$gradingOptionId] = 0;
-                if ($this->hasAssociatedRecords($GradingOptions, $gradingOption, $extra)) {
-                    $gradingOptions[$gradingOptionId] = 1;
-                }
-            }
-
-            // it will check if there are any in-used gradeOption, can't delete all the gradeOptions.
-            $allowedDeleteAll = max($gradingOptions);
-
-            $currentGradingOptionIds = (new Collection($entity->grading_options))->extract($this->GradingOptions->primaryKey())->toArray();
-            $originalGradingOptionIds = (new Collection($entity->getOriginal('grading_options')))->extract($this->GradingOptions->primaryKey())->toArray();
-            $tempRemovedGradingOptionIds = array_diff($originalGradingOptionIds, $currentGradingOptionIds);
-
-            // get the array of gradeOption that will be deleted, if the gradeOption was in-used it will be excluded from this array.
-            $removedGradingOptionIds = [];
-            foreach ($tempRemovedGradingOptionIds as $key => $value) {
-                if (!$gradingOptions[$value]) {
-                    $removedGradingOptionIds[$key] = $value;
-                }
-            }
-
-            // remove the gradeOption inside the removed gradeOptions array.
-            // remove all the gradeOptions if no in-use gradeOption.
-            if (!empty($removedGradingOptionIds)) {
-                $this->GradingOptions->deleteAll([
-                    $this->GradingOptions->aliasField($this->GradingOptions->primaryKey()) . ' IN ' => $removedGradingOptionIds
-                ]);
-            } else if ((!array_key_exists('grading_options', $requestData['CompetencyGradingTypes'])) && (!$allowedDeleteAll)){
-                $this->GradingOptions->deleteAll([
-                    $this->GradingOptions->aliasField('competency_grading_type_id') => $entity->id
-                ]);
             }
         }
     }
