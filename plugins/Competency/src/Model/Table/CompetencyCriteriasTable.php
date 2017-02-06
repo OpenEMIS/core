@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Utility\Inflector;
 use App\Model\Table\ControllerActionTable;
 
 class CompetencyCriteriasTable extends ControllerActionTable {
@@ -37,7 +38,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
             $extra['selectedTemplate'] = $competencyTemplateId;
 
             $name = $this->Templates->get(['id' => $competencyTemplateId, 'academic_period_id' => $academicPeriodId])->name;
-            $header = $name . ' - ' . __($this->alias());
+            $header = $name . ' - ' . __(Inflector::humanize(Inflector::underscore($this->alias())));
             $this->controller->set('contentHeader', $header);
             $this->controller->Navigation->substituteCrumb($this->alias(), $header);
         } else {
