@@ -741,9 +741,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 	            'Genders.name'
 			])
 			->contain(['Institutions', 'Users', 'Users.Genders', 'Users.MainNationalities', 'Users.MainIdentityTypes'])
+			->matching('AbsenceTypes', function ($q) {
+				return $q->where([
+					'code' => 'UNEXCUSED'
+				]);
+			})
 			->where([
-				// unexcused and current academic period
-				'absence_type_id' => 2,
 				'start_date' . ' >='  => $currentPeriodStartDate->format('Y-m-d'),
 				'end_date' . ' <='  => $currentPeriodEndDate->format('Y-m-d'),
 			])
