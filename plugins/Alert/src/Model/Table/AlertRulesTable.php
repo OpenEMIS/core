@@ -76,8 +76,7 @@ class AlertRulesTable extends ControllerActionTable
         return $validator
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
-                'provider' => 'table',
-                'message' => __('This field has to be unique')
+                'provider' => 'table'
             ]);
     }
 
@@ -215,6 +214,9 @@ class AlertRulesTable extends ControllerActionTable
             if (isset($request->data[$this->alias()]['feature'])) {
                 $feature = $request->data[$this->alias()]['feature'];
                 $type = $this->getThresholdType($feature);
+                if ($type == 'integer') {
+                    $attr['attr']['min'] = 0;
+                }
             } else {
                 $type = 'hidden';
             }
