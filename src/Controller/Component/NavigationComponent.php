@@ -477,6 +477,19 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
+			'Institution.Competencies' => [
+				'title' => 'Competencies',
+				'parent' => 'Institutions.index',
+				'link' => false
+			],
+
+				'Institutions.StudentCompetencies.index' => [
+					'title' => 'Students',
+					'parent' => 'Institution.Competencies',
+					'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+					'params' => ['plugin' => 'Institution']
+				],
+
 			'Institutions.Assessments.index' => [
 				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
@@ -994,6 +1007,31 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Assessment'],
                 'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
             ],
+            'Administration.Competencies' => [
+                'title' => 'Competencies',
+                'parent' => 'Administration',
+                'link' => false,
+                'params' => ['plugin' => 'Competency'],
+            ],
+            	'Competencies.Templates' => [
+            		'title' => 'Templates',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias']
+            	],
+            	'Competencies.Periods' => [
+            		'title' => 'Periods',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.Periods']
+            	],
+            	'Competencies.GradingTypes' => [
+            		'title' => 'Grading Types',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.GradingTypes']
+            	],
+
 			'Administration.Examinations' => [
 					'title' => 'Examinations',
 					'parent' => 'Administration',
