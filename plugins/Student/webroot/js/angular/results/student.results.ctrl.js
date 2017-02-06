@@ -41,23 +41,20 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 StudentResultsSvc.getStudentResults(academicPeriodId)
                 .then(function(response) {
                     if (angular.isDefined(response[academicPeriodId])) {
-                        angular.forEach(response[academicPeriodId], function(institutionObj, institutionId) {
-                            var institutionName = StudentResultsSvc.getInstitution(institutionId).code_name;
-                            angular.forEach(response[academicPeriodId][institutionId], function(assessmentObj, assessmentId) {
-                                var assessmentName = StudentResultsSvc.getAssessment(assessmentId).code_name;
-                                var sectionId = academicPeriodId+'_'+institutionId+'_'+assessmentId;
-                                var sectionName = academicPeriodName + ' | ' + institutionName + ' | ' + assessmentName;
+                        angular.forEach(response[academicPeriodId], function(assessmentObj, assessmentId) {
+                            var assessmentName = StudentResultsSvc.getAssessment(assessmentId).code_name;
+                            var sectionId = academicPeriodId+'_'+assessmentId;
+                            var sectionName = academicPeriodName + ' | ' + assessmentName;
 
-                                vm.sections.push({
-                                    id: sectionId,
-                                    name: sectionName,
-                                    order: academicPeriodOrder,
-                                    visible: true
-                                });
-
-                                var assessmentResults = response[academicPeriodId][institutionId][assessmentId];
-                                vm.initGrid(sectionId, academicPeriodId, institutionId, assessmentId, assessmentResults);
+                            vm.sections.push({
+                                id: sectionId,
+                                name: sectionName,
+                                order: academicPeriodOrder,
+                                visible: true
                             });
+
+                            var assessmentResults = response[academicPeriodId][assessmentId];
+                            vm.initGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
                         });
                     }
                 }, function(error) {
@@ -85,7 +82,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
         });
     });
 
-    function initGrid(sectionId, academicPeriodId, institutionId, assessmentId, assessmentResults) {
+    function initGrid(sectionId, academicPeriodId, assessmentId, assessmentResults) {
         vm.gridOptions[sectionId] = {
             columnDefs: [],
             rowData: [],
@@ -100,12 +97,12 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
             suppressCellSelection: true,
             suppressMovableColumns: true,
             onGridReady: function() {
-                vm.setGrid(sectionId, academicPeriodId, institutionId, assessmentId, assessmentResults);
+                vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
             }
         };
     }
 
-    function setGrid(sectionId, academicPeriodId, institutionId, assessmentId, assessmentResults) {
+    function setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults) {
         UtilsSvc.isAppendSpinner(true, 'student-result-table_'+sectionId);
         StudentResultsSvc.getAssessmentPeriods(assessmentId)
         // getAssessmentPeriods
