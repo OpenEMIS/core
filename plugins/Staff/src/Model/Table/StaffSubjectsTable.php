@@ -20,8 +20,8 @@ class StaffSubjectsTable extends ControllerActionTable {
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('InstitutionSubjects', ['className' => 'Institution.InstitutionSubjects']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-
 
         /*
             note that in DirectoriesController
@@ -225,7 +225,7 @@ class StaffSubjectsTable extends ControllerActionTable {
 
                 if (in_array($value->id, $selectedSubjects)) {
                     if (!$staffWasIn) {
-                        $InstitutionSubjectStaff->addStaffToSubject($staffId, $value->id);
+                        $InstitutionSubjectStaff->addStaffToSubject($staffId, $value->id, $entity->institution_id);
                     }
                 } else {
                     if ($staffWasIn) {
