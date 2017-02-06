@@ -571,7 +571,7 @@ class InstitutionsController extends AppController
             $params = array(
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
             );
-            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staffs_by_type', $params);
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_type', $params);
 
         } else if ($classification == $Institutions::NON_ACADEMIC) {
 
@@ -579,7 +579,7 @@ class InstitutionsController extends AppController
             $params = array(
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
             );
-            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staffs_by_position_title', $params);
+            $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_position', $params);
         }
 
         $this->set('highChartDatas', $highChartDatas);
