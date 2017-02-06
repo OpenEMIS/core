@@ -106,15 +106,15 @@ class AdvanceSearchBehavior extends Behavior {
 
 					if ($customFilter->result) {
 						$result = $customFilter->result;
-                        foreach ($result as $customFilterKey => $item) {
-    						if ($key == $customFilterKey) {
-    							$filters[$customFilterKey] = [
-    								'label' => $item['label'],
-    								'options' => $item['options'],
-    								'selected' => $selected
-    							];
-    						}
-                        }
+						foreach ($result as $customFilterKey => $item) {
+							if ($key == $customFilterKey) {
+								$filters[$customFilterKey] = [
+									'label' => $item['label'],
+									'options' => $item['options'],
+									'selected' => $selected
+								];
+							}
+						}
 					}
 				}
 
