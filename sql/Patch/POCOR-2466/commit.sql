@@ -17,8 +17,7 @@ ALTER TABLE `alerts_roles` CHANGE `alert_id` `alert_rule_id` INT(11) NOT NULL CO
 ALTER TABLE `alerts_roles`
     DROP PRIMARY KEY,
     ADD PRIMARY KEY(`alert_rule_id`, `security_role_id`),
-    ADD KEY `alert_rule_id` (`alert_rule_id`),
-    ADD KEY `security_role_id` (`security_role_id`);
+    ADD KEY `alert_rule_id` (`alert_rule_id`);
 
 -- security_user table
 ALTER TABLE `security_users` ADD `email` VARCHAR(100) NULL AFTER `preferred_name`;
