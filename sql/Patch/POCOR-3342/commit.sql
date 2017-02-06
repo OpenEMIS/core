@@ -23,6 +23,7 @@ CREATE TABLE `competency_grading_options` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` TEXT NULL,
   `competency_grading_type_id` int(11) NOT NULL COMMENT 'links to competency_grading_types.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
