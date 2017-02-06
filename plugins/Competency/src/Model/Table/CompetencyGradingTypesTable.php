@@ -117,6 +117,7 @@ class CompetencyGradingTypesTable extends ControllerActionTable
         if (isset($requestData[$this->alias()]['grading_options']) && is_array($requestData[$this->alias()]['grading_options'])) {
             $gradingOptions = $requestData[$this->alias()]['grading_options'];
             $codes = array_column($gradingOptions, 'code');
+            $codes = array_filter($codes);
             $vals = array_count_values($codes);
             foreach ($vals as $count) {
                 if ($count > 1) {
