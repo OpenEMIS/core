@@ -118,7 +118,8 @@ class CompetencyCriteriasTable extends ControllerActionTable {
     {
         if ($this->request->query('item')) {
             $this->request->data[$this->alias()]['competency_item_id'] = $this->request->query('item');
-        } else if ($this->request->query('criteriaForm')) {
+        }
+        if ($this->request->query('criteriaForm')) {
             $this->request->data[$this->alias()]['competency_item_id'] = $this->getQueryString('competency_item_id', 'criteriaForm');
             $this->request->data[$this->alias()]['name'] = $this->getQueryString('name', 'criteriaForm');
             $this->request->data[$this->alias()]['competency_grading_type_id'] = $this->getQueryString('competency_grading_type_id', 'criteriaForm');
