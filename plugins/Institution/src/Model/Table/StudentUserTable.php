@@ -273,8 +273,21 @@ class StudentUserTable extends ControllerActionTable
 		}
 		// End POCOR-3010
 
-		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+        $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+
+        $this->fields['nationality_id']['type'] = 'readonly';
+        $this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
+
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
 	}
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'MainNationalities', 'MainIdentityTypes'
+        ]);
+    }
 
 	private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
 	{
