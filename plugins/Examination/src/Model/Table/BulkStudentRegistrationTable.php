@@ -251,11 +251,12 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
                 $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
 
+                $Institutions = TableRegistry::get('Institution.Institutions');
                 $InstitutionGradesTable = $this->Institutions->InstitutionGrades;
                 $institutionsData = $InstitutionGradesTable
                     ->find()
-                    ->matching('Institutions', function($q) {
-                        return $q->where(['Institutions.classification' => 1]);
+                    ->matching('Institutions', function($q) use ($Institutions) {
+                        return $q->where(['Institutions.classification' => $Institutions::ACADEMIC]);
                     })
                     ->where([$InstitutionGradesTable->aliasField('education_grade_id') => $educationGradeId])
                     ->select(['institution_id' => 'Institutions.id', 'institution_name' => 'Institutions.name', 'institution_code' => 'Institutions.code'])
