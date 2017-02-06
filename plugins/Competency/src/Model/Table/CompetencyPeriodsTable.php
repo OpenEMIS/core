@@ -19,12 +19,13 @@ class CompetencyPeriodsTable extends ControllerActionTable
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         // $this->belongsTo('Items',           ['className' => 'Competency.CompetencyItems', 'foreignKey' => ['competency_item_id', 'academic_period_id']]);
-        $this->belongsTo('Templates',       ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id']]);
+        $this->belongsTo('Templates',       ['className' => 'Competency.CompetencyTemplates', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'bindingKey' => ['id', 'academic_period_id']]);
 
         $this->belongsToMany('CompetencyItems', [
             'className' => 'Competency.CompetencyItems',
             'joinTable' => 'competency_items_periods',
             'foreignKey' => ['competency_period_id', 'academic_period_id'],
+            'bindingKey' => ['id', 'academic_period_id'],
             'targetForeignKey' => ['competency_item_id', 'academic_period_id', 'competency_template_id'],
             'through' => 'Competency.CompetencyItemsPeriods',
             'dependent' => true,
