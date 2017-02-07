@@ -1,3 +1,11 @@
+v3.9.1
+- Implemented Student Competency Based Performance module
+
+v3.8.8
+- System now displays users who generated the report
+- System now sorts report by date
+- Institutions > Subjects : Users can filter subject list by classes based on their given permission
+
 v3.8.7
 - Institutions > Position : System now correctly displays list of current and past staffs
 
