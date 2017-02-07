@@ -560,7 +560,6 @@ class InstitutionClassStudentsTable extends AppTable {
             $InstitutionSubjectStudentsTable->delete($value);
         }
     }
-<<<<<<< HEAD
 
     public function getStudentsList($academicPeriodId, $institutionId, $classId)
     {
@@ -581,7 +580,4 @@ class InstitutionClassStudentsTable extends AppTable {
 
         return $studentList;
     }
-
-=======
->>>>>>> 9c0672e3ba98b915fc84915e833019ab7598b64d
 }
