@@ -631,4 +631,13 @@ class IndividualPromotionTable extends ControllerActionTable
 
         return false;
     }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [
+            TableRegistry::get('Institution.InstitutionClassStudents'),
+            TableRegistry::get('Institution.InstitutionSubjectStudents')
+        ];
+        $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
+    }
 }

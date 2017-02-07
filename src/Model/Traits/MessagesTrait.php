@@ -30,7 +30,8 @@ trait MessagesTrait {
             'assessmentGradingType' => 'Assessment Grading Type',
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
-            'periodWeight' => 'Period Weight'
+            'periodWeight' => 'Period Weight',
+            'classification' => 'Classification'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -89,6 +90,7 @@ trait MessagesTrait {
             'academicPeriod' => [
                 'notEditable' => 'The chosen academic period is not editable',
             ],
+            'uniqueCodeForm' => 'Code must be unique from other codes in this form',
             'invalidTime' => 'You have entered an invalid time.',
             'invalidDate' => 'You have entered an invalid date.',
             'invalidUrl' => 'You have entered an invalid URL.',
@@ -435,7 +437,8 @@ trait MessagesTrait {
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
-            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
+            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.'
         ],
         'TransferApprovals' => [
             'existsInNewSchool' => 'Student is already exists in the new school',
@@ -629,6 +632,17 @@ trait MessagesTrait {
             'noTextbooks' => 'No Textbooks',
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
+        ],
+        'Templates' => [
+            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
+        ],
+        'Items' => [
+            'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
+        ],
+        'StudentCompetencies' => [
+            'noPeriod' => 'No Period',
+            'noItem' => 'No Item',
+            'noCriterias' => 'Please setup competency criterias for the selected item',
         ],
 
         // Validation Messages
@@ -1256,6 +1270,15 @@ trait MessagesTrait {
                 'final_rating' => 'Final Rating',
                 'deleted_competencies' => 'This competency has been removed'
             ],
+            'Competencies' => [
+                'min' => [
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ],
+                'max' => [
+                    'ruleCompare' => 'Max value must be greater than min value',
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ]
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
@@ -1538,6 +1561,40 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
                 ]
+            ],
+        ],
+        'Competency' => [
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ],
+                'point' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'CompetencyGradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ],
+            ],
+            'CompetencyCriterias' => [
+                'percentage' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'CompetencyTemplates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
+            'CompetencyPeriods' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
             ],
         ],
         'Configuration' => [
