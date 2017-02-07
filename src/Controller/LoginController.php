@@ -10,7 +10,7 @@ use SSO\Controller\LoginController as Controller;
 class LoginController extends Controller
 {
     private $sso = false;
-    private $productName = 'OpenEmis Core';
+    private $productName = 'OpenEMIS Core';
     public function initialize()
     {
         parent::initialize();
