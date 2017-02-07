@@ -635,7 +635,10 @@ trait MessagesTrait {
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
-            'noCriterias' => 'Please setup competency criterias for the selected item',
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
         ],
 
         // Validation Messages
