@@ -1279,7 +1279,7 @@ trait MessagesTrait {
             ],
             'EducationSubjects' => [
                 'code' => [
-                    'ruleUniqueCode' => 'Code must be unique'
+                    'ruleUnique' => 'This code already exists in the system'
                 ]
             ]
         ],
