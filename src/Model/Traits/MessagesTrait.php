@@ -626,10 +626,6 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
-<<<<<<< HEAD
-        'Licenses' => [
-            'select_classification' => 'Select Classification'
-=======
         'Templates' => [
             'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
         ],
@@ -639,8 +635,10 @@ trait MessagesTrait {
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
-            'noCriterias' => 'Please setup competency criterias for the selected item',
->>>>>>> 9c0672e3ba98b915fc84915e833019ab7598b64d
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
         ],
 
         // Validation Messages
