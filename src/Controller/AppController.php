@@ -31,7 +31,7 @@ use Cake\ORM\TableRegistry;
 class AppController extends Controller {
 	use ControllerActionTrait;
 
-	private $productName = 'OpenEmis Core';
+	private $productName = 'OpenEMIS Core';
 	public $helpers = [
 		'Text',
 
