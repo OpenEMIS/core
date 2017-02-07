@@ -189,8 +189,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
                     ->where([
                         $this->aliasField('academic_period_id') => $period,
                         $this->aliasField('institution_class_id') => $class,
-                        $this->aliasField('education_subject_id') => $subject,
-                        $this->aliasField('status') => 1
+                        $this->aliasField('education_subject_id') => $subject
                     ])
                     ->select([
                         $this->aliasField('student_id'),
