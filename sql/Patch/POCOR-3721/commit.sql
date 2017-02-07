@@ -136,7 +136,7 @@ CREATE TABLE `license_classifications` (
   PRIMARY KEY (`id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This is a field option table containing the list of user-defined classification of licences used by staff_licenses';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This is a field option table containing the list of user-defined classification of licences used by staff_licenses';
 
 -- staff_licenses_classifications
 DROP TABLE IF EXISTS `staff_licenses_classifications`;
@@ -175,7 +175,7 @@ CREATE TABLE `staff_licenses` (
   INDEX `staff_id` (`staff_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `staff_licenses` (`id`, `license_number`, `issue_date`, `expiry_date`, `issuer`, `status_id`, `assignee_id`, `license_type_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `id`, `license_number`, `issue_date`, `expiry_date`, `issuer`, @openStatusId, 0, `license_type_id`, `staff_id`, `modified_user_id`, `modified`, `created_user_id`, `created` FROM `z_3721_staff_licenses`;
