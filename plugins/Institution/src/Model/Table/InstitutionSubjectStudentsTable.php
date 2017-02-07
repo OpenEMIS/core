@@ -21,6 +21,8 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
 
 		$this->belongsTo('ClassStudents', [
 			'className' => 'Institution.InstitutionClassStudents',
@@ -39,11 +41,70 @@ class InstitutionSubjectStudentsTable extends AppTable {
         ]);
 	}
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Students.afterSave'] = 'studentsAfterSave';
+        $events['Model.AssessmentResults.afterSave'] = 'assessmentResultsAfterSave';
+        return $events;
+    }
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
 		if ($entity->isNew()) {
 			$entity->id = Text::uuid();
 		}
 	}
+
+    public function studentsAfterSave(Event $event, $student)
+    {
+        // saving of new students is handled by _setSubjectStudentData in InstitutionClassStudents
+        if (!$student->isNew()) {
+            // to update student status in subject if student status in school has been changed
+            $subjectStudents = $this->find()
+                ->where([
+                    $this->aliasField('institution_id') => $student->institution_id,
+                    $this->aliasField('academic_period_id') => $student->academic_period_id,
+                    $this->aliasField('student_id') => $student->student_id,
+                    $this->aliasField('education_grade_id') => $student->education_grade_id
+                ])->toArray();
+
+            if (!empty($subjectStudents)) {
+                foreach ($subjectStudents as $subjectStudentToSave) {
+                    if ($subjectStudentToSave->student_status_id != $student->student_status_id) {
+                        $subjectStudentToSave->student_status_id = $student->student_status_id;
+                        $this->save($subjectStudentToSave);
+                    }
+                }
+            }
+        }
+    }
+
+    public function assessmentResultsAfterSave(Event $event, $results)
+    {
+        // used to update total mark whenever an assessment mark is added or updated
+        $studentId = $results->student_id;
+        $academicPeriodId = $results->academic_period_id;
+        $educationSubjectId = $results->education_subject_id;
+        $educationGradeId = $results->education_grade_id;
+        $institutionId = $results->institution_id;
+
+        $ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        $totalMark = $ItemResults->getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId);
+
+        if (!empty($totalMark)) {
+            // update all records of student regardless of institution
+            $this->query()
+                ->update()
+                ->set(['total_mark' => $totalMark->calculated_total])
+                ->where([
+                    'student_id' => $studentId,
+                    'academic_period_id' => $academicPeriodId,
+                    'education_subject_id' => $educationSubjectId,
+                    'education_grade_id' => $educationGradeId
+                ])
+                ->execute();
+        }
+    }
 
 	public function findResults(Query $query, array $options) {
 		$institutionId = $options['institution_id'];
@@ -51,9 +112,11 @@ class InstitutionSubjectStudentsTable extends AppTable {
 		$assessmentId = $options['assessment_id'];
 		$periodId = $options['academic_period_id'];
 		$subjectId = $options['subject_id'];
+        $gradeId = $options['grade_id'];
 
 		$Users = $this->Users;
 		$InstitutionSubjects = $this->InstitutionSubjects;
+        $StudentStatuses = $this->StudentStatuses;
 		$ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
 
 		return $query
@@ -63,15 +126,19 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				$ItemResults->aliasField('assessment_grading_option_id'),
 				$ItemResults->aliasField('assessment_period_id'),
 				$this->aliasField('student_id'),
+                $this->aliasField('student_status_id'),
 				$this->aliasField('total_mark'),
 				$Users->aliasField('openemis_no'),
 				$Users->aliasField('first_name'),
 				$Users->aliasField('middle_name'),
 				$Users->aliasField('third_name'),
 				$Users->aliasField('last_name'),
-				$Users->aliasField('preferred_name')
+				$Users->aliasField('preferred_name'),
+                $StudentStatuses->aliasField('code'),
+                $StudentStatuses->aliasField('name')
 			])
 			->matching('Users')
+            ->contain('StudentStatuses')
 			->innerJoin(
 				[$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
 				[
@@ -86,9 +153,9 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				[
 					$ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
 					$ItemResults->aliasField('assessment_id') => $assessmentId,
-					$ItemResults->aliasField('institution_id') => $institutionId,
 					$ItemResults->aliasField('academic_period_id') => $periodId,
-					$ItemResults->aliasField('education_subject_id') => $subjectId
+					$ItemResults->aliasField('education_subject_id') => $subjectId,
+                    $ItemResults->aliasField('education_grade_id') => $gradeId
 				]
 			)
 			->where([
@@ -155,16 +222,10 @@ class InstitutionSubjectStudentsTable extends AppTable {
 				$AssessmentItemResults->aliasField('student_id') => $entity->student_id,
 				$AssessmentItemResults->aliasField('institution_id') => $institutionClassData->institution_id,
 				$AssessmentItemResults->aliasField('academic_period_id') => $institutionClassData->academic_period_id,
-
+                $AssessmentItemResults->aliasField('education_subject_id') => $institutionClassData->education_subject_id,
+                $AssessmentItemResults->aliasField('education_grade_id') => $entity->education_grade_id
 			])
 			;
-
-		if (!empty($gradeArray)) {
-			$deleteAssessmentItemResults->matching('Assessments', function ($q) use ($gradeArray) {
-			    return $q->where(['Assessments.education_grade_id IN ' => $gradeArray]);
-			})
-			;
-		}
 
 		foreach ($deleteAssessmentItemResults as $key => $value) {
 			$AssessmentItemResults->delete($value);
