@@ -10,6 +10,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Utility\Hash;
 use Cake\Utility\Inflector;
+use Cake\Utility\Security;
 use Cake\Log\Log;
 
 use App\Model\Traits\OptionsTrait;
@@ -36,20 +37,17 @@ class AlertLogsTable extends ControllerActionTable
         $today = Time::now();
         $todayDate = Date::now();
 
-        $alertLogsResults = $this->find()
-            ->where([
-                $this->aliasField('method') => $alertRule->method,
-                $this->aliasField('destination') => $email,
-                $this->aliasField('subject') => $subject,
-                $this->aliasField('message') => $message
-            ])
-            ->all();
+        // checksum hash($subject,$message)
+        $checksum = Security::hash($subject . ',' . $message, 'sha256');
 
         // to update and add new records into the alert_logs
-        if (!$alertLogsResults->isEmpty()) {
-            if ($alertLogsResults->first()->status == 0) {
-                $entity = $alertLogsResults->first();
-                $this->save($entity);
+        if ($this->exists(['checksum' => $checksum])) {
+            $record = $this->find()
+                ->where(['checksum' => $checksum])
+                ->first();
+
+            if ($record->status == 0) {
+                $this->save($record);
             }
         } else {
             $entity = $this->newEntity([
@@ -57,7 +55,8 @@ class AlertLogsTable extends ControllerActionTable
                 'destination' => $email,
                 'status' => 0,
                 'subject' => $subject,
-                'message' => $message
+                'message' => $message,
+                'checksum' => $checksum
             ]);
             $this->save($entity);
         }
@@ -95,11 +94,12 @@ class AlertLogsTable extends ControllerActionTable
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status', ['after' => 'message']);
+        $this->field('checksum', ['visible' => false]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('message', ['type' => 'hidden']);
+        $this->field('message', ['visible' => false]);
     }
 
     public function triggerSendingAlertShell($shellName)
