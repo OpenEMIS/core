@@ -52,6 +52,8 @@ class AppController extends Controller {
 	public function initialize() {
 		parent::initialize();
 
+		
+
 		// ControllerActionComponent must be loaded before AuthComponent for it to work
 		$this->loadComponent('ControllerAction.ControllerAction', [
 			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
