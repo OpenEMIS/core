@@ -90,12 +90,6 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 		return $validator;
 	}
 
-
-/******************************************************************************************************************
-**
-** cakephp events
-**
-******************************************************************************************************************/
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
 		$this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
@@ -107,6 +101,11 @@ class AssessmentGradingTypesTable extends ControllerActionTable {
 			'fields' => $this->GradingOptions->fields,
 			'formFields' => []
 		]);
+	}
+
+	public function indexBeforeAction(Event $event, ArrayObject $extra)
+	{
+		$this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
 	}
 
 

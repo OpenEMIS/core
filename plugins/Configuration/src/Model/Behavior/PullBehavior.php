@@ -344,14 +344,14 @@ class PullBehavior extends Behavior
 	                }
 
 	                $fieldOrder = array_keys($this->_table->fields);
-	                $this->newValues['first_name'] = $this->setChanges($entity->first_name, $this->getValue($body['data'], $this->firstNameMapping));
-	                $this->newValues['middle_name'] = $this->setChanges($entity->middle_name, $this->getValue($body['data'], $this->middleNameMapping));
-	                $this->newValues['third_name'] = $this->setChanges($entity->third_name, $this->getValue($body['data'], $this->thirdNameMapping));
-	                $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping));
-	                $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping));
-	                $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping));
-                    $this->newValues['address'] = $this->setChanges($entity->address, $this->getValue($body['data'], $this->addressMapping));
-                    $this->newValues['postal_code'] = $this->setChanges($entity->postal_code, $this->getValue($body['data'], $this->postalMapping));
+	                $this->newValues['first_name'] = $this->setChanges($entity->first_name, $this->getValue($body['data'], $this->firstNameMapping), $this->firstNameMapping);
+	                $this->newValues['middle_name'] = $this->setChanges($entity->middle_name, $this->getValue($body['data'], $this->middleNameMapping), $this->middleNameMapping);
+	                $this->newValues['third_name'] = $this->setChanges($entity->third_name, $this->getValue($body['data'], $this->thirdNameMapping), $this->thirdNameMapping);
+	                $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping), $this->lastNameMapping);
+	                $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping), $this->identityNumberMapping);
+	                $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping), $this->dateOfBirthMapping);
+                    $this->newValues['address'] = $this->setChanges($entity->address, $this->getValue($body['data'], $this->addressMapping), $this->addressMapping);
+                    $this->newValues['postal_code'] = $this->setChanges($entity->postal_code, $this->getValue($body['data'], $this->postalMapping), $this->postalMapping);
 	                $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
 	                $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
 	                $nationalityArr = [
@@ -376,7 +376,7 @@ class PullBehavior extends Behavior
 	                    $nationalityArr['id'] = $nationality->id;
 	                    $nationalityArr['name'] = $nationality->name;
 	                }
-	                $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr);
+	                $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr, $this->nationalityMapping);
 
 	                $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
 	                $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
@@ -401,7 +401,7 @@ class PullBehavior extends Behavior
 	                    $identityTypeArr['id'] = $identityType->id;
 	                    $identityTypeArr['name'] = $identityType->name;
 	                }
-	                $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr);
+	                $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr, $this->identityTypeMapping);
 
 	                $genders = TableRegistry::get('User.Genders')->find()->select(['id', 'name'])->hydrate(false)->toArray();
 	                $genderName = __(trim($this->getValue($body['data'], $this->genderMapping)));
@@ -412,7 +412,7 @@ class PullBehavior extends Behavior
 	                		break;
 	                	}
 	                }
-	                $this->newValues['gender_id'] = $this->setChanges($entity->gender, $genderArr);
+	                $this->newValues['gender_id'] = $this->setChanges($entity->gender, $genderArr, $this->genderMapping);
                     if ($this->changes) {
     	                $toolbarButton = [
     	                    'type' => 'button',
@@ -433,21 +433,20 @@ class PullBehavior extends Behavior
     	                    ]
     	                ];
 
-    	                $externalDataValue = [
-    	                	'first_name' => $this->getValue($body['data'], $this->firstNameMapping),
-    	                	'middle_name' => $this->getValue($body['data'], $this->middleNameMapping),
-    	                	'third_name' => $this->getValue($body['data'], $this->thirdNameMapping),
-    	                	'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
-    	                	'gender_id' => $genderArr['id'],
-    	                	'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
-                            'address' => $this->getValue($body['data'], $this->addressMapping),
-                            'postal_code' => $this->getValue($body['data'], $this->postalMapping),
-    	                	'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
-    	                	'identity_type_id' => $identityTypeArr['id'],
-    	                	'nationality_id' => $nationalityArr['id']
-    	                ];
+                        $externalDataValue = new ArrayObject();
+                        $this->setExternalDataValue($externalDataValue, 'first_name', $this->getValue($body['data'], $this->firstNameMapping), $this->firstNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'middle_name', $this->getValue($body['data'], $this->middleNameMapping), $this->middleNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'third_name', $this->getValue($body['data'], $this->thirdNameMapping), $this->thirdNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'last_name', $this->getValue($body['data'], $this->lastNameMapping), $this->lastNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'gender_id', $genderArr['id'], $this->genderMapping);
+                        $this->setExternalDataValue($externalDataValue, 'date_of_birth', new Time($this->getValue($body['data'], $this->dateOfBirthMapping)), $this->dateOfBirthMapping);
+                        $this->setExternalDataValue($externalDataValue, 'address', $this->getValue($body['data'], $this->addressMapping), $this->addressMapping);
+                        $this->setExternalDataValue($externalDataValue, 'postal_code', $this->getValue($body['data'], $this->postalMapping), $this->postalMapping);
+                        $this->setExternalDataValue($externalDataValue, 'identity_number', $this->getValue($body['data'], $this->identityNumberMapping), $this->identityNumberMapping);
+                        $this->setExternalDataValue($externalDataValue, 'identity_type_id', $identityTypeArr['id'], $this->identityTypeMapping);
+                        $this->setExternalDataValue($externalDataValue, 'nationality_id', $nationalityArr['id'], $this->nationalityMapping);
 
-    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue);
+    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue->getArrayCopy());
     	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
                         $extra['toolbarButtons']['synchronise'] = $toolbarButton;
                     }
@@ -467,6 +466,13 @@ class PullBehavior extends Behavior
 	                $this->_table->Alert->error('general.failConnectToExternalSource');
 	            }
 	        }
+        }
+    }
+
+    private function setExternalDataValue(ArrayObject $externalDataValue, $field, $value, $mapping)
+    {
+        if (!empty($mapping)) {
+            $externalDataValue[$field] = $value;
         }
     }
 
@@ -547,12 +553,14 @@ class PullBehavior extends Behavior
         }
     }
 
-    private function setDateChanges($oldDate, $newDate)
+    private function setDateChanges($oldDate, $newDate, $mapping)
     {
         $oldValue = $this->_table->formatDate(new Time($oldDate));
         $newValue = $this->_table->formatDate(new Time($newDate));
 
-        if ($oldValue != $newValue) {
+        if (empty($mapping)) {
+            return null;
+        } else if ($oldValue != $newValue) {
             $this->changes = true;
             return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
         } else {
@@ -560,9 +568,11 @@ class PullBehavior extends Behavior
         }
     }
 
-    private function setChanges($oldValue, $newValue)
+    private function setChanges($oldValue, $newValue, $mapping)
     {
-        if (is_array($newValue)) {
+        if (empty($mapping)) {
+            return null;
+        } else if (is_array($newValue)) {
             $oldValueId = isset($oldValue['id']) ? $oldValue['id'] : null;
             $oldValueName = isset($oldValue['name']) ? $oldValue['name'] : '';
             if ($oldValueId != $newValue['id']) {
