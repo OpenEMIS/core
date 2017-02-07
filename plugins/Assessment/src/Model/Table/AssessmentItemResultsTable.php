@@ -126,7 +126,6 @@ class AssessmentItemResultsTable extends AppTable {
         return $returnArray;
     }
 
-<<<<<<< HEAD
     public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
     {
         $institutionId = $params['institution_id'];
@@ -186,7 +185,8 @@ class AssessmentItemResultsTable extends AppTable {
         }
 
         return $reference;
-=======
+    }
+
     public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId) {
         $query = $this->find();
         $totalMarks = $query
@@ -211,6 +211,5 @@ class AssessmentItemResultsTable extends AppTable {
             ->first();
 
         return $totalMarks;
->>>>>>> 9c0672e3ba98b915fc84915e833019ab7598b64d
     }
 }
