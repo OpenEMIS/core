@@ -25,8 +25,9 @@ class EducationSubjectsTable extends ControllerActionTable {
     {
         $validator = parent::validationDefault($validator);
         $validator
-            ->add('code', 'ruleUniqueCode', [
-                'rule' => ['checkUniqueCode', null]
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
             ]);
         return $validator;
     }
