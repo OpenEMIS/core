@@ -870,7 +870,8 @@ class StudentsTable extends ControllerActionTable
         if (isset($buttons['view'])) {
             $url = $this->url('view');
             $userId = $this->paramsEncode(['id' => $entity->_matchingData['Users']->id]);
-            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', 'id' => $entity->id, $userId]);
+            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', $userId]);
+            $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
         }
 
         // Remove in POCOR-3010
