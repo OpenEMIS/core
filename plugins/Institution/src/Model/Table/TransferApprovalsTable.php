@@ -144,6 +144,7 @@ class TransferApprovalsTable extends AppTable {
 						$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
 						$institutionClassStudentObj = [
 							'student_id' => $newEntity->student_id,
+							'student_status_id' => $newEntity->student_status_id,
 							'institution_class_id' => $classId,
 							'education_grade_id' => $newEntity->education_grade_id,
 							'student_status_id' => $newEntity->student_status_id,

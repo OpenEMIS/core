@@ -90,6 +90,7 @@ trait MessagesTrait {
             'academicPeriod' => [
                 'notEditable' => 'The chosen academic period is not editable',
             ],
+            'uniqueCodeForm' => 'Code must be unique from other codes in this form',
             'invalidTime' => 'You have entered an invalid time.',
             'invalidDate' => 'You have entered an invalid date.',
             'invalidUrl' => 'You have entered an invalid URL.',
@@ -625,8 +626,21 @@ trait MessagesTrait {
             'noClasses' => 'No Classes',
             'noRecords' => 'No Records'
         ],
+<<<<<<< HEAD
         'Licenses' => [
             'select_classification' => 'Select Classification'
+=======
+        'Templates' => [
+            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
+        ],
+        'Items' => [
+            'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
+        ],
+        'StudentCompetencies' => [
+            'noPeriod' => 'No Period',
+            'noItem' => 'No Item',
+            'noCriterias' => 'Please setup competency criterias for the selected item',
+>>>>>>> 9c0672e3ba98b915fc84915e833019ab7598b64d
         ],
 
         // Validation Messages
@@ -1537,6 +1551,40 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
                 ]
+            ],
+        ],
+        'Competency' => [
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ],
+                'point' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'CompetencyGradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ],
+            ],
+            'CompetencyCriterias' => [
+                'percentage' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'CompetencyTemplates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
+            'CompetencyPeriods' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
             ],
         ],
         'Configuration' => [
