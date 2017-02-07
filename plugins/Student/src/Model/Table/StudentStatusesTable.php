@@ -10,6 +10,10 @@ class StudentStatusesTable extends AppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index', 'view']
+        ]);
 	}
 
 	public function findCodeList() {
