@@ -2,6 +2,7 @@
 namespace App\Controller\Component;
 
 use Cake\Controller\Component;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class NavigationComponent extends Component
@@ -175,6 +176,46 @@ class NavigationComponent extends Component
 		}
 	}
 
+	public function checkClassification(array &$navigations)
+	{
+		$session = $this->request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+
+		if (!empty($institutionId)) {
+			$Institutions = TableRegistry::get('Institution.Institutions');
+			$currentInstitution = $Institutions->get($institutionId);
+
+			if ($currentInstitution) {
+				$classification = $currentInstitution->classification;
+
+				if ($classification == $Institutions::NON_ACADEMIC) {
+					// navigation items to exclude from non-academic institutions
+					$academicArray = [
+						'Institution.Academic',
+						'Institutions.Students.index',
+						'Institutions.StudentAttendances.index',
+						'Institutions.StudentBehaviours.index',
+						'Institutions.Assessments.index',
+						'Institutions.Examinations',
+						'Institutions.Fees',
+						'Institutions.StudentFees',
+						'Institutions.Rubrics',
+						'Institutions.VisitRequests',
+						'Institution.Competencies'
+					];
+
+					$navigationParentList = $this->array_column($navigations, 'parent');
+					foreach ($navigationParentList as $navigationKey => $parent) {
+						// unset navigation item and all children if in academicArray
+						if (in_array($parent, $academicArray) || in_array($navigationKey, $academicArray)) {
+							unset($navigations[$navigationKey]);
+						}
+					}
+				}
+			}
+		}
+	}
+
 	// PHP 5.5 array_column alternative
 	public function array_column($array, $column_name)
 	{
@@ -204,17 +245,19 @@ class NavigationComponent extends Component
 		$institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
 		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
 
-
 		if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+			$this->checkClassification($navigations);
 		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
+			$this->checkClassification($navigations);
 		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+			$this->checkClassification($navigations);
 		} elseif ($controller->name == 'Directories' && $action != 'index') {
 			$navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
@@ -432,6 +475,19 @@ class NavigationComponent extends Component
 					'title' => 'Staff',
 					'parent' => 'Institution.Behaviour',
 					'selected' => ['Institutions.StaffBehaviours'],
+					'params' => ['plugin' => 'Institution']
+				],
+
+			'Institution.Competencies' => [
+				'title' => 'Competencies',
+				'parent' => 'Institutions.index',
+				'link' => false
+			],
+
+				'Institutions.StudentCompetencies.index' => [
+					'title' => 'Students',
+					'parent' => 'Institution.Competencies',
+					'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
 					'params' => ['plugin' => 'Institution']
 				],
 
@@ -964,6 +1020,31 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Assessment'],
                 'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
             ],
+            'Administration.Competencies' => [
+                'title' => 'Competencies',
+                'parent' => 'Administration',
+                'link' => false,
+                'params' => ['plugin' => 'Competency'],
+            ],
+            	'Competencies.Templates' => [
+            		'title' => 'Templates',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias']
+            	],
+            	'Competencies.Periods' => [
+            		'title' => 'Periods',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.Periods']
+            	],
+            	'Competencies.GradingTypes' => [
+            		'title' => 'Grading Types',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.GradingTypes']
+            	],
+
 			'Administration.Examinations' => [
 					'title' => 'Examinations',
 					'parent' => 'Administration',

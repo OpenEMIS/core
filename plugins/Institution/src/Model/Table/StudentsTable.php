@@ -615,9 +615,10 @@ class StudentsTable extends ControllerActionTable
                 'Users.middle_name',
                 'Users.third_name',
                 'Users.last_name',
-                'Users.preferred_name'
+                'Users.preferred_name',
+                'student_status_id'
             ]);
-        
+
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
@@ -753,6 +754,7 @@ class StudentsTable extends ControllerActionTable
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
+            TableRegistry::get('Institution.InstitutionSubjectStudents'),
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);

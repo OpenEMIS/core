@@ -38,6 +38,16 @@ class TransferApprovalsTable extends AppTable {
         ]);
 	}
 
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('start_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'end_date', false]
+            ])
+        ;
+    }
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -134,6 +144,7 @@ class TransferApprovalsTable extends AppTable {
 						$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
 						$institutionClassStudentObj = [
 							'student_id' => $newEntity->student_id,
+							'student_status_id' => $newEntity->student_status_id,
 							'institution_class_id' => $classId,
 							'education_grade_id' => $newEntity->education_grade_id,
 							'student_status_id' => $newEntity->student_status_id,
