@@ -78,8 +78,12 @@ class ConfigProductListsTable extends ControllerActionTable {
     {
         $this->field('auto_login_url', ['type' => 'string']);
         $this->field('auto_logout_url', ['type' => 'string']);
-        $this->field('deletable', ['type' => 'hidden', 'value' => 1]);
         $this->field('file_content', ['type' => 'image', 'defaultWidth' => 95]);
+    }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $requestData[$this->alias()]['deletable'] = 1;
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -127,7 +131,7 @@ class ConfigProductListsTable extends ControllerActionTable {
     {
         if (!$entity->deletable) {
             $entity->auto_login_url = rtrim($entity->url, '/').'/Login';
-            $entity->auto_logout_url = $entity->url;
+            $entity->auto_logout_url = $entity->url. '/';
         }
     }
 
