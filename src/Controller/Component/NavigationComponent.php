@@ -589,7 +589,7 @@ class NavigationComponent extends Component
 	public function getInstitutionStudentNavigation()
 	{
 		$session = $this->request->session();
-		$id = $session->read('Institution.Students.id');
+		$id = !empty($this->controller->ControllerAction->getQueryString('institution_student_id')) ? $this->controller->ControllerAction->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
 		$studentId = $session->read('Student.Students.id');
 		$institutionId = $session->read('Institution.Institutions.id');
 		$queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $institutionId, 'institution_student_id' => $id]);
