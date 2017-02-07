@@ -44,7 +44,12 @@ class InstitutionRubricAnswersTable extends AppTable {
     }
 
 	public function edit($id=0) {
+		// pr($this->ControllerAction->paramsPass()[1]);
+		$paramsPass = $this->paramsDecode($this->ControllerAction->paramsPass()[1]);
+		// pr($paramsPass);die;
 		$request = $this->request;
+
+		$id = $paramsPass['id'];
 
 		if ($this->InstitutionRubrics->exists(['id' => $id])) {
 			$query = $this->InstitutionRubrics

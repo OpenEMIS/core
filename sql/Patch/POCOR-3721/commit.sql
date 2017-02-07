@@ -1,17 +1,59 @@
 -- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3721', NOW());
 
+-- license_types
+INSERT INTO `license_types` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+('Teaching License - Provisional', 1, 1, 0, 0, 'TEACHING_LICENSE_PROVISIONAL', 'TEACHING_LICENSE_PROVISIONAL', NULL, NULL, 1, NOW()),
+('Teaching License - Full', 2, 1, 0, 0, 'TEACHING_LICENSE_FULL', 'TEACHING_LICENSE_FULL', NULL, NULL, 1, NOW());
+
 -- workflow_models
 SET @modelId := 11;
 INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
-(@modelId, 'Staff > Professional Development > Licenses', 'Staff.Licenses', NULL, 0, 1, NOW());
+(@modelId, 'Staff > Professional Development > Licenses', 'Staff.Licenses', 'FieldOption.LicenseTypes', 0, 1, NOW());
 
--- Pre-insert workflows
+-- Pre-insert workflows - Apply To All
 INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
-('STAFF-LICENSE-1001', 'Staff Licenses', @modelId, 1, NOW());
+('STAFF-LICENSE-1001', 'Staff Licenses - General', @modelId, 1, NOW());
 
 SET @workflowId := 0;
 SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'STAFF-LICENSE-1001';
+
+INSERT INTO `workflows_filters` (`id`, `workflow_id`, `filter_id`) VALUES
+('4ec31ed4-ec54-11e6-b8f2-525400b263eb', @workflowId, 0);
+
+-- Pre-insert workflow_steps
+SET @openStatusId := 0;
+SET @pendingStatusId := 0;
+SET @closedStatusId := 0;
+INSERT INTO `workflow_steps` (`name`, `category`, `is_editable`, `is_removable`, `is_system_defined`, `workflow_id`, `created_user_id`, `created`) VALUES
+('Open', 1, 1, 1, 1, @workflowId, 1, NOW()),
+('Pending For Approval', 2, 0, 0, 1, @workflowId, 1, NOW()),
+('Closed', 3, 0, 0, 1, @workflowId, 1, NOW());
+
+SELECT `id` INTO @openStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 1;
+SELECT `id` INTO @pendingStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 2;
+SELECT `id` INTO @closedStatusId FROM `workflow_steps` WHERE `workflow_id` = @workflowId AND `category` = 3;
+
+-- Pre-insert workflow_actions
+INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `comment_required`, `allow_by_assignee`, `event_key`, `workflow_step_id`, `next_workflow_step_id`, `created_user_id`, `created`) VALUES
+('Submit For Approval', NULL, 0, 1, 0, 1, NULL, @openStatusId, @pendingStatusId, 1, NOW()),
+('Cancel', NULL, 1, 1, 0, 1, NULL, @openStatusId, @closedStatusId, 1, NOW()),
+('Approve', NULL, 0, 1, 0, 0, NULL, @pendingStatusId, @closedStatusId, 1, NOW()),
+('Reject', NULL, 1, 1, 0, 0, NULL, @pendingStatusId, @openStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @closedStatusId, @openStatusId, 1, NOW());
+
+-- Pre-insert workflows - Default
+INSERT INTO `workflows` (`code`, `name`, `workflow_model_id`, `created_user_id`, `created`) VALUES
+('STAFF-LICENSE-1002', 'Staff Licenses', @modelId, 1, NOW());
+
+SET @workflowId := 0;
+SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'STAFF-LICENSE-1002';
+
+INSERT INTO `workflows_filters` (`id`, `workflow_id`, `filter_id`) VALUES
+('68de0aac-ec55-11e6-b8f2-525400b263eb', @workflowId, 0),
+('6b7a9861-ec55-11e6-b8f2-525400b263eb', @workflowId, 0);
 
 -- Pre-insert workflow_steps
 SET @openStatusId := 0;
@@ -75,11 +117,6 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Approve', NULL, 0, 0, 0, 0, NULL, @notAwardedStatusId, 0, 1, NOW()),
 ('Reject', NULL, 1, 0, 0, 0, NULL, @notAwardedStatusId, 0, 1, NOW()),
 ('Reopen', NULL, NULL, 1, 0, 0, NULL, @notAwardedStatusId, @openStatusId, 1, NOW());
-
--- license_types
-INSERT INTO `license_types` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
-('Teaching License - Provisional', 1, 1, 0, 0, 'TEACHING_LICENSE_PROVISIONAL', 'TEACHING_LICENSE_PROVISIONAL', NULL, NULL, 1, NOW()),
-('Teaching License - Full', 2, 1, 0, 0, 'TEACHING_LICENSE_FULL', 'TEACHING_LICENSE_FULL', NULL, NULL, 1, NOW());
 
 -- license_classifications
 DROP TABLE IF EXISTS `license_classifications`;
