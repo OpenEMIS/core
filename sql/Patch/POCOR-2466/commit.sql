@@ -9,10 +9,12 @@ ALTER TABLE `alert_rules` CHANGE `code` `feature` VARCHAR(50) NOT NULL;
 
 -- alert_logs
 ALTER TABLE `alert_logs` DROP `type`;
+ALTER TABLE `alert_logs` ADD `checksum` CHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER `message`;
 
 -- alert_roles table
 RENAME TABLE `alert_roles` TO `alerts_roles`;
 ALTER TABLE `alerts_roles` CHANGE `alert_id` `alert_rule_id` INT(11) NOT NULL COMMENT 'links to alert_rules.id';
+ALTER TABLE `alerts_roles` CHANGE `id` `id` CHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 ALTER TABLE `alerts_roles`
     DROP PRIMARY KEY,
@@ -57,8 +59,6 @@ DROP TABLE sms_logs;
 DROP TABLE sms_messages;
 DROP TABLE sms_responses;
 
--- alertRole to composite id
-ALTER TABLE `alerts_roles` CHANGE `id` `id` CHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 
 

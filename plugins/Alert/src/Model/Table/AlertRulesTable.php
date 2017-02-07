@@ -88,7 +88,7 @@ class AlertRulesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('message', ['type' => 'hidden']);
+        $this->field('message', ['visible' => false]);
 
         // element control
         $featureOptions = $this->getFeatureOptions();

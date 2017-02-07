@@ -1,6 +1,3 @@
--- alertRole to composite id
-ALTER TABLE `alerts_roles` CHANGE `id` `id` CHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
-
 -- sms_logs table
 CREATE TABLE `sms_logs` (
     `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -57,6 +54,7 @@ UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` BETWEEN 5033
 -- alert_roles table
 RENAME TABLE `alerts_roles` TO `alert_roles`;
 ALTER TABLE `alert_roles` CHANGE `alert_rule_id` `alert_id` INT(11) NOT NULL COMMENT 'links to alerts.id';
+ALTER TABLE `alert_roles` CHANGE `id` `id` CHAR(32) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
 
 ALTER TABLE `alert_roles`
     DROP PRIMARY KEY,
@@ -65,6 +63,7 @@ ALTER TABLE `alert_roles`
 
 -- alert_logs
 ALTER TABLE `alert_logs` ADD `type` VARCHAR(20) NOT NULL AFTER `destination`;
+ALTER TABLE `alert_logs` DROP `checksum`;
 
 -- alerts table
 ALTER TABLE `alert_rules` CHANGE `threshold` `threshold` INT(5) NOT NULL;
