@@ -52,8 +52,8 @@ SET @workflowId := 0;
 SELECT `id` INTO @workflowId FROM `workflows` WHERE `code` = 'STAFF-LICENSE-1002';
 
 INSERT INTO `workflows_filters` (`id`, `workflow_id`, `filter_id`) VALUES
-('68de0aac-ec55-11e6-b8f2-525400b263eb', @workflowId, 0),
-('6b7a9861-ec55-11e6-b8f2-525400b263eb', @workflowId, 0);
+('68de0aac-ec55-11e6-b8f2-525400b263eb', @workflowId, (SELECT `id` FROM `license_types` WHERE `international_code` = 'TEACHING_LICENSE_PROVISIONAL')),
+('6b7a9861-ec55-11e6-b8f2-525400b263eb', @workflowId, (SELECT `id` FROM `license_types` WHERE `international_code` = 'TEACHING_LICENSE_FULL'));
 
 -- Pre-insert workflow_steps
 SET @openStatusId := 0;
