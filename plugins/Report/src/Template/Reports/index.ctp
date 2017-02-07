@@ -38,11 +38,11 @@ $this->start('panelBody');
 		<table class="table table-curved" id="ReportList" url="<?= $url ?>">
 			<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
 			<tbody>
-				<?php foreach ($data->toArray() as $obj) : ?>
+				<?php foreach ($data as $obj) : ?>
 				<tr row-id="<?= $obj->id ?>">
-					<td><?= $obj->id ?></td>
+					<td><?= $obj->name ?></td>
                     <td><?= $table->formatDateTime($obj->created) ?></td>
-                    <td><?= $obj->created_user->name_with_id ?></td>
+                    <td><?= $obj->has('created_user') ? $obj->created_user->name_with_id : '' ?></td>
 					<td class="modified"><?= !empty($obj->file_path) ? $table->formatDateTime($obj->modified) : '' ?></td>
 					<td class="expiryDate"><?= $table->formatDateTime($obj->expiry_date) ?></td>
 					<td>
