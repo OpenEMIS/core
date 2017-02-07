@@ -31,6 +31,17 @@ class SecurityRolesTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+		$this->belongsToMany('AlertRules', [
+            'className' => 'Alert.AlertRules',
+            'joinTable' => 'alerts_roles',
+            'foreignKey' => 'security_role_id',
+            'targetForeignKey' => 'alert_rule_id',
+            'through' => 'Alert.AlertsRoles',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
 		if ($this->behaviors()->has('Reorder')) {
 			$this->behaviors()->get('Reorder')->config([
 					'filter' => 'security_group_id'
