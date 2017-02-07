@@ -606,7 +606,8 @@ class StudentsTable extends ControllerActionTable
                 'Users.middle_name',
                 'Users.third_name',
                 'Users.last_name',
-                'Users.preferred_name'
+                'Users.preferred_name',
+                'student_status_id'
             ]);
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
@@ -744,6 +745,7 @@ class StudentsTable extends ControllerActionTable
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
+            TableRegistry::get('Institution.InstitutionSubjectStudents'),
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);

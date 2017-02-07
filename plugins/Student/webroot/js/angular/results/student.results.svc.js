@@ -7,7 +7,6 @@ StudentResultsSvc.$inject = ['$q', '$filter', 'KdOrmSvc', 'KdSessionSvc'];
 function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
     var properties = {
         academicPeriods: {},
-        institutions: {},
         assessments: {},
         subjects: {},
         assessmentGradingTypes: {},
@@ -24,7 +23,6 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
     var service = {
         init: init,
-        getInstitution: getInstitution,
         getAssessment: getAssessment,
         getSubject: getSubject,
         getAssessmentPeriod: getAssessmentPeriod,
@@ -45,10 +43,6 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.controllerAction('Results');
         KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(models);
-    };
-
-    function getInstitution(id) {
-        return properties.institutions[id];
     };
 
     function getAssessment(id) {
@@ -114,7 +108,6 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 var results = {};
                 angular.forEach(studentResults, function(studentResult, key) {
                     var academicPeriodId = studentResult.academic_period_id;
-                    var institutionId = studentResult.institution_id;
                     var assessmentId = studentResult.assessment_id;
                     var subjectId = studentResult.education_subject_id;
                     var assessmentPeriodId = studentResult.assessment_period_id;
@@ -123,29 +116,24 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                         results[academicPeriodId] = {};
                     }
 
-                    if (angular.isUndefined(results[academicPeriodId][institutionId])) {
-                        properties.institutions[institutionId] = studentResult._matchingData.Institutions;
-                        results[academicPeriodId][institutionId] = {};
-                    }
-
-                    if (angular.isUndefined(results[academicPeriodId][institutionId][assessmentId])) {
+                    if (angular.isUndefined(results[academicPeriodId][assessmentId])) {
                         properties.assessments[assessmentId] = studentResult._matchingData.Assessments;
-                        results[academicPeriodId][institutionId][assessmentId] = {};
+                        results[academicPeriodId][assessmentId] = {};
                     }
 
-                    if (angular.isUndefined(results[academicPeriodId][institutionId][assessmentId][subjectId])) {
+                    if (angular.isUndefined(results[academicPeriodId][assessmentId][subjectId])) {
                         properties.subjects[subjectId] = studentResult._matchingData.EducationSubjects;
-                        results[academicPeriodId][institutionId][assessmentId][subjectId] = {};
+                        results[academicPeriodId][assessmentId][subjectId] = {};
                     }
 
-                    if (angular.isUndefined(results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId])) {
+                    if (angular.isUndefined(results[academicPeriodId][assessmentId][subjectId][assessmentPeriodId])) {
                         properties.assessmentPeriods[assessmentPeriodId] = studentResult._matchingData.AssessmentPeriods;
-                        results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId] = {};
+                        results[academicPeriodId][assessmentId][subjectId][assessmentPeriodId] = {};
                     }
 
                     properties.assessmentGradingOptions[studentResult.assessment_grading_option_id] = studentResult._matchingData.AssessmentGradingOptions;
-                    results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId]['assessment_grading_option_id'] = studentResult.assessment_grading_option_id;
-                    results[academicPeriodId][institutionId][assessmentId][subjectId][assessmentPeriodId]['marks'] = studentResult.marks;
+                    results[academicPeriodId][assessmentId][subjectId][assessmentPeriodId]['assessment_grading_option_id'] = studentResult.assessment_grading_option_id;
+                    results[academicPeriodId][assessmentId][subjectId][assessmentPeriodId]['marks'] = studentResult.marks;
                 });
 
                 deferred.resolve(results);
@@ -206,12 +194,26 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                     if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'])) {
                         gradingType = properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'];
                         passMark = gradingType.pass_mark;
+                        resultType = gradingType.result_type;
                     }
 
-                    if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
-                        return {color: '#CC5C5C'};
+                    if (resultType == 'DURATION') {
+                        var duration = String(params.value).split(" : ");
+                        var minInSeconds = parseInt(duration[0]) * 60;
+                        var seconds = parseInt(duration[1]);
+                        var totalSeconds = minInSeconds + seconds;
+
+                        if (!isNaN(parseFloat(params.value)) && totalSeconds > passMark) {
+                            return {color: '#CC5C5C', direction: 'ltr'};
+                        } else {
+                            return {color: '#333', direction: 'ltr'};
+                        }
                     } else {
-                        return {color: '#333'};
+                        if (!isNaN(parseFloat(params.value)) && parseFloat(params.value) < passMark) {
+                            return {color: '#CC5C5C'};
+                        } else {
+                            return {color: '#333'};
+                        }
                     }
                 },
                 valueGetter: function(params) {
@@ -227,6 +229,16 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
 
                     if (resultType == 'MARKS') {
                         return $filter('number')(value, 2);
+
+                    } else if (resultType == 'DURATION') {
+                        if (!isNaN(parseFloat(value))) {
+                            var durationAsFloat = $filter('number')(value, 2);
+                            var duration = String(durationAsFloat).replace(".", " : ");
+                            return duration;
+                        } else {
+                            return '';
+                        }
+
                     } else {
                         // for GRADES type
                         return value;
@@ -294,6 +306,10 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                         break;
                     case 'GRADES':
                         result = assessmentGradingOption.code_name;
+                        weight = '';
+                        break;
+                    case 'DURATION':
+                        result = resultObj.marks;
                         weight = '';
                         break;
                     default:
