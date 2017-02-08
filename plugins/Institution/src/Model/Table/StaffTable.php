@@ -775,29 +775,9 @@ class StaffTable extends ControllerActionTable {
     {
         // populate 'to be deleted' field
         $staff = $this->Users->get($entity->staff_id);
-        $extra['customName'] = $staff->name_with_id;
+        $entity->showDeletedValueAs = $staff->name_with_id;
 
         $extra['excludedModels'] = [$this->StaffPositionProfiles->alias()];
-
-        // staff absences
-        $StaffAbsences = TableRegistry::get('Institution.StaffAbsences');
-        $absencesRecordsCount = $StaffAbsences->find()
-            ->where([
-                $StaffAbsences->aliasField('staff_id') => $entity->staff_id,
-                $StaffAbsences->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->count();
-        $extra['associatedRecords'][] = ['model' => 'StaffAbsences', 'count' => $absencesRecordsCount];
-
-        // staff leave
-        $StaffLeave = TableRegistry::get('Institution.StaffLeave');
-        $leaveRecordsCount = $StaffLeave->find()
-            ->where([
-                $StaffLeave->aliasField('staff_id') => $entity->staff_id,
-                $StaffLeave->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->count();
-        $extra['associatedRecords'][] = ['model' => 'StaffLeave', 'count' => $leaveRecordsCount];
 
         // staff assignments
         $StaffTransferRequests = TableRegistry::get('Institution.StaffTransferRequests');
@@ -809,45 +789,25 @@ class StaffTable extends ControllerActionTable {
             ->count();
         $extra['associatedRecords'][] = ['model' => 'StaffTransferRequests', 'count' => $transferRecordsCount];
 
-        // institution classes
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-        $classRecordsCount = $InstitutionClasses->find()
-            ->where([
-                $InstitutionClasses->aliasField('staff_id') => $entity->staff_id,
-                $InstitutionClasses->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->count();
-        $extra['associatedRecords'][] = ['model' => 'InstitutionClasses', 'count' => $classRecordsCount];
+        $associationArray = [
+        	'Institution.StaffAbsences' => 'StaffAbsences',
+        	'Institution.StaffLeave' => 'StaffLeave',
+        	'Institution.InstitutionClasses' =>'InstitutionClasses',
+        	'Institution.InstitutionSubjectStaff' => 'InstitutionSubjects',
+        	'Institution.InstitutionRubrics' => 'InstitutionRubrics',
+        	'Institution.InstitutionQualityVisits' => 'InstitutionVisits'
+        ];
 
-        // institution subject staff
-        $InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
-        $subjectRecordsCount = $InstitutionSubjectStaff->find()
-            ->where([
-                $InstitutionSubjectStaff->aliasField('staff_id') => $entity->staff_id,
-                $InstitutionSubjectStaff->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->count();
-        $extra['associatedRecords'][] = ['model' => 'InstitutionSubjects', 'count' => $subjectRecordsCount];
-
-        // institution quality rubrics
-        $InstitutionRubrics = TableRegistry::get('Institution.InstitutionRubrics');
-        $rubricsRecordsCount = $InstitutionRubrics->find()
-            ->where([
-                $InstitutionRubrics->aliasField('staff_id') => $entity->staff_id,
-                $InstitutionRubrics->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->count();
-        $extra['associatedRecords'][] = ['model' => 'InstitutionRubrics', 'count' => $rubricsRecordsCount];
-
-        // institution quality visits
-        $InstitutionQualityVisits = TableRegistry::get('Institution.InstitutionQualityVisits');
-        $visitsRecordsCount = $InstitutionQualityVisits->find()
-            ->where([
-                $InstitutionQualityVisits->aliasField('staff_id') => $entity->staff_id,
-                $InstitutionQualityVisits->aliasField('institution_id') => $entity->institution_id
-            ])
-            ->count();
-        $extra['associatedRecords'][] = ['model' => 'InstitutionQualityVisits', 'count' => $visitsRecordsCount];
+        foreach ($associationArray as $tableName => $model) {
+	        $Table = TableRegistry::get($tableName);
+	        $recordsCount = $Table->find()
+	            ->where([
+	                $Table->aliasField('staff_id') => $entity->staff_id,
+	                $Table->aliasField('institution_id') => $entity->institution_id
+	            ])
+	            ->count();
+	        $extra['associatedRecords'][] = ['model' => $model, 'count' => $recordsCount];
+    	}
     }
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
