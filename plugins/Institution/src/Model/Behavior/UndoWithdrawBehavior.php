@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Institution\Model\Behavior;
 
 use ArrayObject;
@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Institution\Model\Behavior\UndoBehavior;
 
-class UndoDropoutBehavior extends UndoBehavior {
+class UndoWithdrawBehavior extends UndoBehavior {
     public function initialize(array $config) {
         parent::initialize($config);
     }
@@ -22,10 +22,10 @@ class UndoDropoutBehavior extends UndoBehavior {
     public function onGetDropoutStudents(Event $event, $data) {
         //this function is to re-check if the student try to undo not the latest status.
         //if yes, then the checkbox will be replaced by tooltip (not able to revert/undo)
-        return $this->getStudents($data); 
+        return $this->getStudents($data);
     }
 
-    public function processSaveDropoutStudents(Event $event, Entity $entity, ArrayObject $data) 
+    public function processSaveDropoutStudents(Event $event, Entity $entity, ArrayObject $data)
     {
         $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
         $studentIds = [];
@@ -58,7 +58,7 @@ class UndoDropoutBehavior extends UndoBehavior {
                             'student_id' => $studentId
                         ];
                     }
-                    
+
                     $this->updateStudentStatus('DROPOUT', $whereId, $whereConditions);
 
                     //update dropout request (institution_student_dropout) to undo status.
