@@ -109,7 +109,9 @@ class PullBehavior extends Behavior
 				}
 			}
             $extra['elements']['view'] = ['name' => 'OpenEmis.ControllerAction/view', 'order' => 5];
-            $extra['back'] = $this->_table->url('view', 'QUERY');
+            $url = $this->_table->url('view', 'QUERY');
+            $url[] = $model->paramsPass(0);
+            $extra['back'] = $url;
         }
     }
 
@@ -132,10 +134,10 @@ class PullBehavior extends Behavior
         if (empty($ids)) {
             if ($model->Session->check($sessionKey)) {
                 $ids = $model->Session->read($sessionKey);
-            } else if (!empty($model->ControllerAction->getQueryString(null, 'data'))) {
+            } else if (!empty($model->getQueryString(null, 'data'))) {
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
                 $primaryKey = $model->primaryKey();
-                $ids = $model->ControllerAction->getQueryString($primaryKey, 'data');
+                $ids = $model->getQueryString($primaryKey, 'data');
             }
         }
 
