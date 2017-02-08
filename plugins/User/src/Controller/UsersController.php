@@ -89,37 +89,15 @@ class UsersController extends AppController
 
     public function logout($sessionId = null)
     {
-        if ($sessionId) {
-
-            // Commit session
-            if (session_id()) {
-                // Same as session_write_close()
-                session_commit();
-            }
-
-            // Store current session id
-            session_start();
-            $currentSessionId = session_id();
-            session_commit();
-
-            // Hijack and destroy specified session id
-            session_id($sessionId);
-            session_start();
-            session_destroy();
-            session_commit();
-
-            // Restore existing session id
-            session_id($currentSessionId);
-            session_start();
-            session_commit();
-        }
         return $this->redirect($this->Auth->logout());
     }
 
     public function afterLogout(Event $event, $user)
     {
+        Log::write('debug', 'afterLogout')
         if ($this->SSO->getAuthenticationType() != 'Local') {
             $autoLogoutUrl = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
+            Log::write('debug', $autoLogoutUrl);
             TableRegistry::get('SSO.SingleLogout')->afterLogout($user, $autoLogoutUrl);
         }
     }
