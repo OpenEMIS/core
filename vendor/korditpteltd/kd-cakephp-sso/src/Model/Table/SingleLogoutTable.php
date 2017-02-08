@@ -22,8 +22,11 @@ class SingleLogoutTable extends Table
 
     public function afterLogout($user, array $autoLogoutUrl)
     {
+        Log::write($user);
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username)) {
+            Log::write($username);
+            Log::write($autoLogoutUrl);
             $this->removeLogoutRecord($username, $autoLogoutUrl);
         }
     }
@@ -96,6 +99,7 @@ class SingleLogoutTable extends Table
         $entities = $this->getLogoutRecords($username);
         foreach ($entities as $entity) {
             $entity->autoLogoutUrl = $autoLogoutUrl;
+            Log::write('debug', 'delete record');
             $this->delete($entity);
         }
     }
@@ -110,10 +114,14 @@ class SingleLogoutTable extends Table
             $username = $entity->username;
             $sessionId = $entity->session_id;
             $autoLogoutUrl = $entity->autoLogoutUrl;
+            Log::write('debug', 'afterDelete');
             if (in_array($url, $autoLogoutUrl)) {
+                Log::write('debug', 'post logout');
                 $this->postLogout($url, $entity->session_id, $username);
             }
         } catch (Exception $e) {
+            Log::write('debug', 'post error');
+            Log::write('debug', $entity);
             Log::write('error', $e);
         }
 
