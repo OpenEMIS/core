@@ -4,6 +4,7 @@ namespace Examination\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Text;
@@ -27,7 +28,8 @@ class ExaminationItemResultsTable extends AppTable
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'ExamResults' => ['index', 'add']
+            'ExamResults' => ['index', 'add'],
+            'StudentExaminationResults' => ['index']
         ]);
 
         $this->addBehavior('CompositeKey');
@@ -36,6 +38,47 @@ class ExaminationItemResultsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $this->setTotalMark($entity);
+    }
+
+    public function findResults(Query $query, array $options) {
+        $academicPeriodId = $options['academic_period_id'];
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $studentId = -1;
+        if ($session->check('Student.ExaminationResults.student_id')) {
+            $studentId = $session->read('Student.ExaminationResults.student_id');
+        }
+
+        return $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('marks'),
+                $this->aliasField('examination_grading_option_id'),
+                $this->aliasField('student_id'),
+                $this->aliasField('examination_id'),
+                $this->aliasField('education_subject_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('academic_period_id'),
+                $this->Examinations->aliasField('code'),
+                $this->Examinations->aliasField('name'),
+                $this->Examinations->aliasField('education_grade_id'),
+                $this->EducationSubjects->aliasField('code'),
+                $this->EducationSubjects->aliasField('name'),
+                $this->ExaminationGradingOptions->aliasField('code'),
+                $this->ExaminationGradingOptions->aliasField('name'),
+                $this->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
+            ])
+            ->innerJoinWith('Examinations')
+            ->innerJoinWith('EducationSubjects')
+            ->innerJoinWith('ExaminationGradingOptions')
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('student_id') => $studentId
+            ])
+            ->order([
+                $this->Examinations->aliasField('code'), $this->Examinations->aliasField('name')
+            ]);
     }
 
     private function getExamGrading(Entity $entity)
