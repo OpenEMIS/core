@@ -194,7 +194,7 @@ class StudentUserTable extends ControllerActionTable
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$institutionStudentId = $this->request->query('id');
+		$institutionStudentId = $this->getQueryString('institution_student_id');
 
 		// this is required if the student link is clicked from the Institution Classes or Subjects
 		if (empty($institutionStudentId)) {
@@ -202,7 +202,7 @@ class StudentUserTable extends ControllerActionTable
 			if ($this->paramsPass(0)) {
 				$params = $this->paramsDecode($this->paramsPass(0));
 			}
-			$institutionId = isset($params['institution_id']) ? $params['institution_id'] : $this->Session->read('Institution.Institutions.id');
+			$institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
 			$studentId = isset($params['id']) ? $params['id'] : $this->Session->read('Institution.StudentUser.primaryKey.id');
 
 			// get the id of the latest student record in the current institution
@@ -297,7 +297,7 @@ class StudentUserTable extends ControllerActionTable
 
 	private function setupTabElements($entity)
 	{
-		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+		$id = !is_null($this->getQueryString('institution_student_id')) ? $this->getQueryString('institution_student_id') : 0;
 
 		$options = [
 			'userRole' => 'Student',
