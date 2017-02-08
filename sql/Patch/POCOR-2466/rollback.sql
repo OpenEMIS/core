@@ -47,9 +47,9 @@ VALUES ('5029', 'Questions', 'Alerts', 'Administration', 'Communications', '5000
 
 UPDATE `security_functions` SET `_view` = 'Logs.index' WHERE `id` = 5031;
 UPDATE `security_functions` SET `_delete` = NULL WHERE `id` = 5031;
-DELETE FROM `security_functions` WHERE `id` = 5062;
-DELETE FROM `security_functions` WHERE `id` = 5063;
-UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` BETWEEN 5033 AND 5062;
+DELETE FROM `security_functions` WHERE `id` = 5064;
+DELETE FROM `security_functions` WHERE `id` = 5065;
+UPDATE `security_functions` SET `order` = `order` - 2 WHERE `order` BETWEEN 5033 AND 5065;
 
 -- alert_roles table
 RENAME TABLE `alerts_roles` TO `alert_roles`;
