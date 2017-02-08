@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Datasource\ResultSetInterface;
 
-class StudentDropoutTable extends AppTable {
+class StudentWithdrawTable extends AppTable {
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
@@ -100,7 +100,7 @@ class StudentDropoutTable extends AppTable {
 
 		$urlParams = $this->ControllerAction->url('edit');
 		if ($urlParams['controller'] == 'Dashboard') {
-			$this->Navigation->addCrumb('Dropout Approvals', $urlParams);
+			$this->Navigation->addCrumb('Withdraw Approvals', $urlParams);
 		}
     }
 

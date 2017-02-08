@@ -9,7 +9,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Date;
 
-class DropoutRequestsTable extends AppTable {
+class WithdrawRequestsTable extends AppTable {
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
