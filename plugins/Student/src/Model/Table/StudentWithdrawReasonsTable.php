@@ -3,7 +3,7 @@ namespace Student\Model\Table;
 
 use App\Model\Table\ControllerActionTable;
 
-class StudentDropoutReasonsTable extends ControllerActionTable
+class StudentWithdrawReasonsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
