@@ -33,7 +33,6 @@ $this->start('panelBody');
 <style type="text/css">
 .none { display: none !important; }
 </style>
-
 <div class="table-wrapper">
 	<div class="table-responsive">
 		<table class="table table-curved" id="ReportList" url="<?= $url ?>">
@@ -43,7 +42,7 @@ $this->start('panelBody');
 				<tr row-id="<?= $obj->id ?>">
 					<td><?= $obj->name ?></td>
                     <td><?= $table->formatDateTime($obj->created) ?></td>
-                    <td><?= $obj->created_user->name_with_id ?></td>
+                    <td><?= $obj->has('created_user') ? $obj->created_user->name_with_id : '' ?></td>
 					<td class="modified"><?= !empty($obj->file_path) ? $table->formatDateTime($obj->modified) : '' ?></td>
 					<td class="expiryDate"><?= $table->formatDateTime($obj->expiry_date) ?></td>
 					<td>
@@ -72,7 +71,7 @@ $this->start('panelBody');
 						<a href="#" data-toggle="tooltip" title="<?= __('Please contact the administrator for assistance.') ?>" class="<?php echo $errorClass ?>"><?php echo __('Error') ?></a>
 					</td>
 				</tr>
-				<?php endforeach ?>
+				<?php endforeach; ?>
 			</tbody>
 		</table>
 	</div>

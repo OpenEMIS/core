@@ -132,10 +132,10 @@ class PullBehavior extends Behavior
         if (empty($ids)) {
             if ($model->Session->check($sessionKey)) {
                 $ids = $model->Session->read($sessionKey);
-            } else if (!empty($model->ControllerAction->getQueryString())) {
+            } else if (!empty($model->ControllerAction->getQueryString(null, 'data'))) {
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
                 $primaryKey = $model->primaryKey();
-                $ids = $model->ControllerAction->getQueryString($primaryKey);
+                $ids = $model->ControllerAction->getQueryString($primaryKey, 'data');
             }
         }
 
@@ -159,7 +159,7 @@ class PullBehavior extends Behavior
             if ($request->is(['post', 'put'])) {
                 $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
                 $patchOptions = new ArrayObject([]);
-                $queryStringData = new ArrayObject($model->getQueryString());
+                $queryStringData = new ArrayObject($model->getQueryString(null, 'data'));
                 $params = [$entity, $queryStringData, $patchOptions, $extra];
 
                 if ($submit == 'save') {
@@ -446,7 +446,7 @@ class PullBehavior extends Behavior
                         $this->setExternalDataValue($externalDataValue, 'identity_type_id', $identityTypeArr['id'], $this->identityTypeMapping);
                         $this->setExternalDataValue($externalDataValue, 'nationality_id', $nationalityArr['id'], $this->nationalityMapping);
 
-    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue->getArrayCopy());
+    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue->getArrayCopy(), 'data');
     	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
                         $extra['toolbarButtons']['synchronise'] = $toolbarButton;
                     }
