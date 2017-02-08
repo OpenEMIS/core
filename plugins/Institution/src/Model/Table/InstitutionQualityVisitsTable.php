@@ -119,7 +119,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
                     'controller' => 'Institutions',
                     'action' => 'StaffUser',
                     'view',
-                    $entity->staff->id
+                    $this->paramsEncode(['id' => $entity->staff->id])
                 ]);
             } else {
                 return $entity->staff->name_with_id;
@@ -211,7 +211,7 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 	{
 		if ($action == 'view') {
 		} else if ($action == 'add' || $action == 'edit') {
-			
+
             if ($action == 'add') {
                 $selectedClass = $request->query('subject');
             } else if ($action == 'edit') {
@@ -292,11 +292,9 @@ class InstitutionQualityVisitsTable extends ControllerActionTable
 	{
 		$this->field('academic_period_id', ['type' => 'select']);
 		$this->field('institution_subject_id', [
-            'type' => 'select',
             'entity' => $entity
         ]);
 		$this->field('staff_id', [
-            'type' => 'select',
             'entity' => $entity
         ]);
 		$this->field('evaluator');
