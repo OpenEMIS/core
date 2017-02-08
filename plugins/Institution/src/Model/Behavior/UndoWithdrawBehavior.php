@@ -19,15 +19,15 @@ class UndoWithdrawBehavior extends UndoBehavior {
         return $events;
     }
 
-    public function onGetDropoutStudents(Event $event, $data) {
+    public function onGetWithdrawStudents(Event $event, $data) {
         //this function is to re-check if the student try to undo not the latest status.
         //if yes, then the checkbox will be replaced by tooltip (not able to revert/undo)
         return $this->getStudents($data);
     }
 
-    public function processSaveDropoutStudents(Event $event, Entity $entity, ArrayObject $data)
+    public function processSaveWithdrawStudents(Event $event, Entity $entity, ArrayObject $data)
     {
-        $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+        $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
         $studentIds = [];
 
         $institutionId = $entity->institution_id;
@@ -41,7 +41,7 @@ class UndoWithdrawBehavior extends UndoBehavior {
                 if ($studentId != 0) {
                     $studentIds[$studentId] = $studentId;
 
-                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['DROPOUT']);
+                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['WITHDRAWN']);
                     $whereId = '';
                     $whereConditions = '';
 
@@ -59,9 +59,9 @@ class UndoWithdrawBehavior extends UndoBehavior {
                         ];
                     }
 
-                    $this->updateStudentStatus('DROPOUT', $whereId, $whereConditions);
+                    $this->updateStudentStatus('WITHDRAWN', $whereId, $whereConditions);
 
-                    //update dropout request (institution_student_dropout) to undo status.
+                    //update withdraw request (institution_student_withdraw) to undo status.
                     $conditions = [
                         'student_id' => $studentId,
                         'status' => 1, //undo approved status
@@ -70,7 +70,7 @@ class UndoWithdrawBehavior extends UndoBehavior {
                         'education_grade_id' => $selectedGrade
                     ];
 
-                    $StudentDropoutTable->updateAll(
+                    $StudentWithdrawTable->updateAll(
                         ['status' => 3], //status 3 = undo
                         [$conditions]
                     );
