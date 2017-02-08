@@ -957,19 +957,19 @@ class NavigationComponent extends Component
 				'link' => false,
 			],
 
-				'Alerts.Questions' => [
-					'title' => 'Questions',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Questions']
-				],
+				'Alerts.Alerts' => [
+						'title' => 'Alerts',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.Alerts']
+					],
 
-				'Alerts.Responses' => [
-					'title' => 'Responses',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Responses']
-				],
+				'Alerts.AlertRules' => [
+						'title' => 'Alert Rules',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.AlertRules']
+					],
 
 				'Alerts.Logs' => [
 					'title' => 'Logs',
