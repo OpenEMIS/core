@@ -94,7 +94,7 @@ class UsersController extends AppController
 
     public function afterLogout(Event $event, $user)
     {
-        Log::write('debug', 'afterLogout')
+        Log::write('debug', 'afterLogout');
         if ($this->SSO->getAuthenticationType() != 'Local') {
             $autoLogoutUrl = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
             Log::write('debug', $autoLogoutUrl);
