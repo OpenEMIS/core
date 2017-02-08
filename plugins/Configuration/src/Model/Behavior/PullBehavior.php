@@ -159,7 +159,7 @@ class PullBehavior extends Behavior
             if ($request->is(['post', 'put'])) {
                 $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
                 $patchOptions = new ArrayObject([]);
-                $queryStringData = new ArrayObject($model->getQueryString(null, , 'data'));
+                $queryStringData = new ArrayObject($model->getQueryString(null, 'data'));
                 $params = [$entity, $queryStringData, $patchOptions, $extra];
 
                 if ($submit == 'save') {
