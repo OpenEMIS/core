@@ -7,11 +7,11 @@ class StudentWithdrawReasonsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('student_dropout_reasons');
+        $this->table('student_withdraw_reasons');
         parent::initialize($config);
 
-        $this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'foreignKey' => 'student_dropout_reason_id']);
-        $this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'foreignKey' => 'student_dropout_reason_id']);
+        $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'foreignKey' => 'student_withdraw_reason_id']);
+        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'foreignKey' => 'student_withdraw_reason_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
