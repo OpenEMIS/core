@@ -100,7 +100,7 @@ class StudentAdmissionTable extends AppTable {
 		$Enrolled = $statusList['CURRENT'];
 		$Promoted = $statusList['PROMOTED'];
         $Graduated = $statusList['GRADUATED'];
-        $Dropout = $statusList['DROPOUT'];
+        $Withdraw = $statusList['WITHDRAWN'];
 
 		if ($student->isNew()) { // add
 			if ($student->student_status_id == $Enrolled) {
@@ -124,9 +124,9 @@ class StudentAdmissionTable extends AppTable {
                 $newStatus = $student->student_status_id;
                 $UndoPromotion = $oldStatus == $Promoted && $newStatus == $Enrolled;
                 $UndoGraduation = $oldStatus == $Graduated && $newStatus == $Enrolled;
-                $UndoDropout = $oldStatus == $Dropout && $newStatus == $Enrolled;
+                $UndoWithdraw = $oldStatus == $Withdraw && $newStatus == $Enrolled;
 
-                if ($UndoPromotion || $UndoGraduation || $UndoDropout) {
+                if ($UndoPromotion || $UndoGraduation || $UndoWithdraw) {
                     $this->removePendingAdmission($student->student_id, $student->institution_id);
                 }
             }
