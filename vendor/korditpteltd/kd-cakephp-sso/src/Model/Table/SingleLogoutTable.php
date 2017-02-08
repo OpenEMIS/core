@@ -22,11 +22,11 @@ class SingleLogoutTable extends Table
 
     public function afterLogout($user, array $autoLogoutUrl)
     {
-        Log::write($user);
+        Log::write('debug', $user);
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username)) {
-            Log::write($username);
-            Log::write($autoLogoutUrl);
+            Log::write('debug', $username);
+            Log::write('debug', $autoLogoutUrl);
             $this->removeLogoutRecord($username, $autoLogoutUrl);
         }
     }
