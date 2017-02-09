@@ -1591,14 +1591,14 @@ trait MessagesTrait {
             ],
         ],
         'Configuration' => [
-        	'ConfigProductLists' => [
-        		'name' => [
-        			'ruleUnique' => 'This product already exists in the system',
-        		],
-        		'url' => [
-        			'invalidUrl' => 'You have entered an invalid URL.',
-        		]
-        	],
+            'ConfigProductLists' => [
+                'name' => [
+                    'ruleUnique' => 'This product already exists in the system',
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL.',
+                ]
+            ],
             'ConfigAdministrativeBoundaries' => [
                 'name' => [
                     'ruleUnique' => 'This product already exists in the system',
