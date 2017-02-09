@@ -242,7 +242,10 @@ class PullBehavior extends Behavior
     		$patchOption['associated'][] = 'Nationalities';
     		$entity->dirty('nationalities', true);
     		$queryString['nationalities'] = [
-	    		['nationality_id' => $queryString['nationality_id']]
+	    		[
+                    'nationality_id' => $queryString['nationality_id'],
+                    'preferred' => 1
+                ]
 	    	];
     	}
 
