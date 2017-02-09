@@ -196,9 +196,11 @@ class UserBehavior extends Behavior {
     }
 
     public function addBeforeAction(Event $event) {
-        $this->_table->fields['is_student']['value'] = 0;
-        $this->_table->fields['is_staff']['value'] = 0;
-        $this->_table->fields['is_guardian']['value'] = 0;
+        if ($this->_table->table() == 'security_users') {
+            $this->_table->fields['is_student']['value'] = 0;
+            $this->_table->fields['is_staff']['value'] = 0;
+            $this->_table->fields['is_guardian']['value'] = 0;
+        }
     }
 
     public function indexAfterAction(Event $event)
