@@ -73,7 +73,10 @@ class UsersTable extends AppTable {
 		$newEvent = [
 			'Model.Auth.createAuthorisedUser' => 'createAuthorisedUser',
 			'Model.Users.afterLogin' => 'afterLogin',
-			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage'
+			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage',
+			'Model.UserNationalities.onChange' => 'onChangeUserNationalities',
+			'Model.UserIdentities.onChange' => 'onChangeUserIdentities',
+            'Model.Nationalities.onChange' => 'onChangeNationalities'
 		];
 
 		$events = array_merge($events, $newEvent);
@@ -655,31 +658,119 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function updateAllIdentityNumber($nationalityType)
+	public function onChangeUserNationalities(Event $event, Entity $entity) 
 	{
-		$connection = ConnectionManager::get('default');
-		$connection->execute(
-			'UPDATE `security_users`
-			INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
-			LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
-			SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
-			WHERE `security_users`.`nationality_id` = ?',
-			[$nationalityType],
-    		['integer']
-		);
-	}
+		$nationalityId = $entity->nationality_id;
+		$Nationalities = TableRegistry::get('FieldOption.Nationalities');
 
-	public function updateIdentityNumber($userId)
-	{
-		$connection = ConnectionManager::get('default');
-        $connection->execute(
-            'UPDATE `security_users`
-            INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
-            LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
-            SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
-            WHERE `security_users`.`id` = ?',
-            [$userId],
-            ['integer']
+		// to find out the default identity type linked to this nationality
+		$nationality = $Nationalities
+                        ->find()
+                        ->where([
+                            $Nationalities->aliasField($Nationalities->primaryKey()) => $nationalityId
+                        ])
+                        ->first();
+
+		// to get the identity record for the user based on the default identity type linked to this nationality
+		$UserIdentities = TableRegistry::get('User.Identities');
+		$latestIdentity = $UserIdentities->find()
+		->where([
+			$UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
+			$UserIdentities->aliasField('identity_type_id') => $nationality->identity_type_id,
+		])
+		->order([$UserIdentities->aliasField('created') => 'desc'])
+		->first();
+
+		// if there is an existing user identity record
+		$identityNumber = NULL;
+		if (!empty($latestIdentity)) {
+			$identityNumber = $latestIdentity->number;
+		}
+
+		$this->updateAll(
+            [
+                'nationality_id' => $nationalityId,
+                'identity_type_id' => $nationality->identity_type_id,
+                'identity_number' => $identityNumber
+            ], 
+            ['id' => $entity->security_user_id]
         );
 	}
+
+    public function onChangeUserIdentities(Event $event, Entity $entity) 
+    {
+        $UserNationalityTable = TableRegistry::get('User.UserNationalities');
+        
+        //check whether identity number / type is tied to preferred nationality.
+        $isPreferredNationality = $UserNationalityTable
+                                ->find()
+                                ->matching('NationalitiesLookUp')
+                                ->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
+                                ->where([
+                                    'NationalitiesLookUp.identity_type_id' => $entity->identity_type_id,
+                                    $UserNationalityTable->aliasField('security_user_id') => $entity->security_user_id,
+                                    $UserNationalityTable->aliasField('preferred') => 1
+                                ]);
+
+        if ($isPreferredNationality->count()) {
+
+            $preferredNationality = $isPreferredNationality->first();
+            // to get the identity record for the user based on the default identity type linked to this nationality
+            $UserIdentities = TableRegistry::get('User.Identities');
+            $latestIdentity = $UserIdentities->find()
+            ->where([
+                $UserIdentities->aliasField('security_user_id') => $entity->security_user_id,
+                $UserIdentities->aliasField('identity_type_id') => $preferredNationality->identityTypeId,
+            ])
+            ->order([$UserIdentities->aliasField('created') => 'desc'])
+            ->first();
+
+            // if there is an existing user identity record
+            $identityNumber = NULL;
+            if (!empty($latestIdentity)) {
+                $identityNumber = $latestIdentity->number;
+            }
+
+            $this->updateAll(
+                [
+                    'nationality_id' => $preferredNationality->nationality_id,
+                    'identity_type_id' => $preferredNationality->identityTypeId,
+                    'identity_number' => $identityNumber
+                ], 
+                ['id' => $entity->security_user_id]
+            );
+        }
+    }
+
+	public function onChangeNationalities(Event $event, Entity $entity) 
+    {
+        $nationalityId = $entity->id;
+        $identityTypeId = $entity->identity_type_id;
+
+        $connection = ConnectionManager::get('default');
+        $connection->execute(
+            'UPDATE `security_users` `SU`
+            INNER JOIN `nationalities` `N`
+                ON `N`.`id` = `SU`.`nationality_id`
+                AND `N`.`id` = ?
+            LEFT JOIN (
+                SELECT `security_user_id`, `identity_type_id`, `number`
+                FROM `user_identities` `U1`
+                WHERE `created` = (
+                    SELECT MAX(`created`) 
+                    FROM `user_identities` 
+                    WHERE  `security_user_id` = `U1`.`security_user_id`
+                    AND `identity_type_id` = ?
+                )
+            )AS UI 
+                ON (
+                    `UI`.`identity_type_id` = `N`.`identity_type_id` 
+                    AND `UI`.`security_user_id` = `SU`.`id`
+                )
+            SET 
+                `SU`.`identity_type_id` = ?, 
+                `SU`.`identity_number` = `UI`.`number`',
+            [$nationalityId,$identityTypeId,$identityTypeId],['integer','integer','integer']
+        );
+    }
 }

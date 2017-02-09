@@ -99,15 +99,15 @@ class PullBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-    	$model = $this->_table;
-    	if ($model->action == 'pull') {
-			$this->newValues = $model->getQueryString(null, 'display');
-			$fieldOrder = $model->fields;
-			foreach ($model->fields as $key => $field) {
-				if (!array_key_exists($key, $this->newValues)) {
-					$model->fields[$key]['visible'] = false;
-				}
-			}
+        $model = $this->_table;
+        if ($model->action == 'pull') {
+            $this->newValues = $model->getQueryString(null, 'display');
+            $fieldOrder = $model->fields;
+            foreach ($model->fields as $key => $field) {
+                if (!array_key_exists($key, $this->newValues)) {
+                    $model->fields[$key]['visible'] = false;
+                }
+            }
             $extra['elements']['view'] = ['name' => 'OpenEmis.ControllerAction/view', 'order' => 5];
             $extra['back'] = $this->_table->url('view', 'QUERY');
         }
@@ -167,12 +167,12 @@ class PullBehavior extends Behavior
                     if ($event->isStopped()) { return $event->result; }
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-					$queryString = $queryStringData->getArrayCopy();
-					if ($extra['patchEntity']) {
-						$entity = $model->patchEntity($entity, $queryString, $patchOptionsArray);
-						$event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
-						if ($event->isStopped()) { return $event->result; }
-					}
+                    $queryString = $queryStringData->getArrayCopy();
+                    if ($extra['patchEntity']) {
+                        $entity = $model->patchEntity($entity, $queryString, $patchOptionsArray);
+                        $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
+                        if ($event->isStopped()) { return $event->result; }
+                    }
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
@@ -211,57 +211,60 @@ class PullBehavior extends Behavior
 
     public function pullAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-    	$this->_table->Alert->info('general.reconfirm');
+        $this->_table->Alert->info('general.reconfirm');
     }
 
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
-    	$model = $this->_table;
-    	$schema = $model->schema();
-    	$dateFields = [];
-    	foreach ($schema->columns() as $column) {
-    		if ($schema->columnType($column) == 'date' || $schema->columnType($column) == 'time' || $schema->columnType($column) == 'datetime') {
-    			$dateFields[] = $column;
-    		}
-    	}
-    	foreach ($queryString as $key => $value) {
-    		if (in_array($key, $dateFields)) {
-    			$queryString[$key] = new Time($value);
-    		}
-    	}
-    	$UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
-    	$userNationalities = $UserNationalitiesTable->find()->where([
-    		$UserNationalitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
-    		$UserNationalitiesTable->aliasField('nationality_id') => $queryString['nationality_id']
-    	])
-    	->first();
+        $model = $this->_table;
+        $schema = $model->schema();
+        $dateFields = [];
+        foreach ($schema->columns() as $column) {
+            if ($schema->columnType($column) == 'date' || $schema->columnType($column) == 'time' || $schema->columnType($column) == 'datetime') {
+                $dateFields[] = $column;
+            }
+        }
+        foreach ($queryString as $key => $value) {
+            if (in_array($key, $dateFields)) {
+                $queryString[$key] = new Time($value);
+            }
+        }
+        $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+        $userNationalities = $UserNationalitiesTable->find()->where([
+            $UserNationalitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
+            $UserNationalitiesTable->aliasField('nationality_id') => $queryString['nationality_id']
+        ])
+        ->first();
 
-    	if (empty($userNationalities) && $queryString['nationality_id']) {
-    		$patchOption['associated'][] = 'Nationalities';
-    		$entity->dirty('nationalities', true);
-    		$queryString['nationalities'] = [
-	    		['nationality_id' => $queryString['nationality_id']]
-	    	];
-    	}
+        if (empty($userNationalities) && $queryString['nationality_id']) {
+            $patchOption['associated'][] = 'Nationalities';
+            $entity->dirty('nationalities', true);
+            $queryString['nationalities'] = [
+                [
+                    'nationality_id' => $queryString['nationality_id'],
+                    'preferred' => 1
+                ]
+            ];
+        }
 
-    	$UserIdentitiesTable = TableRegistry::get('User.Identities');
-    	$userIdentity = $UserIdentitiesTable->find()->where([
-    		$UserIdentitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
-    		$UserIdentitiesTable->aliasField('identity_type_id') => $queryString['identity_type_id'],
-    		$UserIdentitiesTable->aliasField('number') => $queryString['identity_number']
-    	])
-    	->first();
-    	if (empty($userIdentity) && $queryString['identity_type_id'] && $queryString['identity_number']) {
-    		$patchOption['associated'][] = 'Identities';
-    		$entity->dirty('identities', true);
-    		$patchOption['associated'][] = 'Identities';
-    		$queryString['identities'] = [
-	    		[
-	    			'identity_type_id' => $queryString['identity_type_id'],
-	    			'number' => $queryString['identity_number']
-	    		]
-	    	];
-    	}
+        $UserIdentitiesTable = TableRegistry::get('User.Identities');
+        $userIdentity = $UserIdentitiesTable->find()->where([
+            $UserIdentitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
+            $UserIdentitiesTable->aliasField('identity_type_id') => $queryString['identity_type_id'],
+            $UserIdentitiesTable->aliasField('number') => $queryString['identity_number']
+        ])
+        ->first();
+        if (empty($userIdentity) && $queryString['identity_type_id'] && $queryString['identity_number']) {
+            $patchOption['associated'][] = 'Identities';
+            $entity->dirty('identities', true);
+            $patchOption['associated'][] = 'Identities';
+            $queryString['identities'] = [
+                [
+                    'identity_type_id' => $queryString['identity_type_id'],
+                    'number' => $queryString['identity_number']
+                ]
+            ];
+        }
         if (isset($queryString['identity_number'])) {
             unset($queryString['identity_number']);
         }
@@ -303,170 +306,170 @@ class PullBehavior extends Behavior
         $externalReference = $entity->getOriginal('external_reference');
 
         if (!empty($externalReference)) {
-        	if ($this->type != 'None') {
-	            $http = new Client();
+            if ($this->type != 'None') {
+                $http = new Client();
                 $clientId = $this->attributes['client_id'];
                 $scope = $this->attributes['scope'];
                 $tokenUri = $this->attributes['token_uri'];
                 $privateKey = $this->attributes['private_key'];
-	            $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
-	            $data = [
-	                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-	                'assertion' => $credentialToken
-	            ];
+                $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+                $data = [
+                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                    'assertion' => $credentialToken
+                ];
 
-	            try {
-	                // Getting access token
-	                $response = $http->post($this->authEndpoint, $data);
-	                if ($response->statusCode() != '200') {
-	                    throw new NotFoundException('Not a successful response');
-	                }
-	                $body = json_decode($response->body(), true);
-	                if (!is_array($body) && !isset($body['access_token']) && !isset($body['token_type'])) {
-	                    throw new NotFoundException('Response body is in wrong format');
-	                }
+                try {
+                    // Getting access token
+                    $response = $http->post($this->authEndpoint, $data);
+                    if ($response->statusCode() != '200') {
+                        throw new NotFoundException('Not a successful response');
+                    }
+                    $body = json_decode($response->body(), true);
+                    if (!is_array($body) && !isset($body['access_token']) && !isset($body['token_type'])) {
+                        throw new NotFoundException('Response body is in wrong format');
+                    }
 
-	                $placeHolder = '{external_reference}';
-	                $url = str_replace($placeHolder, $externalReference, $this->userEndpoint);
+                    $placeHolder = '{external_reference}';
+                    $url = str_replace($placeHolder, $externalReference, $this->userEndpoint);
 
-	                // Getting data
-	                // Getting access token
-	                $http = new Client([
-	                    'headers' => ['Authorization' => $body['token_type'].' '.$body['access_token']]
-	                ]);
-	                $response = $http->get($url);
-	                if ($response->statusCode() != '200') {
-	                    throw new NotFoundException('Not a successful response');
-	                }
-	                $body = json_decode($response->body(), true);
-	                if (!is_array($body) && !isset($body['data'])) {
-	                    throw new NotFoundException('Response body is in wrong format');
-	                }
+                    // Getting data
+                    // Getting access token
+                    $http = new Client([
+                        'headers' => ['Authorization' => $body['token_type'].' '.$body['access_token']]
+                    ]);
+                    $response = $http->get($url);
+                    if ($response->statusCode() != '200') {
+                        throw new NotFoundException('Not a successful response');
+                    }
+                    $body = json_decode($response->body(), true);
+                    if (!is_array($body) && !isset($body['data'])) {
+                        throw new NotFoundException('Response body is in wrong format');
+                    }
 
-	                $fieldOrder = array_keys($this->_table->fields);
-	                $this->newValues['first_name'] = $this->setChanges($entity->first_name, $this->getValue($body['data'], $this->firstNameMapping));
-	                $this->newValues['middle_name'] = $this->setChanges($entity->middle_name, $this->getValue($body['data'], $this->middleNameMapping));
-	                $this->newValues['third_name'] = $this->setChanges($entity->third_name, $this->getValue($body['data'], $this->thirdNameMapping));
-	                $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping));
-	                $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping));
-	                $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping));
+                    $fieldOrder = array_keys($this->_table->fields);
+                    $this->newValues['first_name'] = $this->setChanges($entity->first_name, $this->getValue($body['data'], $this->firstNameMapping));
+                    $this->newValues['middle_name'] = $this->setChanges($entity->middle_name, $this->getValue($body['data'], $this->middleNameMapping));
+                    $this->newValues['third_name'] = $this->setChanges($entity->third_name, $this->getValue($body['data'], $this->thirdNameMapping));
+                    $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping));
+                    $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping));
+                    $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping));
                     $this->newValues['address'] = $this->setChanges($entity->address, $this->getValue($body['data'], $this->addressMapping));
                     $this->newValues['postal_code'] = $this->setChanges($entity->postal_code, $this->getValue($body['data'], $this->postalMapping));
-	                $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
-	                $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
-	                $nationalityArr = [
-	                    'id' => null,
-	                    'name' => ''
-	                ];
-	                if ($nationalityName) {
-	                    $nationality = $NationalitiesTable
-	                        ->find()
-	                        ->where([$NationalitiesTable->aliasField('name') => $nationalityName])
-	                        ->first();
-	                    if (empty($nationality)) {
-	                        $nationality = $NationalitiesTable->newEntity([
-	                            'name' => $nationalityName,
-	                            'visible' => 1,
-	                            'editable' => 1,
-	                            'default' => 0
-	                        ]);
-	                        $nationality = $NationalitiesTable->save($nationality);
-	                    }
+                    $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
+                    $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
+                    $nationalityArr = [
+                        'id' => null,
+                        'name' => ''
+                    ];
+                    if ($nationalityName) {
+                        $nationality = $NationalitiesTable
+                            ->find()
+                            ->where([$NationalitiesTable->aliasField('name') => $nationalityName])
+                            ->first();
+                        if (empty($nationality)) {
+                            $nationality = $NationalitiesTable->newEntity([
+                                'name' => $nationalityName,
+                                'visible' => 1,
+                                'editable' => 1,
+                                'default' => 0
+                            ]);
+                            $nationality = $NationalitiesTable->save($nationality);
+                        }
 
-	                    $nationalityArr['id'] = $nationality->id;
-	                    $nationalityArr['name'] = $nationality->name;
-	                }
-	                $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr);
+                        $nationalityArr['id'] = $nationality->id;
+                        $nationalityArr['name'] = $nationality->name;
+                    }
+                    $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr);
 
-	                $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
-	                $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
-	                $identityTypeArr = [
-	                    'id' => null,
-	                    'name' => ''
-	                ];
-	                if ($identityTypeName) {
-	                    $identityType = $IdentityTypesTable
-	                        ->find()
-	                        ->where([$IdentityTypesTable->aliasField('name') => $identityTypeName])
-	                        ->first();
-	                    if (empty($identityType)) {
-	                        $identityType = $IdentityTypesTable->newEntity([
-	                            'name' => $identityTypeName,
-	                            'visible' => 1,
-	                            'editable' => 1,
-	                            'default' => 0
-	                        ]);
-	                        $identityType = $IdentityTypesTable->save($identityType);
-	                    }
-	                    $identityTypeArr['id'] = $identityType->id;
-	                    $identityTypeArr['name'] = $identityType->name;
-	                }
-	                $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr);
+                    $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
+                    $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
+                    $identityTypeArr = [
+                        'id' => null,
+                        'name' => ''
+                    ];
+                    if ($identityTypeName) {
+                        $identityType = $IdentityTypesTable
+                            ->find()
+                            ->where([$IdentityTypesTable->aliasField('name') => $identityTypeName])
+                            ->first();
+                        if (empty($identityType)) {
+                            $identityType = $IdentityTypesTable->newEntity([
+                                'name' => $identityTypeName,
+                                'visible' => 1,
+                                'editable' => 1,
+                                'default' => 0
+                            ]);
+                            $identityType = $IdentityTypesTable->save($identityType);
+                        }
+                        $identityTypeArr['id'] = $identityType->id;
+                        $identityTypeArr['name'] = $identityType->name;
+                    }
+                    $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr);
 
-	                $genders = TableRegistry::get('User.Genders')->find()->select(['id', 'name'])->hydrate(false)->toArray();
-	                $genderName = __(trim($this->getValue($body['data'], $this->genderMapping)));
-	                $genderArr = current($genders);
-	                foreach ($genders as $key => $value) {
-	                	if ($genderName == __($value['name'])) {
-	                		$genderArr = $genders[$key];
-	                		break;
-	                	}
-	                }
-	                $this->newValues['gender_id'] = $this->setChanges($entity->gender, $genderArr);
+                    $genders = TableRegistry::get('User.Genders')->find()->select(['id', 'name'])->hydrate(false)->toArray();
+                    $genderName = __(trim($this->getValue($body['data'], $this->genderMapping)));
+                    $genderArr = current($genders);
+                    foreach ($genders as $key => $value) {
+                        if ($genderName == __($value['name'])) {
+                            $genderArr = $genders[$key];
+                            break;
+                        }
+                    }
+                    $this->newValues['gender_id'] = $this->setChanges($entity->gender, $genderArr);
                     if ($this->changes) {
-    	                $toolbarButton = [
-    	                    'type' => 'button',
-    	                    'label' => '<i class="fa fa-refresh"></i>',
-    	                    'attr' => [
-    	                        'class' => 'btn btn-xs btn-default',
-    	                        'data-toggle' => 'tooltip',
-    	                        'data-placement' => 'bottom',
-    	                        'escape' => false,
-    	                        'title' => __('Synchronisation')
-    	                    ],
-    	                    'url' => [
-    	                        'plugin' => $this->_table->controller->plugin,
-    	                        'controller' => $this->_table->controller->name,
-    	                        'action' => $this->_table->alias(),
-    	                        '0' => 'pull',
-    	                        '1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
-    	                    ]
-    	                ];
+                        $toolbarButton = [
+                            'type' => 'button',
+                            'label' => '<i class="fa fa-refresh"></i>',
+                            'attr' => [
+                                'class' => 'btn btn-xs btn-default',
+                                'data-toggle' => 'tooltip',
+                                'data-placement' => 'bottom',
+                                'escape' => false,
+                                'title' => __('Synchronisation')
+                            ],
+                            'url' => [
+                                'plugin' => $this->_table->controller->plugin,
+                                'controller' => $this->_table->controller->name,
+                                'action' => $this->_table->alias(),
+                                '0' => 'pull',
+                                '1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
+                            ]
+                        ];
 
-    	                $externalDataValue = [
-    	                	'first_name' => $this->getValue($body['data'], $this->firstNameMapping),
-    	                	'middle_name' => $this->getValue($body['data'], $this->middleNameMapping),
-    	                	'third_name' => $this->getValue($body['data'], $this->thirdNameMapping),
-    	                	'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
-    	                	'gender_id' => $genderArr['id'],
-    	                	'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
+                        $externalDataValue = [
+                            'first_name' => $this->getValue($body['data'], $this->firstNameMapping),
+                            'middle_name' => $this->getValue($body['data'], $this->middleNameMapping),
+                            'third_name' => $this->getValue($body['data'], $this->thirdNameMapping),
+                            'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
+                            'gender_id' => $genderArr['id'],
+                            'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
                             'address' => $this->getValue($body['data'], $this->addressMapping),
                             'postal_code' => $this->getValue($body['data'], $this->postalMapping),
-    	                	'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
-    	                	'identity_type_id' => $identityTypeArr['id'],
-    	                	'nationality_id' => $nationalityArr['id']
-    	                ];
+                            'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
+                            'identity_type_id' => $identityTypeArr['id'],
+                            'nationality_id' => $nationalityArr['id']
+                        ];
 
-    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue);
-    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
+                        $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue);
+                        $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
                         $extra['toolbarButtons']['synchronise'] = $toolbarButton;
                     }
 
 
-	                $this->_table->field('first_name');
-	                $this->_table->field('middle_name');
-	                $this->_table->field('third_name');
-	                $this->_table->field('last_name');
-	                $this->_table->field('identity_number');
-	                $this->_table->field('date_of_birth');
-	                $this->_table->field('nationality_id');
-	                $this->_table->setFieldOrder($fieldOrder);
-	            } catch (NotFoundException $e) {
-	                $this->_table->Alert->error('general.failConnectToExternalSource');
-	            } catch (Exception $e) {
-	                $this->_table->Alert->error('general.failConnectToExternalSource');
-	            }
-	        }
+                    $this->_table->field('first_name');
+                    $this->_table->field('middle_name');
+                    $this->_table->field('third_name');
+                    $this->_table->field('last_name');
+                    $this->_table->field('identity_number');
+                    $this->_table->field('date_of_birth');
+                    $this->_table->field('nationality_id');
+                    $this->_table->setFieldOrder($fieldOrder);
+                } catch (NotFoundException $e) {
+                    $this->_table->Alert->error('general.failConnectToExternalSource');
+                } catch (Exception $e) {
+                    $this->_table->Alert->error('general.failConnectToExternalSource');
+                }
+            }
         }
     }
 
@@ -528,7 +531,7 @@ class PullBehavior extends Behavior
 
     public function onGetGenderId(Event $events, Entity $entity)
     {
-    	if (isset($this->newValues['gender_id'])) {
+        if (isset($this->newValues['gender_id'])) {
             return $this->newValues['gender_id'];
         }
     }
