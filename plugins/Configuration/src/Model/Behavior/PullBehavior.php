@@ -99,15 +99,15 @@ class PullBehavior extends Behavior
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-    	$model = $this->_table;
-    	if ($model->action == 'pull') {
-			$this->newValues = $model->getQueryString(null, 'display');
-			$fieldOrder = $model->fields;
-			foreach ($model->fields as $key => $field) {
-				if (!array_key_exists($key, $this->newValues)) {
-					$model->fields[$key]['visible'] = false;
-				}
-			}
+        $model = $this->_table;
+        if ($model->action == 'pull') {
+            $this->newValues = $model->getQueryString(null, 'display');
+            $fieldOrder = $model->fields;
+            foreach ($model->fields as $key => $field) {
+                if (!array_key_exists($key, $this->newValues)) {
+                    $model->fields[$key]['visible'] = false;
+                }
+            }
             $extra['elements']['view'] = ['name' => 'OpenEmis.ControllerAction/view', 'order' => 5];
             $url = $this->_table->url('view', 'QUERY');
             $url[] = $model->paramsPass(0);
@@ -169,12 +169,12 @@ class PullBehavior extends Behavior
                     if ($event->isStopped()) { return $event->result; }
 
                     $patchOptionsArray = $patchOptions->getArrayCopy();
-					$queryString = $queryStringData->getArrayCopy();
-					if ($extra['patchEntity']) {
-						$entity = $model->patchEntity($entity, $queryString, $patchOptionsArray);
-						$event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
-						if ($event->isStopped()) { return $event->result; }
-					}
+                    $queryString = $queryStringData->getArrayCopy();
+                    if ($extra['patchEntity']) {
+                        $entity = $model->patchEntity($entity, $queryString, $patchOptionsArray);
+                        $event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
+                        if ($event->isStopped()) { return $event->result; }
+                    }
                     $process = function ($model, $entity) {
                         return $model->save($entity);
                     };
@@ -213,7 +213,7 @@ class PullBehavior extends Behavior
 
     public function pullAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-    	$this->_table->Alert->info('general.reconfirm');
+        $this->_table->Alert->info('general.reconfirm');
     }
 
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
@@ -275,25 +275,35 @@ class PullBehavior extends Behavior
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $connection = ConnectionManager::get('default');
-        $connection->execute(
-            'UPDATE `security_users`
-            INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
-            LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
-            SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
-            WHERE `security_users`.`id` = ?',
-            [$entity->id],
-            ['integer']
-        );
-    }
-
     public function pullAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
         $model = $this->_table;
         $errors = $entity->errors();
         if (empty($errors)) {
             $model->Alert->success('general.edit.success');
+
+            //to update nationality from external source as preferred
+            $nationalityId = $entity->nationality_id;
+
+            if (!empty($nationalityId)) {
+                $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+                //unset all existing record
+                $UserNationalitiesTable->updateAll(
+                    ['preferred' => 0], 
+                    ['security_user_id' => $entity->id]
+                );
+
+                //set as preferred
+                $userNationality = $UserNationalitiesTable
+                                    ->find()
+                                    ->where([
+                                        'nationality_id' => $entity->nationality_id,
+                                        'security_user_id' => $entity->id
+                                    ])
+                                    ->first();
+
+                $userNationality->preferred = 1;
+                $UserNationalitiesTable->save($userNationality); //save() to trigger after save
+            }
         } else {
             $model->Alert->error('general.edit.failed');
             $errors = Hash::flatten($errors);
@@ -308,12 +318,13 @@ class PullBehavior extends Behavior
         $externalReference = $entity->getOriginal('external_reference');
 
         if (!empty($externalReference)) {
-        	if ($this->type != 'None') {
-	            $http = new Client();
+            if ($this->type != 'None') {
+                $http = new Client();
                 $clientId = $this->attributes['client_id'];
                 $scope = $this->attributes['scope'];
                 $tokenUri = $this->attributes['token_uri'];
                 $privateKey = $this->attributes['private_key'];
+
 	            $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
 	            $data = [
 	                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
@@ -453,24 +464,25 @@ class PullBehavior extends Behavior
 
     	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue->getArrayCopy(), 'data');
     	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
+
                         $extra['toolbarButtons']['synchronise'] = $toolbarButton;
                     }
 
 
-	                $this->_table->field('first_name');
-	                $this->_table->field('middle_name');
-	                $this->_table->field('third_name');
-	                $this->_table->field('last_name');
-	                $this->_table->field('identity_number');
-	                $this->_table->field('date_of_birth');
-	                $this->_table->field('nationality_id');
-	                $this->_table->setFieldOrder($fieldOrder);
-	            } catch (NotFoundException $e) {
-	                $this->_table->Alert->error('general.failConnectToExternalSource');
-	            } catch (Exception $e) {
-	                $this->_table->Alert->error('general.failConnectToExternalSource');
-	            }
-	        }
+                    $this->_table->field('first_name');
+                    $this->_table->field('middle_name');
+                    $this->_table->field('third_name');
+                    $this->_table->field('last_name');
+                    $this->_table->field('identity_number');
+                    $this->_table->field('date_of_birth');
+                    $this->_table->field('nationality_id');
+                    $this->_table->setFieldOrder($fieldOrder);
+                } catch (NotFoundException $e) {
+                    $this->_table->Alert->error('general.failConnectToExternalSource');
+                } catch (Exception $e) {
+                    $this->_table->Alert->error('general.failConnectToExternalSource');
+                }
+            }
         }
     }
 
@@ -539,7 +551,7 @@ class PullBehavior extends Behavior
 
     public function onGetGenderId(Event $events, Entity $entity)
     {
-    	if (isset($this->newValues['gender_id'])) {
+        if (isset($this->newValues['gender_id'])) {
             return $this->newValues['gender_id'];
         }
     }
