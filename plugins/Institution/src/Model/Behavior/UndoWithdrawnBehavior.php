@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Institution\Model\Behavior\UndoBehavior;
 
-class UndoWithdrawBehavior extends UndoBehavior {
+class UndoWithdrawnBehavior extends UndoBehavior {
     public function initialize(array $config) {
         parent::initialize($config);
     }
@@ -19,13 +19,13 @@ class UndoWithdrawBehavior extends UndoBehavior {
         return $events;
     }
 
-    public function onGetWithdrawStudents(Event $event, $data) {
+    public function onGetWithdrawnStudents(Event $event, $data) {
         //this function is to re-check if the student try to undo not the latest status.
         //if yes, then the checkbox will be replaced by tooltip (not able to revert/undo)
         return $this->getStudents($data);
     }
 
-    public function processSaveWithdrawStudents(Event $event, Entity $entity, ArrayObject $data)
+    public function processSaveWithdrawnStudents(Event $event, Entity $entity, ArrayObject $data)
     {
         $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
         $studentIds = [];
