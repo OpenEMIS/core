@@ -109,7 +109,9 @@ class PullBehavior extends Behavior
                 }
             }
             $extra['elements']['view'] = ['name' => 'OpenEmis.ControllerAction/view', 'order' => 5];
-            $extra['back'] = $this->_table->url('view', 'QUERY');
+            $url = $this->_table->url('view', 'QUERY');
+            $url[] = $model->paramsPass(0);
+            $extra['back'] = $url;
         }
     }
 
@@ -132,10 +134,10 @@ class PullBehavior extends Behavior
         if (empty($ids)) {
             if ($model->Session->check($sessionKey)) {
                 $ids = $model->Session->read($sessionKey);
-            } else if (!empty($model->ControllerAction->getQueryString())) {
+            } else if (!empty($model->getQueryString(null, 'data'))) {
                 // Query string logic not implemented yet, will require to check if the query string contains the primary key
                 $primaryKey = $model->primaryKey();
-                $ids = $model->ControllerAction->getQueryString($primaryKey);
+                $ids = $model->getQueryString($primaryKey, 'data');
             }
         }
 
@@ -159,7 +161,7 @@ class PullBehavior extends Behavior
             if ($request->is(['post', 'put'])) {
                 $submit = isset($request->data['submit']) ? $request->data['submit'] : 'save';
                 $patchOptions = new ArrayObject([]);
-                $queryStringData = new ArrayObject($model->getQueryString());
+                $queryStringData = new ArrayObject($model->getQueryString(null, 'data'));
                 $params = [$entity, $queryStringData, $patchOptions, $extra];
 
                 if ($submit == 'save') {
@@ -273,25 +275,35 @@ class PullBehavior extends Behavior
         }
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $connection = ConnectionManager::get('default');
-        $connection->execute(
-            'UPDATE `security_users`
-            INNER JOIN `nationalities` ON `nationalities`.`id` = `security_users`.`nationality_id`
-            LEFT JOIN `user_identities` ON `user_identities`.`identity_type_id` = `nationalities`.`identity_type_id` AND `user_identities`.`security_user_id` = `security_users`.`id`
-            SET `security_users`.`identity_type_id` = `user_identities`.`identity_type_id`, `security_users`.`identity_number` = `user_identities`.`number`
-            WHERE `security_users`.`id` = ?',
-            [$entity->id],
-            ['integer']
-        );
-    }
-
     public function pullAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
         $model = $this->_table;
         $errors = $entity->errors();
         if (empty($errors)) {
             $model->Alert->success('general.edit.success');
+
+            //to update nationality from external source as preferred
+            $nationalityId = $entity->nationality_id;
+
+            if (!empty($nationalityId)) {
+                $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+                //unset all existing record
+                $UserNationalitiesTable->updateAll(
+                    ['preferred' => 0], 
+                    ['security_user_id' => $entity->id]
+                );
+
+                //set as preferred
+                $userNationality = $UserNationalitiesTable
+                                    ->find()
+                                    ->where([
+                                        'nationality_id' => $entity->nationality_id,
+                                        'security_user_id' => $entity->id
+                                    ])
+                                    ->first();
+
+                $userNationality->preferred = 1;
+                $UserNationalitiesTable->save($userNationality); //save() to trigger after save
+            }
         } else {
             $model->Alert->error('general.edit.failed');
             $errors = Hash::flatten($errors);
@@ -312,146 +324,147 @@ class PullBehavior extends Behavior
                 $scope = $this->attributes['scope'];
                 $tokenUri = $this->attributes['token_uri'];
                 $privateKey = $this->attributes['private_key'];
-                $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
-                $data = [
-                    'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-                    'assertion' => $credentialToken
-                ];
 
-                try {
-                    // Getting access token
-                    $response = $http->post($this->authEndpoint, $data);
-                    if ($response->statusCode() != '200') {
-                        throw new NotFoundException('Not a successful response');
-                    }
-                    $body = json_decode($response->body(), true);
-                    if (!is_array($body) && !isset($body['access_token']) && !isset($body['token_type'])) {
-                        throw new NotFoundException('Response body is in wrong format');
-                    }
+	            $credentialToken = TableRegistry::get('Configuration.ExternalDataSourceAttributes')->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
+	            $data = [
+	                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+	                'assertion' => $credentialToken
+	            ];
 
-                    $placeHolder = '{external_reference}';
-                    $url = str_replace($placeHolder, $externalReference, $this->userEndpoint);
+	            try {
+	                // Getting access token
+	                $response = $http->post($this->authEndpoint, $data);
+	                if ($response->statusCode() != '200') {
+	                    throw new NotFoundException('Not a successful response');
+	                }
+	                $body = json_decode($response->body(), true);
+	                if (!is_array($body) && !isset($body['access_token']) && !isset($body['token_type'])) {
+	                    throw new NotFoundException('Response body is in wrong format');
+	                }
 
-                    // Getting data
-                    // Getting access token
-                    $http = new Client([
-                        'headers' => ['Authorization' => $body['token_type'].' '.$body['access_token']]
-                    ]);
-                    $response = $http->get($url);
-                    if ($response->statusCode() != '200') {
-                        throw new NotFoundException('Not a successful response');
-                    }
-                    $body = json_decode($response->body(), true);
-                    if (!is_array($body) && !isset($body['data'])) {
-                        throw new NotFoundException('Response body is in wrong format');
-                    }
+	                $placeHolder = '{external_reference}';
+	                $url = str_replace($placeHolder, $externalReference, $this->userEndpoint);
 
-                    $fieldOrder = array_keys($this->_table->fields);
-                    $this->newValues['first_name'] = $this->setChanges($entity->first_name, $this->getValue($body['data'], $this->firstNameMapping));
-                    $this->newValues['middle_name'] = $this->setChanges($entity->middle_name, $this->getValue($body['data'], $this->middleNameMapping));
-                    $this->newValues['third_name'] = $this->setChanges($entity->third_name, $this->getValue($body['data'], $this->thirdNameMapping));
-                    $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping));
-                    $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping));
-                    $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping));
-                    $this->newValues['address'] = $this->setChanges($entity->address, $this->getValue($body['data'], $this->addressMapping));
-                    $this->newValues['postal_code'] = $this->setChanges($entity->postal_code, $this->getValue($body['data'], $this->postalMapping));
-                    $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
-                    $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
-                    $nationalityArr = [
-                        'id' => null,
-                        'name' => ''
-                    ];
-                    if ($nationalityName) {
-                        $nationality = $NationalitiesTable
-                            ->find()
-                            ->where([$NationalitiesTable->aliasField('name') => $nationalityName])
-                            ->first();
-                        if (empty($nationality)) {
-                            $nationality = $NationalitiesTable->newEntity([
-                                'name' => $nationalityName,
-                                'visible' => 1,
-                                'editable' => 1,
-                                'default' => 0
-                            ]);
-                            $nationality = $NationalitiesTable->save($nationality);
-                        }
+	                // Getting data
+	                // Getting access token
+	                $http = new Client([
+	                    'headers' => ['Authorization' => $body['token_type'].' '.$body['access_token']]
+	                ]);
+	                $response = $http->get($url);
+	                if ($response->statusCode() != '200') {
+	                    throw new NotFoundException('Not a successful response');
+	                }
+	                $body = json_decode($response->body(), true);
+	                if (!is_array($body) && !isset($body['data'])) {
+	                    throw new NotFoundException('Response body is in wrong format');
+	                }
 
-                        $nationalityArr['id'] = $nationality->id;
-                        $nationalityArr['name'] = $nationality->name;
-                    }
-                    $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr);
+	                $fieldOrder = array_keys($this->_table->fields);
+	                $this->newValues['first_name'] = $this->setChanges($entity->first_name, $this->getValue($body['data'], $this->firstNameMapping), $this->firstNameMapping);
+	                $this->newValues['middle_name'] = $this->setChanges($entity->middle_name, $this->getValue($body['data'], $this->middleNameMapping), $this->middleNameMapping);
+	                $this->newValues['third_name'] = $this->setChanges($entity->third_name, $this->getValue($body['data'], $this->thirdNameMapping), $this->thirdNameMapping);
+	                $this->newValues['last_name'] = $this->setChanges($entity->last_name, $this->getValue($body['data'], $this->lastNameMapping), $this->lastNameMapping);
+	                $this->newValues['identity_number'] = $this->setChanges($entity->identity_number, $this->getValue($body['data'], $this->identityNumberMapping), $this->identityNumberMapping);
+	                $this->newValues['date_of_birth'] = $this->setDateChanges($entity->date_of_birth, $this->getValue($body['data'], $this->dateOfBirthMapping), $this->dateOfBirthMapping);
+                    $this->newValues['address'] = $this->setChanges($entity->address, $this->getValue($body['data'], $this->addressMapping), $this->addressMapping);
+                    $this->newValues['postal_code'] = $this->setChanges($entity->postal_code, $this->getValue($body['data'], $this->postalMapping), $this->postalMapping);
+	                $NationalitiesTable = TableRegistry::get('FieldOption.Nationalities');
+	                $nationalityName = trim($this->getValue($body['data'], $this->nationalityMapping));
+	                $nationalityArr = [
+	                    'id' => null,
+	                    'name' => ''
+	                ];
+	                if ($nationalityName) {
+	                    $nationality = $NationalitiesTable
+	                        ->find()
+	                        ->where([$NationalitiesTable->aliasField('name') => $nationalityName])
+	                        ->first();
+	                    if (empty($nationality)) {
+	                        $nationality = $NationalitiesTable->newEntity([
+	                            'name' => $nationalityName,
+	                            'visible' => 1,
+	                            'editable' => 1,
+	                            'default' => 0
+	                        ]);
+	                        $nationality = $NationalitiesTable->save($nationality);
+	                    }
 
-                    $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
-                    $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
-                    $identityTypeArr = [
-                        'id' => null,
-                        'name' => ''
-                    ];
-                    if ($identityTypeName) {
-                        $identityType = $IdentityTypesTable
-                            ->find()
-                            ->where([$IdentityTypesTable->aliasField('name') => $identityTypeName])
-                            ->first();
-                        if (empty($identityType)) {
-                            $identityType = $IdentityTypesTable->newEntity([
-                                'name' => $identityTypeName,
-                                'visible' => 1,
-                                'editable' => 1,
-                                'default' => 0
-                            ]);
-                            $identityType = $IdentityTypesTable->save($identityType);
-                        }
-                        $identityTypeArr['id'] = $identityType->id;
-                        $identityTypeArr['name'] = $identityType->name;
-                    }
-                    $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr);
+	                    $nationalityArr['id'] = $nationality->id;
+	                    $nationalityArr['name'] = $nationality->name;
+	                }
+	                $this->newValues['nationality_id'] = $this->setChanges($entity->main_nationality, $nationalityArr, $this->nationalityMapping);
 
-                    $genders = TableRegistry::get('User.Genders')->find()->select(['id', 'name'])->hydrate(false)->toArray();
-                    $genderName = __(trim($this->getValue($body['data'], $this->genderMapping)));
-                    $genderArr = current($genders);
-                    foreach ($genders as $key => $value) {
-                        if ($genderName == __($value['name'])) {
-                            $genderArr = $genders[$key];
-                            break;
-                        }
-                    }
-                    $this->newValues['gender_id'] = $this->setChanges($entity->gender, $genderArr);
+	                $IdentityTypesTable = TableRegistry::get('FieldOption.IdentityTypes');
+	                $identityTypeName = trim($this->getValue($body['data'], $this->identityTypeMapping));
+	                $identityTypeArr = [
+	                    'id' => null,
+	                    'name' => ''
+	                ];
+	                if ($identityTypeName) {
+	                    $identityType = $IdentityTypesTable
+	                        ->find()
+	                        ->where([$IdentityTypesTable->aliasField('name') => $identityTypeName])
+	                        ->first();
+	                    if (empty($identityType)) {
+	                        $identityType = $IdentityTypesTable->newEntity([
+	                            'name' => $identityTypeName,
+	                            'visible' => 1,
+	                            'editable' => 1,
+	                            'default' => 0
+	                        ]);
+	                        $identityType = $IdentityTypesTable->save($identityType);
+	                    }
+	                    $identityTypeArr['id'] = $identityType->id;
+	                    $identityTypeArr['name'] = $identityType->name;
+	                }
+	                $this->newValues['identity_type_id'] = $this->setChanges($entity->main_identity_type, $identityTypeArr, $this->identityTypeMapping);
+
+	                $genders = TableRegistry::get('User.Genders')->find()->select(['id', 'name'])->hydrate(false)->toArray();
+	                $genderName = __(trim($this->getValue($body['data'], $this->genderMapping)));
+	                $genderArr = current($genders);
+	                foreach ($genders as $key => $value) {
+	                	if ($genderName == __($value['name'])) {
+	                		$genderArr = $genders[$key];
+	                		break;
+	                	}
+	                }
+	                $this->newValues['gender_id'] = $this->setChanges($entity->gender, $genderArr, $this->genderMapping);
                     if ($this->changes) {
-                        $toolbarButton = [
-                            'type' => 'button',
-                            'label' => '<i class="fa fa-refresh"></i>',
-                            'attr' => [
-                                'class' => 'btn btn-xs btn-default',
-                                'data-toggle' => 'tooltip',
-                                'data-placement' => 'bottom',
-                                'escape' => false,
-                                'title' => __('Synchronisation')
-                            ],
-                            'url' => [
-                                'plugin' => $this->_table->controller->plugin,
-                                'controller' => $this->_table->controller->name,
-                                'action' => $this->_table->alias(),
-                                '0' => 'pull',
-                                '1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
-                            ]
-                        ];
+    	                $toolbarButton = [
+    	                    'type' => 'button',
+    	                    'label' => '<i class="fa fa-refresh"></i>',
+    	                    'attr' => [
+    	                        'class' => 'btn btn-xs btn-default',
+    	                        'data-toggle' => 'tooltip',
+    	                        'data-placement' => 'bottom',
+    	                        'escape' => false,
+    	                        'title' => __('Synchronisation')
+    	                    ],
+    	                    'url' => [
+    	                        'plugin' => $this->_table->controller->plugin,
+    	                        'controller' => $this->_table->controller->name,
+    	                        'action' => $this->_table->alias(),
+    	                        '0' => 'pull',
+    	                        '1' => $this->_table->paramsEncode(['id' => $entity->getOriginal('id')])
+    	                    ]
+    	                ];
 
-                        $externalDataValue = [
-                            'first_name' => $this->getValue($body['data'], $this->firstNameMapping),
-                            'middle_name' => $this->getValue($body['data'], $this->middleNameMapping),
-                            'third_name' => $this->getValue($body['data'], $this->thirdNameMapping),
-                            'last_name' => $this->getValue($body['data'], $this->lastNameMapping),
-                            'gender_id' => $genderArr['id'],
-                            'date_of_birth' => new Time($this->getValue($body['data'], $this->dateOfBirthMapping)),
-                            'address' => $this->getValue($body['data'], $this->addressMapping),
-                            'postal_code' => $this->getValue($body['data'], $this->postalMapping),
-                            'identity_number' => $this->getValue($body['data'], $this->identityNumberMapping),
-                            'identity_type_id' => $identityTypeArr['id'],
-                            'nationality_id' => $nationalityArr['id']
-                        ];
+                        $externalDataValue = new ArrayObject();
+                        $this->setExternalDataValue($externalDataValue, 'first_name', $this->getValue($body['data'], $this->firstNameMapping), $this->firstNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'middle_name', $this->getValue($body['data'], $this->middleNameMapping), $this->middleNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'third_name', $this->getValue($body['data'], $this->thirdNameMapping), $this->thirdNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'last_name', $this->getValue($body['data'], $this->lastNameMapping), $this->lastNameMapping);
+                        $this->setExternalDataValue($externalDataValue, 'gender_id', $genderArr['id'], $this->genderMapping);
+                        $this->setExternalDataValue($externalDataValue, 'date_of_birth', new Time($this->getValue($body['data'], $this->dateOfBirthMapping)), $this->dateOfBirthMapping);
+                        $this->setExternalDataValue($externalDataValue, 'address', $this->getValue($body['data'], $this->addressMapping), $this->addressMapping);
+                        $this->setExternalDataValue($externalDataValue, 'postal_code', $this->getValue($body['data'], $this->postalMapping), $this->postalMapping);
+                        $this->setExternalDataValue($externalDataValue, 'identity_number', $this->getValue($body['data'], $this->identityNumberMapping), $this->identityNumberMapping);
+                        $this->setExternalDataValue($externalDataValue, 'identity_type_id', $identityTypeArr['id'], $this->identityTypeMapping);
+                        $this->setExternalDataValue($externalDataValue, 'nationality_id', $nationalityArr['id'], $this->nationalityMapping);
 
-                        $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue);
-                        $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
+    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $externalDataValue->getArrayCopy(), 'data');
+    	                $toolbarButton['url'] = $this->_table->setQueryString($toolbarButton['url'], $this->newValues, 'display');
+
                         $extra['toolbarButtons']['synchronise'] = $toolbarButton;
                     }
 
@@ -470,6 +483,13 @@ class PullBehavior extends Behavior
                     $this->_table->Alert->error('general.failConnectToExternalSource');
                 }
             }
+        }
+    }
+
+    private function setExternalDataValue(ArrayObject $externalDataValue, $field, $value, $mapping)
+    {
+        if (!empty($mapping)) {
+            $externalDataValue[$field] = $value;
         }
     }
 
@@ -550,12 +570,14 @@ class PullBehavior extends Behavior
         }
     }
 
-    private function setDateChanges($oldDate, $newDate)
+    private function setDateChanges($oldDate, $newDate, $mapping)
     {
         $oldValue = $this->_table->formatDate(new Time($oldDate));
         $newValue = $this->_table->formatDate(new Time($newDate));
 
-        if ($oldValue != $newValue) {
+        if (empty($mapping)) {
+            return null;
+        } else if ($oldValue != $newValue) {
             $this->changes = true;
             return '<span class="status past">'.$oldValue.'</span> <span class="transition-arrow"></span> <span class="status highlight">'.$newValue.'</span>';
         } else {
@@ -563,9 +585,11 @@ class PullBehavior extends Behavior
         }
     }
 
-    private function setChanges($oldValue, $newValue)
+    private function setChanges($oldValue, $newValue, $mapping)
     {
-        if (is_array($newValue)) {
+        if (empty($mapping)) {
+            return null;
+        } else if (is_array($newValue)) {
             $oldValueId = isset($oldValue['id']) ? $oldValue['id'] : null;
             $oldValueName = isset($oldValue['name']) ? $oldValue['name'] : '';
             if ($oldValueId != $newValue['id']) {
