@@ -225,7 +225,7 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$ids = $this->paramsDecode($modelId);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
 					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
 					$idKey[$model->aliasField('student_id')] = $userId;
 					$exists = $model->exists($idKey);

@@ -254,8 +254,7 @@ class GuardiansTable extends ControllerActionTable {
                 'controller' => $this->controller->name,
                 'action' => $this->editButtonAction(),
                 'edit',
-                $entity->_matchingData['Users']->id,
-                'id' => $entity->id
+                $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])
             ];
         }
 
