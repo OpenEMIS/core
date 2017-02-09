@@ -288,11 +288,11 @@ class DirectoriesController extends AppController {
 	}
 
 
-	public function getUserTabElements($options = []) 
+	public function getUserTabElements($options = [])
     {
         if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
             $id = $this->ControllerAction->getQueryString('security_user_id');
-        } 
+        }
 
         $plugin = $this->plugin;
         $name = $this->name;
@@ -309,14 +309,15 @@ class DirectoriesController extends AppController {
             'Comments' => ['text' => __('Comments')],
             'Attachments' => ['text' => __('Attachments')],
             'SpecialNeeds' => ['text' => __('Special Needs')],
-            'History' => ['text' => __('History')] 
+            'History' => ['text' => __('History')]
         ];
 
         foreach ($tabElements as $key => $value) {
 
             if ($key == $this->name) {
 
-                $tabElements[$key]['url']['action'] = 'view';
+                $tabElements[$key]['url']['action'] = 'Directories';
+                $tabElements[$key]['url'][] = 'view';
                 $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
 
             } else if ($key == 'Accounts') {
@@ -332,15 +333,15 @@ class DirectoriesController extends AppController {
                     $actionURL = 'Nationalities';
                 }
                 $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
-                                                'plugin' => $plugin, 
-                                                'controller' => $name, 
-                                                'action' => $actionURL, 
+                                                'plugin' => $plugin,
+                                                'controller' => $name,
+                                                'action' => $actionURL,
                                                 'index'],
                                                 ['security_user_id' => $id]
                                             );
             }
         }
-        
+
 		return $tabElements;
 	}
 
