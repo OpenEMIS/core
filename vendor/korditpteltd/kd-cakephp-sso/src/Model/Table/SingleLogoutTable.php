@@ -40,9 +40,7 @@ class SingleLogoutTable extends Table
                 if (!empty($url)) {
                     try {
                         // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
-                        $url = rtrim($url, '/');
-                        $url = $url.'/';
-                        $this->putLogin($url, rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), '/'), $sessionId, $username);
+                        $this->putLogin($url, Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), $sessionId, $username);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }
@@ -112,17 +110,8 @@ class SingleLogoutTable extends Table
             $username = $entity->username;
             $sessionId = $entity->session_id;
             $autoLogoutUrl = $entity->autoLogoutUrl;
-            Log::write('debug', 'afterDelete');
-            Log::write('debug', $url);
-            Log::write('debug', $autoLogoutUrl);
             if (in_array($url, $autoLogoutUrl)) {
-                Log::write('debug', 'post logout - updated');
                 // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
-                $url = rtrim($url, '/');
-                $url = $url.'/';
-                Log::write('debug', $url);
-                Log::write('debug', $entity->session_id);
-                Log::write('debug', $username);
                 $this->postLogout($url, $entity->session_id, $username);
             }
         } catch (Exception $e) {
