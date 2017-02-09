@@ -238,7 +238,7 @@ class StudentWithdrawTable extends AppTable {
 			}
 			unset($toolbarButtons['back']['url'][1]);
 		} else if ($action == 'view') {
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST && isset($toolbarButtons['edit'])) {
 				unset($toolbarButtons['edit']);
 			}
 		}
