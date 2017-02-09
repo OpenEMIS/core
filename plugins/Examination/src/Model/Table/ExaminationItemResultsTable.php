@@ -57,12 +57,16 @@ class ExaminationItemResultsTable extends AppTable
                 $this->aliasField('examination_grading_option_id'),
                 $this->aliasField('student_id'),
                 $this->aliasField('examination_id'),
+                $this->aliasField('examination_item_id'),
                 $this->aliasField('education_subject_id'),
                 $this->aliasField('institution_id'),
                 $this->aliasField('academic_period_id'),
                 $this->Examinations->aliasField('code'),
                 $this->Examinations->aliasField('name'),
                 $this->Examinations->aliasField('education_grade_id'),
+                $this->ExaminationItems->aliasField('code'),
+                $this->ExaminationItems->aliasField('name'),
+                $this->ExaminationItems->aliasField('weight'),
                 $this->EducationSubjects->aliasField('code'),
                 $this->EducationSubjects->aliasField('name'),
                 $this->ExaminationGradingOptions->aliasField('code'),
@@ -70,6 +74,7 @@ class ExaminationItemResultsTable extends AppTable
                 $this->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
             ])
             ->innerJoinWith('Examinations')
+            ->innerJoinWith('ExaminationItems')
             ->innerJoinWith('EducationSubjects')
             ->innerJoinWith('ExaminationGradingOptions')
             ->where([
