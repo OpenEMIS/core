@@ -844,7 +844,9 @@ class StudentsTable extends ControllerActionTable
                             $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
                             $WithdrawRequestsTable->aliasField('institution_id') => $institutionId,
                             $WithdrawRequestsTable->aliasField('education_grade_id') => $educationGradeId,
-                            $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId
+                            $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
+                            // Status = 1 is approved withdraw, in case student has a previous withdraw request that was undone
+                            $WithdrawRequestsTable->aliasField('status') => 1,
                         ])
                         ->first();
 
