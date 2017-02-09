@@ -194,13 +194,16 @@ class StudentUserTable extends ControllerActionTable
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$institutionStudentId = $this->request->query('id');
+		$institutionStudentId = $this->getQueryString('institution_student_id');
 
 		// this is required if the student link is clicked from the Institution Classes or Subjects
-		if (empty($institutionStudentId) && !empty($this->paramsPass(0))) {
-			$params = $this->paramsDecode($this->paramsPass(0));
-			$institutionId = isset($params['institution_id']) ? $params['institution_id'] : 0;
-			$studentId = isset($params['id']) ? $params['id'] : 0;
+		if (empty($institutionStudentId)) {
+			$params = [];
+			if ($this->paramsPass(0)) {
+				$params = $this->paramsDecode($this->paramsPass(0));
+			}
+			$institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
+			$studentId = isset($params['id']) ? $params['id'] : $this->Session->read('Institution.StudentUser.primaryKey.id');
 
 			// get the id of the latest student record in the current institution
 			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
@@ -213,7 +216,6 @@ class StudentUserTable extends ControllerActionTable
                 ->extract('id')
                 ->first();
 		}
-
 		$this->Session->write('Institution.Students.id', $institutionStudentId);
 		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
 			$event->stopPropagation();
@@ -308,7 +310,7 @@ class StudentUserTable extends ControllerActionTable
 
 	private function setupTabElements($entity)
 	{
-		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+		$id = !is_null($this->getQueryString('institution_student_id')) ? $this->getQueryString('institution_student_id') : 0;
 
 		$options = [
 			'userRole' => 'Student',
