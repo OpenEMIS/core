@@ -838,7 +838,7 @@ class StudentsTable extends ControllerActionTable
                 case 'WITHDRAWN':
                     $WithdrawRequestsTable = TableRegistry::get('Institution.WithdrawRequests');
 
-                    $WithdrawReason = $WithdrawRequestsTable->find()
+                    $withdrawReason = $WithdrawRequestsTable->find()
                         ->matching('StudentWithdrawReasons')
                         ->where([
                             $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
