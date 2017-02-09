@@ -22,11 +22,8 @@ class SingleLogoutTable extends Table
 
     public function afterLogout($user, array $autoLogoutUrl)
     {
-        Log::write('debug', $user);
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username)) {
-            Log::write('debug', $username);
-            Log::write('debug', $autoLogoutUrl);
             $this->removeLogoutRecord($username, $autoLogoutUrl);
         }
     }
@@ -56,7 +53,6 @@ class SingleLogoutTable extends Table
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
         } catch(\Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
@@ -69,7 +65,6 @@ class SingleLogoutTable extends Table
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
         } catch(\Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
@@ -97,7 +92,6 @@ class SingleLogoutTable extends Table
         $entities = $this->getLogoutRecords($username);
         foreach ($entities as $entity) {
             $entity->autoLogoutUrl = $autoLogoutUrl;
-            Log::write('debug', 'delete record');
             $this->delete($entity);
         }
     }
@@ -115,8 +109,8 @@ class SingleLogoutTable extends Table
                 $this->postLogout($url, $entity->session_id, $username);
             }
         } catch (Exception $e) {
-            Log::write('debug', 'post error');
-            Log::write('debug', $entity);
+            Log::write('error', 'post error');
+            Log::write('error', $entity);
             Log::write('error', $e);
         }
 
