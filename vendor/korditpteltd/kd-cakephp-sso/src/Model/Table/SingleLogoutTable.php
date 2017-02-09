@@ -37,7 +37,8 @@ class SingleLogoutTable extends Table
                 if (!empty($url)) {
                     try {
                         // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
-                        $this->putLogin($url, Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), $sessionId, $username);
+                        $selfUrl = Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true) . '/';
+                        $this->putLogin($url, $selfUrl, $sessionId, $username);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }
