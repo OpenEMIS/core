@@ -9,6 +9,7 @@ use Cake\Core\Configure;
 class OpenEmisComponent extends Component {
 
 	private $controller;
+	private $productName;
 	protected $_defaultConfig = [
 		'theme' => 'auto',
 		'homeUrl' => ['controller' => '/'],
@@ -32,6 +33,7 @@ class OpenEmisComponent extends Component {
 
 	// Is called before the controller's beforeFilter method.
 	public function initialize(array $config) {
+		$this->productName = $config['productName'];
 		$this->controller = $this->_registry->getController();
 	}
 
@@ -45,7 +47,7 @@ class OpenEmisComponent extends Component {
 		$controller->set('homeUrl', $this->config('homeUrl'));
 		$controller->set('headerMenu', $this->getHeaderMenu());
 		$controller->set('SystemVersion', $this->getCodeVersion());
-		$controller->set('_productName', $controller->_productName);
+		$controller->set('_productName', $this->productName);
 
 		//Retriving the panel width size from session
 		if ($session->check('System.layout')) {
@@ -78,7 +80,7 @@ class OpenEmisComponent extends Component {
 				$product = $session->read('theme.product');
 			}
 			if (!empty($theme)) {
-				$controller->_productName .= ' ' . Inflector::camelize($product);
+				$this->productName .= ' ' . Inflector::camelize($product);
 			}
 		} else {
 			$theme .= $this->config('theme') . $css;

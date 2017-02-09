@@ -617,7 +617,7 @@ trait MessagesTrait {
             'noTextbooks' => 'No Textbooks',
             'noProgrammes' => 'No Programmes',
             'noGrades' => 'No Grades',
-            'noClassSubjectSelected' => 'Please select Class, Subject and Textbook before adding record',
+            'noClassSubjectSelected' => 'Please select Subject and Textbook before adding record',
             'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
             'noTextbookStudent' => 'Please add physical textbook to be added'
         ],
@@ -971,7 +971,7 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ]
+                ],
             ],
             'Accounts' => [
                 'username' => [
@@ -1608,7 +1608,14 @@ trait MessagesTrait {
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ]
-        ]
+        ],
+        'Alert' => [
+            'AlertRules' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique',
+                ]
+            ],
+        ],
     ];
 
 
