@@ -1794,4 +1794,30 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
+
+    public static function validatePreferredNationality($field, array $globalData)
+    {
+        //check at least one preferred nationality set
+        if (array_key_exists('preferred', $globalData['data'])) {
+
+            if ($field == 0) { //if set as not preferred
+                $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+
+                $query = $UserNationalitiesTable
+                        ->find()
+                        ->where([
+                            $UserNationalitiesTable->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                            $UserNationalitiesTable->aliasField('nationality_id <> ') => $globalData['data']['nationality_id'],
+                            $UserNationalitiesTable->aliasField('preferred') => 1
+                        ])
+                        ->count();
+                if ($query > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
