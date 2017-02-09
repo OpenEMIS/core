@@ -6,6 +6,11 @@ INSERT INTO `license_types` (`name`, `order`, `visible`, `editable`, `default`, 
 ('Teaching License - Provisional', 1, 1, 0, 0, 'TEACHING_LICENSE_PROVISIONAL', 'TEACHING_LICENSE_PROVISIONAL', NULL, NULL, 1, NOW()),
 ('Teaching License - Full', 2, 1, 0, 0, 'TEACHING_LICENSE_FULL', 'TEACHING_LICENSE_FULL', NULL, NULL, 1, NOW());
 
+SET @order := 2;
+UPDATE `license_types`
+SET `order` = @order := @order + 1
+WHERE national_code NOT IN ('TEACHING_LICENSE_FULL', 'TEACHING_LICENSE_PROVISIONAL');
+
 -- workflow_models
 SET @modelId := 11;
 INSERT INTO `workflow_models` (`id`, `name`, `model`, `filter`, `is_school_based`, `created_user_id`, `created`) VALUES
