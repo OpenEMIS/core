@@ -20,7 +20,6 @@ class LogoutShell extends Shell {
 			$username = $this->args[2];
 			$response = $http->post($url, ['session_id' => $sessionId, 'username' => $username]);
 			$this->out($response->statusCode());
-			$this->out($response->body());
 			$this->out('End Processing Logout Shell');
 		} catch (\Exception $e) {
 			$this->out('Logout Shell > Exception : ');
