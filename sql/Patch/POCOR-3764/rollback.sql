@@ -17,15 +17,12 @@ ALTER TABLE `institution_student_withdraw`
 
 -- security_functions
 UPDATE `security_functions`
-SET `name` = 'Dropout Request'
-AND `_execute` = 'DropoutRequests.add|DropoutRequests.edit'
-WHERE `name` = 'Withdraw Request' AND `controller` = 'Institutions';
+SET `name` = 'Dropout Request', `_execute` = 'DropoutRequests.add|DropoutRequests.edit'
+WHERE `name` = 'Withdraw Request' AND `controller` = 'Institutions' AND `category` = 'Students';
 
 UPDATE `security_functions`
-SET `name` = 'Student Dropout'
-AND `_view` = 'StudentDropout.index|StudentDropout.view'
-AND `_execute` = 'StudentDropout.edit|StudentDropout.view'
-WHERE `name` = 'Student Withdraw' AND `controller` = 'Institutions';
+SET `name` = 'Student Dropout', `_view` = 'StudentDropout.index|StudentDropout.view', `_execute` = 'StudentDropout.edit|StudentDropout.view'
+WHERE `name` = 'Student Withdraw' AND `controller` = 'Institutions' AND `category` = 'Students';
 
 -- labels
 UPDATE `labels`
