@@ -218,55 +218,55 @@ class PullBehavior extends Behavior
 
     public function pullBeforePatch(Event $event, Entity $entity, ArrayObject $queryString, ArrayObject $patchOption, ArrayObject $extra)
     {
-        $model = $this->_table;
-        $schema = $model->schema();
-        $dateFields = [];
-        foreach ($schema->columns() as $column) {
-            if ($schema->columnType($column) == 'date' || $schema->columnType($column) == 'time' || $schema->columnType($column) == 'datetime') {
-                $dateFields[] = $column;
-            }
-        }
-        foreach ($queryString as $key => $value) {
-            if (in_array($key, $dateFields)) {
-                $queryString[$key] = new Time($value);
-            }
-        }
-        $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
-        $userNationalities = $UserNationalitiesTable->find()->where([
-            $UserNationalitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
-            $UserNationalitiesTable->aliasField('nationality_id') => $queryString['nationality_id']
-        ])
-        ->first();
+    	$model = $this->_table;
+    	$schema = $model->schema();
+    	$dateFields = [];
+    	foreach ($schema->columns() as $column) {
+    		if ($schema->columnType($column) == 'date' || $schema->columnType($column) == 'time' || $schema->columnType($column) == 'datetime') {
+    			$dateFields[] = $column;
+    		}
+    	}
+    	foreach ($queryString as $key => $value) {
+    		if (in_array($key, $dateFields)) {
+    			$queryString[$key] = new Time($value);
+    		}
+    	}
+    	$UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+    	$userNationalities = $UserNationalitiesTable->find()->where([
+    		$UserNationalitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
+    		$UserNationalitiesTable->aliasField('nationality_id') => $queryString['nationality_id']
+    	])
+    	->first();
 
-        if (empty($userNationalities) && $queryString['nationality_id']) {
-            $patchOption['associated'][] = 'Nationalities';
-            $entity->dirty('nationalities', true);
-            $queryString['nationalities'] = [
-                [
+    	if (empty($userNationalities) && $queryString['nationality_id']) {
+    		$patchOption['associated'][] = 'Nationalities';
+    		$entity->dirty('nationalities', true);
+    		$queryString['nationalities'] = [
+	    		[
                     'nationality_id' => $queryString['nationality_id'],
                     'preferred' => 1
                 ]
-            ];
-        }
+	    	];
+    	}
 
-        $UserIdentitiesTable = TableRegistry::get('User.Identities');
-        $userIdentity = $UserIdentitiesTable->find()->where([
-            $UserIdentitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
-            $UserIdentitiesTable->aliasField('identity_type_id') => $queryString['identity_type_id'],
-            $UserIdentitiesTable->aliasField('number') => $queryString['identity_number']
-        ])
-        ->first();
-        if (empty($userIdentity) && $queryString['identity_type_id'] && $queryString['identity_number']) {
-            $patchOption['associated'][] = 'Identities';
-            $entity->dirty('identities', true);
-            $patchOption['associated'][] = 'Identities';
-            $queryString['identities'] = [
-                [
-                    'identity_type_id' => $queryString['identity_type_id'],
-                    'number' => $queryString['identity_number']
-                ]
-            ];
-        }
+    	$UserIdentitiesTable = TableRegistry::get('User.Identities');
+    	$userIdentity = $UserIdentitiesTable->find()->where([
+    		$UserIdentitiesTable->aliasField('security_user_id') => $entity->getOriginal('id'),
+    		$UserIdentitiesTable->aliasField('identity_type_id') => $queryString['identity_type_id'],
+    		$UserIdentitiesTable->aliasField('number') => $queryString['identity_number']
+    	])
+    	->first();
+    	if (empty($userIdentity) && $queryString['identity_type_id'] && $queryString['identity_number']) {
+    		$patchOption['associated'][] = 'Identities';
+    		$entity->dirty('identities', true);
+    		$patchOption['associated'][] = 'Identities';
+    		$queryString['identities'] = [
+	    		[
+	    			'identity_type_id' => $queryString['identity_type_id'],
+	    			'number' => $queryString['identity_number']
+	    		]
+	    	];
+    	}
         if (isset($queryString['identity_number'])) {
             unset($queryString['identity_number']);
         }

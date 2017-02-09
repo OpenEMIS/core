@@ -89,15 +89,14 @@ class UsersController extends AppController
 
     public function logout($sessionId = null)
     {
-        $this->request->session()->id($sessionId);
-        $this->request->session()->destroy();
         return $this->redirect($this->Auth->logout());
     }
 
     public function afterLogout(Event $event, $user)
     {
         if ($this->SSO->getAuthenticationType() != 'Local') {
-            TableRegistry::get('SSO.SingleLogout')->afterLogout($user);
+            $autoLogoutUrl = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
+            TableRegistry::get('SSO.SingleLogout')->afterLogout($user, $autoLogoutUrl);
         }
     }
 
