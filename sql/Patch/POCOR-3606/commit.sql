@@ -79,4 +79,3 @@ ON (UI.`identity_type_id` = N.`identity_type_id`
 SET S.`identity_type_id` = N.`identity_type_id`, 
     S.`identity_number` = UI.`number`,
     S.`nationality_id` = N.`id`;
-
