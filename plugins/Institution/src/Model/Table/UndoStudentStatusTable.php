@@ -41,7 +41,7 @@ class UndoStudentStatusTable extends AppTable {
 		];
 
 		$this->addBehavior('Institution.UndoCurrent', $settings);
-		$this->addBehavior('Institution.UndoWithdraw', $settings);
+		$this->addBehavior('Institution.UndoWithdrawn', $settings);
 		$this->addBehavior('Institution.UndoTransferred', $settings);
 		$this->addBehavior('Institution.UndoGraduated', $settings);
 		$this->addBehavior('Institution.UndoPromoted', $settings);
@@ -602,7 +602,7 @@ class UndoStudentStatusTable extends AppTable {
 					$student_ids = $event->result;
 
 					if (empty($student_ids)) {
-						$this->Alert->success('UndoStudentStatus.failed', ['reset' => true]);
+						$this->Alert->error('UndoStudentStatus.failed', ['reset' => true]);
 					} else {
 						$this->Alert->success('UndoStudentStatus.success', ['reset' => true]);
 					}
