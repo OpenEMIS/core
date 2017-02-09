@@ -37,9 +37,7 @@ class SingleLogoutTable extends Table
                 if (!empty($url)) {
                     try {
                         // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
-                        $url = rtrim($url, '/');
-                        $url = $url.'/';
-                        $this->putLogin($url, rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), '/'), $sessionId, $username);
+                        $this->putLogin($url, Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), $sessionId, $username);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }
@@ -55,7 +53,6 @@ class SingleLogoutTable extends Table
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
         } catch(\Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
@@ -68,7 +65,6 @@ class SingleLogoutTable extends Table
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
         } catch(\Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
@@ -104,16 +100,17 @@ class SingleLogoutTable extends Table
     {
         try {
             $http = new Client();
-
-            // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
             $url = $entity->url;
             $username = $entity->username;
             $sessionId = $entity->session_id;
             $autoLogoutUrl = $entity->autoLogoutUrl;
             if (in_array($url, $autoLogoutUrl)) {
+                // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
                 $this->postLogout($url, $entity->session_id, $username);
             }
         } catch (Exception $e) {
+            Log::write('error', 'post error');
+            Log::write('error', $entity);
             Log::write('error', $e);
         }
 
