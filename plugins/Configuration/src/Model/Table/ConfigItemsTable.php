@@ -20,10 +20,12 @@ class ConfigItemsTable extends AppTable {
 	use OptionsTrait;
 
 	private $configurations = [];
-	private $languagePath = TMP . 'cache'. DS . 'language_menu';
-	private $languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
+	private $languagePath;
+	private $languageFilePath;
 
 	public function initialize(array $config) {
+		$this->languagePath = TMP . 'cache' . DS . 'language_menu';
+		$this->languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
 		parent::initialize($config);
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
