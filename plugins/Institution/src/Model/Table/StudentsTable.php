@@ -20,7 +20,7 @@ class StudentsTable extends ControllerActionTable
 {
     const PENDING_TRANSFER = -2;
     const PENDING_ADMISSION = -3;
-    const PENDING_DROPOUT = -4;
+    const PENDING_WITHDRAW = -4;
 
     private $dashboardQuery = null;
 
@@ -441,7 +441,7 @@ class StudentsTable extends ControllerActionTable
         $pendingStatuses = [
             $StudentStatusesTable->PENDING_ADMISSION => 'StudentAdmission',
             $StudentStatusesTable->PENDING_TRANSFER => 'TransferRequests',
-            $StudentStatusesTable->PENDING_DROPOUT => 'StudentDropout'
+            $StudentStatusesTable->PENDING_WITHDRAW => 'StudentWithdraw'
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
@@ -510,7 +510,7 @@ class StudentsTable extends ControllerActionTable
         $pendingStatus = [
             $StudentStatusesTable->PENDING_TRANSFER => __('Pending Transfer'),
             $StudentStatusesTable->PENDING_ADMISSION => __('Pending Admission'),
-            $StudentStatusesTable->PENDING_DROPOUT => __('Pending Dropout'),
+            $StudentStatusesTable->PENDING_WITHDRAW => __('Pending Withdraw'),
         ];
 
         $statusOptions = $statusOptions + $pendingStatus;
@@ -633,7 +633,7 @@ class StudentsTable extends ControllerActionTable
         $statuses = $this->StudentStatuses->findCodeList();
         $code = array_search($studentStatusId, $statuses);
 
-        if ($code == 'DROPOUT' || $code == 'TRANSFERRED') {
+        if ($code == 'WITHDRAWN' || $code == 'TRANSFERRED') {
             $this->field('reason', ['type' => 'custom_status_reason']);
             $this->field('comment');
             $this->setFieldOrder([
@@ -835,22 +835,24 @@ class StudentsTable extends ControllerActionTable
                     return $transferReason->_matchingData['StudentTransferReasons']->name;
                     break;
 
-                case 'DROPOUT':
-                    $DropoutRequestsTable = TableRegistry::get('Institution.DropoutRequests');
+                case 'WITHDRAWN':
+                    $WithdrawRequestsTable = TableRegistry::get('Institution.WithdrawRequests');
 
-                    $dropoutReason = $DropoutRequestsTable->find()
-                        ->matching('StudentDropoutReasons')
+                    $withdrawReason = $WithdrawRequestsTable->find()
+                        ->matching('StudentWithdrawReasons')
                         ->where([
-                            $DropoutRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
-                            $DropoutRequestsTable->aliasField('institution_id') => $institutionId,
-                            $DropoutRequestsTable->aliasField('education_grade_id') => $educationGradeId,
-                            $DropoutRequestsTable->aliasField('academic_period_id') => $academicPeriodId
+                            $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
+                            $WithdrawRequestsTable->aliasField('institution_id') => $institutionId,
+                            $WithdrawRequestsTable->aliasField('education_grade_id') => $educationGradeId,
+                            $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
+                            // Status = 1 is approved withdraw, in case student has a previous withdraw request that was undone
+                            $WithdrawRequestsTable->aliasField('status') => 1,
                         ])
                         ->first();
 
-                    $entity->comment = $dropoutReason->comment;
+                    $entity->comment = $withdrawReason->comment;
 
-                    return $dropoutReason->_matchingData['StudentDropoutReasons']->name;
+                    return $withdrawReason->_matchingData['StudentWithdrawReasons']->name;
                     break;
             }
         }
