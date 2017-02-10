@@ -515,6 +515,7 @@ class StudentUserTable extends ControllerActionTable
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Assessments')],
+			'ExaminationResults' => ['text' => __('Examinations')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];
