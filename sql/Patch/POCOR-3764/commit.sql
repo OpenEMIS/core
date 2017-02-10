@@ -10,8 +10,13 @@ WHERE `code` = 'DROPOUT';
 RENAME TABLE `student_dropout_reasons` TO `student_withdraw_reasons`;
 
 INSERT INTO `student_withdraw_reasons` (`name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT 'Dropout', (MAX(`order`)+1), 1, 1, 0, 'DROPOUT', 'DROPOUT', NULL, NULL, 1, NOW()
-FROM `student_withdraw_reasons`;
+VALUES ('Dropout', 1, 1, 1, 0, 'DROPOUT', 'DROPOUT', NULL, NULL, 1, NOW());
+
+SET @order := 1;
+UPDATE `student_withdraw_reasons`
+SET `order` = @order := @order + 1
+WHERE `international_code` <> 'DROPOUT'
+ORDER BY `order` ASC;
 
 -- institution_student_withdraw
 ALTER TABLE `institution_student_dropout`
