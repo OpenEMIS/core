@@ -1,3 +1,11 @@
+-- POCOR-3714
+ALTER TABLE `system_errors` DROP `code`;
+ALTER TABLE `system_errors` DROP `request_method`;
+ALTER TABLE `system_errors` DROP `server_info`;
+
+DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3714';
+
+
 -- POCOR-3606
 -- user_nationalities
 DROP TABLE IF EXISTS `user_nationalities`;
