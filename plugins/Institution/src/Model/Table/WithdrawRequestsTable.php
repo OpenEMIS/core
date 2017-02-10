@@ -9,19 +9,19 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Date;
 
-class DropoutRequestsTable extends AppTable {
+class WithdrawRequestsTable extends AppTable {
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
 
 	public function initialize(array $config) {
-		$this->table('institution_student_dropout');
+		$this->table('institution_student_withdraw');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'Student.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
+		$this->belongsTo('StudentWithdrawReasons', ['className' => 'Student.StudentWithdrawReasons', 'foreignKey' => 'student_withdraw_reason_id']);
 	}
 
 	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -54,7 +54,7 @@ class DropoutRequestsTable extends AppTable {
 
 		if ($count > 0) {
 			$process = function ($model, $entity) {
-				$this->Alert->error('StudentDropout.hasTransferApplication');
+				$this->Alert->error('StudentWithdraw.hasTransferApplication');
 			};
 			return $process;
 		}
@@ -81,13 +81,13 @@ class DropoutRequestsTable extends AppTable {
 			$this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
 			$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
 			$this->ControllerAction->field('effective_date');
-			$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'select']);
+			$this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'select']);
 			$this->ControllerAction->field('comment');
 
 			$this->ControllerAction->setFieldOrder([
 				'application_status','student_id','institution_id', 'academic_period_id', 'education_grade_id',
 				'effective_date',
-				'student_dropout_reason_id', 'comment',
+				'student_withdraw_reason_id', 'comment',
 			]);
 		} else {
 			$Students = TableRegistry::get('Institution.Students');
@@ -106,13 +106,13 @@ class DropoutRequestsTable extends AppTable {
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden', 'attr' => ['value' => $entity->academic_period_id]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
 		$this->ControllerAction->field('effective_date');
-		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'select', 'attr' => ['value' => $entity->student_dropout_reason_id]]);
+		$this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'select', 'attr' => ['value' => $entity->student_withdraw_reason_id]]);
 		$this->ControllerAction->field('comment');
 
 		$this->ControllerAction->setFieldOrder([
 			'status', 'student_id','institution_id', 'academic_period_id', 'education_grade_id',
 			'effective_date',
-			'student_dropout_reason_id', 'comment',
+			'student_withdraw_reason_id', 'comment',
 		]);
 	}
 
