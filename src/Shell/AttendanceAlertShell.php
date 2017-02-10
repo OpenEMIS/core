@@ -44,32 +44,34 @@ class AttendanceAlertShell extends Shell
 
                 foreach ($data as $key => $vars) {
                     if (!empty($rule['security_roles'])) { //check if the alertRule have security role
+
+                        $emailList = [];
                         foreach ($rule['security_roles'] as $securityRolesObj) {
                             $securityRoleId = $securityRolesObj->id;
                             $institutionId = $vars['institution']['id'];
+                            // all staff within securityRole and institution
                             $emailListResult = $this->SecurityGroupUsers
                                 ->find('emailList', ['securityRoleId' => $securityRoleId, 'institutionId' => $institutionId])
                                 ->where(['email' . ' IS NOT NULL'])
                                 ->toArray()
                             ;
 
+                            // combine all email to the email list
                             if (!empty($emailListResult)) {
-                                $emailList = [];
                                 foreach ($emailListResult as $obj) {
                                     $emailList[] = $obj->user->email;
                                 }
-
-                                $vars['threshold'] = $rule->threshold;
-                                $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
-
-                                // subject and message for alert email
-                                $subject = $this->AlertLogs->replaceMessage($rule->subject, $vars);
-                                $message = $this->AlertLogs->replaceMessage($rule->message, $vars);
-
-                                // insert record to  the alertLog
-                                $this->AlertLogs->insertAlertLog($rule, $email, $subject, $message);
                             }
                         }
+
+                        $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+
+                        // subject and message for alert email
+                        $subject = $this->AlertLogs->replaceMessage($rule->subject, $vars);
+                        $message = $this->AlertLogs->replaceMessage($rule->message, $vars);
+
+                        // insert record to  the alertLog
+                        $this->AlertLogs->insertAlertLog($rule, $email, $subject, $message);
                     }
                 }
             }
