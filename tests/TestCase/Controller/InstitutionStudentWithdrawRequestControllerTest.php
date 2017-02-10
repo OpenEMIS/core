@@ -4,7 +4,7 @@ namespace App\Test\TestCases;
 use Cake\ORM\TableRegistry;
 use App\Test\AppTestCase;
 
-class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
+class InstitutionStudentWithdrawRequestControllerTest extends AppTestCase
 {
     public $fixtures = [
         'app.config_items',
@@ -30,12 +30,12 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         'app.student_custom_forms_fields',
         'app.student_statuses',
         'app.institution_student_admission',
-        'app.institution_student_dropout',
+        'app.institution_student_withdraw',
         'app.institution_students',
         'app.institutions',
         'app.academic_periods',
         'app.education_grades',
-        'app.student_dropout_reasons',
+        'app.student_withdraw_reasons',
     ];
 
     private $studentId = 2;
@@ -52,7 +52,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
                 'Institutions' => [
                     'id' => 1
                 ],
-                'DropoutRequests' => [
+                'WithdrawRequests' => [
                     'id' => $this->studentId
                 ]
             ],
@@ -63,7 +63,7 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
             ]
         ]);
 
-        $this->urlPrefix('/Institutions/DropoutRequests/');
+        $this->urlPrefix('/Institutions/WithdrawRequests/');
     }
 
     public function testCreate()
@@ -73,13 +73,13 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         $this->assertResponseCode(200);
 
         $data = [
-            'DropoutRequests' => [
+            'WithdrawRequests' => [
                 'student_id' => $this->securityUserId,
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 77,
                 'effective_date' => '2016-06-01', // correct date (after enrollment date '2016-01-01')
-                'student_dropout_reason_id' => 661,
+                'student_withdraw_reason_id' => 661,
                 'comment' => NULL,
                 'status' => 0
             ],
@@ -87,12 +87,12 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         ];
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institutions.institution_student_dropout');
+        $table = TableRegistry::get('Institutions.institution_student_withdraw');
         $lastInsertedRecord = $table->find()
-            ->where([$table->aliasField('student_id') => $data['DropoutRequests']['student_id'],
-                $table->aliasField('institution_id') => $data['DropoutRequests']['institution_id'],
-                $table->aliasField('academic_period_id') => $data['DropoutRequests']['academic_period_id'],
-                $table->aliasField('education_grade_id') => $data['DropoutRequests']['education_grade_id']])
+            ->where([$table->aliasField('student_id') => $data['WithdrawRequests']['student_id'],
+                $table->aliasField('institution_id') => $data['WithdrawRequests']['institution_id'],
+                $table->aliasField('academic_period_id') => $data['WithdrawRequests']['academic_period_id'],
+                $table->aliasField('education_grade_id') => $data['WithdrawRequests']['education_grade_id']])
             ->first();
 
         $this->assertEquals(true, (!empty($lastInsertedRecord)));
@@ -103,13 +103,13 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         $testUrl = $this->url('add');
 
         $data = [
-            'DropoutRequests' => [
+            'WithdrawRequests' => [
                 'student_id' => $this->securityUserId,
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 77,
                 'effective_date' => '2015-01-01', // wrong date (before enrollment date '2016-01-01')
-                'student_dropout_reason_id' => 661,
+                'student_withdraw_reason_id' => 661,
                 'comment' => NULL,
                 'status' => 0
             ],
@@ -128,26 +128,26 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         $this->assertResponseCode(200);
 
         $data = [
-            'DropoutRequests' => [
+            'WithdrawRequests' => [
                 'id' => $this->editId,
                 'student_id' => 7,
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
                 'effective_date' => '2016-10-01', // correct date (after enrollment date '2016-06-01')
-                'student_dropout_reason_id' => 649,
+                'student_withdraw_reason_id' => 649,
                 'comment' => 'Test comment',
             ],
             'submit' => 'save'
         ];
         $this->postData($testUrl, $data);
 
-        $table = TableRegistry::get('Institutions.institution_student_dropout');
+        $table = TableRegistry::get('Institutions.institution_student_withdraw');
         $editedRecord = $table->find()
-            ->where([$table->aliasField('id') => $data['DropoutRequests']['id'],
-                $table->aliasField('effective_date') => $data['DropoutRequests']['effective_date'],
-                $table->aliasField('student_dropout_reason_id') => $data['DropoutRequests']['student_dropout_reason_id'],
-                $table->aliasField('comment') => $data['DropoutRequests']['comment']])
+            ->where([$table->aliasField('id') => $data['WithdrawRequests']['id'],
+                $table->aliasField('effective_date') => $data['WithdrawRequests']['effective_date'],
+                $table->aliasField('student_withdraw_reason_id') => $data['WithdrawRequests']['student_withdraw_reason_id'],
+                $table->aliasField('comment') => $data['WithdrawRequests']['comment']])
             ->first();
 
         $this->assertEquals(true, (!empty($editedRecord)));
@@ -157,14 +157,14 @@ class InstitutionStudentDropoutRequestControllerTest extends AppTestCase
         $testUrl = $this->url('edit/' . $this->editId);
 
         $data = [
-            'DropoutRequests' => [
+            'WithdrawRequests' => [
                 'id' => $this->editId,
                 'student_id' => 7,
                 'institution_id' => 1,
                 'academic_period_id' => 3,
                 'education_grade_id' => 76,
                 'effective_date' => '2016-01-01', // wrong date (before enrollment date '2016-06-01')
-                'student_dropout_reason_id' => 649,
+                'student_withdraw_reason_id' => 649,
                 'comment' => 'Test comment',
             ],
             'submit' => 'save'
