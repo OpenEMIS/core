@@ -779,17 +779,27 @@ class StaffTable extends ControllerActionTable {
 
 		$extra['excludedModels'] = [$this->StaffPositionProfiles->alias()];
 
-		// staff assignments
+		// staff transfer in
 		$StaffTransferRequests = TableRegistry::get('Institution.StaffTransferRequests');
-		$transferRecordsCount = $StaffTransferRequests->find()
+		$transferInRecordsCount = $StaffTransferRequests->find()
+			->where([
+				$StaffTransferRequests->aliasField('staff_id') => $entity->staff_id,
+				$StaffTransferRequests->aliasField('institution_id') => $entity->institution_id
+			])
+			->count();
+		$extra['associatedRecords'][] = ['model' => 'StaffTransferIn', 'count' => $transferInRecordsCount];
+
+		// staff transfer out
+		$transferOutRecordsCount = $StaffTransferRequests->find()
 			->where([
 				$StaffTransferRequests->aliasField('staff_id') => $entity->staff_id,
 				$StaffTransferRequests->aliasField('previous_institution_id') => $entity->institution_id
 			])
 			->count();
-		$extra['associatedRecords'][] = ['model' => 'StaffTransferRequests', 'count' => $transferRecordsCount];
+		$extra['associatedRecords'][] = ['model' => 'StaffTransferOut', 'count' => $transferOutRecordsCount];
 
 		$associationArray = [
+			'Institution.StaffPositionProfiles' => 'StaffChangeInAssignment',
 			'Institution.StaffAbsences' => 'StaffAbsences',
 			'Institution.StaffLeave' => 'StaffLeave',
 			'Institution.InstitutionClasses' =>'InstitutionClasses',
