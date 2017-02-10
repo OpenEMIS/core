@@ -212,9 +212,9 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         });
 
         columnDefs.push({
-            headerName: "weight",
+            headerName: "Weight",
             field: 'weight',
-            hide: true
+            filterParams: filterParams
         });
 
         columnDefs.push({
