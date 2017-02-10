@@ -60,10 +60,10 @@ class ReportListBehavior extends Behavior {
 		$this->ReportProgress->purge();
 
 		// beside super user, report can only be seen by the one who generate it.
-		$session = new Session();
 		$conditions[] = [$this->ReportProgress->aliasField('module') => $this->_table->alias()];
-		if (!$session->read('Auth.User.super_admin')) {
-			$conditions[] = [$this->ReportProgress->aliasField('created_user_id') => $session->read('Auth.User.id')];
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$userId = $this->_table->Auth->user('id');
+			$conditions[] = [$this->ReportProgress->aliasField('created_user_id') => $userId];
 		}
 
 		$query = $this->ReportProgress->find()
