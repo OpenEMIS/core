@@ -236,6 +236,11 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             }
         });
 
+        var bodyDir = getComputedStyle(document.body).direction;
+        if (bodyDir == 'rtl') {
+            columnDefs.reverse();
+        }
+
         return {data: columnDefs};
     };
 
