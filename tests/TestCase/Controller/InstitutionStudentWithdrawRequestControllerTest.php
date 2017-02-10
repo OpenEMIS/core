@@ -123,7 +123,7 @@ class InstitutionStudentWithdrawRequestControllerTest extends AppTestCase
     }
 
     public function testUpdate() {
-        $testUrl = $this->url('edit/' . $this->editId);
+        $testUrl = $this->url('edit/'.$this->paramsEncode(['id' => $this->editId]));
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
@@ -154,7 +154,7 @@ class InstitutionStudentWithdrawRequestControllerTest extends AppTestCase
     }
 
     public function testUpdateWrongDate() {
-        $testUrl = $this->url('edit/' . $this->editId);
+        $testUrl = $this->url('edit/'.$this->paramsEncode(['id' => $this->editId]));
 
         $data = [
             'WithdrawRequests' => [
