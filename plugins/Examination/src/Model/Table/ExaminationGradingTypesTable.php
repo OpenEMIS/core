@@ -20,6 +20,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $this->hasMany('GradingOptions', ['className' => 'Examination.ExaminationGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentExaminationResults' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
