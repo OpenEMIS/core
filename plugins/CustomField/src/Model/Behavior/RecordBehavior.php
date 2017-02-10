@@ -668,7 +668,10 @@ class RecordBehavior extends Behavior {
 			foreach ($model->fields as $fieldName => $field) {
 				if (!in_array($fieldName, $ignoreFields)) {
 					$order = $field['order'] > $order ? $field['order'] : $order;
-					$fieldOrder[$field['order']] = $fieldName;
+					if (array_key_exists($order, $fieldOrder)) {
+						$order++;
+					}
+					$fieldOrder[$order] = $fieldName;
 				}
 			}
 
