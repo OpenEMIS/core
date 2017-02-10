@@ -715,6 +715,7 @@ class InstitutionsController extends AppController
             'Results' => ['text' => __('Assessments')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
+            'Textbooks' => ['text' => __('Textbooks')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
