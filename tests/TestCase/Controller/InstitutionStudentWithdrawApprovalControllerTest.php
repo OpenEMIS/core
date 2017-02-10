@@ -31,6 +31,7 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
         'app.institution_classes',
         'app.institution_student_withdraw',
         'app.institution_students',
+        'app.institution_subject_students',
         'app.institutions',
         'app.academic_periods',
         'app.education_grades',
@@ -51,7 +52,7 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
 
     public function testApprove()
     {
-        $testUrl = $this->url('edit/' . $this->editId);
+        $testUrl = $this->url('edit/'.$this->paramsEncode(['id' => $this->editId]));
         $this->get($testUrl);
         $this->assertResponseCode(200);
 
@@ -97,7 +98,7 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
 
     public function testApproveWrongDate()
     {
-        $testUrl = $this->url('edit/' . $this->editId);
+        $testUrl = $this->url('edit/'.$this->paramsEncode(['id' => $this->editId]));
 
         $data = [
             'StudentWithdraw' => [
@@ -135,7 +136,7 @@ class InstitutionStudentWithdrawApprovalControllerTest extends AppTestCase
     }
 
     public function testReject() {
-        $testUrl = $this->url('edit/' . $this->editId);
+        $testUrl = $this->url('edit/'.$this->paramsEncode(['id' => $this->editId]));
 
         $data = [
             'StudentWithdraw' => [
