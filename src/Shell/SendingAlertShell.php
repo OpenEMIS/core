@@ -24,19 +24,25 @@ class SendingAlertShell extends Shell
         $todayDate = Date::now();
 
         $alertLogsList = $this->AlertLogs->find()
-            ->where([
-                'status' => 0, // pending
-            ])
+            ->where(['status' => 0]) // pending
             ->all();
 
         foreach ($alertLogsList as $key => $obj) {
             if ($obj->destination != 'No Email' || $obj->destination != 'No Security Role') {
                 $emailArray = explode(', ', $obj->destination); // also can used
 
+                $sendTo = [];
+                foreach ($emailArray as $item) {
+                    list($name, $email) = explode('<', $item);
+                    $name = trim($name);
+                    $email = str_replace('>', '', $email);
+                    $sendTo[$email] = $name;
+                }
+
                 // sending Email if the destination email is exist
-                $email = new Email('openemis');
-                $email
-                    ->to($emailArray)
+                $emailObj = new Email('openemis');
+                $emailObj
+                    ->to($sendTo)
                     ->subject($obj->subject)
                     ->send($obj->message);
 
@@ -45,7 +51,7 @@ class SendingAlertShell extends Shell
                     ->update()
                     ->set([
                         'status' => 1,
-                        'created' => $today
+                        'processed_date' => $today
                     ])
                     ->execute();
             }
