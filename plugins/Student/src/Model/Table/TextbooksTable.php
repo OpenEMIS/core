@@ -47,10 +47,18 @@ class TextbooksTable extends ControllerActionTable {
         ]);
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    {
+        $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $searchKey = $this->getSearchKey();
+        $session = $this->request->session();
+        $studentId = $session->read('Student.Students.id');
+        $query->where([$this->aliasField('student_id') => $studentId]);
         
+        $searchKey = $this->getSearchKey();
         if (strlen($searchKey)) {
             $query->matching('MainTextbooks'); //to enable search by textbook title
             $extra['OR'] = [
@@ -58,6 +66,12 @@ class TextbooksTable extends ControllerActionTable {
                 $this->MainTextbooks->aliasField('code').' LIKE' => '%' . $searchKey . '%',
             ];
         }
+
+        $sortList = ['code', 'MainTextbooks.title'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
     }
 
     public function afterAction(Event $event, ArrayObject $extra) 
