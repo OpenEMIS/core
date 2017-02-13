@@ -110,8 +110,26 @@ ALTER TABLE `alert_rules` CHANGE `status` `enabled` INT(1) NOT NULL DEFAULT '1';
 ALTER TABLE `alert_rules` CHANGE `code` `feature` VARCHAR(50) NOT NULL;
 
 -- alert_logs
-ALTER TABLE `alert_logs` DROP `type`;
-ALTER TABLE `alert_logs` ADD `checksum` CHAR(64) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL AFTER `message`;
+DROP TABLE IF EXISTS `alert_logs`;
+CREATE TABLE IF NOT EXISTS `alert_logs` (
+  `id` int(11) NOT NULL,
+  `method` varchar(20) NOT NULL,
+  `destination` text NOT NULL,
+  `status` varchar(20) NOT NULL COMMENT '-1 -> Failed, 0 -> Pending, 1 -> Success',
+  `subject` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `checksum` char(64) NOT NULL,
+  `processed_date` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE `alert_logs`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `security_user_id` (`created_user_id`),
+  ADD KEY `method` (`method`);
+
+ALTER TABLE `alert_logs` MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 -- alert_roles table
 RENAME TABLE `alert_roles` TO `alerts_roles`;
