@@ -100,6 +100,7 @@ class AlertLogsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
+        $this->field('destination', ['visible' => false]);
     }
 
     public function triggerSendingAlertShell($shellName)
