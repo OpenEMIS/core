@@ -41,6 +41,7 @@ class TextbooksTable extends ControllerActionTable {
     {
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('institution_id', ['visible' => false]);
+        $this->field('student_id', ['visible' => false]);
 
         $this->setFieldOrder([
             'academic_period_id', 'code', 'textbook_id', 'textbook_status_id', 'textbook_condition_id', 'education_subject_id'
