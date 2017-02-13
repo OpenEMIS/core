@@ -20,11 +20,11 @@ class SingleLogoutTable extends Table
         parent::initialize($config);
     }
 
-    public function afterLogout($user)
+    public function afterLogout($user, array $autoLogoutUrl)
     {
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username)) {
-            $this->removeLogoutRecord($username);
+            $this->removeLogoutRecord($username, $autoLogoutUrl);
         }
     }
 
@@ -33,21 +33,41 @@ class SingleLogoutTable extends Table
         $sessionId = $request->session()->id();
         $username = isset($user['username']) ? $user['username'] : null;
         if (!empty($username) && !empty($sessionId)) {
-            $http = new Client();
             foreach ($autoLogoutUrl as $url) {
                 if (!empty($url)) {
                     try {
                         // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
-                        $url = rtrim($url, '/');
-                        $url = $url.'/';
-                        // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
-                        // http://php.net/manual/en/thread.start.php
-                        $response = $http->put($url, ['url' => rtrim(Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true), '/'), 'session_id' => $sessionId, 'username' => $username]);
+                        $selfUrl = Router::url(['plugin' => null, 'controller' => null, 'action' => 'index', '_ext' => null], true) . '/';
+                        $this->putLogin($url, $selfUrl, $sessionId, $username);
                     } catch (Exception $e) {
                         Log::write('error', $e);
                     }
                 }
             }
+        }
+    }
+
+    private function putLogin($targetUrl, $sourceUrl, $sessionId, $username)
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake Login ' . $targetUrl . ' ' . $sourceUrl . ' ' . $sessionId . ' ' . $username;
+        $logs = ROOT . DS . 'logs' . DS . 'Login.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        try {
+            $pid = exec($shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when login : '. $ex);
+        }
+    }
+
+    private function postLogout($targetUrl, $sessionId, $username)
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake Logout ' . $targetUrl . ' ' . $sessionId . ' ' . $username;
+        $logs = ROOT . DS . 'logs' . DS . 'Logout.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+        try {
+            $pid = exec($shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
     }
 
@@ -68,10 +88,11 @@ class SingleLogoutTable extends Table
         return $this->find()->where([$this->aliasField('username') => $username])->toArray();
     }
 
-    public function removeLogoutRecord($username)
+    public function removeLogoutRecord($username, array $autoLogoutUrl)
     {
         $entities = $this->getLogoutRecords($username);
         foreach ($entities as $entity) {
+            $entity->autoLogoutUrl = $autoLogoutUrl;
             $this->delete($entity);
         }
     }
@@ -80,17 +101,17 @@ class SingleLogoutTable extends Table
     {
         try {
             $http = new Client();
-
-            // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
-            $url = rtrim($entity->url, '/');
-            $url = $url . '/';
+            $url = $entity->url;
             $username = $entity->username;
             $sessionId = $entity->session_id;
-
-            // Recommend to install the PECL php extension so that each of these can be run as a separate thread to improve performance or to change to using javascript
-            // http://php.net/manual/en/thread.start.php
-            $http->post($url, ['username' => $username, 'session_id' => $entity->session_id]);
+            $autoLogoutUrl = $entity->autoLogoutUrl;
+            if (in_array($url, $autoLogoutUrl)) {
+                // The following two lines are work around code to fix the trailing slash cause by the htaccess, without the trailing slash it will always be a redirect response
+                $this->postLogout($url, $entity->session_id, $username);
+            }
         } catch (Exception $e) {
+            Log::write('error', 'post error');
+            Log::write('error', $entity);
             Log::write('error', $e);
         }
 
