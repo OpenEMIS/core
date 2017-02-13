@@ -59,7 +59,12 @@ class AttendanceAlertShell extends Shell
                             // combine all email to the email list
                             if (!empty($emailListResult)) {
                                 foreach ($emailListResult as $obj) {
-                                    $emailList[] = $obj->user->email;
+                                    if (!empty($obj->user->email)) {
+                                        $recipient = $obj->user->name . ' <' . $obj->user->email . '>';
+                                        if (!in_array($recipient, $emailList)) {
+                                            $emailList[] = $recipient;
+                                        }
+                                    }
                                 }
                             }
                         }
