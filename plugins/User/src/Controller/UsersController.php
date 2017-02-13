@@ -25,9 +25,9 @@ class UsersController extends AppController
         $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords']);
 
         $action = $this->request->params['action'];
-        if ($action == 'login_remote') {
+        if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
             $this->eventManager()->off($this->Csrf);
-            $this->Security->config('unlockedActions', ['login_remote']);
+            $this->Security->config('unlockedActions', [$action]);
         }
 
         // For fall back
