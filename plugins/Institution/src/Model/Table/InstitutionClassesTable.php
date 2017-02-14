@@ -1029,7 +1029,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $InstitutionStudentsTable->aliasField('education_grade_id IN ') => $educationGrades
             ])
             ->first();
-        
+
         if ($userData) {
             $data = [
                 'id' => $this->getExistingRecordId($id, $entity),
@@ -1139,5 +1139,20 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $multiGradeData = $this->find('list', $multiGradeOptions);
         return $multiGradeData->toArray();
+    }
+
+    public function getSubjectClasses($institutionId, $academicPeriodId, $gradeId, $subjectId)
+    {
+        return $this->find('list')->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->innerJoinWith('EducationGrades', function($q) use ($gradeId) {
+                return $q->where(['EducationGrades.id' => $gradeId]);
+            })
+            ->innerJoinWith('InstitutionSubjects', function($q) use ($subjectId) {
+                return $q->where(['InstitutionSubjects.education_subject_id' => $subjectId]);
+            })
+            ->toArray();
     }
 }
