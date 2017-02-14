@@ -47,13 +47,10 @@ class SendingAlertShell extends Shell
                     ->send($obj->message);
 
                 // update the alertLog
-                $this->AlertLogs->query()
-                    ->update()
-                    ->set([
-                        'status' => 1,
-                        'processed_date' => $today
-                    ])
-                    ->execute();
+                $this->AlertLogs->updateAll(
+                    ['status' => 1, 'processed_date' => $today],
+                    ['id' => $obj->id]
+                );
             }
         }
     }
