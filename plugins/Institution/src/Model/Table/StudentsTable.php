@@ -547,11 +547,6 @@ class StudentsTable extends ControllerActionTable
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
-        // To add the academic_period_id to export
-        if (isset($extra['toolbarButtons']['export']['url'])) {
-            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedAcademicPeriod;
-        }
-
         // Advanced Select Options
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         $studentTable = $this;
@@ -564,8 +559,12 @@ class StudentsTable extends ControllerActionTable
 
         $request->query['academic_period_id'] = $selectedAcademicPeriod;
 
-        $this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
+        // To add the academic_period_id to export
+        if (isset($extra['toolbarButtons']['export']['url'])) {
+            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedAcademicPeriod;
+        }
 
+        $this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
         if ($selectedEducationGrades != -1) {
             $query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
