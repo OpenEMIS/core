@@ -160,6 +160,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $selectedAcademicPeriod = !is_null($model->request->query('academic_period_id')) ? $model->request->query('academic_period_id') : $model->AcademicPeriods->getCurrent();
         $model->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$model->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $extra['selectedAcademicPeriod'] = $selectedAcademicPeriod;
         // End
 
         // Examination
@@ -168,6 +169,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $selectedExamination = !is_null($model->request->query('examination_id')) ? $model->request->query('examination_id') : -1;
         $model->controller->set(compact('examinationOptions', 'selectedExamination'));
         $where[$model->aliasField('examination_id')] = $selectedExamination;
+        $extra['selectedExamination'] = $selectedExamination;
         // End
 
         $extra['auto_order'] = false;
