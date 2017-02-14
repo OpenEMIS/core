@@ -604,7 +604,7 @@ class NavigationComponent extends Component
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Institution'],
 				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards',
-					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
+					'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance',
 				'parent' => 'Institutions.Students.index',
