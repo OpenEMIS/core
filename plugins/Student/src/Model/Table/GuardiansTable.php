@@ -27,12 +27,8 @@ class GuardiansTable extends ControllerActionTable {
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-<<<<<<< HEAD
         $this->addBehavior('Indexes.Indexes');
-=======
-
         $this->addBehavior('ControllerAction.Image');
->>>>>>> 7e3397969592eb471182c777c56fc907441792f2
     }
 
     public function validationDefault(Validator $validator) {
