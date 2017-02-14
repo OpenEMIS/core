@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -22,6 +23,23 @@ class IndexesCriteriasTable extends ControllerActionTable
         $this->hasMany('StudentIndexesCriterias', ['className' => 'Indexes.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->add('index_value', [
+                'ruleRange' => [
+                    'rule' => ['range', 1, 99]
+                ]
+            ])
+             ->add('threshold', [
+                'ruleRange' => [
+                    'rule' => ['range', 1, 99]
+                ]
+            ])
+            ;
     }
 
     public function getTotalIndex($indexId)

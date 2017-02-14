@@ -1,4 +1,4 @@
-<?php
+    <?php
 namespace Assessment\Model\Table;
 
 use ArrayObject;
@@ -126,66 +126,67 @@ class AssessmentItemResultsTable extends AppTable {
         return $returnArray;
     }
 
-    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
-    {
-        $institutionId = $params['institution_id'];
-        $studentId = $params['student_id'];
-        $academicPeriodId = $params['academic_period_id'];
-        $criteriaName = $params['criteria_name'];
+    // result criteria for indexes will be hide for now.
+    // public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    // {
+    //     $institutionId = $params['institution_id'];
+    //     $studentId = $params['student_id'];
+    //     $academicPeriodId = $params['academic_period_id'];
+    //     $criteriaName = $params['criteria_name'];
 
-        $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+    //     $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
 
-        return $valueIndex;
-    }
+    //     return $valueIndex;
+    // }
 
-    public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
-    {
-        $results = $this
-            ->find()
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('student_id') => $studentId,
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-            ])
-            ->all();
+    // public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
+    // {
+    //     $results = $this
+    //         ->find()
+    //         ->where([
+    //             $this->aliasField('institution_id') => $institutionId,
+    //             $this->aliasField('student_id') => $studentId,
+    //             $this->aliasField('academic_period_id') => $academicPeriodId,
+    //         ])
+    //         ->all();
 
-        $getValueIndex = 0;
-        foreach ($results as $key => $resultsObj) {
-            $getValueIndex = $getValueIndex + $resultsObj->marks;
-        }
+    //     $getValueIndex = 0;
+    //     foreach ($results as $key => $resultsObj) {
+    //         $getValueIndex = $getValueIndex + $resultsObj->marks;
+    //     }
 
-        return $getValueIndex;
-    }
+    //     return $getValueIndex;
+    // }
 
-    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
-    {
-        $results = $this
-            ->find()
-            ->contain(['Assessments', 'EducationSubjects'])
-            ->where([
-                $this->aliasField('institution_id') => $institutionId,
-                $this->aliasField('student_id') => $studentId,
-                $this->aliasField('academic_period_id') => $academicPeriodId
-            ])
-            ->all();
+    // public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+    // {
+    //     $results = $this
+    //         ->find()
+    //         ->contain(['Assessments', 'EducationSubjects'])
+    //         ->where([
+    //             $this->aliasField('institution_id') => $institutionId,
+    //             $this->aliasField('student_id') => $studentId,
+    //             $this->aliasField('academic_period_id') => $academicPeriodId
+    //         ])
+    //         ->all();
 
-        $referenceDetails = [];
-        foreach ($results as $key => $obj) {
-            $assessmentName = $obj->assessment->name;
-            $educationSubjectName = $obj->education_subject->name;
-            $marks = !is_null($obj->marks) ? $obj->marks : 'null';
+    //     $referenceDetails = [];
+    //     foreach ($results as $key => $obj) {
+    //         $assessmentName = $obj->assessment->name;
+    //         $educationSubjectName = $obj->education_subject->name;
+    //         $marks = !is_null($obj->marks) ? $obj->marks : 'null';
 
-            $referenceDetails[$obj->assessment_id] = __($assessmentName) . ' - ' . __($educationSubjectName) . ' (' . $marks . ')';
-        }
+    //         $referenceDetails[$obj->assessment_id] = __($assessmentName) . ' - ' . __($educationSubjectName) . ' (' . $marks . ')';
+    //     }
 
-        // tooltip only receieved string to be display
-        $reference = '';
-        foreach ($referenceDetails as $key => $referenceDetailsObj) {
-            $reference = $reference . $referenceDetailsObj . '<br/>';
-        }
+    //     // tooltip only receieved string to be display
+    //     $reference = '';
+    //     foreach ($referenceDetails as $key => $referenceDetailsObj) {
+    //         $reference = $reference . $referenceDetailsObj . '<br/>';
+    //     }
 
-        return $reference;
-    }
+    //     return $reference;
+    // }
 
     public function getTotalMarks($studentId, $academicPeriodId, $educationSubjectId, $educationGradeId) {
         $query = $this->find();

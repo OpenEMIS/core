@@ -47,7 +47,7 @@ class StudentIndexesCriteriasTable extends AppTable
         if (!is_null($value)) {
             switch ($operator) {
             case 1: // '<'
-                if ($value < $threshold) {
+                if ($value <= $threshold) {
                     $indexValue = $IndexesCriteriasData->index_value;
                 } else {
                     $indexValue = 0;
@@ -55,7 +55,7 @@ class StudentIndexesCriteriasTable extends AppTable
                 break;
 
              case 2: // '>'
-                if ($value > $threshold) {
+                if ($value >= $threshold) {
                     $indexValue = $IndexesCriteriasData->index_value;
                 } else {
                     $indexValue = 0;
@@ -63,6 +63,7 @@ class StudentIndexesCriteriasTable extends AppTable
                 break;
 
             case 3: // '='
+            case 11: // for Repeated status
                 $Indexes = TableRegistry::get('Indexes.Indexes');
                 $criteriaName = $IndexesCriteriasData->criteria;
                 $criteriaDetails = $Indexes->getCriteriasDetails($criteriaName);

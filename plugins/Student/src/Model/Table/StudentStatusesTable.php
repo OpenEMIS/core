@@ -35,7 +35,7 @@ class StudentStatusesTable extends AppTable {
 	public function getThresholdOptions()
     {
     	// options only dropout and repeated
-    	$options = ['DROPOUT', 'REPEATED'];
+    	$options = ['REPEATED'];
 
         return $this
             ->find('list')
