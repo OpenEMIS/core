@@ -73,6 +73,11 @@ UPDATE `security_users` S
 SET S.`identity_type_id` = NULL,
     S.`identity_number` = NULL,
     S.`nationality_id` = NULL;
+
+# Fix incorrect datetime value
+UPDATE `user_identities` SET `modified` = NULL WHERE `modified` = '0000-00-00 00:00:00';
+UPDATE `user_identities` SET `created` = '1970-01-01 00:00:00' WHERE `created` = '0000-00-00 00:00:00';
+
 #get nationality, identity and number based on the existing record.
 UPDATE `security_users` S
 INNER JOIN `user_nationalities` UN
