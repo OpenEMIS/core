@@ -665,7 +665,11 @@ class RecordBehavior extends Behavior {
 			$fieldOrder = [];
 			// temporary fix: to make custom fields appear before map in Institutions > General > Overview
 			$ignoreFields = ['id', 'map_section', 'map', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-			foreach ($model->fields as $fieldName => $field) {
+			
+			// re-order array sequence based on 'order' attribute value.
+			$modelFields = $model->fields;
+			uasort($modelFields, function($a,$b){ return $a['order']-$b['order'];});
+			foreach ($modelFields as $fieldName => $field) {
 				if (!in_array($fieldName, $ignoreFields)) {
 					$order = $field['order'] > $order ? $field['order'] : $order;
 					if (array_key_exists($order, $fieldOrder)) {
@@ -674,7 +678,6 @@ class RecordBehavior extends Behavior {
 					$fieldOrder[$order] = $fieldName;
 				}
 			}
-
 			// retrieve saved values
 			$values = new ArrayObject([]);
 			$cells = new ArrayObject([]);
