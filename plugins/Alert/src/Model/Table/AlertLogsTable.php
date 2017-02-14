@@ -62,12 +62,16 @@ class AlertLogsTable extends ControllerActionTable
         }
     }
 
-    public function replaceMessage($message, $vars)
+    public function replaceMessage($feature, $message, $vars)
     {
         $format = '${%s}';
-
         $strArray = explode('${', $message);
         array_shift($strArray); // first element will not contain the placeholder
+
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+
+        $alertTypeDetails = $AlertRules->getAlertTypeDetailsByFeature($feature);
+        $availablePlaceholder = $alertTypeDetails[$feature]['placeholder'];
 
         foreach ($strArray as $key => $str) {
             $pos = strpos($str, '}');
@@ -75,9 +79,9 @@ class AlertLogsTable extends ControllerActionTable
             if ($pos !== false) {
                 $placeholder = substr($str, 0, $pos);
                 $replace = sprintf($format, $placeholder);
-                $value = Hash::get($vars, $placeholder);
 
-                if (!is_null($value)) {
+                if (array_key_exists('${' . $placeholder . '}', $availablePlaceholder)) {
+                    $value = Hash::get($vars, $placeholder);
                     $message = str_replace($replace, $value, $message);
                 }
             }
