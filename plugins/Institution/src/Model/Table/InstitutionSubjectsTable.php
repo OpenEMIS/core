@@ -223,23 +223,26 @@ class InstitutionSubjectsTable extends ControllerActionTable
                                     $Classes->aliasField('institution_id') => $institutionId
                                 ])
                                 ->toArray();
-        if (empty($classOptions) && !isset($extra['noProgrammes'])) {
-            $this->Alert->warning('Institutions.noClassRecords');
-        }
-        $selectedClassId = $this->queryString('class_id', $classOptions);
 
         if (!$this->Auth->user('super_admin')) {
-            $authorisedClass = $Subjects
+            $classOptions = $Subjects
                 ->find('list', ['keyField' => 'class_id', 'valueField' => 'class_name'])
                 ->innerJoinWith('Classes')
                 ->select(['class_id' => 'Classes.id', 'class_name' => 'Classes.name'])
                 ->find('byAccess', ['userId' => $userId, 'accessControl' => $AccessControl, 'controller' => $controller])
+                ->where([
+                    $Classes->aliasField('academic_period_id') => $selectedAcademicPeriodId,
+                    $Classes->aliasField('institution_id') => $institutionId
+                ])
                 ->group(['class_id'])
                 ->hydrate(false)
                 ->toArray();
-
-            $classOptions = array_intersect_key($classOptions, $authorisedClass);
         }
+
+        if (empty($classOptions) && !isset($extra['noProgrammes'])) {
+            $this->Alert->warning('Institutions.noClassRecords');
+        }
+        $selectedClassId = $this->queryString('class_id', $classOptions);
 
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
