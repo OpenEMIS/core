@@ -69,6 +69,7 @@ class ExaminationItemResultsTable extends AppTable
                 $this->ExaminationItems->aliasField('weight'),
                 $this->EducationSubjects->aliasField('code'),
                 $this->EducationSubjects->aliasField('name'),
+                $this->EducationSubjects->aliasField('order'),
                 $this->ExaminationGradingOptions->aliasField('code'),
                 $this->ExaminationGradingOptions->aliasField('name'),
                 $this->ExaminationGradingOptions->aliasField('examination_grading_type_id'),
@@ -82,7 +83,9 @@ class ExaminationItemResultsTable extends AppTable
                 $this->aliasField('student_id') => $studentId
             ])
             ->order([
-                $this->Examinations->aliasField('code'), $this->Examinations->aliasField('name')
+                $this->EducationSubjects->aliasField('order'),
+                $this->ExaminationItems->aliasField('code'),
+                $this->ExaminationItems->aliasField('name')
             ]);
     }
 
