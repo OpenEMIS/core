@@ -43,8 +43,9 @@ class AttendanceAlertShell extends Shell
                 $data = $this->InstitutionStudentAbsences->getUnexcusedAbsenceData($threshold);
 
                 foreach ($data as $key => $vars) {
-                    if (!empty($rule['security_roles'])) { //check if the alertRule have security role
+                    $vars['threshold'] = $threshold;
 
+                    if (!empty($rule['security_roles'])) { //check if the alertRule have security role
                         $emailList = [];
                         foreach ($rule['security_roles'] as $securityRolesObj) {
                             $securityRoleId = $securityRolesObj->id;
@@ -72,8 +73,8 @@ class AttendanceAlertShell extends Shell
                         $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
 
                         // subject and message for alert email
-                        $subject = $this->AlertLogs->replaceMessage($rule->subject, $vars);
-                        $message = $this->AlertLogs->replaceMessage($rule->message, $vars);
+                        $subject = $this->AlertLogs->replaceMessage('Attendance', $rule->subject, $vars);
+                        $message = $this->AlertLogs->replaceMessage('Attendance', $rule->message, $vars);
 
                         // insert record to  the alertLog
                         $this->AlertLogs->insertAlertLog($rule, $email, $subject, $message);
