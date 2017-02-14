@@ -21,7 +21,6 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('Users',               ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 
-        $this->toggle('view', false);
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -40,16 +39,17 @@ class TextbooksTable extends ControllerActionTable {
     public function beforeAction() 
     {
         $this->field('academic_period_id', ['type' => 'select']);
-        $this->field('institution_id', ['visible' => false]);
+        $this->field('institution_id', ['type' => 'select']);
         $this->field('student_id', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'textbook_id', 'textbook_status_id', 'textbook_condition_id', 'education_subject_id'
+            'academic_period_id', 'institution_id', 'code', 'textbook_id', 'education_subject_id', 'textbook_condition_id', 'textbook_status_id'
         ]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra) 
     {
+        $this->field('comment', ['visible' => false]);
         $this->fields['textbook_id']['sort'] = ['field' => 'MainTextbooks.title'];
     }
 
@@ -73,6 +73,8 @@ class TextbooksTable extends ControllerActionTable {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
+
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
     }
 
     public function afterAction(Event $event, ArrayObject $extra) 
@@ -100,5 +102,8 @@ class TextbooksTable extends ControllerActionTable {
         }
     }
 
-    
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {   
+        return $entity->institution->code_name;
+    }
 }
