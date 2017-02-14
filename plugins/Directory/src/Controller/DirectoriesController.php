@@ -32,8 +32,6 @@ class DirectoriesController extends AppController {
 
 
 			// Student
-			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
-			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
@@ -88,6 +86,8 @@ class DirectoriesController extends AppController {
     public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
 	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
+	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
+	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
 	// End
 
 	// AngularJS
@@ -225,7 +225,7 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$ids = $this->paramsDecode($modelId);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
 					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
 					$idKey[$model->aliasField('student_id')] = $userId;
 					$exists = $model->exists($idKey);

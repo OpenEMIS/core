@@ -76,7 +76,7 @@ class CustomFieldListBehavior extends Behavior {
 	}
 
 	// Model.excel.onExcelUpdateFields
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, array $fields) {
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$filterValue = null;
 		if (isset($settings['sheet']['key'])) {
 			$filterValue = $settings['sheet']['key'];
@@ -86,7 +86,7 @@ class CustomFieldListBehavior extends Behavior {
 		$tableCustomFieldIds = [];
 		$excelFields = array_values($excelFields);
 		$fieldCount = count($excelFields);
-		
+
 		foreach ($customFields as $customField) {
 			if ($customField['field_type'] != 'TABLE') {
 				$field['key'] = 'CustomField';
@@ -150,7 +150,7 @@ class CustomFieldListBehavior extends Behavior {
 			if (isset($attr['tableCustomFieldIds'])) {
 				$tableCellValues = $this->getTableCellValues($attr['tableCustomFieldIds'], $entity->id);
 				$fieldValues = $fieldValues + $tableCellValues;
-				
+
 				if (!empty($tableCellValues)) {
 					if (isset($fieldValues[$entity->id])) {
 						$tmpArray = $fieldValues[$entity->id];
@@ -161,7 +161,7 @@ class CustomFieldListBehavior extends Behavior {
 						$fieldValues[$entity->id] = $tableCellValues;
 					}
 				}
-				
+
 				ksort($fieldValues);
 			}
 			$tmpFieldValues = $this->setTmpFieldValues($fieldValues);
@@ -272,7 +272,7 @@ class CustomFieldListBehavior extends Behavior {
 		}
 
 		$SurveyFormsTable = TableRegistry::get('Survey.SurveyForms');
-		
+
 		return $SurveyFormsTable
 			->find('list', [
 				'keyField' => 'id',
@@ -296,7 +296,7 @@ class CustomFieldListBehavior extends Behavior {
 		// If there is any specified query condition
 		$condition = $this->_condition;
 		$query->where($condition);
-		
+
 		// If it is a survey
 		if (is_null($this->config('moduleKey'))) {
 			$query->where([$this->_table->aliasField($this->config('formKey')) => $key]);
@@ -378,7 +378,7 @@ class CustomFieldListBehavior extends Behavior {
 	 *
 	 *	@param int | null $filterValue The id value of the filterKey
 	 *	@return array The value of the header and the custom fields
-	 */	
+	 */
 	public function getCustomFields($filterValue=null) {
 		$customFields = [];
 		$customFormFields = [];
@@ -398,7 +398,7 @@ class CustomFieldListBehavior extends Behavior {
 				->find()
 				->where([$this->CustomFormsFilters->aliasField($customFilterKey).' IN' => [$filterValue, 0]])
 				->contain(['CustomForms', 'CustomForms.CustomFields.CustomTableColumns', 'CustomForms.CustomFields.CustomTableRows'])
-				->toArray();	
+				->toArray();
 		} else {
 			// If there is no filter specified
 			$customFormFields = $this->CustomForms
@@ -421,7 +421,7 @@ class CustomFieldListBehavior extends Behavior {
 				foreach ($fields as $field) {
 					if ($field->field_type != 'STUDENT_LIST') {
 						$customFields[$field->id] = $field;
-					}	
+					}
 				}
 			}
 			if (!empty($customFields)) {
@@ -452,7 +452,7 @@ class CustomFieldListBehavior extends Behavior {
 				.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
 				.' END) SEPARATOR \',\'))'
 		];
-		
+
 		// Getting the custom field table
 		$customFieldsTable = $customFieldValueTable->CustomFields;
 
@@ -516,7 +516,7 @@ class CustomFieldListBehavior extends Behavior {
 			return '';
 		}
 	}
-	
+
 	private function textarea($data, $field, $options=[]) {
 		if (isset($data[$field['id']])) {
 			return $data[$field['id']];
@@ -536,7 +536,7 @@ class CustomFieldListBehavior extends Behavior {
 			return '';
 		}
 	}
-	
+
 	private function checkbox($data, $field, $options=[]) {
 		if (isset($data[$field['id']])) {
 			$values = explode(",", $data[$field['id']]);
@@ -546,7 +546,7 @@ class CustomFieldListBehavior extends Behavior {
 					if (empty($returnValue)) {
 						$returnValue = $options[$value];
 					} else {
-						$returnValue = $returnValue.', '.$options[$value];						
+						$returnValue = $returnValue.', '.$options[$value];
 					}
 				}
 			}
