@@ -5,26 +5,17 @@ use ArrayObject;
 use Exception;
 
 use Cake\Event\Event;
-use Cake\ORM\Entity;
 use Cake\ORM\Query;
-use Cake\ORM\TableRegistry;
 use Cake\Utility\Text;
-use Cake\Network\Request;
-use Cake\Network\Http\Client;
 use Cake\Log\Log;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 
-class SystemErrorsTable extends ControllerActionTable {
+class SystemErrorsTable extends AppTable {
     public function initialize(array $config) {
         parent::initialize($config);
 
         $this->belongsTo('CreatedUser', ['className' => 'Security.Users', 'foreignKey' => 'created_user_id']);
-
-        $this->toggle('view', false);
-        $this->toggle('add', false);
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
     }
 
     public function implementedEvents()
@@ -45,16 +36,26 @@ class SystemErrorsTable extends ControllerActionTable {
         $trace = $ex->getTraceAsString();
         $file = $ex->getFile();
         $line = $ex->getLine();
+        $code = $ex->getCode();
+        $serverInfo = json_encode($_SERVER);
+
+        $clientIp = $ip = $_SERVER['REMOTE_ADDR'];
+        if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            $clientIp = $_SERVER['HTTP_X_FORWARDED_FOR'];
+        }
 
         $entity = $this->newEntity([
             'id' => Text::uuid(),
+            'code' => $code,
             'error_message' => $msg,
+            'request_method' => $_SERVER['REQUEST_METHOD'],
             'request_url' => $_SERVER['REQUEST_URI'],
             'referrer_url' => isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
-            'client_ip' => $_SERVER['REMOTE_ADDR'],
+            'client_ip' => $clientIp,
             'client_browser' => $_SERVER['HTTP_USER_AGENT'],
             'triggered_from' => $file . ' (Line: ' . $line . ')',
-            'stack_trace' => $trace
+            'stack_trace' => $trace,
+            'server_info' => $serverInfo
         ]);
 
         $this->save($entity);
