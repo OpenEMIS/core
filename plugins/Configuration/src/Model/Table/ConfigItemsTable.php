@@ -20,10 +20,12 @@ class ConfigItemsTable extends AppTable {
 	use OptionsTrait;
 
 	private $configurations = [];
-	private $languagePath = TMP . 'cache'. DS . 'language_menu';
-	private $languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
+	private $languagePath;
+	private $languageFilePath;
 
 	public function initialize(array $config) {
+		$this->languagePath = TMP . 'cache' . DS . 'language_menu';
+		$this->languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
 		parent::initialize($config);
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
@@ -48,6 +50,11 @@ class ConfigItemsTable extends AppTable {
 		$this->ControllerAction->field('value', ['visible' => true]);
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.AreaLevel.afterDelete'] = 'areaLevelAfterDelete';
+		return $events;
+	}
 
 /******************************************************************************************************************
 **
@@ -264,7 +271,16 @@ class ConfigItemsTable extends AppTable {
 				$model = Inflector::pluralize($exp[1]);
 				$model = $this->getActualModeLocation($model);
 				$optionsModel = TableRegistry::get($model);
-				$value = $optionsModel->get($entity->$valueField);
+
+				if ($entity->code == 'institution_area_level_id') {
+	                // get area level from value
+	                $value = $optionsModel->find()
+	                    ->where([$optionsModel->aliasField('level') => $entity->$valueField])
+	                    ->first();
+				} else {
+					$value = $optionsModel->get($entity->$valueField);
+				}
+
 				if (is_object($value)) {
 					return $value->name;
 				} else {
@@ -352,6 +368,19 @@ class ConfigItemsTable extends AppTable {
 		}
 		return $model;
 	}
+
+    public function areaLevelAfterDelete(Event $event, $areaLevel)
+    {
+        $entity = $this->findByCode('institution_area_level_id')->first();
+        $configValue = strlen($entity->value) ? $entity->value : $entity->default_value;
+
+        // if area level used for institution_area_level_id config is deleted
+        if ($areaLevel->level == $configValue) {
+            // update institution_area_level_id config to default level
+            $entity->value = $entity->default_value;
+            $this->save($entity);
+        }
+    }
 
 	public function getSystemLanguageOptions()
 	{
