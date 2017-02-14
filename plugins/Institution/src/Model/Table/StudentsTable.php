@@ -1286,15 +1286,15 @@ class StudentsTable extends ControllerActionTable
     public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
     {
         switch ($criteriaName) {
-            case 'Status':
-                $statusResults = $this->find()
+            case 'StatusRepeated':
+                $statusRepeatedResults = $this->find()
                     ->where([
                         'student_id' => $studentId
                     ])
                     ->all();
 
                 $getValueIndex = [];
-                foreach ($statusResults as $key => $obj) {
+                foreach ($statusRepeatedResults as $obj) {
                     $statusId = $obj->student_status_id;
 
                     // for '=' the value index will be in array (valueIndex[threshold] = value)
@@ -1379,7 +1379,7 @@ class StudentsTable extends ControllerActionTable
         $referenceDetails = [];
 
         switch ($criteriaName) {
-            case 'Status':
+            case 'StatusRepeated':
                 $statusId = $threshold; // it will classified by the status Id
                 $results = $this->find()
                     ->contain(['StudentStatuses', 'AcademicPeriods'])
@@ -1469,8 +1469,7 @@ class StudentsTable extends ControllerActionTable
         return $institutionId = $this->find()
             ->where([
                 $this->aliasField('student_id') => $studentId,
-                $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('student_status_id') => 1 // status enrolled
+                $this->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->first()->institution_id;
     }

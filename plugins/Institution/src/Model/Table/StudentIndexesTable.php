@@ -41,8 +41,9 @@ class StudentIndexesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('generated_by',['after' => 'total_index']);
-        $this->field('generated_on',['after' => 'generated_by']);
+        $this->field('generated_by',['visible' => false]);
+        $this->field('generated_on',['visible' => false]);
+        $this->field('institution', ['after' => 'academic_period_id']);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -66,9 +67,67 @@ class StudentIndexesTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->field('name');
+        $this->field('grade');
+        $this->field('class');
         $this->field('indexes_criterias', ['type' => 'custom_criterias', 'after' => 'total_index']);
         $this->field('created_user_id', ['visible' => false]);
         $this->field('created', ['visible' => false]);
+    }
+
+    public function onGetInstitution(Event $event, Entity $entity)
+    {
+        return $entity->institution->name;
+    }
+
+    public function onGetName(Event $event, Entity $entity)
+    {
+        return $entity->user->name;
+    }
+
+    public function onGetGrade(Event $event, Entity $entity)
+    {
+        // some class not configure in the institutionClassStudents, therefore using the institutionStudents
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $studentId = $entity->student_id;
+        $academicPeriodId = $entity->academic_period_id;
+
+        $educationGradeData = $InstitutionClassStudents->find()
+            ->where([
+                'student_id' => $studentId,
+                'academic_period_id' => $academicPeriodId
+            ])
+            ->first();
+
+        $educationGradesName = '';
+        if (isset($educationGradeData->education_grade_id)) {
+            $educationGradesName = $EducationGrades->get($educationGradeData->education_grade_id)->name;
+        }
+
+        return $educationGradesName;
+    }
+
+    public function onGetClass(Event $event, Entity $entity)
+    {
+        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $studentId = $entity->student_id;
+        $academicPeriodId = $entity->academic_period_id;
+
+        $institutionClassesData = $InstitutionClassStudents->find()
+            ->where([
+                'student_id' => $studentId,
+                'academic_period_id' => $academicPeriodId
+            ])
+            ->first();
+
+        $institutionClassesName = '';
+        if (isset($institutionClassesData->institution_class_id)) {
+            $institutionClassesName = $InstitutionClasses->get($institutionClassesData->institution_class_id)->name;
+        }
+
+        return $institutionClassesName;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -134,7 +193,7 @@ class StudentIndexesTable extends ControllerActionTable
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
+        // $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $tableHeaders = $this->getMessage('Indexes.TableHeader');
         array_splice($tableHeaders, 3, 0, __('Value')); // adding value header
         $tableHeaders[] = __('References');
@@ -163,7 +222,8 @@ class StudentIndexesTable extends ControllerActionTable
                     $indexesCriteriasId = $obj->indexes_criteria->id;
 
                     $criteriaName = $obj->indexes_criteria->criteria;
-                    $operator = $obj->indexes_criteria->operator;
+                    $operatorId = $obj->indexes_criteria->operator;
+                    $operator = $this->Indexes->getOperatorDetails($operatorId);
                     $threshold = $obj->indexes_criteria->threshold;
 
                     $value = $this->StudentIndexesCriterias->getValue($institutionStudentIndexId, $indexesCriteriasId);
@@ -190,6 +250,9 @@ class StudentIndexesTable extends ControllerActionTable
                         // for threshold name
                         $thresholdName = $LookupModel->get($threshold)->name;
                         $threshold = $thresholdName;
+                        if ($thresholdName == 'Repeated') {
+                            $threshold = $this->Indexes->getCriteriasDetails($criteriaName)['threshold']['value']; // 'Yes'
+                        }
                     } else {
                         // numeric value come here (absence quantity, results)
                         // for value
@@ -205,7 +268,7 @@ class StudentIndexesTable extends ControllerActionTable
                     // to put in the table
                     $rowData = [];
                     $rowData[] = __($this->Indexes->getCriteriasDetails($criteriaName)['name']);
-                    $rowData[] = $this->Indexes->getCriteriasDetails($criteriaName)['operator'][$operator];
+                    $rowData[] = __($operator);
                     $rowData[] = __($threshold);
                     $rowData[] = __($value);
                     $rowData[] = $indexValue;

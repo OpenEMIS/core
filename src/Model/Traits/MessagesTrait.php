@@ -1554,6 +1554,14 @@ trait MessagesTrait {
                 'Operator',
                 'Threshold',
                 'Index'
+            ],
+            'IndexesCriterias' => [
+                'threshold' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ],
+                'index_value' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ]
             ]
         ],
         'Textbook' => [
