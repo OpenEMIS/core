@@ -13,8 +13,8 @@
     <?php $tableClass = 'table-responsive'; ?>
     <div class="clearfix"></div>
     <?php
-        echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add').'</span>', [
-            'label' => __('Manage'),
+        echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add Textbook').'</span>', [
+            'label' => __('Action'),
             'type' => 'button',
             'class' => 'btn btn-default',
             'aria-expanded' => 'true',

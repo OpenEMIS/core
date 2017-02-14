@@ -69,6 +69,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         ]);
     }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
+    }
+
     public function addEditBeforeAction(Event $event, ArrayObject $extra) {
         if ($this->action=='edit') {
             $this->fields['visible']['visible'] = false;
