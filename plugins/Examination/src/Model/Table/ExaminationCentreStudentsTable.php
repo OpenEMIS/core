@@ -86,7 +86,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $ExaminationItemResults->deleteAll($conditions);
 
         if (!is_array($examinationCentres)) {
-            $examinationCentres[] = $examinationCentres;
+            $examinationCentres = [0 => $examinationCentres];
         }
 
         // update affected exam centre(s) total registered count
