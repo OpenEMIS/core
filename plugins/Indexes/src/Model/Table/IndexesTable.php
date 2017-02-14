@@ -11,6 +11,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Log\Log;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
@@ -22,51 +23,81 @@ class IndexesTable extends ControllerActionTable
     use HtmlTrait;
 
     private $criteriaTypes = [
-        'Assessment.AssessmentItemResults' => [
-            'name' => 'Results',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
-        ],
+        // 'Assessment.AssessmentItemResults' => [
+        //     'name' => 'Results',
+        //     'operator' => 2,
+        //     'threshold' => ['type' => 'number']
+        // ],
         'Institution.InstitutionStudentAbsences' => [
-            'name' => 'Absences',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
+            'AbsencesExcused' => [
+                'name' => 'Absence - Excused',
+                'operator' => 2,
+                'threshold' => ['type' => 'number'],
+                'absence_type_id' => 1 // excused
+            ],
+            'AbsencesUnexcused' => [
+                'name' => 'Absence - Unexcused',
+                'operator' => 2,
+                'threshold' => ['type' => 'number'],
+                'absence_type_id' => 2 // unexcused
+            ],
+            'AbsencesLate' => [
+                'name' => 'Absence - Late',
+                'operator' => 2,
+                'threshold' => ['type' => 'number'],
+                'absence_type_id' => 3 // late
+            ]
         ],
         'Institution.StudentBehaviours' => [
-            'name' => 'Behaviour',
-            'operator' => [3 => '='],
-            'threshold' => ['type' => 'select', 'lookupModel' => 'Student.BehaviourClassifications']
+            'Behaviour' => [
+                'name' => 'Behaviour',
+                'operator' => 3,
+                'threshold' => ['type' => 'select', 'lookupModel' => 'Student.BehaviourClassifications']
+            ]
         ],
         // dropout will used the institution.students, while repeated will used Institution.IndividualPromotion
         'Institution.Students' => [
-            'Status' => [
-                'name' => 'Status',
-                'operator' => [3 => '='],
-                'threshold' => ['type' => 'select', 'lookupModel' => 'Student.StudentStatuses']
+            'StatusRepeated' => [
+                'name' => 'Student Status',
+                'operator' => 11, // Repeated
+                'threshold' => ['type' => 'select', 'lookupModel' => 'Student.StudentStatuses', 'value' => 'Yes']
             ],
+            // 'StatusDropout' => [
+            //     'name' => 'Student Status - Dropout',
+            //     'operator' => 3,
+                // 'threshold' => ['type' => 'select', 'lookupModel' => 'Student.StudentStatuses', 'value' => 'Yes']
+            // ],
             'Overage' => [
                 'name' => 'Overage',
-                'operator' => [2 => '>'],
+                'operator' => 2,
                 'threshold' => ['type' => 'number']
             ],            //
             'Genders' => [
                 'name' => 'Genders',
-                'operator' => [3 => '='],
+                'operator' => 3,
                 'threshold' => ['type' => 'select', 'lookupModel' => 'User.Genders']
             ],
             'Guardians' => [
                 'name' => 'Guardians',
-                'operator' => [1 => '<', 2 => '>'],
+                'operator' => 1,
                 'threshold' => ['type' => 'number']
             ]
         ],
         'User.SpecialNeeds' => [
-            'name' => 'Special Needs',
-            'operator' => [1 => '<', 2 => '>'],
-            'threshold' => ['type' => 'number']
+            'SpecialNeeds' => [
+                'name' => 'Special Needs',
+                'operator' => 2,
+                'threshold' => ['type' => 'number']
+            ]
         ],
     ];
 
+    private $operatorTypes = [
+        1 => 'Less than or equal to',
+        2 => 'Greater than or equal to',
+        3 => 'Equal to',
+        11 => 'Repeated'
+    ];
 
     public function initialize(array $config)
     {
@@ -106,41 +137,7 @@ class IndexesTable extends ControllerActionTable
         $sessionUserId = $session->read('Auth.User.id');
         $sessionIndexId = $session->read('Indexes.Indexes.primaryKey.id');
 
-        // back Button
-        // if have queryString will be redirected to institution>indexes>generate
-        if (array_key_exists('queryString', $requestQuery)) {
-            $url = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'InstitutionIndexes',
-                'index'
-            ];
-        } else {
-            $url = $this->url('index');
-        }
-
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $toolbarButtonsArray['back']['type'] = 'button';
-        $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
-        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
-        $toolbarButtonsArray['back']['attr']['title'] = __('Back');
-        $toolbarButtonsArray['back']['url'] = $url;
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // end back Button
-
-        $this->fields = []; // reset all the fields
-
-        $extra['config']['form'] = true;
-        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
-
         $params = [];
-
         if (array_key_exists('queryString', $requestQuery)) {
             $params = $this->paramsDecode($requestQuery['queryString']);
         }
@@ -150,30 +147,33 @@ class IndexesTable extends ControllerActionTable
         $indexId = array_key_exists('index_id', $params) ? $params['index_id'] : $sessionIndexId;
         $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : $requestQuery['academic_period_id'];
 
-        $entity = $this->newEntity();
+        // trigger shell
+        $this->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId, $academicPeriodId);
 
-        if ($this->request->is(['get'])) {
-        } else if ($this->request->is(['post', 'put'])) {
-            // trigger shell
-            $this->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId, $academicPeriodId);
+        // redirect to respective page from params['action']
+        $url = $this->url($params['action'],$params['academic_period_id']);
+
+        // if have institution id, its from institution > indexes
+        if ($institutionId != 0) {
+            $url = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'InstitutionIndexes',
+                    'index'
+                ];
         }
 
-        $this->controller->set('data', $entity);
-        return $entity;
+        $event->stopPropagation();
+        return $this->controller->redirect($url);
     }
 
     public function getCriteriasData()
     {
         $criteriaData = [];
         foreach ($this->criteriaTypes as $key => $obj) {
-            if ($key == 'Institution.Students') {
-                foreach ($this->criteriaTypes[$key] as $institutionStudentsKey => $institutionStudentsObj) {
-                    $criteriaData[$institutionStudentsObj['name']] = $institutionStudentsObj;
-                    $criteriaData[$institutionStudentsObj['name']]['model'] = $key;
-                }
-            } else {
-                $criteriaData[$obj['name']] = $obj;
-                $criteriaData[$obj['name']]['model'] = $key;
+            foreach ($this->criteriaTypes[$key] as $typesKey => $typesObj) {
+                $criteriaData[$typesKey] = $typesObj;
+                $criteriaData[$typesKey]['model'] = $key;
             }
         }
 
@@ -186,22 +186,11 @@ class IndexesTable extends ControllerActionTable
 
         $criteriaOptions = [];
         foreach ($criteriaData as $key => $obj) {
-            $criteriaOptions[$key] = __($obj['name']);
+            $criteriaOptions[$key] = __(Inflector::humanize(Inflector::underscore($key)));
         }
         ksort($criteriaOptions); // sorting the option by Key
 
         return $criteriaOptions;
-    }
-
-    public function getOperatorParams($criteriaType)
-    {
-        $criteriaData = $this->getCriteriasData();
-
-        $operatorParams['label'] = false;
-        $operatorParams['type'] = 'select';
-        $operatorParams['options'] = $criteriaData[$criteriaType]['operator'];
-
-        return $operatorParams;
     }
 
     public function getThresholdParams($criteriaType)
@@ -210,10 +199,23 @@ class IndexesTable extends ControllerActionTable
 
         $thresholdParams['label'] = false;
         $thresholdParams['type'] = $criteriaData[$criteriaType]['threshold']['type'];
+        $thresholdParams['min'] = 1;
+        $thresholdParams['max'] = 99;
 
         if ($thresholdParams['type'] == 'select') {
             $model = $criteriaData[$criteriaType]['threshold']['lookupModel'];
-            $thresholdParams['options'] = $this->getOptions($model);
+
+            if ($criteriaType == 'StatusRepeated') {
+                $value = $criteriaData[$criteriaType]['threshold']['value'];
+                $operatorId = $criteriaData[$criteriaType]['operator'];
+                $operator = $this->operatorTypes[$operatorId];
+                $options = $this->getOptions($model);
+
+                // change the threshold to 'Yes' instead of 'Repeated'
+                $thresholdParams['options'] = str_replace($operator, $value, $options);
+            } else {
+                $thresholdParams['options'] = $this->getOptions($model);
+            }
         }
 
         return $thresholdParams;
@@ -242,11 +244,14 @@ class IndexesTable extends ControllerActionTable
             $associated = $entity->extractOriginal([$fieldKey]);
 
             if (!empty($associated[$fieldKey])) {
-                foreach ($associated[$fieldKey] as $i => $obj) {
+                foreach ($associated[$fieldKey] as $obj) {
                     if ($obj['operator'] == 3) {
                         // '=' the threshold is a string
                         $lookupModel = TableRegistry::get($criteriaData[$obj['criteria']]['threshold']['lookupModel']);
                         $thresholdData = $lookupModel->get($obj['threshold'])->name;
+                    } else if ($obj['operator'] == 11) { // for Repeated
+                        // for student status, the threshold value will be 'Yes'
+                        $thresholdData = $criteriaData[$obj->criteria]['threshold']['value'];
                     } else {
                         // '<' and '>' the threshold is a numeric
                         $thresholdData = $obj['threshold'];
@@ -254,7 +259,7 @@ class IndexesTable extends ControllerActionTable
 
                     $rowData = [];
                     $rowData[] = __($criteriaData[$obj['criteria']]['name']);
-                    $rowData[] = $criteriaData[$obj['criteria']]['operator'][$obj['operator']];
+                    $rowData[] = __($this->operatorTypes[$obj->operator]);
                     $rowData[] = __($thresholdData); // will get form the FO or from the model related
                     $rowData[] = __($obj['index_value']);
 
@@ -301,7 +306,13 @@ class IndexesTable extends ControllerActionTable
                     $threshold = $obj['threshold'];
                     $indexId = $obj['index_id'];
 
-                    $cell = $criteriaOptions[$criteriaType];
+                    if ($criteriaType == 'StatusRepeated' ) {
+                        // for status the criteria name will be student status.
+                        $cell = $criteriaData[$criteriaType]['name'];
+                    } else {
+                        $cell = $criteriaOptions[$criteriaType];
+                    }
+
                     if (isset($obj['id'])) {
                         $cell .= $Form->hidden("$alias.$fieldKey.$key.id", ['value' => $obj['id']]);
                     }
@@ -311,9 +322,9 @@ class IndexesTable extends ControllerActionTable
                     $cell .= $Form->hidden("$alias.$fieldKey.$key.index_id", ['value' => $indexId]);
 
                     $rowData[] = $cell;
-                    $rowData[] = $Form->input("$alias.$fieldKey.$key.operator", $this->getOperatorParams($criteriaType));
+                    $rowData[] = $this->operatorTypes[$operator];
                     $rowData[] = $Form->input("$alias.$fieldKey.$key.threshold", $this->getThresholdParams($criteriaType));
-                    $rowData[] = $Form->input("$alias.$fieldKey.$key.index_value", ['type' => 'number', 'label' => false]);
+                    $rowData[] = $Form->input("$alias.$fieldKey.$key.index_value", ['type' => 'number', 'label' => false, 'min' => 1, 'max' => 99]);
                     $rowData[] = $this->getDeleteButton();
                     $tableCells[] = $rowData;
                 }
@@ -334,7 +345,7 @@ class IndexesTable extends ControllerActionTable
 
             $attr['type'] = 'select';
             $attr['options'] = $periodOptions;
-        } elseif ($action == 'edit') {
+        } else if ($action == 'edit') {
             $requestQuery = $this->request->query;
 
             $academicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
@@ -396,31 +407,6 @@ class IndexesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
-
-        // generate buttons
-        $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $url = [
-            'plugin' => 'Indexes',
-            'controller' => 'Indexes',
-            'action' => 'Indexes',
-            'generate',
-            'academic_period_id' => $entity->academic_period_id
-        ];
-        $toolbarButtonsArray['generate']['type'] = 'button';
-        $toolbarButtonsArray['generate']['label'] = '<i class="fa fa-refresh"></i>';
-        $toolbarButtonsArray['generate']['attr'] = $toolbarAttr;
-        $toolbarButtonsArray['generate']['attr']['title'] = __('Generate');
-        $toolbarButtonsArray['generate']['url'] = $url;
-
-        $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
-        // end generate buttons
-
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -529,10 +515,11 @@ class IndexesTable extends ControllerActionTable
 
         if (array_key_exists($alias, $data) && array_key_exists('criteria_type', $data[$alias])) {
             $criteriaType = $data[$alias]['criteria_type'];
+            $operator = $this->getCriteriasDetails($criteriaType)['operator'];
 
             $data[$alias][$fieldKey][] = [
                 'criteria' => $criteriaType,
-                'operator' => '',
+                'operator' => $operator,
                 'threshold' => '',
                 'index_value' => '',
                 'index_id' => 0
@@ -555,6 +542,34 @@ class IndexesTable extends ControllerActionTable
 
         $this->setFieldOrder(['name', 'indexes_criterias']);
     }
+
+    // hide on this version, so the admin > indexes cant generate
+    // public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    // {
+    //     $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+    //     // generate buttons
+    //     if (array_key_exists('view', $buttons)) {
+    //         if ($this->AccessControl->check(['Indexes', 'Indexes', 'process'])) { // to check execute permission
+    //             $url = [
+    //                 'plugin' => 'Indexes',
+    //                 'controller' => 'Indexes',
+    //                 'action' => 'Indexes',
+    //                 'generate'
+    //             ];
+
+    //             $buttons['generate'] = $buttons['view'];
+    //             $buttons['generate']['label'] = '<i class="fa fa-refresh"></i>' . __('Generate');
+    //             $buttons['generate']['url'] = $this->setQueryString($url, [
+    //                 'academic_period_id' => $entity->academic_period_id,
+    //                 'action' => 'index'
+    //             ]);
+    //         }
+    //     }
+    //     // end generate buttons
+
+    //     return $buttons;
+    // }
 
     public function onGetGeneratedBy(Event $event, Entity $entity)
     {
@@ -582,11 +597,16 @@ class IndexesTable extends ControllerActionTable
         $criteria = [];
         foreach ($criteriaData as $key => $obj) {
             if ($obj['model'] == $model) {
-                $criteria[$obj['name']] = $obj;
+                $criteria[$key] = $obj;
             }
         }
 
         return $criteria;
+    }
+
+    public function getOperatorDetails($operatorId)
+    {
+        return $this->operatorTypes[$operatorId];
     }
 
     public function triggerUpdateIndexesShell($shellName, $institutionId=0, $userId=0, $indexId=0, $academicPeriodId=0)

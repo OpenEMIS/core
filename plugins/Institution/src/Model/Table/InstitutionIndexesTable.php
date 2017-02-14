@@ -91,9 +91,15 @@ class InstitutionIndexesTable extends ControllerActionTable
         return $userName;
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (isset($buttons['view']['url'])) {
+        $session = $this->request->session();
+        $institutionId = $session->read('Institution.Institutions.id');
+        $userId = $session->read('Auth.User.id');
+        $indexId = $entity->id;
+
+        if (array_key_exists('view', $buttons)) {
             $buttons['view']['url'] = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
@@ -101,6 +107,27 @@ class InstitutionIndexesTable extends ControllerActionTable
                 'index_id' => $entity->id,
                 'academic_period_id' => $entity->academic_period_id
             ];
+
+            // generate button
+            if ($this->AccessControl->check(['Indexes', 'Indexes', 'process'])) { // to check execute permission
+                $url = [
+                    'plugin' => 'Indexes',
+                    'controller' => 'Indexes',
+                    'action' => 'Indexes',
+                    'generate'
+                ];
+
+                $buttons['generate'] = $buttons['view'];
+                $buttons['generate']['label'] = '<i class="fa fa-refresh"></i>' . __('Generate');
+                $buttons['generate']['url'] = $this->setQueryString($url, [
+                    'institution_id' => $institutionId,
+                    'user_id' => $userId,
+                    'index_id' => $indexId,
+                    'academic_period_id' => $entity->academic_period_id,
+                    'action' => 'index'
+                ]);
+            }
+            // end generate button
         }
 
         return $buttons;

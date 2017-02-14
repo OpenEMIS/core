@@ -712,15 +712,19 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		$studentId = $params['student_id'];
 		$academicPeriodId = $params['academic_period_id'];
 
+		$Indexes = TableRegistry::get('Indexes.Indexes');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
 		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+
+		$absenceTypeId = $Indexes->getCriteriasDetails($params['criteria_name'])['absence_type_id'];
 
 		$absenceResults = $this
 			->find()
 			->where([
 				$this->aliasField('institution_id') => $institutionId,
 				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('absence_type_id') => $absenceTypeId,
 				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate->format('Y-m-d'),
 				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d'),
 			])
@@ -739,32 +743,39 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 	{
+		$Indexes = TableRegistry::get('Indexes.Indexes');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
 		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+		$absenceTypeId = $Indexes->getCriteriasDetails($criteriaName)['absence_type_id'];
 
 		$absenceResults = $this
 			->find()
-			->contain(['AbsenceTypes'])
+			->contain(['AbsenceTypes', 'StudentAbsenceReasons'])
 			->where([
 				$this->aliasField('institution_id') => $institutionId,
 				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('absence_type_id') => $absenceTypeId,
 				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate->format('Y-m-d'),
-				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d'),
-
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d')
 			])
 			->all();
 
 		$referenceDetails = [];
 		foreach ($absenceResults as $key => $obj) {
-			$title = $obj->absence_type->name;
+			// $title = $obj->absence_type->name;
+			$reason = 'Unexcused';
+			if (isset($obj->student_absence_reason->name)) {
+				$reason = $obj->student_absence_reason->name;
+			}
+
 			$startDate = $obj->start_date;
 			$endDate = $obj->end_date;
 
 			if ($startDate == $endDate) {
-				$referenceDetails[$obj->id] = __($title) . ' (' . $startDate->format('d/m/Y') . ')';
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format('d/m/Y') . ')';
 			} else {
-				$referenceDetails[$obj->id] = __($title) . ' (' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y') . ')';
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y') . ')';
 			}
 		}
 
