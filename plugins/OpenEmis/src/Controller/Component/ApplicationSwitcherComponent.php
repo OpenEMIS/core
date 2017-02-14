@@ -14,8 +14,10 @@ class ApplicationSwitcherComponent extends Component {
     use ProductListsTrait;
 
     private $controller;
+    private $productName;
 
     public function initialize(array $config) {
+        $this->productName = $config['productName'];
         $this->controller = $this->_registry->getController();
     }
 
@@ -45,7 +47,7 @@ class ApplicationSwitcherComponent extends Component {
                 ->hydrate(false)
                 ->toArray();
             $productListData = array_flip(array_column($productListOptions, 'name'));
-            $productListData[$this->controller->_productName] = '';
+            $productListData[$this->productName] = '';
             $productLists = array_diff_key($productList, $productListData);
             foreach ($productLists as $product => $value) {
                 $data = [
