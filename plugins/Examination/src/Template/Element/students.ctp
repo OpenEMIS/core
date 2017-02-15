@@ -16,6 +16,7 @@ $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => 
                             <th><?= __('Registration Number') ?></th>
                             <th></th>
                             <th><?= __('OpenEMIS ID') ?></th>
+                            <th></th>
                             <th><?= __('Student') ?></th>
                             <th><?= __('Current Grade') ?></th>
                             <th><?= __('Special Needs') ?></th>
@@ -59,14 +60,13 @@ $checkboxOptions = ['type' => 'checkbox', 'class' => 'icheck-input', 'label' => 
                                     </ul>
                                 <?php endif; ?>
                                 </td>
+                                <td><?php echo $obj->user->openemis_no; ?></td>
                                 <td>
-                                <?php
-                                    echo $obj->user->openemis_no;
-                                    if ($specialNeeds) {
-                                        echo ' <i class="fa fa-info-circle fa-lg icon-red"></i>';
-                                    }
-                                ?>
-
+                                    <?php
+                                        if ($specialNeeds) {
+                                            echo '<i class="fa fa-info-circle fa-lg icon-red"></i>';
+                                        }
+                                    ?>
                                 </td>
                                 <td><?= $obj->user->name ?></td>
                                 <td><?= $obj->_matchingData['EducationGrades']->programme_grade_name ?></td>
