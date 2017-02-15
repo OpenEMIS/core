@@ -16,14 +16,16 @@ use Cake\I18n\Time;
 class RegisteredStudentsBehavior extends Behavior {
 	public function initialize(array $config) {
 		parent::initialize($config);
-
         $model = $this->_table;
+
+        $model->addBehavior('User.AdvancedNameSearch');
         $model->toggle('edit', false); // temporary not allow edit
         $model->toggle('remove', false);
 	}
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
@@ -216,6 +218,12 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->aliasField('academic_period_id'),
                 $model->aliasField('examination_id')
             ]);
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'student_id';
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
