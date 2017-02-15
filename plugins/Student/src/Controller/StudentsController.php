@@ -77,6 +77,24 @@ class StudentsController extends AppController {
 			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
 		}
 	}
+
+	public function ExaminationResults() {
+		$session = $this->request->session();
+
+		if ($session->check('Student.Students.id')) {
+			$studentId = $session->read('Student.Students.id');
+			$session->write('Student.ExaminationResults.student_id', $studentId);
+
+			// tabs
+			$options = ['type' => 'student'];
+	        $tabElements = $this->getAcademicTabElements($options);
+	        $this->set('tabElements', $tabElements);
+	        $this->set('selectedAction', 'ExaminationResults');
+	        // End
+
+			$this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
+		}
+	}
 	// End
 
 	private function attachAngularModules() {
@@ -88,6 +106,14 @@ class StudentsController extends AppController {
 					'alert.svc',
 					'student.results.ctrl',
 					'student.results.svc'
+				]);
+				break;
+
+			case 'ExaminationResults':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.examination_results.ctrl',
+					'student.examination_results.svc'
 				]);
 				break;
 		}
