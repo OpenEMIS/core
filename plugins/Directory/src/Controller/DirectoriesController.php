@@ -108,6 +108,24 @@ class DirectoriesController extends AppController {
 			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
 		}
 	}
+
+	public function StudentExaminationResults() {
+		$session = $this->request->session();
+
+		if ($session->check('Directory.Directories.id')) {
+			$studentId = $session->read('Directory.Directories.id');
+			$session->write('Student.ExaminationResults.student_id', $studentId);
+
+			// tabs
+			$options['type'] = 'student';
+			$tabElements = $this->getAcademicTabElements($options);
+			$this->set('tabElements', $tabElements);
+			$this->set('selectedAction', 'ExaminationResults');
+	        // End
+
+			$this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
+		}
+	}
 	// End
 
 	private function attachAngularModules() {
@@ -119,6 +137,13 @@ class DirectoriesController extends AppController {
 					'alert.svc',
 					'student.results.ctrl',
 					'student.results.svc'
+				]);
+				break;
+			case 'StudentExaminationResults':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.examination_results.ctrl',
+					'student.examination_results.svc'
 				]);
 				break;
 		}
@@ -370,6 +395,7 @@ class DirectoriesController extends AppController {
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Assessments')],
+			'ExaminationResults' => ['text' => __('Examinations')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];

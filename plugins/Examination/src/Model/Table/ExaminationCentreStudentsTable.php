@@ -30,7 +30,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
 
-        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('CompositeKey');

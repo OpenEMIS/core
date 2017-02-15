@@ -29,7 +29,6 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('Excel', [
             'excludes' => ['id', 'education_subject_id', 'examination_item_id'],
