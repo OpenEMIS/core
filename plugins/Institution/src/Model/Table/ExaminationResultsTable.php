@@ -30,7 +30,6 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects']);
 
-        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
 
         $this->toggle('add', false);
@@ -52,7 +51,10 @@ class ExaminationResultsTable extends ControllerActionTable
 
             if (!is_null($this->examinationItems) && array_key_exists($examinationItemId, $this->examinationItems)) {
                 $examinationItemEntity = $this->examinationItems[$examinationItemId];
-                return $examinationItemEntity->code_name;
+                $label = $examinationItemEntity->code;
+                $label .= '&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="'.$examinationItemEntity->name.'" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+
+                return $label;
             }
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
