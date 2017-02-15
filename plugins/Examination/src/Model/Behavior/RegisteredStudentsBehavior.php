@@ -174,8 +174,6 @@ class RegisteredStudentsBehavior extends Behavior {
         $extra['selectedExamination'] = $selectedExamination;
         // End
 
-        $extra['auto_order'] = false;
-        $extra['auto_search'] = false;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $sortList = ['Users.openemis_no', 'Users.first_name'];
@@ -186,8 +184,8 @@ class RegisteredStudentsBehavior extends Behavior {
 
         $search = $model->getSearchKey();
         if (!empty($search)) {
-            // function from AdvancedNameSearchBehavior
-            $query = $model->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+            $nameConditions = $model->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
         }
 
         $query
