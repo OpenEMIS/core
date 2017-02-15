@@ -32,8 +32,6 @@ class DirectoriesController extends AppController {
 
 
 			// Student
-			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
-			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
@@ -88,6 +86,8 @@ class DirectoriesController extends AppController {
     public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
 	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
+	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
+	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
 	// End
 
 	// AngularJS
