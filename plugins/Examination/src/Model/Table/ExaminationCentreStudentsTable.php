@@ -85,12 +85,10 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
         $ExaminationItemResults->deleteAll($conditions);
 
-        if (!is_array($examinationCentres)) {
-            $examinationCentres = [0 => $examinationCentres];
-        }
+        $examinationCentreIds = is_array($examinationCentres) ? $examinationCentres : array($examinationCentres);
 
         // update affected exam centre(s) total registered count
-        foreach ($examinationCentres as $centreId) {
+        foreach ($examinationCentreIds as $centreId) {
             $studentCount = $this->find()
                 ->where([
                     $this->aliasField('examination_centre_id') => $centreId,
