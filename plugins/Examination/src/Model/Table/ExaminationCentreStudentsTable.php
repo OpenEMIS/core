@@ -263,10 +263,7 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
         if (!empty($Admission)) {
             $tooltipMessage = __('Student has been transferred to') . ' (' . $Admission->institution->code_name . ') ' . __('after registration');
-            return  __('Yes') . 
-                    "<div class='tooltip-desc' style='display: inline-block;'>
-                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
-                    </div>";
+            return  __('Yes') . " <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='left' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>";
         } else {
             return __('No');
         }
