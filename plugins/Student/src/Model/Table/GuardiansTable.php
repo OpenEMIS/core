@@ -10,9 +10,9 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class GuardiansTable extends AppTable {
+class GuardiansTable extends ControllerActionTable {
     private $editButtonAction = 'GuardianUser';
 
     public function initialize(array $config) {
@@ -27,6 +27,8 @@ class GuardiansTable extends AppTable {
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
+
+        $this->addBehavior('ControllerAction.Image');
     }
 
     public function validationDefault(Validator $validator) {
@@ -38,6 +40,13 @@ class GuardiansTable extends AppTable {
                 'on' => 'create'
             ])
         ;
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
+        return $events;
     }
 
     private function setupTabElements($entity=null) {
@@ -63,8 +72,8 @@ class GuardiansTable extends AppTable {
                 $action = 'StudentGuardians';
                 $actionUser = 'StudentGuardianUser';
             }
-            $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $entity->id]);
-            $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $entity->guardian_id, 'id' => $entity->id]);
+            $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
+            $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
 
             $this->controller->set('tabElements', $tabElements);
             $this->controller->set('selectedAction', $this->alias());
@@ -75,6 +84,10 @@ class GuardiansTable extends AppTable {
         if ($this->action != 'view') {
             $this->setupTabElements();
         }
+
+        $this->setFieldOrder([
+            'photo_content', 'openemis_no', 'guardian_id', 'guardian_relation_id'
+        ]);
     }
 
     public function onGetGuardianId(Event $event, Entity $entity) {
@@ -89,13 +102,14 @@ class GuardiansTable extends AppTable {
         } else {
             $studentId = $this->Session->read('Student.Students.id');
         }
-        $this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
-        $this->ControllerAction->field('guardian_id');
-        $this->ControllerAction->field('guardian_relation_id', ['type' => 'select']);
+        $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
+        $this->field('guardian_id');
+        $this->field('guardian_relation_id', ['type' => 'select']);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-        $search = $this->ControllerAction->getSearchKey();
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $search = $this->getSearchKey();
         if (!empty($search)) {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
@@ -111,13 +125,12 @@ class GuardiansTable extends AppTable {
     }
 
     public function addAfterAction(Event $event, Entity $entity) {
-        $this->ControllerAction->field('id', ['value' => Text::uuid()]);
+        $this->field('id', ['value' => Text::uuid()]);
     }
 
     public function viewBeforeAction(Event $event) {
-        $this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
-        $this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
-        $this->fields['guardian_id']['order'] = 10;
+        $this->field('photo_content', ['type' => 'image', 'order' => 0]);
+        $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity) {
@@ -129,7 +142,7 @@ class GuardiansTable extends AppTable {
     }
 
     public function editAfterAction(Event $event, Entity $entity) {
-        $this->ControllerAction->field('guardian_id', [
+        $this->field('guardian_id', [
             'type' => 'readonly',
             'order' => 10,
             'attr' => ['value' => $entity->user->name_with_id]
@@ -241,8 +254,7 @@ class GuardiansTable extends AppTable {
                 'controller' => $this->controller->name,
                 'action' => $this->editButtonAction(),
                 'edit',
-                $entity->_matchingData['Users']->id,
-                'id' => $entity->id
+                $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])
             ];
         }
 

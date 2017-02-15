@@ -1296,6 +1296,11 @@ trait MessagesTrait {
                 'hours_required' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value'
                 ]
+            ],
+            'EducationSubjects' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
             ]
         ],
         'Localization' => [
