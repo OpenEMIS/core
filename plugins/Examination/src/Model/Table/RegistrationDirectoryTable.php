@@ -48,7 +48,8 @@ class RegistrationDirectoryTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['SpecialNeeds.SpecialNeedTypes']);
+        $query->contain(['SpecialNeeds.SpecialNeedTypes'])
+            ->where([$this->aliasField('super_admin') => 0]);
 
         $search = $this->getSearchKey();
         if (!empty($search)) {
