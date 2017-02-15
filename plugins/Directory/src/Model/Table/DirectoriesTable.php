@@ -320,7 +320,8 @@ class DirectoriesTable extends ControllerActionTable {
         }
     }
 
-	public function addAfterAction(Event $event) {
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
 		foreach ($this->fields as $key => $value) {
@@ -429,16 +430,6 @@ class DirectoriesTable extends ControllerActionTable {
 			$attr['value'] = $value;
 			return $attr;
 		}
-	}
-
-	//to handle identity_number field that is automatically created by mandatory behaviour.
-	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-			$attr['fieldName'] = $this->alias().'.identities.0.number';
-			$attr['attr']['label'] = __('Identity Number');
-		}
-		return $attr;
 	}
 
 	public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions) {
@@ -582,8 +573,8 @@ class DirectoriesTable extends ControllerActionTable {
 
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    {
 		$isSet = $this->setSessionAfterAction($event, $entity);
 
 		if ($isSet) {
@@ -600,7 +591,7 @@ class DirectoriesTable extends ControllerActionTable {
 		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity)
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$isSet = $this->setSessionAfterAction($event, $entity);
 		if ($isSet) {

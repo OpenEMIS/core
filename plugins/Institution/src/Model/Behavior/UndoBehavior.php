@@ -128,8 +128,8 @@ class UndoBehavior extends Behavior {
                     $entity->end_date = $endDate;
                 }
             //undo which dont store previous end_date will then take the end date of the academic period.
-            } else if ($undoStatus == 'DROPOUT' || $undoStatus == 'REPEATED' || $undoStatus == 'PROMOTED') {
-                
+            } else if ($undoStatus == 'WITHDRAWN' || $undoStatus == 'REPEATED' || $undoStatus == 'PROMOTED') {
+
                 $academicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
                 $academicPeriod = $academicPeriodTable->get($entity->academic_period_id);
 
