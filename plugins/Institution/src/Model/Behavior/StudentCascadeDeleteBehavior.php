@@ -30,13 +30,13 @@ class StudentCascadeDeleteBehavior extends Behavior {
 			$this->deleteStudentAbsences($entity);
 			$this->deleteStudentBehaviours($entity);
 			$this->deleteStudentSurveys($entity);
-			$this->deleteStudentDropoutRecords($entity);
+			$this->deleteStudentWithdrawRecords($entity);
 			$this->deleteStudentAdmissionRecords($entity);
 		}
 
         $listeners = [
             TableRegistry::get('Institution.StudentAdmission'),
-            TableRegistry::get('Institution.StudentDropout')
+            TableRegistry::get('Institution.StudentWithdraw')
         ];
         $this->_table->dispatchEventToModels('Model.Students.afterDelete', [$entity], $this->_table, $listeners);
     }
@@ -268,19 +268,19 @@ class StudentCascadeDeleteBehavior extends Behavior {
         }
 	}
 
-	private function deleteStudentDropoutRecords(Entity $entity) {
-		$StudentDropout = TableRegistry::get('Institution.StudentDropout');
-		$studentDropoutData = $StudentDropout->find()
+	private function deleteStudentWithdrawRecords(Entity $entity) {
+		$StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
+		$studentWithdrawData = $StudentWithdraw->find()
             ->where([
-    			$StudentDropout->aliasField('institution_id') => $entity->institution_id,
-    			$StudentDropout->aliasField('academic_period_id') => $entity->academic_period_id,
-    			$StudentDropout->aliasField('education_grade_id') => $entity->education_grade_id,
-    			$StudentDropout->aliasField('student_id') => $entity->student_id
+    			$StudentWithdraw->aliasField('institution_id') => $entity->institution_id,
+    			$StudentWithdraw->aliasField('academic_period_id') => $entity->academic_period_id,
+    			$StudentWithdraw->aliasField('education_grade_id') => $entity->education_grade_id,
+    			$StudentWithdraw->aliasField('student_id') => $entity->student_id
     		])
             ->toArray()
             ;
-        foreach ($studentDropoutData as $key => $value) {
-            $StudentDropout->delete($value);
+        foreach ($studentWithdrawData as $key => $value) {
+            $StudentWithdraw->delete($value);
         }
 	}
 
