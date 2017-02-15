@@ -52,7 +52,7 @@ class ExaminationResultsTable extends ControllerActionTable
             if (!is_null($this->examinationItems) && array_key_exists($examinationItemId, $this->examinationItems)) {
                 $examinationItemEntity = $this->examinationItems[$examinationItemId];
                 $label = $examinationItemEntity->code;
-                $label .= '&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="'.$examinationItemEntity->name.'" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+                $label .= '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="'.$examinationItemEntity->name.'" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
 
                 return $label;
             }
