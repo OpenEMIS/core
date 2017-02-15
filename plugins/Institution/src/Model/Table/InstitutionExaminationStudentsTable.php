@@ -213,7 +213,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $undoButton['attr']['data-toggle'] = 'tooltip';
         $undoButton['attr']['data-placement'] = 'bottom';
         $undoButton['attr']['escape'] = false;
-        $undoButton['attr']['title'] = __('Bulk Unregister');
+        $undoButton['attr']['title'] = __('Unregister');
         $toolbarButtonsArray['undo'] = $undoButton;
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
