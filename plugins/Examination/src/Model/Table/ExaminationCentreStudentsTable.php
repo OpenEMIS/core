@@ -60,7 +60,45 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
+        $events['Model.Examinations.afterUnregister'] = 'examinationsAfterUnregister';
         return $events;
+    }
+
+    public function examinationsAfterUnregister(Event $event, $students, $academicPeriodId, $examinationId, $examinationCentres)
+    {
+        $conditions = [
+            'academic_period_id' => $academicPeriodId,
+            'examination_id' => $examinationId
+        ];
+
+        if (is_array($students)) {
+            $conditions['student_id IN'] = $students;
+        } else {
+            $conditions['student_id'] = $students;
+        }
+
+        // delete student(s) from exam centre room
+        $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+        $ExaminationCentreRoomStudents->deleteAll($conditions);
+
+        // delete results for student(s)
+        $ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
+        $ExaminationItemResults->deleteAll($conditions);
+
+        $examinationCentreIds = is_array($examinationCentres) ? $examinationCentres : array($examinationCentres);
+
+        // update affected exam centre(s) total registered count
+        foreach ($examinationCentreIds as $centreId) {
+            $studentCount = $this->find()
+                ->where([
+                    $this->aliasField('examination_centre_id') => $centreId,
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('examination_id') => $examinationId
+                ])
+                ->group([$this->aliasField('student_id')])
+                ->count();
+            $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $centreId]);
+        }
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
