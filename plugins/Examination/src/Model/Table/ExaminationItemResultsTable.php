@@ -36,6 +36,13 @@ class ExaminationItemResultsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $this->setTotalMark($entity);
+
+        // delete record if user removes the mark or grade
+        $marks = $entity->marks;
+        $grade = $entity->examination_grading_option_id;
+        if (is_null($marks) && is_null($grade)) {
+            $this->delete($entity);
+        }
     }
 
     private function getExamGrading(Entity $entity)
