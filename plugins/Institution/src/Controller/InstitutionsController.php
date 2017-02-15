@@ -170,12 +170,12 @@ class InstitutionsController extends AppController
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
             $externalDataSource = false;
-        	$ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
-        	$externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
-        	if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
-        		$externalDataSource = true;
-        	}
-        	$this->set('externalDataSource', $externalDataSource);
+            $ConfigItemTable = TableRegistry::get('Configuration.ConfigItems');
+            $externalSourceType = $ConfigItemTable->find()->where([$ConfigItemTable->aliasField('code') => 'external_data_source_type'])->first();
+            if (!empty($externalSourceType) && $externalSourceType['value'] != 'None') {
+                $externalDataSource = true;
+            }
+            $this->set('externalDataSource', $externalDataSource);
             $this->render('studentAdd');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Students']);
@@ -269,7 +269,15 @@ class InstitutionsController extends AppController
         // this is to cater for back links
         $query = $this->request->query;
 
-        if (array_key_exists('institution_id', $query)) {
+        if ($this->ControllerAction->getQueryString('institution_id')) {
+            $institutionId = $this->ControllerAction->getQueryString('institution_id');
+            //check for permission
+            $this->checkInstitutionAccess($institutionId, $event);
+            if ($event->isStopped()) {
+                return false;
+            }
+            $session->write('Institution.Institutions.id', $institutionId);
+        } else if (array_key_exists('institution_id', $query)) {
             //check for permission
             $this->checkInstitutionAccess($query['institution_id'], $event);
             if ($event->isStopped()) {
@@ -280,6 +288,10 @@ class InstitutionsController extends AppController
 
         if ($action == 'index') {
             $session->delete('Institution.Institutions');
+        } else if ($action == 'StudentUser') {
+            $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
+        } else if ($action == 'StaffUser') {
+            $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         }
 
         if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
@@ -323,34 +335,34 @@ class InstitutionsController extends AppController
         echo $this->UserOpenEMISID->getUniqueOpenemisId();
     }
 
-	private function attachAngularModules()
+    private function attachAngularModules()
     {
-		$action = $this->request->action;
+        $action = $this->request->action;
 
-		switch ($action) {
-			case 'Results':
-				$this->Angular->addModules([
-					'alert.svc',
-					'institutions.results.ctrl',
-					'institutions.results.svc'
-				]);
-				break;
-			case 'Surveys':
-				$this->Angular->addModules([
-					'relevancy.rules.ctrl'
-				]);
-				$this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
-				break;
+        switch ($action) {
+            case 'Results':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'institutions.results.ctrl',
+                    'institutions.results.svc'
+                ]);
+                break;
+            case 'Surveys':
+                $this->Angular->addModules([
+                    'relevancy.rules.ctrl'
+                ]);
+                $this->set('ngController', 'RelevancyRulesCtrl as RelevancyRulesController');
+                break;
             case 'Students':
-            	if (isset($this->request->pass[0])) {
-            		if ($this->request->param('pass')[0] == 'add') {
-	                    $this->Angular->addModules([
-	                        'alert.svc',
-	                        'institutions.students.ctrl',
-	                        'institutions.students.svc'
-	                    ]);
-	                }
-            	}
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'add') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'institutions.students.ctrl',
+                            'institutions.students.svc'
+                        ]);
+                    }
+                }
                 break;
             case 'Staff':
                 if (isset($this->request->pass[0])) {
@@ -363,8 +375,8 @@ class InstitutionsController extends AppController
                     }
                 }
                 break;
-		}
-	}
+        }
+    }
 
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
@@ -412,7 +424,7 @@ class InstitutionsController extends AppController
             $requestQuery = $this->request->query;
             if (isset($params['pass'][1])) {
                 if ($model->table() == 'security_users' && !$isDownload) {
-                    $ids = $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
+                    $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
                 }
             } else if (isset($requestQuery['user_id'][1])) {
@@ -609,6 +621,8 @@ class InstitutionsController extends AppController
 
     public function getUserTabElements($options = [])
     {
+        $encodedParam = $this->request->params['pass'][1]; //get the encoded param from URL
+
         $userRole = (array_key_exists('userRole', $options))? $options['userRole']: null;
         $action = (array_key_exists('action', $options))? $options['action']: 'add';
         $id = (array_key_exists('id', $options))? $options['id']: 0;
@@ -638,7 +652,16 @@ class InstitutionsController extends AppController
 
         $studentTabElements = [
             'Identities' => ['text' => __('Identities')],
-            'UserNationalities' => ['url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Nationalities', $id], 'text' => __('Nationalities'), 'urlModel' => 'Nationalities'],
+            'UserNationalities' => [
+                'url' => [
+                    'plugin' => $this->plugin, 
+                    'controller' => $this->name, 
+                    'action' => 'Nationalities', 
+                    $id
+                ], 
+                'text' => __('Nationalities'), 
+                'urlModel' => 'Nationalities'
+            ],
             'Contacts' => ['text' => __('Contacts')],
             'Guardians' => ['text' => __('Guardians')],
             'Languages' => ['text' => __('Languages')],
@@ -673,9 +696,22 @@ class InstitutionsController extends AppController
                 $tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
             }
 
+            $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
+
             foreach ($studentTabElements as $key => $value) {
                 $urlModel = (array_key_exists('urlModel', $value))? $value['urlModel'] : $key;
-                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$urlModel, 'index']);
+
+                $tempParam = [];
+                $tempParam['action'] = $urlModel;
+                $tempParam[] = 'index';
+
+                $url = $this->ControllerAction
+                        ->setQueryString(
+                            array_merge($studentUrl, $tempParam), 
+                            ['security_user_id' => $securityUserId]
+                        );
+
+                $tabElements[$key]['url'] = $url;
             }
         }
 
