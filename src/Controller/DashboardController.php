@@ -17,7 +17,7 @@ class DashboardController extends AppController {
 		$this->ControllerAction->models = [
 			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']],
 			'StudentAdmission' 	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']],
-			'StudentDropout' 	=> ['className' => 'Institution.StudentDropout', 'actions' => ['edit']],
+			'StudentWithdraw' 	=> ['className' => 'Institution.StudentWithdraw', 'actions' => ['edit']],
 		];
 		$this->attachAngularModules();
     }

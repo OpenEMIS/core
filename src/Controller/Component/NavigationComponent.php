@@ -426,7 +426,7 @@ class NavigationComponent extends Component
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
-					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add',
+					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
 					'Institutions.ImportStudents', 'Institutions.Students'],
 				'params' => ['plugin' => 'Institution']
 			],
@@ -605,7 +605,7 @@ class NavigationComponent extends Component
 				'title' => 'Academic',
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards',
+				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.Awards',
 					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance',
@@ -749,7 +749,7 @@ class NavigationComponent extends Component
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
 					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-						'Directories.StudentResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
+						'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
 				],
 				'Directories.StudentBankAccounts' => [
 					'title' => 'Finance',
