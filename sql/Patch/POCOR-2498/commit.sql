@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS `indexes` (
     `name` varchar(100) NOT NULL,
     `generated_by` int(11) DEFAULT NULL,
     `generated_on` datetime DEFAULT NULL,
+    `status` INT(2) NOT NULL DEFAULT '1' COMMENT '1 => Not Generated 2 => Processing 3 => Completed 4 => Not Completed',
+    `process_id` INT(11) DEFAULT NULL,
     `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
     `modified_user_id` int(11) DEFAULT NULL,
     `modified` datetime DEFAULT NULL,
@@ -17,7 +19,6 @@ CREATE TABLE IF NOT EXISTS `indexes` (
 
 ALTER TABLE `indexes`
     ADD KEY `academic_period_id` (`academic_period_id`);
-
 
 -- Table structure for table `indexes_criterias`
 CREATE TABLE IF NOT EXISTS `indexes_criterias` (

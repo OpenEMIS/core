@@ -32,11 +32,11 @@ class InstitutionIndexesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name',['sort' => false]);
-        $this->field('average_index',['sort' => false]);
-        $this->field('total_risk_index',['sort' => false]);
+        $this->field('number_of_risk_index',['sort' => false]);
         $this->field('academic_period_id',['visible' => false]);
-
         $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
+        $this->field('status',['after' => 'generated_on']);
+        $this->field('process_id',['visible' => false]);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -66,11 +66,11 @@ class InstitutionIndexesTable extends ControllerActionTable
     public function setupFields(Event $event, Entity $entity)
     {
         $this->field('generated_by',['visible' => false]);
-
-        $this->setFieldOrder(['name']);
+        $this->field('status',['visible' => false]);
+        $this->field('process_id',['visible' => false]);
     }
 
-    public function onGetTotalRiskIndex(Event $event, Entity $entity)
+    public function onGetNumberOfRiskIndex(Event $event, Entity $entity)
     {
         $indexId = $entity->id;
         $indexTotal = $this->IndexesCriterias->getTotalIndex($indexId);
@@ -89,6 +89,12 @@ class InstitutionIndexesTable extends ControllerActionTable
         }
 
         return $userName;
+    }
+
+    public function onGetStatus(Event $event, Entity $entity)
+    {
+        $Indexes = TableRegistry::get('Indexes.Indexes');
+        return $Indexes->getIndexesStatus($entity->status);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
