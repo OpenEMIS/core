@@ -29,6 +29,13 @@ class InstitutionIndexesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.generate'] = 'generate';
+        return $events;
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('name',['sort' => false]);
@@ -61,6 +68,47 @@ class InstitutionIndexesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']]);
+    }
+
+    public function generate(Event $event, ArrayObject $extra)
+    {
+        $Indexes = TableRegistry::get('Indexes.Indexes');
+        $requestQuery = $this->request->query;
+        $params = $this->paramsDecode($requestQuery['queryString']);
+
+        $institutionId = $params['institution_id'];
+        $userId = $params['user_id'];
+        $indexId = $params['index_id'];
+        $academicPeriodId = $params['academic_period_id'];
+
+        // update indexes process_id and status
+        $pid = getmypid();
+        $runningPid = $this->find()->where(['id' => $indexId])->first()->process_id;
+
+        // if processing id not empty (process still running or process stuck)
+        if (!empty($runningPid)) {
+            exec("kill -9 " . $runningPid);
+        }
+
+        $this->updateAll([
+            'process_id' => $pid,
+            'status' => 2 // processing
+        ],
+        ['id' => $indexId]);
+
+        // trigger shell
+        $Indexes->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId, $academicPeriodId);
+
+        // redirect to index page
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'InstitutionIndexes',
+            'index'
+        ];
+
+        $event->stopPropagation();
+        return $this->controller->redirect($url);
     }
 
     public function setupFields(Event $event, Entity $entity)
@@ -115,11 +163,11 @@ class InstitutionIndexesTable extends ControllerActionTable
             ];
 
             // generate button
-            if ($this->AccessControl->check(['Indexes', 'Indexes', 'process'])) { // to check execute permission
+            if ($this->AccessControl->check(['Institutions', 'InstitutionIndexes', 'generate'])) {
                 $url = [
-                    'plugin' => 'Indexes',
-                    'controller' => 'Indexes',
-                    'action' => 'Indexes',
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'InstitutionIndexes',
                     'generate'
                 ];
 
