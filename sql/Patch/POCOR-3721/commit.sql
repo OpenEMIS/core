@@ -134,6 +134,7 @@ CREATE TABLE `license_classifications` (
   `default` int(1) NOT NULL DEFAULT '0',
   `international_code` varchar(50) DEFAULT NULL,
   `national_code` varchar(50) DEFAULT NULL,
+  `license_type_id` int(11) NOT NULL COMMENT 'links to license_types.id',
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
