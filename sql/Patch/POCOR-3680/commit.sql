@@ -8,12 +8,6 @@ INSERT INTO `z_3680_security_group_users`
 SELECT * FROM `security_group_users`;
 
 DELETE FROM `security_group_users` 
-WHERE `security_group_id` IN (
-    SELECT `security_group_id` 
-    FROM `institutions`
-);
-
-DELETE FROM `security_group_users` 
 WHERE EXISTS (
     SELECT 1
     FROM `institutions`
