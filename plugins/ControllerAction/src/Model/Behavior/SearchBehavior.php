@@ -60,12 +60,13 @@ class SearchBehavior extends Behavior {
 
 		$schema = $model->schema();
 		$columns = $schema->columns();
+		$excludeFields = ['id', 'password'];
 		if ($extra['auto_search']) {
 			$OR = [];
 			if (!empty($search)) {
 				foreach ($columns as $col) {
 					$attr = $schema->column($col);
-					if ($col == 'password') continue;
+					if (in_array($col, $excludeFields)) continue;
 					if (in_array($attr['type'], ['string', 'text'])) {
 						$OR[$model->aliasField($col).' LIKE'] = '%' . $search . '%';
 					}
