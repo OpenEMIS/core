@@ -599,10 +599,14 @@ class DirectoriesTable extends ControllerActionTable {
 		$this->setupTabElements($entity);
 
         $this->fields['nationality_id']['type'] = 'readonly';
-        $this->fields['nationality_id']['attr']['value'] = $entity->main_nationality->name;
+        if (!empty($entity->main_nationality)) {
+            $this->fields['nationality_id']['attr']['value'] = $entity->main_nationality->name;
+        }
 
         $this->fields['identity_type_id']['type'] = 'readonly';
-        $this->fields['identity_type_id']['attr']['value'] = $entity->main_identity_type->name;
+        if (!empty($entity->main_identity_type)) {
+            $this->fields['identity_type_id']['attr']['value'] = $entity->main_identity_type->name;
+        }
 
 		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
