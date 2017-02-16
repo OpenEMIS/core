@@ -112,9 +112,9 @@ UPDATE `student_behaviours`
 
 -- Security functions (permission)
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-    VALUES ('1054', 'Indexes', 'Institutions', 'Institutions', 'Students', '8', 'InstitutionIndexes.index|InstitutionIndexes.view|InstitutionStudentIndexes.index', NULL, NULL, NULL, 'Indexes.generate', '1054', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00'),
-        ('2030', 'Indexes', 'Institutions', 'Institutions', 'Students - Academic', '2000', 'StudentIndexes.index|StudentIndexes.view', NULL, NULL, NULL, NULL, '2030', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00'),
-        ('5064', 'Indexes', 'Indexes', 'Administration', 'Indexes', '5000', 'Indexes.index|Indexes.view', 'Indexes.edit', 'Indexes.add', NULL, 'Indexes.generate', '5064', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00');
+    VALUES ('1055', 'Indexes', 'Institutions', 'Institutions', 'Students', '8', 'InstitutionIndexes.index|InstitutionIndexes.view|InstitutionStudentIndexes.index', NULL, NULL, NULL, 'Indexes.generate', '1055', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00'),
+        ('2031', 'Indexes', 'Institutions', 'Institutions', 'Students - Academic', '2000', 'StudentIndexes.index|StudentIndexes.view', NULL, NULL, NULL, NULL, '2031', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00'),
+        ('5066', 'Indexes', 'Indexes', 'Administration', 'Indexes', '5000', 'Indexes.index|Indexes.view', 'Indexes.edit', 'Indexes.add', NULL, NULL, '5066', '1', NULL, NULL, NULL, '1', '2015-08-04 02:41:00');
 
 
 
