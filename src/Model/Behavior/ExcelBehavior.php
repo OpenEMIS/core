@@ -94,6 +94,7 @@ class ExcelBehavior extends Behavior {
         }
         $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
         $this->generateXLXS($ids);
+        return true;
     }
 
     private function eventKey($key) {
@@ -480,7 +481,7 @@ class ExcelBehavior extends Behavior {
         echo file_get_contents($path);
     }
 
-    private function purge($path) 
+    private function purge($path)
     {
         if (file_exists($path)) {
             unlink($path);

@@ -127,8 +127,8 @@ class StaffUserTable extends ControllerActionTable {
         ];
     }
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
-		$this->field('username', ['visible' => false]);
+    public function beforeAction(Event $event, ArrayObject $extra) {
+        $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
             $id = $this->request->query('id');
@@ -141,7 +141,7 @@ class StaffUserTable extends ControllerActionTable {
                 $toolbarButtons['back']['url'][1] = $this->paramsPass(0);
             }
         }
-	}
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -159,38 +159,51 @@ class StaffUserTable extends ControllerActionTable {
         return $validator;
     }
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-		if (!$this->AccessControl->isAdmin()) {
-			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
-		}
-		$this->Session->write('Staff.Staff.id', $entity->id);
-		$this->Session->write('Staff.Staff.name', $entity->name);
-		$this->setupTabElements($entity);
-	}
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'MainNationalities', 'MainIdentityTypes'
+        ]);
+    }
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->Session->write('Staff.Staff.id', $entity->id);
-		$this->Session->write('Staff.Staff.name', $entity->name);
-		$this->setupTabElements($entity);
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+        if (!$this->AccessControl->isAdmin()) {
+            $institutionIds = $this->AccessControl->getInstitutionsByUser();
+            $this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+        }
+        $this->Session->write('Staff.Staff.id', $entity->id);
+        $this->Session->write('Staff.Staff.name', $entity->name);
+        $this->setupTabElements($entity);
+    }
 
-		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
-	}
+    public function editAfterAction(Event $event, Entity $entity) {
+        $this->Session->write('Staff.Staff.id', $entity->id);
+        $this->Session->write('Staff.Staff.name', $entity->name);
+        $this->setupTabElements($entity);
 
-	private function setupTabElements($entity) {
-		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-		$options = [
-			'userRole' => 'Staff',
-			'action' => $this->action,
-			'id' => $id,
-			'userId' => $entity->id
-		];
+        $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 
-		$tabElements = $this->controller->getUserTabElements($options);
+        $this->fields['nationality_id']['type'] = 'readonly';
+        $this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
 
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
+    }
+
+    private function setupTabElements($entity) {
+        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+        $options = [
+            'userRole' => 'Staff',
+            'action' => $this->action,
+            'id' => $id,
+            'userId' => $entity->id
+        ];
+
+        $tabElements = $this->controller->getUserTabElements($options);
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {

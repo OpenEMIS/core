@@ -68,13 +68,18 @@
 
 					<tr>
 						<td>
-							<?= $this->html->link($obj->student_openemis_no, [
+							<?php
+								$url = [
 									'plugin' => 'Institution',
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id, 'institution_id' => $obj->institution_id])
-								]) ?>
+									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id])
+								];
+
+								$newUrl = $this->ControllerAction->setQueryString($url, ['institution_id' => $obj->institution_id]);
+							?>
+							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
 						<td><?= $obj->student_name ?></td>
 						<td><?= __($obj->student_gender) ?></td>
