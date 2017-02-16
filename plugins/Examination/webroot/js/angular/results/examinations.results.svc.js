@@ -70,7 +70,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             .select()
             .contain(['EducationSubjects', 'ExaminationGradingTypes.GradingOptions'])
             .where({examination_id: examinationId})
-            .order(['EducationSubjects.name'])
+            .order(['EducationSubjects.order', 'ExaminationItems.code', 'ExaminationItems.name'])
             .ajax({success: success, defer: true});
     };
 
