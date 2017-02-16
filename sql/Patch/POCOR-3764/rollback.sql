@@ -1,35 +1,3 @@
--- POCOR-3660
--- labels
-DELETE FROM `labels` WHERE `id` = '11fd443d-f298-11e6-aa46-525400b263eb';
-
--- security_functions
-DELETE FROM `security_functions` WHERE `id` IN (1054);
-
-SET @order := 0;
-SELECT `order` INTO @order FROM `security_functions` WHERE `id` = 1027;
-UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN @order AND 1999;
-
--- system_patches
-DELETE FROM `system_patches` WHERE `issue`='POCOR-3660';
-
-
--- POCOR-3659
--- security_functions
-DELETE FROM `security_functions` WHERE `id` IN (2030, 7050);
-
-SET @order := 0;
-SELECT `order` INTO @order FROM `security_functions` WHERE `id` = 2007;
-UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN @order AND 2999;
-
-SET @order := 0;
-SELECT `order` INTO @order FROM `security_functions` WHERE `id` = 7016;
-UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN @order AND 7999;
-
--- system_patches
-DELETE FROM `system_patches` WHERE `issue`='POCOR-3659';
-
-
--- POCOR-3764
 -- student_statuses
 UPDATE `student_statuses`
 SET `code` = 'DROPOUT', `name` = 'Dropout'
@@ -72,7 +40,3 @@ AND `field` = 'student_withdraw_reason_id';
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3764';
 
-
--- 3.9.2
-DELETE FROM system_updates WHERE version = (SELECT value FROM config_items WHERE code = 'db_version');
-UPDATE config_items SET value = '3.9.2' WHERE code = 'db_version';
