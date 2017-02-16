@@ -63,10 +63,17 @@ class GuardianUserTable extends UserTable {
     {
 		$this->setupTabElements($entity);
 
-        $this->field('nationality_id', ['type' => 'readonly', 'after' => 'date_of_birth']);
-        $this->field('identity_type_id', ['type' => 'readonly', 'after' => 'nationality_id']);
-        $this->field('identity_number', ['type' => 'readonly', 'after' => 'identity_type_id']);
+		$this->fields['nationality_id']['type'] = 'readonly';
+        if (!empty($entity->main_nationality)) {
+            $this->fields['nationality_id']['attr']['value'] = $entity->main_nationality->name;
+        }
 
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        if (!empty($entity->main_identity_type)) {
+            $this->fields['identity_type_id']['attr']['value'] = $entity->main_identity_type->name;
+        }
+
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
 	}
 
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
