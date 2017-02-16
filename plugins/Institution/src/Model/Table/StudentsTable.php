@@ -556,11 +556,6 @@ class StudentsTable extends ControllerActionTable
         $selectedEducationGrades = $this->queryString('education_grade_id', $educationGradesOptions);
         $selectedAcademicPeriod = $this->queryString('academic_period_id', $academicPeriodOptions);
 
-        // To add the academic_period_id to export
-        if (isset($extra['toolbarButtons']['export']['url'])) {
-            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedAcademicPeriod;
-        }
-
         // Advanced Select Options
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         $studentTable = $this;
@@ -573,8 +568,12 @@ class StudentsTable extends ControllerActionTable
 
         $request->query['academic_period_id'] = $selectedAcademicPeriod;
 
-        $this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
+        // To add the academic_period_id to export
+        if (isset($extra['toolbarButtons']['export']['url'])) {
+            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedAcademicPeriod;
+        }
 
+        $this->advancedSelectOptions($educationGradesOptions, $selectedEducationGrades);
 
         if ($selectedEducationGrades != -1) {
             $query->where([$this->aliasField('education_grade_id') => $selectedEducationGrades]);
@@ -879,7 +878,8 @@ class StudentsTable extends ControllerActionTable
         if (isset($buttons['view'])) {
             $url = $this->url('view');
             $userId = $this->paramsEncode(['id' => $entity->_matchingData['Users']->id]);
-            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', 'id' => $entity->id, $userId]);
+            $buttons['view']['url'] = array_merge($url, ['action' => 'StudentUser', $userId]);
+            $buttons['view']['url'] = $this->setQueryString($buttons['view']['url'], ['institution_student_id' => $entity->id]);
         }
 
         // Remove in POCOR-3010
