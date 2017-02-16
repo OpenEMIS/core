@@ -708,7 +708,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
 	}
 
-<<<<<<< HEAD
 	public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
 	{
 		$institutionId = $params['institution_id'];
@@ -789,7 +788,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
         }
 
 		return $reference;
-=======
+
 	public function getUnexcusedAbsenceData($threshold)
 	{
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -847,6 +846,5 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			;
 
 		return $unexcusedAbsenceResults->toArray();
->>>>>>> 36dda7be977e97dab3e3f61546389573d4cea6c9
 	}
 }
