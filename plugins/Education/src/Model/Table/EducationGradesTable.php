@@ -37,7 +37,7 @@ class EducationGradesTable extends ControllerActionTable
 		$this->hasMany('InstitutionClassStudents',	['className' => 'Institution.InstitutionClassStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionStudents',		['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentAdmission',			['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StudentDropout',			['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentWithdraw',			['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
 
 		$this->belongsToMany('EducationSubjects', [
 			'className' => 'Education.EducationSubjects',
