@@ -617,7 +617,7 @@ trait MessagesTrait {
             'noTextbooks' => 'No Textbooks',
             'noProgrammes' => 'No Programmes',
             'noGrades' => 'No Grades',
-            'noClassSubjectSelected' => 'Please select Class, Subject and Textbook before adding record',
+            'noClassSubjectSelected' => 'Please select Subject and Textbook before adding record',
             'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
             'noTextbookStudent' => 'Please add physical textbook to be added'
         ],
@@ -639,6 +639,9 @@ trait MessagesTrait {
         ],
         'Licenses' => [
             'select_classification' => 'Select Classification'
+        ],
+        'UserNationalities' => [
+            'noRecordRemain' => 'There should be at least one Nationality record'
         ],
 
         // Validation Messages
@@ -971,7 +974,7 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ]
+                ],
             ],
             'Accounts' => [
                 'username' => [
@@ -1088,6 +1091,11 @@ trait MessagesTrait {
                 ],
                 'bank_branch_id' => [
                     'ruleNotBlank' => 'Please select a Bank Branch'
+                ]
+            ],
+            'UserNationalities' => [
+                'preferred' => [
+                    'ruleValidatePreferredNationality' => 'There must be at least one Preferred Nationality'
                 ]
             ],
         ],
@@ -1593,14 +1601,14 @@ trait MessagesTrait {
             ]
         ],
         'Configuration' => [
-        	'ConfigProductLists' => [
-        		'name' => [
-        			'ruleUnique' => 'This product already exists in the system',
-        		],
-        		'url' => [
-        			'invalidUrl' => 'You have entered an invalid URL.',
-        		]
-        	],
+            'ConfigProductLists' => [
+                'name' => [
+                    'ruleUnique' => 'This product already exists in the system',
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL.',
+                ]
+            ],
             'ConfigAdministrativeBoundaries' => [
                 'name' => [
                     'ruleUnique' => 'This product already exists in the system',
@@ -1610,7 +1618,14 @@ trait MessagesTrait {
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ]
-        ]
+        ],
+        'Alert' => [
+            'AlertRules' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique',
+                ]
+            ],
+        ],
     ];
 
 

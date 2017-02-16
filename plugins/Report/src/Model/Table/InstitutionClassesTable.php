@@ -10,7 +10,7 @@ use App\Model\Table\AppTable;
 
 class InstitutionClassesTable extends AppTable  {
 
-    public function initialize(array $config) 
+    public function initialize(array $config)
     {
 		$this->table('institution_classes');
 		parent::initialize($config);
@@ -27,7 +27,7 @@ class InstitutionClassesTable extends AppTable  {
             'targetForeignKey' => 'education_grade_id',
             'dependent' => true
         ]);
-        
+
 		$this->addBehavior('Excel', ['excludes' => ['class_number']]);
 		$this->addBehavior('Report.ReportList');
 		$this->addBehavior('Report.InstitutionSecurity');
@@ -39,30 +39,30 @@ class InstitutionClassesTable extends AppTable  {
 		$this->ControllerAction->field('format');
 	}
 
-	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) 
+	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
 		$attr['options'] = $this->controller->getFeatureOptions('Institutions');
 		return $attr;
 	}
 
-    public function onExcelGetInstitutionShiftId(Event $event, Entity $entity) 
+    public function onExcelGetInstitutionShiftId(Event $event, Entity $entity)
     {
-        return $entity->institution_shift->shift_option->name;
+        return $entity->shift_name;
     }
 
-    public function onExcelGetEducationGrades(Event $event, Entity $entity) 
+    public function onExcelGetEducationGrades(Event $event, Entity $entity)
     {
         $classGrades = [];
         if ($entity->education_grades) {
            foreach ($entity->education_grades as $key => $value) {
                 $classGrades[] = $value->name;
-            } 
+            }
         }
-        
+
         return implode(', ', $classGrades); //display as comma seperated
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) 
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $query
         ->contain('Institutions.Areas')
@@ -71,11 +71,12 @@ class InstitutionClassesTable extends AppTable  {
         ->contain('InstitutionShifts.ShiftOptions')
         ->contain('AcademicPeriods')
         ->select([
-            'institution_code' => 'Institutions.code', 
-            'institution_name' => 'Institutions.name', 
-            'area_name' => 'Areas.name', 
+            'institution_code' => 'Institutions.code',
+            'institution_name' => 'Institutions.name',
+            'area_name' => 'Areas.name',
             'area_code' => 'Areas.code',
-            'institution_type' => 'Types.name'
+            'institution_type' => 'Types.name',
+            'shift_name' => 'ShiftOptions.name'
         ])
         ->order([
             'AcademicPeriods.order',
@@ -83,8 +84,8 @@ class InstitutionClassesTable extends AppTable  {
         ]);
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
-    {   
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
         //redeclare all for sorting purpose.
         $newFields[] = [
             'key' => 'InstitutionClasses.academic_period_id',
