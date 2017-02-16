@@ -18,7 +18,7 @@ class ModificationBehavior extends Behavior
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
         $schema = $this->_table->schema();
         $columns = $schema->columns();
-        
+
         $userId = null;
         if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
             $userId = $_SESSION['Auth']['User']['id'];
@@ -44,5 +44,5 @@ class ModificationBehavior extends Behavior
                 }
             }
         }
-    } 
+    }
 }

@@ -29,6 +29,8 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('view', false);
         $this->toggle('edit', false);
+
+        $this->addBehavior('Indexes.Indexes');
     }
 
     public function implementedEvents() {
