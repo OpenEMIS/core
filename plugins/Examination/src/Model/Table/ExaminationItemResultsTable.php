@@ -80,7 +80,8 @@ class ExaminationItemResultsTable extends AppTable
             ->innerJoinWith('ExaminationGradingOptions')
             ->where([
                 $this->aliasField('academic_period_id') => $academicPeriodId,
-                $this->aliasField('student_id') => $studentId
+                $this->aliasField('student_id') => $studentId,
+                $this->ExaminationItems->aliasField('weight > ') => 0
             ])
             ->order([
                 $this->EducationSubjects->aliasField('order'),
