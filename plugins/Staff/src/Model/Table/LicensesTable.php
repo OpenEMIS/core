@@ -69,6 +69,11 @@ class LicensesTable extends ControllerActionTable
 		$this->setupFields($entity);
 	}
 
+	public function editOnInitialize(Event $event, Entity $entity)
+	{
+		$this->request->data[$this->alias()]['license_type_id'] = $entity->license_type_id;
+	}
+
 	public function addEditAfterAction(Event $event, Entity $entity)
 	{
 		$this->setupFields($entity);
@@ -79,12 +84,37 @@ class LicensesTable extends ControllerActionTable
 		$this->setupTabElements();
 	}
 
+	public function onUpdateFieldLicenseTypeId(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'add' || $action == 'edit') {
+			$attr['onChangeReload'] = 'changeLicenseType';
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldClassifications(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add' || $action == 'edit') {
-			$classificationOptions = $this->Classifications->getList();
+			$classificationOptions = [];
 
-			$attr['options'] = $classificationOptions;
+			if (array_key_exists($this->alias(), $request->data) && array_key_exists('license_type_id', $request->data[$this->alias()])) {
+				$licenseTypeId = $request->data[$this->alias()]['license_type_id'];
+
+				if (!empty($licenseTypeId)) {
+					$classificationOptions = $this->Classifications
+						->find('list')
+						->where([$this->Classifications->aliasField('license_type_id') => $licenseTypeId])
+						->toArray();
+				}
+			}
+
+			if (empty($classificationOptions)) {
+				$attr['type'] = 'select';
+				$attr['options'] = ['' => $this->getMessage('general.select.noOptions')];
+			} else {
+	            $attr['options'] = $classificationOptions;
+			}
 		}
 
 		return $attr;
@@ -137,14 +167,16 @@ class LicensesTable extends ControllerActionTable
 
 	private function setupFields(Entity $entity)
 	{
-		$this->field('license_type_id', ['type' => 'select']);
+		$this->field('license_type_id', [
+			'type' => 'select'
+		]);
 		$this->field('classifications', [
-            'type' => 'chosenSelect',
-            'fieldNameKey' => 'classifications',
-            'fieldName' => $this->alias() . '.classifications._ids',
-            'placeholder' => $this->getMessage($this->aliasField('select_classification'))
-        ]);
+			'type' => 'chosenSelect',
+			'fieldNameKey' => 'classifications',
+			'fieldName' => $this->alias() . '.classifications._ids',
+			'placeholder' => $this->getMessage($this->aliasField('select_classification'))
+		]);
 
-        $this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
+        $this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer', 'comments']);
 	}
 }
