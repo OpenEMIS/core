@@ -50,7 +50,10 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingStatusId, @openStatusId, 1, NOW()),
 ('Approve', NULL, 0, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
 ('Reject', NULL, 1, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
-('Reopen', NULL, NULL, 1, 0, 0, NULL, @closedStatusId, @openStatusId, 1, NOW());
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @closedStatusId, @openStatusId, 1, NOW()),
+('Approve', NULL, 0, 0, 0, 0, NULL, @activeStatusId, 0, 1, NOW()),
+('Reject', NULL, 1, 0, 0, 0, NULL, @activeStatusId, 0, 1, NOW()),
+('Reopen', NULL, NULL, 1, 0, 0, NULL, @activeStatusId, @openStatusId, 1, NOW());
 
 -- license_classifications
 DROP TABLE IF EXISTS `license_classifications`;
