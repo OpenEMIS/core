@@ -29,6 +29,19 @@ class LicenseClassificationsTable extends ControllerActionTable
         $this->addBehavior('FieldOption.FieldOption');
     }
 
+    public function validationDefault(Validator $validator) 
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('name', [
+                'ruleUnique' => [
+                    'rule' => ['validateUnique', ['scope' => 'license_type_id']],
+                    'provider' => 'table'
+                ]
+            ]);
+    }
+
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $parentFieldOptions = $this->getLicenseTypes();
