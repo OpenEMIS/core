@@ -105,6 +105,13 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             $this->field('identity_number');
             $this->field('repeated');
             $this->field('transferred');
+
+            if ($this->action == 'index') {
+                $this->field('tooltip_column', [
+                    'after' => 'transferred'
+                ]);
+            }
+
             $this->setFieldOrder('registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'identity_number', 'institution_id', 'repeated', 'transferred');
         }
     }
@@ -164,6 +171,8 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'identity_number') {
             return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+        } else if ($field == 'tooltip_column') {
+            return '';
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -260,11 +269,22 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                         ->first();
         }
 
+        $this->transferred = [];
         if (!empty($Admission)) {
-            $tooltipMessage = __('Student has been transferred to') . ' (' . $Admission->institution->code_name . ') ' . __('after registration');
-            return  __('Yes') . " <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='left' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>";
+            $this->transferred = [true, $Admission->institution->code_name];
+            return  __('Yes');
         } else {
             return __('No');
+        }
+    }
+
+    public function onGetTooltipColumn(Event $event, Entity $entity)
+    {
+        if (!empty($this->transferred)) {
+            $tooltipMessage = __('Student has been transferred to') . ' (' . $this->transferred[1] . ') ' . __('after registration');
+            return  "<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='left' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>";
+        } else {
+            return '-';
         }
     }
 
