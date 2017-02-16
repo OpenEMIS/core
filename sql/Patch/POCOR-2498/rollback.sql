@@ -1,7 +1,7 @@
 -- code here
-DELETE FROM `security_functions` WHERE `id` = 1054;
-DELETE FROM `security_functions` WHERE `id` = 2030;
-DELETE FROM `security_functions` WHERE `id` = 5064;
+DELETE FROM `security_functions` WHERE `id` = 1055;
+DELETE FROM `security_functions` WHERE `id` = 2031;
+DELETE FROM `security_functions` WHERE `id` = 5066;
 ALTER TABLE `student_behaviours` DROP `academic_period_id`;
 ALTER TABLE `student_behaviour_categories` DROP `behaviour_classification_id`;
 DROP TABLE student_indexes_criterias;
