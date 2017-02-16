@@ -50,6 +50,14 @@ class RubricsController extends AppController
 			]
 		];
 
+		// pass query string for selected template across tabs
+		if (!is_null($this->request->query('template'))) {
+			$template = $this->request->query('template');
+			foreach ($tabElements as $key => $obj) {
+				$tabElements[$key]['url']['template'] = $template;
+			}
+		}
+
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
