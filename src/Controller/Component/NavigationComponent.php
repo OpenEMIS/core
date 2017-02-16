@@ -596,13 +596,15 @@ class NavigationComponent extends Component
 	public function getInstitutionStudentNavigation()
 	{
 		$session = $this->request->session();
-		$id = $session->read('Institution.Students.id');
+		$id = !empty($this->controller->ControllerAction->getQueryString('institution_student_id')) ? $this->controller->ControllerAction->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
 		$studentId = $session->read('Student.Students.id');
+		$institutionId = $session->read('Institution.Institutions.id');
+		$queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $institutionId, 'institution_student_id' => $id]);
 		$navigation = [
 			'Institutions.StudentUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Students.index',
-				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'id' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
 				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
 					'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull']],
@@ -967,19 +969,19 @@ class NavigationComponent extends Component
 				'link' => false,
 			],
 
-				'Alerts.Questions' => [
-					'title' => 'Questions',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Questions']
-				],
+				'Alerts.Alerts' => [
+						'title' => 'Alerts',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.Alerts']
+					],
 
-				'Alerts.Responses' => [
-					'title' => 'Responses',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Responses']
-				],
+				'Alerts.AlertRules' => [
+						'title' => 'Alert Rules',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.AlertRules']
+					],
 
 				'Alerts.Logs' => [
 					'title' => 'Logs',
