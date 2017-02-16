@@ -473,11 +473,18 @@ class StudentCompetenciesTable extends ControllerActionTable
             if ($competencyItemEntity->has('criterias')) {
                 foreach ($competencyItemEntity->criterias as $colKey => $criteriaObj) {
                     $this->competencyCriteriaCount++;
+                    if (strlen($criteriaObj['code']) > 0) {
+                        $displayHeader = $criteriaObj['code'];
+                        $displayHeader .= '&nbsp;&nbsp;<i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="'.$criteriaObj['name'].'" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+                    } else {
+                        $displayHeader = $criteriaObj['name'];
+                    }
 
-                    $tableHeaders[$colKey + $colOffset] = $criteriaObj['name'];
+                    $tableHeaders[$colKey + $colOffset] = $displayHeader;
                 }
             }
         }
+
         if ($action == 'edit' && $this->competencyCriteriaCount == 0) {
             $this->Alert->warning('StudentCompetencies.noCriterias');
         }
