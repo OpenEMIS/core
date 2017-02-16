@@ -204,7 +204,10 @@ class ExaminationResultsTable extends ControllerActionTable
         $examinationItemResults = $ExaminationItems
             ->find()
             ->matching($EducationSubjects->alias())
-            ->where([$ExaminationItems->aliasField('examination_id') => $selectedExamination])
+            ->where([
+                $ExaminationItems->aliasField('examination_id') => $selectedExamination,
+                $ExaminationItems->aliasField('weight > ') => 0
+            ])
             ->order([
                 $EducationSubjects->aliasField('order'),
                 $ExaminationItems->aliasField('code'),
@@ -261,7 +264,8 @@ class ExaminationResultsTable extends ControllerActionTable
                 $ExaminationItemResults->aliasField('academic_period_id') => $academicPeriodId,
                 $ExaminationItemResults->aliasField('examination_id') => $examinationId,
                 $ExaminationItemResults->aliasField('institution_id') => $institutionId,
-                $ExaminationItemResults->aliasField('student_id') => $studentId
+                $ExaminationItemResults->aliasField('student_id') => $studentId,
+                $ExaminationItemResults->ExaminationItems->aliasField('weight > ') => 0
             ])
             ->toArray();
 
