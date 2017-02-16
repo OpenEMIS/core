@@ -1585,6 +1585,13 @@ trait MessagesTrait {
                 ],
             ],
         ],
+        'FieldOption' => [
+            'LicenseClassifications' => [
+                'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
+            ]
+        ],
         'Configuration' => [
         	'ConfigProductLists' => [
         		'name' => [
