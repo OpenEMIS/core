@@ -536,8 +536,8 @@ class LabelsFixture extends TestFixture
             "id" => "cfa6d554-6824-11e5-90af-0025902f4ecc",
             "modified" => null,
             "modified_user_id" => null,
-            "module" => "StudentDropout",
-            "module_name" => "Institutions -> Student Dropout",
+            "module" => "StudentWithdraw",
+            "module_name" => "Institutions -> Student Withdraw",
             "name" => null,
             "visible" => "1"
         ], [
