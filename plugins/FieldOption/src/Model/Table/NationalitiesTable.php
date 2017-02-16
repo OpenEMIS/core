@@ -33,8 +33,11 @@ class NationalitiesTable extends ControllerActionTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!empty($entity->identity_type_id)) {
-            $Users = TableRegistry::get('User.Users');
-            $Users->updateAllIdentityNumber($entity->id, $entity->identity_type_id);
+            //update information on security user table
+            $listeners = [
+                TableRegistry::get('User.Users')
+            ];
+            $this->dispatchEventToModels('Model.Nationalities.onChange', [$entity], $this, $listeners);
         }
     }
 }

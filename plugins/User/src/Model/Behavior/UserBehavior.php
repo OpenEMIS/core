@@ -147,6 +147,7 @@ class UserBehavior extends Behavior {
             $this->_table->fields['nationality_id']['order'] = $i++;
             $this->_table->fields['identity_type_id']['order'] = $i++;
             $this->_table->fields['identity_number']['order'] = $i++;
+            $this->_table->fields['email']['order'] = $i++;
 
             $this->_table->fields['address']['order'] = $i++;
             $this->_table->fields['postal_code']['order'] = $i++;
@@ -161,7 +162,24 @@ class UserBehavior extends Behavior {
                     $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
                     $this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
                 }
+            }
 
+            // edit page, email = readonly
+            if ($this->_table->action == 'edit') {
+                if ($this->isCAv4()) {
+                    $this->_table->field('email', ['type' => 'readonly', 'after' => 'identity_number']);
+                } else {
+                    $this->_table->ControllerAction->field('email', ['type' => 'readonly', 'after' => 'identity_number']);
+                }
+            }
+
+            // add page, email = hidden
+            if ($this->_table->action == 'add') {
+                if ($this->isCAv4()) {
+                    $this->_table->field('email', ['type' => 'hidden']);
+                } else {
+                    $this->_table->ControllerAction->field('email', ['type' => 'hidden']);
+                }
             }
 
             if ($this->_table->registryAlias() != 'Security.Users') {

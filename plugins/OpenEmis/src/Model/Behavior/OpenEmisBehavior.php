@@ -407,6 +407,20 @@ class OpenEmisBehavior extends Behavior {
         // refer to attachEntityInfoToToolBar() in afterAction()
     }
 
+    public function getButtonTemplate()
+    {
+        $btnAttr = [
+            'type' => 'button',
+            'attr' => [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false
+            ]
+        ];
+        return $btnAttr;
+    }
+
     private function isCAv4() {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
