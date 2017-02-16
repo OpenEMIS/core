@@ -119,13 +119,6 @@ class IndexesTable extends ControllerActionTable
         $this->toggle('remove', false);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.Model.generate'] = 'generate';
-        return $events;
-    }
-
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
@@ -135,58 +128,6 @@ class IndexesTable extends ControllerActionTable
                 'provider' => 'table',
                 'message' => __('This field has to be unique')
             ]);
-    }
-
-    public function generate(Event $event, ArrayObject $extra)
-    {
-        $requestQuery = $this->request->query;
-        $session = $this->request->session();
-        $sessionUserId = $session->read('Auth.User.id');
-        $sessionIndexId = $session->read('Indexes.Indexes.primaryKey.id');
-
-        $params = [];
-        if (array_key_exists('queryString', $requestQuery)) {
-            $params = $this->paramsDecode($requestQuery['queryString']);
-        }
-
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : 0;
-        $userId = array_key_exists('user_id', $params) ? $params['user_id'] : $sessionUserId;
-        $indexId = array_key_exists('index_id', $params) ? $params['index_id'] : $sessionIndexId;
-        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : $requestQuery['academic_period_id'];
-
-        // update indexes process_id and status
-        $pid = getmypid();
-        $runningPid = $this->find()->where(['id' => $indexId])->first()->process_id;
-
-        // if processing id not empty (process still running or process stuck)
-        if (!empty($runningPid)) {
-            exec("kill -9 " . $runningPid);
-        }
-
-        $this->updateAll([
-            'process_id' => $pid,
-            'status' => 2 // processing
-        ],
-        ['id' => $indexId]);
-
-        // trigger shell
-        $this->triggerUpdateIndexesShell('UpdateIndexes', $institutionId, $userId, $indexId, $academicPeriodId);
-
-        // redirect to respective page from params['action']
-        $url = $this->url($params['action'],$params['academic_period_id']);
-
-        // if have institution id, its from institution > indexes
-        if ($institutionId != 0) {
-            $url = [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'InstitutionIndexes',
-                    'index'
-                ];
-        }
-
-        $event->stopPropagation();
-        return $this->controller->redirect($url);
     }
 
     public function getCriteriasData()
@@ -608,7 +549,7 @@ class IndexesTable extends ControllerActionTable
                     // pr($indexesCriteriasDataObj);
                     $indexesId = $indexesCriteriasDataObj->index_id;
                     if (!empty($indexesId)) {
-                        if ($this->get($indexesId)->status == 2 || $this->get($indexesId)->status == 3) { // other than not generated
+                        if ($this->get($indexesId)->status == 2 || $this->get($indexesId)->status == 3) { // Status processing and completed
                             $criteria[$criteriaKey] = $criteriaObj;
                         }
                     }
