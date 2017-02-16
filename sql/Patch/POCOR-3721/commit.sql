@@ -72,6 +72,7 @@ CREATE TABLE `license_classifications` (
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
+  INDEX `license_type_id` (`license_type_id`),
   INDEX `modified_user_id` (`modified_user_id`),
   INDEX `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This is a field option table containing the list of user-defined classification of licences used by staff_licenses';
