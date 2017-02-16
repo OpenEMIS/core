@@ -116,8 +116,8 @@ class UserBehavior extends Behavior {
             $this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
             $this->_table->fields['birthplace_area_id']['source_model'] = 'Area.AreaAdministratives';
             $this->_table->fields['gender_id']['type'] = 'select';
-            $this->_table->fields['nationality_id']['type'] = 'select';
-            $this->_table->fields['identity_type_id']['type'] = 'select';
+            $this->_table->fields['nationality_id']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
+            $this->_table->fields['identity_type_id']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
 
             $i = 10;
             $this->_table->fields['first_name']['order'] = $i++;
@@ -214,9 +214,11 @@ class UserBehavior extends Behavior {
     }
 
     public function addBeforeAction(Event $event) {
-        $this->_table->fields['is_student']['value'] = 0;
-        $this->_table->fields['is_staff']['value'] = 0;
-        $this->_table->fields['is_guardian']['value'] = 0;
+        if ($this->_table->table() == 'security_users') {
+            $this->_table->fields['is_student']['value'] = 0;
+            $this->_table->fields['is_staff']['value'] = 0;
+            $this->_table->fields['is_guardian']['value'] = 0;
+        }
     }
 
     public function indexAfterAction(Event $event)
