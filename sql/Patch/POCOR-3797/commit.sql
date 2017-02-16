@@ -7,7 +7,7 @@ RENAME TABLE `competency_criterias` TO `z_3797_competency_criterias`;
 DROP TABLE IF EXISTS `competency_criterias`;
 CREATE TABLE `competency_criterias` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
   `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
   `competency_item_id` int(11) NOT NULL COMMENT 'links to competency_items.id',
