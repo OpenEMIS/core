@@ -82,7 +82,14 @@ class RemoveBehavior extends Behavior
                 $model->field($primaryKey, ['type' => 'hidden']);
             }
 
-            $model->field('to_be_deleted', ['type' => 'readonly', 'attr' => ['value' => $entity->name]]);
+            $deletedValue = '';
+            if ($entity->has('showDeletedValueAs')) {
+                $deletedValue = $entity->showDeletedValueAs;
+            } else if ($entity->has('name')) {
+                $deletedValue = $entity->name;
+            }
+
+            $model->field('to_be_deleted', ['type' => 'readonly', 'attr' => ['value' => $deletedValue]]);
             $model->field('associated_records', [
                 'type' => 'table',
                 'headers' => [__('Feature'), __('No of Records')],
