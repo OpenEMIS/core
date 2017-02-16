@@ -788,6 +788,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
         }
 
 		return $reference;
+	}
 
 	public function getUnexcusedAbsenceData($threshold)
 	{
