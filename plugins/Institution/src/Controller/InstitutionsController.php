@@ -111,6 +111,10 @@ class InstitutionsController extends AppController
     public function StudentCompetencyResults()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']); }
     public function StudentSurveys()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
     // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
+    public function InstitutionIndexes()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIndexes']); }
+    public function StudentIndexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
+    public function InstitutionStudentIndexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
+
     // End
 
     // AngularJS
@@ -398,7 +402,8 @@ class InstitutionsController extends AppController
             }
 
             $studentModels = [
-                'StudentProgrammes' => __('Programmes')
+                'StudentProgrammes' => __('Programmes'),
+                'StudentIndexes' => __('Indexes')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -751,6 +756,7 @@ class InstitutionsController extends AppController
             'Results' => ['text' => __('Assessments')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
+            'StudentIndexes' => ['text' => __('Indexes')],
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -760,6 +766,9 @@ class InstitutionsController extends AppController
             if ($key == 'Programmes') {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            } elseif ($key == 'StudentIndexes') {
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);

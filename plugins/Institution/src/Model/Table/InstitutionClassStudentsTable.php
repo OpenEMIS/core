@@ -560,4 +560,24 @@ class InstitutionClassStudentsTable extends AppTable {
             $InstitutionSubjectStudentsTable->delete($value);
         }
     }
+
+    public function getStudentsList($academicPeriodId, $institutionId, $classId)
+    {
+        $studentResults = $this->find()
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('institution_class_id') => $classId,
+            ])
+            ->all();
+
+        $studentList = [];
+        if (!$studentResults->isEmpty()) {
+            foreach ($studentResults as $key => $obj) {
+                $studentList[$obj->student_id] = $obj->student_id;
+            }
+        }
+
+        return $studentList;
+    }
 }
