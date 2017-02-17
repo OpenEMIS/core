@@ -1225,10 +1225,33 @@ class WorkflowBehavior extends Behavior {
 		]);
 	}
 
-	public function workflowAfterTransition(Event $event, $id=null, $requestData) {
-		$entity = $this->_table->get($id);
-		$this->setAssigneeId($entity, $requestData);
-		$this->setStatusId($entity, $requestData);
+	public function workflowAfterTransition(Event $event, $id=null, $requestData)
+	{
+		$AlertLogs = TableRegistry::get('Alert.AlertLogs');
+ 		$entity = $this->_table->get($id);
+		$workflowActionId = $requestData[$this->WorkflowTransitions->alias()]['workflow_action_id'];
+		$workflowActionData = $this->WorkflowActions->get($workflowActionId);
+
+ 		$this->setAssigneeId($entity, $requestData);
+ 		$this->setStatusId($entity, $requestData);
+
+		if ($this->_table->get($id)->assignee_id == 0 && $workflowActionData['event_key'] == 'Workflow.onAssignBack') {
+			// when closing the workflow with assignback eventkey chosen.
+			$entity = $this->_table->get($id); // get the latest entity
+			$entity->assignee_id = $entity->created_user_id;
+
+			// Trigger event on the alert log model (status and assignee transition triggered here)
+			$alias = $this->_table->alias();
+			$event = $AlertLogs->dispatchEvent('Model.Workflow.afterTransition', [$entity], $this->_table);
+			if ($event->isStopped()) { return $event->result; }
+			// End
+		} else {
+			// Trigger event on the alert log model (status and assignee transition triggered here)
+			$alias = $this->_table->alias();
+			$event = $AlertLogs->dispatchEvent('Model.Workflow.afterTransition', [$this->_table->get($id)], $this->_table);
+			if ($event->isStopped()) { return $event->result; }
+			// End
+		}
 	}
 
 	public function processWorkflow() {
