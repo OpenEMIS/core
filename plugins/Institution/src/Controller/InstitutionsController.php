@@ -34,7 +34,6 @@ class InstitutionsController extends AppController
 
             'Staff'             => ['className' => 'Institution.Staff'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
-            'StaffAttendances'  => ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 
             'StaffBehaviours'   => ['className' => 'Institution.StaffBehaviours'],
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
@@ -111,7 +110,7 @@ class InstitutionsController extends AppController
     public function StudentCompetencies()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']); }
     public function StudentCompetencyResults()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']); }
     public function StudentSurveys()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
-    // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
+    public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     // End
 
     // AngularJS
