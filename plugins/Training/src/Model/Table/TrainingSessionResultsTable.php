@@ -76,7 +76,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					}
 				}
 
-				return true;
+                return true;
 			} else {
 				return false;
 			}
@@ -88,7 +88,6 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// redirect back to edit page
-		$event->stopPropagation();
 		return $this->controller->redirect($this->url('edit'));
 	}
 
