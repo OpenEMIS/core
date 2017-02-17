@@ -5,15 +5,18 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 
-class StaffAttendancesTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class StaffAttendancesTable extends ControllerActionTable
+{
 	use OptionsTrait;
 	use MessagesTrait;
 	private $allDayOptions = [];
@@ -25,7 +28,8 @@ class StaffAttendancesTable extends AppTable {
 	private $_absenceData = [];
 	const PRESENT = 0;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('institution_staff');
 		$config['Modified'] = false;
 		$config['Created'] = false;
@@ -59,12 +63,6 @@ class StaffAttendancesTable extends AppTable {
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
 	}
-
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$academicPeriodId = $this->request->query['academic_period_id'];
@@ -228,8 +226,8 @@ class StaffAttendancesTable extends AppTable {
 		return $absenceCheckList;
 	}
 
-	public function beforeAction(Event $event) {
-		$this->fields['security_group_user_id']['visible'] = false;
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
 		$tabElements = [
 			'Attendance' => [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'],
@@ -244,17 +242,18 @@ class StaffAttendancesTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Attendance');
 
-		$this->ControllerAction->field('openemis_no');
-		$this->ControllerAction->field('staff_id', ['order' => 2]);
+		$this->field('openemis_no');
+		$this->field('staff_id', ['order' => 2]);
 
-		$this->ControllerAction->field('FTE', ['visible' => false]);
-		$this->ControllerAction->field('start_date', ['visible' => false]);
-		$this->ControllerAction->field('start_year', ['visible' => false]);
-		$this->ControllerAction->field('end_date', ['visible' => false]);
-		$this->ControllerAction->field('end_year', ['visible' => false]);
-		$this->ControllerAction->field('staff_type_id', ['visible' => false]);
-		$this->ControllerAction->field('staff_status_id', ['visible' => false]);
-		$this->ControllerAction->field('institution_position_id', ['visible' => false]);
+		$this->field('FTE', ['visible' => false]);
+		$this->field('start_date', ['visible' => false]);
+		$this->field('start_year', ['visible' => false]);
+		$this->field('end_date', ['visible' => false]);
+		$this->field('end_year', ['visible' => false]);
+		$this->field('staff_type_id', ['visible' => false]);
+		$this->field('staff_status_id', ['visible' => false]);
+		$this->field('institution_position_id', ['visible' => false]);
+		$this->field('security_group_user_id', ['visible' => false]);
 	}
 
 	// Event: ControllerAction.Model.afterAction
@@ -270,7 +269,8 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Function use by the mini dashboard
-	public function getNumberOfStaffByAttendance($params=[]) {
+	public function getNumberOfStaffByAttendance($params=[])
+	{
 		$query = $params['query'];
 		$selectedDay = $params['selectedDay'];
 
@@ -345,7 +345,8 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
-	public function onGetOpenemisNo(Event $event, Entity $entity) {
+	public function onGetOpenemisNo(Event $event, Entity $entity)
+	{
 		$sessionPath = 'Users.staff_absences.';
 		$timeError = $this->Session->read($sessionPath.$entity->staff_id.'.timeError');
 		$startTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.startTimestamp');
@@ -468,7 +469,8 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.onGetReason
-	public function onGetReason(Event $event, Entity $entity) {
+	public function onGetReason(Event $event, Entity $entity)
+	{
 		$html = '';
 
 		if (!is_null($this->request->query('mode'))) {
@@ -552,35 +554,43 @@ class StaffAttendancesTable extends AppTable {
 		return $html;
 	}
 
-	public function onGetSunday(Event $event, Entity $entity) {
+	public function onGetSunday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'sunday');
 	}
 
-	public function onGetMonday(Event $event, Entity $entity) {
+	public function onGetMonday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'monday');
 	}
 
-	public function onGetTuesday(Event $event, Entity $entity) {
+	public function onGetTuesday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'tuesday');
 	}
 
-	public function onGetWednesday(Event $event, Entity $entity) {
+	public function onGetWednesday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'wednesday');
 	}
 
-	public function onGetThursday(Event $event, Entity $entity) {
+	public function onGetThursday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'thursday');
 	}
 
-	public function onGetFriday(Event $event, Entity $entity) {
+	public function onGetFriday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'friday');
 	}
 
-	public function onGetSaturday(Event $event, Entity $entity) {
+	public function onGetSaturday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'saturday');
 	}
 
-	public function getAbsenceData(Event $event, Entity $entity, $key) {
+	public function getAbsenceData(Event $event, Entity $entity, $key)
+	{
 		$value = '<i class="fa fa-check"></i>';
 		$currentDay = $this->allDayOptions[$key]['date'];
 
@@ -625,9 +635,10 @@ class StaffAttendancesTable extends AppTable {
 		return $value;
 	}
 
-	// Event: ControllerAction.Model.index.beforeAction
-    public function indexBeforeAction(Event $event, ArrayObject $settings) {
-        $query = $settings['query'];
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$institutionId = $this->Session->read('Institution.Institutions.id');
+
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptionsData = $AcademicPeriod->getList();
@@ -639,7 +650,6 @@ class StaffAttendancesTable extends AppTable {
 		}
 
 		$Staff = $this;
-		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->request->query['academic_period_id'];
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -660,10 +670,8 @@ class StaffAttendancesTable extends AppTable {
 
 			// Setup week options
 			$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
-			$weekStr = 'Week %d (%s - %s)';
 			$weekOptions = [];
 			$currentWeek = null;
-			$selectedWeekDate = [];
 			foreach ($weeks as $index => $dates) {
 				if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
 					$weekStr = __('Current Week') . ' %d (%s - %s)';
@@ -756,8 +764,6 @@ class StaffAttendancesTable extends AppTable {
 			$this->controller->set(compact('dayOptions', 'selectedDay'));
 			// End setup days
 
-			$settings['pagination'] = false;
-
 			if ($selectedDay == -1) {
 				$startDate = $weekStartDate;
 				$endDate = $weekEndDate;
@@ -817,22 +823,18 @@ class StaffAttendancesTable extends AppTable {
 				'options' => []
 			];
 
-			$toolbarElements[] = [
-				'name' => 'Institution.Attendance/controls',
-				'data' => [],
-				'options' => []
-			];
-
 			$this->controller->set('toolbarElements', $toolbarElements);
+
+			$extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
-					$this->ControllerAction->addField($key);
+					$this->field($key);
 					$this->_fieldOrder[] = $key;
 				}
 			} else {
-				$this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
-				$this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
+				$this->field('type', ['tableColumnClass' => 'vertical-align-top']);
+				$this->field('reason', ['tableColumnClass' => 'vertical-align-top']);
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
 				$typeOptions = [self::PRESENT => __('Present')];
@@ -842,12 +844,10 @@ class StaffAttendancesTable extends AppTable {
 				$this->reasonOptions = $StaffAbsenceReasons->getList()->toArray();
 			}
 		} else {
-			$settings['pagination'] = false;
-			$query
-				->where([$this->aliasField('staff_id') => 0]);
+			$query->where([$this->aliasField('staff_id') => 0]);
 
-			$this->ControllerAction->field('type');
-			$this->ControllerAction->field('reason');
+			$this->field('type');
+			$this->field('reason');
 
 			$this->Alert->warning('StaffAttendances.noStaff');
 		}
@@ -857,7 +857,8 @@ class StaffAttendancesTable extends AppTable {
 		$this->dataCount = $data->count();
 	}
 
-	public function findWithAbsence(Query $query, array $options) {
+	public function findWithAbsence(Query $query, array $options)
+	{
 		$date = $options['date'];
 
 		$conditions = ['StaffAbsences.staff_id = StaffAttendances.staff_id'];
