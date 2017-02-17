@@ -46,7 +46,7 @@ DELETE FROM `security_group_areas`
 WHERE NOT EXISTS (
         SELECT 1 FROM `security_groups`
         WHERE `security_groups`.`id` = `security_group_areas`.`security_group_id`
-)
+);
 
 -- security_group_institutions
 DROP TABLE IF EXISTS `z_3772_security_group_institutions`;
