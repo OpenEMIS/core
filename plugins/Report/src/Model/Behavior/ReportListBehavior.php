@@ -59,9 +59,18 @@ class ReportListBehavior extends Behavior {
 		// To remove expired reports
 		$this->ReportProgress->purge();
 
+		// beside super user, report can only be seen by the one who generate it.
+        $conditions = [
+            $this->ReportProgress->aliasField('module') => $this->_table->alias()
+        ];
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$userId = $this->_table->Auth->user('id');
+			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
+		}
+
 		$query = $this->ReportProgress->find()
             ->contain('CreatedUser') //association declared on AppTable
-			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
+			->where($conditions)
 			->order([
 				$this->ReportProgress->aliasField('created') => 'DESC',
 				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
