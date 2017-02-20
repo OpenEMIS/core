@@ -478,18 +478,12 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
-			'Institution.Competencies' => [
+			'Institutions.StudentCompetencies' => [
 				'title' => 'Competencies',
 				'parent' => 'Institutions.index',
-				'link' => false
+				'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+				'params' => ['plugin' => 'Institution']
 			],
-
-				'Institutions.StudentCompetencies.index' => [
-					'title' => 'Students',
-					'parent' => 'Institution.Competencies',
-					'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
-					'params' => ['plugin' => 'Institution']
-				],
 
 			'Institutions.Assessments.index' => [
 				'title' => 'Assessments',
