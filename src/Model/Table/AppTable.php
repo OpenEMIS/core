@@ -129,10 +129,19 @@ class AppTable extends Table {
 	public function getList($query = null) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
+		$table = $schema->name();
 
 		if (is_null($query)) {
-			$query = $this->find('list');
-		}
+            if ($table == 'area_levels') {
+                $query = $this
+                    ->find('list', [
+                        'keyField' => 'level',
+                        'valueField' => 'name'
+                    ]);
+            } else {
+                $query = $this->find('list');
+            }
+        }
 
 		if ($this->hasBehavior('FieldOption') && $this->table() == 'field_option_values') {
 			$query->innerJoin(

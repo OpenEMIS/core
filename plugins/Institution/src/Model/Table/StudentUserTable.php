@@ -194,13 +194,16 @@ class StudentUserTable extends ControllerActionTable
 		}
 
 		// this value comes from the list page from StudentsTable->onUpdateActionButtons
-		$institutionStudentId = $this->request->query('id');
+		$institutionStudentId = $this->getQueryString('institution_student_id');
 
 		// this is required if the student link is clicked from the Institution Classes or Subjects
-		if (empty($institutionStudentId) && !empty($this->paramsPass(0))) {
-			$params = $this->paramsDecode($this->paramsPass(0));
-			$institutionId = isset($params['institution_id']) ? $params['institution_id'] : 0;
-			$studentId = isset($params['id']) ? $params['id'] : 0;
+		if (empty($institutionStudentId)) {
+			$params = [];
+			if ($this->paramsPass(0)) {
+				$params = $this->paramsDecode($this->paramsPass(0));
+			}
+			$institutionId = !empty($this->getQueryString('institution_id')) ? $this->getQueryString('institution_id') : $this->request->session()->read('Institution.Institutions.id');
+			$studentId = isset($params['id']) ? $params['id'] : $this->Session->read('Institution.StudentUser.primaryKey.id');
 
 			// get the id of the latest student record in the current institution
 			$InstitutionStudentsTable = TableRegistry::get('Institution.Students');
@@ -213,7 +216,6 @@ class StudentUserTable extends ControllerActionTable
                 ->extract('id')
                 ->first();
 		}
-
 		$this->Session->write('Institution.Students.id', $institutionStudentId);
 		if (empty($institutionStudentId)) { // if value is empty, redirect back to the list page
 			$event->stopPropagation();
@@ -245,6 +247,13 @@ class StudentUserTable extends ControllerActionTable
 		}
 	}
 
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'MainNationalities', 'MainIdentityTypes'
+        ]);
+    }
+
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		if (!$this->AccessControl->isAdmin()) {
@@ -273,10 +282,16 @@ class StudentUserTable extends ControllerActionTable
 		}
 		// End POCOR-3010
 
-		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+        $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+
+        $this->fields['nationality_id']['type'] = 'readonly';
+        $this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
+
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
 	}
 
-	private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
+    private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
 	{
 		$toolbarButtons = $extra['toolbarButtons'];
 		$toolbarButtons['back']['url']['action'] = 'Students';
@@ -290,12 +305,12 @@ class StudentUserTable extends ControllerActionTable
 
 		$this->addPromoteButton($entity, $extra);
 		$this->addTransferButton($entity, $extra);
-		$this->addDropoutButton($entity, $extra);
+		$this->addWithdrawButton($entity, $extra);
 	}
 
 	private function setupTabElements($entity)
 	{
-		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+		$id = !is_null($this->getQueryString('institution_student_id')) ? $this->getQueryString('institution_student_id') : 0;
 
 		$options = [
 			'userRole' => 'Student',
@@ -392,9 +407,9 @@ class StudentUserTable extends ControllerActionTable
 		}
     }
 
-    private function addDropoutButton(Entity $entity, ArrayObject $extra)
+    private function addWithdrawButton(Entity $entity, ArrayObject $extra)
     {
-    	if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
+    	if ($this->AccessControl->check([$this->controller->name, 'WithdrawRequests', 'add'])) {
     		$session = $this->Session;
     		$toolbarButtons = $extra['toolbarButtons'];
 
@@ -408,34 +423,34 @@ class StudentUserTable extends ControllerActionTable
 
 			// Check if the student is enrolled
 			if ($studentEntity->student_status_id == $enrolledStatus) {
-				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
-				$session->write($DropoutRequests->registryAlias().'.id', $institutionStudentId);
+				$WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
+				$session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
 				$NEW = 0;
 
-				// check if there is an existing dropout request
-				$dropoutRequest = $DropoutRequests->find()
-					->select(['institution_student_dropout_id' => 'id'])
-					->where([$DropoutRequests->aliasField('student_id') => $studentEntity->student_id,
-							$DropoutRequests->aliasField('institution_id') => $studentEntity->institution_id,
-							$DropoutRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
-							$DropoutRequests->aliasField('status') => $NEW
+				// check if there is an existing withdraw request
+				$withdrawRequest = $WithdrawRequests->find()
+					->select(['institution_student_withdraw_id' => 'id'])
+					->where([$WithdrawRequests->aliasField('student_id') => $studentEntity->student_id,
+							$WithdrawRequests->aliasField('institution_id') => $studentEntity->institution_id,
+							$WithdrawRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
+							$WithdrawRequests->aliasField('status') => $NEW
 						])
 					->first();
 
-				$dropoutButton = $toolbarButtons['back'];
-				$dropoutButton['type'] = 'button';
-				$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
-				$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$dropoutButton['attr']['title'] = __('Dropout');
+				$withdrawButton = $toolbarButtons['back'];
+				$withdrawButton['type'] = 'button';
+				$withdrawButton['label'] = '<i class="fa kd-dropout"></i>';
+				$withdrawButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$withdrawButton['attr']['title'] = __('Withdraw');
 
-				$dropoutButton['url'] = $this->url('add', 'QUERY');
-				$dropoutButton['url']['action'] = 'DropoutRequests';
+				$withdrawButton['url'] = $this->url('add', 'QUERY');
+				$withdrawButton['url']['action'] = 'WithdrawRequests';
 
-				if (!empty($dropoutRequest)) {
-					$dropoutButton['url'][0] = 'edit';
-					$dropoutButton['url'][1] = $this->paramsEncode(['id' => $dropoutRequest->institution_student_dropout_id]);
+				if (!empty($withdrawRequest)) {
+					$withdrawButton['url'][0] = 'edit';
+					$withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
 				}
-				$toolbarButtons['dropout'] = $dropoutButton;
+				$toolbarButtons['withdraw'] = $withdrawButton;
 			}
 		}
     }
@@ -515,6 +530,7 @@ class StudentUserTable extends ControllerActionTable
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Assessments')],
+			'ExaminationResults' => ['text' => __('Examinations')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 			'Textbooks' => ['text' => __('Textbooks')],
