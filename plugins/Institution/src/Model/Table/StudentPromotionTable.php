@@ -627,21 +627,21 @@ class StudentPromotionTable extends AppTable
                         $students[$key]->admissionRequestCount = $admissionCount + $transferCount;
                     }
 
-                    $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+                    $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
                     foreach ($students as $key => $value) {
                         $conditions = [
                             'student_id' => $value->student_id,
-                            'status' => $StudentDropoutTable::NEW_REQUEST,
+                            'status' => $StudentWithdrawTable::NEW_REQUEST,
                             'education_grade_id' => $value->education_grade_id,
                             'institution_id' => $value->institution_id,
                             'academic_period_id' => $value->academic_period_id,
                         ];
 
-                        $count = $StudentDropoutTable->find()
+                        $count = $StudentWithdrawTable->find()
                             ->where($conditions)
                             ->count();
 
-                        $students[$key]->dropoutRequestCount = $count;
+                        $students[$key]->withdrawRequestCount = $count;
                     }
                 }
             }
