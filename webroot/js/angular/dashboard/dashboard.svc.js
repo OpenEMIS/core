@@ -26,9 +26,9 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StudentAdmission'
         },
-        StudentDropoutTable: {
+        StudentWithdrawTable: {
             cols: workbenchItemTypes.FIXED,
-            model: 'Institution.StudentDropout'
+            model: 'Institution.StudentWithdraw'
         },
         StaffTransferApprovalTable: {
             cols: workbenchItemTypes.FIXED,
