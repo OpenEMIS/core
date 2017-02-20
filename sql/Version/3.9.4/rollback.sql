@@ -1,6 +1,6 @@
 -- POCOR-3644
 -- security_functions
-DELETE FROM `security_functions` WHERE `id` IN (2030);
+DELETE FROM `security_functions` WHERE `id` IN (2031;
 
 UPDATE `security_functions`
 SET `order` = `order` - 1
