@@ -658,7 +658,7 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function getExaminationOptions($selectedAcademicPeriod, $institutionId = null)
+    private function getExaminationOptions($selectedAcademicPeriod, $institutionId = null)
     {
         $model = $this->_table;
         $examinationQuery = $model->Examinations
