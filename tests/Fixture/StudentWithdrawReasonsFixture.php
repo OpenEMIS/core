@@ -3,9 +3,9 @@ namespace App\Test\Fixture;
 
 use Cake\TestSuite\Fixture\TestFixture;
 
-class StudentDropoutReasonsFixture extends TestFixture
+class StudentWithdrawReasonsFixture extends TestFixture
 {
-    public $import = ['table' => 'student_dropout_reasons'];
+    public $import = ['table' => 'student_withdraw_reasons'];
     public $records = [
          [
             'id' => 649,
