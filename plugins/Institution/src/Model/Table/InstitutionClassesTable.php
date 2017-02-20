@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
+use Cake\I18n\Date;
 
 use Cake\Routing\Router;
 
@@ -966,6 +967,13 @@ class InstitutionClassesTable extends ControllerActionTable
                             })
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
+                            ->where([ //check the staff start and end date.
+                                $Staff->aliasField('start_date <=') => new Date(),
+                                'OR' => [
+                                    [$Staff->aliasField('end_date').' > ' => new Date()],
+                                    [$Staff->aliasField('end_date').' IS NULL']
+                                ]
+                            ])
                             ;
 
             foreach ($query->toArray() as $key => $value) {
