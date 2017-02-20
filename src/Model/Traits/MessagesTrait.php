@@ -1579,6 +1579,9 @@ trait MessagesTrait {
                 ],
             ],
             'CompetencyCriterias' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
                 'percentage' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'
