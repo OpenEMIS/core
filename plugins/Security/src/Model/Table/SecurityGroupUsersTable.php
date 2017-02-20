@@ -416,4 +416,14 @@ class SecurityGroupUsersTable extends AppTable {
 
 		return $assigneeId;
 	}
+
+    public function findEmailList(Query $query, array $options)
+    {
+        return $query
+            ->contain('Users')
+            ->where([
+                'security_group_id' => $options['institutionId'],
+                'security_role_id' => $options['securityRoleId']
+            ]);
+    }
 }
