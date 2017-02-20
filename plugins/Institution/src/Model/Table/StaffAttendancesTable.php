@@ -24,7 +24,6 @@ class StaffAttendancesTable extends ControllerActionTable
 	private $typeOptions = [];
 	private $reasonOptions = [];
 	private $_fieldOrder = ['openemis_no', 'staff_id'];
-	private $dataCount = null;
 	private $_absenceData = [];
 	const PRESENT = 0;
 
@@ -62,7 +61,19 @@ class StaffAttendancesTable extends ControllerActionTable
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
+
+		$this->toggle('search', false);
+		$this->toggle('add', false);
+		$this->toggle('edit', false);
+		$this->toggle('view', false);
+		$this->toggle('remove', false);
 	}
+
+	public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.indexEdit'] = 'indexEdit';
+        return $events;
+    }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$academicPeriodId = $this->request->query['academic_period_id'];
@@ -257,15 +268,9 @@ class StaffAttendancesTable extends ControllerActionTable
 	}
 
 	// Event: ControllerAction.Model.afterAction
-	public function afterAction(Event $event, ArrayObject $config) {
-		if (!is_null($this->request->query('mode'))) {
-			if ($this->dataCount > 0) {
-				$config['formButtons'] = true;
-				$config['url'] = $config['buttons']['index']['url'];
-				$config['url'][0] = 'indexEdit';
-			}
-		}
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function afterAction(Event $event, ArrayObject $extra)
+	{
+		$this->setFieldOrder($this->_fieldOrder);
 	}
 
 	// Function use by the mini dashboard
@@ -853,8 +858,63 @@ class StaffAttendancesTable extends ControllerActionTable
 		}
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		$this->dataCount = $data->count();
+	public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+	{
+		$dataCount = $resultSet->count();
+
+		$btnTemplate = [
+			'type' => 'button',
+			'attr' => [
+	            'class' => 'btn btn-xs btn-default',
+	            'data-toggle' => 'tooltip',
+	            'data-placement' => 'bottom',
+	            'escape' => false
+	        ],
+	        'url' => $this->url('index')
+        ];
+
+		if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
+	    	if ($this->request->query('day') != -1) { // only one day selected
+	    		if (!is_null($this->request->query('mode'))) { // edit mode
+	    			// Back button
+	    			$extra['toolbarButtons']['back'] = $btnTemplate;
+	    			$extra['toolbarButtons']['back']['attr']['title'] = __('Back');
+	    			$extra['toolbarButtons']['back']['label'] = '<i class="fa kd-back"></i>';
+					if ($extra['toolbarButtons']['back']['url']['mode']) {
+						unset($extra['toolbarButtons']['back']['url']['mode']);
+					}
+
+					// Save button
+					if ($dataCount > 0) {
+						$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+						$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
+						$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
+						$extra['toolbarButtons']['indexEdit']['url'][0] = 'indexEdit';
+					}
+
+					// unset export button
+					if (isset($extra['toolbarButtons']['export'])) {
+						unset($extra['toolbarButtons']['export']);
+					}
+				} else { // not edit mode
+					// unset Back button
+					if (isset($extra['toolbarButtons']['back'])) {
+						unset($extra['toolbarButtons']['back']);
+					}
+
+					// Edit button
+					$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+					$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Edit');
+					$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-edit"></i>';
+					$extra['toolbarButtons']['indexEdit']['url']['mode'] = 'edit';
+				}
+			} else { // if user selected All Days, Edit operation will not be allowed
+				// unset Edit button
+				if ($extra['toolbarButtons']->offsetExists('indexEdit')) {
+					$extra['toolbarButtons']->offsetUnset('indexEdit');
+				}
+			}
+		}
 	}
 
 	public function findWithAbsence(Query $query, array $options)
@@ -921,34 +981,6 @@ class StaffAttendancesTable extends ControllerActionTable
 			->order(['Users.openemis_no'])
 			;
     }
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
-	    	if ($this->request->query('day') != -1) {
-	    		if (!is_null($this->request->query('mode'))) {
-	    			$toolbarButtons['back'] = $buttons['back'];
-					if ($toolbarButtons['back']['url']['mode']) {
-						unset($toolbarButtons['back']['url']['mode']);
-					}
-					$toolbarButtons['back']['type'] = 'button';
-					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-					$toolbarButtons['back']['attr'] = $attr;
-					$toolbarButtons['back']['attr']['title'] = __('Back');
-
-					if (isset($toolbarButtons['export'])) {
-						unset($toolbarButtons['export']);
-					}
-				} else {
-					$toolbarButtons['back'] = $buttons['back'];
-					$toolbarButtons['back']['type'] = null;
-				}
-			} else { // if user selected All Days, Edit operation will not be allowed
-				if ($toolbarButtons->offsetExists('edit')) {
-					$toolbarButtons->offsetUnset('edit');
-				}
-			}
-		}
-	}
 
 	public function indexEdit()
 	{
