@@ -151,8 +151,10 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('education_subject_id', ['visible' => false]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         $model = $this->_table;
+        $session = $this->_table->Session;
         $where = [];
 
         // Academic Period
@@ -163,7 +165,8 @@ class RegisteredStudentsBehavior extends Behavior {
         // End
 
         // Examination
-        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
+        $institutionId = $session->read('Institution.Institutions.id');
+        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod, $institutionId);
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
         $selectedExamination = !is_null($model->request->query('examination_id')) ? $model->request->query('examination_id') : -1;
         $model->controller->set(compact('examinationOptions', 'selectedExamination'));
@@ -647,18 +650,16 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function getExaminationOptions($selectedAcademicPeriod) {
+    public function getExaminationOptions($selectedAcademicPeriod, $institutionId = null)
+    {
         $model = $this->_table;
-        $session = $this->_table->Session;
         $examinationQuery = $model->Examinations
             ->find('list')
             ->where([$model->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // in institutions, only show examinations for grades available in the institution
-        if ($model->alias() == 'InstitutionExaminationStudents' && $session->check('Institution.Institutions.id')) {
-            $institutionId = $session->read('Institution.Institutions.id');
+        if ($model->alias() == 'InstitutionExaminationStudents' && !is_null($institutionId)) {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-
             $availableGrades = $InstitutionGrades
                 ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
                 ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
