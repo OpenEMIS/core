@@ -11,19 +11,19 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Datasource\ResultSetInterface;
 
-class StudentDropoutTable extends AppTable {
+class StudentWithdrawTable extends AppTable {
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
 	const REJECTED = 2;
 
 	public function initialize(array $config) {
-		$this->table('institution_student_dropout');
+		$this->table('institution_student_withdraw');
 		parent::initialize($config);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->belongsTo('StudentDropoutReasons', ['className' => 'Student.StudentDropoutReasons', 'foreignKey' => 'student_dropout_reason_id']);
+		$this->belongsTo('StudentWithdrawReasons', ['className' => 'Student.StudentWithdrawReasons', 'foreignKey' => 'student_withdraw_reason_id']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
         ]);
@@ -43,12 +43,12 @@ class StudentDropoutTable extends AppTable {
 
     public function studentsAfterDelete(Event $event, Entity $student)
     {
-        $this->removePendingDropout($student->student_id, $student->institution_id);
+        $this->removePendingWithdraw($student->student_id, $student->institution_id);
     }
 
-	protected function removePendingDropout($studentId, $institutionId)
+	protected function removePendingWithdraw($studentId, $institutionId)
     {
-        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and dropout can be done on different grade / academic period)
+        //could not include grade / academic period because not always valid. (promotion/graduation/repeat and withdraw can be done on different grade / academic period)
         $conditions = [
             'student_id' => $studentId,
             'institution_id' => $institutionId,
@@ -90,27 +90,27 @@ class StudentDropoutTable extends AppTable {
 		$this->ControllerAction->field('institution_id', ['type' => 'readonly', 'attr' => ['value' => $this->Institutions->get($entity->institution_id)->code_name]]);
 		$this->ControllerAction->field('academic_period_id', ['type' => 'readonly', 'attr' => ['value' => $this->AcademicPeriods->get($entity->academic_period_id)->name]]);
 		$this->ControllerAction->field('education_grade_id', ['type' => 'readonly', 'attr' => ['value' => $this->EducationGrades->get($entity->education_grade_id)->programme_grade_name]]);
-		$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentDropoutReasons->get($entity->student_dropout_reason_id)->name]]);
+		$this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
 		$this->ControllerAction->field('created', ['type' => 'disabled', 'attr' => ['value' => $this->formatDate($entity->created)]]);
   		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'effective_date', 'student_dropout_reason_id', 'comment',
+			'effective_date', 'student_withdraw_reason_id', 'comment',
 		]);
 
 		$urlParams = $this->ControllerAction->url('edit');
 		if ($urlParams['controller'] == 'Dashboard') {
-			$this->Navigation->addCrumb('Dropout Approvals', $urlParams);
+			$this->Navigation->addCrumb('Withdraw Approvals', $urlParams);
 		}
     }
 
     public function viewAfterAction($event, Entity $entity) {
     	$this->request->data[$this->alias()]['status'] = $entity->status;
-    	$this->ControllerAction->field('student_dropout_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentDropoutReasons->get($entity->student_dropout_reason_id)->name]]);
+    	$this->ControllerAction->field('student_withdraw_reason_id', ['type' => 'readonly', 'attr' => ['value' => $this->StudentWithdrawReasons->get($entity->student_withdraw_reason_id)->name]]);
 		$this->ControllerAction->setFieldOrder([
 			'created', 'status', 'student_id',
 			'institution_id', 'academic_period_id', 'education_grade_id',
-			'effective_date', 'student_dropout_reason_id', 'comment'
+			'effective_date', 'student_withdraw_reason_id', 'comment'
 		]);
     }
 
@@ -238,7 +238,7 @@ class StudentDropoutTable extends AppTable {
 			}
 			unset($toolbarButtons['back']['url'][1]);
 		} else if ($action == 'view') {
-			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST) {
+			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST && isset($toolbarButtons['edit'])) {
 				unset($toolbarButtons['edit']);
 			}
 		}
@@ -288,7 +288,7 @@ class StudentDropoutTable extends AppTable {
 				'student_id' => $studentId,
 				'academic_period_id' => $periodId,
 				'education_grade_id' => $gradeId,
-				'student_status_id' => $statuses['DROPOUT']
+				'student_status_id' => $statuses['WITHDRAWN']
 			];
 
 			$newData = $conditions;
@@ -308,7 +308,7 @@ class StudentDropoutTable extends AppTable {
 
 				if (!empty($existingStudentEntity)) {
 					// approval should not proceed
-					$existingStudentEntity->student_status_id = $statuses['DROPOUT'];
+					$existingStudentEntity->student_status_id = $statuses['WITHDRAWN'];
 					$existingStudentEntity->end_date = $effectiveDate;
 					$result = $Students->save($existingStudentEntity);
 
@@ -328,8 +328,8 @@ class StudentDropoutTable extends AppTable {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
 	{
-		$this->Alert->success('StudentDropout.approve', ['reset' => true]);
-		// To redirect back to the student dropout if it is not access from the workbench
+		$this->Alert->success('StudentWithdraw.approve', ['reset' => true]);
+		// To redirect back to the student withdraw if it is not access from the workbench
 		$urlParams = $this->ControllerAction->url('index');
 		$plugin = false;
 		$controller = 'Dashboard';
@@ -337,7 +337,7 @@ class StudentDropoutTable extends AppTable {
 		if ($urlParams['controller'] == 'Institutions') {
 			$plugin = 'Institution';
 			$controller = 'Institutions';
-			$action = 'StudentDropout';
+			$action = 'StudentWithdraw';
 		}
 		$event->stopPropagation();
 		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
@@ -348,7 +348,7 @@ class StudentDropoutTable extends AppTable {
 			['status' => self::REJECTED, 'comment' => $data[$this->alias()]['comment'], 'effective_date' => strtotime($data[$this->alias()]['effective_date'])],
 			['id' => $entity->id]);
 
-		$this->Alert->success('StudentDropout.reject');
+		$this->Alert->success('StudentWithdraw.reject');
 
 		// To redirect back to the student admission if it is not access from the workbench
 		$urlParams = $this->ControllerAction->url('index');
@@ -445,7 +445,7 @@ class StudentDropoutTable extends AppTable {
 
 					$row['url'] = $url;
 	    			$row['status'] = __('Pending For Approval');
-	    			$row['request_title'] = __('Dropout request of').' '.$row->user->name_with_id;
+	    			$row['request_title'] = __('Withdraw request of').' '.$row->user->name_with_id;
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
 	    			$row['requester'] = $row->created_user->name_with_id;

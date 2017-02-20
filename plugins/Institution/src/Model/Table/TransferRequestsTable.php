@@ -56,8 +56,8 @@ class TransferRequestsTable extends ControllerActionTable
         $validator
             ->requirePresence('new_education_grade_id')
 
-            ->add('student_id', 'ruleNoNewDropoutRequestInGradeAndInstitution', [
-                'rule' => ['noNewDropoutRequestInGradeAndInstitution'],
+            ->add('student_id', 'ruleNoNewWithdrawRequestInGradeAndInstitution', [
+                'rule' => ['noNewWithdrawRequestInGradeAndInstitution'],
                 'on' => 'create'
             ])
             ->add('student_id', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
