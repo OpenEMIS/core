@@ -41,7 +41,7 @@ class UndoStudentStatusTable extends AppTable {
 		];
 
 		$this->addBehavior('Institution.UndoCurrent', $settings);
-		$this->addBehavior('Institution.UndoDropout', $settings);
+		$this->addBehavior('Institution.UndoWithdrawn', $settings);
 		$this->addBehavior('Institution.UndoTransferred', $settings);
 		$this->addBehavior('Institution.UndoGraduated', $settings);
 		$this->addBehavior('Institution.UndoPromoted', $settings);
@@ -248,7 +248,7 @@ class UndoStudentStatusTable extends AppTable {
 			$codes = [];
 			$codes[$this->statuses['CURRENT']] = $this->statuses['CURRENT'];
 			$codes[$this->statuses['TRANSFERRED']] = $this->statuses['TRANSFERRED'];
-			$codes[$this->statuses['DROPOUT']] = $this->statuses['DROPOUT'];
+			$codes[$this->statuses['WITHDRAWN']] = $this->statuses['WITHDRAWN'];
 			$codes[$this->statuses['GRADUATED']] = $this->statuses['GRADUATED'];
 			$codes[$this->statuses['PROMOTED']] = $this->statuses['PROMOTED'];
 			$codes[$this->statuses['REPEATED']] = $this->statuses['REPEATED'];
@@ -417,7 +417,7 @@ class UndoStudentStatusTable extends AppTable {
                         ['institutionId' => $institutionId, 'selectedPeriod' => $selectedPeriod, 'selectedClass' => $selectedClass, 'selectedGrade' => $selectedGrade, 'studentIds' => '']
                     );
 
-                } else if ($selectedStatus == $this->statuses['DROPOUT']) {
+                } else if ($selectedStatus == $this->statuses['WITHDRAWN']) {
 
                     $data = $data
                         ->leftJoin(['InstitutionStudent' => 'institution_students'], [
@@ -425,7 +425,7 @@ class UndoStudentStatusTable extends AppTable {
                         ])
                         ->where([
                             $conditions,
-                            'InstitutionStudent.student_status_id IS NULL' //no record after dropout record
+                            'InstitutionStudent.student_status_id IS NULL' //no record after withdraw record
                         ]);
 
                 } else {
@@ -602,7 +602,7 @@ class UndoStudentStatusTable extends AppTable {
 					$student_ids = $event->result;
 
 					if (empty($student_ids)) {
-						$this->Alert->success('UndoStudentStatus.failed', ['reset' => true]);
+						$this->Alert->error('UndoStudentStatus.failed', ['reset' => true]);
 					} else {
 						$this->Alert->success('UndoStudentStatus.success', ['reset' => true]);
 					}
