@@ -85,7 +85,7 @@ class AlertLogsTable extends ControllerActionTable
         $this->insertAlertLog($method, $feature, $recipient, $subject, $message);
 
         // trigger the send email shell
-        // $this->triggerSendingAlertShell('SendingAlert');
+        $this->triggerSendingAlertShell('SendingAlert');
     }
 
     public function insertAlertLog($method, $feature, $email, $subject=null, $message=null)
