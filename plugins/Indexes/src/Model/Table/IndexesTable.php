@@ -329,7 +329,7 @@ class IndexesTable extends ControllerActionTable
         $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
         $this->field('academic_period_id',['visible' => false]);
         $this->field('status',['visible' => false]);
-        $this->field('process_id',['visible' => false]);
+        $this->field('pid',['visible' => false]);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -504,7 +504,7 @@ class IndexesTable extends ControllerActionTable
         $this->field('generated_by',['visible' => false]);
         $this->field('generated_on',['visible' => false]);
         $this->field('status',['visible' => false]);
-        $this->field('process_id',['visible' => false]);
+        $this->field('pid',['visible' => false]);
         $this->field('indexes_criterias', ['type' => 'custom_criterias']);
 
         $this->setFieldOrder(['name', 'indexes_criterias']);
