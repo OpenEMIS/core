@@ -14,7 +14,7 @@ class ImportUsersTable extends AppTable {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-	    $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'Users']);
+	    $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'Users', 'backUrl' => ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']]);
 
 	    // register table once
 		$this->Users = TableRegistry::get('User.Users');

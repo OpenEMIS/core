@@ -82,7 +82,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentAdmission', 					['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentWithdraw', 					['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
 		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -535,10 +535,11 @@ class InstitutionsTable extends AppTable  {
 				if ($areaId > 0) {
 					$path = $this->Areas
 						->find('path', ['for' => $areaId])
+						->contain('AreaLevels')
 						->toArray();
 
 					foreach($path as $value){
-						if ($value['area_level_id'] == $areaLevel) {
+						if ($value['area_level']['level'] == $areaLevel) {
 							$areaName = $value['name'];
 						}
 					}
@@ -564,7 +565,15 @@ class InstitutionsTable extends AppTable  {
 				$areaLevel = $ConfigItems->value('institution_area_level_id');
 
 				$AreaTable = TableRegistry::get('Area.AreaLevels');
-				return $AreaTable->get($areaLevel)->name;
+				$value = $AreaTable->find()
+					->where([$AreaTable->aliasField('level') => $areaLevel])
+					->first();
+
+				if (is_object($value)) {
+					return $value->name;
+				} else {
+					return $areaLevel;
+				}
 			} else {
 				return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
 			}
@@ -915,7 +924,7 @@ class InstitutionsTable extends AppTable  {
     	$extra['excludedModels'] = [
     		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
     		$this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
-    		$this->StudentAdmission->alias(), $this->StudentDropout->alias(), $this->TransferApprovals->alias(),
+    		$this->StudentAdmission->alias(), $this->StudentWithdraw->alias(), $this->TransferApprovals->alias(),
             $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
     	];
     }

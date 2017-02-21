@@ -260,8 +260,9 @@ class InstitutionSubjectStudentsTable extends AppTable {
                         $Users->aliasField('third_name'),
                         $Users->aliasField('last_name'),
                         $Users->aliasField('preferred_name')
-                    ])->toArray();
-        
+                    ])
+                    ->toArray();
+
         $studentList = [];
         foreach ($students as $key => $value) {
             $studentList[$value->student_id] = $value->_matchingData['Users']['name_with_id'];

@@ -1541,7 +1541,7 @@ class ValidationBehavior extends Behavior {
         return intVal($minValue) <= intVal($globalData['data']['max']);
     }
 
-	public static function noNewDropoutRequestInGradeAndInstitution($field, array $globalData)
+	public static function noNewWithdrawRequestInGradeAndInstitution($field, array $globalData)
 	{
 		$model = $globalData['providers']['table'];
 		$data = $globalData['data'];
@@ -1555,7 +1555,7 @@ class ValidationBehavior extends Behavior {
 			return true;
 		}
 
-		$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+		$StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
     	$conditions = [
 			'student_id' => $studentId,
 			'status' => $model::NEW_REQUEST,
@@ -1563,7 +1563,7 @@ class ValidationBehavior extends Behavior {
 			'institution_id' => $previousInstitutionId
 		];
 
-		$count = $StudentDropoutTable->find()
+		$count = $StudentWithdrawTable->find()
 			->where($conditions)
 			->count();
 
@@ -1794,4 +1794,30 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
+
+    public static function validatePreferredNationality($field, array $globalData)
+    {
+        //check at least one preferred nationality set
+        if (array_key_exists('preferred', $globalData['data'])) {
+
+            if ($field == 0) { //if set as not preferred
+                $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+
+                $query = $UserNationalitiesTable
+                        ->find()
+                        ->where([
+                            $UserNationalitiesTable->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                            $UserNationalitiesTable->aliasField('nationality_id <> ') => $globalData['data']['nationality_id'],
+                            $UserNationalitiesTable->aliasField('preferred') => 1
+                        ])
+                        ->count();
+                if ($query > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }
