@@ -305,7 +305,7 @@ class StudentUserTable extends ControllerActionTable
 
 		$this->addPromoteButton($entity, $extra);
 		$this->addTransferButton($entity, $extra);
-		$this->addDropoutButton($entity, $extra);
+		$this->addWithdrawButton($entity, $extra);
 	}
 
 	private function setupTabElements($entity)
@@ -407,9 +407,9 @@ class StudentUserTable extends ControllerActionTable
 		}
     }
 
-    private function addDropoutButton(Entity $entity, ArrayObject $extra)
+    private function addWithdrawButton(Entity $entity, ArrayObject $extra)
     {
-    	if ($this->AccessControl->check([$this->controller->name, 'DropoutRequests', 'add'])) {
+    	if ($this->AccessControl->check([$this->controller->name, 'WithdrawRequests', 'add'])) {
     		$session = $this->Session;
     		$toolbarButtons = $extra['toolbarButtons'];
 
@@ -423,34 +423,34 @@ class StudentUserTable extends ControllerActionTable
 
 			// Check if the student is enrolled
 			if ($studentEntity->student_status_id == $enrolledStatus) {
-				$DropoutRequests = TableRegistry::get('Institution.DropoutRequests');
-				$session->write($DropoutRequests->registryAlias().'.id', $institutionStudentId);
+				$WithdrawRequests = TableRegistry::get('Institution.WithdrawRequests');
+				$session->write($WithdrawRequests->registryAlias().'.id', $institutionStudentId);
 				$NEW = 0;
 
-				// check if there is an existing dropout request
-				$dropoutRequest = $DropoutRequests->find()
-					->select(['institution_student_dropout_id' => 'id'])
-					->where([$DropoutRequests->aliasField('student_id') => $studentEntity->student_id,
-							$DropoutRequests->aliasField('institution_id') => $studentEntity->institution_id,
-							$DropoutRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
-							$DropoutRequests->aliasField('status') => $NEW
+				// check if there is an existing withdraw request
+				$withdrawRequest = $WithdrawRequests->find()
+					->select(['institution_student_withdraw_id' => 'id'])
+					->where([$WithdrawRequests->aliasField('student_id') => $studentEntity->student_id,
+							$WithdrawRequests->aliasField('institution_id') => $studentEntity->institution_id,
+							$WithdrawRequests->aliasField('education_grade_id') => $studentEntity->education_grade_id,
+							$WithdrawRequests->aliasField('status') => $NEW
 						])
 					->first();
 
-				$dropoutButton = $toolbarButtons['back'];
-				$dropoutButton['type'] = 'button';
-				$dropoutButton['label'] = '<i class="fa kd-dropout"></i>';
-				$dropoutButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
-				$dropoutButton['attr']['title'] = __('Dropout');
+				$withdrawButton = $toolbarButtons['back'];
+				$withdrawButton['type'] = 'button';
+				$withdrawButton['label'] = '<i class="fa kd-dropout"></i>';
+				$withdrawButton['attr']['class'] = 'btn btn-xs btn-default icon-big';
+				$withdrawButton['attr']['title'] = __('Withdraw');
 
-				$dropoutButton['url'] = $this->url('add', 'QUERY');
-				$dropoutButton['url']['action'] = 'DropoutRequests';
+				$withdrawButton['url'] = $this->url('add', 'QUERY');
+				$withdrawButton['url']['action'] = 'WithdrawRequests';
 
-				if (!empty($dropoutRequest)) {
-					$dropoutButton['url'][0] = 'edit';
-					$dropoutButton['url'][1] = $this->paramsEncode(['id' => $dropoutRequest->institution_student_dropout_id]);
+				if (!empty($withdrawRequest)) {
+					$withdrawButton['url'][0] = 'edit';
+					$withdrawButton['url'][1] = $this->paramsEncode(['id' => $withdrawRequest->institution_student_withdraw_id]);
 				}
-				$toolbarButtons['dropout'] = $dropoutButton;
+				$toolbarButtons['withdraw'] = $withdrawButton;
 			}
 		}
     }
@@ -530,6 +530,7 @@ class StudentUserTable extends ControllerActionTable
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Results' => ['text' => __('Assessments')],
+			'ExaminationResults' => ['text' => __('Examinations')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 		];

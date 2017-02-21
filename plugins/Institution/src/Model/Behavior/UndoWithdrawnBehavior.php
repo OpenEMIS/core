@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Institution\Model\Behavior;
 
 use ArrayObject;
@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Institution\Model\Behavior\UndoBehavior;
 
-class UndoDropoutBehavior extends UndoBehavior {
+class UndoWithdrawnBehavior extends UndoBehavior {
     public function initialize(array $config) {
         parent::initialize($config);
     }
@@ -19,15 +19,15 @@ class UndoDropoutBehavior extends UndoBehavior {
         return $events;
     }
 
-    public function onGetDropoutStudents(Event $event, $data) {
+    public function onGetWithdrawnStudents(Event $event, $data) {
         //this function is to re-check if the student try to undo not the latest status.
         //if yes, then the checkbox will be replaced by tooltip (not able to revert/undo)
-        return $this->getStudents($data); 
+        return $this->getStudents($data);
     }
 
-    public function processSaveDropoutStudents(Event $event, Entity $entity, ArrayObject $data) 
+    public function processSaveWithdrawnStudents(Event $event, Entity $entity, ArrayObject $data)
     {
-        $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+        $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
         $studentIds = [];
 
         $institutionId = $entity->institution_id;
@@ -41,7 +41,7 @@ class UndoDropoutBehavior extends UndoBehavior {
                 if ($studentId != 0) {
                     $studentIds[$studentId] = $studentId;
 
-                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['DROPOUT']);
+                    $prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['WITHDRAWN']);
                     $whereId = '';
                     $whereConditions = '';
 
@@ -58,10 +58,10 @@ class UndoDropoutBehavior extends UndoBehavior {
                             'student_id' => $studentId
                         ];
                     }
-                    
-                    $this->updateStudentStatus('DROPOUT', $whereId, $whereConditions);
 
-                    //update dropout request (institution_student_dropout) to undo status.
+                    $this->updateStudentStatus('WITHDRAWN', $whereId, $whereConditions);
+
+                    //update withdraw request (institution_student_withdraw) to undo status.
                     $conditions = [
                         'student_id' => $studentId,
                         'status' => 1, //undo approved status
@@ -70,7 +70,7 @@ class UndoDropoutBehavior extends UndoBehavior {
                         'education_grade_id' => $selectedGrade
                     ];
 
-                    $StudentDropoutTable->updateAll(
+                    $StudentWithdrawTable->updateAll(
                         ['status' => 3], //status 3 = undo
                         [$conditions]
                     );
