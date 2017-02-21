@@ -640,6 +640,9 @@ trait MessagesTrait {
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
         ],
+        'UserContacts' => [
+            'noEmailRemain' => 'There should be at least one Email record'
+        ],
 
         // Validation Messages
         'Institution' => [
@@ -1011,7 +1014,7 @@ trait MessagesTrait {
                     'ruleValidateEmergency' => 'Please enter a valid Value',
                 ],
                 'preferred' => [
-                    'ruleValidatePreferred' => 'Please select a preferred contact type'
+                    'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
             'Identities' => [
