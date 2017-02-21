@@ -17,8 +17,8 @@ class StudentStatusesFixture extends TestFixture
             'name' => 'Transferred'
         ], [
             'id' => 4,
-            'code' => 'DROPOUT',
-            'name' => 'Dropout'
+            'code' => 'WITHDRAWN',
+            'name' => 'Withdrawn'
         ], [
             'id' => 6,
             'code' => 'GRADUATED',
