@@ -52,9 +52,6 @@ foreach ($data as $entity) {
 $tableClass = 'table table-curved table-sortable table-checkable';
 if (isset($tabElements)) {
 	if (isset($toolbarElements)) {
-		foreach ($toolbarElements as $element) {
-			echo $this->element($element['name'], $element['data'], $element['options']);
-		}
 	} else {
 		$tableClass = 'table table-sortable table-checkable';
 	}
