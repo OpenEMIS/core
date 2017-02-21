@@ -109,8 +109,8 @@ class ContactsTable extends ControllerActionTable {
     {
         //for email, check whether has minimum one email record.
         $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
-        $extra['contactOption'] = $contactOption;
-        // pr($contactOption);die;
+        $extra['contactOption'] = $contactOption;//to be passed to afterDelete
+        
         if ($contactOption == 4) {
             $query = $this
                 ->find()
