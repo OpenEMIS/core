@@ -100,24 +100,6 @@ class InstitutionsController extends AppController
     public function StaffTrainingResults()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']); }
     public function StaffTrainingNeeds()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']); }
     public function StaffTrainingApplications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']); }
-<<<<<<< HEAD
-    public function CourseCatalogue()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CourseCatalogue']); }
-    public function StaffLeave()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
-    public function VisitRequests()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.VisitRequests']); }
-    public function Visits()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionQualityVisits']); }
-    public function StaffAppraisals()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']); }
-    public function Programmes()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']); }
-    public function StaffAbsences()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
-    public function Textbooks()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
-    public function StudentCompetencies()       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']); }
-    public function StudentCompetencyResults()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']); }
-    public function StudentSurveys()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
-    // public function StaffAttendances()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
-    public function InstitutionIndexes()    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIndexes']); }
-    public function StudentIndexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
-    public function InstitutionStudentIndexes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
-
-=======
     public function CourseCatalogue()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CourseCatalogue']); }
     public function StaffLeave()                    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
     public function VisitRequests()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.VisitRequests']); }
@@ -131,7 +113,9 @@ class InstitutionsController extends AppController
     public function StudentSurveys()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
     public function StudentTextbooks()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
     // public function StaffAttendances()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
->>>>>>> caf970a0d6f4171d6f539cad0889a2a5f78dd3a9
+    public function InstitutionIndexes()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIndexes']); }
+    public function StudentIndexes()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
+    public function InstitutionStudentIndexes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
     // End
 
     // AngularJS
@@ -675,12 +659,12 @@ class InstitutionsController extends AppController
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => [
                 'url' => [
-                    'plugin' => $this->plugin, 
-                    'controller' => $this->name, 
-                    'action' => 'Nationalities', 
+                    'plugin' => $this->plugin,
+                    'controller' => $this->name,
+                    'action' => 'Nationalities',
                     $id
-                ], 
-                'text' => __('Nationalities'), 
+                ],
+                'text' => __('Nationalities'),
                 'urlModel' => 'Nationalities'
             ],
             'Contacts' => ['text' => __('Contacts')],
@@ -728,7 +712,7 @@ class InstitutionsController extends AppController
 
                 $url = $this->ControllerAction
                         ->setQueryString(
-                            array_merge($studentUrl, $tempParam), 
+                            array_merge($studentUrl, $tempParam),
                             ['security_user_id' => $securityUserId]
                         );
 
@@ -774,11 +758,8 @@ class InstitutionsController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
-<<<<<<< HEAD
-            'StudentIndexes' => ['text' => __('Indexes')],
-=======
-            'Textbooks' => ['text' => __('Textbooks')]
->>>>>>> caf970a0d6f4171d6f539cad0889a2a5f78dd3a9
+            'Textbooks' => ['text' => __('Textbooks')],
+            'StudentIndexes' => ['text' => __('Indexes')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
