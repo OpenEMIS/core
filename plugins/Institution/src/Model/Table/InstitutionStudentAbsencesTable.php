@@ -727,8 +727,8 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				$this->aliasField('institution_id') => $institutionId,
 				$this->aliasField('student_id') => $studentId,
 				$this->aliasField('absence_type_id') => $absenceTypeId,
-				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate->format('Y-m-d'),
-				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d'),
+				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate,
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate
 			])
 			->all();
 
@@ -740,12 +740,14 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$absenceDay = $absenceDay + $interval->days + 1;
 		}
 
-		return $valueIndex = $absenceDay;
+		return $absenceDay;
 	}
 
 	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
 	{
 		$Indexes = TableRegistry::get('Indexes.Indexes');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$dateFormat = $ConfigItems->value('date_format');
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
 		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
@@ -758,14 +760,13 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				$this->aliasField('institution_id') => $institutionId,
 				$this->aliasField('student_id') => $studentId,
 				$this->aliasField('absence_type_id') => $absenceTypeId,
-				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate->format('Y-m-d'),
-				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate->format('Y-m-d')
+				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate,
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate
 			])
 			->all();
 
 		$referenceDetails = [];
 		foreach ($absenceResults as $key => $obj) {
-			// $title = $obj->absence_type->name;
 			$reason = 'Unexcused';
 			if (isset($obj->student_absence_reason->name)) {
 				$reason = $obj->student_absence_reason->name;
@@ -775,9 +776,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$endDate = $obj->end_date;
 
 			if ($startDate == $endDate) {
-				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format('d/m/Y') . ')';
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format($dateFormat) . ')';
 			} else {
-				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y') . ')';
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format($dateFormat) . ' - ' . $endDate->format($dateFormat) . ')';
 			}
 		}
 
