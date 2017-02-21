@@ -1541,7 +1541,7 @@ class ValidationBehavior extends Behavior {
         return intVal($minValue) <= intVal($globalData['data']['max']);
     }
 
-	public static function noNewDropoutRequestInGradeAndInstitution($field, array $globalData)
+	public static function noNewWithdrawRequestInGradeAndInstitution($field, array $globalData)
 	{
 		$model = $globalData['providers']['table'];
 		$data = $globalData['data'];
@@ -1555,7 +1555,7 @@ class ValidationBehavior extends Behavior {
 			return true;
 		}
 
-		$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+		$StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
     	$conditions = [
 			'student_id' => $studentId,
 			'status' => $model::NEW_REQUEST,
@@ -1563,7 +1563,7 @@ class ValidationBehavior extends Behavior {
 			'institution_id' => $previousInstitutionId
 		];
 
-		$count = $StudentDropoutTable->find()
+		$count = $StudentWithdrawTable->find()
 			->where($conditions)
 			->count();
 
