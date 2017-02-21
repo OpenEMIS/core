@@ -1,6 +1,6 @@
 -- code here
 DELETE FROM `security_functions` WHERE `id` = 1055;
-DELETE FROM `security_functions` WHERE `id` = 2031;
+DELETE FROM `security_functions` WHERE `id` = 2032;
 DELETE FROM `security_functions` WHERE `id` = 5066;
 ALTER TABLE `student_behaviours` DROP `academic_period_id`;
 ALTER TABLE `student_behaviour_categories` DROP `behaviour_classification_id`;
