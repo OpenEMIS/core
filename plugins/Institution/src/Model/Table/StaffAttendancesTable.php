@@ -876,6 +876,11 @@ class StaffAttendancesTable extends ControllerActionTable
 		if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
 	    	if ($this->request->query('day') != -1) { // only one day selected
 	    		if (!is_null($this->request->query('mode'))) { // edit mode
+
+	    			// enable form, change form action to indexEdit
+	    			$extra['config']['form']['name'] = "staffAttendance";
+	    			$extra['config']['form']['url'] = $this->url('indexEdit');
+
 	    			// Back button
 	    			$extra['toolbarButtons']['back'] = $btnTemplate;
 	    			$extra['toolbarButtons']['back']['attr']['title'] = __('Back');
@@ -888,8 +893,9 @@ class StaffAttendancesTable extends ControllerActionTable
 					if ($dataCount > 0) {
 						$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
 						$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
+						$extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'document.staffAttendance.submit();';
 						$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
-						$extra['toolbarButtons']['indexEdit']['url'][0] = 'indexEdit';
+						$extra['toolbarButtons']['indexEdit']['url'] = '#';
 					}
 
 					// unset export button
