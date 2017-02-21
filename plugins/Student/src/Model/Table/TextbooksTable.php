@@ -19,6 +19,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->belongsTo('Institutions',        ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods',     ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationSubjects',   ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades',     ['className' => 'Education.EducationGrades']);
         $this->belongsTo('Users',               ['className' => 'User.Users', 'foreignKey' => 'student_id']);
 
         $this->toggle('add', false);
@@ -43,7 +44,7 @@ class TextbooksTable extends ControllerActionTable {
         $this->field('student_id', ['visible' => false]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'institution_id', 'code', 'textbook_id', 'education_subject_id', 'textbook_condition_id', 'textbook_status_id'
+            'academic_period_id', 'institution_id', 'code', 'textbook_id', 'education_grade_id', 'education_subject_id', 'textbook_condition_id', 'textbook_status_id'
         ]);
     }
 
