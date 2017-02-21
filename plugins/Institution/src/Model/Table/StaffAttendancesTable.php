@@ -828,17 +828,16 @@ class StaffAttendancesTable extends ControllerActionTable
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Late for the week', 'value' => $late];
 			}
 
-			$toolbarElements[] = [
+			$extra['elements']['dashboard'] = [
 				'name' => $indexDashboard,
 				'data' => [
 					'model' => 'staff',
 					'modelCount' => $totalStaff,
 					'modelArray' => $staffAttendanceArray,
 				],
-				'options' => []
+				'options' => [],
+				'order' => 0
 			];
-
-			$this->controller->set('toolbarElements', $toolbarElements);
 
 			$extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
 
