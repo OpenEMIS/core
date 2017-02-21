@@ -105,15 +105,6 @@ class ContactsTable extends ControllerActionTable {
         }
     }
 
-	// public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-	// {
-	// 	$securityUserId = $entity->security_user_id;
-	// 	$deletedEmail = $entity->value;
-
-	// 	// delete the user email
-	// 	$this->Users->updateAll(['email' => NULL],['email' => $deletedEmail]);
-	// }
-
     public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         //for email, check whether has minimum one email record.
@@ -142,60 +133,33 @@ class ContactsTable extends ControllerActionTable {
     public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
     {
         $contactOption = $extra['contactOption'];
-        $contactType = $extra['contactType'];
-
+        
         if ($entity->preferred == 1) { //if the preferred contact deleted
-
-            //get the next latest contact based on contact option to be set as preferred
-            
-            $query = $this->ContactTypes
-                    ->find()
-                    ->where([
-                        $this->ContactTypes->aliasfield('contact_option_id') => $contactOption;
-                    ])     
 
             $query = $this->find()
                     ->matching('ContactTypes', function ($q) use ($contactOption) {
                         return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
                     })
                     ->where([
-                        $this->aliasField('contactType') => 'ContactTypes.contact_option_id',
-                        $this->aliasField('security_user_id') => $entity->security_user_id
+                        $this->aliasField('security_user_id') => $entity->security_user_id,
                     ])
-                    ->order('created DESC')
+                    ->order($this->aliasField('created') . ' DESC')
                     ->first();
 
             if (!empty($query)) {
-                $query->preferred = 1;
-                $this->save($query);
-                $entity->nationality_id = $query->nationality_id; //send the new preferred nationality
+                $this->updateAll(
+                    ['preferred' => 1], 
+                    ['id' => $query->id]
+                );
 
-                //update information on security user table
-                $listeners = [
-                    TableRegistry::get('User.Users')
-                ];
-                $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
+                if ($contactOption == 4) { //if the deleted contact option is email
+                    //update information on security user table
+                    $listeners = [
+                        TableRegistry::get('User.Users')
+                    ];
+                    $this->dispatchEventToModels('Model.UserContacts.onChange', [$query], $this, $listeners);
+                }
             }
-
-            // //get the next latest contact to be set as preferred
-            // $query = $this->find()
-            //         ->where([
-            //             $this->aliasfield('security_user_id') => $entity->security_user_id
-            //         ])
-            //         ->order('created DESC')
-            //         ->first();
-
-            // if (!empty($query)) {
-            //     $query->preferred = 1;
-            //     $this->save($query);
-            //     $entity->nationality_id = $query->nationality_id; //send the new preferred nationality
-
-            //     //update information on security user table
-            //     $listeners = [
-            //         TableRegistry::get('User.Users')
-            //     ];
-            //     $this->dispatchEventToModels('Model.UserNationalities.onChange', [$entity], $this, $listeners);
-            // }
         }
     }
 
