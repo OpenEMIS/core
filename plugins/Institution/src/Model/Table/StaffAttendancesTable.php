@@ -75,7 +75,8 @@ class StaffAttendancesTable extends ControllerActionTable
         return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
 		$academicPeriodId = $this->request->query['academic_period_id'];
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
@@ -84,7 +85,8 @@ class StaffAttendancesTable extends ControllerActionTable
 			->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
 	}
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$startDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->start_date->format('Y-m-d');
 		$endDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->end_date->format('Y-m-d');
@@ -120,7 +122,8 @@ class StaffAttendancesTable extends ControllerActionTable
 		}
 	}
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
     	$newArray = [];
 		$newArray[] = [
 			'key' => 'Users.openemis_no',
@@ -155,7 +158,8 @@ class StaffAttendancesTable extends ControllerActionTable
 		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId']);
 	}
 
-	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
+	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
+	{
 		// get the data from the temporary variable
 		$absenceData = $this->_absenceData;
 		$absenceCodeList = $this->absenceCodeList;
@@ -191,7 +195,8 @@ class StaffAttendancesTable extends ControllerActionTable
 		}
 	}
 
-	public function getData($monthStartDay, $monthEndDay, $institutionId) {
+	public function getData($monthStartDay, $monthEndDay, $institutionId)
+	{
 		$StaffAbsencesTable = TableRegistry::get('Institution.StaffAbsences');
 		$absenceData = $StaffAbsencesTable->find('all')
 				->contain(['StaffAbsenceReasons', 'AbsenceTypes'])
@@ -642,8 +647,6 @@ class StaffAttendancesTable extends ControllerActionTable
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptionsData = $AcademicPeriod->getList();
@@ -655,6 +658,7 @@ class StaffAttendancesTable extends ControllerActionTable
 		}
 
 		$Staff = $this;
+		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$selectedPeriod = $this->request->query['academic_period_id'];
 
 		$this->advancedSelectOptions($periodOptions, $selectedPeriod, [
@@ -666,8 +670,14 @@ class StaffAttendancesTable extends ControllerActionTable
 					->count();
 			}
 		]);
+
+		// To add the academic_period_id to export
+        if (isset($extra['toolbarButtons']['export']['url'])) {
+            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedPeriod;
+        }
+
+        $this->request->query['academic_period_id'] = $selectedPeriod;
 		// End setup periods
-		$this->request->query['academic_period_id'] = $selectedPeriod;
 
 		if ($selectedPeriod != 0) {
 			$todayDate = date("Y-m-d");
