@@ -127,6 +127,7 @@ class ImportTextbooksTable extends AppTable
                 $textbookEntity = $textbookResults->first();
                 $tempRow['academic_period_id'] = $textbookEntity->academic_period_id;
                 $tempRow['education_subject_id'] = $textbookEntity->education_subject_id;
+                $tempRow['education_grade_id'] = $textbookEntity->education_grade_id;
 
                 //check for student being assigned 2 same book.
                 $InstitutionTextbooks = TableRegistry::get('Institution.InstitutionTextbooks');
@@ -138,10 +139,11 @@ class ImportTextbooksTable extends AppTable
                                     $InstitutionTextbooks->aliasField('textbook_id') => $tempRow['textbook_id'],
                                     $InstitutionTextbooks->aliasField('institution_id') => $tempRow['institution_id'],
                                     $InstitutionTextbooks->aliasField('academic_period_id') => $tempRow['academic_period_id'],
-                                    $InstitutionTextbooks->aliasField('education_subject_id') => $tempRow['education_subject_id']
+                                    $InstitutionTextbooks->aliasField('education_subject_id') => $tempRow['education_subject_id'],
+                                    $InstitutionTextbooks->aliasField('education_grade_id') => $tempRow['education_grade_id']
                                 ])
                                 ->count();
-                        if ($query > 1) { //student assigned to same book before
+                        if ($query > 0) { //student assigned to same book before
                             $rowInvalidCodeCols['student_id'] = __('Textbook already assigned to the same student before.');
                             return false;
                         }
