@@ -199,7 +199,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 }
 
                 $this->advancedSelectOptions($textbookOptions, $selectedTextbook, [
-                    'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noRecord')),
+                    'message' => '{{label}} - ' . $this->getMessage('general.noRecords'),
                     'callable' => function($id) use ($selectedPeriod, $selectedSubject) {
                         $conditions[] = $this->aliasField('academic_period_id = ') . $selectedPeriod;
                         $conditions[] = $this->aliasField('education_subject_id = ') . $selectedSubject;
