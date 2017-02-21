@@ -43,7 +43,7 @@ class InstitutionIndexesTable extends ControllerActionTable
         $this->field('academic_period_id',['visible' => false]);
         $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
         $this->field('status',['after' => 'generated_on']);
-        $this->field('process_id',['visible' => false]);
+        $this->field('pid',['visible' => false]);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -81,9 +81,9 @@ class InstitutionIndexesTable extends ControllerActionTable
         $indexId = $params['index_id'];
         $academicPeriodId = $params['academic_period_id'];
 
-        // update indexes process_id and status
+        // update indexes pid and status
         $pid = getmypid();
-        $runningPid = $this->find()->where(['id' => $indexId])->first()->process_id;
+        $runningPid = $this->find()->where(['id' => $indexId])->first()->pid;
 
         // if processing id not empty (process still running or process stuck)
         if (!empty($runningPid)) {
@@ -91,7 +91,7 @@ class InstitutionIndexesTable extends ControllerActionTable
         }
 
         $this->updateAll([
-            'process_id' => $pid,
+            'pid' => $pid,
             'status' => 2 // processing
         ],
         ['id' => $indexId]);
@@ -115,7 +115,7 @@ class InstitutionIndexesTable extends ControllerActionTable
     {
         $this->field('generated_by',['visible' => false]);
         $this->field('status',['visible' => false]);
-        $this->field('process_id',['visible' => false]);
+        $this->field('pid',['visible' => false]);
     }
 
     public function onGetNumberOfRiskIndex(Event $event, Entity $entity)

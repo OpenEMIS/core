@@ -43,7 +43,7 @@ class UpdateIndexesShell extends Shell
                 [
                     'generated_by' => $userId,
                     'generated_on' => $today,
-                    'process_id' => NULL,
+                    'pid' => NULL,
                     'status' => 3 // completed
                 ],
                 ['id' => $indexesId]
@@ -159,7 +159,7 @@ class UpdateIndexesShell extends Shell
         $this->Indexes->updateAll([
             'generated_by' => $userId,
             'generated_on' => $today,
-            'process_id' => NULL,
+            'pid' => NULL,
             'status' => 3 // completed
         ],
         ['id' => $indexesId]);

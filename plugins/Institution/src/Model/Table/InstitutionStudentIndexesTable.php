@@ -82,20 +82,16 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         // back buttons
         $toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'InstitutionIndexes',
+            'index'
         ];
-        $toolbarButtonsArray['back']['type'] = 'button';
+        $toolbarButtonsArray['back'] = $this->getButtonTemplate();
         $toolbarButtonsArray['back']['label'] = '<i class="fa kd-back"></i>';
-        $toolbarButtonsArray['back']['attr'] = $toolbarAttr;
         $toolbarButtonsArray['back']['attr']['title'] = __('Back');
-        $toolbarButtonsArray['back']['url']['plugin'] = 'Institution';
-        $toolbarButtonsArray['back']['url']['controller'] = 'Institutions';
-        $toolbarButtonsArray['back']['url']['action'] = 'InstitutionIndexes';
-        $toolbarButtonsArray['back']['url'][0] = 'index';
+        $toolbarButtonsArray['back']['url'] = $url;
 
         $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         // end back buttons
@@ -377,7 +373,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                             break;
 
                         case 3: // '='
-                        case 11: // '=' Repeated
+                        case 11: // for status Repeated
                             // value index is an array (valueIndex[threshold] = value)
                             if (array_key_exists($threshold, $valueIndexData)) {
                                 $valueIndex = 'True';
