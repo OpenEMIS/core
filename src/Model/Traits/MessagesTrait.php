@@ -216,6 +216,10 @@ trait MessagesTrait {
             'multiGrade' => 'Multi Grade',
             'noShift' => 'There are no shifts configured for the selected academic period'
         ],
+        'InstitutionStudentIndexes' => [
+            'noClasses' => 'No Classes',
+            'noStudents' => 'No Students'
+        ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
             'noClasses' => 'No Classes',
@@ -425,7 +429,10 @@ trait MessagesTrait {
         ],
         'StudentBehaviours' => [
             'noClasses' => 'No Classes',
-            'noStudents' => 'No Students'
+            'noStudents' => 'No Students',
+            'date_of_behaviour' => [
+                'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+            ],
         ],
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
@@ -1551,6 +1558,22 @@ trait MessagesTrait {
             'LinkedInstitutionAddStudents' => [
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
+                ]
+            ]
+        ],
+        'Indexes' => [
+            'TableHeader' => [
+                'Criteria',
+                'Operator',
+                'Threshold',
+                'Index'
+            ],
+            'IndexesCriterias' => [
+                'threshold' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ],
+                'index_value' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
                 ]
             ]
         ],
