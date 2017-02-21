@@ -113,6 +113,9 @@ class InstitutionsController extends AppController
     public function StudentSurveys()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
     public function StudentTextbooks()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
     // public function StaffAttendances()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
+    public function InstitutionIndexes()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIndexes']); }
+    public function StudentIndexes()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
+    public function InstitutionStudentIndexes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
     // End
 
     // AngularJS
@@ -400,7 +403,8 @@ class InstitutionsController extends AppController
             }
 
             $studentModels = [
-                'StudentProgrammes' => __('Programmes')
+                'StudentProgrammes' => __('Programmes'),
+                'StudentIndexes' => __('Indexes')
             ];
             if (array_key_exists($alias, $studentModels)) {
                 // add Students and student name
@@ -655,12 +659,12 @@ class InstitutionsController extends AppController
             'Identities' => ['text' => __('Identities')],
             'UserNationalities' => [
                 'url' => [
-                    'plugin' => $this->plugin, 
-                    'controller' => $this->name, 
-                    'action' => 'Nationalities', 
+                    'plugin' => $this->plugin,
+                    'controller' => $this->name,
+                    'action' => 'Nationalities',
                     $id
-                ], 
-                'text' => __('Nationalities'), 
+                ],
+                'text' => __('Nationalities'),
                 'urlModel' => 'Nationalities'
             ],
             'Contacts' => ['text' => __('Contacts')],
@@ -708,7 +712,7 @@ class InstitutionsController extends AppController
 
                 $url = $this->ControllerAction
                         ->setQueryString(
-                            array_merge($studentUrl, $tempParam), 
+                            array_merge($studentUrl, $tempParam),
                             ['security_user_id' => $securityUserId]
                         );
 
@@ -754,7 +758,8 @@ class InstitutionsController extends AppController
             'ExaminationResults' => ['text' => __('Examinations')],
             'Awards' => ['text' => __('Awards')],
             'Extracurriculars' => ['text' => __('Extracurriculars')],
-            'Textbooks' => ['text' => __('Textbooks')]
+            'Textbooks' => ['text' => __('Textbooks')],
+            'StudentIndexes' => ['text' => __('Indexes')]
         ];
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -764,6 +769,9 @@ class InstitutionsController extends AppController
             if ($key == 'Programmes' || $key == 'Textbooks') {
                 $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            } elseif ($key == 'StudentIndexes') {
+                $studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
             } else {
                 $studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
