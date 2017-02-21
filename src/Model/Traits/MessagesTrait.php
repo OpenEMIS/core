@@ -430,7 +430,7 @@ trait MessagesTrait {
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
-            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+            'hasWithdrawApplication' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
             'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.'
         ],
         'TransferApprovals' => [
@@ -472,7 +472,7 @@ trait MessagesTrait {
             'savingPromotionError' => 'The student record was not updated succesfully',
             'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
             'pendingTransfer' => 'There is a pending transfer request for this student.',
-            'pendingDropout' => 'There is a pending dropout request for this student.',
+            'pendingWithdraw' => 'There is a pending withdraw request for this student.',
         ],
         'StudentTransfer' => [
             'noGrades' => 'No Available Grades',
@@ -517,14 +517,14 @@ trait MessagesTrait {
             'approve' => 'Student admission has been approved successfully.',
             'reject' => 'Student admission has been rejected successfully.'
         ],
-        'DropoutRequests' => [
-            'request' => 'Dropout request hsa been submitted successfully.',
+        'WithdrawRequests' => [
+            'request' => 'Withdraw request has been submitted successfully.',
             'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
         ],
-        'StudentDropout' => [
+        'StudentWithdraw' => [
             'exists' => 'Student has already dropped out from the school.',
-            'approve' => 'Dropout request has been approved successfully.',
-            'reject' => 'Dropout request has been rejected successfully.',
+            'approve' => 'Withdraw request has been approved successfully.',
+            'reject' => 'Withdraw request has been rejected successfully.',
             'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
         ],
         'Import' => [
@@ -617,7 +617,7 @@ trait MessagesTrait {
             'noTextbooks' => 'No Textbooks',
             'noProgrammes' => 'No Programmes',
             'noGrades' => 'No Grades',
-            'noClassSubjectSelected' => 'Please select Class, Subject and Textbook before adding record',
+            'noClassSubjectSelected' => 'Please select Subject and Textbook before adding record',
             'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
             'noTextbookStudent' => 'Please add physical textbook to be added'
         ],
@@ -636,6 +636,9 @@ trait MessagesTrait {
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
             'noCriterias' => 'Please setup competency criterias for the selected item',
+        ],
+        'UserNationalities' => [
+            'noRecordRemain' => 'There should be at least one Nationality record'
         ],
 
         // Validation Messages
@@ -787,7 +790,7 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ],
                 'student_id' => [
-                    'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+                    'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
                         'inTargetSchool' => 'Student is already enrolled in this school.',
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
@@ -880,12 +883,12 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
                 ]
             ],
-            'DropoutRequests' => [
+            'WithdrawRequests' => [
                 'effective_date' => [
                     'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
             ],
-            'StudentDropout' => [
+            'StudentWithdraw' => [
                 'effective_date' => [
                     'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
@@ -968,7 +971,7 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ]
+                ],
             ],
             'Accounts' => [
                 'username' => [
@@ -1085,6 +1088,11 @@ trait MessagesTrait {
                 ],
                 'bank_branch_id' => [
                     'ruleNotBlank' => 'Please select a Bank Branch'
+                ]
+            ],
+            'UserNationalities' => [
+                'preferred' => [
+                    'ruleValidatePreferredNationality' => 'There must be at least one Preferred Nationality'
                 ]
             ],
         ],
@@ -1287,6 +1295,11 @@ trait MessagesTrait {
             'EducationGradesSubjects' => [
                 'hours_required' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ]
+            ],
+            'EducationSubjects' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
                 ]
             ]
         ],
@@ -1583,14 +1596,14 @@ trait MessagesTrait {
             ],
         ],
         'Configuration' => [
-        	'ConfigProductLists' => [
-        		'name' => [
-        			'ruleUnique' => 'This product already exists in the system',
-        		],
-        		'url' => [
-        			'invalidUrl' => 'You have entered an invalid URL.',
-        		]
-        	],
+            'ConfigProductLists' => [
+                'name' => [
+                    'ruleUnique' => 'This product already exists in the system',
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL.',
+                ]
+            ],
             'ConfigAdministrativeBoundaries' => [
                 'name' => [
                     'ruleUnique' => 'This product already exists in the system',
@@ -1600,7 +1613,14 @@ trait MessagesTrait {
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ]
-        ]
+        ],
+        'Alert' => [
+            'AlertRules' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique',
+                ]
+            ],
+        ],
     ];
 
 

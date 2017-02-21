@@ -426,7 +426,7 @@ class NavigationComponent extends Component
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
-					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add',
+					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
 					'Institutions.ImportStudents', 'Institutions.Students'],
 				'params' => ['plugin' => 'Institution']
 			],
@@ -516,6 +516,12 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Institution']
 					],
 
+					'Institutions.ExaminationResults' => [
+						'title' => 'Results',
+						'parent' => 'Institutions.Examinations',
+						'params' => ['plugin' => 'Institution']
+					],
+
 			'Institutions.Positions' => [
 				'title' => 'Positions',
 				'parent' => 'Institutions.index',
@@ -589,13 +595,15 @@ class NavigationComponent extends Component
 	public function getInstitutionStudentNavigation()
 	{
 		$session = $this->request->session();
-		$id = $session->read('Institution.Students.id');
+		$id = !empty($this->controller->ControllerAction->getQueryString('institution_student_id')) ? $this->controller->ControllerAction->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
 		$studentId = $session->read('Student.Students.id');
+		$institutionId = $session->read('Institution.Institutions.id');
+		$queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $institutionId, 'institution_student_id' => $id]);
 		$navigation = [
 			'Institutions.StudentUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Students.index',
-				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'id' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
 				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
 					'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull']],
@@ -603,7 +611,7 @@ class NavigationComponent extends Component
 				'title' => 'Academic',
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards',
+				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.Awards',
 					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance',
@@ -747,7 +755,7 @@ class NavigationComponent extends Component
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
 					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-						'Directories.StudentResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
+						'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
 				],
 				'Directories.StudentBankAccounts' => [
 					'title' => 'Finance',
@@ -955,19 +963,19 @@ class NavigationComponent extends Component
 				'link' => false,
 			],
 
-				'Alerts.Questions' => [
-					'title' => 'Questions',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Questions']
-				],
+				'Alerts.Alerts' => [
+						'title' => 'Alerts',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.Alerts']
+					],
 
-				'Alerts.Responses' => [
-					'title' => 'Responses',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Responses']
-				],
+				'Alerts.AlertRules' => [
+						'title' => 'Alert Rules',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.AlertRules']
+					],
 
 				'Alerts.Logs' => [
 					'title' => 'Logs',
