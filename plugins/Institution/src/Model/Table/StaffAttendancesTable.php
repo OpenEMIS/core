@@ -634,7 +634,11 @@ class StaffAttendancesTable extends ControllerActionTable
 
 		$query = $this->find()
 			->select(['start_date' => $this->aliasField('start_date')])
-			->where([$this->aliasField('staff_id') => $entity->staff_id])
+			->where([
+				$this->aliasField('staff_id') => $entity->staff_id,
+				$this->aliasField('institution_id') => $entity->institution_id
+			])
+			->order([$this->aliasField('start_date') => 'ASC'])
 			->first();
 		$staffStartDate = $query->start_date->format('Y-m-d');
 
@@ -790,6 +794,7 @@ class StaffAttendancesTable extends ControllerActionTable
 			$query
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->find('inDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
+				->select(['institution_id'])
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
 				->where([$this->aliasField('institution_id') => $institutionId])
