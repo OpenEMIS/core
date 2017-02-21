@@ -72,6 +72,26 @@ class ContactsTable extends ControllerActionTable {
 		$this->fields['preferred']['options'] = $this->getSelectOptions('general.yesno');
 	}
 
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+    	if ($entity->preferred && $entity->contact_option_id == 4) { // preferred and email
+    		$securityUserId = $entity->security_user_id;
+    		$email = $entity->value;
+
+    		// update the user email with preferred email
+    		$this->Users->updateAll(['email' => $email],['id' => $securityUserId]);
+    	}
+    }
+
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+	{
+		$securityUserId = $entity->security_user_id;
+		$deletedEmail = $entity->value;
+
+		// delete the user email
+		$this->Users->updateAll(['email' => NULL],['email' => $deletedEmail]);
+	}
+
 	// public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 	// 	//Required by patchEntity for associated data
 	// 	$newOptions = [];

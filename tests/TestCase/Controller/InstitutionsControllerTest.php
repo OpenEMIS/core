@@ -74,7 +74,7 @@ class InstitutionsControllerTest extends AppTestCase
         'app.institution_student_absences',
         'app.institution_bank_accounts',
         'app.institution_student_admission',
-        'app.institution_student_dropout',
+        'app.institution_student_withdraw',
         'app.institution_fees',
         'app.absence_types',
         'app.student_behaviours',
