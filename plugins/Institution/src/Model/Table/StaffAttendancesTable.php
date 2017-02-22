@@ -386,7 +386,7 @@ class StaffAttendancesTable extends ControllerActionTable
 	{
 		$html = '';
 
-		if (!is_null($this->request->query('mode'))) {
+		if (!is_null($this->request->query('mode')) && $this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
 			$Form = $event->subject()->Form;
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -483,7 +483,7 @@ class StaffAttendancesTable extends ControllerActionTable
 	{
 		$html = '';
 
-		if (!is_null($this->request->query('mode'))) {
+		if (!is_null($this->request->query('mode')) && $this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
 			$Form = $event->subject()->Form;
 
 			$id = $entity->staff_id;
