@@ -59,6 +59,8 @@ class UserGroupsTable extends ControllerActionTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+        $this->setDeleteStrategy('restrict');
 	}
 
 	public function implementedEvents() {
@@ -66,7 +68,8 @@ class UserGroupsTable extends ControllerActionTable {
 		$newEvent = [
 			$events['ControllerAction.Model.ajaxAreaAutocomplete'] = 'ajaxAreaAutocomplete',
 			$events['ControllerAction.Model.ajaxInstitutionAutocomplete'] = 'ajaxInstitutionAutocomplete',
-			$events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete'
+			$events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete',
+            $events['ControllerAction.Model.getAssociatedRecordConditions'] = 'getAssociatedRecordConditions'
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -82,7 +85,8 @@ class UserGroupsTable extends ControllerActionTable {
 		}
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		$userId = $this->Auth->user('id');
 		$securityGroupId = $entity->id;
@@ -106,7 +110,8 @@ class UserGroupsTable extends ControllerActionTable {
 		return $buttons;
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    {
 		$this->request->data[$this->alias()]['security_group_id'] = $entity->id;
 
 		if (!$this->AccessControl->isAdmin()) {
@@ -114,10 +119,12 @@ class UserGroupsTable extends ControllerActionTable {
 			$securityGroupId = $this->request->data[$this->alias()]['security_group_id'];
 			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
-				if (array_key_exists('edit', $extra['toolbarButtons'])) {
-					unset($extra['toolbarButtons']['edit']);
-				}
+				$this->toggle('edit', false);
 			}
+
+            if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_delete')) {
+                $this->toggle('remove', false);
+            }
 		}
 	}
 
@@ -518,7 +525,7 @@ class UserGroupsTable extends ControllerActionTable {
 							$rowData[] = $joinData['openemis_no'];
 							$rowData[] = $name;
 							$rowData[] = __('Group Administrator');
-							$rowData[] = $this->getDeleteButton();
+                            $rowData[] = '';
 							$tableCells[] = $rowData;
 						}
 					}
@@ -703,6 +710,24 @@ class UserGroupsTable extends ControllerActionTable {
 			}
 		}
 	}
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
+            $this->Areas->alias(),
+            $this->Institutions->alias(),
+            $this->Roles->alias(),
+            'SecurityGroupUsers'
+        ];
+    }
+
+    public function getAssociatedRecordConditions(Event $event, Query $query, $assocTable, ArrayObject $extra)
+    {
+        //additional condition to exclude current user to the user inside the group counter.
+        if ($assocTable->alias() == 'SecurityGroupUsers'){
+            $query->where([$assocTable->aliasField('security_user_id != ') => $this->Auth->user('id')]);
+        }
+    }
 
 	// also exists in SystemGroups
 	private function filterDuplicateUserRoles(ArrayObject $data) {
