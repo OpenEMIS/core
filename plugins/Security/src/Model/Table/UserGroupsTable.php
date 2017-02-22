@@ -21,8 +21,6 @@ class UserGroupsTable extends ControllerActionTable {
 		$this->table('security_groups');
 		parent::initialize($config);
 
-		$this->hasMany('Roles', ['className' => 'Security.SecurityRoles', 'dependent' => true]);
-
 		$this->belongsToMany('Users', [
 			'className' => 'Security.Users',
 			'joinTable' => 'security_group_users',
