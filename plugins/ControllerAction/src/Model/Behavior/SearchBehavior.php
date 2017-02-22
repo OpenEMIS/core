@@ -48,10 +48,6 @@ class SearchBehavior extends Behavior {
 		$request->data['Search']['limit'] = $limit;
 
 		$extra['config']['search'] = $search;
-
-		if ($extra['pagination']) {
-			$extra['options']['limit'] = $pageOptions[$limit];
-		}
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {

@@ -66,6 +66,12 @@ class IndexBehavior extends Behavior {
 		$data = [];
 		if ($hasQuery) {
 			if ($extra['pagination']) {
+				$alias = $model->registryAlias();
+				$session = $model->request->session();
+				$pageOptions = $extra['config']['pageOptions'];
+				$limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : key($pageOptions);
+				$extra['options']['limit'] = $pageOptions[$limit];
+
 				try {
 					$data = $model->Paginator->paginate($query, $extra['options']);
 				} catch (NotFoundException $e) {
