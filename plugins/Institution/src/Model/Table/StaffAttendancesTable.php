@@ -892,7 +892,6 @@ class StaffAttendancesTable extends ControllerActionTable
 	    		if (!is_null($this->request->query('mode'))) { // edit mode
 
 	    			// enable form, change form action to indexEdit
-	    			$extra['config']['form']['name'] = "staffAttendance";
 	    			$extra['config']['form']['url'] = $this->url('indexEdit');
 
 	    			// Back button
@@ -903,11 +902,11 @@ class StaffAttendancesTable extends ControllerActionTable
 						unset($extra['toolbarButtons']['back']['url']['mode']);
 					}
 
-					// Save button
+					// Save button, only can save if there is data
 					if ($dataCount > 0) {
 						$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
 						$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
-						$extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'document.staffAttendance.submit();';
+						$extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
 						$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
 						$extra['toolbarButtons']['indexEdit']['url'] = '#';
 					}
@@ -922,11 +921,13 @@ class StaffAttendancesTable extends ControllerActionTable
 						unset($extra['toolbarButtons']['back']);
 					}
 
-					// Edit button
-					$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
-					$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Edit');
-					$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-edit"></i>';
-					$extra['toolbarButtons']['indexEdit']['url']['mode'] = 'edit';
+					// Edit button, only can edit if there is data
+					if ($dataCount > 0) {
+						$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+						$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Edit');
+						$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-edit"></i>';
+						$extra['toolbarButtons']['indexEdit']['url']['mode'] = 'edit';
+					}
 				}
 			} else { // if user selected All Days, Edit operation will not be allowed
 				// unset Edit button
