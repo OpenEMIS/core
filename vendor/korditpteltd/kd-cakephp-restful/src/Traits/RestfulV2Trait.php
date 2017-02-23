@@ -22,7 +22,9 @@ trait RestfulV2Trait {
     private function initTable(Table $table, $connectionName = 'default')
     {
         $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : $connectionName;
-        $table::setConnectionName($_connectionName);
+        if (method_exists($table, 'setConnectionName')) {
+           $table::setConnectionName($_connectionName);
+        }
         return $table;
     }
 
