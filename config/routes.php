@@ -122,7 +122,7 @@ Router::scope('/restful', [], function ($routes) {
         // View
         $routes->connect( '/:version/:model/:id',
             ['action' => 'view', '_method' => 'GET'],
-            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['model', 'id']]
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
         );
 
         $routes->connect( '/:model/:id',
