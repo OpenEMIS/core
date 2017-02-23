@@ -512,7 +512,7 @@ class UserGroupsTable extends ControllerActionTable {
 				foreach ($associated as $i => $obj) {
 					$joinData = $obj['_joinData'];
 					//editable only for other than current user, creator of group and user with lower role.
-                    if (!in_array($joinData['security_user_id'], $notEditableUsers)) {
+                    if (!in_array($joinData['security_user_id'], $notEditableUsers) && $joinData['security_user_id'] != $userId) {
 						$rowData = [];
 						$name = $joinData['name'];
 						$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
