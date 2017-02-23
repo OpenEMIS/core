@@ -2994,7 +2994,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "c9e270ff4c93b69470deb8994c3545caedcb8813"
+            "reference": "cacb17ea6119c47c5d37f55b268ec1b49132c977"
         },
         "require": {
             "cakephp/cakephp": ">3.0.9"
@@ -3003,7 +3003,7 @@
             "cakephp/cakephp-codesniffer": "dev-master",
             "phpunit/phpunit": "4.1.*"
         },
-        "time": "2017-02-23 08:04:13",
+        "time": "2017-02-23 11:11:53",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {

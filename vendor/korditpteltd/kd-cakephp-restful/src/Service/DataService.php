@@ -300,7 +300,7 @@ class DataService
         return $url;
     }
 
-    public function save($data, $options = [])
+    public function save($data)
     {
         $url = $this->toURL();
         $headerOption =  !empty($this->getHeaders()) ? ['header' => $this->getHeaders()] : [];
@@ -309,12 +309,11 @@ class DataService
         return $this->extractData($response);
     }
 
-    public function edit($id, $data, $options = [])
+    public function edit($data)
     {
         $headerOption =  !empty($this->getHeaders()) ? ['header' => $this->getHeaders()] : [];
         $model = str_replace('.', '-', $this->className);
-        $url = implode('/', [$this->base, $this->controller, $model]);
-        $url .= '/' . $id;
+        $url = $this->toURL();
         $http = new Client();
         $response = $http->patch($url, $data, $headerOption);
         $responseType = $this->responseType;
@@ -322,13 +321,12 @@ class DataService
         return $this->extractData($response);
     }
 
-    public function delete($id) {
+    public function delete($data) {
         $headerOption =  !empty($this->getHeaders()) ? ['header' => $this->getHeaders()] : [];
         $model = str_replace('.', '-', $this->className);
-        $url = implode('/', [$this->base, $this->controller, $model]);
-        $url .= '/' . $id;
+        $url = $this->toURL();
         $http = new Client();
-        $response = $http->delete($url, $headerOption);
+        $response = $http->delete($url, $data, $headerOption);
         return $this->extractData($response);
     }
 
