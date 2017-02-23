@@ -23,7 +23,6 @@ class InstitutionIndexesTable extends ControllerActionTable
 
         $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-        $this->toggle('search', false);
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -38,10 +37,10 @@ class InstitutionIndexesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('name',['sort' => false]);
+        $this->field('name');
         $this->field('number_of_risk_index',['sort' => false]);
         $this->field('academic_period_id',['visible' => false]);
-        $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
+        $this->field('generated_on',[ 'after' => 'generated_by']);
         $this->field('status',['after' => 'generated_on']);
         $this->field('pid',['visible' => false]);
 
@@ -49,7 +48,7 @@ class InstitutionIndexesTable extends ControllerActionTable
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $requestQuery = $this->request->query;
 
-        $selectedAcademicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 

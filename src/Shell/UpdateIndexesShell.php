@@ -27,7 +27,6 @@ class UpdateIndexesShell extends Shell
         $indexesId = !empty($this->args[2]) ? $this->args[2] : 0;
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
-        // $indexesCriteriaData = $this->Indexes->getCriteriasData(); // all the criteria in the indexesTable
         $indexesCriteriaData = $this->IndexesCriterias->getCriteriaKey($indexesId);
 
         if (!empty($indexesCriteriaData)) {
@@ -36,19 +35,19 @@ class UpdateIndexesShell extends Shell
 
                 $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId, $indexesId);
             }
-
-            // update the generated_by and generated_on in indexes table
-            $today = Time::now();
-            $this->Indexes->updateAll(
-                [
-                    'generated_by' => $userId,
-                    'generated_on' => $today,
-                    'pid' => NULL,
-                    'status' => 3 // completed
-                ],
-                ['id' => $indexesId]
-            );
         }
+
+        // update the generated_by and generated_on in indexes table
+        $today = Time::now();
+        $this->Indexes->updateAll(
+            [
+                'generated_by' => $userId,
+                'generated_on' => $today,
+                'pid' => NULL,
+                'status' => 3 // completed
+            ],
+            ['id' => $indexesId]
+        );
     }
 
     public function autoUpdateIndexes($key, $model, $institutionId, $userId, $academicPeriodId, $indexesId)
