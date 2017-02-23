@@ -16,6 +16,7 @@ return [
         'ControllerAction' => $baseDir . '/plugins/ControllerAction/',
         'CustomExcel' => $baseDir . '/plugins/CustomExcel/',
         'CustomField' => $baseDir . '/plugins/CustomField/',
+        'DataService' => $baseDir . '/plugins/DataService/',
         'DebugKit' => $baseDir . '/vendor/cakephp/debug_kit/',
         'Directory' => $baseDir . '/plugins/Directory/',
         'Education' => $baseDir . '/plugins/Education/',
