@@ -457,48 +457,54 @@ class UserGroupsTable extends ControllerActionTable {
 					}
 				}
 			}
+
+            $notEditableUsers = [];
 			
 			if (!$this->AccessControl->isAdmin()) {
 				if ($entity->isNew()) {
 					$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
 				}
+
+                //un-editable for the original user and also creator of the group and user with higher or equal role
+                $associated = $entity->extractOriginal([$key]);
+                // $found = false;
+                if (!empty($associated[$key]) && !$entity->isNew()) {
+                    foreach ($associated[$key] as $i => $obj) {
+                        if ($obj->id == $userId || $obj->id == $entity->created_user_id || (!empty($userIdRoleOrder) && $obj->security_role_id_order <= $userIdRoleOrder)) {
+                            $rowData = [];
+                            $name = $obj->name;
+                            $rowData[] = $obj->openemis_no;
+                            $rowData[] = $name;
+
+                            // To revisit this part again due to a bug when user add itself in
+                            if (isset($obj->_joinData->security_role_id)) {
+                                $securityRoleName = $this->Roles->get($obj->_joinData->security_role_id)->name;
+                                $this->Session->write($this->registryAlias().'.security_role_id', $securityRoleName);
+                                $rowData[] = $securityRoleName;
+                            } else {
+                                $securityRoleName = $this->Session->read($this->registryAlias().'.security_role_id');
+                                $rowData[] = $securityRoleName;
+                            }
+
+                            $notEditableUsers[] = $obj->id;
+
+                            $notEditableVal = '';
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i.id", ['value' => $obj->id]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $obj->openemis_no]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $obj->name]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $obj->id]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $obj->_joinData->security_role_id]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id_order", ['value' => $obj->security_role_id_order]);
+
+                            $rowData[] = $notEditableVal;
+                            $tableCells[] = $rowData;
+                            // $found = true;
+                            // break;
+                        }
+                    }
+                }
 			}
-			//un-editable for the original user and also creator of the group and user with higher or equal role
-			$associated = $entity->extractOriginal([$key]);
-            // $found = false;
-			if (!empty($associated[$key]) && !$entity->isNew()) {
-				foreach ($associated[$key] as $i => $obj) {
-					if ($obj->id == $userId || $obj->id == $entity->created_user_id || ($obj->security_role_id_order <= $userIdRoleOrder && !empty($userIdRoleOrder))) {
-						$rowData = [];
-						$name = $obj->name;
-						$rowData[] = $obj->openemis_no;
-						$rowData[] = $name;
-
-						// To revisit this part again due to a bug when user add itself in
-						if (isset($obj->_joinData->security_role_id)) {
-							$securityRoleName = $this->Roles->get($obj->_joinData->security_role_id)->name;
-							$this->Session->write($this->registryAlias().'.security_role_id', $securityRoleName);
-							$rowData[] = $securityRoleName;
-						} else {
-							$securityRoleName = $this->Session->read($this->registryAlias().'.security_role_id');
-							$rowData[] = $securityRoleName;
-						}
-
-                        $notEditableVal = '';
-                        $notEditableVal .= $Form->hidden("$alias.$key.$i.id", ['value' => $obj->id]);
-                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $obj->openemis_no]);
-                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $obj->name]);
-                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $obj->id]);
-                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $obj->_joinData->security_role_id]);
-                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id_order", ['value' => $obj->security_role_id_order]);
-
-						$rowData[] = $notEditableVal;
-						$tableCells[] = $rowData;
-						// $found = true;
-						// break;
-					}
-				}
-			}
+			
 
 			// refer to addEditOnAddUser for http post
 			if ($this->request->data("$alias.$key")) {
@@ -506,7 +512,7 @@ class UserGroupsTable extends ControllerActionTable {
 				foreach ($associated as $i => $obj) {
 					$joinData = $obj['_joinData'];
 					//editable only for other than current user, creator of group and user with lower role.
-					if ($joinData['security_user_id'] != $userId && $joinData['security_user_id'] != $entity->created_user_id && ($joinData['security_role_id_order'] > $userIdRoleOrder || empty($userIdRoleOrder))) {
+                    if (!in_array($joinData['security_user_id'], $notEditableUsers)) {
 						$rowData = [];
 						$name = $joinData['name'];
 						$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
