@@ -203,34 +203,20 @@ class RestfulV2Component extends Component implements RestfulInterface
         $target = $this->initTable($this->model);
         if ($target) {
             $requestData = $this->request->data;
-            $extra = new ArrayObject(['table' => $table, 'action' => 'custom', 'functionName' => 'edit', 'blobContent' => true]);
+            $extra = new ArrayObject(['table' => $target, 'action' => 'custom', 'functionName' => 'edit', 'blobContent' => true]);
             $requestQueries = $this->request->query;
             $this->processQueryString($requestQueries, null, $extra);
-            if (!is_array($target->primaryKey())) {
-                $primaryKey = [$target->primaryKey()];
-            } else {
-                // composite keys
-                $primaryKey = $target->primaryKey();
-            }
-            $flipKey = array_flip($primaryKey);
-            $keyCount = count($primaryKey);
-            $keyValues = array_intersect_key($requestData, $flipKey);
-            if (count($keyValues) != $keyCount) {
-                // throw exception
-            }
-            $primaryKeyValues = $this->getIdKeys($target, $keyValues);
+            $primaryKeyValues = $this->getIdKeys($target, $requestData, false);
             if ($target->exists([$primaryKeyValues])) {
-                $entity = $table->get($primaryKeyValues);
+                $entity = $target->get($primaryKeyValues);
                 $options = ['extra' => $extra];
-                $entity = $table->patchEntity($entity, $requestData, $options);
+                $entity = $target->patchEntity($entity, $requestData, $options);
+
                 $entity = $this->convertBase64ToBinary($entity);
-                $table->save($entity);
+                $target->save($entity);
                 $errors = $entity->errors();
-                $data = $this->formatResultSet($table, $entity, $extra);
+                $data = $this->formatResultSet($target, $entity, $extra);
                 if (isset($extra['flatten']) && $extra['flatten'] === true) {
-                    $flatten = true;
-                }
-                if ($flatten) {
                     $data = Hash::flatten($data->toArray());
                 }
                 $this->controller->set([
@@ -247,7 +233,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     public function delete()
     {
         $target = $this->model;
-        $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'delete']);
+        $extra = new ArrayObject(['table' => $target, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'delete']);
         if ($target) {
             $requestData = $this->request->data;
 

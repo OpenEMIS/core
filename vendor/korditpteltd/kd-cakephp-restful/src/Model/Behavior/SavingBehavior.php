@@ -31,7 +31,7 @@ class SavingBehavior extends Behavior {
                     }
                     if (!$set->isPresenceRequired()) {
                         if ($this->isForeignKey($col)) {
-                            $validator->requirePresence($col);
+                            $validator->requirePresence($col, 'create');
                         }
                     }
                 } else {
@@ -44,7 +44,7 @@ class SavingBehavior extends Behavior {
                         ) {
                             $validator->add($col, 'notBlank', ['rule' => 'notBlank']);
                             if ($this->isForeignKey($col)) {
-                                $validator->requirePresence($col);
+                                $validator->requirePresence($col, 'create');
                             }
                         }
                     }
