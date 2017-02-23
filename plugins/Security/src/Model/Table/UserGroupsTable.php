@@ -406,6 +406,7 @@ class UserGroupsTable extends ControllerActionTable {
 			$Form->unlockField('user_id');
 			$user = $this->Auth->user();
 			$userId = $user['id'];
+			$userIdRoleOrder = '';
 			if ($user['super_admin'] == 1) { // super admin will show all roles
 				$userId = null;
 			}
@@ -464,10 +465,10 @@ class UserGroupsTable extends ControllerActionTable {
 			}
 			//un-editable for the original user and also creator of the group and user with higher or equal role
 			$associated = $entity->extractOriginal([$key]);
-			$found = false;
+            // $found = false;
 			if (!empty($associated[$key]) && !$entity->isNew()) {
 				foreach ($associated[$key] as $i => $obj) {
-					if ($obj->id == $userId || $obj->id == $entity->created_user_id || $obj->security_role_id_order <= $userIdRoleOrder) {
+					if ($obj->id == $userId || $obj->id == $entity->created_user_id || ($obj->security_role_id_order <= $userIdRoleOrder && !empty($userIdRoleOrder))) {
 						$rowData = [];
 						$name = $obj->name;
 						$rowData[] = $obj->openemis_no;
@@ -483,9 +484,17 @@ class UserGroupsTable extends ControllerActionTable {
 							$rowData[] = $securityRoleName;
 						}
 
-						$rowData[] = '';
+                        $notEditableVal = '';
+                        $notEditableVal .= $Form->hidden("$alias.$key.$i.id", ['value' => $obj->id]);
+                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $obj->openemis_no]);
+                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $obj->name]);
+                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $obj->id]);
+                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $obj->_joinData->security_role_id]);
+                        $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id_order", ['value' => $obj->security_role_id_order]);
+
+						$rowData[] = $notEditableVal;
 						$tableCells[] = $rowData;
-						$found = true;
+						// $found = true;
 						// break;
 					}
 				}
@@ -497,17 +506,19 @@ class UserGroupsTable extends ControllerActionTable {
 				foreach ($associated as $i => $obj) {
 					$joinData = $obj['_joinData'];
 					//editable only for other than current user, creator of group and user with lower role.
-					if ($joinData['security_user_id'] != $userId && $joinData['security_user_id'] != $entity->created_user_id && $joinData['security_role_id_order'] > $userIdRoleOrder) {
+					if ($joinData['security_user_id'] != $userId && $joinData['security_user_id'] != $entity->created_user_id && ($joinData['security_role_id_order'] > $userIdRoleOrder || empty($userIdRoleOrder))) {
 						$rowData = [];
 						$name = $joinData['name'];
 						$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+						$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id_order", ['value' => $joinData['security_role_id_order']]);
 						$Form->unlockField("$alias.$key.$i.id");
 						$Form->unlockField("$alias.$key.$i._joinData.openemis_no");
 						$Form->unlockField("$alias.$key.$i._joinData.name");
 						$Form->unlockField("$alias.$key.$i._joinData.security_user_id");
+						$Form->unlockField("$alias.$key.$i._joinData.security_role_id_order");
 						$rowData[] = $joinData['openemis_no'];
 						$rowData[] = $name;
 						$rowData[] = $HtmlField->secureSelect("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
@@ -558,7 +569,7 @@ class UserGroupsTable extends ControllerActionTable {
 				}
 				$data[$alias]['users'][] = [
 					'id' => $obj->id,
-					'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
+					'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name, 'security_role_id_order' => '']
 				];
 			} catch (RecordNotFoundException $ex) {
 				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
@@ -664,33 +675,6 @@ class UserGroupsTable extends ControllerActionTable {
 
 		// in case user has been added with the same role twice, we need to filter it
 		$this->filterDuplicateUserRoles($data);
-
-		// To merge in the original modifying user's permission (if any) as the user will not
-		// be able to modify their own permission
-		$key = 'users';
-		$associated = $entity->extractOriginal([$key]);
-		$user = $this->Auth->user();
-		$userId = $user['id'];
-		if ($user['super_admin'] == 1) { // super admin will show all roles
-			$userId = null;
-		}
-
-		// If not super admin
-		if(!is_null($userId)) {
-			$userArray = [];
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					if ($userId == $obj->id) {
-						$userArray[$i]['id'] = $obj->id;
-						$userArray[$i]['_joinData']['openemis_no'] = $obj->openemis_no;
-						$userArray[$i]['_joinData']['name'] = $obj->name;
-						$userArray[$i]['_joinData']['security_user_id'] = $obj->id;
-						$userArray[$i]['_joinData']['security_role_id'] = $obj->_joinData->security_role_id;
-					}
-				}
-			}
-			$data[$this->alias()][$key] = array_merge($userArray, $data[$this->alias()][$key]);
-		}
 
 		// Required by patchEntity for associated data
 		$newOptions = [];
