@@ -68,7 +68,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('openEMIS_Id');
+        $this->field('openEMIS_ID');
         $this->field('index_id',['visible' => false]);
         $this->field('average_index',['visible' => false]);
         $this->field('student_id', [
@@ -541,12 +541,20 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     // blue info tooltip
                     $tooltipReference = '<i class="fa fa-info-circle fa-lg icon-blue" data-placement="left" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="'.$reference.'"></i>';
 
+                    if (!is_numeric($threshold)) {
+                        $threshold = __($threshold);
+                    }
+
+                    if (!is_numeric($value)) {
+                        $value = __($value);
+                    }
+
                     // to put in the table
                     $rowData = [];
                     $rowData[] = __($this->Indexes->getCriteriasDetails($criteriaName)['name']);
                     $rowData[] = __($operator);
-                    $rowData[] = __($threshold);
-                    $rowData[] = __($value);
+                    $rowData[] = $threshold;
+                    $rowData[] = $value;
                     $rowData[] = $indexValue;
                     $rowData[] = $tooltipReference;
 
