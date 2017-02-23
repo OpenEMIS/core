@@ -131,14 +131,15 @@ class RestfulV2Component extends Component implements RestfulInterface
             $options = ['extra' => $extra];
             $entity = $table->newEntity($this->request->data, $options);
             $entity = $this->convertBase64ToBinary($entity);
-            $entity = $table->save($entity);
+            $table->save($entity);
+            $errors = $entity->errors();
             $data = $this->formatResultSet($table, $entity, $extra);
             if ($extra->offsetExists('flatten') && $extra['flatten'] === true) {
                 $data = Hash::flatten($data->toArray());
             }
             $this->controller->set([
                 'data' => $data,
-                'error' => $entity->errors(),
+                'error' => $errors,
                 '_serialize' => ['data', 'error']
             ]);
         }
@@ -224,6 +225,7 @@ class RestfulV2Component extends Component implements RestfulInterface
                 $entity = $table->patchEntity($entity, $requestData, $options);
                 $entity = $this->convertBase64ToBinary($entity);
                 $table->save($entity);
+                $errors = $entity->errors();
                 $data = $this->formatResultSet($table, $entity, $extra);
                 if (isset($extra['flatten']) && $extra['flatten'] === true) {
                     $flatten = true;
@@ -233,7 +235,7 @@ class RestfulV2Component extends Component implements RestfulInterface
                 }
                 $this->controller->set([
                     'data' => $data,
-                    'error' => $entity->errors(),
+                    'error' => $errors,
                     '_serialize' => ['data', 'error']
                 ]);
             } else {
