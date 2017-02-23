@@ -588,6 +588,9 @@ trait RestfulV2Trait {
                     }
                 }
             } else {
+                if (is_array($ids)) {
+                    $ids = $ids[$primaryKey];
+                }
                 if ($addAlias) {
                     $idKeys[$model->aliasField($primaryKey)] = $ids;
                 } else {

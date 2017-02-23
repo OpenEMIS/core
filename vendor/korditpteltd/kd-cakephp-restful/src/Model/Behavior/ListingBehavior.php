@@ -41,6 +41,8 @@ class ListingBehavior extends Behavior {
         $query->where($searchCondition);
 
         $model->dispatchEvent('Restful.CRUD.index.formatResults', [$query, $options], $model);
+
+        return $query;
     }
 
     private function generateSearchQuery($field, $search, array $fullWildCard)
