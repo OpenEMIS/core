@@ -28,16 +28,15 @@ class IndexesCriteriasTable extends ControllerActionTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
+
         return $validator
             ->add('index_value', [
                 'ruleRange' => [
                     'rule' => ['range', 1, 99]
                 ]
             ])
-             ->add('threshold', [
-                'ruleRange' => [
-                    'rule' => ['range', 1, 99]
-                ]
+            ->add('threshold', 'ruleCheckCriteriaThresholdRange', [
+                'rule' => ['checkCriteriaThresholdRange']
             ])
             ;
     }

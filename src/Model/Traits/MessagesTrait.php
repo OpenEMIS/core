@@ -1570,7 +1570,8 @@ trait MessagesTrait {
             ],
             'IndexesCriterias' => [
                 'threshold' => [
-                    'ruleRange' => 'Value must be within 1 to 99'
+                    'ruleRange' => 'Value must be within 1 to 99',
+                    'criteriaThresholdRange' => 'Value must be within %s to %s'
                 ],
                 'index_value' => [
                     'ruleRange' => 'Value must be within 1 to 99'
