@@ -416,6 +416,7 @@ class UserGroupsTable extends ControllerActionTable {
 				} else {
 					$this->request->data[$alias][$key] = [];
 				}
+				
 				$associated = $entity->extractOriginal([$key]);
 				if (!empty($associated[$key])) {
 					foreach ($associated[$key] as $i => $obj) {
@@ -425,9 +426,16 @@ class UserGroupsTable extends ControllerActionTable {
 								'openemis_no' => $obj->openemis_no,
 								'security_user_id' => $obj->id,
 								'name' => $obj->name,
-								'security_role_id' => $obj->_joinData->security_role_id
+								'security_role_id' => $obj->_joinData->security_role_id,
+								'security_role_id_order' => $entity->roles[$i]->order //adding role order for checking during edit
 							]
 						];
+						$entity->users[$i]->security_role_id_order = $entity->roles[$i]->order; //adding role order for checking during edit
+
+						//keep the current login user role order.
+						if ($userId == $entity->users[$i]->id) {
+							$userIdRoleOrder = $entity->roles[$i]->order;
+						}
 					}
 				} else {
 					if (!$this->AccessControl->isAdmin()) {
@@ -448,18 +456,18 @@ class UserGroupsTable extends ControllerActionTable {
 					}
 				}
 			}
-
+			
 			if (!$this->AccessControl->isAdmin()) {
 				if ($entity->isNew()) {
 					$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
 				}
 			}
-			// For the original user
+			//un-editable for the original user and also creator of the group and user with higher or equal role
 			$associated = $entity->extractOriginal([$key]);
 			$found = false;
 			if (!empty($associated[$key]) && !$entity->isNew()) {
 				foreach ($associated[$key] as $i => $obj) {
-					if ($obj->id == $userId) {
+					if ($obj->id == $userId || $obj->id == $entity->created_user_id || $obj->security_role_id_order <= $userIdRoleOrder) {
 						$rowData = [];
 						$name = $obj->name;
 						$rowData[] = $obj->openemis_no;
@@ -478,7 +486,7 @@ class UserGroupsTable extends ControllerActionTable {
 						$rowData[] = '';
 						$tableCells[] = $rowData;
 						$found = true;
-						break;
+						// break;
 					}
 				}
 			}
@@ -488,7 +496,8 @@ class UserGroupsTable extends ControllerActionTable {
 				$associated = $this->request->data("$alias.$key");
 				foreach ($associated as $i => $obj) {
 					$joinData = $obj['_joinData'];
-					if ($joinData['security_user_id'] != $userId) {
+					//editable only for other than current user, creator of group and user with lower role.
+					if ($joinData['security_user_id'] != $userId && $joinData['security_user_id'] != $entity->created_user_id && $joinData['security_role_id_order'] > $userIdRoleOrder) {
 						$rowData = [];
 						$name = $joinData['name'];
 						$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
@@ -523,7 +532,7 @@ class UserGroupsTable extends ControllerActionTable {
 							$rowData[] = $joinData['openemis_no'];
 							$rowData[] = $name;
 							$rowData[] = __('Group Administrator');
-                            $rowData[] = '';
+                            $rowData[] = ''; //creator could not be removed.
 							$tableCells[] = $rowData;
 						}
 					}
