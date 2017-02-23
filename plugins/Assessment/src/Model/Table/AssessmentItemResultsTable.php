@@ -1,4 +1,4 @@
-    <?php
+<?php
 namespace Assessment\Model\Table;
 
 use ArrayObject;
