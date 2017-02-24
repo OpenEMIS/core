@@ -6,10 +6,6 @@ INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-2498', NOW());
 CREATE TABLE IF NOT EXISTS `indexes` (
     `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
     `name` varchar(100) NOT NULL,
-    `status` INT(2) NOT NULL DEFAULT '1' COMMENT '1 => Not Generated 2 => Processing 3 => Completed 4 => Not Completed',
-    `pid` INT(11) DEFAULT NULL,
-    `generated_on` datetime DEFAULT NULL,
-    `generated_by` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
     `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
     `modified_user_id` int(11) DEFAULT NULL,
     `modified` datetime DEFAULT NULL,
@@ -19,6 +15,27 @@ CREATE TABLE IF NOT EXISTS `indexes` (
 
 ALTER TABLE `indexes`
     ADD KEY `academic_period_id` (`academic_period_id`),
+    ADD KEY `modified_user_id` (`modified_user_id`),
+    ADD KEY `created_user_id` (`created_user_id`);
+
+-- Table structure for table `institution_indexes`
+CREATE TABLE IF NOT EXISTS `institution_indexes` (
+    `id` int(11) NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    `status` INT(2) NOT NULL DEFAULT '1' COMMENT '1 => Not Generated 2 => Processing 3 => Completed 4 => Not Completed',
+    `pid` INT(11) DEFAULT NULL,
+    `generated_on` datetime DEFAULT NULL,
+    `generated_by` int(11) DEFAULT NULL COMMENT 'links to security_users.id',
+    `index_id` int(11) NOT NULL COMMENT 'links to indexes.id',
+    `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+    `modified_user_id` int(11) DEFAULT NULL,
+    `modified` datetime DEFAULT NULL,
+    `created_user_id` int(11) NOT NULL,
+    `created` datetime NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE `institution_indexes`
+    ADD KEY `index_id` (`index_id`),
+    ADD KEY `institution_id` (`institution_id`),
     ADD KEY `modified_user_id` (`modified_user_id`),
     ADD KEY `created_user_id` (`created_user_id`);
 
