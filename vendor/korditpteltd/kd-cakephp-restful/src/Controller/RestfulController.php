@@ -148,6 +148,11 @@ class RestfulController extends AppController
         $this->restfulComponent->delete();
     }
 
+    public function ajax()
+    {
+        $this->restfulComponent->ajax();
+    }
+
     private function initTable(Table $table, $connectionName = 'default')
     {
         $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : $connectionName;
