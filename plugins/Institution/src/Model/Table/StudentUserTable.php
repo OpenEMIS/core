@@ -472,6 +472,7 @@ class StudentUserTable extends ControllerActionTable
     public function studentsAfterSave(Event $event, $student)
     {
     	if ($student->isNew()) {
+    		// needed when user is added from directory as others, then added as student
         	$this->updateAll(['is_student' => 1],['id' => $student->student_id]);
         }
     }
