@@ -137,6 +137,7 @@ class StudentUserTable extends ControllerActionTable
 	public function implementedEvents()
 	{
     	$events = parent::implementedEvents();
+        $events['Model.Students.afterSave'] = 'studentsAfterSave';
     	return $events;
     }
 
@@ -464,6 +465,13 @@ class StudentUserTable extends ControllerActionTable
 		}
 		return $attr;
 	}
+
+    public function studentsAfterSave(Event $event, $student)
+    {
+    	if ($student->isNew()) {
+        	$this->updateAll(['is_student' => 1],['id' => $student->student_id]);
+        }
+    }
 
 	private function checkClassPermission($studentId, $userId)
 	{
