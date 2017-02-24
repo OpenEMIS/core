@@ -38,6 +38,9 @@ class RestfulController extends BaseController
             'controller' => 'Users',
             'action' => 'login'
         ]);
+
+        // custom components
+        $this->loadComponent('ConfigItem');
     }
 
     public function beforeFilter(Event $event)

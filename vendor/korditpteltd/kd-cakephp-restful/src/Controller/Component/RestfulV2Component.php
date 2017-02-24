@@ -266,4 +266,15 @@ class RestfulV2Component extends Component implements RestfulInterface
             }
         }
     }
+
+    public function ajax()
+    {
+        $this->controller->autoRender = false;
+        $component = $this->request->pass[0];
+        $method = $this->request->pass[1];
+        
+        if (method_exists($this->controller->{$component}, $method)) {
+            return call_user_func_array(array($this->controller->{$component}, $method), []);
+        }
+    }
 }
