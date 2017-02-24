@@ -35,11 +35,11 @@ class InstitutionStudentIndexesControllerTest extends AppTestCase
         'app.institution_custom_forms_filters',
     ];
 
-    public function testIndexInstitutionIndexes()
+    public function testIndexIndexes()
     {
         $this->setInstitutionSession(1);
 
-        $this->get('/Institutions/InstitutionIndexes/index');
+        $this->get('/Institutions/Indexes/index');
         $this->assertResponseCode(200);
     }
 

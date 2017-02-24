@@ -13,6 +13,7 @@ class UpdateIndexesShell extends Shell
     {
         parent::initialize();
         $this->loadModel('Institution.InstitutionStudentIndexes');
+        $this->loadModel('Institution.InstitutionIndexes');
         $this->loadModel('Institution.StudentIndexesCriterias');
         $this->loadModel('Indexes.IndexesCriterias');
         $this->loadModel('Indexes.Indexes');
@@ -27,7 +28,6 @@ class UpdateIndexesShell extends Shell
         $indexesId = !empty($this->args[2]) ? $this->args[2] : 0;
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
 
-        // $indexesCriteriaData = $this->Indexes->getCriteriasData(); // all the criteria in the indexesTable
         $indexesCriteriaData = $this->IndexesCriterias->getCriteriaKey($indexesId);
 
         if (!empty($indexesCriteriaData)) {
@@ -36,30 +36,27 @@ class UpdateIndexesShell extends Shell
 
                 $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId, $indexesId);
             }
-
-            // update the generated_by and generated_on in indexes table
-            $today = Time::now();
-            $this->Indexes->updateAll(
-                [
-                    'generated_by' => $userId,
-                    'generated_on' => $today,
-                    'pid' => NULL,
-                    'status' => 3 // completed
-                ],
-                ['id' => $indexesId]
-            );
         }
+
+        // update the generated_by and generated_on in indexes table
+        $this->InstitutionIndexes->updateAll(
+            [
+                'generated_by' => $userId,
+                'generated_on' => new Time(),
+                'pid' => NULL,
+                'status' => 3 // completed
+            ],
+            ['index_id' => $indexesId, 'institution_id' => $institutionId]
+        );
     }
 
     public function autoUpdateIndexes($key, $model, $institutionId, $userId, $academicPeriodId, $indexesId)
     {
         $today = Time::now();
         $CriteriaModel = TableRegistry::get($model);
-        $StudentIndexesCriterias = TableRegistry::get('Institution.StudentIndexesCriterias');
-        $Students = TableRegistry::get('Institution.Students');
 
         // get the list of enrolled student in the institution in academic period
-        $institutionStudentsResults = $Students->find()
+        $institutionStudentsResults = $this->Students->find()
             ->where([
                 'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId,
@@ -146,7 +143,7 @@ class UpdateIndexesShell extends Shell
                 ->execute();
 
             // update the student indexes criteria
-            $StudentIndexesCriterias->query()
+            $this->StudentIndexesCriterias->query()
                 ->update()
                 ->set([
                     'created_user_id' => $userId,
@@ -154,14 +151,5 @@ class UpdateIndexesShell extends Shell
                 ])
                 ->execute();
         }
-
-        // update indexes
-        $this->Indexes->updateAll([
-            'generated_by' => $userId,
-            'generated_on' => $today,
-            'pid' => NULL,
-            'status' => 3 // completed
-        ],
-        ['id' => $indexesId]);
     }
 }

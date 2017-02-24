@@ -1318,11 +1318,10 @@ class StudentsTable extends ControllerActionTable
                     ->first();
 
                 if (!empty($results)) {
-                    $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
                     $educationGradeId = $results->education_grade_id;
                     $educationProgrammeId = $this->EducationGrades->get($educationGradeId)->education_programme_id;
-                    $admissionAge = $EducationProgrammes->getAdmissionAge($educationProgrammeId);
+                    $admissionAge = $this->EducationGrades->getAdmissionAge($educationGradeId);
                     $schoolStartYear = $results->start_year;
                     $birthdayYear = $results->user->date_of_birth->format('Y');
 
