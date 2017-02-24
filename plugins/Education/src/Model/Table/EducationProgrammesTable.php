@@ -315,12 +315,4 @@ class EducationProgrammesTable extends ControllerActionTable
                     ->order(['EducationCycles.order' => 'ASC', $this->aliasField('order') => 'ASC'])
                     ->toArray();
 	}
-
-	public function getAdmissionAge($educationProgrammeId)
-    {
-    	$EducationCyclesId = $this->get($educationProgrammeId)->education_cycle_id;
-    	$admissionAge = $this->EducationCycles->get($EducationCyclesId)->admission_age;
-
-    	return $admissionAge;
-    }
 }

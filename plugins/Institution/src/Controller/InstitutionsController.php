@@ -113,7 +113,7 @@ class InstitutionsController extends AppController
     public function StudentSurveys()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
     public function StudentTextbooks()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
     // public function StaffAttendances()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
-    public function InstitutionIndexes()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionIndexes']); }
+    public function Indexes()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']); }
     public function StudentIndexes()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
     public function InstitutionStudentIndexes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
     // End

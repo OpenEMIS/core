@@ -114,9 +114,6 @@ class IndexesTable extends ControllerActionTable
 
         $this->hasMany('IndexesCriterias', ['className' => 'Indexes.IndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionStudentIndexes', ['className' => 'Institution.InstitutionStudentIndexes', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-        $this->toggle('search', false);
-        $this->toggle('remove', false);
     }
 
     public function validationDefault(Validator $validator)
@@ -165,6 +162,10 @@ class IndexesTable extends ControllerActionTable
         $thresholdParams['min'] = 1;
         $thresholdParams['max'] = 99;
 
+        if ($criteriaType == 'Guardians') {
+            $thresholdParams['min'] = 0;
+        }
+
         if ($thresholdParams['type'] == 'select') {
             $model = $criteriaData[$criteriaType]['threshold']['lookupModel'];
 
@@ -211,10 +212,10 @@ class IndexesTable extends ControllerActionTable
                     if ($obj['operator'] == 3) {
                         // '=' the threshold is a string
                         $lookupModel = TableRegistry::get($criteriaData[$obj['criteria']]['threshold']['lookupModel']);
-                        $thresholdData = $lookupModel->get($obj['threshold'])->name;
+                        $thresholdData = __($lookupModel->get($obj['threshold'])->name);
                     } else if ($obj['operator'] == 11) { // for Repeated
                         // for student status, the threshold value will be 'Yes'
-                        $thresholdData = $criteriaData[$obj->criteria]['threshold']['value'];
+                        $thresholdData = __($criteriaData[$obj->criteria]['threshold']['value']);
                     } else {
                         // '<' and '>' the threshold is a numeric
                         $thresholdData = $obj['threshold'];
@@ -223,7 +224,7 @@ class IndexesTable extends ControllerActionTable
                     $rowData = [];
                     $rowData[] = __($criteriaData[$obj['criteria']]['name']);
                     $rowData[] = __($this->operatorTypes[$obj->operator]);
-                    $rowData[] = __($thresholdData); // will get form the FO or from the model related
+                    $rowData[] = $thresholdData; // will get form the FO or from the model related
                     $rowData[] = __($obj['index_value']);
 
                     $tableCells[] = $rowData;
@@ -231,7 +232,6 @@ class IndexesTable extends ControllerActionTable
             }
 
         } else if ($action == 'add' || $action == 'edit') {
-            $tableHeaders[] = ''; // for delete column
             $Form = $event->subject()->Form;
             $Form->unlockField($alias.".".$fieldKey);
 
@@ -311,7 +311,7 @@ class IndexesTable extends ControllerActionTable
         } else if ($action == 'edit') {
             $requestQuery = $this->request->query;
 
-            $academicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+            $academicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
             $attr['type'] = 'readonly';
             $attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriodId)->name;
@@ -323,19 +323,16 @@ class IndexesTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('name',['sort' => false]);
+        $this->field('name');
         $this->field('modified_user_id',['visible' => true]);
-        $this->field('modified',['visible' => true, 'sort' => false]);
-        $this->field('generated_on',['sort' => false, 'after' => 'generated_by']);
+        $this->field('modified',['visible' => true]);
         $this->field('academic_period_id',['visible' => false]);
-        $this->field('status',['visible' => false]);
-        $this->field('pid',['visible' => false]);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
         $requestQuery = $this->request->query;
 
-        $selectedAcademicPeriodId = !empty($requestQuery) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
+        $selectedAcademicPeriodId = !empty($requestQuery['academic_period_id']) ? $requestQuery['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
 
@@ -439,9 +436,18 @@ class IndexesTable extends ControllerActionTable
         }
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // delete the institution Indexes records
+        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
+        $indexId = $entity->id;
+        $InstitutionIndexes->deleteAll(['index_id' => $indexId]);
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $fieldKey = 'indexes_criterias';
+        $userId = $this->request->session()->read('Auth.User.id');
         $undeletedList = [];
         $originalEntityList = [];
         $originalEntity = [];
@@ -471,6 +477,13 @@ class IndexesTable extends ControllerActionTable
                 }
             }
         }
+
+        // update the modified by and date
+        $this->updateAll(
+            ['modified_user_id' => $userId],
+            ['id' => $entity->id]
+        );
+
     }
 
     public function addEditOnAddCriteria(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -501,31 +514,9 @@ class IndexesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
-        $this->field('generated_by',['visible' => false]);
-        $this->field('generated_on',['visible' => false]);
-        $this->field('status',['visible' => false]);
-        $this->field('pid',['visible' => false]);
         $this->field('indexes_criterias', ['type' => 'custom_criterias']);
 
         $this->setFieldOrder(['name', 'indexes_criterias']);
-    }
-
-    public function onGetGeneratedBy(Event $event, Entity $entity)
-    {
-        $userName = '';
-        if (isset($entity->generated_by)) {
-            $generatedById = $entity->generated_by;
-
-            $Users = TableRegistry::get('Security.Users');
-            $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
-        }
-
-        return $userName;
-    }
-
-    public function getIndexesStatus($statusId)
-    {
-        return $this->statusTypes[$statusId];
     }
 
     public function getCriteriasDetails($criteriaKey)
@@ -534,8 +525,9 @@ class IndexesTable extends ControllerActionTable
         return $details = $criteriaData[$criteriaKey];
     }
 
-    public function getCriteriaByModel($model)
+    public function getCriteriaByModel($model, $institutionId)
     {
+        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
         $criteriaData = $this->getCriteriasData();
 
         $criteria = [];
@@ -546,10 +538,12 @@ class IndexesTable extends ControllerActionTable
                     ->all();
 
                 foreach ($indexesCriteriasData as $indexesCriteriasDataObj) {
-                    // pr($indexesCriteriasDataObj);
                     $indexesId = $indexesCriteriasDataObj->index_id;
-                    if (!empty($indexesId)) {
-                        if ($this->get($indexesId)->status == 2 || $this->get($indexesId)->status == 3) { // Status processing and completed
+
+                    if (!empty($indexesId) && !empty($institutionId)) {
+                        $status = $InstitutionIndexes->getStatus($indexesId, $institutionId);
+
+                        if ($status == 2 || $status == 3) { // Status processing and completed
                             $criteria[$criteriaKey] = $criteriaObj;
                         }
                     }
@@ -559,6 +553,12 @@ class IndexesTable extends ControllerActionTable
 
         return $criteria;
     }
+
+    public function getIndexesStatus($statusId)
+    {
+        return $this->statusTypes[$statusId];
+    }
+
 
     public function getOperatorDetails($operatorId)
     {
