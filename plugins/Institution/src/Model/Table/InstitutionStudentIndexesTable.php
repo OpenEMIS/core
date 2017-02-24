@@ -163,7 +163,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $studentList = $InstitutionClassStudents->getStudentsList($academicPeriodId, $institutionId, $classId);
 
             $conditions = [
-                $this->aliasField('index_id') => $requestQuery['index_id'],
+                $this->aliasField('index_id') => $params['index_id'],
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('student_id') . ' IN ' => $studentList,
                 $this->aliasField('total_index') . ' >' => 0
