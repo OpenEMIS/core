@@ -53,6 +53,10 @@ class InstitutionClassStudentsTable extends AppTable {
             'pages' => ['index'],
             'orientation' => 'landscape'
         ]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index', 'view']
+        ]);
     }
 
     public function implementedEvents()
