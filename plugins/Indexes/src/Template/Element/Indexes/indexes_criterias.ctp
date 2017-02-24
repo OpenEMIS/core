@@ -35,21 +35,19 @@
             ]);
         }
     ?>
-    <div class="table-wrapper full-width">
-        <div class="table-responsive">
-            <table class="table table-curved table-input row-align-top">
-                <thead>
-                    <tr>
-                        <th><?= __('Criteria') ?></th>
-                        <th><?= __('Operator') ?></th>
-                        <th class="required"><label class="table-header-label"><?= __('Threshold') ?></label></th>
-                        <th class="required"><label class="table-header-label"><?= __('Index') ?></label></th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
-            </table>
-        </div>
+    <div class="<?= $tableClass; ?>" autocomplete-ref="indexes">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><?= __('Criteria') ?></th>
+                    <th><?= __('Operator') ?></th>
+                    <th class="required"><label class="table-header-label"><?= __('Threshold') ?></label></th>
+                    <th class="required"><label class="table-header-label"><?= __('Index') ?></label></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+        </table>
     </div>
 <?php endif ?>
 
