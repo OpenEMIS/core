@@ -69,7 +69,8 @@ class AcademicPeriodsTable extends AppTable
             'Students' => ['index'],
             'Staff' => ['index'],
             'Results' => ['index'],
-            'StudentExaminationResults' => ['index']
+            'StudentExaminationResults' => ['index'],
+            'OpenEMIS_Classroom' => ['index']
         ]);
     }
 
