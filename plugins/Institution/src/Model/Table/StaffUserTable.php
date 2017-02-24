@@ -131,9 +131,6 @@ class StaffUserTable extends ControllerActionTable {
         $options['associated']['Identities'] = [
             'validate' => 'AddByAssociation'
         ];
-
-        // needed when creating new staff from institution page
-        $data['is_staff'] = 1;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
@@ -217,7 +214,6 @@ class StaffUserTable extends ControllerActionTable {
     public function staffAfterSave(Event $event, $staff)
     {
         if ($staff->isNew()) {
-            // needed when user is added from directory as others then added as staff
             $this->updateAll(['is_staff' => 1], ['id' => $staff->staff_id]);
         }
     }
