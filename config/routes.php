@@ -108,6 +108,10 @@ Router::scope('/restful', [], function ($routes) {
 
         $routes->connect('/', ['action' => 'nothing']);
         $routes->connect('/token', ['action' => 'token', '_method' => 'GET']);
+        $routes->connect('/:version/ajax/:component/:method', 
+            ['action' => 'ajax', '_method' => 'GET'], 
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['component', 'method']]
+        );
 
         // Index
         $routes->connect( '/:version/:model',
