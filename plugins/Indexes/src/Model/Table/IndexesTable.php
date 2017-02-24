@@ -102,7 +102,7 @@ class IndexesTable extends ControllerActionTable
     private $statusTypes = [
         1 => 'Not Generated',
         2 => 'Processing',
-        3 => 'Completed',
+        3 => 'Generated',
         4 => 'Not Completed'
     ];
 
