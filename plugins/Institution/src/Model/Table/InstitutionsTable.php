@@ -295,7 +295,7 @@ class InstitutionsTable extends AppTable  {
 
 	public function onGetShiftType(Event $event, Entity $entity)
 	{
-		$type = '-';
+		$type = ' ';
 		if (array_key_exists($entity->shift_type, $this->shiftTypes)) {
 			$type = $this->shiftTypes[$entity->shift_type];
 		}
