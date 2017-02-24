@@ -24,6 +24,7 @@ return [
         'FieldOption' => $baseDir . '/plugins/FieldOption/',
         'Health' => $baseDir . '/plugins/Health/',
         'Import' => $baseDir . '/plugins/Import/',
+        'Indexes' => $baseDir . '/plugins/Indexes/',
         'Infrastructure' => $baseDir . '/plugins/Infrastructure/',
         'Institution' => $baseDir . '/plugins/Institution/',
         'InstitutionCustomField' => $baseDir . '/plugins/InstitutionCustomField/',
