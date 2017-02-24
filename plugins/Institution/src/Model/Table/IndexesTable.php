@@ -119,7 +119,8 @@ class IndexesTable extends ControllerActionTable
             'plugin' => 'Institution',
             'controller' => 'Institutions',
             'action' => 'Indexes',
-            'index'
+            'index',
+            'academic_period_id' => $params['academic_period_id']
         ];
 
         $event->stopPropagation();
@@ -200,13 +201,16 @@ class IndexesTable extends ControllerActionTable
         $indexId = $entity->id;
 
         if (array_key_exists('view', $buttons)) {
-            $buttons['view']['url'] = [
+            $url = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
-                'action' => 'InstitutionStudentIndexes',
+                'action' => 'InstitutionStudentIndexes'
+            ];
+
+            $buttons['view']['url'] = $this->setQueryString($url, [
                 'index_id' => $entity->id,
                 'academic_period_id' => $entity->academic_period_id
-            ];
+            ]);
 
             // generate button
             if ($this->AccessControl->check(['Institutions', 'Indexes', 'generate'])) {
