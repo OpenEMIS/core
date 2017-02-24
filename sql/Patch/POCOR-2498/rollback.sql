@@ -8,6 +8,7 @@ DROP TABLE student_indexes_criterias;
 DROP TABLE institution_student_indexes;
 DROP TABLE behaviour_classifications;
 DROP TABLE indexes_criterias;
+DROP TABLE institution_indexes;
 DROP TABLE indexes;
 
 

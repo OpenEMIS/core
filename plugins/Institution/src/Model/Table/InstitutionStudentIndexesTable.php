@@ -85,7 +85,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $url = [
             'plugin' => 'Institution',
             'controller' => 'Institutions',
-            'action' => 'InstitutionIndexes',
+            'action' => 'Indexes',
             'index'
         ];
         $toolbarButtonsArray['back'] = $this->getButtonTemplate();
@@ -190,9 +190,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         // BreadCrumb
         $indexId = $this->request->query['index_id'];
         $academicPeriodId = $this->request->query['academic_period_id'];
-        $institutionIndexesUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionStudentIndexes', 'index_id' => $indexId, 'academic_period_id' => $academicPeriodId];
+        $indexesUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionStudentIndexes', 'index_id' => $indexId, 'academic_period_id' => $academicPeriodId];
 
-        $this->Navigation->substituteCrumb('Institution Student Indexes', 'Institution Student Indexes', $institutionIndexesUrl);
+        $this->Navigation->substituteCrumb('Institution Student Indexes', 'Institution Student Indexes', $indexesUrl);
 
         // Header
         $studentName = $entity->user->first_name . ' ' . $entity->user->last_name;
@@ -267,7 +267,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $criteriaModel = 'Institution.Students';
         }
 
-        $criteriaData = $this->Indexes->getCriteriaByModel($criteriaModel);
         $IndexesCriterias = TableRegistry::get('Indexes.IndexesCriterias');
         $criteriaTable = TableRegistry::get($criteriaModel);
 
@@ -295,20 +294,40 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
         }
 
+        $criteriaData = $this->Indexes->getCriteriaByModel($criteriaModel, $institutionId);
+
+
+// pr($institutionId);
+// pr($criteriaModel);
+// pr($criteriaData);
+// die;
         foreach ($criteriaData as $criteriaDataKey => $criteriaDataObj) {
+// pr('inside- foreach');
+// pr($criteriaDataObj);
+// die;
             // to get the indexes criteria to get the value on the student_indexes_criterias
             $indexesCriteriaResults = $IndexesCriterias->find()
                 ->contain(['Indexes'])
+                // ->matching('Institution.InstitutionIndexes', function ($q) use ($institutionId) {
+                //     return $q->where([
+                //         'Institution.InstitutionIndexes.institution_id' => $institutionId,
+                //         'OR' => [
+                //             ['Institution.InstitutionIndexes.status' => 2],
+                //             ['Institution.InstitutionIndexes.status' => 3]
+                //         ]
+                //     ]);
+                // })
                 ->where([
                     'criteria' => $criteriaDataKey,
                     'Indexes.academic_period_id' => $academicPeriodId,
-                    'OR' => [
-                        ['Indexes.status' => 2], // Indexes status is processing
-                        ['Indexes.status' => 3]  // Indexes status is completed
-                    ]
+                    // 'OR' => [
+                    //     ['Indexes.status' => 2], // Indexes status is processing
+                    //     ['Indexes.status' => 3]  // Indexes status is completed
+                    // ]
                 ])
                 ->all();
-
+// pr($indexesCriteriaResults);
+// die;
             if (!$indexesCriteriaResults->isEmpty()) {
                 foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
                     $indexId = $indexesCriteriaData->index_id;

@@ -326,10 +326,7 @@ class IndexesTable extends ControllerActionTable
         $this->field('name');
         $this->field('modified_user_id',['visible' => true]);
         $this->field('modified',['visible' => true]);
-        $this->field('generated_on',['after' => 'generated_by']);
         $this->field('academic_period_id',['visible' => false]);
-        $this->field('status',['visible' => false]);
-        $this->field('pid',['visible' => false]);
 
         // element control
         $academicPeriodOptions = $this->AcademicPeriods->getYearList();
@@ -439,6 +436,14 @@ class IndexesTable extends ControllerActionTable
         }
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        // delete the institution Indexes records
+        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
+        $indexId = $entity->id;
+        $InstitutionIndexes->deleteAll(['index_id' => $indexId]);
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
     {
         $fieldKey = 'indexes_criterias';
@@ -509,31 +514,9 @@ class IndexesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
-        $this->field('generated_by',['visible' => false]);
-        $this->field('generated_on',['visible' => false]);
-        $this->field('status',['visible' => false]);
-        $this->field('pid',['visible' => false]);
         $this->field('indexes_criterias', ['type' => 'custom_criterias']);
 
         $this->setFieldOrder(['name', 'indexes_criterias']);
-    }
-
-    public function onGetGeneratedBy(Event $event, Entity $entity)
-    {
-        $userName = '';
-        if (isset($entity->generated_by)) {
-            $generatedById = $entity->generated_by;
-
-            $Users = TableRegistry::get('Security.Users');
-            $userName = $Users->get($generatedById)->first_name . ' ' . $Users->get($generatedById)->last_name;
-        }
-
-        return $userName;
-    }
-
-    public function getIndexesStatus($statusId)
-    {
-        return $this->statusTypes[$statusId];
     }
 
     public function getCriteriasDetails($criteriaKey)
@@ -542,30 +525,51 @@ class IndexesTable extends ControllerActionTable
         return $details = $criteriaData[$criteriaKey];
     }
 
-    public function getCriteriaByModel($model)
+    public function getCriteriaByModel($model, $institutionId)
     {
+        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
         $criteriaData = $this->getCriteriasData();
-
+// pr('getCriteriaByModel - indexestabls');
+// die;
         $criteria = [];
         foreach ($criteriaData as $criteriaKey => $criteriaObj) {
             if ($criteriaObj['model'] == $model) {
                 $indexesCriteriasData = $this->IndexesCriterias->find()
                     ->where(['criteria' => $criteriaKey])
                     ->all();
-
+// pr('indexesCriteriasData');
+// pr($indexesCriteriasData);
                 foreach ($indexesCriteriasData as $indexesCriteriasDataObj) {
                     $indexesId = $indexesCriteriasDataObj->index_id;
-                    if (!empty($indexesId)) {
-                        if ($this->get($indexesId)->status == 2 || $this->get($indexesId)->status == 3) { // Status processing and completed
+// pr('indexesId '. $indexesId);
+// pr('institutionId '.$institutionId);
+// pr($indexesCriteriasDataObj);
+                    if (!empty($indexesId) && !empty($institutionId)) {
+                        $status = $InstitutionIndexes->getStatus($indexesId, $institutionId);
+// pr('indexesId '. $indexesId);
+// pr('institutionId '.$institutionId);
+// return $this->InstitutionIndexes->find('Record', ['index_id' => $indexId, 'institution_id' => $institutionId]);
+// $data = $InstitutionIndexes->find('Record', ['index_id' => $indexesId, 'institution_id' => $institutionId])->first();
+// pr($InstitutionIndexes->getStatus($indexesId, $institutionId));
+// pr($data);
+
+                        if ($status == 2 || $status == 3) { // Status processing and completed
                             $criteria[$criteriaKey] = $criteriaObj;
                         }
                     }
                 }
             }
         }
-
+// pr($criteria);
+// die;
         return $criteria;
     }
+
+    public function getIndexesStatus($statusId)
+    {
+        return $this->statusTypes[$statusId];
+    }
+
 
     public function getOperatorDetails($operatorId)
     {
