@@ -13,5 +13,8 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
         $this->hasMany('StudentBehaviours', ['className' => 'Student.StudentBehaviours', 'foreignKey' => 'student_behaviour_category_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index']
+        ]);
     }
 }
