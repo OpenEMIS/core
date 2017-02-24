@@ -26,8 +26,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         $this->hasMany('StudentIndexesCriterias', ['className' => 'Institution.StudentIndexesCriterias', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+        $this->addBehavior('User.AdvancedNameSearch');
+
         $this->toggle('add', false);
-        $this->toggle('search', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
     }
@@ -35,6 +36,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        // for search
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+
         // student absence and attendance
         $events['Model.InstitutionStudentAbsences.afterSave'] = 'afterSaveOrDelete';
         $events['Model.InstitutionStudentAbsences.afterDelete'] = 'afterSaveOrDelete';
@@ -66,6 +70,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         return $events;
     }
 
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'student_id';
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('openEMIS_ID');
@@ -78,6 +86,8 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $this->field('academic_period_id',['visible' => false]);
 
         $session = $this->request->session();
+        $requestQuery = $this->request->query;
+        $params = $this->paramsDecode($requestQuery['queryString']);
         $institutionId = $session->read('Institution.Institutions.id');
 
         // back buttons
@@ -99,7 +109,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         // element control
         $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-        $selectedAcademicPeriodId = $this->request->query['academic_period_id'];
+        $selectedAcademicPeriodId = $params['academic_period_id'];
 
         $classOptions = $Classes->getClassOptions($selectedAcademicPeriodId, $institutionId);
         if (!empty($classOptions)) {
@@ -135,14 +145,15 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $requestQuery = $this->request->query;
+        $params = $this->paramsDecode($requestQuery['queryString']);
         $session = $this->request->session();
 
         $institutionId = $session->read('Institution.Institutions.id');
-        $academicPeriodId = $requestQuery['academic_period_id'];
+        $academicPeriodId = $params['academic_period_id'];
         $classId = $extra['selectedClass'];
 
         $conditions = [
-            $this->aliasField('index_id') => $requestQuery['index_id'],
+            $this->aliasField('index_id') => $params['index_id'],
             $this->aliasField('academic_period_id') => $academicPeriodId,
             $this->aliasField('total_index') . ' >' => 0
         ];
@@ -171,7 +182,13 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $extra['options']['sortWhitelist'] = $sortList;
         // end sorting (refer to commentsTable)
 
-        return $query->where([$conditions]);
+        $query->where([$conditions]);
+
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        }
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -188,9 +205,21 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $this->field('created', ['visible' => false]);
 
         // BreadCrumb
-        $indexId = $this->request->query['index_id'];
-        $academicPeriodId = $this->request->query['academic_period_id'];
-        $indexesUrl = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'InstitutionStudentIndexes', 'index_id' => $indexId, 'academic_period_id' => $academicPeriodId];
+        $requestQuery = $this->request->query;
+        $params = $this->paramsDecode($requestQuery['queryString']);
+
+        $indexId = $params['index_id'];
+        $academicPeriodId = $params['academic_period_id'];
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'InstitutionStudentIndexes'
+        ];
+
+        $indexesUrl = $this->setQueryString($url, [
+            'index_id' => $indexId,
+            'academic_period_id' => $academicPeriodId
+        ]);
 
         $this->Navigation->substituteCrumb('Institution Student Indexes', 'Institution Student Indexes', $indexesUrl);
 
@@ -215,16 +244,16 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
     {
         // some class not configure in the institutionClassStudents, therefore using the institutionStudents
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $studentId = $entity->student_id;
         $academicPeriodId = $entity->academic_period_id;
 
-        $educationGradeData = $InstitutionClassStudents->find()
+        $educationGradeData = $InstitutionStudents->find()
             ->where([
                 'student_id' => $studentId,
                 'academic_period_id' => $academicPeriodId
             ])
-            ->first();
+            ->last();
 
         $educationGradesName = '';
         if (isset($educationGradeData->education_grade_id)) {
@@ -296,38 +325,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         $criteriaData = $this->Indexes->getCriteriaByModel($criteriaModel, $institutionId);
 
-
-// pr($institutionId);
-// pr($criteriaModel);
-// pr($criteriaData);
-// die;
         foreach ($criteriaData as $criteriaDataKey => $criteriaDataObj) {
-// pr('inside- foreach');
-// pr($criteriaDataObj);
-// die;
             // to get the indexes criteria to get the value on the student_indexes_criterias
-            $indexesCriteriaResults = $IndexesCriterias->find()
-                ->contain(['Indexes'])
-                // ->matching('Institution.InstitutionIndexes', function ($q) use ($institutionId) {
-                //     return $q->where([
-                //         'Institution.InstitutionIndexes.institution_id' => $institutionId,
-                //         'OR' => [
-                //             ['Institution.InstitutionIndexes.status' => 2],
-                //             ['Institution.InstitutionIndexes.status' => 3]
-                //         ]
-                //     ]);
-                // })
-                ->where([
-                    'criteria' => $criteriaDataKey,
-                    'Indexes.academic_period_id' => $academicPeriodId,
-                    // 'OR' => [
-                    //     ['Indexes.status' => 2], // Indexes status is processing
-                    //     ['Indexes.status' => 3]  // Indexes status is completed
-                    // ]
-                ])
-                ->all();
-// pr($indexesCriteriaResults);
-// die;
+            $indexesCriteriaResults = $IndexesCriterias->find('ActiveIndexesCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
+
             if (!$indexesCriteriaResults->isEmpty()) {
                 foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
                     $indexId = $indexesCriteriaData->index_id;

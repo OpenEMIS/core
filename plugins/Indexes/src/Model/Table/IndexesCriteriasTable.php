@@ -41,6 +41,32 @@ class IndexesCriteriasTable extends ControllerActionTable
             ;
     }
 
+    public function findActiveIndexesCriteria(Query $query, array $options)
+    {
+        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
+
+        $activeIndexId = [];
+        $activeIndexesData = $InstitutionIndexes->find()
+            ->where([
+                'institution_id' => $options['institution_id'],
+                'OR' => [
+                    ['status' => 2], // status == processing
+                    ['status' => 3]  // status == completed
+                ]
+            ])
+            ->all();
+
+        foreach ($activeIndexesData as $activeIndexes) {
+            $activeIndexId [] = $activeIndexes->index_id;
+        }
+
+        return $query->contain('Indexes')
+            ->where([
+                $this->Indexes->aliasField('id') . ' IN ' => $activeIndexId
+            ])
+            ->all();
+    }
+
     public function getTotalIndex($indexId)
     {
         $indexCriteriasResults = $this->find()

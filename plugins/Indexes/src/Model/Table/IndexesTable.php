@@ -529,29 +529,19 @@ class IndexesTable extends ControllerActionTable
     {
         $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
         $criteriaData = $this->getCriteriasData();
-// pr('getCriteriaByModel - indexestabls');
-// die;
+
         $criteria = [];
         foreach ($criteriaData as $criteriaKey => $criteriaObj) {
             if ($criteriaObj['model'] == $model) {
                 $indexesCriteriasData = $this->IndexesCriterias->find()
                     ->where(['criteria' => $criteriaKey])
                     ->all();
-// pr('indexesCriteriasData');
-// pr($indexesCriteriasData);
+
                 foreach ($indexesCriteriasData as $indexesCriteriasDataObj) {
                     $indexesId = $indexesCriteriasDataObj->index_id;
-// pr('indexesId '. $indexesId);
-// pr('institutionId '.$institutionId);
-// pr($indexesCriteriasDataObj);
+
                     if (!empty($indexesId) && !empty($institutionId)) {
                         $status = $InstitutionIndexes->getStatus($indexesId, $institutionId);
-// pr('indexesId '. $indexesId);
-// pr('institutionId '.$institutionId);
-// return $this->InstitutionIndexes->find('Record', ['index_id' => $indexId, 'institution_id' => $institutionId]);
-// $data = $InstitutionIndexes->find('Record', ['index_id' => $indexesId, 'institution_id' => $institutionId])->first();
-// pr($InstitutionIndexes->getStatus($indexesId, $institutionId));
-// pr($data);
 
                         if ($status == 2 || $status == 3) { // Status processing and completed
                             $criteria[$criteriaKey] = $criteriaObj;
@@ -560,8 +550,7 @@ class IndexesTable extends ControllerActionTable
                 }
             }
         }
-// pr($criteria);
-// die;
+
         return $criteria;
     }
 

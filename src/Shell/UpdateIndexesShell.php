@@ -27,12 +27,7 @@ class UpdateIndexesShell extends Shell
         $userId = !empty($this->args[1]) ? $this->args[1] : 0;
         $indexesId = !empty($this->args[2]) ? $this->args[2] : 0;
         $academicPeriodId = !empty($this->args[3]) ? $this->args[3] : 0;
-// pr('institutionId '.$institutionId);
-// pr('userId '.$userId);
-// pr('indexesId '.$indexesId);
-// pr('academicPeriodId '.$academicPeriodId);
-// pr('date '. new Date());
-// die;
+
         $indexesCriteriaData = $this->IndexesCriterias->getCriteriaKey($indexesId);
 
         if (!empty($indexesCriteriaData)) {
