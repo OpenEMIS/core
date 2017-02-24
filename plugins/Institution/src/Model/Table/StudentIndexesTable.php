@@ -89,11 +89,11 @@ class StudentIndexesTable extends ControllerActionTable
     {
         // some class not configure in the institutionClassStudents, therefore using the institutionStudents
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+        $InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $studentId = $entity->student_id;
         $academicPeriodId = $entity->academic_period_id;
 
-        $educationGradeData = $InstitutionClassStudents->find()
+        $educationGradeData = $InstitutionStudents->find()
             ->where([
                 'student_id' => $studentId,
                 'academic_period_id' => $academicPeriodId
