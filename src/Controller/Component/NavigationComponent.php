@@ -498,6 +498,13 @@ class NavigationComponent extends Component
 				'params' => ['plugin' => 'Institution'],
 			],
 
+			'Institutions.Indexes.index' => [
+				'title' => 'Indexes',
+				'parent' => 'Institutions.index',
+				'selected' => ['Institutions.Indexes','Institutions.InstitutionStudentIndexes'],
+				'params' => ['plugin' => 'Institution'],
+			],
+
 				'Institutions.Examinations' => [
 					'title' => 'Examinations',
 					'parent' => 'Institutions.index',
@@ -612,7 +619,7 @@ class NavigationComponent extends Component
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Institution'],
 				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.Awards',
-					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
+					'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance',
 				'parent' => 'Institutions.Students.index',
@@ -909,7 +916,12 @@ class NavigationComponent extends Component
 					'parent' => 'SystemSetup',
 					'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit']
 				],
-
+				'Indexes.Indexes' => [
+					'title' => 'Indexes',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'Indexes'],
+					'selected' => ['Indexes.Indexes']
+				],
 			'Security' => [
 				'title' => 'Security',
 				'parent' => 'Administration',
