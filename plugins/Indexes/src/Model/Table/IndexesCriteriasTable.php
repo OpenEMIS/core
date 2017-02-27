@@ -62,6 +62,7 @@ class IndexesCriteriasTable extends ControllerActionTable
 
         return $query->contain('Indexes')
             ->where([
+                'criteria' => $options['criteria_key'],
                 $this->Indexes->aliasField('id') . ' IN ' => $activeIndexId
             ])
             ->all();
