@@ -10,15 +10,48 @@ class SavingBehavior extends Behavior {
 
     protected $_defaultConfig = [
         'fields' => [
-            'excludes' => ['modified', 'created']
-        ]
+            'excludes' => ['created_user_id', 'created']
+        ],
+        'triggerOn' => 'create'
     ];
+
+    private $excludedFields =  [];
+
+    public function initialize(array $config)
+    {
+        $this->excludedFields = $this->config('fields.excludes');
+    }
+
+    public function addExcludedFields($field)
+    {
+        if (is_array($field)) {
+            $this->excludedFields = array_merge($this->excludedFields, $field);
+        } else {
+            $this->excludedFields[] = $field;
+        }
+    }
+
+    public function getExcludedFields()
+    {
+        return $this->excludedFields;
+    }
+
+    public function removeExcludedFields($field)
+    {
+        if (!is_array($field)) {
+            $field = [$field];
+        }
+        $this->excludedFields = array_diff($this->excludedFields, $field);
+    }
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
         if ($name == 'default') {
-            $schema = $this->_table->schema();
+            $model = $this->_table;
+            $triggerOn = $this->config('triggerOn');
 
+            // Check on database not null fields
+            $schema = $model->schema();
             $columns = $schema->columns();
             foreach ($columns as $col) {
                 $attr = $schema->column($col);
@@ -31,12 +64,12 @@ class SavingBehavior extends Behavior {
                     }
                     if (!$set->isPresenceRequired()) {
                         if ($this->isForeignKey($col)) {
-                            $validator->requirePresence($col, 'create');
+                            $validator->requirePresence($col, $triggerOn);
                         }
                     }
                 } else {
                     if (array_key_exists('null', $attr)) {
-                        $ignoreFields = $this->config('fields.excludes');
+                        $ignoreFields = $this->getExcludedFields();
                         if ($attr['null'] === false // not nullable
                             && (array_key_exists('default', $attr) && strlen($attr['default']) == 0) // don't have a default value in database
                             && $col !== 'id' // not a primary key
@@ -44,7 +77,7 @@ class SavingBehavior extends Behavior {
                         ) {
                             $validator->add($col, 'notBlank', ['rule' => 'notBlank']);
                             if ($this->isForeignKey($col)) {
-                                $validator->requirePresence($col, 'create');
+                                $validator->requirePresence($col, $triggerOn);
                             }
                         }
                     }

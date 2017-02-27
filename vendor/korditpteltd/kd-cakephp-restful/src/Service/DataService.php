@@ -25,7 +25,7 @@ class DataService
     private $_page = 0;
     private $_wildcard = '_';
     private $_db = 'default';
-    private $_hideSchema = false;
+    private $schema = false;
     private $header = [];
 
     /**
@@ -43,7 +43,9 @@ class DataService
     public function __construct($config = [])
     {
         $this->base = $config['base'];
-        $this->className = $config['className'];
+        if (array_key_exists('className', $config)) {
+            $this->className = $config['className'];
+        }
         if (array_key_exists('controller', $config)) {
             $this->controller = $config['controller'];
         }
@@ -53,6 +55,9 @@ class DataService
         if (array_key_exists('action', $config)) {
             $this->_action = $config['action'];
         }
+        if (array_key_exists('header', $config)) {
+            $this->header = $config['header'];
+        }
         if (array_key_exists('db', $config)) {
             $this->_db = $config['db'];
         }
@@ -61,9 +66,9 @@ class DataService
     public function init($className, $action = null)
     {
         if (is_null($action)) {
-            $newDataService = new self(['className' => $className, 'base' => $this->base, 'version' => $this->version, 'action' => $this->_action, 'db' => $this->_db]);
+            $newDataService = new self(['className' => $className, 'base' => $this->base, 'version' => $this->version, 'action' => $this->_action, 'header' => $this->header, 'db' => $this->_db]);
         } else {
-            $newDataService = new self(['className' => $className, 'base' => $this->base, 'version' => $this->version, 'action' => $action, 'db' => $this->_db]);
+            $newDataService = new self(['className' => $className, 'base' => $this->base, 'version' => $this->version, 'action' => $action, 'header' => $this->header, 'db' => $this->_db]);
         }
 
         return $newDataService;
@@ -94,9 +99,9 @@ class DataService
         $this->_action = $action;
     }
 
-    public function hideSchema($bool)
+    public function showSchema($bool)
     {
-        $this->_hideSchema = $bool;
+        $this->schema = $bool;
         return $this;
     }
 
@@ -137,6 +142,7 @@ class DataService
         $this->_group = [];
         $this->_order = [];
         $this->_page = 0;
+        $this->schema = false;
     }
 
     public function select($fields)
@@ -281,11 +287,11 @@ class DataService
             $params[] = '_db=' . $this->_db;
         }
 
-        if ($this->_hideSchema) {
-            $params[] = '_hideSchema='.$this->_hideSchema;
+        if ($this->schema) {
+            $params[] = '_schema='.$this->schema;
         }
 
-        if ($this->id > 0 || (is_string($this->id) && $this->className == 'ajax')) {
+        if ($this->id > 0 || (is_string($this->id) && $this->id == 'schema')) {
             $url .= '/' . $this->id;
         }
         if (!empty($responseType)) {
@@ -303,7 +309,7 @@ class DataService
     public function save($data)
     {
         $url = $this->toURL();
-        $headerOption =  !empty($this->getHeaders()) ? ['header' => $this->getHeaders()] : [];
+        $headerOption =  !empty($this->getHeaders()) ? ['headers' => $this->getHeaders()] : [];
         $http = new Client();
         $response = $http->post($url, $data, $headerOption);
         return $this->extractData($response);
@@ -311,7 +317,7 @@ class DataService
 
     public function edit($data)
     {
-        $headerOption =  !empty($this->getHeaders()) ? ['header' => $this->getHeaders()] : [];
+        $headerOption =  !empty($this->getHeaders()) ? ['headers' => $this->getHeaders()] : [];
         $model = str_replace('.', '-', $this->className);
         $url = $this->toURL();
         $http = new Client();
@@ -322,7 +328,7 @@ class DataService
     }
 
     public function delete($data) {
-        $headerOption =  !empty($this->getHeaders()) ? ['header' => $this->getHeaders()] : [];
+        $headerOption =  !empty($this->getHeaders()) ? ['headers' => $this->getHeaders()] : [];
         $model = str_replace('.', '-', $this->className);
         $url = $this->toURL();
         $http = new Client();
@@ -332,7 +338,7 @@ class DataService
 
     public function ajax()
     {
-        $headerOption =  !empty($this->getHeaders()) ? ['header' => $this->getHeaders()] : [];
+        $headerOption =  !empty($this->getHeaders()) ? ['headers' => $this->getHeaders()] : [];
         $url = $this->toURL();
         $http = new Client();
         $response = $http->get($url, [], $headerOption);
