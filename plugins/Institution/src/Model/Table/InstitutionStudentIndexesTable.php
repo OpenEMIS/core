@@ -323,9 +323,9 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
         }
 
-        $criteriaData = $this->Indexes->getCriteriaByModel($criteriaModel, $institutionId);
+        $criteriaRecord = $this->Indexes->getCriteriaByModel($criteriaModel, $institutionId);
 
-        foreach ($criteriaData as $criteriaDataKey => $criteriaDataObj) {
+        foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
             // to get the indexes criteria to get the value on the student_indexes_criterias
             $indexesCriteriaResults = $IndexesCriterias->find('ActiveIndexesCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
 
@@ -473,7 +473,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 }
 
                 foreach ($indexTotal as $key => $obj) {
-
                     $this->query()
                         ->update()
                         ->set(['total_index' => $obj])
