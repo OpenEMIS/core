@@ -42,8 +42,8 @@ class IndexesTable extends ControllerActionTable
         $this->field('name');
         $this->field('number_of_risk_index',['sort' => false]);
         $this->field('academic_period_id',['visible' => false]);
-        $this->field('generated_by',[ 'after' => 'number_of_risk_index']);
-        $this->field('generated_on',[ 'after' => 'generated_by']);
+        $this->field('generated_by',['after' => 'number_of_risk_index']);
+        $this->field('generated_on',['after' => 'generated_by']);
         $this->field('status',['after' => 'generated_on']);
         $this->field('pid',['visible' => false]);
 
@@ -87,8 +87,8 @@ class IndexesTable extends ControllerActionTable
         $pid = getmypid();
         $record = $this->getInstitutionIndexesRecords($indexId, $institutionId)->first();
 
-        // if processing id not empty (process still running or process stuck)
-        if (!empty($record->pid)) {
+        // if processing id not null (process still running or process stuck)
+        if (!is_null($record->pid)) {
             exec("kill -9 " . $record->pid);
         }
 
