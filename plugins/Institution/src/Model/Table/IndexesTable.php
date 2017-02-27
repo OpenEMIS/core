@@ -88,7 +88,7 @@ class IndexesTable extends ControllerActionTable
         $record = $this->getInstitutionIndexesRecords($indexId, $institutionId)->first();
 
         // if processing id not null (process still running or process stuck)
-        if (!is_null($record->pid)) {
+        if (!empty($record->pid)) {
             exec("kill -9 " . $record->pid);
         }
 
