@@ -180,9 +180,9 @@ trait RestfulV2Trait {
         }
     }
 
-    private function _hideSchema(Query $query = null, $value, ArrayObject $extra)
+    private function _schema(Query $query = null, $value, ArrayObject $extra)
     {
-        $extra['hideSchema'] = $value;
+        $extra['showSchema'] = $value;
     }
 
     private function _innerJoinWith(Query $query = null, $value, ArrayObject $extra)
@@ -215,31 +215,22 @@ trait RestfulV2Trait {
             $contain = [];
             $table = $extra['table'];
 
-            if ($value === 'true') { // contains all BelongsTo associations
-                foreach ($table->associations() as $assoc) {
-                    if ($assoc->type() == 'manyToOne') {
-                        $contain[] = $assoc->name();
+            $valueArr = explode(',', $value);
+            foreach ($valueArr as $item) {
+                if ($item === 'true') { // contains all BelongsTo associations
+                    foreach ($table->associations() as $assoc) {
+                        if ($assoc->type() == 'manyToOne') {
+                            $contain[] = $assoc->name();
+                        }
                     }
+                } else {
+                    $contain[] = $item;
                 }
-            } else {
-                $contain = explode(',', $value);
             }
 
             if (!empty($contain)) {
                 if (!is_null($query)) {
                     $query->contain($contain);
-                    // $fields = [];
-                    // foreach ($contain as $name) {
-                    //     foreach ($table->associations() as $assoc) {
-                    //         if ($name == $assoc->name()) {
-                    //             $columns = $assoc->schema()->columns();
-                    //             foreach ($columns as $column) {
-                    //                 $fields[] = $assoc->aliasField($column);
-                    //             }
-                    //         }
-                    //     }
-                    // }
-                    // $extra['fields'] = array_merge($extra['fields'], $fields);
                 }
             }
             $extra['contain'] = $contain;
@@ -401,11 +392,14 @@ trait RestfulV2Trait {
                 }
                 $columnType = $table->schema()->columnType($property);
                 $method = 'format'. ucfirst($columnType);
-                if (method_exists($this, $method)) {
+                $eventKey = 'Restful.Model.onRender'.ucfirst($columnType);
+                $event = $table->dispatchEvent($eventKey, [$entity, $property], $this);
+                if ($event->result) {
+                    $entity->$property = $event->result;
+                } else if (method_exists($this, $method)) {
                     $entity->$property = $this->$method($entity->$property, $extra);
                 }
-                $eventKey = 'Restful.Model.onRender'.ucfirst($columnType);
-                $table->dispatchEvent($eventKey, [$entity, $property], $this);
+                
             }
         }
     }
