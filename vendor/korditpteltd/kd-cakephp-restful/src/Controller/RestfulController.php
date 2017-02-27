@@ -25,6 +25,7 @@ class RestfulController extends AppController
         'v1' => 'v1',
         'v2' => 'v2'
     ];
+    private $user = null;
 
     public function initialize()
     {
@@ -82,6 +83,7 @@ class RestfulController extends AppController
 
     public function isAuthorized($user = null)
     {
+        $this->user = $user;
         $model = $this->model;
         $scope = $this->controllerAction;
         $action = $this->request->params['action'];
@@ -92,6 +94,16 @@ class RestfulController extends AppController
             return $event->result;
         }
         return false;
+    }
+
+    public function setUser($user)
+    {
+        $this->user = $user;
+    }
+
+    public function getUser()
+    {
+        return $this->user;
     }
 
     public function beforeRender(Event $event)
@@ -146,11 +158,6 @@ class RestfulController extends AppController
     public function delete()
     {
         $this->restfulComponent->delete();
-    }
-
-    public function ajax()
-    {
-        $this->restfulComponent->ajax();
     }
 
     private function initTable(Table $table, $connectionName = 'default')

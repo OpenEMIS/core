@@ -85,7 +85,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         $table = $this->initTable($this->model);
         $query = $table->find();
         $requestQueries = $this->request->query;
-        $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'index']);
+        $user = $this->controller->getUser();
+        $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'index', 'user' => $user]);
 
         $this->processQueryString($requestQueries, $query, $extra);
 
@@ -101,17 +102,28 @@ class RestfulV2Component extends Component implements RestfulInterface
                 if ($extra->offsetExists('limit') && $extra->offsetExists('page')) {
                     $query->limit($extra['limit'])->page($extra['page']);
                 }
-                $data = $this->formatResultSet($table, $query->toArray(), $extra);
-                if ($extra->offsetExists('flatten')) {
-                    $data = $data->toArray();
-                    foreach ($data as $key => $content) {
-                        $data[$key] = Hash::flatten($content->toArray());
+                $extra['query'] = $query;
+                $data = $query->toArray();
+                $event = $table->dispatchEvent('Restful.Model.onBeforeFormatResult', [$data, $extra], $this->controller);
+                if ($event->result) {
+                    $data = $event->result;
+                } else {
+                    $data = $this->formatResultSet($table, $data, $extra);
+                    if ($extra->offsetExists('flatten')) {
+                        $data = $data->toArray();
+                        foreach ($data as $key => $content) {
+                            $data[$key] = Hash::flatten($content->toArray());
+                        }
                     }
                 }
-                if ($extra->offsetExists('hideSchema') && $extra['hideSchema']) {
-                    $serialize = ['data' => $data, 'total' => $total];
-                } else {
+                $event = $table->dispatchEvent('Restful.Model.onAfterFormatResult', [$data, $extra], $this->controller);
+                if ($event->result) {
+                    $data = $event->result;
+                }
+                if ($extra->offsetExists('showSchema') && $extra['showSchema']) {
                     $serialize = ['data' => $data, 'schema' => $schema->getArrayCopy(), 'total' => $total];
+                } else {
+                    $serialize = ['data' => $data, 'total' => $total];
                 }
             }
             $serialize['_serialize'] = array_keys($serialize);
@@ -125,7 +137,8 @@ class RestfulV2Component extends Component implements RestfulInterface
     {
         $table = $this->initTable($this->model);
         if ($table) {
-            $extra = new ArrayObject(['table' => $table, 'action' => 'custom', 'functionName' => 'add', 'blobContent' => true]);
+            $user = $this->controller->getUser();
+            $extra = new ArrayObject(['table' => $table, 'action' => 'custom', 'functionName' => 'add', 'blobContent' => true, 'user' => $user]);
             $requestQueries = $this->request->query;
             $this->processQueryString($requestQueries, null, $extra);
             $options = ['extra' => $extra];
@@ -152,7 +165,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
 
         $table = $this->initTable($this->model);
-        $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'view', 'blobContent' => true]);
+        $user = $this->controller->getUser();
+        $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'view', 'blobContent' => true, 'user' => $user]);
         $primaryKey = [];
         if (strtolower($id) != 'schema') {
             $idKeys = $id;
@@ -182,15 +196,29 @@ class RestfulV2Component extends Component implements RestfulInterface
                 if (isset($extra['flatten']) && $extra['flatten'] === true) {
                     $flatten = true;
                 }
-                $data = $table->get($primaryKey, $extra->getArrayCopy());
-                $data = $this->formatResultSet($table, $data, $extra);
-                if ($flatten) {
-                    $data = Hash::flatten($data->toArray());
-                }
-                if ($extra->offsetExists('hideSchema') && $extra['hideSchema']) {
-                    $serialize = ['data' => $data];
+                $event = $table->dispatchEvent('Restful.Model.onBeforeGetData', [$primaryKey, $extra], $this->controller);
+                if ($event->result) {
+                    $data = $event->result;
                 } else {
+                    $data = $table->get($primaryKey, $extra->getArrayCopy()); 
+                }
+                $event = $table->dispatchEvent('Restful.Model.onBeforeFormatResult', [$data, $extra], $this->controller);
+                if ($event->result) {
+                    $data = $event->result;
+                } else {
+                    $data = $this->formatResultSet($table, $data, $extra);
+                    if ($flatten) {
+                        $data = Hash::flatten($data->toArray());
+                    }
+                }
+                $event = $table->dispatchEvent('Restful.Model.onAfterFormatResult', [$data, $extra], $this->controller);
+                if ($event->result) {
+                    $data = $event->result;
+                }
+                if ($extra->offsetExists('showSchema') && $extra['showSchema']) {
                     $serialize = ['data' => $data, 'schema' => $schema->getArrayCopy()];
+                } else {
+                    $serialize = ['data' => $data];
                 }
                 $serialize['_serialize'] = array_keys($serialize);
                 $this->controller->set($serialize);
@@ -203,7 +231,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         $target = $this->initTable($this->model);
         if ($target) {
             $requestData = $this->request->data;
-            $extra = new ArrayObject(['table' => $target, 'action' => 'custom', 'functionName' => 'edit', 'blobContent' => true]);
+            $user = $this->controller->getUser();
+            $extra = new ArrayObject(['table' => $target, 'action' => 'custom', 'functionName' => 'edit', 'blobContent' => true, 'user' => $user]);
             $requestQueries = $this->request->query;
             $this->processQueryString($requestQueries, null, $extra);
             $primaryKeyValues = $this->getIdKeys($target, $requestData, false);
@@ -233,7 +262,8 @@ class RestfulV2Component extends Component implements RestfulInterface
     public function delete()
     {
         $target = $this->model;
-        $extra = new ArrayObject(['table' => $target, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'delete']);
+        $user = $this->controller->getUser();
+        $extra = new ArrayObject(['table' => $target, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'delete', 'user' => $user]);
         if ($target) {
             $requestData = $this->request->data;
 
@@ -264,17 +294,6 @@ class RestfulV2Component extends Component implements RestfulInterface
             } else {
                 $this->_outputError('Record does not exists');
             }
-        }
-    }
-
-    public function ajax()
-    {
-        $this->controller->autoRender = false;
-        $component = $this->request->pass[0];
-        $method = $this->request->pass[1];
-        
-        if (method_exists($this->controller->{$component}, $method)) {
-            return call_user_func_array(array($this->controller->{$component}, $method), []);
         }
     }
 }
