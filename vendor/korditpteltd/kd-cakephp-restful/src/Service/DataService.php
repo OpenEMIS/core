@@ -291,7 +291,7 @@ class DataService
             $params[] = '_schema='.$this->schema;
         }
 
-        if ($this->id > 0 || (is_string($this->id) && $this->id == 'schema')) {
+        if ($this->id > 0 || (is_string($this->id) && $this->className == 'ajax')) {
             $url .= '/' . $this->id;
         }
         if (!empty($responseType)) {
