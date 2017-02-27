@@ -36,6 +36,7 @@ class RestfulController extends AppController
             'unauthorizedRedirect' => false
         ]);
         $this->Auth->allow('token');
+        $this->Auth->allow();
     }
 
     public function beforeFilter(Event $event)
@@ -158,6 +159,11 @@ class RestfulController extends AppController
     public function delete()
     {
         $this->restfulComponent->delete();
+    }
+
+    public function ajax()
+    {
+        $this->restfulComponent->ajax();
     }
 
     private function initTable(Table $table, $connectionName = 'default')
