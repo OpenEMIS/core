@@ -22,6 +22,7 @@ class GendersTable extends AppTable {
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add'],
         	'Staff' => ['index', 'add'],
+        	'OpenEMIS_Classroom' => ['index']
         ]);
 	}
 
