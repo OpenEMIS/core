@@ -32,6 +32,7 @@ trait RestfulV2Trait {
     {
         $searchableFields = [];
         $table = $extra['table'];
+        $table->dispatchEvent('Restful.Model.onBeforeProcessQueryString', [$requestQueries, $query, $extra], $this->controller);
         foreach ($table->schema()->columns() as $column) {
             $attr = $table->schema()->column($column);
             if ($attr['type'] == 'string' || $attr['type'] == 'text') {
@@ -399,7 +400,7 @@ trait RestfulV2Trait {
                 } else if (method_exists($this, $method)) {
                     $entity->$property = $this->$method($entity->$property, $extra);
                 }
-                
+
             }
         }
     }
