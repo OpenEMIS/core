@@ -98,7 +98,7 @@ class StudentIndexesTable extends ControllerActionTable
                 'student_id' => $studentId,
                 'academic_period_id' => $academicPeriodId
             ])
-            ->first();
+            ->last();
 
         $educationGradesName = '';
         if (isset($educationGradeData->education_grade_id)) {
@@ -120,7 +120,7 @@ class StudentIndexesTable extends ControllerActionTable
                 'student_id' => $studentId,
                 'academic_period_id' => $academicPeriodId
             ])
-            ->first();
+            ->last();
 
         $institutionClassesName = '';
         if (isset($institutionClassesData->institution_class_id)) {
