@@ -25,6 +25,8 @@ class InstitutionStudentsTable extends AppTable  {
 			'pages' => false
 		]);
 		$this->addBehavior('Report.InstitutionSecurity');
+
+        $this->statuses = $this->StudentStatuses->findCodeList();
 	}
 
 	public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -63,8 +65,35 @@ class InstitutionStudentsTable extends AppTable  {
 		
 		$query
 			->contain(['Users.Genders', 'Institutions.Areas', 'Institutions.Types'])
-			->select(['openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'institution_type' => 'Types.name']);
-	}
+			->select([
+                'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 
+                'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'institution_type' => 'Types.name'
+            ]);
+
+        $query->autoFields(true);
+
+        if ($statusId == $this->statuses['WITHDRAWN']) {
+            
+            $query->leftJoin(
+                ['StudentWithdraw' => 'institution_student_withdraw'], 
+                [
+                    'StudentWithdraw.student_id' => $this->aliasField('student_id'),
+                    'StudentWithdraw.institution_id' => $this->aliasField('institution_id'),
+                    'StudentWithdraw.education_grade_id' => $this->aliasField('education_grade_id'),
+                    'StudentWithdraw.academic_period_id' => $this->aliasField('academic_period_id')
+                ]
+            );
+            
+            $query->leftJoin(['StudentWithdrawReasons' => 'student_withdraw_reasons'], [
+                'StudentWithdrawReasons.id' => 'StudentWithdraw.student_withdraw_reason_id'
+            ]);
+
+            $query->select([
+                'withdraw_comment' => 'StudentWithdraw.comment', 
+                'withdraw_reason' => 'StudentWithdrawReasons.name'
+            ]);
+        }
+    }
 
 	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
 		$age = '';
@@ -79,19 +108,51 @@ class InstitutionStudentsTable extends AppTable  {
 		return $age;
 	}
 
+    public function onExcelGetWithdrawComment(Event $event, Entity $entity)
+    {
+        $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
+        $query = $StudentWithdraw->find()
+                ->where([
+                    $StudentWithdraw->aliasField('student_id') => $entity->student_id,
+                    $StudentWithdraw->aliasField('institution_id') => $entity->institution_id,
+                    $StudentWithdraw->aliasField('education_grade_id') => $entity->education_grade_id,
+                    $StudentWithdraw->aliasField('academic_period_id') => $entity->academic_period_id,
+                    $StudentWithdraw->aliasField('status') => 1 //approved
+                ])
+                ->first();
+
+        $entity->student_withdraw_reasons = '';
+        if (!empty($query)) {
+            $entity->student_withdraw_reasons = $query->student_withdraw_reason_id;
+            return $query->comment;
+        }
+    }
+
+    public function onExcelGetWithdrawReason(Event $event, Entity $entity)
+    {
+        $StudentWithdrawReasons = TableRegistry::get('Institution.StudentWithdrawReasons');
+
+        if (!empty($entity->student_withdraw_reasons)) {
+            return $StudentWithdrawReasons->get($entity->student_withdraw_reasons)->name;
+        }
+    }
+
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 		$identity = $IdentityType->getDefaultEntity();
 
 		$settings['identity'] = $identity;
 
+        $requestData = json_decode($settings['process']['params']);
+        $statusId = $requestData->status;
+
 		// To update to this code when upgrade server to PHP 5.5 and above
 		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
 
 		foreach ($fields as $key => $field) {
-			if ($field['field'] == 'institution_id') {
+			if ($field['field'] == 'institution_id' || $field['field'] == 'previous_institution_student_id') {
 				unset($fields[$key]);
-				break;
+				// break;
 			}
 		}
 		
@@ -158,7 +219,26 @@ class InstitutionStudentsTable extends AppTable  {
 			'label' => 'Age',
 		];
 
-		$newFields = array_merge($extraField, $fields->getArrayCopy());
-		$fields->exchangeArray($newFields);
+        $newFields = array_merge($extraField, $fields->getArrayCopy());
+
+        if ($statusId == $this->statuses['WITHDRAWN']) {
+            $extraField[] = [
+                'key' => 'StudentWithdraw.comment',
+                'field' => 'withdraw_comment',
+                'type' => 'string',
+                'label' => __('Withdraw Comment')
+            ];
+
+            $extraField[] = [
+                'key' => 'StudentWithdrawReasons.name',
+                'field' => 'withdraw_reason',
+                'type' => 'string',
+                'label' => __('Withdraw Reason')
+            ];
+        }
+
+        $fields = array_merge($extraField, $newFields);
+
+		// $fields->exchangeArray($newFields);
 	}
 }
