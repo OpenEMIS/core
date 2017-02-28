@@ -24,7 +24,7 @@ class StudentBehavioursTable extends AppTable {
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 
 		$this->addBehavior('Restful.RestfulAccessControl', [
-            'OpenEMIS_Classroom' => ['index', 'view', 'edit']
+            'OpenEMIS_Classroom' => ['index', 'view', 'add', 'edit']
         ]);
 	}
 
