@@ -64,9 +64,9 @@ class InstitutionStudentsTable extends AppTable  {
 		}
 		
 		$query
-			->contain(['Users.Genders', 'Institutions.Areas', 'Institutions.Types'])
+			->contain(['Users.Genders', 'Users.MainNationalities', 'Institutions.Areas', 'Institutions.Types'])
 			->select([
-                'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 
+                'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 'preferred_nationality' => 'MainNationalities.name', 
                 'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'institution_type' => 'Types.name'
             ]);
     }
@@ -286,7 +286,18 @@ class InstitutionStudentsTable extends AppTable  {
 
         $newFields = array_merge($extraField, $fields->getArrayCopy());
         
-        if ($statusId == $this->statuses['WITHDRAWN']) {
+        if ($statusId == $this->statuses['CURRENT']) {
+            $withdrawExtraField[] = [
+                'key' => 'MainNationalities.name',
+                'field' => 'preferred_nationality',
+                'type' => 'string',
+                'label' => __('Preferred Nationality')
+            ];
+
+            $outputFields = array_merge($newFields, $withdrawExtraField);
+            $fields->exchangeArray($outputFields);
+
+        } else if ($statusId == $this->statuses['WITHDRAWN']) {
             $withdrawExtraField[] = [
                 'key' => 'StudentWithdraw.comment',
                 'field' => 'withdraw_comment',
