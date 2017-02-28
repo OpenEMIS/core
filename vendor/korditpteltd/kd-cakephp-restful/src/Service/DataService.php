@@ -63,14 +63,9 @@ class DataService
         }
     }
 
-    public function init($className, $action = null)
+    public function init($className, $action = 'custom')
     {
-        if (is_null($action)) {
-            $newDataService = new self(['className' => $className, 'base' => $this->base, 'version' => $this->version, 'action' => $this->_action, 'header' => $this->header, 'db' => $this->_db]);
-        } else {
-            $newDataService = new self(['className' => $className, 'base' => $this->base, 'version' => $this->version, 'action' => $action, 'header' => $this->header, 'db' => $this->_db]);
-        }
-
+        $newDataService = new self(['className' => $className, 'base' => $this->base, 'version' => $this->version, 'action' => $action, 'header' => $this->header, 'db' => $this->_db]);
         return $newDataService;
     }
 
@@ -291,7 +286,7 @@ class DataService
             $params[] = '_schema='.$this->schema;
         }
 
-        if ($this->id > 0 || (is_string($this->id) && $this->className == 'ajax')) {
+        if ($this->id > 0 || (is_string($this->id) && $this->id == 'schema')) {
             $url .= '/' . $this->id;
         }
         if (!empty($responseType)) {
@@ -312,6 +307,7 @@ class DataService
         $headerOption =  !empty($this->getHeaders()) ? ['headers' => $this->getHeaders()] : [];
         $http = new Client();
         $response = $http->post($url, $data, $headerOption);
+        $this->reset();
         return $this->extractData($response);
     }
 
@@ -322,8 +318,7 @@ class DataService
         $url = $this->toURL();
         $http = new Client();
         $response = $http->patch($url, $data, $headerOption);
-        $responseType = $this->responseType;
-
+        $this->reset();
         return $this->extractData($response);
     }
 
@@ -333,6 +328,7 @@ class DataService
         $url = $this->toURL();
         $http = new Client();
         $response = $http->delete($url, $data, $headerOption);
+        $this->reset();
         return $this->extractData($response);
     }
 
