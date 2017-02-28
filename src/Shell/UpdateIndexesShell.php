@@ -6,6 +6,7 @@ use Cake\I18n\Time;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Console\Shell;
+use Cake\Log\Log;
 
 class UpdateIndexesShell extends Shell
 {
@@ -33,6 +34,10 @@ class UpdateIndexesShell extends Shell
         if (!empty($indexesCriteriaData)) {
             foreach ($indexesCriteriaData as $key => $obj) {
                 $criteriaData = $this->Indexes->getCriteriasDetails($key);
+
+                // for cli-debug.log to see still updating
+                Log::write('debug', 'Criteria: '. $key);
+                // end debug
 
                 $this->autoUpdateIndexes($key, $criteriaData['model'], $institutionId, $userId, $academicPeriodId, $indexesId);
             }
@@ -128,6 +133,11 @@ class UpdateIndexesShell extends Shell
 
         foreach ($criteriaModelResults as $criteriaModelEntity) {
             $criteriaModelEntityId = $criteriaModelEntity->id;
+
+            // for cli-debug.log to see still updating
+            $studentId = $criteriaModelEntity->student_id;
+            Log::write('debug', 'Student id: '. $studentId);
+            // end debug
 
             // will triggered the aftersave of the model (indexes behavior)
             $criteriaModelEntity->dirty('modified_user_id', true);
