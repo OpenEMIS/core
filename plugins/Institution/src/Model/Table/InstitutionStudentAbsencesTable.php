@@ -45,6 +45,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			],
 			'pages' => ['index']
 		]);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['add', 'edit']
+        ]);
 
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();

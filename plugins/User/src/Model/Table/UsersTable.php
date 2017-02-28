@@ -65,7 +65,7 @@ class UsersTable extends AppTable {
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'StaffRoom' => ['index', 'add'],
-        	'OpenEMIS_Classroom' => ['view']
+        	'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
 	}
 
