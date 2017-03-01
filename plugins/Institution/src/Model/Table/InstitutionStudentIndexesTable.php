@@ -336,6 +336,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                     $indexId = $indexesCriteriaData->index_id;
                     $threshold = $indexesCriteriaData->threshold;
                     $operator = $indexesCriteriaData->operator;
+                    $criteria = $indexesCriteriaData->criteria;
 
                     $params = new ArrayObject([
                         'institution_id' => $institutionId,
@@ -353,28 +354,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
                     $valueIndexData = $event->result;
 
-                    $institutionStudentIndexesResults = $this->find()
-                        ->where([
-                            $this->aliasField('academic_period_id') => $academicPeriodId,
-                            $this->aliasField('institution_id') => $institutionId,
-                            $this->aliasField('student_id') => $studentId,
-                            $this->aliasField('index_id') => $indexId
-                        ])
-                        ->all();
-
-                    // to update and add new records into the institution_student_indexes
-                    if (!$institutionStudentIndexesResults->isEmpty()) {
-                        $entity = $institutionStudentIndexesResults->first();
-                    } else {
-                        $entity = $this->newEntity([
-                            'average_index' => 0,
-                            'total_index' => 0,
-                            'academic_period_id' => $academicPeriodId,
-                            'institution_id' => $institutionId,
-                            'student_id' => $studentId,
-                            'index_id' => $indexId
-                        ]);
-                    }
 
                     // if the condition fulfilled then the value will be saved as its value, if not saved as null
                     switch ($operator) {
@@ -411,28 +390,79 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         'indexes_criteria_id' => $indexesCriteriaData->id
                     ];
 
-                    if (!$entity->isNew()) {
-                        $studentIndexesCriteriaResults = $this->StudentIndexesCriterias->find()
-                            ->where([
-                                $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $entity->id,
-                                $this->StudentIndexesCriterias->aliasField('indexes_criteria_id') => $indexesCriteriaData->id
-                            ])
-                            ->all();
+                    $conditions = [
+                        $this->aliasField('academic_period_id') => $academicPeriodId,
+                        $this->aliasField('institution_id') => $institutionId,
+                        $this->aliasField('student_id') => $studentId,
+                        $this->aliasField('index_id') => $indexId
+                    ];
 
-                        // find id from db
-                        if (!$studentIndexesCriteriaResults->isEmpty()) {
-                            $criteriaEntity = $studentIndexesCriteriaResults->first();
-                            $criteriaData['id'] = $criteriaEntity->id;
+                    if ($criteria == 'SpecialNeeds') {
+                        if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
+                            $conditions = [
+                                $this->aliasField('academic_period_id') => $academicPeriodId,
+                                $this->aliasField('institution_id') => $institutionId,
+                                $this->aliasField('student_id') => $studentId,
+                                $this->aliasField('index_id') => $indexId
+                            ];
+                        } else {
+                            $conditions = [
+                                $this->aliasField('academic_period_id') => $academicPeriodId,
+                                $this->aliasField('student_id') => $studentId,
+                                $this->aliasField('index_id') => $indexId
+                            ];
                         }
                     }
 
-                    $data = [];
-                    $data['student_indexes_criterias'][] = $criteriaData;
+                    $institutionStudentIndexesResults = $this->find()
+                        ->where([$conditions])
+                        ->all();
 
-                    $patchOptions = ['validate' => false];
-                    $entity = $this->patchEntity($entity, $data, $patchOptions);
+                    // to update and add new records into the institution_student_indexes
+                    if (!$institutionStudentIndexesResults->isEmpty()) {
+                        // $entity = $institutionStudentIndexesResults->first();
+                        foreach ($institutionStudentIndexesResults as $institutionStudentIndexesResultsObj) {
+                            $entity = $institutionStudentIndexesResultsObj;
 
-                    $this->save($entity);
+                            $studentIndexesCriteriaResults = $this->StudentIndexesCriterias->find()
+                                ->where([
+                                    $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $entity->id,
+                                    $this->StudentIndexesCriterias->aliasField('indexes_criteria_id') => $indexesCriteriaData->id
+                                ])
+                                ->all();
+
+                            // find id from db
+                            if (!$studentIndexesCriteriaResults->isEmpty()) {
+                                $criteriaEntity = $studentIndexesCriteriaResults->first();
+                                $criteriaData['id'] = $criteriaEntity->id;
+                            }
+
+                            $data = [];
+                            $data['student_indexes_criterias'][] = $criteriaData;
+
+                            $patchOptions = ['validate' => false];
+                            $entity = $this->patchEntity($entity, $data, $patchOptions);
+
+                            $this->save($entity);
+                        }
+                    } else {
+                        $entity = $this->newEntity([
+                            'average_index' => 0,
+                            'total_index' => 0,
+                            'academic_period_id' => $academicPeriodId,
+                            'institution_id' => $institutionId,
+                            'student_id' => $studentId,
+                            'index_id' => $indexId
+                        ]);
+
+                        $data = [];
+                        $data['student_indexes_criterias'][] = $criteriaData;
+
+                        $patchOptions = ['validate' => false];
+                        $entity = $this->patchEntity($entity, $data, $patchOptions);
+
+                        $this->save($entity);
+                    }
                 }
             }
         }
