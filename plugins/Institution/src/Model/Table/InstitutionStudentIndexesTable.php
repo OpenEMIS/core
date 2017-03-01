@@ -437,7 +437,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                             $patchOptions = ['validate' => false];
                             $entity = $this->patchEntity($entity, $data, $patchOptions);
 
-                            $this->save($entity, ['atomic' => false]);
+                            $this->save($entity);
                         }
                     } else {
                         $entity = $this->newEntity([
@@ -455,7 +455,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                         $patchOptions = ['validate' => false];
                         $entity = $this->patchEntity($entity, $data, $patchOptions);
 
-                        $this->save($entity, ['atomic' => false]);
+                        $this->save($entity);
                     }
                 }
             }
