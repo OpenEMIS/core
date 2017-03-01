@@ -13,14 +13,15 @@ class SecuritiesController extends AppController {
 		$this->ControllerAction->models = [
 			'Accounts'		=> ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
 			'Users'			=> ['className' => 'Security.Users'],
-			'UserGroups'	=> ['className' => 'Security.UserGroups'],
 			'SystemGroups'	=> ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']],
 			'Roles'			=> ['className' => 'Security.SecurityRoles'],
 			'Permissions'	=> ['className' => 'Security.Permissions', 'actions' => ['index']]
 		];
 	}
 
-	public function RefreshToken() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']); }
+	public function UserGroups()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroups']); }
+
+	public function RefreshToken() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']); }
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);

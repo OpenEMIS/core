@@ -58,9 +58,9 @@ class StudentUserTable extends ControllerActionTable
 
 		$this->toggle('index', false);
         $this->toggle('remove', false);
+
+        $this->addBehavior('Indexes.Indexes');
 	}
-
-
 
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
 	{
@@ -133,12 +133,6 @@ class StudentUserTable extends ControllerActionTable
 		$model->hasMany('StudentFees', ['className' => 'Institution.StudentFeesAbstract',	'foreignKey' => 'student_id', 'dependent' => true]);
 		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
-
-	public function implementedEvents()
-	{
-    	$events = parent::implementedEvents();
-    	return $events;
-    }
 
 	public function validationDefault(Validator $validator)
 	{
@@ -533,14 +527,20 @@ class StudentUserTable extends ControllerActionTable
 			'ExaminationResults' => ['text' => __('Examinations')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
+			'Textbooks' => ['text' => __('Textbooks')],
+            'Indexes' => ['text' => __('Indexes')]
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
 
-		// Programme will use institution controller, other will be still using student controller
+		// Programme & Textbooks will use institution controller, other will be still using student controller
 		foreach ($studentTabElements as $key => $tab) {
-            if ($key == 'Programmes') {
+            if ($key == 'Programmes' || $key == 'Textbooks') {
                 $type = (array_key_exists('type', $options))? $options['type']: null;
+        		$studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+                $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
+            } elseif ($key == 'Indexes') {
+            	$type = (array_key_exists('type', $options))? $options['type']: null;
         		$studentUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
                 $tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>'Student'.$key, 'index', 'type' => $type]);
             } else {
