@@ -251,9 +251,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $educationGradeData = $InstitutionStudents->find()
             ->where([
                 'student_id' => $studentId,
-                'academic_period_id' => $academicPeriodId
+                'academic_period_id' => $academicPeriodId,
+                'student_status_id' => 1 // enrolled status
             ])
-            ->last();
+            ->first();
 
         $educationGradesName = '';
         if (isset($educationGradeData->education_grade_id)) {
@@ -273,9 +274,10 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
         $institutionClassesData = $InstitutionClassStudents->find()
             ->where([
                 'student_id' => $studentId,
-                'academic_period_id' => $academicPeriodId
+                'academic_period_id' => $academicPeriodId,
+                'student_status_id' => 1 // enrolled status
             ])
-            ->last();
+            ->first();
 
         $institutionClassesName = '';
         if (isset($institutionClassesData->institution_class_id)) {

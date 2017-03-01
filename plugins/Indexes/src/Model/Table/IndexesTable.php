@@ -436,12 +436,37 @@ class IndexesTable extends ControllerActionTable
         }
     }
 
+    public function beforeDelete(Event $event, Entity $entity)
+    {
+        // stop the processing before delete the indexes.
+        $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
+        $indexId = $entity->id;
+
+        $records = $InstitutionIndexes->find()
+            ->where([
+                'index_id' => $indexId,
+                'status' => 2 // processing
+            ])
+            ->all();
+
+        if (!empty($records)) {
+            foreach ($records as $obj) {
+                $pid = $obj->pid;
+                if (!empty($pid)) {
+                    exec("kill -9 " . $pid);
+                }
+            }
+        }
+    }
+
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
         // delete the institution Indexes records
         $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
         $indexId = $entity->id;
         $InstitutionIndexes->deleteAll(['index_id' => $indexId]);
+
+        $this->InstitutionStudentIndexes->deleteAll(['index_id' => $indexId]);
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
