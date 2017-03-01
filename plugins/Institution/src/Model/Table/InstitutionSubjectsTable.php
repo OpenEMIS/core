@@ -143,7 +143,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             'type' => 'element',
             'element' => 'Institution.Subjects/past_teachers',
             'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => false]
-        ]);  
+        ]);
 
         $this->field('rooms', [
             'type' => 'chosenSelect',
@@ -542,13 +542,21 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $query = $this
-                ->Institutions
-                ->Staff
-                ->find()
-                ->contain(['Users'])
-                ->where(['Staff.institution_id' => $extra['institution_id']])
-                ->toArray();
+        $Staff = TableRegistry::get('Institution.Staff');
+        $query = $Staff->find('all')
+            ->find('withBelongsTo')
+            ->find('byInstitution', ['Institutions.id' => $extra['institution_id']])
+            ->find('byPositions', ['Institutions.id' => $extra['institution_id'], 'type' => 1]) // refer to OptionsTrait for type options
+            ->find('AcademicPeriod', ['academic_period_id'=> $extra['selectedAcademicPeriodId']])
+            ->where([
+                $Staff->aliasField('institution_position_id'),
+                'OR' => [ //check teacher end date
+                    [$Staff->aliasField('end_date').' > ' => new Date()],
+                    [$Staff->aliasField('end_date').' IS NULL']
+                ]
+            ])
+            ->toArray();
+
         $teachers = [0 => '-- ' . __('Select Teacher or Leave Blank') . ' --'];
         foreach ($query as $key => $value) {
             if ($value->has('user')) {
@@ -622,7 +630,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $checkedStaff = [];
         // POCOR-2781 - Remove 'status' from institution_subject_staff
         // note that this has been converted from saving of 'association data' to saving using editAfterSave
-        
+
         $todayDate = new Date();
         foreach($entity->subject_staff as $key => $record) {
             $k = $record->staff_id;
@@ -848,12 +856,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         ]
                     ];
                     if ($row['subject_staff'][0]['staff_id']!=0) {
+                        $row['subject_staff'][0]['institution_id'] = $commonData['institution_id'];
+
                         $subjects[$key]['subject_staff'] = $row['subject_staff'];
                     }
                 }
             }
-
-            //pr($subjects);
 
             if (!$subjects) {
                 $error = $this->aliasField('noSubjectSelected');
@@ -873,6 +881,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             // $this->log(__FILE__.' @ '.__LINE__.': noSubjectsInClass', 'debug');
             $error = $this->aliasField('noSubjectsInClass');
         }
+
         return [$error, $subjects, $data];
     }
 
@@ -1013,6 +1022,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
             ->contain([
                 'InstitutionSubjects' => [
                     'EducationSubjects',
+                    'Teachers' => function($q) {
+                        return $q
+                            ->where([
+                                'OR' => [
+                                    ['end_date IS NULL'],
+                                    ['end_date' . ' >= ' => Date::now()]
+                                ]
+                            ]);
+                    },
                     'Teachers.Genders'
                 ],
             ])
@@ -1021,6 +1039,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $this->ClassSubjects->aliasField('status') => 1
             ])
             ->toArray();
+
         if ($listOnly) {
             $subjectList = [];
             foreach ($classSubjects as $key => $classSubject) {
@@ -1034,6 +1053,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         } else {
             $data = $classSubjects;
         }
+
         return $data;
     }
 
@@ -1286,10 +1306,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if ($entity->has('teachers')) {
             $resultArray = [];
             $todayDate = new Date();
-            
+
             foreach ($entity->teachers as $key => $value) {
                 $staffEndDate = $value->_joinData->end_date;
-                
+
                 if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
                     switch ($this->action) {
                         case 'view':
@@ -1312,10 +1332,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     }
                 } else {
                     unset($entity->teachers[$key]); //if teacher end date is earlier than today, then unset from entity
-                }     
+                }
             }
         }
-        
+
         if (!empty($resultArray)) {
             return implode(', ', $resultArray);
         }
@@ -1399,7 +1419,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         $todayDate = new Date();
         $data = [];
-        if ($entity->has('teachers')) {            
+        if ($entity->has('teachers')) {
             foreach ($entity->teachers as $key => $value) {
                 if ($value->has('_joinData')) {
                     if (!empty($value->_joinData->end_date)) {
@@ -1408,12 +1428,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             $data[$key]['id'] = $value->id;
                             $data[$key]['name'] = $value->name_with_id;
                             $data[$key]['start_date'] = $value->_joinData->start_date->format('d-m-Y');;
-                            $data[$key]['end_date'] = $value->_joinData->end_date->format('d-m-Y');;                            
+                            $data[$key]['end_date'] = $value->_joinData->end_date->format('d-m-Y');;
                         }
                     }
                 }
             }
         }
-        return $data;       
+
+        return $data;
     }
 }

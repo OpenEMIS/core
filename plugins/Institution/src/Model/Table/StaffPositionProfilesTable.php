@@ -432,7 +432,25 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$attr['type'] = 'date';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
+
+					$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+					$latestSubjectStartDate = $InstitutionSubjectStaff->find()
+						->where([
+							$InstitutionSubjectStaff->aliasField('staff_id') => $entity->staff_id,
+							$InstitutionSubjectStaff->aliasField('institution_id') => $entity->institution_id,
+							$InstitutionSubjectStaff->aliasField('start_date') . ' IS NOT NULL'
+						])
+						->order([$InstitutionSubjectStaff->aliasField('start_date') => 'DESC'])
+						->first();
+
+					if (!empty($latestSubjectStartDate)) {
+						// restrict earliest end of assignment date to the day after latest subject start date
+						$earliestEndDate = $latestSubjectStartDate->start_date->modify('+1 day');
+					} else {
+						$earliestEndDate = $entity->start_date;
+					}
+
+					$attr['date_options']['startDate'] = $earliestEndDate->format('d-m-Y');
 				}
 			} else {
 				$attr['type'] = 'hidden';

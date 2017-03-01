@@ -30,4 +30,15 @@ class GendersTable extends AppTable {
 		return $validator;
 	}
 
+	public function getThresholdOptions()
+    {
+        // options only female
+        $options = ['F'];
+
+        return $this
+            ->find('list')
+            ->where([$this->aliasField('code') . ' IN ' => $options])
+            ->toArray()
+        ;
+    }
 }
