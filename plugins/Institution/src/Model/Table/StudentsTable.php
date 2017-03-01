@@ -1472,6 +1472,7 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
+            ->order(['start_date DESC'])
             ->first()->institution_id;
     }
 }
