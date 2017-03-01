@@ -399,12 +399,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
                     if ($criteria == 'SpecialNeeds') {
                         if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
-                            $conditions = [
-                                $this->aliasField('academic_period_id') => $academicPeriodId,
-                                $this->aliasField('institution_id') => $institutionId,
-                                $this->aliasField('student_id') => $studentId,
-                                $this->aliasField('index_id') => $indexId
-                            ];
                         } else {
                             $conditions = [
                                 $this->aliasField('academic_period_id') => $academicPeriodId,
