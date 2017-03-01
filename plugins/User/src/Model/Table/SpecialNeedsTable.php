@@ -103,7 +103,7 @@ class SpecialNeedsTable extends ControllerActionTable {
 
         $quantity = !empty(count($quantityResult)) ? count($quantityResult) : 0;
 
-        return $valueIndex = $quantity;
+        return $quantity;
     }
 
     public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)

@@ -65,7 +65,7 @@ class UpdateIndexesShell extends Shell
             ->where([
                 'institution_id' => $institutionId,
                 'academic_period_id' => $academicPeriodId,
-                'student_status_id' => 1 //enrolled status
+                // 'student_status_id' => 1 //enrolled status
             ])
             ->all();
 
@@ -136,11 +136,16 @@ class UpdateIndexesShell extends Shell
 
             // for cli-debug.log to see still updating
             $studentId = $criteriaModelEntity->student_id;
+            if ($key == 'SpecialNeeds') {
+                $studentId = $criteriaModelEntity->security_user_id;
+                $criteriaModelEntity['institution_id'] = $institutionId;
+            }
             Log::write('debug', 'Student id: '. $studentId);
             // end debug
 
             // will triggered the aftersave of the model (indexes behavior)
             $criteriaModelEntity->dirty('modified_user_id', true);
+            $criteriaModelEntity->trigger_from = 'shell';
             $CriteriaModel->save($criteriaModelEntity);
 
             // update the institution student index
