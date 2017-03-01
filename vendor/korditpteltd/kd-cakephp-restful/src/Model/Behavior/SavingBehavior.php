@@ -92,8 +92,8 @@ class SavingBehavior extends Behavior {
 
         $model->dispatchEvent('Restful.CRUD.addEdit.beforePatch', [$data, $options], $model);
 
-        if ($options->offsetExists('action')) {
-            $model->dispatchEvent('Restful.CRUD.'.$options['action'].'.beforePatch', [$data, $options], $model);
+        if ($options['extra']->offsetExists('action')) {
+            $model->dispatchEvent('Restful.CRUD.'.$options['extra']['action'].'.beforePatch', [$data, $options], $model);
         }
     }
 
