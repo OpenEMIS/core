@@ -23,22 +23,29 @@ class ListingBehavior extends Behavior {
 
         $search = isset($options['search']) ? $options['search'] : null;
         $searchCondition = [];
-        $searchCondition['OR'] = [];
         $fullWildCard = isset($option['fullWildCard']) ? $option['fullWildCard'] : [];
         if ($search) {
             foreach ($searchableFields as $field) {
                 if ($selectedFields->getArrayCopy()) {
                     if (in_array($field, $selectedFields->getArrayCopy()) && !in_array($field, $excludedFields->getArrayCopy())) {
+                        if (!array_key_exists('OR', $searchCondition)) {
+                            $searchCondition['OR'] = [];
+                        }
                         $searchCondition['OR'][] = $this->generateSearchQuery($field, $search, $fullWildCard);
                     }
                 } else {
                     if (!in_array($field, $excludedFields->getArrayCopy())) {
+                        if (!array_key_exists('OR', $searchCondition)) {
+                            $searchCondition['OR'] = [];
+                        }
                         $searchCondition['OR'][] = $this->generateSearchQuery($field, $search, $fullWildCard);
                     }
                 }
             }
         }
-        $query->where($searchCondition);
+        if ($searchCondition) {
+            $query->where($searchCondition);
+        }
 
         $model->dispatchEvent('Restful.CRUD.index.formatResults', [$query, $options], $model);
 

@@ -389,7 +389,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "fa0b94862b11dd00b6040e16c42ffff3fce23824"
+                "reference": "3243916a0b473c571587b75359871012b909005f"
             },
             "require": {
                 "admad/cakephp-jwt-auth": "^2.0",
@@ -436,7 +436,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2017-02-28 02:32:34"
+            "time": "2017-02-28 09:22:41"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
