@@ -41,6 +41,12 @@ class IndexesCriteriasTable extends ControllerActionTable
             ;
     }
 
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $indexesCriteriaId = $entity->id;
+        $this->StudentIndexesCriterias->deleteAll(['indexes_criteria_id' => $indexesCriteriaId]);
+    }
+
     public function findActiveIndexesCriteria(Query $query, array $options)
     {
         $InstitutionIndexes = TableRegistry::get('Institution.InstitutionIndexes');
