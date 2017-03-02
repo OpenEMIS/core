@@ -41,6 +41,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
+        $this->toggle('remove', false);
     }
 
     public function implementedEvents()

@@ -92,6 +92,7 @@ class WorkflowBehavior extends Behavior {
 		}
 		$events['ControllerAction.Model.index.afterAction'] 	= ['callable' => 'indexAfterAction', 'priority' => 1000];
 		$events['ControllerAction.Model.view.afterAction'] 		= ['callable' => 'viewAfterAction', 'priority' => 1000];
+		$events['ControllerAction.Model.addEdit.afterAction'] 	= ['callable' => 'addEditAfterAction', 'priority' => 1000];
 		$events['ControllerAction.Model.addEdit.beforeAction'] 	= ['callable' => 'addEditBeforeAction', 'priority' => 1];
 		$events['Model.custom.onUpdateToolbarButtons'] 			= ['callable' => 'onUpdateToolbarButtons', 'priority' => 1000];
 		$events['Model.custom.onUpdateActionButtons'] 			= ['callable' => 'onUpdateActionButtons', 'priority' => 1000];
@@ -496,6 +497,10 @@ class WorkflowBehavior extends Behavior {
 	public function addEditBeforeAction(Event $event) {
 		$model = $this->isCAv4() ? $this->_table : $this->_table->ControllerAction;
 		$model->field('status_id');
+	}
+
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->setFilterNotEditable($entity);
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
@@ -1282,5 +1287,47 @@ class WorkflowBehavior extends Behavior {
 			return $this->_table->controller->redirect($url);
 			// End
 		}
+	}
+
+	public function setFilterNotEditable(Entity $entity) {
+		$model = $this->_table;
+
+		if ($model->action == 'edit') {
+			$WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+			$results = $WorkflowModels
+				->find()
+				->where([$WorkflowModels->aliasField('model') => $model->registryAlias()])
+				->first();
+
+			if (!empty($results) && !empty($results->filter)) {
+				$filterAlias = $results->filter;
+				$modelAlias = $model->registryAlias();
+				
+				$filterKey = $this->getFilterKey($filterAlias, $this->config('model'));
+				if (empty($filterKey)) {
+					list($modelplugin, $modelAlias) = explode('.', $filterAlias, 2);
+					$filterKey = Inflector::underscore(Inflector::singularize($modelAlias)) . '_id';
+				}
+
+				$filterId = $entity->$filterKey;
+				$filterName = TableRegistry::get($filterAlias)->get($filterId)->name;
+
+				$model->fields[$filterKey]['type'] = 'readonly';
+				$model->fields[$filterKey]['value'] = $filterId;
+				$model->fields[$filterKey]['attr']['value'] = $filterName;
+			}
+		}
+	}
+
+	public function getFilterKey($filterAlias, $modelAlias) {
+		$filterKey = '';
+		$associations = TableRegistry::get($filterAlias)->associations();
+		foreach ($associations as $assoc) {
+			if ($assoc->registryAlias() == $modelAlias) {
+				$filterKey = $assoc->foreignKey();
+				return $filterKey;
+			}
+		}
+		return $filterKey;
 	}
 }

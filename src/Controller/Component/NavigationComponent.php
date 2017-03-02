@@ -478,23 +478,24 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
-			'Institution.Competencies' => [
+			'Institutions.StudentCompetencies' => [
 				'title' => 'Competencies',
 				'parent' => 'Institutions.index',
-				'link' => false
+				'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+				'params' => ['plugin' => 'Institution']
 			],
-
-				'Institutions.StudentCompetencies.index' => [
-					'title' => 'Students',
-					'parent' => 'Institution.Competencies',
-					'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
-					'params' => ['plugin' => 'Institution']
-				],
 
 			'Institutions.Assessments.index' => [
 				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Assessments', 'Institutions.Results'],
+				'params' => ['plugin' => 'Institution'],
+			],
+
+			'Institutions.Indexes.index' => [
+				'title' => 'Indexes',
+				'parent' => 'Institutions.index',
+				'selected' => ['Institutions.Indexes','Institutions.InstitutionStudentIndexes'],
 				'params' => ['plugin' => 'Institution'],
 			],
 
@@ -612,7 +613,7 @@ class NavigationComponent extends Component
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Institution'],
 				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.Awards',
-					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
+					'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance',
 				'parent' => 'Institutions.Students.index',
@@ -755,7 +756,7 @@ class NavigationComponent extends Component
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
 					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-						'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
+						'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
 				],
 				'Directories.StudentBankAccounts' => [
 					'title' => 'Finance',
@@ -909,7 +910,12 @@ class NavigationComponent extends Component
 					'parent' => 'SystemSetup',
 					'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit']
 				],
-
+				'Indexes.Indexes' => [
+					'title' => 'Indexes',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'Indexes'],
+					'selected' => ['Indexes.Indexes']
+				],
 			'Security' => [
 				'title' => 'Security',
 				'parent' => 'Administration',

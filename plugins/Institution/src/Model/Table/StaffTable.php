@@ -177,6 +177,12 @@ class StaffTable extends ControllerActionTable {
 			$query->find('academicPeriod', ['academic_period_id' => $periodId]);
 		}
 		$query->contain(['Positions.StaffPositionTitles'])->select(['position_title_teaching' => 'StaffPositionTitles.type'])->autoFields(true);
+        $query->contain(['Users.IdentityTypes'])
+            ->select([
+                'openemis_no' => 'Users.openemis_no',
+                'identity_type' => 'IdentityTypes.name',
+                'identity_number' => 'Users.identity_number'
+            ]);
 	}
 
 	public function onExcelGetFTE(Event $event, Entity $entity) {
@@ -188,18 +194,98 @@ class StaffTable extends ControllerActionTable {
 		return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+    {
 		$fieldArray = $fields->getArrayCopy();
-		$extraField[] = [
-			'key' => 'Positions.position_title_teaching',
-			'field' => 'position_title_teaching',
-			'type' => 'string',
-			'label' => __('Teaching')
-		];
 
-		$newFields = array_merge($fieldArray, $extraField);
-		$fields->exchangeArray($newFields);
-	}
+        //redeclare fields for sorting purpose.
+        $extraField[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => __('OpenEMIS ID')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.staff_id',
+            'field' => 'staff_id',
+            'type' => 'integer',
+            'label' => __('Staff')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.institution_position_id',
+            'field' => 'institution_position_id',
+            'type' => 'integer',
+            'label' => __('Position')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.staff_type_id',
+            'field' => 'staff_type_id',
+            'type' => 'integer',
+            'label' => __('Staff Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.FTE',
+            'field' => 'FTE',
+            'type' => 'decimal',
+            'label' => __('FTE')
+        ];
+
+        $extraField[] = [
+            'key' => 'Positions.position_title_teaching',
+            'field' => 'position_title_teaching',
+            'type' => 'string',
+            'label' => __('Teaching')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.staff_status_id',
+            'field' => 'staff_status_id',
+            'type' => 'integer',
+            'label' => __('Staff Status')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.start_date',
+            'field' => 'start_date',
+            'type' => 'date',
+            'label' => __('Start Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.end_date',
+            'field' => 'end_date',
+            'type' => 'date',
+            'label' => __('End Date')
+        ];
+
+        $extraField[] = [
+            'key' => 'Staff.institution_id',
+            'field' => 'institution_id',
+            'type' => 'integer',
+            'label' => __('Institution')
+        ];
+
+        $extraField[] = [
+            'key' => 'Users.identity_type',
+            'field' => 'identity_type',
+            'type' => 'string',
+            'label' => __('Identity Type')
+        ];
+
+        $extraField[] = [
+            'key' => 'Users.identity_number',
+            'field' => 'identity_number',
+            'type' => 'string',
+            'label' => __('Identity Number')
+        ];
+
+		// $newFields = array_merge($fieldArray, $extraField);
+		$fields->exchangeArray($extraField);
+    }
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->fields['staff_id']['order'] = 5;
@@ -564,7 +650,8 @@ class StaffTable extends ControllerActionTable {
 		}
 
 		$listeners = [
-			TableRegistry::get('Institution.InstitutionSubjectStaff')
+			TableRegistry::get('Institution.InstitutionSubjectStaff'),
+			TableRegistry::get('Institution.StaffUser')
 		];
 		$this->dispatchEventToModels('Model.Staff.afterSave', [$entity], $this, $listeners);
 	}
