@@ -243,6 +243,7 @@ class RestfulV2Component extends Component implements RestfulInterface
             if ($target->exists([$primaryKeyValues])) {
                 $entity = $target->get($primaryKeyValues);
                 $options = ['extra' => $extra];
+                $this->convertBinaryToBase64($target, $entity, $extra);
                 $entity = $target->patchEntity($entity, $requestData, $options);
 
                 $entity = $this->convertBase64ToBinary($entity);
