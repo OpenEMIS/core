@@ -198,7 +198,7 @@ class AccessControlComponent extends Component {
 	public function check($url=[], $roleIds=[]) {
 		$superAdmin = $this->Auth->user('super_admin');
 
-		if ($superAdmin) {
+		if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
 			return true;
 		}
 
