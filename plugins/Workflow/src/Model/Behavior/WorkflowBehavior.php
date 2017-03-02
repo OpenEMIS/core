@@ -1319,7 +1319,7 @@ class WorkflowBehavior extends Behavior {
 		}
 	}
 
-	public function getFilterKey($filterAlias, $modelAlias) {
+	private function getFilterKey($filterAlias, $modelAlias) {
 		$filterKey = '';
 		$associations = TableRegistry::get($filterAlias)->associations();
 		foreach ($associations as $assoc) {
