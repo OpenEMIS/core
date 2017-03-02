@@ -754,6 +754,7 @@ class StudentsTable extends ControllerActionTable
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
+            TableRegistry::get('Institution.StudentUser'),
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
