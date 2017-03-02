@@ -145,25 +145,23 @@ Router::scope('/restful', [], function ($routes) {
         );
 
         // Edit
-        $routes->connect( '/:version/:model/:id',
+        $routes->connect( '/:version/:model',
             ['action' => 'edit', '_method' => 'PATCH'],
-            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
         );
 
-        $routes->connect( '/:model/:id',
-            ['action' => 'edit', '_method' => 'PATCH'],
-            ['pass' => ['id']]
+        $routes->connect( '/:model',
+            ['action' => 'edit', '_method' => 'PATCH']
         );
 
         // Delete
-        $routes->connect( '/:version/:model/:id',
+        $routes->connect( '/:version/:model',
             ['action' => 'delete', '_method' => 'DELETE'],
-            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
         );
 
-        $routes->connect( '/:model/:id',
-            ['action' => 'delete', '_method' => 'DELETE'],
-            ['pass' => ['id']]
+        $routes->connect( '/:model',
+            ['action' => 'delete', '_method' => 'DELETE']
         );
     });
 });
