@@ -134,7 +134,7 @@ class ReportListBehavior extends Behavior {
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
-			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
 			['id' => $process->id]
 		);
 		$settings['purge'] = false; //for report, dont purge after download.

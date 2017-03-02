@@ -445,37 +445,37 @@ class ValidationBehavior extends Behavior {
 	 * @param  array  $globalData [description]
 	 * @return [type]             [description]
 	 */
-	public static function validatePreferred($field, array $globalData) {
-		$flag = false;
-		$preferred = $field;
-		$contactOption = $globalData['data']['contact_option_id'];
-		$userId = $globalData['data']['security_user_id'];
+    public static function validatePreferredContact($field, array $globalData) {
+        $flag = false;
+        $preferred = $field;
+        $contactOption = $globalData['data']['contact_option_id'];
+        $userId = $globalData['data']['security_user_id'];
 
-		if ($preferred == "0" && $contactOption != "5") {
-			$Contacts = TableRegistry::get('User.Contacts');
-			$contactId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
+        if ($preferred == "0" && $contactOption != "5") {
+            $Contacts = TableRegistry::get('User.Contacts');
+            $contactId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
 
-			$query = $Contacts->find();
-			$query->matching('ContactTypes', function ($q) use ($contactOption) {
-				return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-			});
+            $query = $Contacts->find();
+            $query->matching('ContactTypes', function ($q) use ($contactOption) {
+                return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+            });
 
-			if (!empty($contactId)) {
-				$query->where([$Contacts->aliasField($Contacts->primaryKey()) .'!='. $contactId]);
-			}
+            if (!empty($contactId)) {
+                $query->where([$Contacts->aliasField($Contacts->primaryKey()) .'!='. $contactId]);
+            }
 
-			$query->where([$Contacts->aliasField('preferred') => 1]);
-			$query->where([$Contacts->aliasField('security_user_id') => $userId]);
-			$count = $query->count();
+            $query->where([$Contacts->aliasField('preferred') => 1]);
+            $query->where([$Contacts->aliasField('security_user_id') => $userId]);
+            $count = $query->count();
 
-			if ($count != 0) {
-				$flag = true;
-			}
-		} else {
-			$flag = true;
-		}
-		return $flag;
-	}
+            if ($count != 0) {
+                $flag = true;
+            }
+        } else {
+            $flag = true;
+        }
+        return $flag;
+    }
 
 	public static function validateNeeded($field, $fieldName, array $additionalParameters, array $globalData) {
 		$flag = false;
@@ -1373,6 +1373,26 @@ class ValidationBehavior extends Behavior {
 				}
 			}
 
+			return true;
+		}
+	}
+
+	public static function checkCriteriaThresholdRange($field, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		$Indexes = TableRegistry::get('Indexes.Indexes');
+
+		// only for operator '1' (less than equal to) and '2' (greater than equal to)
+		if ($globalData['data']['operator'] == '1' || $globalData['data']['operator'] == '2') {
+			$criteriaMin = $Indexes->getThresholdParams($globalData['data']['criteria'])['min'];
+			$criteriaMax = $Indexes->getThresholdParams($globalData['data']['criteria'])['max'];
+
+			if ($field < $criteriaMin || $field > $criteriaMax ) {
+				return $model->getMessage('Indexes.IndexesCriterias.threshold.criteriaThresholdRange', ['sprintf' => [$criteriaMin, $criteriaMax]]);
+			} else {
+				return true;
+			}
+		} else {
 			return true;
 		}
 	}

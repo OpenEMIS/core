@@ -11,16 +11,15 @@ use Cake\Datasource\Exception\RecordNotFoundException;
 use App\Model\Table\AppTable;
 use App\Model\Traits\MessagesTrait;
 use App\Model\Traits\HtmlTrait;
+use App\Model\Table\ControllerActionTable;
 
-class UserGroupsTable extends AppTable {
+class UserGroupsTable extends ControllerActionTable {
 	use MessagesTrait;
 	use HtmlTrait;
 
 	public function initialize(array $config) {
 		$this->table('security_groups');
 		parent::initialize($config);
-
-		$this->hasMany('Roles', ['className' => 'Security.SecurityRoles', 'dependent' => true]);
 
 		$this->belongsToMany('Users', [
 			'className' => 'Security.Users',
@@ -58,12 +57,17 @@ class UserGroupsTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+        $this->setDeleteStrategy('restrict');
 	}
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$newEvent = [
-			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
+			$events['ControllerAction.Model.ajaxAreaAutocomplete'] = 'ajaxAreaAutocomplete',
+			$events['ControllerAction.Model.ajaxInstitutionAutocomplete'] = 'ajaxInstitutionAutocomplete',
+			$events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete',
+            $events['ControllerAction.Model.getAssociatedRecordConditions'] = 'getAssociatedRecordConditions'
 		];
 		$events = array_merge($events, $newEvent);
 		return $events;
@@ -79,7 +83,8 @@ class UserGroupsTable extends AppTable {
 		}
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 		$userId = $this->Auth->user('id');
 		$securityGroupId = $entity->id;
@@ -103,39 +108,38 @@ class UserGroupsTable extends AppTable {
 		return $buttons;
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    {
 		$this->request->data[$this->alias()]['security_group_id'] = $entity->id;
-	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			if (!$this->AccessControl->isAdmin()) {
-				$userId = $this->Auth->user('id');
-				$securityGroupId = $this->request->data[$this->alias()]['security_group_id'];
-				$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-				if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
-					if (array_key_exists('edit', $toolbarButtons)) {
-						unset($toolbarButtons['edit']);
-					}
-				}
+		if (!$this->AccessControl->isAdmin()) {
+			$userId = $this->Auth->user('id');
+			$securityGroupId = $this->request->data[$this->alias()]['security_group_id'];
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
+				$this->toggle('edit', false);
 			}
+
+            if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_delete')) {
+                $this->toggle('remove', false);
+            }
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		if (!$this->AccessControl->isAdmin()) {
 			$userId = $this->Auth->user('id');
 			$securityGroupId = $entity->id;
 			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
 			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
-				$urlParams = $this->ControllerAction->url('index');
+				$urlParams = $this->url('index');
 				$event->stopPropagation();
 				return $this->controller->redirect($urlParams);
 			}
 		}
 	}
 
-	public function beforeAction(Event $event) {
+	public function beforeAction(Event $event, ArrayObject $extra) {
 		$controller = $this->controller;
 		$tabElements = [
 			$this->alias() => [
@@ -151,31 +155,31 @@ class UserGroupsTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 
-		$this->ControllerAction->field('areas', [
+		$this->field('areas', [
 			'type' => 'area_table',
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
-		$this->ControllerAction->field('institutions', [
+		$this->field('institutions', [
 			'type' => 'institution_table',
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
 		$roleOptions = $this->Roles->find('list')->toArray();
-		$this->ControllerAction->field('users', [
+		$this->field('users', [
 			'type' => 'user_table',
 			'valueClass' => 'table-full-width',
 			'roleOptions' => $roleOptions,
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
 		]);
 
-		$this->ControllerAction->setFieldOrder([
+		$this->setFieldOrder([
 			'name', 'areas', 'institutions', 'users'
 		]);
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain(['Areas.AreaLevels', 'Institutions', 'Users', 'Roles']);
 	}
 
@@ -252,7 +256,7 @@ class UserGroupsTable extends AppTable {
 		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
 	}
 
-	public function addEditOnAddArea(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnAddArea(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		$alias = $this->alias();
 
 		if ($data->offsetExists('area_id')) {
@@ -342,7 +346,7 @@ class UserGroupsTable extends AppTable {
 		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
 	}
 
-	public function addEditOnAddInstitution(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnAddInstitution(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		$alias = $this->alias();
 
 		if ($data->offsetExists('institution_id')) {
@@ -380,7 +384,8 @@ class UserGroupsTable extends AppTable {
 					$rowData[] = $event->subject()->Html->link($obj->openemis_no , [
 						'plugin' => 'Directory',
 						'controller' => 'Directories',
-						'action' => 'view',
+						'action' => 'Directories',
+						'view',
 						$this->paramsEncode(['id' => $obj->id])
 					]);
 					$rowData[] = $obj->name;
@@ -402,6 +407,7 @@ class UserGroupsTable extends AppTable {
 			$Form->unlockField('user_id');
 			$user = $this->Auth->user();
 			$userId = $user['id'];
+			$userIdRoleOrder = '';
 			if ($user['super_admin'] == 1) { // super admin will show all roles
 				$userId = null;
 			}
@@ -412,6 +418,7 @@ class UserGroupsTable extends AppTable {
 				} else {
 					$this->request->data[$alias][$key] = [];
 				}
+				
 				$associated = $entity->extractOriginal([$key]);
 				if (!empty($associated[$key])) {
 					foreach ($associated[$key] as $i => $obj) {
@@ -421,9 +428,16 @@ class UserGroupsTable extends AppTable {
 								'openemis_no' => $obj->openemis_no,
 								'security_user_id' => $obj->id,
 								'name' => $obj->name,
-								'security_role_id' => $obj->_joinData->security_role_id
+								'security_role_id' => $obj->_joinData->security_role_id,
+								'security_role_id_order' => $entity->roles[$i]->order //adding role order for checking during edit
 							]
 						];
+						$entity->users[$i]->security_role_id_order = $entity->roles[$i]->order; //adding role order for checking during edit
+
+						//keep the current login user role order.
+						if ($userId == $entity->users[$i]->id) {
+							$userIdRoleOrder = $entity->roles[$i]->order;
+						}
 					}
 				} else {
 					if (!$this->AccessControl->isAdmin()) {
@@ -445,56 +459,73 @@ class UserGroupsTable extends AppTable {
 				}
 			}
 
+            $notEditableUsers = [];
+			
 			if (!$this->AccessControl->isAdmin()) {
 				if ($entity->isNew()) {
 					$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId, true);
 				}
-			}
-			// For the original user
-			$associated = $entity->extractOriginal([$key]);
-			$found = false;
-			if (!empty($associated[$key]) && !$entity->isNew()) {
-				foreach ($associated[$key] as $i => $obj) {
-					if ($obj->id == $userId) {
-						$rowData = [];
-						$name = $obj->name;
-						$rowData[] = $obj->openemis_no;
-						$rowData[] = $name;
 
-						// To revisit this part again due to a bug when user add itself in
-						if (isset($obj->_joinData->security_role_id)) {
-							$securityRoleName = $this->Roles->get($obj->_joinData->security_role_id)->name;
-							$this->Session->write($this->registryAlias().'.security_role_id', $securityRoleName);
-							$rowData[] = $securityRoleName;
-						} else {
-							$securityRoleName = $this->Session->read($this->registryAlias().'.security_role_id');
-							$rowData[] = $securityRoleName;
-						}
+                //un-editable for the original user and also creator of the group and user with higher or equal role
+                $associated = $entity->extractOriginal([$key]);
+                // $found = false;
+                if (!empty($associated[$key]) && !$entity->isNew()) {
+                    foreach ($associated[$key] as $i => $obj) {
+                        if ($obj->id == $userId || $obj->id == $entity->created_user_id || (!empty($userIdRoleOrder) && $obj->security_role_id_order <= $userIdRoleOrder)) {
+                            $rowData = [];
+                            $name = $obj->name;
+                            $rowData[] = $obj->openemis_no;
+                            $rowData[] = $name;
 
-						$rowData[] = '';
-						$tableCells[] = $rowData;
-						$found = true;
-						break;
-					}
-				}
+                            // To revisit this part again due to a bug when user add itself in
+                            if (isset($obj->_joinData->security_role_id)) {
+                                $securityRoleName = $this->Roles->get($obj->_joinData->security_role_id)->name;
+                                $this->Session->write($this->registryAlias().'.security_role_id', $securityRoleName);
+                                $rowData[] = $securityRoleName;
+                            } else {
+                                $securityRoleName = $this->Session->read($this->registryAlias().'.security_role_id');
+                                $rowData[] = $securityRoleName;
+                            }
+
+                            $notEditableUsers[] = $obj->id;
+
+                            $notEditableVal = '';
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i.id", ['value' => $obj->id]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $obj->openemis_no]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $obj->name]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $obj->id]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id", ['value' => $obj->_joinData->security_role_id]);
+                            $notEditableVal .= $Form->hidden("$alias.$key.$i._joinData.security_role_id_order", ['value' => $obj->security_role_id_order]);
+
+                            $rowData[] = $notEditableVal;
+                            $tableCells[] = $rowData;
+                            // $found = true;
+                            // break;
+                        }
+                    }
+                }
 			}
+			
 
 			// refer to addEditOnAddUser for http post
 			if ($this->request->data("$alias.$key")) {
 				$associated = $this->request->data("$alias.$key");
 				foreach ($associated as $i => $obj) {
 					$joinData = $obj['_joinData'];
-					if ($joinData['security_user_id'] != $userId) {
+					//editable only for other than current user, creator of group and user with lower role.
+                    if (!in_array($joinData['security_user_id'], $notEditableUsers) && $joinData['security_user_id'] != $userId) {
 						$rowData = [];
 						$name = $joinData['name'];
 						$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
 						$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
+						$name .= $Form->hidden("$alias.$key.$i._joinData.security_role_id_order", ['value' => $joinData['security_role_id_order']]);
 						$Form->unlockField("$alias.$key.$i.id");
 						$Form->unlockField("$alias.$key.$i._joinData.openemis_no");
 						$Form->unlockField("$alias.$key.$i._joinData.name");
 						$Form->unlockField("$alias.$key.$i._joinData.security_user_id");
+						$Form->unlockField("$alias.$key.$i._joinData.security_role_id_order");
 						$rowData[] = $joinData['openemis_no'];
 						$rowData[] = $name;
 						$rowData[] = $HtmlField->secureSelect("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
@@ -519,7 +550,7 @@ class UserGroupsTable extends AppTable {
 							$rowData[] = $joinData['openemis_no'];
 							$rowData[] = $name;
 							$rowData[] = __('Group Administrator');
-							$rowData[] = $this->getDeleteButton();
+                            $rowData[] = ''; //creator could not be removed.
 							$tableCells[] = $rowData;
 						}
 					}
@@ -532,7 +563,7 @@ class UserGroupsTable extends AppTable {
 		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
 	}
 
-	public function addEditOnAddUser(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditOnAddUser(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		$alias = $this->alias();
 
 		if ($data->offsetExists('user_id')) {
@@ -545,7 +576,7 @@ class UserGroupsTable extends AppTable {
 				}
 				$data[$alias]['users'][] = [
 					'id' => $obj->id,
-					'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
+					'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name, 'security_role_id_order' => '']
 				];
 			} catch (RecordNotFoundException $ex) {
 				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
@@ -553,13 +584,14 @@ class UserGroupsTable extends AppTable {
 		}
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->ControllerAction->field('no_of_users', ['visible' => ['index' => true]]);
-		$this->ControllerAction->setFieldOrder(['name', 'no_of_users']);
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('no_of_users', ['visible' => ['index' => true]]);
+		$this->setFieldOrder(['name', 'no_of_users']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$queryParams = $request->query;
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+		$queryParams = $this->request->query;
 
 		$query->find('notInInstitutions');
 
@@ -573,12 +605,12 @@ class UserGroupsTable extends AppTable {
 				]
 			]);
 		}
-		$options['order'] = [$this->aliasField('name') => 'asc'];
+		$extra['order'] = [$this->aliasField('name') => 'asc'];
 
-		$search = $this->ControllerAction->getSearchKey();
+		$search = $this->getSearchKey();
 
 		// CUSTOM SEACH - Institution Code, Institution Name, Area Code and Area Name
-		$options['auto_search'] = false; // it will append an AND
+		$extra['auto_search'] = false; // it will append an AND
 		if (!empty($search)) {
 			$query->find('byInstitutionAreaNameCode', ['search' => $search]);
 		}
@@ -634,7 +666,7 @@ class UserGroupsTable extends AppTable {
 		return $query;
 	}
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		// delete all areas if no areas remains in the table
 		if (!array_key_exists('areas', $data[$this->alias()])) {
 			$data[$this->alias()]['areas'] = [];
@@ -651,33 +683,6 @@ class UserGroupsTable extends AppTable {
 		// in case user has been added with the same role twice, we need to filter it
 		$this->filterDuplicateUserRoles($data);
 
-		// To merge in the original modifying user's permission (if any) as the user will not
-		// be able to modify their own permission
-		$key = 'users';
-		$associated = $entity->extractOriginal([$key]);
-		$user = $this->Auth->user();
-		$userId = $user['id'];
-		if ($user['super_admin'] == 1) { // super admin will show all roles
-			$userId = null;
-		}
-
-		// If not super admin
-		if(!is_null($userId)) {
-			$userArray = [];
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					if ($userId == $obj->id) {
-						$userArray[$i]['id'] = $obj->id;
-						$userArray[$i]['_joinData']['openemis_no'] = $obj->openemis_no;
-						$userArray[$i]['_joinData']['name'] = $obj->name;
-						$userArray[$i]['_joinData']['security_user_id'] = $obj->id;
-						$userArray[$i]['_joinData']['security_role_id'] = $obj->_joinData->security_role_id;
-					}
-				}
-			}
-			$data[$this->alias()][$key] = array_merge($userArray, $data[$this->alias()][$key]);
-		}
-
 		// Required by patchEntity for associated data
 		$newOptions = [];
 		$newOptions['associated'] = [
@@ -691,7 +696,7 @@ class UserGroupsTable extends AppTable {
 		$options->exchangeArray($arrayOptions);
 	}
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		// manually remove users from entity object when users are deleted from the screen
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		$userIds = array_column($data[$this->alias()]['users'], 'id');
@@ -703,6 +708,24 @@ class UserGroupsTable extends AppTable {
 			}
 		}
 	}
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
+            $this->Areas->alias(),
+            $this->Institutions->alias(),
+            $this->Roles->alias(),
+            'SecurityGroupUsers'
+        ];
+    }
+
+    public function getAssociatedRecordConditions(Event $event, Query $query, $assocTable, ArrayObject $extra)
+    {
+        //additional condition to exclude current user to the user inside the group counter.
+        if ($assocTable->alias() == 'SecurityGroupUsers'){
+            $query->where([$assocTable->aliasField('security_user_id != ') => $this->Auth->user('id')]);
+        }
+    }
 
 	// also exists in SystemGroups
 	private function filterDuplicateUserRoles(ArrayObject $data) {
@@ -792,7 +815,7 @@ class UserGroupsTable extends AppTable {
 		}
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->request->data['area_search'] = '';
 		$this->request->data['institution_search'] = '';
 		$this->request->data['user_search'] = '';
