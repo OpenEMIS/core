@@ -1,4 +1,3 @@
--- POCOR-3721
 -- delete pre-insert workflow
 DELETE FROM `workflow_models` WHERE `id` = 11;
 
@@ -27,8 +26,3 @@ RENAME TABLE `z_3721_staff_licenses` TO `staff_licenses`;
 
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue`='POCOR-3721';
-
-
--- 3.9.4
-DELETE FROM system_updates WHERE version = (SELECT value FROM config_items WHERE code = 'db_version');
-UPDATE config_items SET value = '3.9.4' WHERE code = 'db_version';
