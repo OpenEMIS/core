@@ -44,8 +44,8 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -68,7 +68,8 @@ class AcademicPeriodsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index'],
-            'Results' => ['index']
+            'Results' => ['index'],
+            'StudentExaminationResults' => ['index']
         ]);
     }
 
@@ -810,5 +811,42 @@ class AcademicPeriodsTable extends AppTable
         } else {
             return 0;
         }
+    }
+
+    public function getAcademicPeriodId($startDate, $endDate)
+    {
+        // get the academic period id from startDate and endDate (e.g. delete the absence records not showing the academic period id)
+        $startDate = $startDate->format('Y-m-d');
+        $endDate = $endDate->format('Y-m-d');
+
+        $academicPeriod = $this->find()
+            ->where([
+                $this->aliasField('start_date') . ' <= ' => $startDate,
+                $this->aliasField('end_date') . ' >= ' => $endDate,
+                $this->aliasField('code') . ' <> ' => 'all'
+            ])
+            ->first();
+
+        $academicPeriodId = $academicPeriod->id;
+
+        return $academicPeriodId;
+    }
+
+    public function getAcademicPeriodIdByDate($date)
+    {
+        // get the academic period id from date
+        $date = $date->format('Y-m-d');
+
+        $academicPeriod = $this->find()
+            ->where([
+                $this->aliasField('start_date') . ' <= ' => $date,
+                $this->aliasField('end_date') . ' >= ' => $date,
+                $this->aliasField('code') . ' <> ' => 'all'
+            ])
+            ->first();
+
+        $academicPeriodId = $academicPeriod->id;
+
+        return $academicPeriodId;
     }
 }

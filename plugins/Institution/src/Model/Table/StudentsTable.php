@@ -20,7 +20,7 @@ class StudentsTable extends ControllerActionTable
 {
     const PENDING_TRANSFER = -2;
     const PENDING_ADMISSION = -3;
-    const PENDING_DROPOUT = -4;
+    const PENDING_WITHDRAW = -4;
 
     private $dashboardQuery = null;
 
@@ -109,6 +109,15 @@ class StudentsTable extends ControllerActionTable
          * End Advance Search Types
          */
         $this->addBehavior('ControllerAction.Image'); // To be verified
+
+        $this->addBehavior('Indexes.Indexes');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        return $events;
     }
 
     public function validationDefault(Validator $validator)
@@ -441,7 +450,7 @@ class StudentsTable extends ControllerActionTable
         $pendingStatuses = [
             $StudentStatusesTable->PENDING_ADMISSION => 'StudentAdmission',
             $StudentStatusesTable->PENDING_TRANSFER => 'TransferRequests',
-            $StudentStatusesTable->PENDING_DROPOUT => 'StudentDropout'
+            $StudentStatusesTable->PENDING_WITHDRAW => 'StudentWithdraw'
         ];
 
         if (array_key_exists($selectedStatus, $pendingStatuses)) {
@@ -510,7 +519,7 @@ class StudentsTable extends ControllerActionTable
         $pendingStatus = [
             $StudentStatusesTable->PENDING_TRANSFER => __('Pending Transfer'),
             $StudentStatusesTable->PENDING_ADMISSION => __('Pending Admission'),
-            $StudentStatusesTable->PENDING_DROPOUT => __('Pending Dropout'),
+            $StudentStatusesTable->PENDING_WITHDRAW => __('Pending Withdraw'),
         ];
 
         $statusOptions = $statusOptions + $pendingStatus;
@@ -632,7 +641,7 @@ class StudentsTable extends ControllerActionTable
         $statuses = $this->StudentStatuses->findCodeList();
         $code = array_search($studentStatusId, $statuses);
 
-        if ($code == 'DROPOUT' || $code == 'TRANSFERRED') {
+        if ($code == 'WITHDRAWN' || $code == 'TRANSFERRED') {
             $this->field('reason', ['type' => 'custom_status_reason']);
             $this->field('comment');
             $this->setFieldOrder([
@@ -834,22 +843,24 @@ class StudentsTable extends ControllerActionTable
                     return $transferReason->_matchingData['StudentTransferReasons']->name;
                     break;
 
-                case 'DROPOUT':
-                    $DropoutRequestsTable = TableRegistry::get('Institution.DropoutRequests');
+                case 'WITHDRAWN':
+                    $WithdrawRequestsTable = TableRegistry::get('Institution.WithdrawRequests');
 
-                    $dropoutReason = $DropoutRequestsTable->find()
-                        ->matching('StudentDropoutReasons')
+                    $withdrawReason = $WithdrawRequestsTable->find()
+                        ->matching('StudentWithdrawReasons')
                         ->where([
-                            $DropoutRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
-                            $DropoutRequestsTable->aliasField('institution_id') => $institutionId,
-                            $DropoutRequestsTable->aliasField('education_grade_id') => $educationGradeId,
-                            $DropoutRequestsTable->aliasField('academic_period_id') => $academicPeriodId
+                            $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
+                            $WithdrawRequestsTable->aliasField('institution_id') => $institutionId,
+                            $WithdrawRequestsTable->aliasField('education_grade_id') => $educationGradeId,
+                            $WithdrawRequestsTable->aliasField('academic_period_id') => $academicPeriodId,
+                            // Status = 1 is approved withdraw, in case student has a previous withdraw request that was undone
+                            $WithdrawRequestsTable->aliasField('status') => 1,
                         ])
                         ->first();
 
-                    $entity->comment = $dropoutReason->comment;
+                    $entity->comment = $withdrawReason->comment;
 
-                    return $dropoutReason->_matchingData['StudentDropoutReasons']->name;
+                    return $withdrawReason->_matchingData['StudentWithdrawReasons']->name;
                     break;
             }
         }
@@ -1256,10 +1267,212 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
             ])
-            // ;pr($completedGradeCount->toArray());die;
             ->count()
             ;
 
         return !($completedGradeCount == 0);
+    }
+
+    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    {
+        $institutionId = $params['institution_id'];
+        $studentId = $params['student_id'];
+        $academicPeriodId = $params['academic_period_id'];
+        $criteriaName = $params['criteria_name'];
+
+        $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+
+        return $valueIndex;
+    }
+
+    public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
+    {
+        switch ($criteriaName) {
+            case 'StatusRepeated':
+                $statusRepeatedResults = $this->find()
+                    ->where([
+                        'student_id' => $studentId
+                    ])
+                    ->all();
+
+                $getValueIndex = [];
+                foreach ($statusRepeatedResults as $obj) {
+                    $statusId = $obj->student_status_id;
+
+                    // for '=' the value index will be in array (valueIndex[threshold] = value)
+                    $getValueIndex[$statusId] = !empty($getValueIndex[$statusId]) ? $getValueIndex[$statusId] : 0;
+                    $getValueIndex[$statusId] = $getValueIndex[$statusId] + 1;
+                }
+
+                return $getValueIndex;
+                break;
+
+            case 'Overage':
+                $getValueIndex = 0;
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+
+                    $educationGradeId = $results->education_grade_id;
+                    $educationProgrammeId = $this->EducationGrades->get($educationGradeId)->education_programme_id;
+                    $admissionAge = $this->EducationGrades->getAdmissionAge($educationGradeId);
+                    $schoolStartYear = $results->start_year;
+                    $birthdayYear = $results->user->date_of_birth->format('Y');
+
+                    $getValueIndex = ($schoolStartYear - $birthdayYear) - $admissionAge;
+                }
+
+                return $getValueIndex;
+                break;
+
+            case 'Genders':
+                $getValueIndex = [];
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+                    // for '=' the value index will be in array (valueIndex[threshold] = value)
+                    $getValueIndex[$results->user->gender_id] = 1;
+                }
+
+                return $getValueIndex;
+                break;
+
+            case 'Guardians':
+                $getValueIndex = 0;
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+                    $Guardians = TableRegistry::get('Student.Guardians');
+
+                    $guardiansData = $Guardians->find()
+                        ->where(['student_id' => $results->student_id])
+                        ->all()->toArray();
+
+                    $getValueIndex = count($guardiansData);
+                }
+
+                return $getValueIndex;
+                break;
+        }
+
+    }
+
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+    {
+        $referenceDetails = [];
+
+        switch ($criteriaName) {
+            case 'StatusRepeated':
+                $statusId = $threshold; // it will classified by the status Id
+                $results = $this->find()
+                    ->contain(['StudentStatuses', 'AcademicPeriods'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => $statusId
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $title = $obj->student_status->name;
+                    $date = $obj->academic_period->name;
+
+                    $referenceDetails[$obj->id] = __($title) . ' (' . $date . ')';
+                }
+
+                break;
+
+            case 'Overage':
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1 // status enrolled
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $title = $obj->education_grade->name;
+                    $date = $obj->user->date_of_birth->format('d/m/Y');
+
+                    $referenceDetails[$obj->id] = __($title) . ' (' . __('Born on') . ': ' . $date . ')';
+                }
+
+                break;
+
+            case 'Genders':
+                $Genders = TableRegistry::get('User.Genders');
+
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1 // status enrolled
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $referenceDetails[$obj->id] = __($Genders->get($obj->user->gender_id)->name);
+                }
+
+                break;
+
+            case 'Guardians':
+                $Guardians = TableRegistry::get('Student.Guardians');
+
+                $results = $Guardians->find()
+                    ->contain(['Users', 'GuardianRelations'])
+                    ->where(['student_id' => $studentId])
+                    ->all();
+
+                if (!$results->isEmpty()) {
+                    foreach ($results as $key => $obj) {
+                        $guardianName = $obj->user->first_name . ' ' . $obj->user->last_name;
+                        $guardianRelation = $obj->guardian_relation->name;
+
+                        $referenceDetails[$obj->guardian_id] = $guardianName . ' (' . __($guardianRelation) . ')';
+                    }
+                } else {
+                    $referenceDetails[] =  __('No Guardian');
+                }
+
+                break;
+        }
+
+        // tooltip only receieved string to be display
+        $reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . '<br/>';
+        }
+
+        return $reference;
+    }
+
+    public function getInstitutionIdByUser($studentId, $academicPeriodId)
+    {
+        return $institutionId = $this->find()
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->order(['start_date DESC'])
+            ->first()->institution_id;
     }
 }

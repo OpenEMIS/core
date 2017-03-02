@@ -311,29 +311,28 @@ class InstitutionExaminationsUndoRegistrationTable extends ControllerActionTable
             if ($submit == 'save') {
                 $examStudents = $requestData[$this->alias()]['examination_students'];
                 $examinationId = $requestData[$this->alias()]['examination_id'];
+                $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
+
                 $students = [];
                 $entity->errors('student_id', 'No selected students');
                 if (!empty($examStudents)) {
                     $students = array_column($examStudents, 'student_id');
+                    $examinationCentres = array_unique(array_column($examStudents, 'examination_centre_id'));
 
                     $deleteStudentEntity = $this->find()
                         ->where([$this->aliasField('student_id').' IN ' => $students, $this->aliasField('examination_id') => $examinationId])
                         ->group([$this->aliasField('student_id')])
                         ->toArray();
 
+                    $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
                     foreach ($deleteStudentEntity as $deleteStudent) {
-                        $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
                         $ExamCentreStudents->delete($deleteStudent);
                     }
 
-                    $examinationCentreId = array_unique(array_column($examStudents, 'examination_centre_id'));
-                    foreach ($examinationCentreId as $centreId) {
-                        $studentCount = $this->find()
-                            ->where([$this->aliasField('examination_centre_id') => $centreId])
-                            ->group([$this->aliasField('student_id')])
-                            ->count();
-                        $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $centreId]);
-                    }
+                    // event to delete all associated records for student
+                    $listeners[] = TableRegistry::get('Examination.ExaminationCentreStudents');
+                    $this->dispatchEventToModels('Model.Examinations.afterUnregister', [$students, $academicPeriodId, $examinationId, $examinationCentres], $this, $listeners);
+
                     $this->Alert->success($this->aliasField('success'));
                     $session = $this->Session;
                     $session->delete($this->registryAlias());
