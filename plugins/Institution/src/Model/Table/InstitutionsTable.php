@@ -82,7 +82,7 @@ class InstitutionsTable extends AppTable  {
 
 		$this->hasMany('StudentPromotion', 					['className' => 'Institution.StudentPromotion', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentAdmission', 					['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('StudentDropout', 					['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StudentWithdraw', 					['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('TransferApprovals', 				['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'previous_institution_id']);
 		$this->hasMany('AssessmentItemResults', 			['className' => 'Institution.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionRubrics', 				['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -388,7 +388,8 @@ class InstitutionsTable extends AppTable  {
 		$field = 'area_administrative_id';
 		$areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
 		$this->ControllerAction->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
-		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact')]);
+		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
+		$this->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 		$this->ControllerAction->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
 
@@ -396,7 +397,7 @@ class InstitutionsTable extends AppTable  {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
 
-		if ($this->action == 'view' || $this->action == 'edit') {
+		if ($this->action == 'edit') {
 			// Moved to InstitutionContacts
 			$this->ControllerAction->field('contact_section', ['visible' => false]);
 			$this->ControllerAction->field('contact_person', ['visible' => false]);
@@ -644,6 +645,9 @@ class InstitutionsTable extends AppTable  {
 
 			'area_administrative_section',
 			'area_administrative_id',
+
+			'contact_section',
+			'contact_person', 'telephone', 'fax', 'email', 'website',
 
 			'map_section',
 			'map',
@@ -924,7 +928,7 @@ class InstitutionsTable extends AppTable  {
     	$extra['excludedModels'] = [
     		$this->SecurityGroups->alias(), $this->InstitutionSurveys->alias(), $this->StudentSurveys->alias(),
     		$this->StaffPositionProfiles->alias(), $this->InstitutionActivities->alias(), $this->StudentPromotion->alias(),
-    		$this->StudentAdmission->alias(), $this->StudentDropout->alias(), $this->TransferApprovals->alias(),
+    		$this->StudentAdmission->alias(), $this->StudentWithdraw->alias(), $this->TransferApprovals->alias(),
             $this->CustomFieldValues->alias(), $this->CustomTableCells->alias()
     	];
     }

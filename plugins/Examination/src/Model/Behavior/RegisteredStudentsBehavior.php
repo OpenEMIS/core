@@ -16,14 +16,16 @@ use Cake\I18n\Time;
 class RegisteredStudentsBehavior extends Behavior {
 	public function initialize(array $config) {
 		parent::initialize($config);
-
         $model = $this->_table;
+
+        $model->addBehavior('User.AdvancedNameSearch');
         $model->toggle('edit', false); // temporary not allow edit
         $model->toggle('remove', false);
 	}
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
         $events['ControllerAction.Model.index.afterAction'] = 'indexAfterAction';
@@ -92,6 +94,7 @@ class RegisteredStudentsBehavior extends Behavior {
                 $educationGradeId = $entity->education_grade_id;
                 $academicPeriodId = $entity->academic_period_id;
                 $examinationId = $entity->examination_id;
+                $examinationCentreId = $entity->examination_centre_id;
 
                 $result = $model->deleteAll([
                     'student_id' => $studentId,
@@ -101,6 +104,10 @@ class RegisteredStudentsBehavior extends Behavior {
                 ]);
 
                 if ($result) {
+                    // event to delete all associated records for student
+                    $listeners[] = TableRegistry::get('Examination.ExaminationCentreStudents');
+                    $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $academicPeriodId, $examinationId, $examinationCentreId], $this, $listeners);
+
                     $model->Alert->success('general.delete.success', ['reset' => 'override']);
                 } else {
                     $model->Alert->error('general.delete.failed', ['reset' => 'override']);
@@ -160,6 +167,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $selectedAcademicPeriod = !is_null($model->request->query('academic_period_id')) ? $model->request->query('academic_period_id') : $model->AcademicPeriods->getCurrent();
         $model->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$model->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        $extra['selectedAcademicPeriod'] = $selectedAcademicPeriod;
         // End
 
         // Examination
@@ -168,10 +176,9 @@ class RegisteredStudentsBehavior extends Behavior {
         $selectedExamination = !is_null($model->request->query('examination_id')) ? $model->request->query('examination_id') : -1;
         $model->controller->set(compact('examinationOptions', 'selectedExamination'));
         $where[$model->aliasField('examination_id')] = $selectedExamination;
+        $extra['selectedExamination'] = $selectedExamination;
         // End
 
-        $extra['auto_order'] = false;
-        $extra['auto_search'] = false;
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $sortList = ['Users.openemis_no', 'Users.first_name'];
@@ -182,8 +189,8 @@ class RegisteredStudentsBehavior extends Behavior {
 
         $search = $model->getSearchKey();
         if (!empty($search)) {
-            // function from AdvancedNameSearchBehavior
-            $query = $model->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+            $nameConditions = $model->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
         }
 
         $query
@@ -214,6 +221,12 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->aliasField('academic_period_id'),
                 $model->aliasField('examination_id')
             ]);
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'student_id';
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)

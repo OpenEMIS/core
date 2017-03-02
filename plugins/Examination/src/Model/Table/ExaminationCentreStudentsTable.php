@@ -30,7 +30,6 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
 
-        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.RegisteredStudents');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('CompositeKey');
@@ -60,7 +59,45 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
+        $events['Model.Examinations.afterUnregister'] = 'examinationsAfterUnregister';
         return $events;
+    }
+
+    public function examinationsAfterUnregister(Event $event, $students, $academicPeriodId, $examinationId, $examinationCentres)
+    {
+        $conditions = [
+            'academic_period_id' => $academicPeriodId,
+            'examination_id' => $examinationId
+        ];
+
+        if (is_array($students)) {
+            $conditions['student_id IN'] = $students;
+        } else {
+            $conditions['student_id'] = $students;
+        }
+
+        // delete student(s) from exam centre room
+        $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+        $ExaminationCentreRoomStudents->deleteAll($conditions);
+
+        // delete results for student(s)
+        $ExaminationItemResults = TableRegistry::get('Examination.ExaminationItemResults');
+        $ExaminationItemResults->deleteAll($conditions);
+
+        $examinationCentreIds = is_array($examinationCentres) ? $examinationCentres : array($examinationCentres);
+
+        // update affected exam centre(s) total registered count
+        foreach ($examinationCentreIds as $centreId) {
+            $studentCount = $this->find()
+                ->where([
+                    $this->aliasField('examination_centre_id') => $centreId,
+                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                    $this->aliasField('examination_id') => $examinationId
+                ])
+                ->group([$this->aliasField('student_id')])
+                ->count();
+            $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $centreId]);
+        }
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
@@ -106,6 +143,13 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
             $this->field('identity_number');
             $this->field('repeated');
             $this->field('transferred');
+
+            if ($this->action == 'index') {
+                $this->field('tooltip_column', [
+                    'after' => 'transferred'
+                ]);
+            }
+
             $this->setFieldOrder('registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'identity_number', 'institution_id', 'repeated', 'transferred');
         }
     }
@@ -165,6 +209,8 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'identity_number') {
             return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+        } else if ($field == 'tooltip_column') {
+            return '';
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -261,14 +307,22 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
                         ->first();
         }
 
+        $this->transferred = [];
         if (!empty($Admission)) {
-            $tooltipMessage = __('Student has been transferred to') . ' (' . $Admission->institution->code_name . ') ' . __('after registration');
-            return  __('Yes') . 
-                    "<div class='tooltip-desc' style='display: inline-block;'>
-                        <i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='top' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>
-                    </div>";
+            $this->transferred = [true, $Admission->institution->code_name];
+            return  __('Yes');
         } else {
             return __('No');
+        }
+    }
+
+    public function onGetTooltipColumn(Event $event, Entity $entity)
+    {
+        if (!empty($this->transferred)) {
+            $tooltipMessage = __('Student has been transferred to') . ' (' . $this->transferred[1] . ') ' . __('after registration');
+            return  "<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='left' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>";
+        } else {
+            return '-';
         }
     }
 

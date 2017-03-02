@@ -29,6 +29,8 @@ class IndividualPromotionTable extends ControllerActionTable
         $this->toggle('index', false);
         $this->toggle('view', false);
         $this->toggle('edit', false);
+
+        $this->addBehavior('Indexes.Indexes');
     }
 
     public function implementedEvents() {
@@ -109,22 +111,22 @@ class IndividualPromotionTable extends ControllerActionTable
             return $this->controller->redirect($extra['redirect']);
 
         } else {
-            // check dropout requests
-            $StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+            // check withdraw requests
+            $StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
             $conditions = [
                 'student_id' => $studentEntity->student_id,
-                'status' => $StudentDropoutTable::NEW_REQUEST,
+                'status' => $StudentWithdrawTable::NEW_REQUEST,
                 'education_grade_id' => $studentEntity->education_grade_id,
                 'institution_id' => $studentEntity->institution_id,
                 'academic_period_id' => $studentEntity->academic_period_id,
             ];
 
-            $dropoutCount = $StudentDropoutTable->find()
+            $withdrawCount = $StudentWithdrawTable->find()
              ->where($conditions)
              ->count();
 
-             if ($dropoutCount) {
-                $this->Alert->error('IndividualPromotion.pendingDropout', ['reset' => true]);
+             if ($withdrawCount) {
+                $this->Alert->error('IndividualPromotion.pendingWithdraw', ['reset' => true]);
                 $event->stopPropagation();
                 return $this->controller->redirect($extra['redirect']);
              }

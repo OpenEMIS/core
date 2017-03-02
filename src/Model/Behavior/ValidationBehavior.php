@@ -1377,6 +1377,26 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function checkCriteriaThresholdRange($field, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		$Indexes = TableRegistry::get('Indexes.Indexes');
+
+		// only for operator '1' (less than equal to) and '2' (greater than equal to)
+		if ($globalData['data']['operator'] == '1' || $globalData['data']['operator'] == '2') {
+			$criteriaMin = $Indexes->getThresholdParams($globalData['data']['criteria'])['min'];
+			$criteriaMax = $Indexes->getThresholdParams($globalData['data']['criteria'])['max'];
+
+			if ($field < $criteriaMin || $field > $criteriaMax ) {
+				return $model->getMessage('Indexes.IndexesCriterias.threshold.criteriaThresholdRange', ['sprintf' => [$criteriaMin, $criteriaMax]]);
+			} else {
+				return true;
+			}
+		} else {
+			return true;
+		}
+	}
+
 	public static function checkDateRange($field, array $globalData) {
 		$systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 		$model = $globalData['providers']['table'];
@@ -1541,7 +1561,7 @@ class ValidationBehavior extends Behavior {
         return intVal($minValue) <= intVal($globalData['data']['max']);
     }
 
-	public static function noNewDropoutRequestInGradeAndInstitution($field, array $globalData)
+	public static function noNewWithdrawRequestInGradeAndInstitution($field, array $globalData)
 	{
 		$model = $globalData['providers']['table'];
 		$data = $globalData['data'];
@@ -1555,7 +1575,7 @@ class ValidationBehavior extends Behavior {
 			return true;
 		}
 
-		$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+		$StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
     	$conditions = [
 			'student_id' => $studentId,
 			'status' => $model::NEW_REQUEST,
@@ -1563,7 +1583,7 @@ class ValidationBehavior extends Behavior {
 			'institution_id' => $previousInstitutionId
 		];
 
-		$count = $StudentDropoutTable->find()
+		$count = $StudentWithdrawTable->find()
 			->where($conditions)
 			->count();
 
