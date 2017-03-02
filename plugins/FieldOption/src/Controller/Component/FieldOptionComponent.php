@@ -95,6 +95,7 @@ class FieldOptionComponent extends Component
         'IdentityTypes' => ['className' => 'FieldOption.IdentityTypes', 'parent' => 'Others'],
         'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
         'LicenseTypes' => ['className' => 'FieldOption.LicenseTypes', 'parent' => 'Others'],
+        'LicenseClassifications' => ['className' => 'FieldOption.LicenseClassifications', 'parent' => 'Others'],
         'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Others'],
         'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Others'],
         'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],
