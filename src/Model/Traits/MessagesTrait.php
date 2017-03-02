@@ -642,7 +642,10 @@ trait MessagesTrait {
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
-            'noCriterias' => 'Please setup competency criterias for the selected item',
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
@@ -1624,6 +1627,13 @@ trait MessagesTrait {
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
             ],
+        ],
+        'FieldOption' => [
+            'LicenseClassifications' => [
+                'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
