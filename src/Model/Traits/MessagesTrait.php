@@ -216,6 +216,10 @@ trait MessagesTrait {
             'multiGrade' => 'Multi Grade',
             'noShift' => 'There are no shifts configured for the selected academic period'
         ],
+        'InstitutionStudentIndexes' => [
+            'noClasses' => 'No Classes',
+            'noStudents' => 'No Students'
+        ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
             'noClasses' => 'No Classes',
@@ -425,12 +429,15 @@ trait MessagesTrait {
         ],
         'StudentBehaviours' => [
             'noClasses' => 'No Classes',
-            'noStudents' => 'No Students'
+            'noStudents' => 'No Students',
+            'date_of_behaviour' => [
+                'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+            ],
         ],
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
-            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+            'hasWithdrawApplication' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
             'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.'
         ],
         'TransferApprovals' => [
@@ -472,7 +479,7 @@ trait MessagesTrait {
             'savingPromotionError' => 'The student record was not updated succesfully',
             'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
             'pendingTransfer' => 'There is a pending transfer request for this student.',
-            'pendingDropout' => 'There is a pending dropout request for this student.',
+            'pendingWithdraw' => 'There is a pending withdraw request for this student.',
         ],
         'StudentTransfer' => [
             'noGrades' => 'No Available Grades',
@@ -517,14 +524,14 @@ trait MessagesTrait {
             'approve' => 'Student admission has been approved successfully.',
             'reject' => 'Student admission has been rejected successfully.'
         ],
-        'DropoutRequests' => [
-            'request' => 'Dropout request hsa been submitted successfully.',
+        'WithdrawRequests' => [
+            'request' => 'Withdraw request has been submitted successfully.',
             'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
         ],
-        'StudentDropout' => [
+        'StudentWithdraw' => [
             'exists' => 'Student has already dropped out from the school.',
-            'approve' => 'Dropout request has been approved successfully.',
-            'reject' => 'Dropout request has been rejected successfully.',
+            'approve' => 'Withdraw request has been approved successfully.',
+            'reject' => 'Withdraw request has been rejected successfully.',
             'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
         ],
         'Import' => [
@@ -793,7 +800,7 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ],
                 'student_id' => [
-                    'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+                    'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
                         'inTargetSchool' => 'Student is already enrolled in this school.',
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
@@ -886,12 +893,12 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
                 ]
             ],
-            'DropoutRequests' => [
+            'WithdrawRequests' => [
                 'effective_date' => [
                     'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
             ],
-            'StudentDropout' => [
+            'StudentWithdraw' => [
                 'effective_date' => [
                     'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
@@ -1299,6 +1306,11 @@ trait MessagesTrait {
                 'hours_required' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value'
                 ]
+            ],
+            'EducationSubjects' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
+                ]
             ]
         ],
         'Localization' => [
@@ -1552,6 +1564,23 @@ trait MessagesTrait {
                 ]
             ]
         ],
+        'Indexes' => [
+            'TableHeader' => [
+                'Criteria',
+                'Operator',
+                'Threshold',
+                'Index'
+            ],
+            'IndexesCriterias' => [
+                'threshold' => [
+                    'ruleRange' => 'Value must be within 1 to 99',
+                    'criteriaThresholdRange' => 'Value must be within %s to %s'
+                ],
+                'index_value' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ]
+            ]
+        ],
         'Textbook' => [
             'Textbooks' => [
                 'code' => [
@@ -1577,6 +1606,9 @@ trait MessagesTrait {
                 ],
             ],
             'CompetencyCriterias' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
                 'percentage' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'

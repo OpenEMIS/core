@@ -55,7 +55,7 @@ class RenderDropdownBehavior extends RenderBehavior {
             $options['empty'] = '-- ' . __('Select') . ' --';
             $options['options'] = $dropdownOptions;
             $options['ng-model'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"]';
-
+            $options['ng-init'] = 'RelevancyRulesController.Dropdown["'.$fieldId.'"] = "";';
             if ($this->_table->request->is(['get'])) {
                 $selectedValue = !is_null($savedValue) ? $savedValue : $dropdownDefault;
                 $options['default'] = $selectedValue;
