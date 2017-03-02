@@ -755,8 +755,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         newStudentData['academic_period_id'] = academicPeriodId;
         newStudentData['education_grade_id'] = educationGradeId;
         newStudentData['start_date'] = startDate;
-        newStudentData['nationality_id'] = StudentController.Student.nationality_id;
-        newStudentData['identity_type_id'] = StudentController.Student.identity_type_id;
+        if (!StudentController.externalSearch) {
+            newStudentData['nationality_id'] = StudentController.Student.nationality_id;
+            newStudentData['identity_type_id'] = StudentController.Student.identity_type_id;
+        }
         InstitutionsStudentsSvc.addUser(newStudentData)
         .then(function(user){
             if (user[0].error.length === 0) {

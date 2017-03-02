@@ -866,8 +866,10 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
         var newStaffData = staffData;
         newStaffData['academic_period_id'] = academicPeriodId;
         newStaffData['start_date'] = startDate;
-        newStaffData['nationality_id'] = StaffController.Staff.nationality_id;
-        newStaffData['identity_type_id'] = StaffController.Staff.identity_type_id;
+        if (!StaffController.externalSearch) {
+            newStaffData['nationality_id'] = StaffController.Staff.nationality_id;
+            newStaffData['identity_type_id'] = StaffController.Staff.identity_type_id;
+        }
         InstitutionsStaffSvc.addUser(newStaffData)
         .then(function(user){
             if (user[0].error.length === 0) {

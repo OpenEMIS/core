@@ -314,14 +314,17 @@ class StudentFeesTable extends ControllerActionTable {
 					}
 	    		}
 	    	// }
-    	} elseif (isset($this->request->params['pass'][1])) {
-    		$idKey = $this->aliasField($this->primaryKey());
-    		if ($this->exists([$idKey => $this->request->params['pass'][1]])) {
-    			$entity = $this->find()
-    				->contain($this->_allAssociations())
-    				->where([$idKey => $this->request->params['pass'][1]])
+    	} else if (isset($this->request->params['pass'][1])) {
+    		$ids = empty($this->paramsPass(0)) ? [] : $this->paramsDecode($this->paramsPass(0));
+    		$idKeys = $this->getIdKeys($this, $ids);
+
+    		if ($this->exists($idKeys)) {
+				$entity = $this
+					->find()
+					->contain($this->_allAssociations())
+					->where($idKeys)
 					->first();
-    			if ($entity) {
+				if ($entity) {
 			    	$this->_addActionSetup($event, $entity);
 			    	$this->fields['payments']['paymentFields'] = $this->_getPaymentRecords($entity);
     			}
