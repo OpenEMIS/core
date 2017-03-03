@@ -86,6 +86,7 @@ class DirectoriesController extends AppController {
     public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
 	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
+	public function StudentTextbooks() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
 	// End
@@ -398,6 +399,7 @@ class DirectoriesController extends AppController {
 			'ExaminationResults' => ['text' => __('Examinations')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
+			'Textbooks' => ['text' => __('Textbooks')]
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
