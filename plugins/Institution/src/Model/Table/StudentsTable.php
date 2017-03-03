@@ -1467,12 +1467,16 @@ class StudentsTable extends ControllerActionTable
 
     public function getInstitutionIdByUser($studentId, $academicPeriodId)
     {
-        return $institutionId = $this->find()
+        $record = $this->find()
             ->where([
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
             ->order(['start_date DESC'])
-            ->first()->institution_id;
+            ->first();
+
+        if (!empty($record)) {
+            return $record;
+        }
     }
 }
