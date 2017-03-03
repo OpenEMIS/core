@@ -49,7 +49,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
         // student gender
         $events['Model.StudentUser.afterSave'] = 'afterSaveOrDelete';
-        $events['Model.Students.afterSave'] = 'afterSaveOrDelete'; // student admission
 
         // student guardian
         $events['Model.Guardians.afterSave'] = 'afterSaveOrDelete';
@@ -670,22 +669,15 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $studentId = !empty($afterSaveOrDeleteEntity->student_id) ? $afterSaveOrDeleteEntity->student_id : $afterSaveOrDeleteEntity->id;
 
                 $Students = TableRegistry::get('Institution.Students');
-                $record = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
-
-                if (!empty($record)) {
-                    $institutionId = $record->institution_id;
-                }
+                $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
 
                 break;
 
             case 'SpecialNeeds':
                 $studentId = $afterSaveOrDeleteEntity->security_user_id;
                 $Students = TableRegistry::get('Institution.Students');
-                $record = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
+                $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
 
-                if (!empty($record)) {
-                    $institutionId = $record->institution_id;
-                }
                 break;
         }
 
