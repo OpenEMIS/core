@@ -1019,6 +1019,7 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
                     'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
