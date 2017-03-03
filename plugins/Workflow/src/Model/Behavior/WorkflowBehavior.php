@@ -1236,8 +1236,6 @@ class WorkflowBehavior extends Behavior {
     public function workflowAfterTransition(Event $event, $id=null, $requestData)
     {
         $entity = $this->_table->get($id);
-        $workflowActionId = $requestData[$this->WorkflowTransitions->alias()]['workflow_action_id'];
-        $workflowActionData = $this->WorkflowActions->get($workflowActionId);
 
         $this->setAssigneeId($entity, $requestData);
         $this->setStatusId($entity, $requestData);
