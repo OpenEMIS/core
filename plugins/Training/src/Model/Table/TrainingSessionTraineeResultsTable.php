@@ -2,6 +2,7 @@
 namespace Training\Model\Table;
 
 use App\Model\Table\AppTable;
+use Cake\Validation\Validator;
 
 class TrainingSessionTraineeResultsTable extends AppTable {
 	public function initialize(array $config) {
@@ -10,4 +11,14 @@ class TrainingSessionTraineeResultsTable extends AppTable {
 		$this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
 		$this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
 	}
+
+    public function validationDefault(Validator $validator) 
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('result', 'ruleMaxLength', [
+                'rule' => ['maxLength', 10]
+            ]);
+    }
 }
