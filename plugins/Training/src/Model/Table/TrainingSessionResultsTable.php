@@ -40,55 +40,64 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	{
 		$SessionResults = $this;
 		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+        
+        $errors = $entity->errors();
 
-		$process = function($model, $entity) use ($data, $SessionResults, $TraineeResults) {
-			$errors = $entity->errors();
+		if (empty($errors)) {
+			$sessionId = $data[$SessionResults->alias()]['training_session_id'];
+			$resultTypeId = $data[$SessionResults->alias()]['result_type'];
+			$trainees = $data[$SessionResults->alias()]['trainees'];
 
-			if (empty($errors)) {
-				$sessionId = $data[$SessionResults->alias()]['training_session_id'];
-				$resultTypeId = $data[$SessionResults->alias()]['result_type'];
-				$trainees = $data[$SessionResults->alias()]['trainees'];
+            $extra['traineesError'] = false;
+			foreach ($trainees as $key => $obj) {
+				if (strlen($obj['result']) > 0) {
+					$resultData = [
+						'result' => $obj['result'],
+						'training_result_type_id' => $resultTypeId,
+						'trainee_id' => $obj['trainee_id'],
+						'training_session_id' => $sessionId
+					];
 
-				foreach ($trainees as $key => $obj) {
-					if (strlen($obj['result']) > 0) {
-						$resultData = [
-							'result' => $obj['result'],
-							'training_result_type_id' => $resultTypeId,
-							'trainee_id' => $obj['trainee_id'],
-							'training_session_id' => $sessionId
-						];
+					if (isset($obj['id'])) {
+						$resultData['id'] = $obj['id'];
+					}
 
-						if (isset($obj['id'])) {
-							$resultData['id'] = $obj['id'];
-						}
-
-						$resultEntity = $TraineeResults->newEntity($resultData, ['validate' => false]);
-						if( $TraineeResults->save($resultEntity) ){
-						} else {
-							$TraineeResults->log($resultEntity->errors(), 'debug');
-						}
+					$resultEntity = $TraineeResults->newEntity($resultData);
+                    
+                    if( $TraineeResults->save($resultEntity) ){
 					} else {
-						if (isset($obj['id'])) {
-							$TraineeResults->deleteAll([
-								$TraineeResults->aliasField('id') => $obj['id']
-							]);
-						}
+                        if ($resultEntity->errors()) {
+                            $extra['traineesError'] = true;
+                            $entity->trainees[$key]['errors'] = $resultEntity->errors(); //to send over error message
+                            // $TraineeResults->log($resultEntity->errors(), 'debug');
+                        }
+					}
+				} else {
+					if (isset($obj['id'])) {
+						$TraineeResults->deleteAll([
+							$TraineeResults->aliasField('id') => $obj['id']
+						]);
 					}
 				}
-
-                return true;
-			} else {
-				return false;
 			}
-		};
-
-		return $process;
+            if ($extra['traineesError'] == true) {
+                $this->Alert->error('general.edit.failed', ['reset' => true]);
+                $process = function($model, $entity) { //return new entity with error while reloading the page
+                    return false;
+                };
+                return $process;
+            }
+		} else {
+			return false;
+		}
 	}
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// redirect back to edit page
-		return $this->controller->redirect($this->url('edit'));
+        if (!$extra['traineesError']) {
+            return $this->controller->redirect($this->url('edit'));
+        }
 	}
 
 	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
@@ -177,7 +186,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 
 	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
 	{
-		$sessionId = $entity->training_session_id;
+        $sessionId = $entity->training_session_id;
 		$selectedResultType = $this->request->query('result_type');
 
 		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result')];
@@ -247,7 +256,23 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$rowData = [];
 				$name = $traineeObj->name;
 				$name .= $Form->hidden("$fieldPrefix.trainee_id", ['value' => $traineeObj->id]);
-				$result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $traineeResult['result']]);
+
+                if ($entity->submit == 'save') { //if come from save process.
+                    $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $entity->trainees[$i]['result']]);
+                    if (array_key_exists('errors', $entity->trainees[$i])) {
+                        $result .= "<div class='error-message'>";
+                        $errors = [];
+                        //flattern 2 dimensional array to cater more than one error returned
+                        array_walk_recursive($entity->trainees[$i]['errors'], function($v, $k) use (&$errors){ $errors[] = $v; });
+                        foreach ($errors as $value) {
+                            $result .= $value;
+                        }
+                        $result .= "</div>";
+                    }
+                } else {
+                    $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $traineeResult['result']]);
+                }
+
 				if (isset($traineeResult['id'])) {
 					$result .= $Form->hidden("$fieldPrefix.id", ['value' => $traineeResult['id']]);
 				}
