@@ -25,6 +25,24 @@ class CompetencyCriteriasTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('code', [
+                'ruleUnique' => [
+                    'rule' => [
+                        'validateUnique', [
+                            'scope' => ['academic_period_id', 'competency_item_id', 'competency_template_id']
+                        ]
+                    ],
+                    'provider' => 'table'
+                ]
+            ])
+            ->allowEmpty('code');
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $queryString = $this->request->query('queryString');
@@ -175,7 +193,7 @@ class CompetencyCriteriasTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder([
-            'academic_period_id', 'competency_template_id', 'competency_item_id', 'name', 'percentage', 'competency_grading_type_id'
+            'academic_period_id', 'competency_template_id', 'competency_item_id', 'code', 'name', 'percentage', 'competency_grading_type_id'
         ]);
     }
 
