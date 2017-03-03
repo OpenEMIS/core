@@ -39,8 +39,6 @@ class StudentAdmissionTable extends AppTable {
         	'Dashboard' => ['index'],
         	'Students' => ['index', 'add']
         ]);
-
-        $this->addBehavior('Indexes.Indexes');
 	}
 
 	public function validationDefault(Validator $validator) {
