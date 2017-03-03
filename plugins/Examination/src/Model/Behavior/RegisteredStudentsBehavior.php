@@ -94,6 +94,7 @@ class RegisteredStudentsBehavior extends Behavior {
                 $educationGradeId = $entity->education_grade_id;
                 $academicPeriodId = $entity->academic_period_id;
                 $examinationId = $entity->examination_id;
+                $examinationCentreId = $entity->examination_centre_id;
 
                 $result = $model->deleteAll([
                     'student_id' => $studentId,
@@ -103,6 +104,10 @@ class RegisteredStudentsBehavior extends Behavior {
                 ]);
 
                 if ($result) {
+                    // event to delete all associated records for student
+                    $listeners[] = TableRegistry::get('Examination.ExaminationCentreStudents');
+                    $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $academicPeriodId, $examinationId, $examinationCentreId], $this, $listeners);
+
                     $model->Alert->success('general.delete.success', ['reset' => 'override']);
                 } else {
                     $model->Alert->error('general.delete.failed', ['reset' => 'override']);
