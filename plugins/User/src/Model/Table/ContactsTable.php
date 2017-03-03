@@ -241,11 +241,14 @@ class ContactsTable extends ControllerActionTable {
 					return ($contactOptionId == 5);
 				},
 			])
-			// end of value validators
+			//validate at least one preferred on each contact type
 			->add('preferred', 'ruleValidatePreferred', [
-				'rule' => ['validatePreferredContact'],
+				'rule' => ['validateContact'],
 			])
-			;
+			//validate unique contact value per contact type
+			->add('value', 'ruleUniqueContactValue', [
+                    'rule' => ['validateContact']
+            ]);
 
 		// validation code must always be set because this is also being used by prefererences 'usercontacts'
 		$this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
@@ -253,8 +256,7 @@ class ContactsTable extends ControllerActionTable {
 		$this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
 		$this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
 		$this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
-
-
+		$this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
 		return $validator;
 	}
 
