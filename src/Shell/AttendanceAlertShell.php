@@ -77,7 +77,7 @@ class AttendanceAlertShell extends Shell
                         $message = $this->AlertLogs->replaceMessage('Attendance', $rule->message, $vars);
 
                         // insert record to  the alertLog
-                        $this->AlertLogs->insertAlertLog($rule, $email, $subject, $message);
+                        $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
                     }
                 }
             }
