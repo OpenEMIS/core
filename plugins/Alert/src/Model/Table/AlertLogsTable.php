@@ -45,9 +45,9 @@ class AlertLogsTable extends ControllerActionTable
     {
         $model = TableRegistry::get($recordEntity->source());
         $modelAlias = $model->alias();
-        $feature = Inflector::humanize(Inflector::underscore($modelAlias)); // feature for control filter
+        $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
 
-        $method = 'Email'; // method will be predefined
+        $method = __('Email'); // method will be predefined
 
         if ($recordEntity->assignee_id > 0) {
             // get the query for the $vars on replace message function, auto contain the belongs to associations
