@@ -162,10 +162,15 @@ class InstitutionsTable extends AppTable  {
 				])
 
 	        ->allowEmpty('date_closed')
+	        ->add('date_opened', 'ruleLessThanToday', [
+				'rule' => ['lessThanToday', true]
+				])
+			->add('date_closed', 'ruleMoreThanToday', [
+				'rule' => ['moreThanToday', true]
+				])
  	        ->add('date_closed', 'ruleCompareDateReverse', [
 		            'rule' => ['compareDateReverse', 'date_opened', false]
 	    	    ])
-
 	        ->allowEmpty('longitude')
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
