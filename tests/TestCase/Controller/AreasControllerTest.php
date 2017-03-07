@@ -266,7 +266,7 @@ class AreasControllerTest extends AppTestCase
         $expectedInstitutionAreaId = 2;
 
         $securityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-        $institutions = TableRegistry::get('Instution.Institutions');
+        $institutions = TableRegistry::get('Institution.Institutions');
 
         // Calling doUpdateAssociatedRecord method from areasTable.php
         $this->table->doUpdateAssociatedRecord($requestData);

@@ -107,38 +107,51 @@ class ReportsController extends AppController {
 		$this->autoRender = false;
 
 		$userId = $this->Auth->user('id');
-		$id = $this->request->query['id'];
+		$dataSet = [];
 
-		$fields = array(
-			'ReportProgress.status',
-			'ReportProgress.modified',
-			'ReportProgress.current_records',
-			'ReportProgress.total_records'
-		);
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
-		$entity = $ReportProgress->find()->where(['id' => $id])->first();
-		$data = [];
+		if (isset($this->request->query['ids'])) {
+			$ids = $this->request->query['ids'];
 
-		if ($entity) {
-			if ($entity->total_records > 0) {
-				$data['percent'] = intval($entity->current_records / $entity->total_records * 100);
-			} else {
-				$data['percent'] = 0;
-			}
-			if (is_null($entity->modified)) {
-				$data['modified'] = $ReportProgress->formatDateTime($entity->created);
-			} else {
-				$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
-			}
+			$fields = array(
+				'ReportProgress.status',
+				'ReportProgress.modified',
+				'ReportProgress.current_records',
+				'ReportProgress.total_records'
+			);
+			$ReportProgress = TableRegistry::get('Report.ReportProgress');
+			if (!empty($ids)) {
+				$results = $ReportProgress
+					->find()
+					->where([$ReportProgress->aliasField('id IN ') => $ids])
+					->all();
 
-			if (!is_null($entity->expiry_date)) {
-				$data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
-			} else {
-				$data['expiry_date'] = null;
+				if (!$results->isEmpty()) {
+					foreach ($results as $key => $entity) {
+						if ($entity->total_records > 0) {
+							$data['percent'] = intval($entity->current_records / $entity->total_records * 100);
+						} else {
+							$data['percent'] = 0;
+						}
+						if (is_null($entity->modified)) {
+							$data['modified'] = $ReportProgress->formatDateTime($entity->created);
+						} else {
+							$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+						}
+
+						if (!is_null($entity->expiry_date)) {
+							$data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
+						} else {
+							$data['expiry_date'] = null;
+						}
+						$data['status'] = $entity->status;
+
+						$dataSet[$entity->id] = $data;
+					}
+				}
 			}
-			$data['status'] = $entity->status;
 		}
-		echo json_encode($data);
+
+		echo json_encode($dataSet);
 		die;
 	}
 }
