@@ -422,7 +422,9 @@ class ControllerActionHelper extends Helper {
 						$_fieldAttr['label'] = $options['label'];
 					}
                     if (is_array($_fieldAttr['label'])) { //to cater for label with array value
-                        $_fieldAttr['label'] = __($_fieldAttr['label']['text']);
+                        if (array_key_exists('text', $_fieldAttr['label'])) {
+                            $_fieldAttr['label'] = __($_fieldAttr['label']['text']);
+                        }
                     } else {
                         $_fieldAttr['label'] = __($_fieldAttr['label']);
                     }
