@@ -134,6 +134,18 @@ class StaffTable extends ControllerActionTable {
         $this->setDeleteStrategy('restrict');
 	}
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'staff_id';
+        $searchableFields[] = 'openemis_no';
+    }
+
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
@@ -194,7 +206,7 @@ class StaffTable extends ControllerActionTable {
 		return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
 		$fieldArray = $fields->getArrayCopy();
 
@@ -314,14 +326,16 @@ class StaffTable extends ControllerActionTable {
 		}
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
 		$request = $this->request;
 		$query->contain(['Positions']);
+
 		$sortList = ['start_date', 'end_date'];
-		if (array_key_exists('sortWhitelist', $extra)) {
-			$sortList = array_merge($extra['sortWhitelist'], $sortList);
+		if (array_key_exists('sortWhitelist', $extra['options'])) {
+			$sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
 		}
-		$extra['sortWhitelist'] = $sortList;
+		$extra['options']['sortWhitelist'] = $sortList;
 
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// Academic Periods
@@ -391,14 +405,6 @@ class StaffTable extends ControllerActionTable {
 			// function from AdvancedNameSearchBehavior
 			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
 		}
-
-		// start: sort by name
-		$sortList = ['Users.first_name'];
-		if (array_key_exists('sortWhitelist', $extra)) {
-			$sortList = array_merge($extra['sortWhitelist'], $sortList);
-		}
-		$extra['sortWhitelist'] = $sortList;
-		// end: sort by name
 
 		$statusOptions = $this->StaffStatuses->find('list')->toArray();
 
