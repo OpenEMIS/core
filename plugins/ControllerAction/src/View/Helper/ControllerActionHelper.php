@@ -421,7 +421,11 @@ class ControllerActionHelper extends Helper {
 					} else {
 						$_fieldAttr['label'] = $options['label'];
 					}
-					$_fieldAttr['label'] = __($_fieldAttr['label']);
+                    if (is_array($_fieldAttr['label'])) { //to cater for label with array value
+                        $_fieldAttr['label'] = __($_fieldAttr['label']['text']);
+                    } else {
+                        $_fieldAttr['label'] = __($_fieldAttr['label']);
+                    }
 				}
 
 				if (array_key_exists('autocomplete', $options) && $options['autocomplete'] == 'off') {
@@ -524,6 +528,19 @@ class ControllerActionHelper extends Helper {
 				if (isset($options['label'])) {
 					$label = $options['label'];
 				}
+
+                //to cater for label with array value
+                if (is_array($label)) {
+                    $cloneLabel = $label;
+                    //get the label text
+                    if (array_key_exists('text', $cloneLabel)) {
+                        $label = $label['text'];
+                    }
+                    //get the label class (but styling only available for edit as of now)
+                    // if (array_key_exists('class', $cloneLabel)) {
+                    //     $_fieldAttr['labelClass'] = $cloneLabel['class'];
+                    // }
+                }
 
 				// attach event for index columns
 				$method = 'onGet' . Inflector::camelize($_field);
