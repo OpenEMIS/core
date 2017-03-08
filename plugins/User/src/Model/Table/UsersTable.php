@@ -597,6 +597,8 @@ class UsersTable extends AppTable {
 		return $buttons;
 	}
 
+	// autocomplete used for TrainingSessions
+	// the same function is found in Security.Users
 	public function autocomplete($search)
 	{
 		$data = [];

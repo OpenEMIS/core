@@ -68,6 +68,7 @@ class UsersTable extends AppTable
 	}
 
 	// autocomplete used for UserGroups
+	// the same function is found in User.Users
 	public function autocomplete($search)
 	{
 		$data = [];
@@ -90,7 +91,8 @@ class UsersTable extends AppTable
 				->limit(100);
 
 			// function from AdvancedNameSearchBehavior
-			$list = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$list = $query->toArray();
 
 			foreach($list as $obj) {
 				$data[] = [
