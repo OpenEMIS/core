@@ -22,7 +22,7 @@ class AssessmentItemResultsTable extends AppTable {
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'add'],
-            'OpenEMIS_Classroom' => ['add', 'edit']
+            'OpenEMIS_Classroom' => ['index', 'add', 'edit', 'delete']
         ]);
     }
 
