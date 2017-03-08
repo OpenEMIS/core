@@ -15,6 +15,8 @@ class RoomTypesTable extends ControllerActionTable
 	private $levelOptions = [];
 	private $roomLevel = null;
 
+	private $classificationTypes = ['Non-Classroom', 'Classroom'];
+
 	public function initialize(array $config)
 	{
 		$this->table('room_types');
@@ -44,6 +46,21 @@ class RoomTypesTable extends ControllerActionTable
 
 	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		$this->setupFields($entity);
+
+		$classificationAttr = [
+			'after' => 'default',
+			'type' => 'select',
+			'options' => $this->getClassificationOptions()
+		];
+
+		if ($this->action == 'edit') {
+			unset($classificationAttr['options']);
+			$classificationAttr ['type'] = 'readonly';
+			$classificationAttr ['value'] = $entity->classification;
+			$classificationAttr ['attr']['value'] = $this->classificationTypes[$entity->classification];
+		}
+
+		$this->field('classification', $classificationAttr);
 	}
 
 	public function onUpdateFieldInfrastructureLevel(Event $event, array $attr, $action, Request $request) {
@@ -59,4 +76,26 @@ class RoomTypesTable extends ControllerActionTable
 	private function setupFields(Entity $entity) {
 		$this->field('infrastructure_level', ['type' => 'select']);
 	}
+
+	public function getClassificationTypes($roomTypeId)
+	{
+		if ($roomTypeId > 0) {
+			$classificationTypeId = $this->get($roomTypeId)->classification;
+			$classificationTypeName = $this->classificationTypes[$classificationTypeId];
+
+			return $classificationTypeName;
+		}
+	}
+
+	public function getClassificationOptions()
+	{
+		$classificationOptions = $this->classificationTypes;
+
+		return $classificationOptions;
+	}
+
+	public function onGetClassification(Event $event, Entity $entity)
+    {
+    	return $this->classificationTypes[$entity->classification];
+    }
 }

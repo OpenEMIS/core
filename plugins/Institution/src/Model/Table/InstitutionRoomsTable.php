@@ -538,6 +538,13 @@ class InstitutionRoomsTable extends AppTable
 	public function onUpdateFieldRoomTypeId(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add') {
+			$roomTypeOptions = $this->RoomTypes
+					->find('list')
+					->find('visible')
+					->order(['order'])
+					->toArray();
+
+			$attr['options'] = $roomTypeOptions;
 			$attr['onChangeReload'] = 'changeRoomType';
 		} else if ($action == 'edit') {
 			$selectedEditType = $request->query('edit_type');
@@ -761,6 +768,17 @@ class InstitutionRoomsTable extends AppTable
         ]);
 		$this->ControllerAction->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
 		$this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
+
+		// POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
+		$visibility = ['visible' => false];
+		$classroomClassification = $this->RoomTypes->getClassificationTypes($entity->room_type_id);
+
+		if ($classroomClassification == 'Classroom') {
+			$visibility = ['visible' => true];
+		}
+
+		$this->ControllerAction->field('subjects', $visibility);
+		// end POCOR-3849
 	}
 
 	private function getAutoGenerateCode($parentId)
