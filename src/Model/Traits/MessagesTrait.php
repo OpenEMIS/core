@@ -1016,6 +1016,7 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleContactValuePattern' => 'Please enter value with a valid format'
                 ],
                 'preferred' => [
                     'ruleValidatePreferred' => 'Please select a preferred contact type'
