@@ -46,6 +46,7 @@ class ContactTypesTable extends ControllerActionTable
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
+		$this->field('validation_pattern', ['after' => 'name', 'sort' => false]);
 		$this->field('contact_option_id', ['visible' => 'false']);
 		$this->field('default', ['visible' => 'false']);
 		$this->field('editable', ['visible' => 'false']);
