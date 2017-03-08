@@ -17,21 +17,21 @@ class DashboardController extends AppController {
 		$this->ControllerAction->models = [
 			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']],
 			'StudentAdmission' 	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']],
-			'StudentDropout' 	=> ['className' => 'Institution.StudentDropout', 'actions' => ['edit']],
+			'StudentWithdraw' 	=> ['className' => 'Institution.StudentWithdraw', 'actions' => ['edit']],
 		];
-		
-		$this->loadComponent('Workbench', [
-			'models' => [
-				'Institution.TransferApprovals' => ['version' => 1],
-				'Institution.StudentAdmission' => ['version' => 1],
-				'Institution.StudentDropout' => ['version' => 1],
-				'Institution.InstitutionSurveys' => ['version' => 2],
-				'Institution.InstitutionPositions' => ['version' => 2],
-				'Institution.StaffPositionProfiles' => ['version' => 2],
-				'Institution.StaffTransferApprovals' => ['version' => 1],
-				'Institution.StaffTransferRequests' => ['version' => 1]
-			]
-		]);
+		$this->attachAngularModules();
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        return true;
     }
 
     public function beforeFilter(Event $event) {
@@ -47,10 +47,21 @@ class DashboardController extends AppController {
     }
 
 	public function index() {
-		$workbenchData = $this->Workbench->getList();
-		$noticeData = TableRegistry::get('Notices')->find('all')->order(['Notices.created desc'])->toArray();
+		$this->set('ngController', 'DashboardCtrl as DashboardController');
+		$this->set('noBreadcrumb', true);
+	}
 
-		$this->set('workbenchData', $workbenchData);
-		$this->set('noticeData', $noticeData);
+	private function attachAngularModules() {
+		$action = $this->request->action;
+
+		switch ($action) {
+			case 'index':
+				$this->Angular->addModules([
+					'alert.svc',
+					'dashboard.ctrl',
+					'dashboard.svc'
+				]);
+				break;
+		}
 	}
 }

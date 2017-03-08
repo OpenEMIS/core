@@ -7,6 +7,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Utility\Security;
 use Cake\I18n\Time;
 use SSO\ProcessToken;
+use Cake\Event\Event;
 
 class SSOComponent extends Component {
     private $controller;
@@ -65,26 +66,6 @@ class SSOComponent extends Component {
         $event = $this->controller->dispatchEvent('Controller.Auth.authenticate', [$extra], $this);
         if ($event->result) {
             $this->controller->dispatchEvent('Controller.Auth.afterAuthenticate', [$extra], $this);
-            if ($this->authType != 'Local' && !isset($extra['disableCookie'])) {
-                if ($this->config('cookieAuth.enabled')) {
-                    // Set of cookie
-                    $now = Time::now();
-                    $now->modify('+2 weeks');
-                    $cookieConfig = $this->_config['cookie'];
-                    if (!empty($cookieConfig['domain'])) {
-                        $cookieConfig['domain'] = '.' . $cookieConfig['domain'];
-                    }
-                    $cookieName = $cookieConfig['name'];
-                    unset($cookieConfig['name']);
-                    $this->controller->Cookie->configKey($cookieName, $cookieConfig);
-                    $user = $this->controller->Auth->user();
-                    $ssoInfo = [
-                        'auth_type' => $extra['authType']
-                    ];
-                    $token = ProcessToken::generateToken($user, $now->toUnixString(), $ssoInfo);
-                    $this->controller->Cookie->write($cookieName, $token);
-                }
-            }
             $event = $this->controller->dispatchEvent('Controller.Auth.beforeRedirection', [$extra], $this);
             if (!$event->result) {
                 $this->controller->redirect($this->_config['homePageURL']);

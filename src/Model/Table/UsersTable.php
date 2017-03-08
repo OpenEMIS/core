@@ -14,7 +14,8 @@ use App\Model\Traits\UserTrait;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
 // this file is used solely for Preferences/Users
-class UsersTable extends AppTable {
+class UsersTable extends ControllerActionTable {
+	private $loginLanguages = [];
 	public function initialize(array $config) {
 		$this->table('security_users');
 		$this->entityClass('User.User');
@@ -22,6 +23,8 @@ class UsersTable extends AppTable {
 
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		$this->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -31,28 +34,37 @@ class UsersTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+		$ConfigItemOptionsTable = TableRegistry::get('Configuration.ConfigItemOptions');
+		$this->loginLanguages = $ConfigItemOptionsTable->find('list', [
+				'keyField' => 'value',
+				'valueField' => 'option'
+			])
+			->where([$ConfigItemOptionsTable->aliasField('option_type') => 'language'])
+			->toArray();
+		$this->toggle('remove', false);
 	}
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('address_area_id', ['visible' => false]);
-		$this->ControllerAction->field('birthplace_area_id', ['visible' => false]);
-		$this->ControllerAction->field('gender_id', ['type' => 'hidden']);
-		$this->ControllerAction->field('preferred_name', ['visible' => false]);
-		$this->ControllerAction->field('address', ['visible' => false]);
-		$this->ControllerAction->field('postal_code', ['visible' => false]);
-		$this->ControllerAction->field('status', ['visible' => false]);
-		$this->ControllerAction->field('super_admin', ['visible' => false]);
-		$this->ControllerAction->field('date_of_death', ['visible' => false]);
-		$this->ControllerAction->field('photo_name', ['visible' => false]);
-		$this->ControllerAction->field('photo_content', ['visible' => false]);
-		$this->ControllerAction->field('date_of_death', ['visible' => false]);
-		$this->ControllerAction->field('is_student', ['visible' => false]);
-		$this->ControllerAction->field('is_staff', ['visible' => false]);
-		$this->ControllerAction->field('is_guardian', ['visible' => false]);
-		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
+	public function beforeAction(Event $event, ArrayObject $extra) {
+		$this->field('address_area_id', ['visible' => false]);
+		$this->field('birthplace_area_id', ['visible' => false]);
+		$this->field('gender_id', ['type' => 'hidden']);
+		$this->field('preferred_name', ['visible' => false]);
+		$this->field('address', ['visible' => false]);
+		$this->field('postal_code', ['visible' => false]);
+		$this->field('status', ['visible' => false]);
+		$this->field('super_admin', ['visible' => false]);
+		$this->field('date_of_death', ['visible' => false]);
+		$this->field('photo_name', ['visible' => false]);
+		$this->field('photo_content', ['visible' => false]);
+		$this->field('date_of_death', ['visible' => false]);
+		$this->field('is_student', ['visible' => false]);
+		$this->field('is_staff', ['visible' => false]);
+		$this->field('is_guardian', ['visible' => false]);
+		$this->field('external_reference', ['visible' => false]);
 
-		$userId = $this->Auth->user('id');
-		if ($userId != $this->request->pass[0] && $this->action != 'password') { // stop user from navigating to other profiles
+		// $this->ControllerAction->field('openemis_no', ['type' => 'readonly']);
+		$userId = $this->paramsEncode(['id' => $this->Auth->user('id')]);
+		if ($userId != $this->paramsPass(0) && $this->action != 'password') { // stop user from navigating to other profiles
 			$event->stopPropagation();
 			return $this->controller->redirect(['plugin' => null, 'controller' => $this->controller->name, 'action' => 'view', $userId]);
 		}
@@ -63,55 +75,75 @@ class UsersTable extends AppTable {
 		$this->controller->set('selectedAction', 'General');
 	}
 
-	public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->field('roles', [
+	public function onGetPreferredLanguage(Event $event, Entity $entity)
+	{
+		if (isset($this->loginLanguages[$entity->preferred_language])) {
+			return $this->loginLanguages[$entity->preferred_language];
+		} else {
+			return $entity->preferred_language;
+		}
+	}
+
+	public function viewBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('roles', [
 			'type' => 'role_table',
 			'valueClass' => 'table-full-width',
 			'visible' => ['index' => false, 'view' => true, 'edit' => false],
 			'order' => 100
 		]);
+
+		$this->setFieldOrder(['username', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth', 'nationality_id', 'identity_type_id', 'identity_number', 'last_login', 'preferred_language', 'modified_user_id', 'modified', 'created_user_id', 'created', 'roles']);
 	}
 
-	public function viewBeforeQuery(Event $event, Query $query) {
+	public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain(['Roles']);
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->field('username', ['visible' => false]);
-		$this->ControllerAction->field('openemis_no', ['visible' => false]);
-		$this->ControllerAction->field('date_of_birth', [
+	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
+		$this->field('username', ['visible' => false]);
+		$this->field('openemis_no', ['visible' => false]);
+		$this->field('date_of_birth', [
 				'date_options' => [
 					'endDate' => date('d-m-Y', strtotime("-2 year"))
 				],
 				'default_date' => false,
 			]
 		);
-		$this->ControllerAction->field('last_login', ['visible' => false]);
+		$this->field('last_login', ['visible' => false]);
 
 		if ($this->action == 'edit') {
-			$this->ControllerAction->field('identity_number', ['visible' => false]);
+			$this->field('identity_number', ['type' => 'readonly']);
 		}
 	}
 
-	public function password() {
-		$this->controller->set('selectedAction', 'Account');
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		$this->field('preferred_language', ['type' => 'select', 'entity' => $entity]);
+		$this->field('nationality_id', ['type' => 'select']);
+		$this->field('identity_type_id', ['type' => 'select']);
+		$this->setFieldOrder(['first_name', 'middle_name', 'third_name', 'last_name', 'date_of_birth', 'preferred_language', 'nationality_id', 'identity_type_id', 'identity_number']);
+	}
 
-		$userId = $this->Auth->user('id');
-		$this->ControllerAction->edit($userId);
+	public function onUpdateFieldPreferredLanguage(Event $event, array $attr, $action, Request $request)
+	{
+		$session = $this->request->session();
+		if ($session->read('System.language_menu')) {
+			$attr['options'] = $this->loginLanguages;
+		} else {
+			$attr['type'] = 'disabled';
+			$entity = $attr['entity'];
+			$attr['attr']['value'] = $this->loginLanguages[$entity->preferred_language];
+		}
 
-		$this->ControllerAction->field('username', ['visible' => true, 'type' => 'readonly']);
-		$this->ControllerAction->field('openemis_no', ['visible' => false]);
-		$this->ControllerAction->field('first_name', ['visible' => false]);
-		$this->ControllerAction->field('middle_name', ['visible' => false]);
-		$this->ControllerAction->field('third_name', ['visible' => false]);
-		$this->ControllerAction->field('last_name', ['visible' => false]);
-		$this->ControllerAction->field('date_of_birth', ['visible' => false]);
-		$this->ControllerAction->field('last_login', ['visible' => false]);
-		$this->ControllerAction->field('password', ['type' => 'password', 'visible' => true, 'attr' => ['value' => '']]);
-		$this->ControllerAction->field('new_password', ['type' => 'password', 'order' => 60, 'attr' => ['value' => '']]);
-		$this->ControllerAction->field('retype_password', ['type' => 'password', 'order' => 61, 'attr' => ['value' => '']]);
+		return $attr;
+	}
 
-		$this->ControllerAction->renderView('/ControllerAction/edit');
+	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+	{
+		// To change the language of the UI
+		$url = $this->url('view');
+		$url['lang'] = $entity->preferred_language;
+		return $this->controller->redirect($url);
 	}
 
 	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -147,77 +179,5 @@ class UsersTable extends AppTable {
 		$validator = parent::validationDefault($validator);
 		$BaseUsers = TableRegistry::get('User.Users');
 		return $BaseUsers->setUserValidation($validator, $this);
-	}
-
-	public function validationPassword(Validator $validator) {
-		$retypeCompareField = 'new_password';
-
-		$this->setValidationCode('username.ruleMinLength', 'User.Accounts');
-        $this->setValidationCode('username.ruleUnique', 'User.Accounts');
-		$this->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
-		$this->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-		return $validator
-			->add('username', [
-                'ruleMinLength' => [
-                    'rule' => ['minLength', 6]
-                ],
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			// password validation now in behavior
-			->add('retype_password' , [
-				'ruleCompare' => [
-					'rule' => ['comparePasswords', $retypeCompareField],
-					'on' => 'update'
-				]
-			])
-			;
-	}
-
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		return $events;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		switch ($action) {
-			case 'view':
-				if ($toolbarButtons->offsetExists('edit')) {
-					$toolbarButtons->exchangeArray(['edit' => $toolbarButtons['edit']]);
-				} else {
-					$toolbarButtons->exchangeArray([]);
-				}
-
-				break;
-
-			case 'edit':
-				if ($toolbarButtons->offsetExists('back')) {
-					$toolbarButtons->exchangeArray(['back' => $toolbarButtons['back']]);
-				} else {
-					$toolbarButtons->exchangeArray([]);
-				}
-				break;
-		}
-	}
-
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
-	{
-		if ($field == 'identity_number') {
-			$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-			$defaultIdentity = $IdentityType->getDefaultEntity();
-			if ($defaultIdentity) {
-				$value = $defaultIdentity->name;
-			}
-			return (!empty($value)) ? $value : parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-		} else {
-			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-		}
 	}
 }

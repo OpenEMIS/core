@@ -1,6 +1,6 @@
 <?php if (isset($modals)) : ?>
 	<?php foreach ($modals as $id => $modal) : ?>
-	<?php 
+	<?php
 		$title = isset($modal['title']) ? $modal['title'] : '';
 		$content = isset($modal['content']) ? $modal['content'] : '';
 	?>
@@ -9,6 +9,8 @@
 			<div class="modal-content">
 				<?php
 				if (isset($modal['form']) && $modal['form']) {
+					$template = $this->ControllerAction->getFormTemplate();
+					$this->Form->templates($template);
 					echo $this->Form->create($modal['form']['model'], $modal['form']['formOptions']);
 					if (isset($modal['form']['fields'])) {
 						foreach ($modal['form']['fields'] as $name => $attr) {
@@ -29,7 +31,7 @@
 				</div>
 
 				<div class="modal-body">
-					<?php 
+					<?php
 					if (isset($modal['contentFields'])) {
 						$contentFields = $modal['contentFields'];
 						foreach ($contentFields as $name => $attr) {

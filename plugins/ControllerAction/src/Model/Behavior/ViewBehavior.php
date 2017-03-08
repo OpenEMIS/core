@@ -18,14 +18,16 @@ class ViewBehavior extends Behavior {
 		$model = $this->_table;
 
 		$event = $model->dispatchEvent('ControllerAction.Model.view.beforeAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
+		if ($event->isStopped()) {
+			$mainEvent->stopPropagation();
+			return $event->result;
+		}
 		if ($event->result instanceof Table) {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->getPrimaryKey();
-		$idKey = $model->aliasField($primaryKey);
-		$sessionKey = $model->registryAlias() . '.' . $primaryKey;
+
+		$sessionKey = $model->registryAlias() . '.primaryKey';
 		$contain = [];
 
 		foreach ($model->associations() as $assoc) {
@@ -34,16 +36,25 @@ class ViewBehavior extends Behavior {
 			}
 		}
 
-		$id = $model->paramsPass(0);
-		if (empty($id)) {
+		$ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+
+		if (empty($ids)) {
 			if ($model->Session->check($sessionKey)) {
-				$id = $model->Session->read($sessionKey);
+				$ids = $model->Session->read($sessionKey);
+			} else if (!empty($model->ControllerAction->getQueryString())) {
+				// Query string logic not implemented yet, will require to check if the query string contains the primary key
+				$primaryKey = $model->primaryKey();
+				$ids = $model->ControllerAction->getQueryString($primaryKey);
 			}
 		}
 
+		$idKeys = $model->getIdKeys($model, $ids);
+
 		$entity = false;
-		if ($model->exists([$idKey => $id])) {
-			$query = $model->find()->where([$idKey => $id])->contain($contain);
+
+		// need to change this part
+		if ($model->exists([$idKeys])) {
+			$query = $model->find()->where($idKeys)->contain($contain);
 
 			$event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
 			$event = $model->dispatchEvent('ControllerAction.Model.viewEdit.beforeQuery', [$query, $extra], $this);
@@ -53,10 +64,12 @@ class ViewBehavior extends Behavior {
 		}
 
 		$event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
-
+		if ($event->isStopped()) {
+			$mainEvent->stopPropagation();
+			return $event->result;
+		}
 		if (!empty($entity)) {
-			$model->Session->write($sessionKey, $id);
+			$model->Session->write($sessionKey, $ids);
 			$model->controller->set('data', $entity);
 		} else {
 			$mainEvent->stopPropagation();

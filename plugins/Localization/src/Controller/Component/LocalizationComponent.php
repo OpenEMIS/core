@@ -5,12 +5,12 @@
 OpenEMIS
 Open Education Management Information System
 
-Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify 
+Copyright © 2013 UNECSO.  This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by the Free Software Foundation
-, either version 3 of the License, or any later version.  This program is distributed in the hope 
+, either version 3 of the License, or any later version.  This program is distributed in the hope
 that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should 
-have received a copy of the GNU General Public License along with this program.  If not, see 
+or FITNESS FOR A PARTICULAR PURPOSE.See the GNU General Public License for more details. You should
+have received a copy of the GNU General Public License along with this program.  If not, see
 <http://www.gnu.org/licenses/>.  For more information please wire to contact@openemis.org.
 */
 
@@ -25,203 +25,271 @@ use Cake\Core\App;
 use Cake\I18n\Time;
 
 class LocalizationComponent extends Component {
-	private $defaultLocale = 'en';
-	private $autoCompile = true;
-	private $controller;
-	public $Session;
-	public $showLanguage = true;
-	public $language = 'en';
-	private $languages = [
-		'ar' => ['name' => 'العربية', 'direction' => 'rtl', 'locale' => 'ar_SA'],
-		'zh' => ['name' => '中文', 'direction' => 'ltr', 'locale' => 'zh_CN'],
-		'en' => ['name' => 'English', 'direction' => 'ltr', 'locale' => 'en_US'],
-		'fr' => ['name' => 'Français', 'direction' => 'ltr', 'locale' => 'fr_FR'],
-		'ru' => ['name' => 'русский', 'direction' => 'ltr', 'locale' => 'ru_RU'],
-		'es' => ['name' => 'español', 'direction' => 'ltr', 'locale' => 'es_ES']
-	];
-	public $components = ['Cookie'];
+    private $defaultLocale = 'en';
+    private $autoCompile = true;
+    private $controller;
+    public $Session;
+    public $showLanguage = true;
+    public $language = 'en';
+    private $languages = [
+        'ar' => ['name' => 'العربية', 'direction' => 'rtl', 'locale' => 'ar_SA'],
+        'zh' => ['name' => '中文', 'direction' => 'ltr', 'locale' => 'zh_CN'],
+        'en' => ['name' => 'English', 'direction' => 'ltr', 'locale' => 'en_US'],
+        'fr' => ['name' => 'Français', 'direction' => 'ltr', 'locale' => 'fr_FR'],
+        'ru' => ['name' => 'русский', 'direction' => 'ltr', 'locale' => 'ru_RU'],
+        'es' => ['name' => 'español', 'direction' => 'ltr', 'locale' => 'es_ES']
+    ];
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['Controller.initialize'] = 'beforeFilter';
-		return $events;
-	}
+    public $components = ['Cookie', 'Auth'];
 
-	// Is called before the controller's beforeFilter method.
-	public function initialize(array $config) {
-		$session = $this->request->session();
-		$this->controller = $this->_registry->getController();
-		
-		$this->Cookie->name = str_replace(' ', '_', $this->controller->_productName) . '_COOKIE';
-		$this->Cookie->time = 3600 * 24 * 30; // expires after one month
-		$lang = $this->language;
-		$params = $this->controller->params;
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Controller.initialize'] = 'beforeFilter';
+        return $events;
+    }
 
-		if (!empty($params->query['lang'])) {
-			$lang = $params->query['lang'];
+    // Is called before the controller's beforeFilter method.
+    public function initialize(array $config) {
+        $session = $this->request->session();
+        $this->controller = $this->_registry->getController();
+        $this->Cookie->name = str_replace(' ', '_', $config['productName']) . '_COOKIE';
+        $this->Cookie->time = 3600 * 24 * 30; // expires after one month
+        list($this->language, $this->showLanguage) = $this->detectLanguage();
+        $this->Session = $session;
+    }
 
-		} else if ($this->Cookie->check('System.language')) {
-			$lang = $this->Cookie->read('System.language');
+    public function getCookie()
+    {
+        return $this->Cookie;
+    }
 
-		} else if ($session->check('System.language')) {
-			$lang = $session->read('System.language');
-		}
+    private function dispatchEvent($subject, $eventKey, $method=null, $params=[], $autoOff=false) {
+        $this->onEvent($subject, $eventKey, $method);
+        $event = new Event($eventKey, $this, $params);
+        $event = $subject->eventManager()->dispatch($event);
+        if(!is_null($method) && $autoOff) {
+            $this->offEvent($subject, $eventKey, $method);
+        }
+        return $event;
+    }
 
-		$this->language = $lang;
-		$this->Session = $session;
-	}
+    private function onEvent($subject, $eventKey, $method) {
+        $eventMap = $subject->implementedEvents();
+        if (!array_key_exists($eventKey, $eventMap) && !is_null($method)) {
+            if (method_exists($subject, $method)) {
+                $subject->eventManager()->on($eventKey, [], [$subject, $method]);
+            }
+        }
+    }
 
-	public function beforeFilter(Event $event) {
-		// Call to recompile the language if the translation files are affected
-		if ($this->autoCompile()) {
-			$this->updateLocaleFile($this->language);
-		}
-		// Move the I18n::locale setting here so that the update can be instant
-		I18n::locale($this->language);
-	}
+    private function offEvent($subject, $eventKey, $method) {
+        $subject->eventManager()->off($eventKey, [$subject, $method]);
+    }
 
-	public function autoCompile($compile = null) {
-		if (is_null($compile)) {
-			return $this->autoCompile;
-		} else {
-			$this->autoCompile = $compile;
-		}
-	}
+    /**
+     *  Function to get the language to display base on the system configuration
+     *
+     *  @return array language - Language to display, showLanguage - If the language menu is to be displayed
+     */
+    private function detectLanguage()
+    {
+        // Default language
+        $lang = $this->language;
+        $request = $this->request;
+        $session = $request->session();
+        $showLanguage = $this->showLanguage;
+        $lang = $this->language;
+        $event = $this->dispatchEvent($this->controller, 'Controller.Localization.getLanguageOptions', 'getLanguageOptions', [], true);
+        if ($event->result) {
+            if (is_array($event->result)) {
+                list($showLanguage, $lang) = $event->result;
+            }
+        }
 
-	private function updateLocaleFile($lang) {
-		if ($this->defaultLocale != $lang) {
-			$isChanged = $this->isChanged($lang);
-			if ($isChanged) {
-				$this->convertPO($lang, $isChanged);
-			}	
-		}
-	}
+        // Language menu enabled
+        if ($session->read('System.language_menu')) {
+            if (array_key_exists($request->query('lang'), $this->languages)) {
+                $lang = $request->query('lang');
+                $user = $this->Auth->user();
+                if ($user) {
+                    $event = $this->dispatchEvent($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
+                }
+                $this->Cookie->write('System.language', $lang);
+            } else if ($this->Cookie->check('System.language')) {
+                $lang = $this->Cookie->read('System.language');
+            } else if ($session->check('System.language')) {
+                $lang = $session->read('System.language');
+                $this->Cookie->write('System.language', $lang);
+            } else {
+                // This condition will only be reach if the user has not login and the cookie for the system language has not been set on the browser
+                $this->Cookie->write('System.language', $lang);
+            }
+        }
+        // Language menu disabled
+        else {
+            // $lang = $session->read('System.language');
+            $user = $this->Auth->user();
+            if ($user) {
+                $event = $this->dispatchEvent($this->controller, 'Controller.Localization.updateLoginLanguage', 'updateLoginLanguage', [$user, $lang], true);
+            }
+            $this->Cookie->write('System.language', $lang);
+        }
 
-	private function getModifiedDate() {
-		$TranslationsTable = TableRegistry::get('Localization.Translations');
-   		$selectedColumns = [
-			'modified' => '(
-				CASE 
-					WHEN '.$TranslationsTable->aliasField('modified').' > '.$TranslationsTable->aliasField('created').' 
-					THEN '.$TranslationsTable->aliasField('modified').' 
-					ELSE '.$TranslationsTable->aliasField('created').' 
-					END
-				)'
-		];
-   		$lastModified = $TranslationsTable
-			->find()
-			->select($selectedColumns)
-			->order(['modified' => 'DESC'])
-			->extract('modified')
-			->first();
-		return $lastModified;
-	}
+        return [$lang, $showLanguage];
+    }
 
-	private function isChanged($locale) {
-		$localeDir = current(App::path('Locale'));
-		$fileLocation = $localeDir . $locale . DS . 'default.po';
-		$lastModified = $this->getModifiedDate();
-		if (file_exists($fileLocation)) {
-			$file = fopen($fileLocation, "r");
-			while (!feof($file)) {
-			   $line = fgets($file);
-			   if (strpos($line, 'PO-Revision-Date: ')) {
-			   		$line = str_replace('"PO-Revision-Date: ', '', $line);
-			   		$line = str_replace('\n"', '', $line);
-			   		try {
-				   		$dateTime = new Time($line);
-						if ($lastModified->eq($dateTime)) {
-							$lastModified = false;
-						}
-					} catch (\Exception $e) {
-						// default will return last modified date
-					}
-			   		break;
-			   }
-			}
-		}
-		fclose($file);
-		return $lastModified;
-	}
+    public function beforeFilter(Event $event) {
+        // Call to recompile the language if the translation files are affected
+        if ($this->autoCompile()) {
+            $this->updateLocaleFile($this->language);
+        }
+        // Move the I18n::locale setting here so that the update can be instant
+        I18n::locale($this->language);
+    }
 
-	private function convertPO($locale, $lastModified) {
-		$str = "";
-		$localeDir = current(App::path('Locale'));
-		$fileLocation = $localeDir . $locale . DS . 'default.po';
-		$TranslationsTable = TableRegistry::get('Localization.Translations');
-		$data = $TranslationsTable
-			->find('list' ,[
-				'keyField' => $this->defaultLocale, 
-				'valueField' => $locale
-			])
-			->toArray();
+    public function autoCompile($compile = null) {
+        if (is_null($compile)) {
+            return $this->autoCompile;
+        } else {
+            $this->autoCompile = $compile;
+        }
+    }
 
-		// clear persistent cache that is used for Translations
-		Cache::clear(false, '_cake_core_');
+    private function updateLocaleFile($lang) {
+        if ($this->defaultLocale != $lang) {
+            $isChanged = $this->isChanged($lang);
+            if ($isChanged) {
+                $this->convertPO($lang, $isChanged);
+            }
+        }
+    }
 
-		// Header of the PO file
-		$str .= 'msgid ""'."\n";
-		$str .= 'msgstr ""'."\n";
-		$str .= '"Project-Id-Version: OpenEMIS Project\n"'."\n";
-		$str .= '"POT-Creation-Date: 2013-01-17 02:33+0000\n"'."\n";
-		$str .= '"PO-Revision-Date: '.$lastModified->format('Y-m-d H:i:sP').'\n"'."\n";
-		$str .= '"Last-Translator: \n"'."\n";
-		$str .= '"Language-Team: \n"'."\n";
-		$str .= '"MIME-Version: 1.0\n"'."\n";
-		$str .= '"Content-Type: text/plain; charset=UTF-8\n"'."\n";
-		$str .= '"Content-Transfer-Encoding: 8bit\n"'."\n";
-		$str .= '"Language: '.$locale.'\n"'."\n";
-		
-		//Replace the whole file
-		if(file_put_contents($fileLocation, $str, LOCK_EX)){
-			// For populating the translation list
-			foreach ($data as $key => $value) {
-				$msgid = $key;
-				$msgstr = $value;
-				$str = "\n";
-				$str .= 'msgid "'.$msgid.'"'."\n";
-				$str .= 'msgstr "'.$msgstr.'"'."\n";
-				//Append to current file
-				file_put_contents($fileLocation, $str, FILE_APPEND | LOCK_EX);
-			}
-			return true;
-		}else{
-			return false;
-		}
-	}
+    private function getModifiedDate() {
+        $TranslationsTable = TableRegistry::get('Localization.Translations');
+        $selectedColumns = [
+            'modified' => '(
+                CASE
+                    WHEN '.$TranslationsTable->aliasField('modified').' > '.$TranslationsTable->aliasField('created').'
+                    THEN '.$TranslationsTable->aliasField('modified').'
+                    ELSE '.$TranslationsTable->aliasField('created').'
+                    END
+                )'
+        ];
+        $lastModified = $TranslationsTable
+            ->find()
+            ->select($selectedColumns)
+            ->order(['modified' => 'DESC'])
+            ->extract('modified')
+            ->first();
+        return $lastModified;
+    }
 
-	// Is called after the controller's beforeFilter method but before the controller executes the current action handler.
-	public function startup(Event $event) {
-		$controller = $this->controller;
-		$htmlLang = $this->language;
-		$languages = $this->languages;
-		
-		if ($this->request->is('post') && array_key_exists('System', $this->request->data)) {
-			if (isset($this->request->data['System']['language'])) {
-				$htmlLang = $this->request->data['System']['language'];
-				$this->Cookie->write('System.language', $htmlLang);
-			}
-		}
+    private function isChanged($locale) {
+        $localeDir = current(App::path('Locale'));
+        $fileLocation = $localeDir . $locale . DS . 'default.po';
+        $lastModified = $this->getModifiedDate();
+        if (file_exists($fileLocation)) {
+            $file = fopen($fileLocation, "r");
+            while (!feof($file)) {
+               $line = fgets($file);
+               if (strpos($line, 'PO-Revision-Date: ')) {
+                    $line = str_replace('"PO-Revision-Date: ', '', $line);
+                    $line = str_replace('\n"', '', $line);
+                    try {
+                        $dateTime = new Time($line);
+                        if ($lastModified->eq($dateTime)) {
+                            $lastModified = false;
+                        }
+                    } catch (\Exception $e) {
+                        // default will return last modified date
+                    }
+                    break;
+               }
+            }
 
-		$this->Session->write('System.language', $htmlLang);
+            fclose($file);
+        }
+        return $lastModified;
+    }
 
-		$htmlLangDir = $languages[$htmlLang]['direction'];
-		$controller->set('showLanguage', $this->showLanguage);
-		$controller->set('languageOptions', $this->getOptions());
-		$controller->set(compact('htmlLang', 'htmlLangDir'));
-	}
+    private function convertPO($locale, $lastModified) {
+        $str = "";
+        $localeDir = current(App::path('Locale'));
+        $fileLocation = $localeDir . $locale . DS . 'default.po';
+        $TranslationsTable = TableRegistry::get('Localization.Translations');
+        $data = $TranslationsTable
+            ->find('list' ,[
+                'keyField' => $this->defaultLocale,
+                'valueField' => $locale
+            ])
+            ->toArray();
 
-	public function getOptions() {
-		$languages = $this->languages;
-		$options = [];
+        // clear persistent cache that is used for Translations
+        Cache::clear(false, '_cake_core_');
 
-		foreach ($languages as $key => $lang) {
-			$options[$key] = $lang['name'];
-		}
-		return $options;
-	}
+        // Header of the PO file
+        $str .= 'msgid ""'."\n";
+        $str .= 'msgstr ""'."\n";
+        $str .= '"Project-Id-Version: OpenEMIS Project\n"'."\n";
+        $str .= '"POT-Creation-Date: 2013-01-17 02:33+0000\n"'."\n";
+        $str .= '"PO-Revision-Date: '.$lastModified->format('Y-m-d H:i:sP').'\n"'."\n";
+        $str .= '"Last-Translator: \n"'."\n";
+        $str .= '"Language-Team: \n"'."\n";
+        $str .= '"MIME-Version: 1.0\n"'."\n";
+        $str .= '"Content-Type: text/plain; charset=UTF-8\n"'."\n";
+        $str .= '"Content-Transfer-Encoding: 8bit\n"'."\n";
+        $str .= '"Language: '.$locale.'\n"'."\n";
 
-	public function getLanguages() {
-		return $this->languages;
-	}
+        //Replace the whole file
+        if(file_put_contents($fileLocation, $str, LOCK_EX)){
+            // For populating the translation list
+            foreach ($data as $key => $value) {
+                $msgid = $key;
+                $msgstr = $value;
+                $str = "\n";
+                $str .= 'msgid "'.$msgid.'"'."\n";
+                $str .= 'msgstr "'.$msgstr.'"'."\n";
+                //Append to current file
+                file_put_contents($fileLocation, $str, FILE_APPEND | LOCK_EX);
+            }
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
+    public function startup(Event $event) {
+        $controller = $this->controller;
+        $htmlLang = $this->language;
+        $languages = $this->languages;
+
+        if ($this->request->is('post') && array_key_exists('System', $this->request->data)) {
+            if (isset($this->request->data['System']['language'])) {
+                $htmlLang = $this->request->data['System']['language'];
+                $this->Cookie->write('System.language', $htmlLang);
+            }
+        }
+
+        $this->Session->write('System.language', $htmlLang);
+
+        $htmlLangDir = $languages[$htmlLang]['direction'];
+        $controller->set('showLanguage', $this->showLanguage);
+        $controller->set('languageOptions', $this->getOptions());
+        $controller->set(compact('htmlLang', 'htmlLangDir'));
+    }
+
+    public function getOptions() {
+        $languages = $this->languages;
+        $options = [];
+
+        foreach ($languages as $key => $lang) {
+            $options[$key] = $lang['name'];
+        }
+        return $options;
+    }
+
+    public function getLanguages() {
+        return $this->languages;
+    }
 }

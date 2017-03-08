@@ -36,9 +36,8 @@ class ReportListBehavior extends Behavior {
 		}
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		$userId = $this->_table->Auth->user('id');
-		// $this->ReportProgress->purge($userId, true);
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+		$query = $settings['query'];
 
 		$settings['pagination'] = false;
 		$fields = $this->_table->ControllerAction->getFields($this->ReportProgress);
@@ -51,26 +50,31 @@ class ReportListBehavior extends Behavior {
 		$fields['params']['visible'] = false;
 		$fields['pid']['visible'] = false;
 		$fields['created']['visible'] = true;
-		$fields['modified']['visible'] = true;
+        $fields['modified']['visible'] = true;
 
 		$this->_table->fields = $fields;
 
 		$this->_table->ControllerAction->setFieldOrder(['name', 'created', 'modified', 'expiry_date', 'status']);
 
 		// To remove expired reports
-		$clonedQuery = $this->ReportProgress->find();
-		$expiredReports = $clonedQuery
-			->where([
-				$this->ReportProgress->aliasField('module') => $this->_table->alias(),
-				$this->ReportProgress->aliasField('expiry_date'). ' IS NOT NULL',
-				$this->ReportProgress->aliasField('expiry_date').' < ' => date('Y-m-d')])
-			->toArray();
-
 		$this->ReportProgress->purge();
 
+		// beside super user, report can only be seen by the one who generate it.
+        $conditions = [
+            $this->ReportProgress->aliasField('module') => $this->_table->alias()
+        ];
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$userId = $this->_table->Auth->user('id');
+			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
+		}
+
 		$query = $this->ReportProgress->find()
-			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
-			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
+            ->contain('CreatedUser') //association declared on AppTable
+			->where($conditions)
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);
 
 		return $query;
 	}
@@ -133,6 +137,7 @@ class ReportListBehavior extends Behavior {
 			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
 			['id' => $process->id]
 		);
+		$settings['purge'] = false; //for report, dont purge after download.
 	}
 
 	protected function _generate($data) {
@@ -145,7 +150,7 @@ class ReportListBehavior extends Behavior {
 		}
 		$table = TableRegistry::get($feature);
 
-		// Event: 
+		// Event:
 		// $eventKey = 'Model.Report.onGetName';
 		// $event = new Event($eventKey, $this, [$data]);
 		// $event = $table->eventManager()->dispatch($event);

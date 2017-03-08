@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
@@ -97,4 +98,27 @@ class EducationLevelsTable extends ControllerActionTable
 
 		return $list;
 	}
+
+    public function getLevelOptionsByInstitution($institutionId)
+    {   
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
+        $list = $InstitutionGrades
+            ->find()
+            ->select(['level_id' => 'EducationLevels.id', 'level_name' => 'EducationLevels.name', 'system_name' => 'EducationSystems.name'])
+            ->matching('EducationGrades.EducationProgrammes.EducationCycles.EducationLevels.EducationSystems')
+            ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+            ->order(['EducationSystems.order', 'EducationLevels.order'])
+            ->group(['level_id'])
+            ->toArray();
+
+        $returnList = [];
+        foreach ($list as $key => $value) {
+            $returnList[$value->level_id] = $value->system_name . " - " . $value->level_name;
+        }
+
+        return $returnList;
+    }
 }

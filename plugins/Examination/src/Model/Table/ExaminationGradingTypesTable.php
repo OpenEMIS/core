@@ -20,6 +20,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $this->hasMany('GradingOptions', ['className' => 'Examination.ExaminationGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentExaminationResults' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
@@ -37,10 +42,18 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
                 ],
                 'ruleIsDecimal' => [
                     'rule' => ['decimal', null],
+                ],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
                 ]
             ])
-            ->add('max', 'ruleIsDecimal', [
-                'rule' => ['decimal', null],
+            ->add('max', [
+                'ruleIsDecimal' => [
+                    'rule' => ['decimal', null],
+                ],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
             ])
             ;
         return $validator;
@@ -50,8 +63,8 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
         $this->controller->getExamsTab();
 
         $this->field('result_type', ['type' => 'select', 'options' => $this->getSelectOptions($this->aliasField('result_type'))]);
-        $this->field('max', ['attr' => ['min' => 0]]);
-        $this->field('pass_mark', ['attr' => ['min' => 0]]);
+        $this->field('max', ['length' => 7, 'attr' => ['min' => 0]]);
+        $this->field('pass_mark', ['length' => 7, 'attr' => ['min' => 0]]);
         $this->field('grading_options', [
             'type' => 'element',
             'element' => 'Examination.grading_options',
@@ -59,6 +72,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             'fields' => $this->GradingOptions->fields,
             'formFields' => []
         ]);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra) {

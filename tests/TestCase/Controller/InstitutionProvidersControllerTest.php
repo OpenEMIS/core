@@ -16,7 +16,17 @@ class InstitutionProvidersControllerTest extends AppTestCase
         'app.workflow_statuses_steps',
         'app.institution_genders',
         'app.institution_providers',
-        'app.institution_sectors'
+        'app.institution_sectors',
+        'app.config_product_lists',
+        'app.institutions',
+        'app.custom_modules',
+        'app.custom_field_types',
+        'app.institution_custom_field_values',
+        'app.institution_custom_fields',
+        'app.survey_forms',
+        'app.survey_rules',
+        'app.institution_custom_forms_fields',
+        'app.institution_custom_forms_filters'
     ];
 
     private $id = 1;
