@@ -6,10 +6,12 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\ControllerActionTable;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 
 class ConfigAuthenticationTable extends ControllerActionTable {
     public $id;
     public $authenticationType;
+    private $options = [];
 
     public function initialize(array $config) {
         $this->table('config_items');
@@ -25,6 +27,14 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         $id = $authenticationRecord->id;
         $this->id = $id;
         $this->authenticationType = $authenticationRecord->value;
+
+        $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
+        $this->options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
+            ->where([
+                'ConfigItemOptions.option_type' => 'authentication_type',
+                'ConfigItemOptions.visible' => 1
+            ])
+            ->toArray();
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -43,7 +53,7 @@ class ConfigAuthenticationTable extends ControllerActionTable {
 
         if ($this->action == 'index') {
             $url = $this->url('view');
-            $url[] = $this->id;
+            $url[1] = $this->paramsEncode(['id' => $this->id]);
             $this->controller->redirect($url);
         } else if ($this->action == 'view') {
             $extra['elements']['controls'] = $this->buildSystemConfigFilters();
@@ -57,14 +67,7 @@ class ConfigAuthenticationTable extends ControllerActionTable {
             if (!empty($id)) {
                 $entity = $this->get($id);
                 if ($entity->field_type == 'Dropdown') {
-                    $optionTable = TableRegistry::get('Configuration.ConfigItemOptions');
-                    $options = $optionTable->find('list', ['keyField' => 'value', 'valueField' => 'option'])
-                        ->where([
-                            'ConfigItemOptions.option_type' => $entity->option_type,
-                            'ConfigItemOptions.visible' => 1
-                        ])
-                        ->toArray();
-                    $attr['options'] = $options;
+                    $attr['options'] = $this->options;
                     $attr['onChangeReload'] = true;
                 }
             }
@@ -72,4 +75,8 @@ class ConfigAuthenticationTable extends ControllerActionTable {
         return $attr;
     }
 
+    public function onGetValue($event, $entity)
+    {
+        return __($this->options[$entity->value]);
+    }
 }

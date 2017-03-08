@@ -20,7 +20,7 @@ class PositionsTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
-		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
+		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
@@ -33,12 +33,12 @@ class PositionsTable extends ControllerActionTable {
 		$this->fields['start_year']['visible'] = false;
 		$this->fields['end_year']['visible'] = false;
 		$this->fields['FTE']['visible'] = false;
-		$this->fields['staff_type_id']['visible'] = false;
 		$this->fields['security_group_user_id']['visible'] = false;
 
 		$this->setFieldOrder([
 			'institution_id',
 			'institution_position_id',
+			'staff_type_id',
 			'start_date',
 			'end_date',
 			'staff_status_id'
@@ -57,7 +57,8 @@ class PositionsTable extends ControllerActionTable {
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'Staff',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
@@ -65,7 +66,7 @@ class PositionsTable extends ControllerActionTable {
 		return $buttons;
 	}
 
-	public function indexAfterAction(Event $event, ResultSet $data, ArrayObject $extra) {
+	public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {
 		$options = ['type' => 'staff'];
 		$tabElements = $this->controller->getCareerTabElements($options);
 		$this->controller->set('tabElements', $tabElements);

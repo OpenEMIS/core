@@ -18,6 +18,7 @@ class Saml2AuthComponent extends Component {
     private $saml;
     private $clientId;
     private $authType;
+    private $createUser;
 
     public function initialize(array $config) {
         $this->session = $this->request->session();
@@ -59,6 +60,8 @@ class Saml2AuthComponent extends Component {
 
         $this->userNameField = $samlAttributes['saml_username_mapping'];
 
+        $this->createUser = isset($samlAttributes['allow_create_user']) ?  $samlAttributes['allow_create_user'] : 0;
+
         $this->saml = new \OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
     }
@@ -95,33 +98,10 @@ class Saml2AuthComponent extends Component {
                     ]
                 ],
                 'SSO.Saml2' => [
-                    'userModel' => $this->_config['userModel']
+                    'userModel' => $this->_config['userModel'],
+                    'createUser' => $this->createUser
                 ]
             ]);
-
-            if ($this->config('cookieAuth.enabled')) {
-                $this->controller->Auth->config('authenticate', [
-                    'SSO.Cookie' => [
-                        'userModel' => $this->_config['userModel'],
-                        'fields' => [
-                            'username' => $this->_config['cookieAuth']['username']
-                        ],
-                        'cookie' => [
-                            'name' => $this->_config['cookie']['name'],
-                            'path' => $this->_config['cookie']['path'],
-                            'expires' => $this->_config['cookie']['expires'],
-                            'domain' => $this->_config['cookie']['domain'],
-                            'encryption' => $this->_config['cookie']['encryption']
-                        ],
-                        'authType' => $this->authType
-                    ]
-                ]);
-
-                $user = $this->controller->Auth->identify();
-                if ($user) {
-                    $this->controller->Auth->setUser($user);
-                }
-            }
         }
     }
 
@@ -233,7 +213,7 @@ class Saml2AuthComponent extends Component {
                     return false;
                 }
             } else {
-                // $this->controller->Alert->error('security.login.remoteFail', ['reset' => true]);
+                $this->session->write('Auth.fallback', true);
                 return false;
             }
         } else {
@@ -264,7 +244,6 @@ class Saml2AuthComponent extends Component {
             if ($user[$this->_config['statusField']] != 1) {
                 $this->session->write('Auth.fallback', true);
                 $extra['status'] = false;
-                $extra['fallback'] = true;
             } else {
                 $this->controller->Auth->setUser($user);
                 $extra['loginStatus'] = true;
@@ -272,6 +251,11 @@ class Saml2AuthComponent extends Component {
         } else {
             $this->session->write('Saml2.remoteFail', true);
         }
+
+        if ($this->session->read('Auth.fallback')) {
+            $extra['fallback'] = true;
+        }
+
         $this->controller->dispatchEvent('Controller.Auth.afterCheckLogin', [$extra], $this);
         return $extra['loginStatus'];
     }

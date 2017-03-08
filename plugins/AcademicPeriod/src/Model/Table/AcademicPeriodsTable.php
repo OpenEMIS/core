@@ -13,10 +13,12 @@ use Cake\Network\Exception\NotFoundException;
 use Cake\Datasource\Exception\RecordNotFoundException;
 use Cake\Log\Log;
 
-class AcademicPeriodsTable extends AppTable {
+class AcademicPeriodsTable extends AppTable
+{
     private $_fieldOrder = ['visible', 'current', 'editable', 'code', 'name', 'start_date', 'end_date', 'academic_period_level_id'];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         parent::initialize($config);
         $this->belongsTo('Parents', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Levels', ['className' => 'AcademicPeriod.AcademicPeriodLevels', 'foreignKey' => 'academic_period_level_id']);
@@ -42,8 +44,8 @@ class AcademicPeriodsTable extends AppTable {
         $this->hasMany('StudentAdmission', ['className' => 'Institution.StudentAdmission', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('TransferApprovals', ['className' => 'Institution.TransferApprovals', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('TransferRequests', ['className' => 'Institution.TransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('DropoutRequests', ['className' => 'Institution.DropoutRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('StudentDropout', ['className' => 'Institution.StudentDropout', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('WithdrawRequests', ['className' => 'Institution.WithdrawRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StudentWithdraw', ['className' => 'Institution.StudentWithdraw', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentSurveys', ['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Students', ['className' => 'Institution.Students', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StudentFees', ['className' => 'Institution.StudentFees', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -60,11 +62,19 @@ class AcademicPeriodsTable extends AppTable {
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-
+        $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Tree');
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index'],
+            'Staff' => ['index'],
+            'Results' => ['index'],
+            'StudentExaminationResults' => ['index']
+        ]);
     }
 
-    public function validationDefault(Validator $validator) {
+    public function validationDefault(Validator $validator)
+    {
         $validator = parent::validationDefault($validator);
 
         $additionalParameters = ['editable = 1 AND visible > 0'];
@@ -79,18 +89,26 @@ class AcademicPeriodsTable extends AppTable {
             ;
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
         $entity->start_year = date("Y", strtotime($entity->start_date));
         $entity->end_year = date("Y", strtotime($entity->end_date));
         if ($entity->current == 1) {
             $entity->editable = 1;
             $entity->visible = 1;
-            $this->updateAll(['current' => 0], []);
+
+             // Adding condition on updateAll(), only change the one which is not the current academic period.
+            $where = [];
+            if (!$entity->isNew()) {
+                $where['id <> '] = $entity->id; // same with $where = [0 => 'id <> ' . $entity->id];
+            }
+            $this->updateAll(['current' => 0], $where);
         }
     }
 
-    public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-        $entity = $this->find()->select(['current'])->where([$this->aliasField($this->primaryKey()) => $id])->first();
+    public function onBeforeDelete(Event $event, ArrayObject $options, $ids)
+    {
+        $entity = $this->find()->select(['current'])->where($ids)->first();
 
         // die silently when a non super_admin wants to delete
         if (!$this->AccessControl->isAdmin()) {
@@ -117,7 +135,8 @@ class AcademicPeriodsTable extends AppTable {
         return $buttons;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
         $canCopy = $this->checkIfCanCopy($entity);
 
         $shells = ['Room', 'Shift'];
@@ -138,9 +157,18 @@ class AcademicPeriodsTable extends AppTable {
                 $this->triggerUpdateInstitutionShiftTypeShell($entity->id);
             }
         }
+
+        $broadcaster = $this;
+        $listeners = [];
+        $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
+
+        if (!empty($listeners)) {
+            $this->dispatchEventToModels('Model.AcademicPeriods.afterSave', [$entity], $broadcaster, $listeners);
+        }
     }
 
-    public function beforeAction(Event $event) {
+    public function beforeAction(Event $event)
+    {
         $this->ControllerAction->field('academic_period_level_id');
         $this->fields['start_year']['visible'] = false;
         $this->fields['end_year']['visible'] = false;
@@ -149,7 +177,8 @@ class AcademicPeriodsTable extends AppTable {
         $this->fields['rght']['visible'] = false;
     }
 
-    public function afterAction(Event $event) {
+    public function afterAction(Event $event)
+    {
         $this->ControllerAction->field('current');
         $this->ControllerAction->field('copy_data_from', [
             'type' => 'hidden',
@@ -165,12 +194,14 @@ class AcademicPeriodsTable extends AppTable {
         $this->ControllerAction->setFieldOrder($this->_fieldOrder);
     }
 
-    public function editAfterAction(Event $event, Entity $entity) {
+    public function editAfterAction(Event $event, Entity $entity)
+    {
         $this->request->data[$this->alias()]['current'] = $entity->current;
         $this->ControllerAction->field('visible');
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function indexBeforeAction(Event $event)
+    {
         // Add breadcrumb
         $toolbarElements = [
             ['name' => 'AcademicPeriod.breadcrumb', 'data' => [], 'options' => []]
@@ -205,12 +236,14 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    {
         $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
         $query->where([$this->aliasField('parent_id') => $parentId]);
     }
 
-    public function addEditBeforeAction(Event $event) {
+    public function addEditBeforeAction(Event $event)
+    {
         //Setup fields
         $this->_fieldOrder = ['academic_period_level_id', 'code', 'name'];
 
@@ -242,7 +275,8 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-    public function triggerUpdateInstitutionShiftTypeShell($params) {
+    public function triggerUpdateInstitutionShiftTypeShell($params)
+    {
         $cmd = ROOT . DS . 'bin' . DS . 'cake UpdateInstitutionShiftType ' . $params;
         $logs = ROOT . DS . 'logs' . DS . 'UpdateInstitutionShiftType.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
@@ -250,17 +284,20 @@ class AcademicPeriodsTable extends AppTable {
         Log::write('debug', $shellCmd);
     }
 
-    public function onGetCurrent(Event $event, Entity $entity) {
+    public function onGetCurrent(Event $event, Entity $entity)
+    {
         return $entity->current == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
     // For PHPOE-1916
-    public function onGetEditable(Event $event, Entity $entity) {
+    public function onGetEditable(Event $event, Entity $entity)
+    {
         return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
     // End PHPOE-1916
 
-    public function onGetName(Event $event, Entity $entity) {
+    public function onGetName(Event $event, Entity $entity)
+    {
         return $event->subject()->HtmlField->link($entity->name, [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
@@ -270,7 +307,8 @@ class AcademicPeriodsTable extends AppTable {
         ]);
     }
 
-    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldAcademicPeriodLevelId(Event $event, array $attr, $action, Request $request)
+    {
         $parentId = !is_null($this->request->query('parent')) ? $this->request->query('parent') : 0;
         $results = $this
             ->find()
@@ -304,14 +342,16 @@ class AcademicPeriodsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldCurrent(Event $event, array $attr, $action, Request $request)
+    {
         $attr['options'] = $this->getSelectOptions('general.yesno');
         $attr['onChangeReload'] = 'changeCurrent';
 
         return $attr;
     }
 
-    public function onUpdateFieldCopyDataFrom(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldCopyDataFrom(Event $event, array $attr, $action, Request $request)
+    {
         if ($action == 'add' || $action == 'edit') {
             if (array_key_exists($this->alias(), $request->data)) {
                 if (array_key_exists('academic_period_level_id', $request->data[$this->alias()])) {
@@ -348,7 +388,8 @@ class AcademicPeriodsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldEditable(Event $event, array $attr, $action, Request $request)
+    {
         if (isset($request->data[$this->alias()]['current'])) {
             if ($request->data[$this->alias()]['current'] == 1) {
                 $attr['type'] = 'hidden';
@@ -358,7 +399,8 @@ class AcademicPeriodsTable extends AppTable {
         return $attr;
     }
 
-    public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request) {
+    public function onUpdateFieldVisible(Event $event, array $attr, $action, Request $request)
+    {
         if (isset($request->data[$this->alias()]['current'])) {
             if ($request->data[$this->alias()]['current'] == 1) {
                 $attr['type'] = 'hidden';
@@ -368,7 +410,8 @@ class AcademicPeriodsTable extends AppTable {
         return $attr;
     }
 
-    public function addEditOnChangeCurrent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+    public function addEditOnChangeCurrent(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
         $request = $this->request;
         unset($request->query['current']);
 
@@ -381,7 +424,8 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-    public function getYearList($params = []) {
+    public function getYearList($params = [])
+    {
         $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
@@ -407,8 +451,17 @@ class AcademicPeriodsTable extends AppTable {
         return $list;
     }
 
-    public function getList($params=[]) {
+    public function findSchoolAcademicPeriod(Query $query, array $options)
+    {
+        $query
+            ->find('visible')
+            ->find('editable', ['isEditable' => true])
+            ->find('order')
+            ->where([$this->aliasField('parent_id') . ' <> ' => 0]);
+    }
 
+    public function getList($params=[])
+    {
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : true;
         $withSelect = array_key_exists('withSelect', $params) ? $params['withSelect'] : false;
         $isEditable = array_key_exists('isEditable', $params) ? $params['isEditable'] : null;
@@ -479,7 +532,8 @@ class AcademicPeriodsTable extends AppTable {
         return $data;
     }
 
-    public function findEditable(Query $query, array $options) {
+    public function findEditable(Query $query, array $options)
+    {
         $isEditable = array_key_exists('isEditable', $options) ? $options['isEditable'] : null;
         if (is_null($isEditable)) {
             return $query;
@@ -488,14 +542,16 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-    public function getDate($dateObject) {
+    public function getDate($dateObject)
+    {
         if (is_object($dateObject)) {
             return $dateObject->toDateString();
         }
         return false;
     }
 
-    public function getWorkingDaysOfWeek() {
+    public function getWorkingDaysOfWeek()
+    {
         // $weekdays = [
         //  0 => __('Sunday'),
         //  1 => __('Monday'),
@@ -528,7 +584,8 @@ class AcademicPeriodsTable extends AppTable {
 
     }
 
-    public function getAttendanceWeeks($id) {
+    public function getAttendanceWeeks($id)
+    {
         // $weekdays = array(
         //  0 => 'sunday',
         //  1 => 'monday',
@@ -575,7 +632,8 @@ class AcademicPeriodsTable extends AppTable {
         return $weeks;
     }
 
-    public function getEditable($academicPeriodId) {
+    public function getEditable($academicPeriodId)
+    {
         try {
             return $this->get($academicPeriodId)->editable;
         } catch (RecordNotFoundException $e) {
@@ -583,7 +641,8 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-    public function getAvailableAcademicPeriods($list = true, $order='DESC') {
+    public function getAvailableAcademicPeriods($list = true, $order='DESC')
+    {
         if($list) {
             $query = $this->find('list', ['keyField' => 'id', 'valueField' => 'name']);
         } else {
@@ -602,7 +661,8 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-    public function getCurrent() {
+    public function getCurrent()
+    {
         $query = $this->find()
                     ->select([$this->aliasField('id')])
                     ->where([
@@ -635,7 +695,8 @@ class AcademicPeriodsTable extends AppTable {
         }
     }
 
-    public function generateMonthsByDates($startDate, $endDate) {
+    public function generateMonthsByDates($startDate, $endDate)
+    {
         $result = [];
         $stampStartDay = strtotime($startDate);
         $stampEndDay = strtotime($endDate);
@@ -659,7 +720,8 @@ class AcademicPeriodsTable extends AppTable {
         return $result;
     }
 
-    public function generateDaysOfMonth($year, $month, $startDate, $endDate){
+    public function generateDaysOfMonth($year, $month, $startDate, $endDate)
+    {
         $days = [];
         $stampStartDay = strtotime($startDate);
         $stampEndDay = strtotime($endDate);
@@ -692,7 +754,8 @@ class AcademicPeriodsTable extends AppTable {
         return $days;
     }
 
-    public function findYears(Query $query, array $options) {
+    public function findYears(Query $query, array $options)
+    {
         $level = $this->Levels
             ->find()
             ->order([$this->Levels->aliasField('level ASC')])
@@ -704,7 +767,8 @@ class AcademicPeriodsTable extends AppTable {
             ->where([$this->aliasField('academic_period_level_id') => $level->id]);
     }
 
-    private function checkIfCanCopy(Entity $entity) {
+    private function checkIfCanCopy(Entity $entity)
+    {
         $canCopy = false;
 
         $level = $this->Levels
@@ -720,7 +784,8 @@ class AcademicPeriodsTable extends AppTable {
         return $canCopy;
     }
 
-    public function triggerCopyShell($shellName, $copyFrom, $copyTo) {
+    public function triggerCopyShell($shellName, $copyFrom, $copyTo)
+    {
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
         $logs = ROOT . DS . 'logs' . DS . 'copy.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
@@ -746,5 +811,42 @@ class AcademicPeriodsTable extends AppTable {
         } else {
             return 0;
         }
+    }
+
+    public function getAcademicPeriodId($startDate, $endDate)
+    {
+        // get the academic period id from startDate and endDate (e.g. delete the absence records not showing the academic period id)
+        $startDate = $startDate->format('Y-m-d');
+        $endDate = $endDate->format('Y-m-d');
+
+        $academicPeriod = $this->find()
+            ->where([
+                $this->aliasField('start_date') . ' <= ' => $startDate,
+                $this->aliasField('end_date') . ' >= ' => $endDate,
+                $this->aliasField('code') . ' <> ' => 'all'
+            ])
+            ->first();
+
+        $academicPeriodId = $academicPeriod->id;
+
+        return $academicPeriodId;
+    }
+
+    public function getAcademicPeriodIdByDate($date)
+    {
+        // get the academic period id from date
+        $date = $date->format('Y-m-d');
+
+        $academicPeriod = $this->find()
+            ->where([
+                $this->aliasField('start_date') . ' <= ' => $date,
+                $this->aliasField('end_date') . ' >= ' => $date,
+                $this->aliasField('code') . ' <> ' => 'all'
+            ])
+            ->first();
+
+        $academicPeriodId = $academicPeriod->id;
+
+        return $academicPeriodId;
     }
 }

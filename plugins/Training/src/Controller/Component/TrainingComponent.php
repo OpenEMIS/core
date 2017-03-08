@@ -41,20 +41,24 @@ class TrainingComponent extends Component {
     }
 
     public function getSessionList($params=[]) {
+        $listAll = array_key_exists('listAll', $params) ? $params['listAll'] : false;
+
         $Sessions = TableRegistry::get('Training.TrainingSessions');
         $query = $Sessions->find('list');
 
-        // Filter by Approved
-        $steps = $this->controller->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
-        if (!empty($steps)) {
-            $query->where([
-                $Sessions->aliasField('status_id IN') => $steps
-            ]);
-        } else {
-            // Return empty list if approved steps not found
-            return [];
+        if (!$listAll) {
+            // Filter by Approved
+            $steps = $this->controller->Workflow->getStepsByModelCode($Sessions->registryAlias(), 'APPROVED');
+            if (!empty($steps)) {
+                $query->where([
+                    $Sessions->aliasField('status_id IN') => $steps
+                ]);
+            } else {
+                // Return empty list if approved steps not found
+                return [];
+            }
+            // End
         }
-        // End
 
         return $query->toArray();
     }

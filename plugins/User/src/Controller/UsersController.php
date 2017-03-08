@@ -1,13 +1,13 @@
 <?php
 namespace User\Controller;
 use Cake\Event\Event;
-use DateTime;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use ArrayObject;
 use Cake\Routing\Router;
 use Firebase\JWT\JWT;
 use Cake\Utility\Security;
+use Cake\Core\Configure;
 
 class UsersController extends AppController
 {
@@ -25,10 +25,13 @@ class UsersController extends AppController
         $this->Auth->allow(['login', 'logout', 'postLogin', 'login_remote', 'patchPasswords']);
 
         $action = $this->request->params['action'];
-        if ($action == 'login_remote') {
+        if ($action == 'login_remote' || ($action == 'login' && $this->request->is('put'))) {
             $this->eventManager()->off($this->Csrf);
-            $this->Security->config('unlockedActions', ['login_remote']);
+            $this->Security->config('unlockedActions', [$action]);
         }
+
+        // For fall back
+        $this->set('_sso', false);
     }
 
     public function patchPasswords()
@@ -46,24 +49,33 @@ class UsersController extends AppController
 
     public function login()
     {
-        $this->viewBuilder()->layout(false);
-        $username = '';
-        $password = '';
-        $session = $this->request->session();
+        if ($this->request->is('put')) {
+            $url = $this->request->data('url');
+            $sessionId = $this->request->data('session_id');
+            $username = $this->request->data('username');
+            if (!empty($url) && !empty($sessionId) && !empty($username)) {
+                TableRegistry::get('SSO.SingleLogout')->addRecord($url, $username, $sessionId);
+            }
+        } else {
+            $this->viewBuilder()->layout(false);
+            $username = '';
+            $password = '';
+            $session = $this->request->session();
 
-        if ($this->Auth->user()) {
-            return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
-        }
+            if ($this->Auth->user()) {
+                return $this->redirect(['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index']);
+            }
 
-        if ($session->check('login.username')) {
-            $username = $session->read('login.username');
-        }
-        if ($session->check('login.password')) {
-            $password = $session->read('login.password');
-        }
+            if ($session->check('login.username')) {
+                $username = $session->read('login.username');
+            }
+            if ($session->check('login.password')) {
+                $password = $session->read('login.password');
+            }
 
-        $this->set('username', $username);
-        $this->set('password', $password);
+            $this->set('username', $username);
+            $this->set('password', $password);
+        }
     }
 
     // this function exists so that the browser can auto populate the username and password from the website
@@ -84,19 +96,35 @@ class UsersController extends AppController
         $this->SSO->doAuthentication();
     }
 
-    public function logout()
+    public function logout($sessionId = null)
     {
-        $this->request->session()->destroy();
         return $this->redirect($this->Auth->logout());
+    }
+
+    public function afterLogout(Event $event, $user)
+    {
+        if ($this->SSO->getAuthenticationType() != 'Local') {
+            $autoLogoutUrl = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
+            TableRegistry::get('SSO.SingleLogout')->afterLogout($user, $autoLogoutUrl);
+        }
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
+        $events['Auth.logout'] = 'afterLogout';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
         return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        if (in_array($action, ['login', 'logout', 'postLogin', 'login_remote'])) {
+            return true;
+        }
     }
 
     public function afterCheckLogin(Event $event, $extra)
@@ -122,14 +150,28 @@ class UsersController extends AppController
             $event->stopPropagation();
             return $this->redirect(['plugin' => null, 'controller' => 'Rest', 'action' => 'auth', 'payload' => $this->generateToken(), 'version' => '2.0']);
         } else {
-            // Labels
-            $labels = TableRegistry::get('Labels');
-            $labels->storeLabelsInCache();
+            $user = $this->Auth->user();
 
-            // Support Url
-            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-            $supportUrl = $ConfigItems->value('support_url');
-            $this->request->session()->write('System.help', $supportUrl);
+            if (!empty($user)) {
+                if ($this->SSO->getAuthenticationType() != 'Local') {
+                    $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_login_url'])->toArray();
+                    TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
+                }
+                $listeners = [
+                    TableRegistry::get('Security.SecurityUserLogins'),
+                    $this->Users
+                ];
+                $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
+                // Labels
+                $labels = TableRegistry::get('Labels');
+                $labels->storeLabelsInCache();
+
+                // Support Url
+                $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+                $supportUrl = $ConfigItems->value('support_url');
+                $this->request->session()->write('System.help', $supportUrl);
+            }
         }
     }
 
@@ -140,20 +182,14 @@ class UsersController extends AppController
         return JWT::encode([
                     'sub' => $user['id'],
                     'exp' =>  time() + 10800
-                ],
-                Security::salt());
+                ], Configure::read('Application.private.key'), 'RS256');
     }
 
     public function afterIdentify(Event $event, $user)
     {
         $user = $this->Users->get($user['id']);
-        $user->last_login = new DateTime();
-        $this->Users->save($user);
 
-        $listeners = [
-            TableRegistry::get('Security.SecurityUserLogins')
-        ];
-        $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
 
         $this->log('[' . $user->username . '] Login successfully.', 'debug');
 

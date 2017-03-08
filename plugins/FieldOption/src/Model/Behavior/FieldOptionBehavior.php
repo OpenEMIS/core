@@ -22,6 +22,7 @@ use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 
 class FieldOptionBehavior extends Behavior {
@@ -30,14 +31,16 @@ class FieldOptionBehavior extends Behavior {
         $this->_table->setDeleteStrategy('restrict');
     }
 
-    public function getDefaultValue() {
+    public function getDefaultValue()
+    {
         $value = '';
         $primaryKey = $this->_table->primaryKey();
         $entity = $this->getDefaultEntity();
         return $entity->$primaryKey;
     }
 
-    public function getDefaultEntity() {
+    public function getDefaultEntity()
+    {
         $query = $this->_table->find();
         $entity = $query
             ->where([$this->_table->aliasField('default') => 1])
@@ -55,9 +58,23 @@ class FieldOptionBehavior extends Behavior {
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction'];
+        $events['ControllerAction.Model.edit.afterAction'] = ['callable' => 'editAfterAction'];
         $events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction'];
         $events['ControllerAction.Model.addEdit.beforePatch'] = ['callable' => 'addEditBeforePatch'];
+        $events['Model.buildValidator'] = ['callable' => 'buildValidator', 'priority' => 5];
         return $events;
+    }
+
+    public function buildValidator(Event $event, Validator $validator, $name)
+    {
+        $validator
+            ->add('name', [
+                'ruleUnique' => [
+                    'rule' => 'validateUnique',
+                    'provider' => 'table',
+                    'message' => __('This field has to be unique')
+                ]
+            ]);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -85,7 +102,7 @@ class FieldOptionBehavior extends Behavior {
 
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
     {
-        $patchOptions['validate'] = 'update';
+
     }
 
     private function addFieldOptionControl(ArrayObject $extra, $data = []) {
@@ -97,11 +114,13 @@ class FieldOptionBehavior extends Behavior {
         return $entity->editable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function onGetDefault(Event $event, Entity $entity) {
+    public function onGetDefault(Event $event, Entity $entity) 
+    {
         return $entity->default == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra) 
+    {
         $model = $this->_table;
         $fieldOptions = $this->buildFieldOptions();
         $selectedOption = $model->alias;
@@ -113,7 +132,17 @@ class FieldOptionBehavior extends Behavior {
         $extra['config']['selectedLink'] = ['controller' => 'FieldOptions', 'action' => 'index'];
     }
 
-    public function indexBeforeAction(Event $event) {
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $model = $this->_table;
+        if ($entity->has('editable') && $entity->editable == false) {
+            $model->fields['name']['type'] = 'disabled';
+            $model->fields['visible']['type'] = 'disabled';
+        }
+    }
+
+    public function indexBeforeAction(Event $event) 
+    {
         $model = $this->_table;
         $model->field('name', ['after' => 'editable']);
         $fields = ['visible', 'default', 'editable', 'name', 'international_code', 'national_code'];
@@ -134,19 +163,5 @@ class FieldOptionBehavior extends Behavior {
                 }
             }
         }
-    }
-
-    public function validationUpdate($validator)
-    {
-        $validator
-            ->add('name', [
-                    'ruleUnique' => [
-                        'rule' => 'validateUnique',
-                        'provider' => 'table',
-                        'message' => __('This field has to be unique')
-                    ]
-                ]);
-
-        return $validator;
     }
 }

@@ -44,6 +44,10 @@ class EducationsController extends AppController
 				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades'],
 				'text' => __('Grades')
 			],
+            'GradeSubjects' => [
+                'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'GradeSubjects'],
+                'text' => __('Grade Subjects')
+            ],
 			$setupTab => [
 				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $setupTab],
 				'text' => __('Setup')
@@ -73,4 +77,5 @@ class EducationsController extends AppController
     public function Cycles() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCycles']); }
     public function Programmes()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammes']); }
     public function Grades() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGrades']); }
+    public function GradeSubjects()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGradesSubjects']); }
 }

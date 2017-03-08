@@ -32,7 +32,7 @@ class StaffBehavioursTable extends AppTable {
 				'controller' => 'Institutions',
 				'action' => 'StaffUser',
 				'view',
-				$entity->staff->id
+				$this->paramsEncode(['id' => $entity->staff->id])
 			]);
 		} else {
 			return $entity->staff->openemis_no;
@@ -49,7 +49,7 @@ class StaffBehavioursTable extends AppTable {
 		}
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);

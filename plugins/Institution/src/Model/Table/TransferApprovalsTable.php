@@ -2,8 +2,10 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
-use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\Query;
+use Cake\ORM\Entity;
+use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\AppTable;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
@@ -31,12 +33,24 @@ class TransferApprovalsTable extends AppTable {
 		$this->belongsTo('NewEducationGrades', ['className' => 'Education.EducationGrades']);
 		$this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
 		$this->addBehavior('OpenEmis.Section');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
+
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('start_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'end_date', false]
+            ])
+        ;
+    }
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 		return $events;
 	}
 
@@ -96,6 +110,15 @@ class TransferApprovalsTable extends AppTable {
                 $newEndDate = (new Date($startDate))->modify('-1 day'); //set the end date of the 'transfered' record to a day before the start date of the 'enrolled' record.
 				$newEndDate = date('Y-m-d', strtotime($newEndDate));
 
+                // add the student to the new school
+                $newData = [
+                    'institution_id' => $newSchoolId,
+                    'student_id' => $studentId,
+                    'academic_period_id' => $periodId,
+                    'education_grade_id' => $gradeId,
+                    'student_status_id' => $statuses['CURRENT']
+                ];
+
                 $existingStudentEntity = $Students->find()->where([
                         $Students->aliasField('institution_id') => $previousSchoolId,
                         $Students->aliasField('student_id') => $studentId,
@@ -108,17 +131,10 @@ class TransferApprovalsTable extends AppTable {
                 // if cannot be found (perhaps is a promoted/graduated transfer record). then dont change the record
                 if (!empty($existingStudentEntity)) {
                 	$prevEndDate = $existingStudentEntity->end_date;
+                    $newData['previous_institution_student_id'] = $existingStudentEntity->id;
                     $this->updateStudentStatus($existingStudentEntity, 'CURRENT', 'TRANSFERRED', $newEndDate);
                 }
 
-				// add the student to the new school
-				$newData = [
-                    'institution_id' => $newSchoolId,
-                    'student_id' => $studentId,
-                    'academic_period_id' => $periodId,
-                    'education_grade_id' => $gradeId,
-                    'student_status_id' => $statuses['CURRENT']
-                ];
 				$newData['start_date'] = $startDate;
 				$newData['end_date'] = $entity->end_date->format('Y-m-d');
 				$newEntity = $Students->newEntity($newData);
@@ -128,6 +144,7 @@ class TransferApprovalsTable extends AppTable {
 						$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
 						$institutionClassStudentObj = [
 							'student_id' => $newEntity->student_id,
+							'student_status_id' => $newEntity->student_status_id,
 							'institution_class_id' => $classId,
 							'education_grade_id' => $newEntity->education_grade_id,
 							'student_status_id' => $newEntity->student_status_id,
@@ -234,7 +251,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'transfer_status_header', 'created', 'transfer_status', 'requested_on', 
+			'transfer_status_header', 'created', 'transfer_status', 'requested_on',
 			'existing_information_header', 'student', 'previous_institution_id', 'academic_period_id', 'education_grade_id',
 			'new_information_header', 'institution_id', 'new_education_grade_id', 'institution_class',
 			'status', 'start_date', 'end_date',
@@ -397,7 +414,7 @@ class TransferApprovalsTable extends AppTable {
 				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
 				$request->data[$this->alias()]['end_date'] = $endDate;
 			}
-			
+
 			if (!is_null($endDate)) {
 				$periodEndDate = $endDate->copy()->subDay();
 			}
@@ -456,72 +473,6 @@ class TransferApprovalsTable extends AppTable {
 		if ($action == 'view') {
 			if ($this->request->data[$this->alias()]['status'] != self::NEW_REQUEST || (!$this->AccessControl->check(['Institutions', 'TransferApprovals', 'edit']))) {
 				unset($toolbarButtons['edit']);
-			}
-		}
-	}
-
-	// Workbench.Model.onGetList
-	public function onGetWorkbenchList(Event $event, $AccessControl, ArrayObject $data) {
-		if ($AccessControl->check(['Institutions', 'TransferApprovals', 'edit'])) {
-			// $institutionIds = $AccessControl->getInstitutionsByUser(null, ['Dashboard', 'TransferApprovals', 'edit']);
-			$institutionIds = $AccessControl->getInstitutionsByUser();
-
-			$where = [$this->aliasField('status') => 0, $this->aliasField('type') => self::TRANSFER];
-			if (!$AccessControl->isAdmin()) {
-				if (!empty($institutionIds)) {
-					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
-				} else {
-					$where[$this->aliasField('institution_id')] = '-1';
-				}
-			}
-
-			$resultSet = $this
-				->find()
-				->select([
-					$this->aliasField('id'),
-					$this->aliasField('modified'),
-					$this->aliasField('created'),
-					'Users.openemis_no',
-					'Users.first_name',
-					'Users.middle_name',
-					'Users.third_name',
-					'Users.last_name',
-					'Users.preferred_name',
-					'Institutions.name',
-					'PreviousInstitutions.name',
-					'CreatedUser.username'
-				])
-				->contain(['Users', 'Institutions', 'PreviousInstitutions', 'CreatedUser'])
-				->where($where)
-				->order([
-					$this->aliasField('modified') => 'DESC'
-				])
-				->limit(30)
-				->toArray();
-
-			foreach ($resultSet as $key => $obj) {
-				$requestTitle = sprintf('Transfer of student (%s) from %s to %s', $obj->user->name_with_id, $obj->previous_institution->name, $obj->institution->name);
-				$url = [
-					'plugin' => false,
-					'controller' => 'Dashboard',
-					'action' => 'TransferApprovals',
-					'edit',
-					$obj->id
-				];
-
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
-				}
-
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Transfer')
-				];
 			}
 		}
 	}
@@ -585,5 +536,95 @@ class TransferApprovalsTable extends AppTable {
 
 		$event->stopPropagation();
 		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
+	}
+
+	public function findWorkbench(Query $query, array $options) {
+		$controller = $options['_controller'];
+		$controller->loadComponent('AccessControl');
+		$controller->loadComponent('ControllerAction.ControllerAction');
+
+		$session = $controller->request->session();
+		$AccessControl = $controller->AccessControl;
+
+		$isAdmin = $session->read('Auth.User.super_admin');
+		$userId = $session->read('Auth.User.id');
+
+		$where = [
+			$this->aliasField('status') => self::NEW_REQUEST,
+			$this->aliasField('type') => self::TRANSFER
+		];
+
+		if (!$isAdmin) {
+			if ($AccessControl->check(['Institutions', 'TransferApprovals', 'edit'])) {
+				$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+				$institutionIds = $SecurityGroupUsers->getInstitutionsByUser($userId);
+
+				if (empty($institutionIds)) {
+					// return empty list if the user does not have access to any schools
+					return $query->where([$this->aliasField('id') => -1]);
+				} else {
+					$where[$this->aliasField('institution_id') . ' IN '] = $institutionIds;
+				}
+			} else {
+				// return empty list if the user does not permission to do Transfer Approvals
+				return $query->where([$this->aliasField('id') => -1]);
+			}
+		}
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('institution_id'),
+				$this->aliasField('previous_institution_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Users->aliasField('openemis_no'),
+				$this->Users->aliasField('first_name'),
+				$this->Users->aliasField('middle_name'),
+				$this->Users->aliasField('third_name'),
+				$this->Users->aliasField('last_name'),
+				$this->Users->aliasField('preferred_name'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->PreviousInstitutions->aliasField('code'),
+				$this->PreviousInstitutions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->Users->alias(), $this->Institutions->alias(), $this->PreviousInstitutions->alias(), $this->CreatedUser->alias()])
+			->where($where)
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => false,
+						'controller' => 'Dashboard',
+						'action' => 'TransferApprovals',
+						'edit',
+						$this->paramsEncode(['id' => $row->id])
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = __('Pending For Approval');
+	    			$row['request_title'] = __('Transfer of student').' '.$row->user->name_with_id.' '.__('from').' '.$row->previous_institution->code_name;
+	    			$row['institution'] = $row->institution->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }

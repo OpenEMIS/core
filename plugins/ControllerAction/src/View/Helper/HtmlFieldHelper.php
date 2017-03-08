@@ -22,7 +22,7 @@ class HtmlFieldHelper extends Helper {
 
 	public $table = null;
 
-	public $helpers = ['Html', 'Form', 'Url', 'Number'];
+	public $helpers = ['ControllerAction', 'Html', 'Form', 'Url', 'Number'];
 
 	public $includes = [
 		'datepicker' => [
@@ -444,7 +444,11 @@ class HtmlFieldHelper extends Helper {
 		$maxImageWidth = 60;
 
 		if ($action == 'index' || $action == 'view') {
-			$src = $data->photo_content;
+			$src = '';
+
+			if ($data->has($attr['field'])) {
+				$src = $data[$attr['field']];
+			}
 
 			if (array_key_exists('ajaxLoad', $attr) && $attr['ajaxLoad']) {
 				$imageUrl = '';
@@ -463,6 +467,9 @@ class HtmlFieldHelper extends Helper {
 					</div>';
 			} else {
 				if (!empty($src)) {
+					if (is_resource($src)) {
+						$src = base64_encode(stream_get_contents($src));
+					}
 					$value = (base64_decode($src, true)) ? '<div class="table-thumb"><img src="data:image/jpeg;base64,'.$src.'" style="max-width:'.$maxImageWidth.'px;" /></div>' : $src;
 				}
 			}
@@ -490,6 +497,13 @@ class HtmlFieldHelper extends Helper {
 			}
 
 			header('Content-Type: image/jpeg');
+
+			if (isset($attr['defaultWidth'])) {
+				$defaultWidth = $attr['defaultWidth'];
+			}
+			if (isset($attr['defaultHeight'])) {
+				$defaultWidth = $attr['defaultHeight'];
+			}
 
 			$this->includes['jasny']['include'] = true;
 			$value = $this->_View->element('ControllerAction.bootstrap-jasny/image_uploader', ['attr' => $attr, 'src' => $src,
@@ -762,22 +776,24 @@ class HtmlFieldHelper extends Helper {
 			} else {
 				if ($options['multiple']) {
 					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
-
-					//logic when there is no option on multiple chosen select which unselectable
-					if (isset($options['empty'])) {
-						unset($options['empty']);
-
-						$options['options'][] = [
-                            'text' => __('No options'),
-                            'value' => '',
-                            'disabled' => 'disabled'
-                        ];
-					}
-
 				} else {
 					$fieldName = $attr['model'] . '.' . $attr['field'];
 				}
 			}
+
+			if ($options['multiple']) {
+				//logic when there is no option on multiple chosen select which unselectable
+				if (isset($options['empty'])) {
+					unset($options['empty']);
+
+					$options['options'][] = [
+						'text' => __('No options'),
+						'value' => '',
+						'disabled' => 'disabled'
+					];
+				}
+			}
+
 			$value = $this->Form->input($fieldName, $options);
 		}
 		return $value;
@@ -793,10 +809,23 @@ class HtmlFieldHelper extends Helper {
 		}
 
 		if ($action == 'index' || $action == 'view') {
+
+			// Modified logic
 			// $buttons = $this->_View->get('_buttons');
 			$buttons = $this->_View->get('ControllerAction');
-			$buttons = $buttons['buttons'];
-			$action = $buttons['download']['url'];
+			if (array_key_exists('buttons', $buttons)) { // for CAv3
+				$action = $buttons['buttons']['download']['url'];
+			} else { // for CAv4
+				$action = $buttons['table']->url('download', false);
+			}
+
+			// New logic from master
+			// $buttons = $this->_View->get('ControllerAction');
+			// $buttons = $buttons['buttons'];
+			// $action = $buttons['download']['url'];
+			$request = $this->request;
+			$ids = $this->ControllerAction->getIdKeys($table, $data, false);
+			$action = ['action' => $request->action, 'download', $this->ControllerAction->paramsEncode($ids)];
 			$value = $this->link($data->$name, $action);
 		} else if ($action == 'edit') {
 			$this->includes['jasny']['include'] = true;

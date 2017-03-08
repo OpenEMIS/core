@@ -7,7 +7,7 @@ trait PickerTrait {
 		// to handle both d-m-y and d-m-Y because datepicker and cake doesnt validate
 		$dateObj = date_create_from_format("d-m-Y",$data);
 		if ($dateObj === false) {
-			$dateObj = date_create_from_format("d-m-y",$data);
+			$dateObj = date_create_from_format("d/m/Y",$data);
 		}
 		if ($dateObj !== false) {
 			return $dateObj->format($format);

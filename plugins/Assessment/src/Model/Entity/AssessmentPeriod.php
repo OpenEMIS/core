@@ -9,13 +9,17 @@ class AssessmentPeriod extends Entity
 	protected $_virtual = ['editable'];
 
     protected function _getEditable() {
-		$today = date('Y-m-d');
+    	$dateToday = date('Y-m-d');
 		$dateEnabled = $this->date_enabled;
 		$dateDisabled = $this->date_disabled;
 		if ($dateEnabled instanceof DateTimeInterface && $dateDisabled instanceof DateTimeInterface) {
-			return ($today >= $dateEnabled->format('Y-m-d') && $today <= $dateDisabled->format('Y-m-d')) ? 1 : 0;
+			return ($dateToday >= $dateEnabled->format('Y-m-d') && $dateToday <= $dateDisabled->format('Y-m-d')) ? 1 : 0;
 		} else {
-			return 1;
+			$today = strtotime($dateToday);
+			$dateEnabled = strtotime($this->date_enabled);
+			$dateDisabled = strtotime($this->date_disabled);
+
+			return ($today >= $dateEnabled && $today <= $dateDisabled) ? 1 : 0;
 		}
 	}
 }
