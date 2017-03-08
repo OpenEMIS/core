@@ -16,6 +16,9 @@ class SurveyFormsQuestionsTable extends CustomFormsFieldsTable {
 		$this->belongsTo('CustomFields', ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id']);
 
 		$this->removeBehavior('Reorder');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'Rules' => ['index']
+        ]);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {

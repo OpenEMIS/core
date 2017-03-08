@@ -12,5 +12,8 @@ class SurveyQuestionChoicesTable extends CustomFieldOptionsTable {
 				'filter' => 'survey_question_id',
 			]);
 		}
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Rules' => ['index']
+        ]);
 	}
 }

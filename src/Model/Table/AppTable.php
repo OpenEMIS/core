@@ -85,10 +85,10 @@ class AppTable extends Table {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 		$this->addBehavior('Validation');
-		$this->attachWorkflow();
 		$this->addBehavior('Modification');
 
         $this->addBehavior('TrackDelete');
+        $this->addBehavior('ControllerAction.Security');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -121,16 +121,6 @@ class AppTable extends Table {
 		}
 	}
 
-	public function attachWorkflow($config=[]) {
-		// check for session and attach workflow behavior
-		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
-			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
-				$config = array_merge($config, ['model' => $this->registryAlias()]);
-				$this->addBehavior('Workflow.Workflow', $config);
-			}
-		}
-	}
-
 	// Event: 'ControllerAction.Model.onPopulateSelectOptions'
 	public function onPopulateSelectOptions(Event $event, Query $query) {
 		return $this->getList($query);
@@ -139,10 +129,19 @@ class AppTable extends Table {
 	public function getList($query = null) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
+		$table = $schema->name();
 
 		if (is_null($query)) {
-			$query = $this->find('list');
-		}
+            if ($table == 'area_levels') {
+                $query = $this
+                    ->find('list', [
+                        'keyField' => 'level',
+                        'valueField' => 'name'
+                    ]);
+            } else {
+                $query = $this->find('list');
+            }
+        }
 
 		if ($this->hasBehavior('FieldOption') && $this->table() == 'field_option_values') {
 			$query->innerJoin(
@@ -281,6 +280,15 @@ class AppTable extends Table {
 		return __($this->getFieldLabel($module, $col, $language));
 	}
 
+    public function getButtonAttr() {
+        return [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+    }
+
 	// Event: 'ControllerAction.Model.onInitializeButtons'
 	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra) {
 		// needs clean up
@@ -290,12 +298,7 @@ class AppTable extends Table {
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
 
-		$toolbarAttr = [
-			'class' => 'btn btn-xs btn-default',
-			'data-toggle' => 'tooltip',
-			'data-placement' => 'bottom',
-			'escape' => false
-		];
+		$toolbarAttr = $this->getButtonAttr();
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
 		// Set for roles belonging to the controller
@@ -408,15 +411,17 @@ class AppTable extends Table {
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $primaryKey = $this->primaryKey();
         $id = null;
-        if (!is_array($primaryKey)) {
-            $id = $entity->$primaryKey;
-        } else {
-        	if ($entity->has('id')) {
-        		$id = $entity->id;
-        	} else {
-        		return $buttons;
-        	}
-        }
+    	$primaryKeyValue = [];
+    	if (is_array($primaryKey)) {
+    		foreach ($primaryKey as $key) {
+				$primaryKeyValue[$key] = $entity->getOriginal($key);
+			}
+    	} else {
+    		$primaryKeyValue[$primaryKey] = $entity->getOriginal($primaryKey);
+    	}
+
+		$encodedKeys = $this->paramsEncode($primaryKeyValue);
+		$id = $encodedKeys;
 
         if (array_key_exists('view', $buttons)) {
             $buttons['view']['url'][1] = $id;

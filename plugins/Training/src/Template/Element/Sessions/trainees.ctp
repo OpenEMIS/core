@@ -17,9 +17,9 @@
 		    'action' => $this->request->params['action'],
 		    'ajaxTraineeAutocomplete'
 		]);
-		$table = $ControllerAction['table']->alias();
+		$alias = $ControllerAction['table']->alias();
 
-		echo $this->Form->input('trainee_search', [
+		echo $this->Form->input("$alias.trainee_search", [
 			'label' => __('Add Trainee'),
 			'type' => 'text',
 			'class' => 'autocomplete',
@@ -30,7 +30,7 @@
 			'autocomplete-target' => 'trainee_id',
 			'autocomplete-submit' => "$('#reload').val('addTrainee').click();"
 		]);
-		echo $this->Form->hidden('trainee_id', ['autocomplete-value' => 'trainee_id']);
+		echo $this->Form->hidden("$alias.trainee_id", ['autocomplete-value' => 'trainee_id']);
 
 		$importAttr = [
 		    'model' => $attr['model'],

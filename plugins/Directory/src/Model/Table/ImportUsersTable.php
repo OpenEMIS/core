@@ -14,11 +14,15 @@ class ImportUsersTable extends AppTable {
 		$this->table('import_mapping');
 		parent::initialize($config);
 
-	    $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'Users']);
+	    $this->addBehavior('Import.Import', ['plugin'=>'User', 'model'=>'Users', 'backUrl' => ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']]);
 
-	    // register table once 
+	    // register table once
 		$this->Users = TableRegistry::get('User.Users');
 	    $this->ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+
+	    $prefix = $this->ConfigItems->value('openemis_id_prefix');
+		$prefix = explode(",", $prefix);
+		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
 
 	    $this->accountTypes = [
 	    	'is_student' => [
@@ -26,43 +30,30 @@ class ImportUsersTable extends AppTable {
 	    		'code' => 'STU',
 	    		'name' => __('Students'),
 	    		'model' => 'Student',
-	    		'prefix' => '',
+	    		'prefix' => $prefix,
 	    	],
 	    	'is_staff' => [
 	    		'id' => 'is_staff',
 	    		'code' => 'STA',
 	    		'name' => __('Staff'),
 	    		'model' => 'Staff',
-	    		'prefix' => '',
+	    		'prefix' => $prefix,
 	    	],
 	    	'is_guardian' => [
 	    		'id' => 'is_guardian',
 	    		'code' => 'GUA',
 	    		'name' => __('Guardians'),
 	    		'model' => 'Guardian',
-	    		'prefix' => '',
+	    		'prefix' => $prefix,
 	    	],
 	    	'others' => [
 	    		'id' => 'others',
 	    		'code' => 'OTH',
 	    		'name' => __('Others'),
 	    		'model' => '',
-	    		'prefix' => '',
+	    		'prefix' => $prefix,
 	    	]
 	    ];
-
-		$studentPrefix = $this->ConfigItems->value('student_prefix');
-		$studentPrefix = explode(",", $studentPrefix);
-		$this->accountTypes['is_student']['prefix'] = (isset($studentPrefix[1]) && $studentPrefix[1]>0) ? $studentPrefix[0] : '';
-
-		$staffPrefix = $this->ConfigItems->value('staff_prefix');
-		$staffPrefix = explode(",", $staffPrefix);
-		$this->accountTypes['is_staff']['prefix'] = (isset($staffPrefix[1]) && $staffPrefix[1]>0) ? $staffPrefix[0] : '';
-
-		$guardianPrefix = $this->ConfigItems->value('guardian_prefix');
-		$guardianPrefix = explode(",", $guardianPrefix);
-		$this->accountTypes['is_guardian']['prefix'] = (isset($guardianPrefix[1]) && $guardianPrefix[1]>0) ? $guardianPrefix[0] : '';
-
 	}
 
 	public function implementedEvents() {
@@ -212,7 +203,7 @@ class ImportUsersTable extends AppTable {
 			foreach ($this->accountTypes as $key => $value) {
 				if (!empty($value['prefix']) && substr_count($val, $value['prefix'])>0) {
 					$val = substr($val, strlen($value['prefix']));
-				}				
+				}
 			}
 			$val = $prefix . (intval($val) + $row);
 			$user = $this->Users->find()->select(['id'])->where(['openemis_no'=>$val])->first();
@@ -243,9 +234,9 @@ class ImportUsersTable extends AppTable {
 		$tempPassedRecord['data'][$key] = $clonedEntity->openemis_no;
 	}
 
-	public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData) 
+	public function onImportCustomHeader(Event $event, $customDataSource, ArrayObject $customHeaderData)
 	{
-	
+
 		$customTable = TableRegistry::get($customDataSource);
 
         switch($customDataSource) { //this is for specify column name based on the data
@@ -264,19 +255,19 @@ class ImportUsersTable extends AppTable {
 		        	$customHeaderData[] = true; //show descriptions
 
 		        } else { //no default defined, then put warning on header
-		            
+
 		            $column = "Please Define Default Identity Type";
 		            $customHeaderData[] = false; //dont show descriptions
 		        }
 
 				break;
-		}	
+		}
 
         $customHeaderData[] = $column;
 
 	}
 
-	public function onImportCheckIdentityConfig(Event $event, $tempRow, $cellValue) 
+	public function onImportCheckIdentityConfig(Event $event, $tempRow, $cellValue)
 	{
 		$result = true;
 

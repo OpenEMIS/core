@@ -16,6 +16,7 @@ use Cake\I18n\Date;
 class RecordBehavior extends Behavior {
 	protected $_defaultConfig = [
 		'events' => [
+			'ControllerAction.Model.afterAction'			=> ['callable' => 'afterAction', 'priority' => 1],
 			'ControllerAction.Model.add.onInitialize'		=> ['callable' => 'addOnInitialize', 'priority' => 100],
 			'ControllerAction.Model.edit.onInitialize'		=> ['callable' => 'editOnInitialize', 'priority' => 100],
 			'ControllerAction.Model.viewEdit.beforeQuery'	=> ['callable' => 'viewEditBeforeQuery', 'priority' => 100],
@@ -116,6 +117,10 @@ class RecordBehavior extends Behavior {
 		}
     }
 
+    private function isCAv4() {
+		return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
+	}
+
     public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events = array_merge($events, $this->config('events'));
@@ -123,16 +128,7 @@ class RecordBehavior extends Behavior {
 	}
 
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($this->config('tabSection')) {
-			$currentAction = $this->_table->ControllerAction->action();
-			if ($currentAction == 'view') {
-				if ($toolbarButtons->offsetExists('back')) {
-					if (array_key_exists('tab_section', $toolbarButtons['back']['url'])) {
-						unset($toolbarButtons['back']['url']['tab_section']);
-					}
-				}
-			}
-		}
+		$this->setToolbarButtons($toolbarButtons, $attr, $action);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
@@ -212,6 +208,23 @@ class RecordBehavior extends Behavior {
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
     	$this->setupCustomFields($entity);
+	}
+
+	public function afterAction(Event $event) {
+		if ($this->isCAv4()) {
+			$extra = func_get_arg(1);
+
+			$toolbarButtons = $extra['toolbarButtons'];
+			$action = $this->_table->action;
+			$toolbarAttr = [
+				'class' => 'btn btn-xs btn-default',
+				'data-toggle' => 'tooltip',
+				'data-placement' => 'bottom',
+				'escape' => false
+			];
+			$this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
+			$extra['toolbarButtons'] = $toolbarButtons;
+		}
 	}
 
 	public function addBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
@@ -588,6 +601,7 @@ class RecordBehavior extends Behavior {
 
 	public function setupCustomFields(Entity $entity) {
 		$model = $this->_table;
+		$ControllerAction = $this->isCAv4() ? $model : $model->ControllerAction;
 		$session = $model->request->session();
 		$query = $this->getCustomFieldQuery($entity);
 
@@ -596,8 +610,12 @@ class RecordBehavior extends Behavior {
 			$customFields = $query->toArray();
 
 			$tabElements = [];
-			$action = $model->ControllerAction->action();
-			$url = $model->ControllerAction->url($action);
+			if ($this->isCAv4()) {
+				$action = $model->action;
+			} else {
+				$action = $ControllerAction->action();
+			}
+			$url = $ControllerAction->url($action);
 			$sectionName = null;
 			foreach ($customFields as $key => $obj) {
 				if (isset($obj->section)) {
@@ -647,13 +665,19 @@ class RecordBehavior extends Behavior {
 			$fieldOrder = [];
 			// temporary fix: to make custom fields appear before map in Institutions > General > Overview
 			$ignoreFields = ['id', 'map_section', 'map', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-			foreach ($model->fields as $fieldName => $field) {
+			
+			// re-order array sequence based on 'order' attribute value.
+			$modelFields = $model->fields;
+			uasort($modelFields, function($a,$b){ return $a['order']-$b['order'];});
+			foreach ($modelFields as $fieldName => $field) {
 				if (!in_array($fieldName, $ignoreFields)) {
 					$order = $field['order'] > $order ? $field['order'] : $order;
-					$fieldOrder[$field['order']] = $fieldName;
+					if (array_key_exists($order, $fieldOrder)) {
+						$order++;
+					}
+					$fieldOrder[$order] = $fieldName;
 				}
 			}
-
 			// retrieve saved values
 			$values = new ArrayObject([]);
 			$cells = new ArrayObject([]);
@@ -723,7 +747,7 @@ class RecordBehavior extends Behavior {
 							$fieldName = "section_".$key."_header";
 
 							if (!empty($sectionName)) {
-								$model->ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName]);
+								$ControllerAction->field($fieldName, ['type' => 'section', 'title' => $sectionName]);
 								$fieldOrder[++$order] = $fieldName;
 							}
 						}
@@ -781,7 +805,7 @@ class RecordBehavior extends Behavior {
 				}
 
 				if ($renderField) {
-					$model->ControllerAction->field($fieldName, $attr);
+					$ControllerAction->field($fieldName, $attr);
 					$fieldOrder[++$order] = $fieldName;
 				}
 			}
@@ -793,7 +817,7 @@ class RecordBehavior extends Behavior {
 				}
 			}
 			ksort($fieldOrder);
-			$model->ControllerAction->setFieldOrder($fieldOrder);
+			$ControllerAction->setFieldOrder($fieldOrder);
 		}
 	}
 
@@ -1027,6 +1051,18 @@ class RecordBehavior extends Behavior {
 			$newEntity = $model->patchEntity($newEntity, $newRequestData, ['validate' => false]);
 			$model->save($newEntity);
         }
+	}
+
+	private function setToolbarButtons(ArrayObject $toolbarButtons, array $attr, $action) {
+		if ($this->config('tabSection')) {
+			if ($action == 'view') {
+				if ($toolbarButtons->offsetExists('back')) {
+					if (array_key_exists('tab_section', $toolbarButtons['back']['url'])) {
+						unset($toolbarButtons['back']['url']['tab_section']);
+					}
+				}
+			}
+		}
 	}
 
 	private function text($data, $fieldInfo, $options=[]) {

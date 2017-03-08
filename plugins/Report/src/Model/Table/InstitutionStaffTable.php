@@ -59,7 +59,14 @@ class InstitutionStaffTable extends AppTable  {
 			]);
 		}
 
-		$query->contain(['Users.Genders', 'Institutions.Areas', 'Positions.StaffPositionTitles', 'Institutions.Types'])->select([
+		$query
+		->contain([
+			'Users.Genders',
+			'Institutions.Areas',
+			'Positions.StaffPositionTitles',
+			'Institutions.Types'
+        ])
+		->select([
 			'openemis_no' => 'Users.openemis_no',
 			'first_name' => 'Users.first_name',
 			'middle_name' => 'Users.middle_name',
@@ -69,7 +76,7 @@ class InstitutionStaffTable extends AppTable  {
 			'gender' => 'Genders.name',
 			'area_name' => 'Areas.name',
 			'area_code' => 'Areas.code',
-			'position_title_teaching' => 'StaffPositionTitles.type', 
+			'position_title_teaching' => 'StaffPositionTitles.type',
 			'institution_type' => 'Types.name'
 		]);
 	}
@@ -96,6 +103,29 @@ class InstitutionStaffTable extends AppTable  {
 		return $age;
 	}
 
+	public function onExcelGetEducationGrades(Event $event, Entity $entity)
+    {
+    	$ClassesTable = TableRegistry::get('Institution.InstitutionClasses');
+
+    	$query = $ClassesTable
+    		->find()
+    		->contain(['EducationGrades'])
+    		->hydrate(false)
+    		->where([$ClassesTable->aliasField('staff_id') => $entity->staff_id]);
+
+    	$classes = $query->toArray();
+    	$grades = [];
+
+    	foreach ($classes as $class) {
+    		foreach ($class['education_grades'] as $grade) {
+    			$grades[$grade['id']] = $grade['name'];
+    		}
+    	}
+
+        return implode(', ', array_values($grades));
+    }
+
+
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
 		$identity = $IdentityType->getDefaultEntity();
@@ -111,98 +141,138 @@ class InstitutionStaffTable extends AppTable  {
 			}
 		}
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Institutions.code',
 			'field' => 'code',
 			'type' => 'string',
 			'label' => '',
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Staff.institution_id',
 			'field' => 'institution_id',
 			'type' => 'integer',
 			'label' => '',
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Institutions.institution_type_id',
 			'field' => 'institution_type',
 			'type' => 'integer',
 			'label' => '',
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Users.openemis_no',
 			'field' => 'openemis_no',
 			'type' => 'string',
 			'label' => ''
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Users.first_name',
 			'field' => 'first_name',
 			'type' => 'string',
 			'label' => ''
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Users.middle_name',
 			'field' => 'middle_name',
 			'type' => 'string',
 			'label' => ''
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Users.last_name',
 			'field' => 'last_name',
 			'type' => 'string',
 			'label' => ''
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Users.identity_number',
 			'field' => 'number',
 			'type' => 'string',
 			'label' => __($identity->name)
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Users.gender_id',
 			'field' => 'gender',
 			'type' => 'string',
 			'label' => ''
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Institutions.area_name',
 			'field' => 'area_name',
 			'type' => 'string',
 			'label' => ''
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Institutions.area_code',
 			'field' => 'area_code',
 			'type' => 'string',
 			'label' => ''
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Staff.FTE',
 			'field' => 'FTE',
 			'type' => 'integer',
 			'label' => 'FTE (%)',
 		];
 
-		$extraField[] = [
+		$newFields[] = [
 			'key' => 'Age',
 			'field' => 'Age',
 			'type' => 'Age',
 			'label' => __('Age'),
 		];
 
-		$newFields = array_merge($extraField, $fields->getArrayCopy());
+		$newFields[] = [
+            'key' => 'InstitutionStaff.start_date',
+            'field' => 'start_date',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+         $newFields[] = [
+            'key' => 'InstitutionStaff.end_date',
+            'field' => 'end_date',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.staff_type_id',
+            'field' => 'staff_type_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Education.education_grades',
+            'field' => 'education_grades',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.staff_status_id',
+            'field' => 'staff_status_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'InstitutionStaff.institution_position_id',
+            'field' => 'institution_position_id',
+            'type' => 'integer',
+            'label' => ''
+        ];
 
 		$newFields[] = [
 			'key' => 'Positions.position_title_teaching',

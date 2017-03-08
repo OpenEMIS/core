@@ -19,8 +19,8 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 			$this->config('associatedKey', $this->_table->aliasField('id'));
 		}
 	}
-	
-	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany) 
+
+	public function onBuildQuery(Event $event, Query $query, $advancedSearchHasMany)
 	{
         $identityType = $advancedSearchHasMany['identity_type'];
 		$identityNumber = $advancedSearchHasMany['identity_number'];
@@ -35,7 +35,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
                         ]
                     ])
                     ->where([
-                        'UserIdentities.number LIKE ' => '%' . $identityNumber . '%'
+                        'UserIdentities.number LIKE ' => $identityNumber . '%'
                     ]);
 
             if (!empty($identityType)) {
@@ -47,7 +47,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
             $query->group('UserIdentities.security_user_id');
         }
         return $query;
-	}	
+	}
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -73,7 +73,7 @@ class AdvancedIdentitySearchBehavior extends Behavior {
 		];
 	}
 
-	public function getIdentityTypeOptions() 
+	public function getIdentityTypeOptions()
     {
         $IdentityTypes = TableRegistry::get('FieldOption.IdentityTypes');
 

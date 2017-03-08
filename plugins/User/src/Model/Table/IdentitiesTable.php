@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -21,7 +22,10 @@ class IdentitiesTable extends ControllerActionTable
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes']);
-
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add'],
+        	'Staff' => ['index', 'add']
+        ]);
 		$this->excludeDefaultValidations(['security_user_id']);
 	}
 
@@ -97,42 +101,68 @@ class IdentitiesTable extends ControllerActionTable
 		;
 	}
 
+	public function validationAddByAssociation(Validator $validator)
+	{
+		$validator = $this->validationDefault($validator);
+		return $validator->requirePresence('security_user_id', false);
+	}
+
 	public function validationNonMandatory(Validator $validator)
 	{
-		$this->validationDefault($validator);
+		$validator = $this->validationDefault($validator);
 		return $validator->allowEmpty('number');
 	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on add/edit action
+		$listeners = [
+            TableRegistry::get('User.Users')
+        ];
+        $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
 	}
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		if ($entity->identity_type_id == $this->IdentityTypes->getDefaultValue()) { //if the delete is done to the default identity type
-			$this->Users->updateIdentityNumber($entity->security_user_id, $this->getLatestDefaultIdentityNo($entity->security_user_id)); //update identity_number field on security_user table on delete action
-		}
+		$listeners = [
+            TableRegistry::get('User.Users')
+        ];
+        $this->dispatchEventToModels('Model.UserIdentities.onChange', [$entity], $this, $listeners);
 	}
 
-	public function getLatestDefaultIdentityNo($userId)
+	public function getLatestDefaultIdentityNo($userId) 
 	{
-		$defaultIdentityType = $this->IdentityTypes->getDefaultValue();
+        //check identity type that ties to the nationality
+		$UserNationalityTable = TableRegistry::get('User.UserNationalities');
 
-		$latestDefaultIdentityNo = NULL;
-		$latestDefaultIdentityNo = $this->find()
-										->select('number')
-										->where([
-											'identity_type_id' => $defaultIdentityType,
-											'security_user_id' => $userId
-										])
-										->order(['created DESC'])
-										->first();
+        $nationalityId = null;
+		$identityType = $UserNationalityTable
+			->find()
+			->matching('NationalitiesLookUp')
+			->select(['nationality_id', 'identityTypeId' => 'NationalitiesLookUp.identity_type_id'])
+			->where([
+				'security_user_id' => $userId,
+                'preferred' => 1
+			])
+            ->first();
 
-		if (!empty($latestDefaultIdentityNo)) {
-			return $latestDefaultIdentityNo->number;
+		//get the latest record according to identity type
+        $result = null;
+        if ($identityType) {
+            $nationalityId = $identityType->nationality_id;
+			$result = $this
+				->find()
+				->where([
+					$this->aliasField('security_user_id') => $userId,
+					$this->aliasField('identity_type_id') => $identityType->identityTypeId
+				])
+                ->order('created DESC')
+				->first();
+		}
+
+		if (!empty($result)) {
+			return ['nationality_id' => $nationalityId, 'identity_type_id' => $result->identity_type_id, 'identity_no' => $result->number];
 		} else {
-			return null;
+			return ['nationality_id' => $nationalityId, 'identity_type_id' => null, 'identity_no' => null];
 		}
 	}
 }

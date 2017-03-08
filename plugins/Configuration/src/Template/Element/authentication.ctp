@@ -1,3 +1,5 @@
+<?= $this->Html->script('Configuration.authentication_config', ['block' => true]); ?>
+
 <?php if ($ControllerAction['action'] == 'index') : ?>
 
 <?php elseif ($ControllerAction['action'] == 'view') : ?>

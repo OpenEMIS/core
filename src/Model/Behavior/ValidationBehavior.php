@@ -12,6 +12,7 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validation;
 use Cake\Validation\Validator;
 use DateTime;
+use Cake\Routing\Router;
 
 class ValidationBehavior extends Behavior {
 	use MessagesTrait;
@@ -102,48 +103,75 @@ class ValidationBehavior extends Behavior {
 		return ctype_digit($check);
 	}
 
-    public static function checkAuthorisedArea($check, $superAdmin, $userId, array $globalData) {
-        $isValid = false;
-        if ($superAdmin == 1) {
-        	$isValid = true;
+	public static function checkNotInvigilator($check, array $globalData) {
+		$data = $globalData['data'];
+
+        $Table = TableRegistry::get('Examination.ExaminationCentresInvigilators');
+        $record = $Table
+        	->find()
+        	->where([
+        		$Table->aliasField('examination_id') => $data['examination_id'],
+        		$Table->aliasField('invigilator_id') => $check,
+        		$Table->aliasField('academic_period_id') => $data['academic_period_id']
+        	])
+        	->first();
+
+        if (!empty($record)) {
+        	return false;
         } else {
-        	$data = $globalData['data'];
-        	$isSystemGroup = false;
-        	if (!$globalData['newRecord']) { // only applicable for edit mode
-        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
-	        		$isSystemGroup = true;
-	        	}
-        	}
-
-        	$condition = [];
-        	$areaCondition = [];
-
-        	if (!$isSystemGroup) {
-        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
-	        	$Areas = TableRegistry::get('Area.Areas');
-	        	// get areas from security group areas
-	        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
-
-	        	if (count($areasByUser) > 0) {
-					foreach($areasByUser as $area) {
-		        		$areaCondition[] = [
-							$Areas->aliasField('lft').' >= ' => $area['lft'],
-							$Areas->aliasField('rght').' <= ' => $area['rght']
-						];
-		        	}
-		        	$condition['OR'] = $areaCondition;
-
-					$isChild = $Areas->find()
-			        	->where([$Areas->aliasField('id') => $check])
-			        	->where($condition)
-			        	->count();
-
-			        $isValid = $isChild > 0;
-				}
-        	} else {
-        		$isValid = true;
-        	}
+        	return true;
         }
+    }
+
+    public static function checkAuthorisedArea($check, array $globalData)
+    {
+    	$data = $globalData['data'];
+    	$isValid = false;
+
+    	if (array_key_exists('superAdmin', $data) && array_key_exists('userId', $data)) {
+    		$superAdmin = $globalData['data']['superAdmin'];
+    		$userId = $globalData['data']['userId'];
+
+    		if ($superAdmin == 1) {
+	        	$isValid = true;
+	        } else {
+	        	$isSystemGroup = false;
+	        	if (!$globalData['newRecord']) { // only applicable for edit mode
+	        		if (array_key_exists('isSystemGroup', $data) && $data['isSystemGroup'] == true) {
+		        		$isSystemGroup = true;
+		        	}
+	        	}
+
+	        	$condition = [];
+	        	$areaCondition = [];
+
+	        	if (!$isSystemGroup) {
+	        		$SecurityGroupAreas = TableRegistry::get('Security.SecurityGroupAreas');
+		        	$Areas = TableRegistry::get('Area.Areas');
+		        	// get areas from security group areas
+		        	$areasByUser = $SecurityGroupAreas->getAreasByUser($userId);
+
+		        	if (count($areasByUser) > 0) {
+						foreach($areasByUser as $area) {
+			        		$areaCondition[] = [
+								$Areas->aliasField('lft').' >= ' => $area['lft'],
+								$Areas->aliasField('rght').' <= ' => $area['rght']
+							];
+			        	}
+			        	$condition['OR'] = $areaCondition;
+
+						$isChild = $Areas->find()
+				        	->where([$Areas->aliasField('id') => $check])
+				        	->where($condition)
+				        	->count();
+
+				        $isValid = $isChild > 0;
+					}
+	        	} else {
+	        		$isValid = true;
+	        	}
+	        }
+    	}
         return $isValid;
     }
 
@@ -496,6 +524,18 @@ class ValidationBehavior extends Behavior {
 
 	}
 
+	public static function compareValues($field, $compareField, array $globalData)
+	{
+		$max = $globalData['data'][$globalData['field']];
+		$min = $globalData['data'][$compareField];
+
+		if($max > $min) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	/**
 	 * To check whether given input is within given start and end dates
 	 * @param  mixed   	$field        			current field value
@@ -702,7 +742,7 @@ class ValidationBehavior extends Behavior {
 
 		if (array_key_exists('student_id', $data)) {
 			// saving for existing students
-			$Students = TableRegistry::get('Student.Students');
+			$Students = TableRegistry::get('Institution.StudentUser');
 			$studentQuery = $Students->find()
 				->select([$Students->aliasField('date_of_birth')])
 				->where([$Students->aliasField($Students->primaryKey()) => $data['student_id']])
@@ -802,26 +842,35 @@ class ValidationBehavior extends Behavior {
         return $count==0;
     }
 
-	public static function inAcademicPeriod($field, $academicFieldName, $globalData)
+	public static function inAcademicPeriod($field, $academicFieldName, $options = [], $globalData)
 	{
 		if (array_key_exists($academicFieldName, $globalData['data'])) {
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$periodObj = $AcademicPeriods
 					->findById($globalData['data'][$academicFieldName])
 					->first();
-			$startDate = strtotime($globalData['data']['start_date']);
-			$endDate = strtotime($globalData['data']['end_date']);
 
 			if (!empty($periodObj)) {
-				$academicPeriodStartDate = (!is_null($periodObj['start_date']))? $periodObj['start_date']->toUnixString(): null;
-				$academicPeriodEndDate = (!is_null($periodObj['end_date']))? $periodObj['end_date']->toUnixString(): null;
+				$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
+		        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
 
-				$rangecheck = ($startDate >= $academicPeriodStartDate && $startDate <= $academicPeriodEndDate) &&
-				(is_null($academicPeriodEndDate) ||
-					(!is_null($academicPeriodEndDate) && ($endDate >= $academicPeriodStartDate && $endDate <= $academicPeriodEndDate))
-				)
-				;
-				return $rangecheck;
+		        if ($excludeFirstDay) {
+		        	$withFirstDay = Time::parse($periodObj->start_date);
+		        	$startDate = strtotime($withFirstDay->modify('+1 day')->format('Y-m-d'));
+		        } else {
+		        	$startDate = strtotime($periodObj->start_date->format('Y-m-d'));
+		        }
+
+		        if ($excludeLastDay) {
+		        	$withLastDay = Time::parse($periodObj->end_date);
+		        	$endDate = strtotime($withLastDay->modify('-1 day')->format('Y-m-d'));
+		        } else {
+		        	$endDate = strtotime($periodObj->end_date->format('Y-m-d'));
+		        }
+
+		        $checkDate = strtotime(Time::parse($field)->format('Y-m-d'));
+
+		        return ($checkDate >= $startDate && $checkDate <= $endDate);
 			}
 		}
 
@@ -969,17 +1018,29 @@ class ValidationBehavior extends Behavior {
 					->where($conditions)
 					->toArray();
 
-			$shiftStartTimeArray = [];
-			$shiftEndTimeArray = [];
-			foreach ($shiftTime as $key => $value) {
-				$shiftStartTimeArray[$key] = $value->start_time;
-				$shiftEndTimeArray[$key] = $value->end_time;
-			}
+			if (!empty($shiftTime)) {
+				$shiftStartTimeArray = [];
+				$shiftEndTimeArray = [];
+				foreach ($shiftTime as $key => $value) {
+					$shiftStartTimeArray[$key] = $value->start_time;
+					$shiftEndTimeArray[$key] = $value->end_time;
+				}
 
-			// get the earliest shift start time for the start time.
-			// get the latest shift end time for the end time.
-			$startTime = min($shiftStartTimeArray);
-			$endTime = max($shiftEndTimeArray);
+				// get the earliest shift start time for the start time.
+				// get the latest shift end time for the end time.
+				$startTime = min($shiftStartTimeArray);
+				$endTime = max($shiftEndTimeArray);
+			} else {
+				$ConfigItems = TableRegistry::get('Configuration.configItems');
+
+				$configStartTime = $ConfigItems->value('start_time');
+				$hourPerDay = $ConfigItems->value('hours_per_day');
+
+				$startTime = new time($configStartTime);
+
+				$endTime = new time($configStartTime);
+				$endTime->addHour($hourPerDay);
+			}
 
 			$institutionShiftStartTime = strtotime($InstitutionShift->formatTime($startTime));
 			$institutionShiftEndTime = strtotime($InstitutionShift->formatTime($endTime));
@@ -1186,7 +1247,6 @@ class ValidationBehavior extends Behavior {
 			->where(
 				[
 					$InstitutionStaff->aliasField('institution_position_id') => $globalData['data']['institution_position_id']
-
 				]
 			);
 
@@ -1317,6 +1377,26 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+	public static function checkCriteriaThresholdRange($field, $globalData)
+	{
+		$model = $globalData['providers']['table'];
+		$Indexes = TableRegistry::get('Indexes.Indexes');
+
+		// only for operator '1' (less than equal to) and '2' (greater than equal to)
+		if ($globalData['data']['operator'] == '1' || $globalData['data']['operator'] == '2') {
+			$criteriaMin = $Indexes->getThresholdParams($globalData['data']['criteria'])['min'];
+			$criteriaMax = $Indexes->getThresholdParams($globalData['data']['criteria'])['max'];
+
+			if ($field < $criteriaMin || $field > $criteriaMax ) {
+				return $model->getMessage('Indexes.IndexesCriterias.threshold.criteriaThresholdRange', ['sprintf' => [$criteriaMin, $criteriaMax]]);
+			} else {
+				return true;
+			}
+		} else {
+			return true;
+		}
+	}
+
 	public static function checkDateRange($field, array $globalData) {
 		$systemDateFormat = TableRegistry::get('Configuration.ConfigItems')->value('date_format');
 		$model = $globalData['providers']['table'];
@@ -1379,6 +1459,7 @@ class ValidationBehavior extends Behavior {
         return $count==0;
     }
 
+    // Function is deprecated, please do not use this validation function
 	public static function checkUniqueCodeWithinForm($code, $parentModel, array $globalData) {
 		$model = $globalData['providers']['table'];
 		$count = 0;
@@ -1480,7 +1561,7 @@ class ValidationBehavior extends Behavior {
         return intVal($minValue) <= intVal($globalData['data']['max']);
     }
 
-	public static function noNewDropoutRequestInGradeAndInstitution($field, array $globalData)
+	public static function noNewWithdrawRequestInGradeAndInstitution($field, array $globalData)
 	{
 		$model = $globalData['providers']['table'];
 		$data = $globalData['data'];
@@ -1494,7 +1575,7 @@ class ValidationBehavior extends Behavior {
 			return true;
 		}
 
-		$StudentDropoutTable = TableRegistry::get('Institution.StudentDropout');
+		$StudentWithdrawTable = TableRegistry::get('Institution.StudentWithdraw');
     	$conditions = [
 			'student_id' => $studentId,
 			'status' => $model::NEW_REQUEST,
@@ -1502,7 +1583,7 @@ class ValidationBehavior extends Behavior {
 			'institution_id' => $previousInstitutionId
 		];
 
-		$count = $StudentDropoutTable->find()
+		$count = $StudentWithdrawTable->find()
 			->where($conditions)
 			->count();
 
@@ -1559,21 +1640,26 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
-	public static function checkAvailableCapacity($field, array $globalData)
+	public static function checkPendingAdmissionExist($field, array $globalData)
 	{
 		$data = $globalData['data'];
-		if (isset($data['available_capacity'])) {
-			if (isset($data['examination_students']) && is_array($data['examination_students'])) {
-				$students = [];
-				foreach($data['examination_students'] as $student) {
-					if ($student['selected']) {
-						$students[] = $student['student_id'];
-					}
-				}
-				return count($students) <= $data['available_capacity'];
-			}
-		}
-		return false;
+		$studentId = $data['student_id'];
+		$institutionId = $data['institution_id'];
+		$academicPeriodId = $data['academic_period_id'];
+		$educationGradeId = $data['education_grade_id'];
+		$AdmissionTable = TableRegistry::get('Institution.StudentAdmission');
+		$studentExist = $AdmissionTable->find()
+			->where([
+					$AdmissionTable->aliasField('status') => 0,
+					$AdmissionTable->aliasField('student_id') => $studentId,
+					$AdmissionTable->aliasField('institution_id') => $institutionId,
+					$AdmissionTable->aliasField('academic_period_id') => $academicPeriodId,
+					$AdmissionTable->aliasField('education_grade_id') => $educationGradeId,
+					$AdmissionTable->aliasField('type') => 1
+				])
+			->count();
+
+		return $studentExist == 0;
 	}
 
 	public static function validateCustomIdentityNumber($field, array $globalData)
@@ -1604,4 +1690,154 @@ class ValidationBehavior extends Behavior {
 
 		return true;
 	}
+
+	public static function validateCustomPattern($field, $code, array $globalData)
+	{
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$valuePattern = '/' . $ConfigItems->value($code) . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+			return $model->getMessage('general.custom_validation_pattern');
+		}
+
+		return true;
+	}
+
+	public static function validateRoomCapacity($field, array $globalData)
+	{
+		if (array_key_exists('students', $globalData)) {
+			$totalSeats = $globalData['data']['number_of_seats'];
+			$currentSeats = count($globalData['data']['students']);
+			return $totalSeats >= $currentSeats;
+		}
+
+		return true;
+	}
+
+	public static function checkNoRunningSystemProcess($check, $processName, array $globalData)
+	{
+		$RUNNING = 2;
+		$SystemProcesses = TableRegistry::get('SystemProcesses');
+		$runningProcesses = $SystemProcesses->find()
+			->where([
+				$SystemProcesses->aliasField('name') => $processName,
+				$SystemProcesses->aliasField('status') => $RUNNING
+			])
+			->toArray();
+
+		if (!empty($runningProcesses)) {
+			foreach ($runningProcesses as $key => $obj) {
+				$params = json_decode($obj->params);
+				if ($params->examination_id && $params->examination_id == $check) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
+
+	public static function checkStaffAssignment($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$staffId = $data['staff_id'];
+		$startDate = new Date($data['start_date']);
+
+		// check if staff is already assigned
+		$StaffTable = TableRegistry::get('Institution.Staff');
+
+		$staffRecord = $StaffTable->find()
+			->contain(['Institutions'])
+			->where([
+				$StaffTable->aliasField('staff_id') => $staffId,
+				$StaffTable->aliasField('institution_id') => $data['institution_id'],
+				'OR' => [
+					[$StaffTable->aliasField('end_date').' >= ' => $startDate],
+					[$StaffTable->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$StaffTable->aliasField('created') => 'DESC'])
+			->first();
+
+		// Check if staff already exist in the school
+		if ($staffRecord) {
+			return true;
+		}
+
+		// If staff does not exist in the school, we check if the staff is in another school
+		$staffRecord = $StaffTable->find()
+			->contain(['Institutions'])
+			->where([
+				$StaffTable->aliasField('staff_id') => $staffId,
+				$StaffTable->aliasField('institution_id'). ' <> ' => $data['institution_id'],
+				'OR' => [
+					[$StaffTable->aliasField('end_date').' >= ' => $startDate],
+					[$StaffTable->aliasField('end_date').' IS NULL']
+				]
+			])
+			->order([$StaffTable->aliasField('created') => 'DESC'])
+			->first();
+
+		if ($staffRecord) {
+			return false;
+		}
+
+		return true;
+	}
+
+	public static function checkPendingStaffTransfer($field, array $globalData)
+	{
+		$data = $globalData['data'];
+		$staffId = $data['staff_id'];
+		$institutionId = $data['institution_id'];
+		$newTransferStatus = 0;
+		$type = 2;
+		$TransferRequest = TableRegistry::get('Institution.StaffTransferRequests');
+
+		$transferRecord = $TransferRequest
+			->find()
+			->where([
+				$TransferRequest->aliasField('institution_id') => $institutionId,
+				$TransferRequest->aliasField('staff_id') => $staffId,
+				$TransferRequest->aliasField('type') => $type,
+				$TransferRequest->aliasField('status') => $newTransferStatus
+			])
+			->first();
+
+		if ($transferRecord) {
+			$url = Router::url(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffTransferRequests', 'view', $TransferRequest->paramsEncode(['id' => $transferRecord->id])], true);
+			return $url;
+		}
+
+		return true;
+	}
+
+    public static function validatePreferredNationality($field, array $globalData)
+    {
+        //check at least one preferred nationality set
+        if (array_key_exists('preferred', $globalData['data'])) {
+
+            if ($field == 0) { //if set as not preferred
+                $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
+
+                $query = $UserNationalitiesTable
+                        ->find()
+                        ->where([
+                            $UserNationalitiesTable->aliasField('security_user_id') => $globalData['data']['security_user_id'],
+                            $UserNationalitiesTable->aliasField('nationality_id <> ') => $globalData['data']['nationality_id'],
+                            $UserNationalitiesTable->aliasField('preferred') => 1
+                        ])
+                        ->count();
+                if ($query > 0) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }

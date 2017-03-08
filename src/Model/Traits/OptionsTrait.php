@@ -22,11 +22,14 @@ trait OptionsTrait {
 				'mark_types' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
 			],
 			'AssessmentGradingTypes' => [
-				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
+				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades'), 'DURATION' => ('Duration')]
 			],
 			'ExaminationGradingTypes' => [
 				'result_type' => ['MARKS' => __('Marks'), 'GRADES' => __('Grades')]
 			],
+            'CompetencyGradingTypes' => [
+                'result_type' => ['STATUS' => __('Status'), 'MARKS' => __('Marks'), 'GRADES' => __('Grades')]
+            ],
 			'Surveys' => [
 				'status' => [0 => __('New'), 1 => __('Draft'), 2 => __('Completed')]
 			],
@@ -37,7 +40,7 @@ trait OptionsTrait {
 			'TrainingSessions' => [
 				'trainer_types' => ['INTERNAL' => __('Internal'), 'EXTERNAL' => __('External')]
 			],
-			'TrainingNeeds' => [
+			'StaffTrainingNeeds' => [
 				'types' => ['CATALOGUE' => __('Course Catalogue'), 'NEED' => __('Need Category')]
 			],
 			'Health' => [
@@ -50,9 +53,9 @@ trait OptionsTrait {
 			],
 			'StaffPositionProfiles' => [
 				'FTE' => [
-					'0.25' => '25%', 
-					'0.5' => '50%', 
-					'0.75' => '75%', 
+					'0.25' => '25%',
+					'0.5' => '50%',
+					'0.75' => '75%',
 					'1' => '100%'
 				],
 			],
@@ -66,12 +69,19 @@ trait OptionsTrait {
 					3 => __('Multiple Shift Owner'),
 					4 => __('Multiple Shift Occupier')
         		]
-        	], 
+        	],
         	'ExaminationCentres' => [
         		'create_as' => [
         			'existing' => __('Existing Institution'),
         			'new' => __('New Examination Centre')
         		]
+        	],
+        	'WorkflowSteps' => [
+        		'category' => [
+	    			1 => __('To Do'),
+	    			2 => __('In Progress'),
+	    			3 => __('Done')
+	    		]
         	]
 		];
 

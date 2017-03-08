@@ -66,7 +66,9 @@ class InstitutionClassesTable extends ControllerActionTable
         // this behavior restricts current user to see All Classes or My Classes
         $this->addBehavior('Security.InstitutionClass');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
-
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Students' => ['index', 'add']
+        ]);
         $this->setDeleteStrategy('restrict');
     }
 
@@ -151,7 +153,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (array_key_exists($this->alias(), $this->request->data)) {
             $selectedAcademicPeriodId = $this->postString('academic_period_id', $academicPeriodOptions);
         } else if ($this->action == 'edit' && isset($this->request->pass[1])) {
-            $id = $this->request->pass[1];
+            $id = $this->paramsDecode($this->request->pass[1]);
             if ($this->exists($id)) {
                 $selectedAcademicPeriodId = $this->get($id)->academic_period_id;
             }
@@ -552,13 +554,14 @@ class InstitutionClassesTable extends ControllerActionTable
             foreach ($entity->institution_subjects as $key => $subjectEntity) {
                 foreach ($data['class_students'] as $classStudent) {
                     $subjectStudents[] = [
-                        'status' => 1,
+                        'student_status_id' => $classStudent['student_status_id'],
                         'student_id' => $classStudent['student_id'],
                         'institution_subject_id' => $subjectEntity->id,
                         'institution_class_id' => $classStudent['institution_class_id'],
                         'institution_id' => $subjectEntity->institution_id,
                         'academic_period_id' => $subjectEntity->academic_period_id,
-                        'education_subject_id' => $subjectEntity->education_subject_id
+                        'education_subject_id' => $subjectEntity->education_subject_id,
+                        'education_grade_id' => $classStudent['education_grade_id']
                     ];
                 }
             }
@@ -741,7 +744,7 @@ class InstitutionClassesTable extends ControllerActionTable
                     'controller' => 'Institutions',
                     'action' => 'StaffUser',
                     'view',
-                    $entity->staff->id
+                    $this->paramsEncode(['id' => $entity->staff->id])
                 ]);
             } else {
                 return $this->getMessage($this->aliasField('noTeacherAssigned'));
@@ -1009,6 +1012,12 @@ class InstitutionClassesTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
+        if ($entity->has('education_grades')) { //build grades array to cater for multi grade class
+            foreach ($entity->education_grades as $key => $value) {
+                $educationGrades[] = $value->id;
+            }
+        }
+
         $InstitutionStudentsTable = $this->Institutions->Students;
         $userData = $InstitutionStudentsTable->find()
             ->contain(['Users' => ['Genders'], 'StudentStatuses', 'EducationGrades'])
@@ -1016,9 +1025,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 $InstitutionStudentsTable->aliasField('student_id') => $id,
                 $InstitutionStudentsTable->aliasField('institution_id') => $entity->institution_id,
                 $InstitutionStudentsTable->aliasField('academic_period_id') => $entity->academic_period_id,
-                //this is to ensure that student is enrolled and have the correct education grade accordingly.
-                $InstitutionStudentsTable->aliasField('education_grade_id') => $entity->education_grades[0]->id,
-                $InstitutionStudentsTable->aliasField('student_status_id') => $enrolled
+                //this is to ensure that student have the correct education grade accordingly.
+                $InstitutionStudentsTable->aliasField('education_grade_id IN ') => $educationGrades
             ])
             ->first();
 
@@ -1064,6 +1072,39 @@ class InstitutionClassesTable extends ControllerActionTable
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
     }
 
+    public function findClassOptions(Query $query, array $options)
+    {
+        $institutionId = array_key_exists('institution_id', $options)? $options['institution_id']: null;
+        $academicPeriodId = array_key_exists('academic_period_id', $options)? $options['academic_period_id']: null;
+        $gradeId = array_key_exists('grade_id', $options)? $options['grade_id']: null;
+
+        if (!is_null($academicPeriodId) && !is_null($institutionId) && !is_null($gradeId)) {
+            $query->select(['InstitutionClasses.id', 'InstitutionClasses.name']);
+            $query->where([
+                'InstitutionClasses.academic_period_id' => $academicPeriodId,
+                'InstitutionClasses.institution_id' => $institutionId
+            ]);
+            if($gradeId != false) {
+                $query->join([
+                        [
+                            'table' => 'institution_class_grades',
+                            'alias' => 'InstitutionClassGrades',
+                            'conditions' => [
+                                'InstitutionClassGrades.institution_class_id = InstitutionClasses.id',
+                                'InstitutionClassGrades.education_grade_id = ' . $gradeId
+                            ]
+                        ]
+                    ]
+                );
+                $query->group(['InstitutionClasses.id']);
+            }
+        } else {
+            // incomplete data return nothing
+            $query->where([$this->aliasField('id') => -1]);
+        }
+        return $query;
+    }
+
     /**
      * Used by Institution/UserBehavior && Institution/InstitutionStudentsTable
      * @param  [integer]  $academicPeriodId [description]
@@ -1098,5 +1139,20 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $multiGradeData = $this->find('list', $multiGradeOptions);
         return $multiGradeData->toArray();
+    }
+
+    public function getSubjectClasses($institutionId, $academicPeriodId, $gradeId, $subjectId)
+    {
+        return $this->find('list')->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->innerJoinWith('EducationGrades', function($q) use ($gradeId) {
+                return $q->where(['EducationGrades.id' => $gradeId]);
+            })
+            ->innerJoinWith('InstitutionSubjects', function($q) use ($subjectId) {
+                return $q->where(['InstitutionSubjects.education_subject_id' => $subjectId]);
+            })
+            ->toArray();
     }
 }

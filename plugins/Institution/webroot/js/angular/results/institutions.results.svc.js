@@ -1,6 +1,6 @@
 angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc'])
 .service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc) {
-    const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
+    const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
         AssessmentsTable: 'Assessment.Assessments',
@@ -9,12 +9,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         AssessmentPeriodsTable: 'Assessment.AssessmentPeriods',
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
-        SecurityGroupUsersTable: 'Security.SecurityGroupUsers'
+        SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
+        StudentStatusesTable: 'Student.StudentStatuses'
     };
 
     return {
         init: function(baseUrl) {
             KdOrmSvc.base(baseUrl);
+            KdOrmSvc.controllerAction('Results');
             KdSessionSvc.base(baseUrl);
             angular.forEach(models, function(model, key) {
                 window[key] = KdOrmSvc.init(model);
@@ -35,12 +37,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return $q.all(promises);
         },
 
-        getSubjects: function(assessmentId, classId)
+        getSubjects: function(roles, assessmentId, classId)
         {
             var deferred = $q.defer();
             var isSuperAdmin = 0;
             var securityUserId = 0;
-            var roles = [];
+            
             var allSubjectRoles = [];
             var subjectRoles = [];
             var subjects = [];
@@ -50,24 +52,15 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 isSuperAdmin = response[0];
                 securityUserId = response[1];
                 var institutionId = response[2];
-                // allSubjectRoles = response[3];
-                // subjectRoles = response[4];
 
-                return SecurityGroupUsersTable
-                    .select(['security_role_id'])
-                    .find('RoleByInstitution', {security_user_id: securityUserId, institution_id: institutionId})
-                    .ajax({defer: true});
+                return roles;
 
             }, function(error) {
                 console.log('error:');
                 console.log(error);
                 deferred.reject(error);
             })
-            .then(function(response) {
-                var securityRoles = response.data;
-                for (i = 0; i < securityRoles.length; i++) {
-                    roles[i] = securityRoles[i].security_role_id;
-                }
+            .then(function(roles) {
                 var promises = [];
 
                 promises.push(KdAccessSvc.checkPermission('Institutions.AllSubjects.view', roles));
@@ -84,7 +77,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 var assessmentSubjects = AssessmentItemsTable
                     .select()
                     .contain(['EducationSubjects'])
-                    .where({assessment_id: assessmentId});
+                    .where({assessment_id: assessmentId})
+                    .order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name']);
 
                 // For no subjects
                 var fail = function(response, deferred) {
@@ -95,12 +89,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 var success = function(response, deferred) {
                     var items = response.data.data;
 
-                    if (angular.isObject(items) && items.length > 0) 
+                    if (angular.isObject(items) && items.length > 0)
                     {
                         var educationSubject = null;
 
                         var subjects = [];
-                        angular.forEach(items, function(item, key) 
+                        angular.forEach(items, function(item, key)
                         {
                             educationSubject = item.education_subject;
                             educationSubject.grading_type = item.grading_type;
@@ -109,17 +103,17 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         }, subjects);
 
                         deferred.resolve(subjects);
-                    } else 
+                    } else
                     {
                         deferred.reject('You need to configure Assessment Items first');
                     }
                 };
 
-                if (isSuperAdmin) 
+                if (isSuperAdmin)
                 {
                     // Super admin will return all subjects
                     assessmentSubjects = assessmentSubjects.ajax({success: success, defer: true});
-                } else 
+                } else
                 {
                     // Non super admin logic
 
@@ -134,7 +128,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 .find('staffSubjects', {class_id: classId, staff_id: securityUserId})
                                 .ajax({success: success, defer: true});
                         } else
-                        {   
+                        {
                             // Display nothing
                             assessmentSubjects = AssessmentItemsTable.ajax({success: fail, defer: true});
                         }
@@ -163,7 +157,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return deferred.promise;
         },
 
-        getPeriods: function(assessmentId) 
+        getPeriods: function(assessmentId)
         {
             var success = function(response, deferred) {
                 var periods = response.data.data;
@@ -172,7 +166,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     deferred.resolve(periods);
                 } else {
                     deferred.reject('You need to configure Assessment Periods first');
-                }   
+                }
             };
 
             return AssessmentPeriodsTable
@@ -205,7 +199,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             .ajax({success: success, defer: true});
         },
 
-        getColumnDefs: function(action, subject, periods, gradingTypes, _results) {
+        getStudentStatusId: function(statusCode)
+        {
+            return StudentStatusesTable.select(['id']).where({code: statusCode}).ajax({defer: true});
+        },
+
+        getColumnDefs: function(action, subject, periods, gradingTypes, _results, enrolledStatus) {
             var filterParams = {
                 cellHeight: 30
             };
@@ -228,6 +227,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 hide: true,
                 filterParams: filterParams
             });
+            columnDefs.push({
+                headerName: "Status",
+                field: "student_status_name",
+                filterParams: filterParams
+            });
 
             var ResultsSvc = this;
             angular.forEach(periods, function(period, key) {
@@ -244,12 +248,20 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                     }
 
                     var resultType = subject.grading_type.result_type;
+                    var maxMark = subject.grading_type.max;
                     var isMarksType = (resultType == resultTypes.MARKS);
                     var isGradesType = (resultType == resultTypes.GRADES);
+                    var isDurationType = (resultType == resultTypes.DURATION);
+
+                    if (isDurationType) {
+                        markAsFloat = parseFloat(maxMark);
+                        durationInMinutes = $filter('number')(markAsFloat/60, 2);
+                        maxMark = durationInMinutes.replace(".", " : ");
+                    }
                 }
 
                 var allowEdit = (action == 'edit' && period.editable);
-                var headerLabel = period.name + " <span class='divider'></span> " + period.weight;
+                var headerLabel = period.name + " <span class='divider'></span> " + maxMark;
                 var headerName = allowEdit ? headerLabel + " <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : headerLabel;
 
                 var periodField = 'period_' + period.id;
@@ -267,7 +279,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         extra = {
                             minMark: 0,
                             passMark: subject.grading_type.pass_mark,
-                            maxMark: subject.grading_type.max
+                            maxMark: subject.grading_type.max,
+                            enrolledStatus: enrolledStatus
                         };
                     }
 
@@ -287,12 +300,25 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         });
 
                         extra = {
-                            gradingOptions: gradingOptions
+                            gradingOptions: gradingOptions,
+                            enrolledStatus: enrolledStatus
                         };
                     }
 
                     extra['period'] = period;
                     columnDef = ResultsSvc.renderGrades(allowEdit, columnDef, extra, _results);
+                } else if (isDurationType) {
+                    if (subject.grading_type != null) {
+                        extra = {
+                            minMark: 0,
+                            passMark: subject.grading_type.pass_mark,
+                            maxMark: subject.grading_type.max,
+                            enrolledStatus: enrolledStatus
+                        };
+                    }
+
+                    extra['period'] = period;
+                    columnDef = ResultsSvc.renderDuration(allowEdit, columnDef, extra, _results);
                 }
 
                 this.push(columnDef);
@@ -333,6 +359,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var minMark = extra.minMark;
             var passMark = extra.passMark;
             var maxMark = extra.maxMark;
+            var enrolledStatus = extra.enrolledStatus;
 
             cols = angular.merge(cols, {
                 filter: 'number',
@@ -356,8 +383,16 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    editable: true,
-                    cellClass: 'oe-cell-highlight',
+                    cellClass: function(params) {
+                        studentStatusId = params.data.student_status_id;
+                        var highlightClass = 'oe-cell-highlight';
+                        return (studentStatusId == enrolledStatus) ? highlightClass : false;
+                    },
+                    editable: function(params) {
+                        // only enrolled student is editable
+                        studentStatusId = params.node.data.student_status_id;
+                        return (studentStatusId == enrolledStatus);
+                    },
                     newValueHandler: function(params) {
                         var valueAsFloat = parseFloat(params.newValue);
 
@@ -376,53 +411,71 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         renderGrades: function(allowEdit, cols, extra, _results) {
             var gradingOptions = extra.gradingOptions;
             var period = extra.period;
+            var enrolledStatus = extra.enrolledStatus;
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
-                    cellClass: 'oe-cell-highlight',
                     cellRenderer: function(params) {
-                        if (params.value.length == 0) {
-                            params.value = 0;
+                        studentStatusId = params.data.student_status_id;
+
+                        if (studentStatusId == enrolledStatus) {
+                            if (params.value.length == 0) {
+                                params.value = 0;
+                            }
+
+                            var oldValue = params.value;
+                            var studentId = params.data.student_id;
+                            var periodId = period.id;
+
+                            var eCell = document.createElement('div');
+                            eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+
+                            var eSelect = document.createElement("select");
+
+                            angular.forEach(gradingOptions, function(obj, key) {
+                                var eOption = document.createElement("option");
+                                var labelText = obj.name;
+                                if (obj.code.length > 0) {
+                                    labelText = obj.code + ' - ' + labelText;
+                                }
+                                eOption.setAttribute("value", key);
+                                eOption.innerHTML = labelText;
+                                eSelect.appendChild(eOption);
+                            });
+
+                            eSelect.value = params.value;
+
+                            eSelect.addEventListener('change', function () {
+                                var newValue = eSelect.value;
+                                params.data[params.colDef.field] = newValue;
+
+                                if (angular.isUndefined(_results[studentId])) {
+                                    _results[studentId] = {};
+                                }
+
+                                if (angular.isUndefined(_results[studentId][periodId])) {
+                                    _results[studentId][periodId] = {gradingOptionId: ''};
+                                }
+
+                                _results[studentId][periodId]['gradingOptionId'] = newValue;
+                            });
+
+                            eCell.appendChild(eSelect);
+
+                        } else {
+                            // don't allow input if student is not enrolled
+                            var cellValue = '';
+                            if (params.value.length != 0 && params.value != 0) {
+                                cellValue = gradingOptions[params.value]['name'];
+                                if (gradingOptions[params.value]['code'].length > 0) {
+                                    cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
+                                }
+                            }
+
+                            var eCell = document.createElement('div');
+                            var eLabel = document.createTextNode(cellValue);
+                            eCell.appendChild(eLabel);
                         }
-
-                        var oldValue = params.value;
-                        var studentId = params.data.student_id;
-                        var periodId = period.id;
-
-                        var eCell = document.createElement('div');
-                        eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
-
-                        var eSelect = document.createElement("select");
-
-                        angular.forEach(gradingOptions, function(obj, key) {
-                            var eOption = document.createElement("option");
-                            var labelText = obj.name;
-                            if (obj.code.length > 0) {
-                                labelText = obj.code + ' - ' + labelText;
-                            }
-                            eOption.setAttribute("value", key);
-                            eOption.innerHTML = labelText;
-                            eSelect.appendChild(eOption);
-                        });
-
-                        eSelect.value = params.value;
-
-                        eSelect.addEventListener('change', function () {
-                            var newValue = eSelect.value;
-                            params.data[params.colDef.field] = newValue;
-
-                            if (angular.isUndefined(_results[studentId])) {
-                                _results[studentId] = {};
-                            }
-
-                            if (angular.isUndefined(_results[studentId][periodId])) {
-                                _results[studentId][periodId] = {gradingOptionId: ''};
-                            }
-
-                            _results[studentId][periodId]['gradingOptionId'] = newValue;
-                        });
-
-                        eCell.appendChild(eSelect);
 
                         return eCell;
                     },
@@ -453,7 +506,151 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return cols;
         },
 
-        getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId) {
+        renderDuration: function(allowEdit, cols, extra, _results) {
+            var minMark = extra.minMark;
+            var passMark = extra.passMark;
+            var maxMark = extra.maxMark;
+            var periodId = extra.period.id;
+            var enrolledStatus = extra.enrolledStatus;
+
+            cols = angular.merge(cols, {
+                cellStyle: function(params) {
+                    var value = params.data[params.colDef.field];
+                    var duration = String(value).split(".");
+                    var minInSeconds = parseInt(duration[0]) * 60;
+                    var seconds = parseInt(duration[1]);
+                    var totalSeconds = minInSeconds + seconds;
+
+                    if (!isNaN(parseFloat(value)) && totalSeconds > passMark) {
+                        return {color: '#CC5C5C', direction: 'ltr'};
+                    } else {
+                        return {color: '#333', direction: 'ltr'};
+                    }
+                },
+                valueGetter: function(params) {
+                    var value = params.data[params.colDef.field];
+
+                    if (!isNaN(parseFloat(value))) {
+                        var duration = String(value).replace(".", " : ");
+                        return duration;
+                    } else {
+                        return '';
+                    }
+                }
+            });
+
+            if (allowEdit) {
+                cols = angular.merge(cols, {
+                    cellClass: function(params) {
+                        studentStatusId = params.data.student_status_id;
+                        var highlightClass = 'oe-cell-highlight';
+                        return (studentStatusId == enrolledStatus) ? highlightClass : false;
+                    },
+                    cellRenderer: function(params) {
+                        var value = params.data[params.colDef.field];
+                        var studentStatusId = params.data.student_status_id;
+
+                        if (studentStatusId == enrolledStatus) {
+                            var studentId = params.data.student_id;
+
+                            var eCell = document.createElement('div');
+                            eCell.setAttribute("class", "ag-grid-dir-ltr");
+
+                            var minuteInput = document.createElement('input');
+                            minuteInput.setAttribute("id", "mins");
+                            minuteInput.setAttribute("type", "number");
+                            minuteInput.setAttribute("min", "0");
+                            minuteInput.setAttribute("max", "999");
+                            minuteInput.setAttribute("class", "ag-grid-duration");
+                            minuteInput.setAttribute("lang", "en");
+
+                            var text = document.createElement('span');
+                            var colon = document.createTextNode(" : ");
+                            text.appendChild(colon);
+
+                            var secondInput = document.createElement('input');
+                            secondInput.setAttribute("id", "secs");
+                            secondInput.setAttribute("type", "number");
+                            secondInput.setAttribute("min", "0");
+                            secondInput.setAttribute("max", "59");
+                            secondInput.setAttribute("class", "ag-grid-duration");
+                            secondInput.setAttribute("lang", "en");
+
+                            eCell.appendChild(minuteInput);
+                            eCell.appendChild(text);
+                            eCell.appendChild(secondInput);
+
+                            if (value) {
+                                var duration = String(value).split(".");
+                                minuteInput.value = duration[0];
+                                secondInput.value = duration[1];
+                            }
+
+                            eCell.addEventListener('change', function() {
+                                var minuteInt = parseInt(minuteInput.value);
+                                var secondInt = parseInt(secondInput.value);
+
+                                // Minute Input
+                                if (minuteInput.value.length > 0) {
+                                    if (isNaN(minuteInt) || (minuteInt < 0 || minuteInt > 999)) {
+                                        minuteInput.value = '';
+                                        secondInput.value = '';
+                                    } else {
+                                        minuteInput.value = minuteInt;
+                                    }
+                                }
+                                // End
+
+                                // Second Input
+                                if (secondInput.value.length > 0) {
+                                    if (isNaN(secondInt) || (secondInt < 0 || secondInt > 59)) {
+                                        minuteInput.value = '';
+                                        secondInput.value = '';
+                                    } else if (secondInput.value.length == 1) {
+                                        // for padding
+                                        secondInput.value = '0' + secondInt;
+                                    } else {
+                                        secondInput.value = secondInt;
+                                    }
+                                }
+                                // End
+
+                                if (angular.isUndefined(_results[studentId])) {
+                                    _results[studentId] = {};
+                                }
+
+                                if (angular.isUndefined(_results[studentId][periodId])) {
+                                    _results[studentId][periodId] = {duration: ''};
+                                }
+
+                                var durationAsFloat = '';
+                                if (minuteInput.value.length > 0 || secondInput.value.length > 0) {
+                                    var duration = minuteInput.value + '.' + secondInput.value;
+                                    durationAsFloat = $filter('number')(duration, 2);
+                                }
+
+                                params.data[params.colDef.field] = durationAsFloat;
+                                _results[studentId][periodId]['duration'] = durationAsFloat;
+                            });
+                            return eCell;
+
+                        } else {
+                            // don't allow input if student is not enrolled
+                            if (!isNaN(parseFloat(value))) {
+                                var duration = String(value).replace(".", " : ");
+                                return duration;
+                            } else {
+                                return '';
+                            }
+                        }
+                    },
+                    suppressMenu: true
+                });
+            }
+            return cols;
+        },
+
+        getRowData: function(gradingTypes, periods, institutionId, classId, assessmentId, academicPeriodId, educationSubjectId, educationGradeId) {
             var success = function(response, deferred) {
                 if (angular.isDefined(response.data.error)) {
                     deferred.reject(response.data.error);
@@ -474,6 +671,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                         var isMarksType = true; // default to MARKS
                         var isGradesType = false;
+                        var isDurationType = false;
                         var resultType = null;
 
                         angular.forEach(subjectStudents, function(subjectStudent, key) {
@@ -485,16 +683,19 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                             isMarksType = (resultType == resultTypes.MARKS);
                             isGradesType = (resultType == resultTypes.GRADES);
+                            isDurationType = (resultType == resultTypes.DURATION);
 
                             if (studentId != currentStudentId) {
                                 if (studentId != null) {
-                                    this.push(studentResults);   
+                                    this.push(studentResults);
                                 }
-                                
+
                                 studentResults = {
                                     openemis_id: subjectStudent._matchingData.Users.openemis_no,
                                     name: subjectStudent._matchingData.Users.name,
                                     student_id: currentStudentId,
+                                    student_status_id: subjectStudent.student_status_id,
+                                    student_status_name: subjectStudent.student_status.name,
                                     total_mark: subjectStudent.total_mark,
                                     is_dirty: false
                                 };
@@ -506,7 +707,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                     // if is GRADES type, set weight to empty so that will not be included when calculate total marks.
                                     if (resultTypeByPeriod == resultTypes.MARKS) {
                                         periodWeight = parseFloat(periodObj[parseInt(period.id)]['weight']);
-                                    } else if (resultTypeByPeriod == resultTypes.GRADES) {
+                                    } else if (resultTypeByPeriod == resultTypes.GRADES || resultTypeByPeriod == resultTypes.DURATION) {
                                         periodWeight = '';
                                     }
 
@@ -525,6 +726,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             } else if (isGradesType) {
                                 if (subjectStudent.AssessmentItemResults.assessment_grading_option_id != null) {
                                     studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.assessment_grading_option_id;
+                                }
+                            } else if (isDurationType) {
+                                var duration = parseFloat(subjectStudent.AssessmentItemResults.marks);
+                                if (!isNaN(duration)) {
+                                    studentResults['period_' + parseInt(assessmentPeriodId)] = subjectStudent.AssessmentItemResults.marks;
                                 }
                             }
                         }, rowData);
@@ -547,7 +753,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 class_id: classId,
                 assessment_id: assessmentId,
                 academic_period_id: academicPeriodId,
-                subject_id: educationSubjectId
+                subject_id: educationSubjectId,
+                grade_id: educationGradeId
             })
             .ajax({success: success, defer: true})
             ;
@@ -596,7 +803,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             }
         },
 
-        saveRowData: function(subject, gradingTypes, results, assessmentId, educationSubjectId, institutionId, academicPeriodId) {
+        saveRowData: function(subject, gradingTypes, results, assessmentId, educationSubjectId, educationGradeId, institutionId, academicPeriodId) {
             var promises = [];
 
             angular.forEach(results, function(result, studentId) {
@@ -617,6 +824,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         if (obj.gradingOptionId != 0) {
                             gradingOptionId = obj.gradingOptionId;
                         }
+                    } else if (resultType == resultTypes.DURATION) {
+                        if (!isNaN(parseFloat(obj.duration))) {
+                            marks = $filter('number')(obj.duration, 2);
+
+                            durationInSeconds = parseFloat(obj.duration) * 60;
+                            var gradingObj = this.getGrading(subject, durationInSeconds);
+                            gradingOptionId = gradingObj.id;
+                        }
                     }
 
                     var data = {
@@ -624,6 +839,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                         "assessment_grading_option_id" : gradingOptionId,
                         "assessment_id" : assessmentId,
                         "education_subject_id" : educationSubjectId,
+                        "education_grade_id" : educationGradeId,
                         "institution_id" : institutionId,
                         "academic_period_id" : academicPeriodId,
                         "student_id" : parseInt(studentId),
@@ -635,22 +851,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             }, this);
 
             return $q.all(promises);
-        },
-
-        saveTotal: function(row, studentId, classId, institutionId, academicPeriodId, educationSubjectId) {
-            var totalMark = this.calculateTotal(row);
-            totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
-
-            var data = {
-                "total_mark" : totalMark,
-                "student_id" : studentId,
-                "institution_class_id" : classId,
-                "institution_id" : institutionId,
-                "academic_period_id" : academicPeriodId,
-                "education_subject_id" : educationSubjectId
-            };
-
-            InstitutionSubjectStudentsTable.save(data);
         }
     }
 });

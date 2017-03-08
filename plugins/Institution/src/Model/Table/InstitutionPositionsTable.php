@@ -5,40 +5,45 @@ use DateTime;
 use DateInterval;
 use ArrayObject;
 
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
-use Cake\ORM\TableRegistry;
 use Cake\Collection\Collection;
-use App\Model\Table\AppTable;
+use Cake\Datasource\ResultSetInterface;
+
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionPositionsTable extends AppTable {
+class InstitutionPositionsTable extends ControllerActionTable {
 	use OptionsTrait;
-	public $CAVersion = '4.0';
+
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 
-		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+		$this->belongsTo('Statuses',			['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('StaffPositionTitles', ['className' => 'Institution.StaffPositionTitles']);
 		$this->belongsTo('StaffPositionGrades', ['className' => 'Institution.StaffPositionGrades']);
 		$this->belongsTo('Institutions', 		['className' => 'Institution.Institutions']);
+		$this->belongsTo('Assignees',			['className' => 'User.Users']);
 
 		$this->hasMany('InstitutionStaff',		['className' => 'Institution.Staff', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffPositions',		['className' => 'Staff.Positions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StaffAttendances',		['className' => 'Institution.StaffAttendances', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('StaffTransferRequests',	['className' => 'Institution.StaffTransferRequests', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-
-		$this->addBehavior('OpenEmis.OpenEmis');
-		$this->addBehavior('ControllerAction.ControllerAction', [
-			'fields' => ['excludes' => ['modified_user_id', 'created_user_id']]
-		]);
+        $this->addBehavior('Workflow.Workflow');
 		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -63,12 +68,11 @@ class InstitutionPositionsTable extends AppTable {
 		);
 	}
 
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
-
-    	return $events;
-    }
+	// public function implementedEvents() {
+ //    	$events = parent::implementedEvents();
+ //    	$events['Restful.Model.index.workbench'] = 'indexAfterFindWorkbench';
+ //    	return $events;
+ //    }
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
@@ -306,7 +310,7 @@ class InstitutionPositionsTable extends AppTable {
 		$extra['auto_contain'] = false;
 		$extra['auto_order'] = false;
 
-		$query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions'])
+		$query->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'Assignees'])
 			->autoFields(true);
 
 		$sortList = ['position_no', 'StaffPositionTitles.order', 'StaffPositionGrades.order'];
@@ -352,7 +356,7 @@ class InstitutionPositionsTable extends AppTable {
 		$session = $this->Session;
 		$pass = $this->request->param('pass');
 		if (is_array($pass) && !empty($pass)) {
-			$id = $pass[1];
+			$id = $this->paramsDecode($pass[1])['id'];
 		}
 		if (!isset($id)) {
 			if ($session->check($this->registryAlias() . '.id')) {
@@ -363,15 +367,23 @@ class InstitutionPositionsTable extends AppTable {
 		if (!isset($id)) {
 			die('no position id specified');
 		}
-		// pr($id);die;
 		// start Current Staff List field
 		$Staff = $this->Institutions->Staff;
-		$currentStaff = $Staff ->findAllByInstitutionIdAndInstitutionPositionId($session->read('Institution.Institutions.id'), $id)
-							->where(['('.$Staff->aliasField('end_date').' IS NULL OR ('.$Staff->aliasField('end_date').' IS NOT NULL AND '.$Staff->aliasField('end_date').' >= DATE(NOW())))'])
-							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo');
-
-		$this->fields['current_staff_list']['data'] = $currentStaff;
+		$currentStaff = $Staff
+                        ->find('withBelongsTo')
+                        ->where([
+                            $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                            $Staff->aliasField('institution_position_id') => $id,
+                            'OR' => [
+                                $Staff->aliasField('end_date').' IS NULL',
+                                'AND' => [
+                                    $Staff->aliasField('end_date').' IS NOT NULL',
+                                    $Staff->aliasField('end_date').' >= DATE(NOW())'
+                                ]
+                            ]
+						])
+                        ->order([$Staff->aliasField('start_date')]);
+        $this->fields['current_staff_list']['data'] = $currentStaff;
 		$totalCurrentFTE = '0.00';
 		if (count($currentStaff)>0) {
 			foreach ($currentStaff as $cs) {
@@ -382,13 +394,16 @@ class InstitutionPositionsTable extends AppTable {
 		// end Current Staff List field
 
 		// start PAST Staff List field
-		$pastStaff = $Staff ->findAllByInstitutionIdAndInstitutionPositionId($session->read('Institution.Institutions.id'), $id)
-							->where([$Staff->aliasField('end_date').' IS NOT NULL'])
-							->andWhere([$Staff->aliasField('end_date').' < DATE(NOW())'])
-							->order([$Staff->aliasField('start_date')])
-							->find('withBelongsTo');
-
-		$this->fields['past_staff_list']['data'] = $pastStaff;
+		$pastStaff  = $Staff
+                    ->find('withBelongsTo')
+                    ->where([
+                        $Staff->aliasField('institution_id') => $session->read('Institution.Institutions.id'),
+                        $Staff->aliasField('institution_position_id') => $id,
+                        $Staff->aliasField('end_date').' IS NOT NULL',
+                        $Staff->aliasField('end_date').' < DATE(NOW())'
+                    ])
+                    ->order([$Staff->aliasField('start_date')]);
+        $this->fields['past_staff_list']['data'] = $pastStaff;
 		// end Current Staff List field
 
 		return true;
@@ -482,116 +497,68 @@ class InstitutionPositionsTable extends AppTable {
 			}
 	}
 
-	// Workbench.Model.onGetList
-	public function onGetWorkbenchList(Event $event, $isAdmin, $institutionRoles, ArrayObject $data) {
-		$excludedStatuses = ['ACTIVE', 'INACTIVE'];
-		$statusIds = $event->subject()->Workflow->getStepsByModel($this->registryAlias(), $excludedStatuses);
+	public function findWorkbench(Query $query, array $options) {
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
 
-		$where = [];
-		if (empty($statusIds)) {
-			// returns empty list if there is no status mapping for workflows
-			// otherwise it will return all rows without any conditions which may cause out of memory
-			return [];
-		} else {
-			if ($isAdmin) {
-				$where[$this->aliasField('status_id') . ' IN '] = $statusIds;
-			} else {
-				if (empty($institutionRoles)) {
-					// return empty list if login user do not have roles in any schools
-					return [];
-				} else {
-					$where[$this->aliasField('institution_id') . ' IN '] = array_keys($institutionRoles);
+		$userId = $session->read('Auth.User.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
 
-					$accessibleStatusIds = $event->subject()->Workflow->getAccessibleStatuses($institutionRoles, $statusIds);
-					if (empty($accessibleStatusIds)) {
-						// return empty list if login user do not have access to any steps
-						return [];
-					} else {
-						$where[$this->aliasField('status_id') . ' IN '] = $accessibleStatusIds;
-					}
-				}
-			}
-		}
-
-		$resultSetQuery = $this
-			->find()
+		$query
 			->select([
 				$this->aliasField('id'),
 				$this->aliasField('status_id'),
+				$this->aliasField('position_no'),
+				$this->aliasField('institution_id'),
 				$this->aliasField('modified'),
 				$this->aliasField('created'),
-				'Statuses.name',
-				'StaffPositionTitles.name',
-				'StaffPositionGrades.name',
-				'Institutions.id',
-				'Institutions.name',
-				'CreatedUser.username'
+				$this->Statuses->aliasField('name'),
+				$this->StaffPositionTitles->aliasField('name'),
+				$this->StaffPositionGrades->aliasField('name'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
 			])
-			->contain(['Statuses', 'StaffPositionTitles', 'StaffPositionGrades', 'Institutions', 'CreatedUser'])
-			->where($where)
-			->order([$this->aliasField('created')]);
+			->contain([$this->StaffPositionTitles->alias(), $this->StaffPositionGrades->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Positions',
+						'view',
+						$this->paramsEncode(['id' => $row->id]),
+						'institution_id' => $row->institution_id
+					];
 
-		// if is admin, only return the first 30 records
-		if ($isAdmin) {
-			$resultSetQuery->limit(30);
-		}
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
 
-		$resultSet = $resultSetQuery->all();
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = $row->position_no.' - '.$row->staff_position_title->name.' '.__('with').' '.$row->staff_position_grade->name;
+	    			$row['institution'] = $row->institution->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
 
-		$WorkflowStepsRoles = TableRegistry::get('Workflow.WorkflowStepsRoles');
-		$stepRoles = [];
+					return $row;
+				});
+			});
 
-		$resultCount = 0;
-		foreach ($resultSet as $key => $obj) {
-			$institutionId = $obj->institution->id;
-
-			if ($isAdmin) {
-				$hasAccess = true;
-			} else {
-				$stepId = $obj->status_id;
-				$roles = $institutionRoles[$institutionId];
-
-				// Permission
-				$hasAccess = false;
-
-				// Array to store security roles in each Workflow Step
-				if (!array_key_exists($stepId, $stepRoles)) {
-					$stepRoles[$stepId] = $WorkflowStepsRoles->getRolesByStep($stepId);
-				}
-				// access is true if user roles exists in step roles
-				$hasAccess = count(array_intersect_key($roles, $stepRoles[$stepId])) > 0;
-				// End
-			}
-
-			if ($hasAccess) {
-				if ($resultCount++ == 30) {
-					break;
-				}
-
-				$requestTitle = sprintf('%s - %s with %s of %s', $obj->status->name, $obj->staff_position_title->name, $obj->staff_position_grade->name, $obj->institution->name);
-				$url = [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'Positions',
-					'view',
-					$obj->id,
-					'institution_id' => $institutionId
-				];
-
-				if (is_null($obj->modified)) {
-					$receivedDate = $this->formatDate($obj->created);
-				} else {
-					$receivedDate = $this->formatDate($obj->modified);
-				}
-
-				$data[] = [
-					'request_title' => ['title' => $requestTitle, 'url' => $url],
-					'receive_date' => $receivedDate,
-					'due_date' => '<i class="fa fa-minus"></i>',
-					'requester' => $obj->created_user->username,
-					'type' => __('Institution > Positions')
-				];
-			}
-		}
+		return $query;
 	}
 }

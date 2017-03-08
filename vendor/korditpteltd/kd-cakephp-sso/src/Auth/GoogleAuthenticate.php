@@ -35,27 +35,31 @@ class GoogleAuthenticate extends BaseAuthenticate
                 if ($isFound) {
                     return $isFound;
                 } else {
-                    $client = $session->read('Google.client');
-                    $ServiceOAuth2Object = new \Google_Service_Oauth2($client);
-                    $me = $ServiceOAuth2Object->userinfo->get();
-                    $userInfo = [
-                        'id' => $me->getId(),
-                        'firstName' => $me->getGivenName(),
-                        'lastName' => $me->getFamilyName(),
-                        'gender' => $me->getGender(),
-                        'email' => $me->getEmail(),
-                        'verifiedEmail' => $me->getVerifiedEmail(),
-                        'locale' => $me->getLocale(),
-                        'link' => $me->getLink(),
-                        'picture' => $me->getPicture(),
-                    ];
+                    if ($this->config('createUser')) {
+                        $client = $session->read('Google.client');
+                        $ServiceOAuth2Object = new \Google_Service_Oauth2($client);
+                        $me = $ServiceOAuth2Object->userinfo->get();
+                        $userInfo = [
+                            'id' => $me->getId(),
+                            'firstName' => $me->getGivenName(),
+                            'lastName' => $me->getFamilyName(),
+                            'gender' => $me->getGender(),
+                            'email' => $me->getEmail(),
+                            'verifiedEmail' => $me->getVerifiedEmail(),
+                            'locale' => $me->getLocale(),
+                            'link' => $me->getLink(),
+                            'picture' => $me->getPicture(),
+                        ];
 
-                    $User = TableRegistry::get($this->_config['userModel']);
-                    $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
-                    if ($event->result === false) {
-                        return false;
+                        $User = TableRegistry::get($this->_config['userModel']);
+                        $event = $User->dispatchEvent('Model.Auth.createAuthorisedUser', [$userName, $userInfo], $this);
+                        if ($event->result === false) {
+                            return false;
+                        } else {
+                            return $this->_findUser($event->result);
+                        }
                     } else {
-                        return $this->_findUser($event->result);
+                        return false;
                     }
                 }
             }

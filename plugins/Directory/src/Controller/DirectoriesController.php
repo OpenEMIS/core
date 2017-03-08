@@ -13,8 +13,6 @@ use App\Controller\AppController;
 class DirectoriesController extends AppController {
 	public function initialize() {
 		parent::initialize();
-
-		$this->ControllerAction->model('Directory.Directories');
 		$this->ControllerAction->models = [
 			// Users
 			'Attachments' 			=> ['className' => 'User.Attachments'],
@@ -34,8 +32,6 @@ class DirectoriesController extends AppController {
 
 
 			// Student
-			'StudentGuardians'		=> ['className' => 'Student.Guardians'],
-			'StudentGuardianUser'	=> ['className' => 'Student.GuardianUser'],
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
@@ -48,12 +44,10 @@ class DirectoriesController extends AppController {
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffAbsences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'StaffLeave'			=> ['className' => 'Staff.Leaves'],
 			'StaffBehaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
-			'TrainingNeeds'			=> ['className' => 'Staff.TrainingNeeds'],
 
 			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
 		];
@@ -65,6 +59,8 @@ class DirectoriesController extends AppController {
 		$this->set('contentHeader', 'Directories');
 	}
 
+	public function Directories() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Directory.Directories']); }
+
 	// CAv4
 	public function StudentFees() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentFees']); }
 	public function StaffQualifications() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Qualifications']); }
@@ -72,6 +68,7 @@ class DirectoriesController extends AppController {
 	public function StaffClasses() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffClasses']); }
 	public function StaffSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffSubjects']); }
 	public function StaffEmployments()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Employments']); }
+	public function StaffLeave()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Leave']); }
 	public function StudentClasses() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentClasses']); }
 	public function StudentSubjects() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSubjects']); }
     public function Nationalities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.UserNationalities']); }
@@ -87,6 +84,11 @@ class DirectoriesController extends AppController {
     public function Identities() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function StudentAwards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function StaffAwards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+    public function TrainingNeeds() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
+	public function StaffAppraisals()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Appraisals']); }
+	public function StudentTextbooks() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
+	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
+	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
 	// End
 
 	// AngularJS
@@ -107,6 +109,24 @@ class DirectoriesController extends AppController {
 			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
 		}
 	}
+
+	public function StudentExaminationResults() {
+		$session = $this->request->session();
+
+		if ($session->check('Directory.Directories.id')) {
+			$studentId = $session->read('Directory.Directories.id');
+			$session->write('Student.ExaminationResults.student_id', $studentId);
+
+			// tabs
+			$options['type'] = 'student';
+			$tabElements = $this->getAcademicTabElements($options);
+			$this->set('tabElements', $tabElements);
+			$this->set('selectedAction', 'ExaminationResults');
+	        // End
+
+			$this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
+		}
+	}
 	// End
 
 	private function attachAngularModules() {
@@ -120,16 +140,23 @@ class DirectoriesController extends AppController {
 					'student.results.svc'
 				]);
 				break;
+			case 'StudentExaminationResults':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.examination_results.ctrl',
+					'student.examination_results.svc'
+				]);
+				break;
 		}
 	}
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);
-		$this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
+		$this->Navigation->addCrumb('Directory', ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories']);
 		$header = __('Directory');
 		$session = $this->request->session();
 		$action = $this->request->params['action'];
-		if ($action == 'index') {
+		if ($action == 'Directories' && (empty($this->ControllerAction->paramsPass()) || $this->ControllerAction->paramsPass()[0] == 'index')) {
 			$session->delete('Directory.Directories');
 			$session->delete('Staff.Staff.id');
 			$session->delete('Staff.Staff.name');
@@ -138,15 +165,15 @@ class DirectoriesController extends AppController {
 		} else if ($session->check('Directory.Directories.id') || $action == 'view' || $action == 'edit' || $action == 'StudentResults') {
 			$id = 0;
 			if (isset($this->request->pass[0]) && ($action == 'view' || $action == 'edit')) {
-				$id = $this->request->pass[0];
+				$id = $this->ControllerAction->paramsDecode($this->request->pass[0])['id'];
 			} else if ($session->check('Directory.Directories.id')) {
 				$id = $session->read('Directory.Directories.id');
 			}
 			if (!empty($id)) {
 				$entity = $this->Directories->get($id);
 				$name = $entity->name;
-				$header = $action == 'StudentResults' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'view', $id]);
+				$header = $action == 'StudentResults' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
 			}
 		}
 
@@ -171,7 +198,6 @@ class DirectoriesController extends AppController {
 			if ($session->check('Directory.Directories.name')) {
 				$header = $session->read('Directory.Directories.name');
 			}
-			$idKey = $this->ControllerAction->getPrimaryKey($model);
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -185,11 +211,10 @@ class DirectoriesController extends AppController {
 
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
-
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -206,10 +231,10 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('staff_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('staff_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -226,10 +251,10 @@ class DirectoriesController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('student_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('student_id')] = $userId;
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -245,7 +270,7 @@ class DirectoriesController extends AppController {
 				$this->Navigation->addCrumb($model->getHeader($model->alias()));
 				$header = __('Users') . ' - ' . $model->getHeader($model->alias());
 				$this->set('contentHeader', $header);
-			} else {
+			} else if ($model->alias() != 'Directories') {
 				$this->Alert->warning('general.notExists');
 				$event->stopPropagation();
 				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
@@ -289,54 +314,60 @@ class DirectoriesController extends AppController {
 	}
 
 
-	public function getUserTabElements($options = []) {
-		$plugin = $this->plugin;
-		$name = $this->name;
+	public function getUserTabElements($options = [])
+    {
+        if (array_key_exists('queryString', $this->request->query)) { //to filter if the URL already contain querystring
+            $id = $this->ControllerAction->getQueryString('security_user_id');
+        }
 
-		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+        $plugin = $this->plugin;
+        $name = $this->name;
 
-		$tabElements = [
-			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'view', $id],
-				'text' => __('Overview')
-			],
-			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $id],
-				'text' => __('Account')
-			],
-			'Identities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Identities'],
-				'text' => __('Identities')
-			],
-			'UserNationalities' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Nationalities'],
-				'text' => __('Nationalities')
-			],
-			'Contacts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Contacts'],
-				'text' => __('Contacts')
-			],
-			'Languages' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Languages'],
-				'text' => __('Languages')
-			],
-			'Comments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Comments'],
-				'text' => __('Comments')
-			],
-			'Attachments' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Attachments'],
-				'text' => __('Attachments')
-			],
-			'SpecialNeeds' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'SpecialNeeds'],
-				'text' => __('Special Needs')
-			],
-			'History' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'History'],
-				'text' => __('History')
-			]
-		];
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($plugin.'.'.$name.'.id');
+
+        $tabElements = [
+            $this->name => ['text' => __('Overview')],
+            'Accounts' => ['text' => __('Account')],
+            'Identities' => ['text' => __('Identities')],
+            'UserNationalities' => ['text' => __('Nationalities')], //UserNationalities is following the filename(alias) to maintain "selectedAction" select tab accordingly.
+            'Contacts' => ['text' => __('Contacts')],
+            'Languages' => ['text' => __('Languages')],
+            'Comments' => ['text' => __('Comments')],
+            'Attachments' => ['text' => __('Attachments')],
+            'SpecialNeeds' => ['text' => __('Special Needs')],
+            'History' => ['text' => __('History')]
+        ];
+
+        foreach ($tabElements as $key => $value) {
+
+            if ($key == $this->name) {
+
+                $tabElements[$key]['url']['action'] = 'Directories';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+
+            } else if ($key == 'Accounts') {
+
+                $tabElements[$key]['url']['action'] = 'Accounts';
+                $tabElements[$key]['url'][] = 'view';
+                $tabElements[$key]['url'][] = $this->ControllerAction->paramsEncode(['id' => $id]);
+
+            } else {
+
+                $actionURL = $key;
+                if ($key == 'UserNationalities') {
+                    $actionURL = 'Nationalities';
+                }
+                $tabElements[$key]['url'] = $this->ControllerAction->setQueryString([
+                                                'plugin' => $plugin,
+                                                'controller' => $name,
+                                                'action' => $actionURL,
+                                                'index'],
+                                                ['security_user_id' => $id]
+                                            );
+            }
+        }
+
 		return $tabElements;
 	}
 
@@ -364,9 +395,11 @@ class DirectoriesController extends AppController {
 			'Subjects' => ['text' => __('Subjects')],
 			'Absences' => ['text' => __('Absences')],
 			'Behaviours' => ['text' => __('Behaviours')],
-			'Results' => ['text' => __('Results')],
+			'Results' => ['text' => __('Assessments')],
+			'ExaminationResults' => ['text' => __('Examinations')],
 			'Awards' => ['text' => __('Awards')],
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
+			'Textbooks' => ['text' => __('Textbooks')]
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
@@ -433,6 +466,7 @@ class DirectoriesController extends AppController {
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
 			'Trainings' => ['text' => __('Trainings')],
+			'Appraisals' => ['text' => __('Appraisals')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);

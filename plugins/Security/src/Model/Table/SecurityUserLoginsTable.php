@@ -24,12 +24,17 @@ class SecurityUserLoginsTable extends AppTable
         return $events;
     }
 
-    public function afterLogin(Event $event, Entity $userEntity)
+    public function afterLogin(Event $event, $user)
     {
+        $controller = $event->subject();
+        $request = $controller->request;
+        $request->trustProxy = true;
         $data = [
             'id' => Text::uuid(),
-            'security_user_id' => $userEntity->id,
-            'login_date_time' => Time::now()
+            'security_user_id' => $user['id'],
+            'login_date_time' => Time::now(),
+            'ip_address' => $request->clientIp(),
+            'session_id' => $request->session()->id()
         ];
 
         $this->save($this->newEntity($data));

@@ -37,6 +37,11 @@ class AreasTable extends ControllerActionTable
                 'filter' => 'parent_id',
             ]);
         }
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StaffRoom' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
@@ -460,7 +465,7 @@ class AreasTable extends ControllerActionTable
     {
         // get the associated data to be displayed and pass it to Sync page.
         $model = $this;
-        $primaryKey = $this->getPrimaryKey($model);
+        $primaryKey = $model->primaryKey();
         $idKey = $model->aliasField($primaryKey);
 
         $extra = new ArrayObject([]);
