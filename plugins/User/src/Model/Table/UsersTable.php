@@ -597,38 +597,39 @@ class UsersTable extends AppTable {
 		return $buttons;
 	}
 
-	public function autocomplete($search) {
-		$search = sprintf('%s%%', $search);
-		$list = $this
-			->find()
-			->select([
-				$this->aliasField('openemis_no'),
-				$this->aliasField('first_name'),
-				$this->aliasField('middle_name'),
-				$this->aliasField('third_name'),
-				$this->aliasField('last_name'),
-				$this->aliasField('preferred_name'),
-				$this->aliasField('id')
-			])
-			->where([
-				'OR' => [
-					$this->aliasField('openemis_no') . ' LIKE' => $search,
-					$this->aliasField('first_name') . ' LIKE' => $search,
-					$this->aliasField('middle_name') . ' LIKE' => $search,
-					$this->aliasField('third_name') . ' LIKE' => $search,
-					$this->aliasField('last_name') . ' LIKE' => $search
-				]
-			])
-			->order([$this->aliasField('first_name')])
-			->limit(100)
-			->all();
+	// autocomplete used for TrainingSessions
+	// the same function is found in Security.Users
+	public function autocomplete($search)
+	{
+		$data = [];
+		if (!empty($search)) {
+			$query = $this
+				->find()
+				->select([
+					$this->aliasField('openemis_no'),
+					$this->aliasField('first_name'),
+					$this->aliasField('middle_name'),
+					$this->aliasField('third_name'),
+					$this->aliasField('last_name'),
+					$this->aliasField('preferred_name'),
+					$this->aliasField('id')
+				])
+				->order([
+					$this->aliasField('first_name'),
+					$this->aliasField('last_name')
+				])
+				->limit(100);
 
-		$data = array();
-		foreach($list as $obj) {
-			$data[] = [
-				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
-				'value' => $obj->id
-			];
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$list = $query->toArray();
+
+			foreach($list as $obj) {
+				$data[] = [
+					'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+					'value' => $obj->id
+				];
+			}
 		}
 		return $data;
 	}
