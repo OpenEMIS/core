@@ -304,41 +304,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
-			$search = sprintf('%s%%', $term);
-
-			$data = [];
-			$Users = $this->Trainers->Users;
-			$list = $Users
-				->find()
-				->select([
-					$Users->aliasField('id'),
-					$Users->aliasField('openemis_no'),
-					$Users->aliasField('first_name'),
-					$Users->aliasField('middle_name'),
-					$Users->aliasField('third_name'),
-					$Users->aliasField('last_name'),
-					$Users->aliasField('preferred_name')
-				])
-				->where([
-					$Users->aliasField('is_student') => 0,
-					'OR' => [
-						$Users->aliasField('openemis_no LIKE ') => $search,
-						$Users->aliasField('first_name LIKE ') => $search,
-						$Users->aliasField('middle_name LIKE ') => $search,
-						$Users->aliasField('third_name LIKE ') => $search,
-						$Users->aliasField('last_name LIKE ') => $search
-					]
-				])
-				->order([$Users->aliasField('first_name')])
-				->all();
-
-			foreach($list as $obj) {
-				$data[] = [
-					'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
-					'value' => $obj->id
-				];
-			}
-
+			$data = $this->Trainers->Users->autocomplete($term);
 			echo json_encode($data);
 			die;
 		}
