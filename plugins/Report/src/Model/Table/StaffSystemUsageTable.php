@@ -30,7 +30,9 @@ class StaffSystemUsageTable extends AppTable  {
         $query->where([$this->aliasField('is_staff') => 1]);
 
         if ($selectedUsageType == 1) {
-            $query->where([$this->aliasField('last_login') . ' IS NULL']);
+            $query
+                ->where([$this->aliasField('last_login') . ' IS NULL'])
+                ->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
 
         } else if ($selectedUsageType == 2) {
             $lastSevenDays = new Date('-7 days');
