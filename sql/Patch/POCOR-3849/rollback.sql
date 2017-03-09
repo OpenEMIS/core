@@ -1,4 +1,6 @@
-ALTER TABLE `room_types` DROP `classification`;
+-- room_types
+DROP TABLE IF EXISTS `room_types`;
+RENAME TABLE `z_3849_room_types` TO `room_types`;
 
 
 -- db_patches
