@@ -10,10 +10,16 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Database\ValueBinder;
+use Cake\Datasource\ResultSetInterface;
 use App\Model\Table\ControllerActionTable;
 
 class LicensesTable extends ControllerActionTable
 {
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
+
 	public function initialize(array $config)
 	{
 		$this->table('staff_licenses');
@@ -104,6 +110,8 @@ class LicensesTable extends ControllerActionTable
 				if (!empty($licenseTypeId)) {
 					$classificationOptions = $this->Classifications
 						->find('list')
+						->find('visible')
+						->find('order')
 						->where([$this->Classifications->aliasField('license_type_id') => $licenseTypeId])
 						->toArray();
 				}
@@ -178,5 +186,68 @@ class LicensesTable extends ControllerActionTable
 		]);
 
         $this->setFieldOrder(['license_type_id', 'classifications', 'license_number', 'issue_date', 'expiry_date', 'issuer', 'comments']);
+	}
+
+	public function findWorkbench(Query $query, array $options)
+	{
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
+		$userId = $session->read('Auth.User.id');
+		$institutionId = $session->read('Institution.Institutions.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('license_number'),
+				$this->aliasField('license_type_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Statuses->aliasField('name'),
+				$this->LicenseTypes->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->LicenseTypes->alias(), $this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) use ($institutionId) {
+				return $results->map(function ($row) use ($institutionId) {
+					$url = [
+						'plugin' => 'Staff',
+						'controller' => 'Staff',
+						'action' => 'Licenses',
+						'view',
+						$this->paramsEncode(['id' => $row->id]),
+						'institution_id' => $institutionId
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = $row->license_type->name.' '.__('of').' '.$row->license_number;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }
