@@ -47,6 +47,9 @@ class LicensesTable extends ControllerActionTable
 				'_function' => 'getNumberOfStaffByLicenses'
 			]
 		]);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator)
