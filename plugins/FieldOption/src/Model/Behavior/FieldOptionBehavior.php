@@ -67,18 +67,25 @@ class FieldOptionBehavior extends Behavior {
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
+        $addUniqueName = false;
         if ($validator->hasField('name')) {
             $set = $validator->field('name');
             if (!$set->rule('ruleUnique')) {
-                $validator
-                    ->add('name', [
-                        'ruleUnique' => [
-                            'rule' => 'validateUnique',
-                            'provider' => 'table',
-                            'message' => __('This field has to be unique')
-                        ]
-                    ]);
+                $addUniqueName = true;
             }
+        } else {
+            $addUniqueName = true;
+        }
+
+        if ($addUniqueName) {
+            $validator
+                ->add('name', [
+                    'ruleUnique' => [
+                        'rule' => 'validateUnique',
+                        'provider' => 'table',
+                        'message' => __('This field has to be unique')
+                    ]
+                ]);
         }
     }
 
