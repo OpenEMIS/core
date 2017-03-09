@@ -613,6 +613,16 @@ class ValidationBehavior extends Behavior {
 		return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField]);
 	}
 
+	public static function compareStudentGenderWithInstitution($field, array $globalData) {
+		$genderId = $globalData['data']['gender_id'];
+		$institutionId = $globalData['data']['institution_id'];
+
+		$Institutions = TableRegistry::get('Institution.Institutions');
+		$admissionInstitution = $Institutions->get($institutionId);
+		$institutionGender = $admissionInstitution->institution_gender_id;
+
+		return false;
+	}
     public static function institutionStaffId($field, array $globalData) {
         $Staff = TableRegistry::get('Institution.Staff');
 
