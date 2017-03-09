@@ -27,12 +27,12 @@ class StaffSystemUsageTable extends AppTable  {
         $requestData = json_decode($settings['process']['params']);
         $selectedUsageType = !empty($requestData->system_usage) ? $requestData->system_usage : null;
 
-        $query->where([$this->aliasField('is_staff') => 1]);
+        $query
+            ->where([$this->aliasField('is_staff') => 1])
+            ->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
 
         if ($selectedUsageType == 1) {
-            $query
-                ->where([$this->aliasField('last_login') . ' IS NULL'])
-                ->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
+            $query->where([$this->aliasField('last_login') . ' IS NULL']);
 
         } else if ($selectedUsageType == 2) {
             $lastSevenDays = new Date('-7 days');
