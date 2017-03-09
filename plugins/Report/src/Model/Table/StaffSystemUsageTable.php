@@ -15,7 +15,10 @@ class StaffSystemUsageTable extends AppTable  {
         $this->table('security_users');
         parent::initialize($config);
 
-        $this->addBehavior('Excel');
+        $this->addBehavior('Excel', [
+            'excludes' => ['preferred_name', 'email', 'address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'nationality_id', 'identity_type_id', 'identity_number', 'external_reference', 'super_admin', 'status', 'last_login', 'photo_name', 'photo_content', 'preferred_language', 'is_student', 'is_staff', 'is_guardian'],
+            'pages' => false
+        ]);
         $this->addBehavior('Report.ReportList');
     }
 
@@ -38,58 +41,12 @@ class StaffSystemUsageTable extends AppTable  {
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
-        $newFields = [];
-
-        $newFields[] = [
-            'key' => 'StaffSystemUsage.openemis_no',
-            'field' => 'openemis_no',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'StaffSystemUsage.username',
-            'field' => 'username',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'StaffSystemUsage.first_name',
-            'field' => 'first_name',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'StaffSystemUsage.middle_name',
-            'field' => 'first_name',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'StaffSystemUsage.third_name',
-            'field' => 'first_name',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'StaffSystemUsage.last_name',
-            'field' => 'first_name',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
+        $fields[] = [
             'key' => 'StaffSystemUsage.last_login',
             'field' => 'last_login',
             'type' => 'integer',
             'label' => '',
         ];
-
-        $fields->exchangeArray($newFields);
     }
 
     public function onExcelGetLastLogin(Event $event, Entity $entity)
