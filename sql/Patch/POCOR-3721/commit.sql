@@ -94,7 +94,7 @@ RENAME TABLE `staff_licenses` TO `z_3721_staff_licenses`;
 DROP TABLE IF EXISTS `staff_licenses`;
 CREATE TABLE `staff_licenses` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `license_number` varchar(100) NOT NULL,
+  `license_number` varchar(100) DEFAULT NULL,
   `issue_date` date NOT NULL,
   `expiry_date` date DEFAULT NULL,
   `issuer` varchar(100) NOT NULL,
