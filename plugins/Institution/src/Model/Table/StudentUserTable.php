@@ -164,6 +164,9 @@ class StudentUserTable extends ControllerActionTable
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+			->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
+				'rule' => ['compareStudentGenderWithInstitution'],
+			])
 			->requirePresence('start_date', 'create')
 			->requirePresence('education_grade_id', 'create')
 			->requirePresence('academic_period_id', 'create')
