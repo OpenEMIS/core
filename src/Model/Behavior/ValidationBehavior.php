@@ -175,6 +175,40 @@ class ValidationBehavior extends Behavior {
         return $isValid;
     }
 
+    //validate area and are administrative selection during add / edit institution according to config item.
+    public static function checkConfiguredArea($check, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $validateAreaLevel = $ConfigItems->value('institution_validate_area_level_id');
+        $validateAreaAdministrativeLevel = $ConfigItems->value('institution_validate_area_administrative_level_id');
+
+        $validationErrorMsg = '';
+        if ($globalData['field'] == 'area_id') {
+            $Areas = TableRegistry::get('Area.Areas');
+            $AreaLevels = TableRegistry::get('Area.AreaLevels');
+            $check = $Areas->get($check)->area_level_id;
+            if ($check != $validateAreaLevel) {
+                $configuredAreaLevel = $AreaLevels->get($validateAreaLevel)->name;
+                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_id.ConfiguredArea', ['sprintf' => [$configuredAreaLevel]]);
+            }
+        } else if ($globalData['field'] == 'area_administrative_id') {
+            $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+            $AreaAdministrativeLevels = TableRegistry::get('Area.AreaAdministrativeLevels');
+            $check = $AreaAdministratives->get($check)->area_administrative_level_id;
+            if ($check != $validateAreaAdministrativeLevel) {
+                $configuredAreaAdministrativeLevel = $AreaAdministrativeLevels->get($validateAreaAdministrativeLevel)->name;
+                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_administrative_id.ConfiguredArea', ['sprintf' => [$configuredAreaAdministrativeLevel]]);
+            }
+        }
+
+        if (!empty($validationErrorMsg)) {
+            return $validationErrorMsg;
+        } else {
+            return true;
+        }
+    }
+
     public static function checkLatitude($check) {
 
         $isValid = false;
