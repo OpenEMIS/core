@@ -273,7 +273,7 @@ class DirectoriesController extends AppController {
 			} else if ($model->alias() != 'Directories') {
 				$this->Alert->warning('general.notExists');
 				$event->stopPropagation();
-				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
+				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
 			}
 		}
 	}

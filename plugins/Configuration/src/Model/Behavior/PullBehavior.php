@@ -130,6 +130,7 @@ class PullBehavior extends Behavior
 
         $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
         $sessionKey = $model->registryAlias() . '.primaryKey';
+        $contain = [];
 
         if (empty($ids)) {
             if ($model->Session->check($sessionKey)) {
@@ -143,10 +144,16 @@ class PullBehavior extends Behavior
 
         $idKeys = $model->getIdKeys($model, $ids);
 
+        foreach ($model->associations() as $assoc) {
+            if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+                $contain[] = $assoc->name();
+            }
+        }
+
         $entity = false;
 
         if ($model->exists($idKeys)) {
-            $query = $model->find()->where($idKeys);
+            $query = $model->find()->where($idKeys)->contain($contain);
 
             $event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
             $event = $model->dispatchEvent('ControllerAction.Model.pull.beforeQuery', [$query, $extra], $this);
