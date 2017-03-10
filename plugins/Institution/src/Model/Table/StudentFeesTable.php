@@ -238,12 +238,13 @@ class StudentFeesTable extends ControllerActionTable {
 **
 ******************************************************************************************************************/
     public function viewBeforeAction(Event $event, ArrayObject $extra) {
-		$extra['toolbarButtons']['add'] = $extra['toolbarButtons']['edit'];
-		$extra['toolbarButtons']['add']['url'][0] = 'add';
-		$extra['toolbarButtons']['add']['label'] = '<i class="fa kd-add"></i>';
-		$extra['toolbarButtons']['add']['attr']['title'] = 'Add New Payment';
-
-		unset($extra['toolbarButtons']['edit']);
+    	$toolbarButtonsArray = $extra['toolbarButtons']->getArrayCopy();
+    	$toolbarButtonsArray['addPayment'] = $toolbarButtonsArray['edit'];
+		$toolbarButtonsArray['addPayment']['url'][0] = 'add';
+		$toolbarButtonsArray['addPayment']['label'] = '<i class="fa kd-add"></i>';
+		$toolbarButtonsArray['addPayment']['attr']['title'] = __('Add Payment');
+    	unset($toolbarButtonsArray['edit']);
+    	$extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
@@ -618,19 +619,6 @@ class StudentFeesTable extends ControllerActionTable {
 			}
 		}
 		return $associations;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'index') {
-			unset($toolbarButtons['add']);
-		} else if ($action == 'view') {
-			$toolbarButtons['add'] = $toolbarButtons['back'];
-			$toolbarButtons['add']['url'] = $buttons['add']['url'];
-			$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
-			$toolbarButtons['add']['attr']['title'] = __('Add New Payment');
-		} else if ($action == 'add') {
-			$toolbarButtons['back']['url'] = $buttons['view']['url'];
-		}
 	}
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
