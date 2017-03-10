@@ -285,7 +285,7 @@ trait RestfulV1Trait {
         if (is_resource($attribute)) {
             return base64_encode(stream_get_contents($attribute));
         } else {
-            return base64_encode(urlencode($attribute));
+            return base64_encode($attribute);
         }
     }
 

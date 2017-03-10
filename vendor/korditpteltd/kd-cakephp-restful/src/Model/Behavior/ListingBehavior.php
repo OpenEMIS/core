@@ -13,8 +13,8 @@ class ListingBehavior extends Behavior {
     {
         $options = new ArrayObject($options);
         $model = $this->_table;
+        $model->dispatchEvent('Restful.CRUD.beforeQuery', [$query, $options], $model);
         $model->dispatchEvent('Restful.CRUD.index.beforeQuery', [$query, $options], $model);
-
         $searchableFields = new ArrayObject($options['extra']['searchableFields']);
         $selectedFields = isset($options['extra']['fields']) ? new ArrayObject($options['extra']['fields']) : new ArrayObject([]);
         $excludedFields = new ArrayObject($this->config('excludedFields'));
@@ -43,6 +43,10 @@ class ListingBehavior extends Behavior {
                 }
             }
         }
+        if ($options->offsetExists('extra') && array_key_exists('OR', $options['extra'])) {
+            $searchCondition = array_merge($searchCondition, $options['extra']['OR']);
+        }
+
         if ($searchCondition) {
             $query->where($searchCondition);
         }
