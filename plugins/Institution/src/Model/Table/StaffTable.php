@@ -650,7 +650,8 @@ class StaffTable extends ControllerActionTable {
 		}
 
 		$listeners = [
-			TableRegistry::get('Institution.InstitutionSubjectStaff')
+			TableRegistry::get('Institution.InstitutionSubjectStaff'),
+			TableRegistry::get('Institution.StaffUser')
 		];
 		$this->dispatchEventToModels('Model.Staff.afterSave', [$entity], $this, $listeners);
 	}
