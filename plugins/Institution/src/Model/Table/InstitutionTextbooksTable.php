@@ -528,7 +528,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
                 ])
                 ->first();
 
-        return $query->status_name;
+        return __($query->status_name);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
