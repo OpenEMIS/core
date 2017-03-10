@@ -6,8 +6,8 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
-use Cake\ORM\ResultSet;
 use Cake\Event\Event;
+use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
 
@@ -244,7 +244,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {        
+    {
         $searchKey = $this->getSearchKey();
 
         if (strlen($searchKey)) {
@@ -278,7 +278,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $query->where([$conditions]);
         }
     }
-
+    
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
