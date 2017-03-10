@@ -42,7 +42,7 @@ class ImportLinkBehavior extends Behavior {
         $customButton = [];
         switch ($action) {
             case 'index':
-                if ($extra['indexButtons']['view']['url']['action']=='Surveys') {
+                if (isset($extra['indexButtons']['view']) && $extra['indexButtons']['view']['url']['action']=='Surveys') {
                     break;
                 }
                 $customButton['url'] = $this->_table->request->params;
