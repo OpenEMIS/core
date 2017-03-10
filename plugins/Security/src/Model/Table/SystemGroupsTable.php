@@ -176,7 +176,8 @@ class SystemGroupsTable extends AppTable {
 					$rowData[] = $event->subject()->Html->link($obj->openemis_no , [
 						'plugin' => 'Directory',
 						'controller' => 'Directories',
-						'action' => 'view',
+						'action' => 'Directories',
+						'view',
 						$this->paramsEncode(['id' => $obj->id])
 					]);
 					$rowData[] = $obj->name;
