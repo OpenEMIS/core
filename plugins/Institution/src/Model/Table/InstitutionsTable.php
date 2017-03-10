@@ -13,6 +13,8 @@ use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
 use Cake\ORM\ResultSet;
 use Cake\Network\Session;
+use Cake\Log\Log;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -344,6 +346,9 @@ class InstitutionsTable extends AppTable  {
 		if ($entity->isNew()) {
 			$entity->shift_type = 0;
 		}
+
+        // adding debug log to monitor when there was a different between date_opened's year and year_opened
+		$this->debugMonitorYearOpened($entity, $options);
 	}
 
 	public function beforeAction($event) {
@@ -921,6 +926,22 @@ class InstitutionsTable extends AppTable  {
 		$groupIds = $this->getSecurityGroupId($userId, $institutionId);
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
+	}
+
+	public function debugMonitorYearOpened($entity, $options)
+	{
+        $time = strtotime($entity->date_opened);
+        $yearDateOpened = date("Y",$time);
+        $yearOpened = $entity->year_opened;
+
+        if ($yearDateOpened != $yearOpened) {
+        	$debugInfo = $this->alias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
+
+            Log::write('debug',$debugInfo);
+            Log::write('debug',$entity);
+            Log::write('debug',$options);
+            Log::write('debug', 'End of monitoring year opened');
+        }
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
