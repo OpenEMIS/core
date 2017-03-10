@@ -6,6 +6,7 @@ use ArrayObject;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -236,14 +237,61 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('comment', ['visible' => false]);
         $this->field('education_subject_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
+        $this->field('student_status');
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id'
+            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id', 'student_status'
         ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // $query->matching('Institutions.Students');
+        // $query->matching('Institutions.Students', function ($q) {
+        //     return $q->where(['Students.student_id' => 'InstitutionTextbooks.student_id']);
+        // });
+
+        // $query->contain('Institutions.Students');
+        // $query->contain([
+        //     'Institutions.Students' => function ($q) {
+        //        return $q
+        //             ->where(['Students.student_id' => 'InstitutionTextbooks.student_id']);
+        //     }
+        // ]);
+
+        // $query = $articles->find()->contain([
+        //     'Comments' => function ($q) {
+        //        return $q
+        //             ->select(['body', 'author_id'])
+        //             ->where(['Comments.approved' => true]);
+        //     }
+        // ]);
+
+        // $query->leftJoinWith('Institutions.Students');
+        // $query->leftJoinWith('Institutions.Students', function($q) {
+        //     return $q
+        //             ->where(['Students.student_id' => 'InstitutionTextbooks.student_id']);
+        //     }
+        // );
+
+        // ->leftJoinWith('ExaminationCentres', function($q) use ($options) {
+        //         return $q
+        //             ->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
+        //     })
+
+        // $query->leftJoin([
+        //     'InstitutionStudents' => 'institution_students'], [
+        //         'InstitutionStudents.institution_id' => $this->aliasField('institution_id'),
+        //         'InstitutionStudents.student_id' => $this->aliasField('student_id'),
+        //         'InstitutionStudents.education_grade_id' => $this->aliasField('education_grade_id'),
+        //         'InstitutionStudents.academic_period_id' => $this->aliasField('academic_period_id'),
+        //     ])
+        // ->autoFields(true);
+
+
+        // pr($query);
+        
+        
         $searchKey = $this->getSearchKey();
 
         if (strlen($searchKey)) {
@@ -276,6 +324,11 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $query->where([$conditions]);
         }
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) 
+    {
+        // pr($query);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -503,6 +556,31 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function onGetTextbookId(Event $event, Entity $entity)
     {
         return $entity->textbook->code_title;
+    }
+
+    public function onGetStudentStatus(Event $event, Entity $entity)
+    {
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $query = $InstitutionStudents
+                ->find()
+                ->where([
+                    $InstitutionStudents->aliasField('institution_id') => $entity->institution->id,
+                    $InstitutionStudents->aliasField('student_id') => $entity->user->id,
+                    $InstitutionStudents->aliasField('education_grade_id') => $entity->education_grade->id,
+                    $InstitutionStudents->aliasField('academic_period_id') => $entity->academic_period->id
+                ])
+                ->innerJoin(
+                    ['StudentStatuses' => 'student_statuses'],
+                    [
+                        'StudentStatuses.id = ' . $InstitutionStudents->aliasField('student_status_id')
+                    ]
+                )
+                ->select([
+                    'status_name' => 'StudentStatuses.name'
+                ])
+                ->first();
+
+        return $query->status_name;
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
