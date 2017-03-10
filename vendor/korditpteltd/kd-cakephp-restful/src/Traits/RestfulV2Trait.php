@@ -32,7 +32,12 @@ trait RestfulV2Trait {
     {
         $searchableFields = [];
         $table = $extra['table'];
-        $table->dispatchEvent('Restful.Model.onBeforeProcessQueryString', [$requestQueries, $query, $extra], $this->controller);
+        if (isset($requestQueries['_action'])) {
+            $extra['action'] = strtolower($requestQueries['_action']);
+        }
+        $requestQuery = new ArrayObject($requestQueries);
+        $table->dispatchEvent('Restful.Model.onBeforeProcessQueryString', [$requestQuery, $query, $extra], $this->controller);
+        $requestQueries = $requestQuery->getArrayCopy();
         foreach ($table->schema()->columns() as $column) {
             $attr = $table->schema()->column($column);
             if ($attr['type'] == 'string' || $attr['type'] == 'text') {
@@ -130,11 +135,6 @@ trait RestfulV2Trait {
             $list = array_merge($list, $array);
         }
         return $list;
-    }
-
-    private function _action(Query $query = null, $value, ArrayObject $extra)
-    {
-        $extra['action'] = strtolower($value);
     }
 
     private function _fields(Query $query = null, $value, ArrayObject $extra)
@@ -385,7 +385,13 @@ trait RestfulV2Trait {
         foreach ($entity->visibleProperties() as $property) {
             if ($entity->$property instanceof Entity) {
                 $source = $entity->$property->source();
-                $entityTable = TableRegistry::get($source);
+                $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+                if (!TableRegistry::exists($source)) {
+                    $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);  
+                } else {
+                    $entityTable = TableRegistry::get($source);
+                }
+                
                 $this->convertBinaryToBase64($entityTable, $entity->$property, $extra);
             } else {
                 if ($property == 'password') {
@@ -394,7 +400,7 @@ trait RestfulV2Trait {
                 $columnType = $table->schema()->columnType($property);
                 $method = 'format'. ucfirst($columnType);
                 $eventKey = 'Restful.Model.onRender'.ucfirst($columnType);
-                $event = $table->dispatchEvent($eventKey, [$entity, $property], $this);
+                $event = $table->dispatchEvent($eventKey, [$entity, $property, $extra], $this);
                 if ($event->result) {
                     $entity->$property = $event->result;
                 } else if (method_exists($this, $method)) {
@@ -411,7 +417,7 @@ trait RestfulV2Trait {
             if (is_resource($attribute)) {
                 return base64_encode(stream_get_contents($attribute));
             } else {
-                return base64_encode(urlencode($attribute));
+                return base64_encode($attribute);
             }
         }
     }
@@ -447,8 +453,12 @@ trait RestfulV2Trait {
         foreach ($columns as $column) {
             $attr = $schema->column($column);
             if ($attr['type'] == 'binary' && $entity->has($column)) {
-                $value = urldecode($entity->$column);
-                $entity->$column = base64_decode($value);
+                if (is_resource($entity->$column)) {
+                    $entity->$column = stream_get_contents($entity->$column);
+                } else {
+                    $value = urldecode($entity->$column);
+                    $entity->$column = base64_decode($value);
+                }
             }
         }
         return $entity;

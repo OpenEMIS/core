@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+use Cake\Utility\Inflector;
 
 class SavingBehavior extends Behavior {
 
@@ -89,11 +90,18 @@ class SavingBehavior extends Behavior {
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
+        if ($options->offsetExists('extra')) {
+            $action = $options['extra']->offsetExists('action') ? $options['extra']['action'] : null;
 
-        $model->dispatchEvent('Restful.CRUD.addEdit.beforePatch', [$data, $options], $model);
+            $model->dispatchEvent('Restful.CRUD.allActions.beforePatch', [$data, $options], $model);
 
-        if ($options['extra']->offsetExists('action')) {
-            $model->dispatchEvent('Restful.CRUD.'.$options['extra']['action'].'.beforePatch', [$data, $options], $model);
+            if ($action == 'add' || $action == 'edit') {
+                $model->dispatchEvent('Restful.CRUD.addEdit.beforePatch', [$data, $options], $model);
+            }
+
+            if ($options['extra']->offsetExists('action')) {
+                $model->dispatchEvent('Restful.CRUD.'.lcfirst(Inflector::camelize($options['extra']['action'])).'.beforePatch', [$data, $options], $model);
+            }
         }
     }
 
