@@ -438,7 +438,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
         if (!empty($studentOptions)) {
             $studentOptions = [null => $this->getMessage('Users.select_student'), 'all' => $this->getMessage('Users.add_all_student')] + $studentOptions;
         } else {
-            $studentOptions = [null => __('-- No Student --')];
+            $studentOptions = [null => $this->getMessage('general.select.noOptions')];
         }
         
         $attr['options'] = $studentOptions;
