@@ -190,7 +190,7 @@ class ValidationBehavior extends Behavior {
             $check = $Areas->get($check)->area_level_id;
             if ($check != $validateAreaLevel) {
                 $configuredAreaLevel = $AreaLevels->get($validateAreaLevel)->name;
-                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_id.ConfiguredArea', ['sprintf' => [$configuredAreaLevel]]);
+                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_id.configuredArea', ['sprintf' => [$configuredAreaLevel]]);
             }
         } else if ($globalData['field'] == 'area_administrative_id') {
             $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
@@ -198,7 +198,7 @@ class ValidationBehavior extends Behavior {
             $check = $AreaAdministratives->get($check)->area_administrative_level_id;
             if ($check != $validateAreaAdministrativeLevel) {
                 $configuredAreaAdministrativeLevel = $AreaAdministrativeLevels->get($validateAreaAdministrativeLevel)->name;
-                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_administrative_id.ConfiguredArea', ['sprintf' => [$configuredAreaAdministrativeLevel]]);
+                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_administrative_id.configuredArea', ['sprintf' => [$configuredAreaAdministrativeLevel]]);
             }
         }
 

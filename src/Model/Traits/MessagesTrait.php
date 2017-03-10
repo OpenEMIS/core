@@ -672,10 +672,10 @@ trait MessagesTrait {
                 ],
                 'area_id' => [
                     'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.',
-                    'ConfiguredArea' => 'Please select area from %s level.'
+                    'configuredArea' => 'Please select area from %s level.'
                 ],
                 'area_administrative_id' => [
-                    'ConfiguredArea' => 'Please select area administrative from %s level.'
+                    'configuredArea' => 'Please select area administrative from %s level.'
                 ],
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
