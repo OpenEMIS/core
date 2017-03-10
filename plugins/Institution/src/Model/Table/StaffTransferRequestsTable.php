@@ -270,16 +270,13 @@ class StaffTransferRequestsTable extends StaffTransfer {
 		}
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, $extra) {
+	public function viewAfterAction(Event $event, Entity $entity, $extra) 
+    {
+        parent::viewAfterAction($event, $entity, $extra);
+        
 		if ($this->Session->check('Institution.StaffTransferRequests.success')) {
 			$this->Alert->success('general.add.success');
 			$this->Session->delete('Institution.StaffTransferRequests.success');
-		}
-		$toolbarButtons = $extra['toolbarButtons'];
-		if ($entity->status == self::APPROVED) {
-			if (isset($toolbarButtons['remove'])) {
-				unset($toolbarButtons['remove']);
-			}
 		}
 	}
 
