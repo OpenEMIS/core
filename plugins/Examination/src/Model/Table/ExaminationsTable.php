@@ -34,8 +34,16 @@ class ExaminationsTable extends ControllerActionTable {
                     'provider' => 'table'
                 ]
             ])
-            ->add('registration_start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'registration_end_date', false]
+            ->add('registration_start_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ],
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'registration_end_date', false]
+                ]
+            ])
+            ->add('registration_end_date', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
             ->requirePresence('examination_items');
     }
