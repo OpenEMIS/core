@@ -76,7 +76,8 @@ class UsersTable extends AppTable {
 			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage',
 			'Model.UserNationalities.onChange' => 'onChangeUserNationalities',
 			'Model.UserIdentities.onChange' => 'onChangeUserIdentities',
-            'Model.Nationalities.onChange' => 'onChangeNationalities'
+            'Model.Nationalities.onChange' => 'onChangeNationalities',
+            'Model.UserContacts.onChange' => 'onChangeUserContacts'
 		];
 
 		$events = array_merge($events, $newEvent);
@@ -772,5 +773,14 @@ class UsersTable extends AppTable {
                 `SU`.`identity_number` = `UI`.`number`',
             [$nationalityId,$identityTypeId,$identityTypeId],['integer','integer','integer']
         );
+    }
+
+    public function onChangeUserContacts(Event $event, Entity $entity) 
+    {
+        $securityUserId = $entity->security_user_id;
+        $email = $entity->value;
+
+        // update the user email with preferred email
+        $this->updateAll(['email' => $email],['id' => $securityUserId]);
     }
 }
