@@ -8,7 +8,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
-use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
 
@@ -245,53 +244,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        // $query->matching('Institutions.Students');
-        // $query->matching('Institutions.Students', function ($q) {
-        //     return $q->where(['Students.student_id' => 'InstitutionTextbooks.student_id']);
-        // });
-
-        // $query->contain('Institutions.Students');
-        // $query->contain([
-        //     'Institutions.Students' => function ($q) {
-        //        return $q
-        //             ->where(['Students.student_id' => 'InstitutionTextbooks.student_id']);
-        //     }
-        // ]);
-
-        // $query = $articles->find()->contain([
-        //     'Comments' => function ($q) {
-        //        return $q
-        //             ->select(['body', 'author_id'])
-        //             ->where(['Comments.approved' => true]);
-        //     }
-        // ]);
-
-        // $query->leftJoinWith('Institutions.Students');
-        // $query->leftJoinWith('Institutions.Students', function($q) {
-        //     return $q
-        //             ->where(['Students.student_id' => 'InstitutionTextbooks.student_id']);
-        //     }
-        // );
-
-        // ->leftJoinWith('ExaminationCentres', function($q) use ($options) {
-        //         return $q
-        //             ->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
-        //     })
-
-        // $query->leftJoin([
-        //     'InstitutionStudents' => 'institution_students'], [
-        //         'InstitutionStudents.institution_id' => $this->aliasField('institution_id'),
-        //         'InstitutionStudents.student_id' => $this->aliasField('student_id'),
-        //         'InstitutionStudents.education_grade_id' => $this->aliasField('education_grade_id'),
-        //         'InstitutionStudents.academic_period_id' => $this->aliasField('academic_period_id'),
-        //     ])
-        // ->autoFields(true);
-
-
-        // pr($query);
-        
-        
+    {        
         $searchKey = $this->getSearchKey();
 
         if (strlen($searchKey)) {
@@ -324,11 +277,6 @@ class InstitutionTextbooksTable extends ControllerActionTable
 
             $query->where([$conditions]);
         }
-    }
-
-    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) 
-    {
-        // pr($query);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
