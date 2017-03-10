@@ -1133,6 +1133,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'select' => true,
             'entity' => $entity
         ]);
+
+        $this->field('student_status');
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
