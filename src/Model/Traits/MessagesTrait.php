@@ -1485,6 +1485,12 @@ trait MessagesTrait {
             'Examinations' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
+                'registration_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'registration_end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
             'ExaminationCentres' => [
