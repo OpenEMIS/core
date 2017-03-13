@@ -1,6 +1,9 @@
 <?php
 namespace Workflow\Model\Table;
 
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+
 use App\Model\Table\AppTable;
 
 class WorkflowModelsTable extends AppTable {
@@ -18,7 +21,7 @@ class WorkflowModelsTable extends AppTable {
 			])
 			->matching('WorkflowStatuses.WorkflowSteps')
 			->where([
-				$this->aliasField('name') => $modelName, 
+				$this->aliasField('name') => $modelName,
 				'WorkflowStatuses.code' => $code
 			])
 			->select(['step_id' => 'WorkflowSteps.id'])
@@ -48,4 +51,18 @@ class WorkflowModelsTable extends AppTable {
 			->select(['workflow_status_id' => 'WorkflowStatuses.id', 'workflow_status_code' => 'WorkflowStatuses.code'])
 			->toArray();
 	}
+
+	public function getFeatureOptions()
+    {
+    	$records = $this->find()->distinct(['model'])->all();
+
+        $featureOptions = [];
+        foreach ($records as $obj) {
+        	$model = TableRegistry::get($obj->model);
+        	$alias = __(Inflector::humanize(Inflector::underscore($model->alias())));
+            $featureOptions[$model->alias()] = __($alias);
+        }
+
+        return $featureOptions;
+    }
 }

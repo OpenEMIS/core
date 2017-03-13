@@ -25,6 +25,11 @@ class AlertLogsTable extends ControllerActionTable
         -1 => 'Failed'
     ];
 
+    private $featureGrouping = [
+        'general' => 'General',
+        'workflow' => 'Workflow'
+    ];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -69,7 +74,7 @@ class AlertLogsTable extends ControllerActionTable
                 $recipient = $assigneeName . ' <' . $assigneeEmail . '>';
 
                 $defaultSubject = __('[${feature}] (${status.name}) ${created_user.first_name} ${created_user.last_name}');
-                $subject = $this->replaceMessage($feature, $defaultSubject, $vars);
+                $subject = $this->replaceMessage($modelAlias, $defaultSubject, $vars);
 
                 // email message
                 $defaultMessage = __('This is a default message for [${feature} workflow feature], the status of this workflow is "${status.name}". ');
@@ -78,13 +83,13 @@ class AlertLogsTable extends ControllerActionTable
                 $message = $this->getWorkflowEmailMessage($recordEntity->source());
 
                 if (is_null($message)) {
-                    $message = $this->replaceMessage($feature, $defaultMessage, $vars);
+                    $message = $this->replaceMessage($modelAlias, $defaultMessage, $vars);
                 } else {
-                    $message = $this->replaceMessage($feature, $message, $vars);
+                    $message = $this->replaceMessage($modelAlias, $message, $vars);
                 }
 
                 // insert to the alertLog and send the email
-                $this->insertAlertLog($method, $feature, $recipient, $subject, $message);
+                $this->insertAlertLog($method, $modelAlias, $recipient, $subject, $message);
 
                 // trigger the send email shell
                 $this->triggerSendingAlertShell('SendingAlert');
@@ -179,22 +184,14 @@ class AlertLogsTable extends ControllerActionTable
 
         // element control
         $featureOptions = $this->getFeatureOptions();
-
-        if (!empty($featureOptions)) {
-            array_unshift($featureOptions, "All Features");
-        }
-
-        $selectedFeatureId = $this->queryString('feature', $featureOptions);
-        $selectedFeatureName = $featureOptions[$selectedFeatureId];
-
-        $extra['selectedFeature'] = $selectedFeatureId;
-        $extra['selectedFeatureName'] = $selectedFeatureName;
+        $selectedFeature = $this->queryString('feature', $featureOptions);
+        $extra['selectedFeature'] = $selectedFeature;
 
         $extra['elements']['control'] = [
             'name' => 'Alert/controls',
             'data' => [
                 'featureOptions'=>$featureOptions,
-                'selectedFeature'=>$selectedFeatureId,
+                'selectedFeature'=>$selectedFeature,
             ],
             'options' => [],
             'order' => 3
@@ -204,23 +201,35 @@ class AlertLogsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $selectedFeatureId = $extra['selectedFeature'];
-        $selectedFeatureName = $extra['selectedFeatureName'];
+        $selectedFeature = $extra['selectedFeature'];
+        $featureOptions = $this->getFeatureOptions();
 
-        if ($selectedFeatureId != 0) {
-            $query->where(['feature' => $selectedFeatureName]);
+        if ($selectedFeature != 'AllFeatures') {
+            $query->where([$this->aliasField('feature') => $selectedFeature]);
         }
     }
 
     public function getFeatureOptions()
     {
-        $featureResults = $this->find()
-            ->distinct(['feature'])
-            ->all();
+        // feature from alert to be classified under general
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+        ksort($alertFeatures); // sort alphabetical
 
-        $featureOptions = [];
-        foreach ($featureResults as $key => $obj) {
-            $featureOptions[] = __($obj['feature']);
+        // feature from workflow to be classified under workflow
+        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+        $workflowFeatures = $WorkflowModels->getFeatureOptions();
+        ksort($workflowFeatures); // sort alphabetical
+
+        $features = array_merge($alertFeatures,$workflowFeatures); // combine the alert and workflow feature
+
+        $featureOptions['AllFeatures'] = 'All Features'; // to show all the records
+        foreach ($features as $key => $value) {
+            if (array_key_exists($key, $alertFeatures)) {
+                $featureOptions[__($this->featureGrouping['general'])][$key] = $value;
+            } else if (array_key_exists($key, $workflowFeatures)) {
+                $featureOptions[__($this->featureGrouping['workflow'])][$key] = $value;
+            }
         }
 
         return $featureOptions;
