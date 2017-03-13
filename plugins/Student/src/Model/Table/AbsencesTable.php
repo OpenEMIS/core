@@ -50,7 +50,8 @@ class AbsencesTable extends AppTable {
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'StudentAbsences',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;

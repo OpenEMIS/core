@@ -50,7 +50,7 @@ class ReportListBehavior extends Behavior {
 		$fields['params']['visible'] = false;
 		$fields['pid']['visible'] = false;
 		$fields['created']['visible'] = true;
-		$fields['modified']['visible'] = true;
+        $fields['modified']['visible'] = true;
 
 		$this->_table->fields = $fields;
 
@@ -59,9 +59,22 @@ class ReportListBehavior extends Behavior {
 		// To remove expired reports
 		$this->ReportProgress->purge();
 
+		// beside super user, report can only be seen by the one who generate it.
+        $conditions = [
+            $this->ReportProgress->aliasField('module') => $this->_table->alias()
+        ];
+		if ($this->_table->Auth->user('super_admin') != 1) { // if user is not super admin, the list will be filtered
+			$userId = $this->_table->Auth->user('id');
+			$conditions[$this->ReportProgress->aliasField('created_user_id')] = $userId;
+		}
+
 		$query = $this->ReportProgress->find()
-			->where([$this->ReportProgress->aliasField('module') => $this->_table->alias()])
-			->order([$this->ReportProgress->aliasField('expiry_date') => 'DESC']);
+            ->contain('CreatedUser') //association declared on AppTable
+			->where($conditions)
+			->order([
+				$this->ReportProgress->aliasField('created') => 'DESC',
+				$this->ReportProgress->aliasField('expiry_date') => 'DESC'
+			]);
 
 		return $query;
 	}
@@ -121,9 +134,10 @@ class ReportListBehavior extends Behavior {
 		$expiryDate = new Time();
 		$expiryDate->addDays(5);
 		$this->ReportProgress->updateAll(
-			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate],
+			['status' => Process::COMPLETED, 'file_path' => $settings['file_path'], 'expiry_date' => $expiryDate, 'modified' => new Time()],
 			['id' => $process->id]
 		);
+		$settings['purge'] = false; //for report, dont purge after download.
 	}
 
 	protected function _generate($data) {

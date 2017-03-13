@@ -58,7 +58,7 @@ class VisitRequestsTable extends ControllerActionTable
 
 		return $validator
 			->add('date_of_visit', 'ruleDateWithinAcademicPeriod', [
-                'rule' => ['checkDateWithinAcademicPeriod', 'academic_period_id', []],
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []],
                 'provider' => 'table',
             ])
 			->allowEmpty('file_content');
@@ -204,7 +204,7 @@ class VisitRequestsTable extends ControllerActionTable
 						'controller' => 'Institutions',
 						'action' => 'VisitRequests',
 						'view',
-						$row->id,
+						$this->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 

@@ -60,6 +60,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.changeNationality = changeNationality;
     StudentController.changeIdentityType = changeIdentityType;
     StudentController.processStudentRecord = processStudentRecord;
+    StudentController.processExternalStudentRecord = processExternalStudentRecord;
     StudentController.createNewInternalDatasource = createNewInternalDatasource;
     StudentController.createNewExternalDatasource = createNewExternalDatasource;
     StudentController.insertStudentData = insertStudentData;
@@ -122,7 +123,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController.onChangeAcademicPeriod();
             }
             promises.push(InstitutionsStudentsSvc.getAddNewStudentConfig());
-            promises.push(InstitutionsStudentsSvc.getDefaultIdentityType());
 
             return $q.all(promises);
         }, function(error) {
@@ -156,16 +156,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (StudentController.StudentSpecialNeeds != 2) {
                 promises[4] = InstitutionsStudentsSvc.getSpecialNeedTypes();
             }
-            var defaultIdentityType = promisesObj[1];
-            if (defaultIdentityType.length > 0) {
-                StudentController.defaultIdentityTypeName = defaultIdentityType[0].name;
-                StudentController.defaultIdentityTypeId = defaultIdentityType[0].id;
-                StudentController.Student.identity_type_id = StudentController.defaultIdentityTypeId;
-                StudentController.Student.identity_type_name = StudentController.defaultIdentityTypeName;
-            } else {
-                StudentController.Student.identity_type_id = null;
-                StudentController.Student.identity_type_name = 'No default identity set';
-            }
             promises[0] = InstitutionsStudentsSvc.getGenders();
 
             return $q.all(promises);
@@ -192,43 +182,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (promisesObj[4] != undefined && promisesObj[4].hasOwnProperty('data')) {
                 StudentController.StudentSpecialNeedsOptions = promisesObj[4]['data'];
             }
-            var deferred = $q.defer();
-            if (StudentController.hasExternalDataSource) {
-                InstitutionsStudentsSvc.getExternalDefaultIdentityType()
-                .then(function(externalIdentityType) {
-                    if (externalIdentityType.length > 0) {
-                        deferred.resolve(externalIdentityType[0].name);
-                    } else {
-                        deferred.reject('No External Identity Type');
-                    }
-                }, function(error) {
-                    StudentController.hasExternalDataSource = false;
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
-                    deferred.reject(error);
-                });
-                return deferred.promise;
-            } else {
-                return StudentController.genderOptions;
-            }
         }, function(error) {
             console.log(error);
             UtilsSvc.isAppendLoader(false);
             AlertSvc.warning($scope, error);
-        })
-        .then(function(arr) {
-            if (StudentController.hasExternalDataSource) {
-                externalIdentityType = arr;
-                StudentController.defaultExternalIdentityTypeName = externalIdentityType;
-                InstitutionsStudentsSvc.init(angular.baseUrl);
-                return true;
-            } else {
-                return true;
-            }
-        }, function(error) {
-            StudentController.hasExternalDataSource = false;
-            InstitutionsStudentsSvc.init(angular.baseUrl);
-            console.log('Error connecting to external source');
-            AlertSvc.warning($scope, 'Error connecting to external source');
         })
         .finally(function(result) {
             $scope.initGrid();
@@ -311,7 +268,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultIdentityTypeName))? StudentController.defaultIdentityTypeName : "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,
@@ -339,11 +298,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
                 {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: (angular.isDefined(StudentController.defaultExternalIdentityTypeName))? StudentController.defaultExternalIdentityTypeName: "[default identity type not set]", field: "identity_number", suppressMenu: true, suppressSorting: true},
+                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,
@@ -443,7 +403,6 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                             startRow: params.startRow,
                             endRow: params.endRow,
                             conditions: {
-                                openemis_no: StudentController.internalFilterOpenemisNo,
                                 first_name: StudentController.internalFilterFirstName,
                                 last_name: StudentController.internalFilterLastName,
                                 identity_number: StudentController.internalFilterIdentityNumber,
@@ -455,7 +414,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         var studentRecords = response.data;
                         var totalRowCount = response.total;
                         StudentController.initialLoad = false;
-                        return StudentController.processStudentRecord(studentRecords, params, totalRowCount);
+                        return StudentController.processExternalStudentRecord(studentRecords, params, totalRowCount);
                     }, function(error) {
                         console.log(error);
                         var status = error.status;
@@ -468,7 +427,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         }
                         var studentRecords = [];
                         InstitutionsStudentsSvc.init(angular.baseUrl);
-                        return StudentController.processStudentRecord(studentRecords, params, 0);
+                        return StudentController.processExternalStudentRecord(studentRecords, params, 0);
                     })
                     .finally(function(res) {
                         InstitutionsStudentsSvc.init(angular.baseUrl);
@@ -482,6 +441,39 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         };
         gridObj.api.setDatasource(dataSource);
         gridObj.api.sizeColumnsToFit();
+    }
+
+    function processExternalStudentRecord(studentRecords, params, totalRowCount) {
+        for(var key in studentRecords) {
+            var mapping = InstitutionsStudentsSvc.getExternalSourceMapping();
+            studentRecords[key]['institution_name'] = '-';
+            studentRecords[key]['academic_period_name'] = '-';
+            studentRecords[key]['education_grade_name'] = '-';
+            studentRecords[key]['date_of_birth'] = InstitutionsStudentsSvc.formatDate(studentRecords[key][mapping.date_of_birth_mapping]);
+            studentRecords[key]['gender_name'] = studentRecords[key][mapping.gender_mapping];
+            studentRecords[key]['gender'] = {'name': studentRecords[key][mapping.gender_mapping]};
+            studentRecords[key]['identity_type_name'] = studentRecords[key][mapping.identity_type_mapping];
+            studentRecords[key]['identity_number'] = studentRecords[key][mapping.identity_number_mapping];
+            studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
+            studentRecords[key]['nationality_name'] = studentRecords[key][mapping.nationality_mapping];
+            studentRecords[key]['address'] = studentRecords[key][mapping.address_mapping];
+            studentRecords[key]['postal_code'] = studentRecords[key][mapping.postal_mapping];
+            studentRecords[key]['name'] = '';
+            if (studentRecords[key].hasOwnProperty(mapping.first_name_mapping)) {
+                studentRecords[key]['name'] = studentRecords[key][mapping.first_name_mapping];
+            }
+            StudentController.appendName(studentRecords[key], mapping.middle_name_mapping);
+            StudentController.appendName(studentRecords[key], mapping.third_name_mapping);
+            StudentController.appendName(studentRecords[key], mapping.last_name_mapping);
+        }
+
+        var lastRow = totalRowCount;
+        StudentController.rowsThisPage = studentRecords;
+
+        params.successCallback(StudentController.rowsThisPage, lastRow);
+        StudentController.externalDataLoaded = true;
+        UtilsSvc.isAppendLoader(false);
+        return studentRecords;
     }
 
     function processStudentRecord(studentRecords, params, totalRowCount) {
@@ -642,30 +634,18 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }, log);
     }
 
-    $scope.formatDateReverse = function(datetime) {
-        datetime = new Date(datetime);
-
-        var yyyy = datetime.getFullYear().toString();
-        var mm = (datetime.getMonth()+1).toString(); // getMonth() is zero-based
-        var dd  = datetime.getDate().toString();
-
-        return (dd[1]?dd:"0"+dd[0]) + '-' + (mm[1]?mm:"0"+mm[0]) + '-' + yyyy; // padding
-    }
-
-
-
     function onChangeAcademicPeriod() {
         AlertSvc.reset($scope);
 
         if (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption')) {
             $scope.endDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date);
-            StudentController.startDate = $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date);
+            StudentController.startDate = InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date);
         }
 
         var startDatePicker = angular.element(document.getElementById('Students_start_date'));
-        startDatePicker.datepicker("setStartDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date));
-        startDatePicker.datepicker("setEndDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.end_date));
-        startDatePicker.datepicker("setDate", $scope.formatDateReverse(StudentController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setStartDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date));
+        startDatePicker.datepicker("setEndDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.end_date));
+        startDatePicker.datepicker("setDate", InstitutionsStudentsSvc.formatDate(StudentController.academicPeriodOptions.selectedOption.start_date));
 
         StudentController.educationGradeOptions = null;
         InstitutionsStudentsSvc.getEducationGrades({
@@ -721,19 +701,15 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var endDate = $scope.endDate;
 
         if (!StudentController.createNewStudent) {
-            InstitutionsStudentsSvc.getStudentData(StudentController.selectedStudent)
-            .then(function(studentData){
-
-                if (StudentController.externalSearch) {
-                    InstitutionsStudentsSvc.init(angular.baseUrl);
-                    StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
-                } else {
-                    var studentId = StudentController.selectedStudent;
-                    StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
-                }
-            }, function(error){
-                console.log(error);
-            });
+            if (StudentController.externalSearch) {
+                var studentData = StudentController.selectedStudentData;
+                var amendedStudentData = Object.assign({}, studentData);
+                amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDate(amendedStudentData.date_of_birth);
+                StudentController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
+            } else {
+                var studentId = StudentController.selectedStudent;
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
+            }
         } else {
             console.log('postForm');
             if (StudentController.selectedStudentData != null) {
@@ -779,8 +755,10 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         newStudentData['academic_period_id'] = academicPeriodId;
         newStudentData['education_grade_id'] = educationGradeId;
         newStudentData['start_date'] = startDate;
-        newStudentData['nationality_id'] = StudentController.Student.nationality_id;
-        newStudentData['identity_type_id'] = StudentController.Student.identity_type_id;
+        if (!StudentController.externalSearch) {
+            newStudentData['nationality_id'] = StudentController.Student.nationality_id;
+            newStudentData['identity_type_id'] = StudentController.Student.identity_type_id;
+        }
         InstitutionsStudentsSvc.addUser(newStudentData)
         .then(function(user){
             if (user[0].error.length === 0) {
@@ -925,6 +903,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         }
         // Step 4 - Add Student
         else {
+            if (StudentController.externalSearch) {
+                StudentController.getUniqueOpenEmisId();
+            }
             studentData = StudentController.selectedStudentData;
             StudentController.completeDisabled = false;
             if (studentData.hasOwnProperty('institution_students')) {

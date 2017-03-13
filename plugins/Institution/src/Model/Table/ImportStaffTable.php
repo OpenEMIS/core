@@ -4,6 +4,7 @@ namespace Institution\Model\Table;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use ArrayObject;
+use Cake\I18n\Date;
 use Cake\Collection\Collection;
 use Cake\Controller\Component;
 use Cake\Datasource\Exception\RecordNotFoundException;
@@ -303,12 +304,18 @@ class ImportStaffTable extends AppTable
         if (empty($tempRow['start_date'])) {
             $rowInvalidCodeCols['start_date'] = __('No start date specified');
             return false;
-        } elseif (!$tempRow['start_date'] instanceof DateTimeInterface) {
-            $rowInvalidCodeCols['start_date'] = __('Unknown date format');
-            return false;
-        } elseif ($tempRow['start_date']->lt($this->_institution->date_opened)) {
-            $rowInvalidCodeCols['start_date'] = __('Start Date should be later than Institution Date Opened');
-            return false;
+        } else {
+            // from string to dateObject
+            $formattedDate = Date::createFromFormat('d/m/Y', $tempRow['start_date']);
+            $tempRow['start_date'] = $formattedDate;
+
+            if (!$tempRow['start_date'] instanceof DateTimeInterface) {
+                $rowInvalidCodeCols['start_date'] = __('Unknown date format');
+                return false;
+            } elseif ($tempRow['start_date']->lt($this->_institution->date_opened)) {
+                $rowInvalidCodeCols['start_date'] = __('Start Date should be later than Institution Date Opened');
+                return false;
+            }
         }
         $tempRow['start_year'] = $tempRow['start_date']->year;
 

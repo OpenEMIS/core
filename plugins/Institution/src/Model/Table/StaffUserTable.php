@@ -12,117 +12,211 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Table\AppTable;
 use Cake\Network\Session;
-use Staff\Model\Table\StaffTable as UserTable;
+use App\Model\Table\ControllerActionTable;
 
-class StaffUserTable extends UserTable {
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('username', ['visible' => false]);
-	}
+class StaffUserTable extends ControllerActionTable {
+    public function initialize(array $config)
+    {
+        $this->table('security_users');
+        $this->entityClass('User.User');
+        parent::initialize($config);
+        self::handleAssociations($this);
+        // Behaviors
+        $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('User.Mandatory', ['userRole' => 'Staff', 'roleFields' =>['Identities', 'Nationalities', 'Contacts', 'SpecialNeeds']]);
+        $this->addBehavior('AdvanceSearch');
+
+        $this->addBehavior('CustomField.Record', [
+            'model' => 'Staff.Staff',
+            'behavior' => 'Staff',
+            'fieldKey' => 'staff_custom_field_id',
+            'tableColumnKey' => 'staff_custom_table_column_id',
+            'tableRowKey' => 'staff_custom_table_row_id',
+            'fieldClass' => ['className' => 'StaffCustomField.StaffCustomFields'],
+            'formKey' => 'staff_custom_form_id',
+            'filterKey' => 'staff_custom_filter_id',
+            'formFieldClass' => ['className' => 'StaffCustomField.StaffCustomFormsFields'],
+            'formFilterClass' => ['className' => 'StaffCustomField.StaffCustomFormsFilters'],
+            'recordKey' => 'staff_id',
+            'fieldValueClass' => ['className' => 'StaffCustomField.StaffCustomFieldValues', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => ['className' => 'StaffCustomField.StaffCustomTableCells', 'foreignKey' => 'staff_id', 'dependent' => true, 'cascadeCallbacks' => true]
+        ]);
+
+        $this->addBehavior('Excel', [
+            'excludes' => ['photo_name', 'is_student', 'is_staff', 'is_guardian', 'super_admin', 'date_of_death' ],
+            'filename' => 'Staff',
+            'pages' => ['view']
+        ]);
+
+        $this->addBehavior('HighChart', [
+            'count_by_gender' => [
+                '_function' => 'getNumberOfStaffByGender'
+            ]
+        ]);
+        $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Configuration.Pull');
+        $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Staff' => ['index', 'add']
+        ]);
+        $this->toggle('index', false);
+        $this->toggle('add', false);
+        $this->toggle('remove', false);
+    }
+
+    public static function handleAssociations($model) {
+        $model->belongsTo('Genders',                ['className' => 'User.Genders']);
+        $model->belongsTo('AddressAreas',           ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+        $model->belongsTo('BirthplaceAreas',        ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+        $model->belongsTo('MainNationalities',      ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+        $model->belongsTo('MainIdentityTypes',      ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
+
+        $model->hasMany('Identities',               ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Nationalities',            ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('SpecialNeeds',             ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Contacts',                 ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Attachments',              ['className' => 'User.Attachments',     'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('BankAccounts',             ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Comments',                 ['className' => 'User.Comments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Languages',                ['className' => 'User.UserLanguages',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Awards',                   ['className' => 'User.Awards',          'foreignKey' => 'security_user_id', 'dependent' => true]);
+
+        $model->belongsToMany('SecurityRoles', [
+            'className' => 'Security.SecurityRoles',
+            'foreignKey' => 'security_role_id',
+            'targetForeignKey' => 'security_user_id',
+            'through' => 'Security.SecurityGroupUsers',
+            'dependent' => true
+        ]);
+
+        $model->belongsToMany('Institutions', [
+            'className' => 'Institution.Institutions',
+            'joinTable' => 'institution_staff', // will need to change to institution_staff
+            'foreignKey' => 'staff_id', // will need to change to staff_id
+            'targetForeignKey' => 'institution_id', // will need to change to institution_id
+            'through' => 'Institution.Staff',
+            'dependent' => true
+        ]);
+
+        // class should never cascade delete
+        $model->hasMany('InstitutionClasses',       ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
+        $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students',    'foreignKey' => 'student_id', 'dependent' => true]);
+        $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff',    'foreignKey' => 'staff_id', 'dependent' => true]);
+
+        $model->belongsToMany('Subjects', [
+            'className' => 'Institution.InstitutionSubject',
+            'joinTable' => 'institution_subject_staff',
+            'foreignKey' => 'staff_id',
+            'targetForeignKey' => 'institution_subject_id',
+            'through' => 'Institution.InstitutionSubjectStaff',
+            'dependent' => true
+        ]);
+
+        $model->hasMany('StaffActivities',          ['className' => 'Staff.StaffActivities', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $model->hasMany('InstitutionRubrics',       ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
+    }
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Staff.afterSave'] = 'staffAfterSave';
+        return $events;
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $options['associated']['Nationalities'] = [
+            'validate' => 'AddByAssociation'
+        ];
+        $options['associated']['Identities'] = [
+            'validate' => 'AddByAssociation'
+        ];
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra) {
+        $this->field('username', ['visible' => false]);
+        $toolbarButtons = $extra['toolbarButtons'];
+        if ($this->action == 'view') {
+            $id = $this->request->query('id');
+            $this->Session->write('Institution.Staff.id', $id);
+            if ($toolbarButtons->offsetExists('back')) {
+                $toolbarButtons['back']['url']['action'] = 'Staff';
+            }
+        } else {
+            if ($toolbarButtons->offsetExists('back')) {
+                $toolbarButtons['back']['url'][1] = $this->paramsPass(0);
+            }
+        }
+    }
 
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
         $validator
+            ->allowEmpty('username')
             ->allowEmpty('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [
                 'rule' => ['validateCustomPattern', 'postal_code'],
                 'provider' => 'table',
                 'last' => true
             ])
+            ->allowEmpty('photo_content')
             ;
         return $validator;
     }
 
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		$sessionKey = 'Institution.Staff.new';
-		if ($this->Session->check($sessionKey)) {
-			$positionData = $this->Session->read($sessionKey);
-			$positionData['staff_id'] = $entity->id;
-			$institutionId = $positionData['institution_id'];
-
-			$Staff = TableRegistry::get('Institution.Staff');
-			$staffEntity = $Staff->newEntity($positionData, ['validate' => 'AllowEmptyName']);
-			if (!$Staff->save($staffEntity)) {
-				$errors = $staffEntity->errors();
-				if (isset($errors['institution_position_id']['ruleCheckFTE'])) {
-					$this->Alert->error('Institution.InstitutionStaff.noFTE', ['reset' => true]);
-				} else {
-					$this->Alert->error('Institution.InstitutionStaff.error', ['reset' => true]);
-				}
-			}
-			$this->Session->delete($sessionKey);
-		}
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'index'];
-		return $this->controller->redirect($action);
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		if (!$this->AccessControl->isAdmin()) {
-			$institutionIds = $this->AccessControl->getInstitutionsByUser();
-			$this->Session->write('AccessControl.Institutions.ids', $institutionIds);
-		}
-		$this->Session->write('Staff.Staff.id', $entity->id);
-		$this->Session->write('Staff.Staff.name', $entity->name);
-		$this->setupTabElements($entity);
-	}
-
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->Session->write('Staff.Staff.id', $entity->id);
-		$this->Session->write('Staff.Staff.name', $entity->name);
-		$this->setupTabElements($entity);
-
-		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
-	}
-
-	private function setupTabElements($entity) {
-		$id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
-		$options = [
-			'userRole' => 'Staff',
-			'action' => $this->action,
-			'id' => $id,
-			'userId' => $entity->id
-		];
-
-		$tabElements = $this->controller->getUserTabElements($options);
-
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
-
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'MainNationalities', 'MainIdentityTypes'
+        ]);
     }
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			$id = $this->request->query('id');
-			$this->Session->write('Institution.Staff.id', $id);
-			$session = $this->request->session();
-			if ($toolbarButtons->offsetExists('back')) {
-				unset($toolbarButtons['back']);
-			}
-		} else if ($action == 'add') {
-			$backAction = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Staff', 'add'];
-			$toolbarButtons['back']['url'] = $backAction;
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+        if (!$this->AccessControl->isAdmin()) {
+            $institutionIds = $this->AccessControl->getInstitutionsByUser();
+            $this->Session->write('AccessControl.Institutions.ids', $institutionIds);
+        }
+        $this->Session->write('Staff.Staff.id', $entity->id);
+        $this->Session->write('Staff.Staff.name', $entity->name);
+        $this->setupTabElements($entity);
+    }
 
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
-		}
-	}
+    public function editAfterAction(Event $event, Entity $entity) {
+        $this->Session->write('Staff.Staff.id', $entity->id);
+        $this->Session->write('Staff.Staff.name', $entity->name);
+        $this->setupTabElements($entity);
 
-	//to handle identity_number field that is automatically created by mandatory behaviour.
-	public function onUpdateFieldIdentityNumber(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-			$attr['fieldName'] = $this->alias().'.identities.0.number';
-			$attr['attr']['label'] = __('Identity Number');
-		}
-		return $attr;
-	}
+        $this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+
+        $this->fields['nationality_id']['type'] = 'readonly';
+        $this->fields['nationality_id']['attr']['value'] = $entity->has('main_nationality') ? $entity->main_nationality->name : '';
+
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
+    }
+
+    private function setupTabElements($entity) {
+        $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
+        $options = [
+            'userRole' => 'Staff',
+            'action' => $this->action,
+            'id' => $id,
+            'userId' => $entity->id
+        ];
+
+        $tabElements = $this->controller->getUserTabElements($options);
+
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function staffAfterSave(Event $event, $staff)
+    {
+        if ($staff->isNew()) {
+            $this->updateAll(['is_staff' => 1], ['id' => $staff->staff_id]);
+        }
+    }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
@@ -141,5 +235,75 @@ class StaffUserTable extends UserTable {
                 break;
             }
         }
+    }
+
+    public function findStaff(Query $query, array $options = []) {
+        $query->where([$this->aliasField('super_admin').' <> ' => 1]);
+
+        $limit = (array_key_exists('limit', $options))? $options['limit']: null;
+        $page = (array_key_exists('page', $options))? $options['page']: null;
+
+        // conditions
+        $firstName = (array_key_exists('first_name', $options))? $options['first_name']: null;
+        $lastName = (array_key_exists('last_name', $options))? $options['last_name']: null;
+        $openemisNo = (array_key_exists('openemis_no', $options))? $options['openemis_no']: null;
+        $identityNumber = (array_key_exists('identity_number', $options))? $options['identity_number']: null;
+        $dateOfBirth = (array_key_exists('date_of_birth', $options))? $options['date_of_birth']: null;
+
+        if (is_null($firstName) && is_null($lastName) && is_null($openemisNo) && is_null($identityNumber) && is_null($dateOfBirth)) {
+            return $query->where(['1 = 0']);
+        }
+
+        $conditions = [];
+        if (!empty($firstName)) $conditions['first_name LIKE'] = $firstName . '%';
+        if (!empty($lastName)) $conditions['last_name LIKE'] = $lastName . '%';
+        if (!empty($openemisNo)) $conditions['openemis_no LIKE'] = $openemisNo . '%';
+        if (!empty($dateOfBirth)) $conditions['date_of_birth'] = $dateOfBirth;
+
+        $identityConditions = [];
+        if (!empty($identityNumber)) $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
+
+        $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
+        $default_identity_type = $this->Identities->IdentityTypes->getDefaultValue();
+        $query->join([
+            [
+                'type' => $identityJoinType,
+                'table' => 'user_identities',
+                'alias' => 'Identities',
+                'conditions' => array_merge([
+                        'Identities.security_user_id = ' . $this->aliasField('id'),
+                        'Identities.identity_type_id' => $default_identity_type
+                    ], $identityConditions)
+            ]
+        ]);
+
+        $query->group([$this->aliasField('id')]);
+
+        if (!empty($conditions)) $query->where($conditions);
+        if (!is_null($limit)) $query->limit($limit);
+        if (!is_null($page)) $query->page($page);
+
+        return $query;
+    }
+
+    public function findAssignedInstitutionStaff(Query $query, array $options = []) {
+        $institutionId = $options['institution_id'];
+        $startDate = $options['start_date'];
+
+        $query->contain([
+            'InstitutionStaff' => function($q) use ($institutionId, $startDate) {
+                return $q->where([
+                    'InstitutionStaff.staff_status_id' => 1,
+                    'InstitutionStaff.institution_id <>' => $institutionId,
+                    'OR' => [
+                        ['InstitutionStaff.end_date >= ' => $startDate],
+                        ['InstitutionStaff.end_date IS NULL']
+                    ]
+                ])
+                ->order(['InstitutionStaff.created' => 'desc']);
+            },
+            'InstitutionStaff.Institutions.Areas'
+        ]);
+        return $query;
     }
 }

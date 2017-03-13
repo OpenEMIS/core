@@ -254,7 +254,7 @@ class CourseCatalogueTable extends ControllerActionTable
                             'controller' => 'Institutions',
                             'action' => 'StaffTrainingApplications',
                             '0' => 'view',
-                            '1' => $existingApplication->id
+                            '1' => $this->paramsEncode(['id' => $existingApplication->id])
                         ]);
                     }
 

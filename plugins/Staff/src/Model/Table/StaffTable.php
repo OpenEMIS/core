@@ -73,6 +73,8 @@ class StaffTable extends AppTable {
 			'through' => 'Institution.Staff',
 			'dependent' => true
 		]);
+		$model->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
 		// class should never cascade delete
 		$model->hasMany('InstitutionClasses', 		['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
@@ -188,20 +190,20 @@ class StaffTable extends AppTable {
 		$this->ControllerAction->field('password', ['order' => ++$highestOrder, 'visible' => true, 'type' => 'password', 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$process = function($model, $id, $options) {
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+		$process = function($model, $ids, $options) {
 			// classes are not to be deleted (cascade delete is not set and need to change id)
 			$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
 			$InstitutionClasses->updateAll(
 					['staff_id' => 0],
-					['staff_id' => $id]
+					$ids
 				);
 
-			$userQuery = $model->find()->where([$this->aliasField('id') => $id])->first();
+			$userQuery = $model->find()->where($ids)->first();
 
 			if (!empty($userQuery)) {
 				if ($userQuery->is_student || $userQuery->is_guardian) {
-					$model->updateAll(['is_staff' => 0], [$model->primaryKey() => $id]);
+					$model->updateAll(['is_staff' => 0], $ids);
 				} else {
 					$model->delete($userQuery);
 				}
@@ -292,6 +294,17 @@ class StaffTable extends AppTable {
 			'Behaviours' => ['text' => __('Behaviours')],
 			'Awards' => ['text' => __('Awards')],
 		];
+
+		// unset classes and subjects if institution is non-academic
+		if (array_key_exists('institution_id', $options)) {
+			$institutionId = $options['institution_id'];
+			$InstitutionTable = TableRegistry::get('Institution.Institutions');
+			$classification = $InstitutionTable->get($institutionId)->classification;
+			if ($classification == $InstitutionTable::NON_ACADEMIC) {
+				unset($studentTabElements['Classes']);
+				unset($studentTabElements['Subjects']);
+			}
+		}
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
 

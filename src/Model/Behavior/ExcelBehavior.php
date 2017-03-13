@@ -75,7 +75,8 @@ class ExcelBehavior extends Behavior {
     }
 
     public function excel($id=0) {
-        $this->generateXLXS(['id' => $id]);
+        $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
+        $this->generateXLXS($ids);
     }
 
     public function excelV4(Event $mainEvent, ArrayObject $extra)
@@ -91,7 +92,9 @@ class ExcelBehavior extends Behavior {
         if (isset($pass[0])) {
             $id = $pass[0];
         }
-        $this->generateXLXS(['id' => $id]);
+        $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
+        $this->generateXLXS($ids);
+        return true;
     }
 
     private function eventKey($key) {
@@ -102,7 +105,8 @@ class ExcelBehavior extends Behavior {
         $_settings = [
             'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
             'path' => WWW_ROOT . $this->config('folder') . DS,
-            'download' => true
+            'download' => true,
+            'purge' => true
         ];
         $_settings = new ArrayObject(array_merge($_settings, $settings));
 
@@ -132,6 +136,10 @@ class ExcelBehavior extends Behavior {
 
         if ($_settings['download']) {
             $this->download($filepath);
+        }
+
+        if ($_settings['purge']) {
+            $this->purge($filepath);
         }
     }
 
@@ -471,6 +479,13 @@ class ExcelBehavior extends Behavior {
         header("Content-Transfer-Encoding: binary");
         header("Content-Length: ".filesize($path));
         echo file_get_contents($path);
+    }
+
+    private function purge($path)
+    {
+        if (file_exists($path)) {
+            unlink($path);
+        }
     }
 
     public function implementedEvents() {

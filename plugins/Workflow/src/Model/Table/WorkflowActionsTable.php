@@ -128,8 +128,8 @@ class WorkflowActionsTable extends AppTable {
 		}
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$entity = $this->find()->where([$this->aliasField($this->primaryKey()) => $id])->first();
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+		$entity = $this->get($ids);
 		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
 		if (!$isDeletable) {

@@ -84,7 +84,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label><?= __('Filter') ?></label>
                 </div>
                 <div class="text">
-                    <label><?= __('OpenEMIS ID')?></label>
+                    <label><?= __('OpenEMIS ID') ?></label>
                     <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
@@ -96,7 +96,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStudentController.internalFilterLastName" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
-                    <label><?= __('{{ InstitutionStudentController.defaultIdentityTypeName }}') ?></label>
+                    <label><?= __('Identity Number') ?></label>
                     <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? InstitutionStudentController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="date">
@@ -130,10 +130,6 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <label><?= __('Filter') ?></label>
                 </div>
                 <div class="text">
-                    <label><?= __('OpenEMIS ID')?></label>
-                    <input ng-model="InstitutionStudentController.internalFilterOpenemisNo" ng-disabled="true" type="text" id="" maxlength="150">
-                </div>
-                <div class="text">
                     <label><?= __('First Name') ?></label>
                     <input ng-model="InstitutionStudentController.internalFilterFirstName" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
@@ -142,7 +138,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStudentController.internalFilterLastName" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
-                    <label><?= __('{{ InstitutionStudentController.defaultExternalIdentityTypeName }}') ?></label>
+                    <label><?= __('Identity Number') ?></label>
                     <input ng-model="InstitutionStudentController.internalFilterIdentityNumber" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
@@ -289,7 +285,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
                 <div class="input string" ng-show="InstitutionStudentController.StudentIdentities != 2">
-                    <label><?= __('{{InstitutionStudentController.Student.identity_type_name}}') ?></label>
+                    <label><?= __('Identity Number') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.identity_number" type="string" disabled="disabled">
                     <div ng-if="InstitutionStudentController.postResponse.error.identities[0].number" class="error-message">
                         <p ng-repeat="error in InstitutionStudentController.postResponse.error.identities[0].number">{{ error }}</p>

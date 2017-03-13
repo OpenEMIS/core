@@ -20,7 +20,7 @@ class PositionsTable extends ControllerActionTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffTypes', ['className' => 'Staff.StaffTypes']);
 		$this->belongsTo('StaffStatuses', ['className' => 'Staff.StaffStatuses']);
-		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions']);
+		$this->belongsTo('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'institution_position_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('SecurityGroupUsers', ['className' => 'Security.SecurityGroupUsers']);
 
@@ -57,7 +57,8 @@ class PositionsTable extends ControllerActionTable {
 				'plugin' => 'Institution',
 				'controller' => 'Institutions',
 				'action' => 'Staff',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;

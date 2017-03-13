@@ -38,6 +38,16 @@ class TransferApprovalsTable extends AppTable {
         ]);
 	}
 
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('start_date', 'ruleCompareDate', [
+                'rule' => ['compareDate', 'end_date', false]
+            ])
+        ;
+    }
+
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
@@ -134,6 +144,7 @@ class TransferApprovalsTable extends AppTable {
 						$InstitutionClassStudentsTable = TableRegistry::get('Institution.InstitutionClassStudents');
 						$institutionClassStudentObj = [
 							'student_id' => $newEntity->student_id,
+							'student_status_id' => $newEntity->student_status_id,
 							'institution_class_id' => $classId,
 							'education_grade_id' => $newEntity->education_grade_id,
 							'student_status_id' => $newEntity->student_status_id,
@@ -240,7 +251,7 @@ class TransferApprovalsTable extends AppTable {
 		$this->ControllerAction->field('institution_class_id', ['visible' => false]);
 
 		$this->ControllerAction->setFieldOrder([
-			'transfer_status_header', 'created', 'transfer_status', 'requested_on', 
+			'transfer_status_header', 'created', 'transfer_status', 'requested_on',
 			'existing_information_header', 'student', 'previous_institution_id', 'academic_period_id', 'education_grade_id',
 			'new_information_header', 'institution_id', 'new_education_grade_id', 'institution_class',
 			'status', 'start_date', 'end_date',
@@ -403,7 +414,7 @@ class TransferApprovalsTable extends AppTable {
 				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
 				$request->data[$this->alias()]['end_date'] = $endDate;
 			}
-			
+
 			if (!is_null($endDate)) {
 				$periodEndDate = $endDate->copy()->subDay();
 			}
@@ -530,6 +541,7 @@ class TransferApprovalsTable extends AppTable {
 	public function findWorkbench(Query $query, array $options) {
 		$controller = $options['_controller'];
 		$controller->loadComponent('AccessControl');
+		$controller->loadComponent('ControllerAction.ControllerAction');
 
 		$session = $controller->request->session();
 		$AccessControl = $controller->AccessControl;
@@ -593,7 +605,7 @@ class TransferApprovalsTable extends AppTable {
 						'controller' => 'Dashboard',
 						'action' => 'TransferApprovals',
 						'edit',
-						$row->id
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {

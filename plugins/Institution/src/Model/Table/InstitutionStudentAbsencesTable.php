@@ -2,6 +2,7 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -24,10 +25,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		parent::initialize($config);
 		$this->addBehavior('Institution.Absence');
 
+		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' =>'student_id']);
 		$this->belongsTo('StudentAbsenceReasons', ['className' => 'Institution.StudentAbsenceReasons']);
 		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('Excel', [
 			'excludes' => [
 				'start_year',
@@ -43,9 +46,18 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			'pages' => ['index']
 		]);
 
+		$this->addBehavior('Indexes.Indexes');
+
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        return $events;
+    }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -240,7 +252,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'controller' => 'Institutions',
 					'action' => 'StudentUser',
 					'view',
-					$entity->user->id
+					$this->paramsEncode(['id' => $entity->user->id])
 				]);
 			} else {
 				return $entity->user->name_with_id;
@@ -694,5 +706,147 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		// End
 
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
+	}
+
+	public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+	{
+		$institutionId = $params['institution_id'];
+		$studentId = $params['student_id'];
+		$academicPeriodId = $params['academic_period_id'];
+
+		$Indexes = TableRegistry::get('Indexes.Indexes');
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
+		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+
+		$absenceTypeId = $Indexes->getCriteriasDetails($params['criteria_name'])['absence_type_id'];
+
+		$absenceResults = $this
+			->find()
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('absence_type_id') => $absenceTypeId,
+				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate,
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate
+			])
+			->all();
+
+		$absenceDay = 0;
+		foreach ($absenceResults as $key => $obj) {
+			$endDate = $obj->end_date;
+			$startDate = $obj->start_date;
+			$interval = $endDate->diff($startDate);
+			$absenceDay = $absenceDay + $interval->days + 1;
+		}
+
+		return $absenceDay;
+	}
+
+	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+	{
+		$Indexes = TableRegistry::get('Indexes.Indexes');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$dateFormat = $ConfigItems->value('date_format');
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
+		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+		$absenceTypeId = $Indexes->getCriteriasDetails($criteriaName)['absence_type_id'];
+
+		$absenceResults = $this
+			->find()
+			->contain(['AbsenceTypes', 'StudentAbsenceReasons'])
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('absence_type_id') => $absenceTypeId,
+				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate,
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate
+			])
+			->all();
+
+		$referenceDetails = [];
+		foreach ($absenceResults as $key => $obj) {
+			$reason = 'Unexcused';
+			if (isset($obj->student_absence_reason->name)) {
+				$reason = $obj->student_absence_reason->name;
+			}
+
+			$startDate = $obj->start_date;
+			$endDate = $obj->end_date;
+
+			if ($startDate == $endDate) {
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format($dateFormat) . ')';
+			} else {
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format($dateFormat) . ' - ' . $endDate->format($dateFormat) . ')';
+			}
+		}
+
+		// tooltip only receieved string to be display
+		$reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . ' <br/>';
+        }
+
+		return $reference;
+	}
+
+	public function getUnexcusedAbsenceData($threshold)
+	{
+		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$currentAcademicPeriodId = $AcademicPeriods->getCurrent();
+		$currentPeriodStartDate = $AcademicPeriods->get($currentAcademicPeriodId)->start_date;
+		$currentPeriodEndDate = $AcademicPeriods->get($currentAcademicPeriodId)->end_date;
+
+		// will do the comparison with threshold when retrieving the absence data
+		$unexcusedAbsenceResults = $this->find()
+			->select([
+				'total_days' => $this->find()->func()->sum(
+					'DATEDIFF(end_date, start_date)+1' // MYSQL:-SPECIFIC CODE
+				),
+				'Institutions.id',
+				'Institutions.name',
+				'Institutions.code',
+				'Institutions.address',
+	            'Institutions.postal_code',
+	            'Institutions.contact_person',
+	            'Institutions.telephone',
+	            'Institutions.fax',
+	            'Institutions.email',
+	            'Institutions.website',
+	            'Users.id',
+	            'Users.openemis_no',
+	            'Users.first_name',
+	            'Users.middle_name',
+	            'Users.third_name',
+	            'Users.last_name',
+	            'Users.preferred_name',
+	            'Users.email',
+	            'Users.address',
+	            'Users.postal_code',
+	            'Users.date_of_birth',
+	            'Users.identity_number',
+	            'Users.photo_name',
+	            'Users.photo_content',
+	            'MainNationalities.name',
+	            'MainIdentityTypes.name',
+	            'Genders.name'
+			])
+			->contain(['Institutions', 'Users', 'Users.Genders', 'Users.MainNationalities', 'Users.MainIdentityTypes'])
+			->matching('AbsenceTypes', function ($q) {
+				return $q->where([
+					'code' => 'UNEXCUSED'
+				]);
+			})
+			->where([
+				'start_date' . ' >='  => $currentPeriodStartDate->format('Y-m-d'),
+				'end_date' . ' <='  => $currentPeriodEndDate->format('Y-m-d'),
+			])
+			->group(['institution_id', 'student_id', 'absence_type_id'])
+			->having(['total_days >= ' => $threshold])
+			->hydrate(false)
+			;
+
+		return $unexcusedAbsenceResults->toArray();
 	}
 }

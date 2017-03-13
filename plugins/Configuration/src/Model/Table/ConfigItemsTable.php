@@ -13,18 +13,25 @@ use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\AppTable;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 
 class ConfigItemsTable extends AppTable {
 	use OptionsTrait;
 
 	private $configurations = [];
+	private $languagePath;
+	private $languageFilePath;
 
 	public function initialize(array $config) {
+		$this->languagePath = TMP . 'cache' . DS . 'language_menu';
+		$this->languageFilePath = TMP . 'cache'. DS . 'language_menu' . DS . 'language';
 		parent::initialize($config);
 		$this->addBehavior('Configuration.ConfigItems');
 		$this->belongsTo('ConfigItemOptions', ['className' => 'Configuration.ConfigItemOptions', 'foreignKey'=>'value']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Students' => ['index']
+        	'Students' => ['index'],
+        	'Staff' => ['index'],
         ]);
 	}
 
@@ -43,6 +50,11 @@ class ConfigItemsTable extends AppTable {
 		$this->ControllerAction->field('value', ['visible' => true]);
 	}
 
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$events['Model.AreaLevel.afterDelete'] = 'areaLevelAfterDelete';
+		return $events;
+	}
 
 /******************************************************************************************************************
 **
@@ -69,7 +81,7 @@ class ConfigItemsTable extends AppTable {
 
 		$pass = $this->request->param('pass');
 		if (is_array($pass) && !empty($pass)) {
-			$id = $pass[0];
+			$id = $this->paramsDecode($pass[0]);
 			$entity = $this->get($id);
 		}
 		if (isset($entity)) {
@@ -90,7 +102,7 @@ class ConfigItemsTable extends AppTable {
 
 	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 		if (is_array($data[$this->alias()]['value'])) {
-			if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
+			if ($entity->code == 'openemis_id_prefix') {
 				$value = $data[$this->alias()]['value']['prefix'];
 				if (isset($data[$this->alias()]['value']['enable'])) {
 					$value .= ','.$data[$this->alias()]['value']['enable'];
@@ -109,7 +121,7 @@ class ConfigItemsTable extends AppTable {
 
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions)
 	{
-		$session = $this->request->session();
+
 		if ($entity->code == 'language') {
 			if ($entity->value != 'en') {
 				$entity = $this->find()
@@ -121,18 +133,32 @@ class ConfigItemsTable extends AppTable {
 				$entity->value = 0;
 				$this->save($entity);
 			}
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		} else if ($entity->code == 'language_menu') {
-			$session->delete('System.language_menu');
+			$this->deleteLanguageCacheFile();
 		}
+	}
+
+	private function deleteLanguageCacheFile()
+	{
+		$dir = new Folder($this->languagePath, true);
+    	$filesAndFolders = $dir->read();
+    	$files = $filesAndFolders[1];
+
+    	if (in_array('language', $files)) {
+    		$languageFile = new File($this->languageFilePath);
+    		$languageFile->delete();
+    	}
+    	$session = $this->request->session();
+		$session->delete('System.language_menu');
 	}
 
 	public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request) {
 		if (in_array($action, ['edit', 'add'])) {
 			$pass = $request->param('pass');
 			if (!empty($pass)) {
-				$id = $pass[0];
-				$entity = $this->get($id);
+				$ids = $this->paramsDecode($pass[0]);
+				$entity = $this->get($ids);
 
 
 				if ($entity->field_type == 'Dropdown') {
@@ -158,6 +184,12 @@ class ConfigItemsTable extends AppTable {
 								'ConfigItemOptions.visible' => 1
 							])
 							->toArray();
+						if (in_array($entity->option_type, ['date_format'])) {
+							foreach ($options as $key => $value) {
+								$options[$key] = date($key);
+							}
+						}
+
 						$attr['options'] = $options;
 					}
 
@@ -186,7 +218,7 @@ class ConfigItemsTable extends AppTable {
 					} else if ($entity->code == 'training_credit_hour') {
 						$attr['type'] = 'integer';
 						$attr['attr'] = ['min' => 0];
-					} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
+					} else if ($entity->code == 'openemis_id_prefix') {
 						$attr['type'] = 'element';
 						$attr['element'] = 'Configurations/with_prefix';
 						$attr['data'] = [];
@@ -239,7 +271,16 @@ class ConfigItemsTable extends AppTable {
 				$model = Inflector::pluralize($exp[1]);
 				$model = $this->getActualModeLocation($model);
 				$optionsModel = TableRegistry::get($model);
-				$value = $optionsModel->get($entity->$valueField);
+
+				if ($entity->code == 'institution_area_level_id') {
+	                // get area level from value
+	                $value = $optionsModel->find()
+	                    ->where([$optionsModel->aliasField('level') => $entity->$valueField])
+	                    ->first();
+				} else {
+					$value = $optionsModel->get($entity->$valueField);
+				}
+
 				if (is_object($value)) {
 					return $value->name;
 				} else {
@@ -258,8 +299,8 @@ class ConfigItemsTable extends AppTable {
 					])
 					->first();
 				if (is_object($value)) {
-					if ($entity->code == 'time_format' || $entity->code == 'date_format') {
-						return date($value->$valueField);
+					if ($entity->code == 'date_format') {
+						return date($entity->$valueField);
 					} else {
 						return $value->option;
 					}
@@ -268,7 +309,7 @@ class ConfigItemsTable extends AppTable {
 				}
 			}
 
-		} else if ($entity->code == 'student_prefix' || $entity->code == 'staff_prefix' || $entity->code == 'guardian_prefix') {
+		} else if ($entity->code == 'openemis_id_prefix') {
 			$exp = explode(',', $entity->$valueField);
 			if (!$exp[1]) {
 				return __('Disabled');
@@ -290,6 +331,9 @@ class ConfigItemsTable extends AppTable {
 			$value = $this->configurations[$code];
 		} else {
 			$entity = $this->findByCode($code)->first();
+			if (empty($entity)) {
+				return false;
+			}
 			$value = strlen($entity->value) ? $entity->value : $entity->default_value;
 			$this->configurations[$code] = $value;
 		}
@@ -323,6 +367,37 @@ class ConfigItemsTable extends AppTable {
 			}
 		}
 		return $model;
+	}
+
+    public function areaLevelAfterDelete(Event $event, $areaLevel)
+    {
+        $entity = $this->findByCode('institution_area_level_id')->first();
+        $configValue = strlen($entity->value) ? $entity->value : $entity->default_value;
+
+        // if area level used for institution_area_level_id config is deleted
+        if ($areaLevel->level == $configValue) {
+            // update institution_area_level_id config to default level
+            $entity->value = $entity->default_value;
+            $this->save($entity);
+        }
+    }
+
+	public function getSystemLanguageOptions()
+	{
+		$dir = new Folder($this->languagePath, true);
+        $filesAndFolders = $dir->read();
+        $files = $filesAndFolders[1];
+        $languageFilePath = $this->languageFilePath;
+        $languageFile = new File($languageFilePath, true);
+        if (!in_array('language', $files)) {
+            $showLanguage = $this->value('language_menu');
+            $systemLanguage = $this->value('language');
+            $languageArr = ['language_menu' => $showLanguage, 'language' => $systemLanguage];
+            $status = $languageFile->write(json_encode($languageArr));
+        }
+        $languageArr = json_decode($languageFile->read(), true);
+
+        return $languageArr;
 	}
 
 

@@ -88,6 +88,7 @@ class AppTable extends Table {
 		$this->addBehavior('Modification');
 
         $this->addBehavior('TrackDelete');
+        $this->addBehavior('ControllerAction.Security');
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -128,10 +129,19 @@ class AppTable extends Table {
 	public function getList($query = null) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
+		$table = $schema->name();
 
 		if (is_null($query)) {
-			$query = $this->find('list');
-		}
+            if ($table == 'area_levels') {
+                $query = $this
+                    ->find('list', [
+                        'keyField' => 'level',
+                        'valueField' => 'name'
+                    ]);
+            } else {
+                $query = $this->find('list');
+            }
+        }
 
 		if ($this->hasBehavior('FieldOption') && $this->table() == 'field_option_values') {
 			$query->innerJoin(
@@ -401,15 +411,17 @@ class AppTable extends Table {
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
         $primaryKey = $this->primaryKey();
         $id = null;
-        if (!is_array($primaryKey)) {
-            $id = $entity->$primaryKey;
-        } else {
-        	if ($entity->has('id')) {
-        		$id = $entity->id;
-        	} else {
-        		return $buttons;
-        	}
-        }
+    	$primaryKeyValue = [];
+    	if (is_array($primaryKey)) {
+    		foreach ($primaryKey as $key) {
+				$primaryKeyValue[$key] = $entity->getOriginal($key);
+			}
+    	} else {
+    		$primaryKeyValue[$primaryKey] = $entity->getOriginal($primaryKey);
+    	}
+
+		$encodedKeys = $this->paramsEncode($primaryKeyValue);
+		$id = $encodedKeys;
 
         if (array_key_exists('view', $buttons)) {
             $buttons['view']['url'][1] = $id;
