@@ -17,7 +17,7 @@ class AttachmentsTable extends ControllerActionTable
 	public function initialize(array $config) {
 		$this->table('user_attachments');
 		parent::initialize($config);
-		
+
 		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
@@ -112,8 +112,8 @@ class AttachmentsTable extends ControllerActionTable
 ** view action logics
 **
 ******************************************************************************************************************/
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
-    	
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    {
     	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
     	if (!empty($entity->modified_user_id)) {
 	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
@@ -166,12 +166,12 @@ class AttachmentsTable extends ControllerActionTable
 		$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
 		$buttons['download']['attr'] = $indexAttr;
 		$buttons['download']['url']['action'] = $this->alias.'/download';
-		$buttons['download']['url'][1] = $entity->id;
+		$buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
 
 		return $buttons;
 	}
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {   
+	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		if($action == "view"){
 			$toolbarButtons['download']['type'] = 'button';
 			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';

@@ -1,7 +1,7 @@
 <?php
 namespace Institution\Model\Table;
 
-use ArrayObject;
+use ArrayObject; 
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
@@ -200,30 +200,33 @@ class InstitutionShiftsTable extends ControllerActionTable
     public function onGetShiftOptionId(Event $event, Entity $entity)
     {
         if ($this->action == 'index') {
+            $ControllerActionHelper = $event->subject();
             $htmlHelper = $event->subject()->Html;
             $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Shifts', 'view'];
-            $url[] = $entity->id;
+            $url[] = $ControllerActionHelper->paramsEncode(['id' => $entity->id]);
             return $htmlHelper->link(__($entity->shift_option->name), $url);
         }
     }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
     {
+        $ControllerActionHelper = $event->subject();
         return $event->subject()->Html->link($entity->institution->name , [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'dashboard',
-            $entity->institution_id
+            $ControllerActionHelper->paramsEncode(['id' => $entity->institution_id])
         ]);
     }
 
     public function onGetLocationInstitutionId(Event $event, Entity $entity)
     {
+        $ControllerActionHelper = $event->subject();
         return $event->subject()->Html->link($entity->location_institution->name , [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'dashboard',
-            $entity->location_institution_id
+            $ControllerActionHelper->paramsEncode(['id' => $entity->location_institution_id])
         ]);
     }
 

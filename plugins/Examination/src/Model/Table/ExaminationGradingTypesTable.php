@@ -20,6 +20,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
 
         $this->hasMany('GradingOptions', ['className' => 'Examination.ExaminationGradingOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'StudentExaminationResults' => ['index']
+        ]);
+
         $this->setDeleteStrategy('restrict');
     }
 
@@ -67,6 +72,11 @@ class ExaminationGradingTypesTable extends ControllerActionTable {
             'fields' => $this->GradingOptions->fields,
             'formFields' => []
         ]);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder(['visible', 'code', 'name', 'result_type', 'max', 'pass_mark']);
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra) {

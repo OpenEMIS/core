@@ -19,8 +19,6 @@ class StudentsController extends AppController {
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
 			'Attachments' 		=> ['className' => 'User.Attachments'],
-			'Guardians' 		=> ['className' => 'Student.Guardians'],
-			'GuardianUser' 		=> ['className' => 'Student.GuardianUser', 'actions' => ['add', 'view', 'edit']],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
@@ -57,6 +55,8 @@ class StudentsController extends AppController {
     public function Comments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Comments']); }
     public function Identities() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
+    public function Guardians() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
+    public function GuardianUser() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
 	// End
 
 	// AngularJS
@@ -77,6 +77,24 @@ class StudentsController extends AppController {
 			$this->set('ngController', 'StudentResultsCtrl as StudentResultsController');
 		}
 	}
+
+	public function ExaminationResults() {
+		$session = $this->request->session();
+
+		if ($session->check('Student.Students.id')) {
+			$studentId = $session->read('Student.Students.id');
+			$session->write('Student.ExaminationResults.student_id', $studentId);
+
+			// tabs
+			$options = ['type' => 'student'];
+	        $tabElements = $this->getAcademicTabElements($options);
+	        $this->set('tabElements', $tabElements);
+	        $this->set('selectedAction', 'ExaminationResults');
+	        // End
+
+			$this->set('ngController', 'StudentExaminationResultsCtrl as StudentExaminationResultsController');
+		}
+	}
 	// End
 
 	private function attachAngularModules() {
@@ -88,6 +106,14 @@ class StudentsController extends AppController {
 					'alert.svc',
 					'student.results.ctrl',
 					'student.results.svc'
+				]);
+				break;
+
+			case 'ExaminationResults':
+				$this->Angular->addModules([
+					'alert.svc',
+					'student.examination_results.ctrl',
+					'student.examination_results.svc'
 				]);
 				break;
 		}
@@ -120,8 +146,8 @@ class StudentsController extends AppController {
 			if (!empty($id)) {
 				$entity = $this->StudentUser->get($id);
 				$name = $entity->name;
-				$header = $action == 'Results' ? $name . ' - ' . __('Results') : $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $id]);
+				$header = $action == 'Results' ? $name . ' - ' . __('Assessments') : $name . ' - ' . __('Overview');
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
 			}
 		}
 
@@ -161,6 +187,7 @@ class StudentsController extends AppController {
 			}
 
 			$idKey = $this->ControllerAction->getPrimaryKey($model);
+			$primaryKey = $model->primaryKey();
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -176,15 +203,14 @@ class StudentsController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
-					if (!$exists) {
+					if (!$model->exists($idKey)) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}
@@ -196,15 +222,14 @@ class StudentsController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('student_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('student_id')] = $userId;
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
 					 */
-					if (!$exists) {
+					if (!$model->exists($idKey)) {
 						$this->Alert->warning('general.notExists');
 						return $this->redirect(['plugin' => 'Student', 'controller' => 'Students', 'action' => $alias]);
 					}

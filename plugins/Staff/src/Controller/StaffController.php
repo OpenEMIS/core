@@ -90,15 +90,13 @@ class StaffController extends AppController {
 				$id = $this->request->pass[0];
 			} else if ($session->check('Staff.Staff.id')) {
 				$id = $session->read('Staff.Staff.id');
-			} else if ($session->check('Institution.Staff.id')) {
-				$id = $session->read('Institution.Staff.id');
 			}
 
 			if (!empty($id)) {
 				$entity = $this->Staff->get($id);
 				$name = $entity->name;
 				$header = $name . ' - ' . __('Overview');
-				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $id]);
+				$this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffUser', 'view', $this->ControllerAction->paramsEncode(['id' => $id])]);
 			}
 		}
 		$this->set('contentHeader', $header);
@@ -117,7 +115,7 @@ class StaffController extends AppController {
 				$header = $session->read('Staff.Staff.name');
 			}
 
-			$idKey = $this->ControllerAction->getPrimaryKey($model);
+			$primaryKey = $model->primaryKey();
 
 			$alias = $model->alias;
 			$this->Navigation->addCrumb($model->getHeader($alias));
@@ -133,10 +131,11 @@ class StaffController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('security_user_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('security_user_id')] = $userId;
+
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -153,10 +152,11 @@ class StaffController extends AppController {
 				if (count($this->request->pass) > 1) {
 					$modelId = $this->request->pass[1]; // id of the sub model
 
-					$exists = $model->exists([
-						$model->aliasField($idKey) => $modelId,
-						$model->aliasField('staff_id') => $userId
-					]);
+					$ids = $this->ControllerAction->paramsDecode($modelId);
+					$idKey = $this->ControllerAction->getIdKeys($model, $ids);
+					$idKey[$model->aliasField('staff_id')] = $userId;
+
+					$exists = $model->exists($idKey);
 
 					/**
 					 * if the sub model's id does not belongs to the main model through relation, redirect to sub model index page
@@ -221,6 +221,11 @@ class StaffController extends AppController {
 			$userId = $session->read('Staff.Staff.id');
 			$options['user_id'] = $userId;
 		}
+		if ($session->check('Institution.Institutions.id')) {
+			$institutionId = $session->read('Institution.Institutions.id');
+			$options['institution_id'] = $institutionId;
+		}
+
 		return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
 	}
 

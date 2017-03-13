@@ -31,8 +31,7 @@ use Cake\ORM\TableRegistry;
 class AppController extends Controller {
 	use ControllerActionTrait;
 
-	public $_productName = 'OpenEMIS Core';
-
+	private $productName = 'OpenEMIS Core';
 	public $helpers = [
 		'Text',
 
@@ -52,6 +51,8 @@ class AppController extends Controller {
 	public function initialize() {
 		parent::initialize();
 
+		
+
 		// ControllerActionComponent must be loaded before AuthComponent for it to work
 		$this->loadComponent('ControllerAction.ControllerAction', [
 			'ignoreFields' => ['modified_user_id', 'created_user_id', 'order']
@@ -68,13 +69,13 @@ class AppController extends Controller {
 				],
 			],
 			'loginAction' => [
-				'plugin' => 'User',
-            	'controller' => 'Users',
+				'plugin' => null,
+            	'controller' => 'Login',
             	'action' => 'login'
             ],
 			'logoutRedirect' => [
-				'plugin' => 'User',
-				'controller' => 'Users',
+				'plugin' => null,
+				'controller' => 'Login',
 				'action' => 'login'
 			]
 		]);
@@ -85,7 +86,9 @@ class AppController extends Controller {
 
 		// Custom Components
 		$this->loadComponent('Navigation');
-		$this->loadComponent('Localization.Localization');
+		$this->loadComponent('Localization.Localization', [
+			'productName' => $this->productName
+		]);
 		$this->loadComponent('OpenEmis.OpenEmis', [
 			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
 			'headerMenu' => [
@@ -93,7 +96,12 @@ class AppController extends Controller {
 					'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
 				]
 			],
+			'productName' => $this->productName,
 			'theme' => 'core'
+		]);
+
+		$this->loadComponent('OpenEmis.ApplicationSwitcher', [
+			'productName' => $this->productName
 		]);
 
 		// Angular initialization
@@ -134,68 +142,21 @@ class AppController extends Controller {
         }
 	}
 
-	public function onUpdateProductList(Event $event, array $productList)
-	{
-		$displayProducts = [];
-		$session = $this->request->session();
-		if (!$session->check('ConfigProductLists.list')) {
-			$ConfigProductLists = TableRegistry::get('Configuration.ConfigProductLists');
-			$productListOptions = $ConfigProductLists-> find('list', [
-								    'keyField' => 'name',
-								    'valueField' => 'url'
-								])
-								-> toArray();
-
-	        $productListData = $productListOptions;
-	        $productListData[$this->_productName] = '';
-	        $productLists = array_diff_key($productList, $productListData);
-	        foreach ($productLists as $product => $value) {
-	            $data = [
-	                'name' => $product,
-	                'url' => '',
-	                'created_user_id' => 1
-	            ];
-	            $entity = $ConfigProductLists->newEntity($data);
-	            $ConfigProductLists->save($entity);
-	        }
-
-			foreach ($productList as $name => $item) {
-				if (!empty($productListOptions[$name])) {
-					$displayProducts[$name] = [
-						'name' => $item['name'],
-						'icon' => $item['icon'],
-						'url' => $productListOptions[$name]
-					];
-				}
-			}
-
-			$session->write('ConfigProductLists.list', $displayProducts);
-		} else {
-			$displayProducts = $session->read('ConfigProductLists.list');
-		}
-
-		return $displayProducts;
-	}
-
 	// Triggered from LocalizationComponent
 	// Controller.Localization.getLanguageOptions
-	public function getLanguageOptions(Event $event)
-	{
-		$ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
-		$session = $event->subject()->request->session();
-		$showLanguage = $session->read('System.language_menu');
-		$systemLanguage = $session->read('System.language');
-
-		// Check if the language menu is enabled
-		if (!$session->check('System.language_menu')) {
-			$showLanguage = $ConfigItemsTable->value('language_menu');
-			$systemLanguage = $ConfigItemsTable->value('language');
-			$session->write('System.language', $systemLanguage);
-			$session->write('System.language_menu', $showLanguage);
-		}
-
-		return [$showLanguage, $systemLanguage];
-	}
+    public function getLanguageOptions(Event $event)
+    {
+        $ConfigItemsTable = TableRegistry::get('Configuration.ConfigItems');
+        $languageArr = $ConfigItemsTable->getSystemLanguageOptions();
+        $systemLanguage = $languageArr['language'];
+        $showLanguage = $languageArr['language_menu'];
+        $session = $this->request->session();
+        if (!$session->check('System.language_menu')) {
+        	$session->write('System.language', $systemLanguage);
+        	$session->write('System.language_menu', $showLanguage);
+        }
+        return [$showLanguage, $systemLanguage];
+    }
 
 	// Triggered from Localization component
 	// Controller.Localization.updateLoginLanguage

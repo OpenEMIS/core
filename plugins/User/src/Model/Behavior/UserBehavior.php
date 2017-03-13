@@ -108,6 +108,7 @@ class UserBehavior extends Behavior {
             $this->_table->fields['photo_name']['visible'] = false;
             $this->_table->fields['super_admin']['visible'] = false;
             $this->_table->fields['date_of_death']['visible'] = false;
+            $this->_table->fields['external_reference']['visible'] = false;
             $this->_table->fields['status']['visible'] = false;
             $this->_table->fields['preferred_language']['visible'] = false;
             $this->_table->fields['address_area_id']['type'] = 'areapicker';
@@ -115,6 +116,8 @@ class UserBehavior extends Behavior {
             $this->_table->fields['birthplace_area_id']['type'] = 'areapicker';
             $this->_table->fields['birthplace_area_id']['source_model'] = 'Area.AreaAdministratives';
             $this->_table->fields['gender_id']['type'] = 'select';
+            $this->_table->fields['nationality_id']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
+            $this->_table->fields['identity_type_id']['visible'] = ['index' => false, 'view' => true, 'edit' => true, 'add' => false];
 
             $i = 10;
             $this->_table->fields['first_name']['order'] = $i++;
@@ -141,7 +144,10 @@ class UserBehavior extends Behavior {
             }
 
             $this->_table->fields['date_of_birth']['order'] = $i++;
+            $this->_table->fields['nationality_id']['order'] = $i++;
+            $this->_table->fields['identity_type_id']['order'] = $i++;
             $this->_table->fields['identity_number']['order'] = $i++;
+            $this->_table->fields['email']['order'] = $i++;
 
             $this->_table->fields['address']['order'] = $i++;
             $this->_table->fields['postal_code']['order'] = $i++;
@@ -156,7 +162,24 @@ class UserBehavior extends Behavior {
                     $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
                     $this->_table->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
                 }
+            }
 
+            // edit page, email = readonly
+            if ($this->_table->action == 'edit') {
+                if ($this->isCAv4()) {
+                    $this->_table->field('email', ['type' => 'readonly', 'after' => 'identity_number']);
+                } else {
+                    $this->_table->ControllerAction->field('email', ['type' => 'readonly', 'after' => 'identity_number']);
+                }
+            }
+
+            // add page, email = hidden
+            if ($this->_table->action == 'add') {
+                if ($this->isCAv4()) {
+                    $this->_table->field('email', ['type' => 'hidden']);
+                } else {
+                    $this->_table->ControllerAction->field('email', ['type' => 'hidden']);
+                }
             }
 
             if ($this->_table->registryAlias() != 'Security.Users') {
@@ -191,9 +214,11 @@ class UserBehavior extends Behavior {
     }
 
     public function addBeforeAction(Event $event) {
-        $this->_table->fields['is_student']['value'] = 0;
-        $this->_table->fields['is_staff']['value'] = 0;
-        $this->_table->fields['is_guardian']['value'] = 0;
+        if ($this->_table->table() == 'security_users') {
+            $this->_table->fields['is_student']['value'] = 0;
+            $this->_table->fields['is_staff']['value'] = 0;
+            $this->_table->fields['is_guardian']['value'] = 0;
+        }
     }
 
     public function indexAfterAction(Event $event)
@@ -269,8 +294,8 @@ class UserBehavior extends Behavior {
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
-        $options['auto_search'] = false;
-        $options['auto_contain'] = false;
+        $extra['auto_search'] = false;
+        // $extra['auto_contain'] = false;
 
         $table = $query->repository()->table();
         if ($table != 'security_users') {
@@ -278,10 +303,10 @@ class UserBehavior extends Behavior {
 
             $this->_table->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
             $sortList = ['Users.openemis_no', 'Users.first_name'];
-            if (array_key_exists('sortWhitelist', $options)) {
-                $sortList = array_merge($options['sortWhitelist'], $sortList);
+            if (array_key_exists('sortWhitelist', $extra)) {
+                $sortList = array_merge($extra['sortWhitelist'], $sortList);
             }
-            $options['sortWhitelist'] = $sortList;
+            $extra['sortWhitelist'] = $sortList;
         }
     }
 
@@ -402,32 +427,13 @@ class UserBehavior extends Behavior {
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
-            $identity = $IdentityType->getDefaultEntity();
-
-            if ($identity) {
-                $value = $identity->name;
-            }
-
-            return !empty($value) ? $value : $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        } else {
-            return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
+        return $this->_table->onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
     public function getUniqueOpenemisId($options = []) {
-        $prefix = '';
-
-        if (array_key_exists('model', $options)) {
-            switch ($options['model']) {
-                case 'Student': case 'Staff': case 'Guardian':
-                    $prefix = TableRegistry::get('Configuration.ConfigItems')->value(strtolower($options['model']).'_prefix');
-                    $prefix = explode(",", $prefix);
-                    $prefix = ($prefix[1] > 0)? $prefix[0]: '';
-                    break;
-            }
-        }
+        $prefix = TableRegistry::get('Configuration.ConfigItems')->value('openemis_id_prefix');
+        $prefix = explode(",", $prefix);
+        $prefix = ($prefix[1] > 0)? $prefix[0]: '';
 
         $latest = $this->_table->find()
             ->order($this->_table->aliasField('id').' DESC')

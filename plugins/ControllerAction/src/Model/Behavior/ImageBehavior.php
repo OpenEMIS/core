@@ -22,31 +22,44 @@ class ImageBehavior extends Behavior
     public function image(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->_table;
-        $id = $model->paramsPass(0);
+        $ids = $model->paramsDecode($model->paramsPass(0));
 
         $base64Format = (array_key_exists('base64', $this->_table->controller->request->query))? $this->_table->controller->request->query['base64']: false;
 
-        $this->_table->controller->autoRender = false;
-        $this->_table->controller->ControllerAction->autoRender = false;
+        $model->controller->autoRender = false;
+        $model->controller->ControllerAction->autoRender = false;
 
-        $currModel = $this->_table;
-        $photoData = $currModel->find()
-            ->contain('Users')
-            ->select(['Users.photo_content'])
-            ->where([$currModel->aliasField($currModel->primaryKey()) => $id])
-            ->first()
-            ;
+        $idKeys = $model->getIdKeys($model, $ids);
 
-        if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
-            $phpResourceFile = $photoData->Users->photo_content;
+        $phpResourceFile= null;
 
+        if ($model->table() == 'security_users') {
+            $photoData = $model->get($idKeys);
+            if ($photoData->has('photo_content')) {
+                $phpResourceFile = $photoData->photo_content;
+            }
+        } else if ($model->association('Users')) {
+            $photoData = $model->find()
+                ->contain('Users')
+                ->select(['Users.photo_content'])
+                ->where($idKeys)
+                ->first()
+                ;
+
+            if (!empty($photoData) && $photoData->has('Users') && $photoData->Users->has('photo_content')) {
+                $phpResourceFile = $photoData->Users->photo_content;
+            }
+        }
+
+        if (is_resource($phpResourceFile)) {
             if ($base64Format) {
                 echo base64_encode(stream_get_contents($phpResourceFile));
             } else {
-                $this->_table->controller->response->type('jpg');
-                $this->_table->controller->response->body(stream_get_contents($phpResourceFile));
+                $model->controller->response->type('jpg');
+                $model->controller->response->body(stream_get_contents($phpResourceFile));
             }
         }
+
         // required so it doesnt go to MissingActionException in ControllerActionV4Trait
         return true;
     }

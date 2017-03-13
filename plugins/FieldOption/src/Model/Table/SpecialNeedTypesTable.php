@@ -17,11 +17,12 @@ class SpecialNeedTypesTable extends ControllerActionTable
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add']
+            'Students' => ['index', 'add'],
+            'Staff' => ['index', 'add']
         ]);
     }
 
-    public function findVisibleNeedTypes(array $options = [])
+    public function getVisibleNeedTypes(array $options = [])
     {
         $query = $this
             ->find('visible')

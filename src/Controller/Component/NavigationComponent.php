@@ -2,6 +2,7 @@
 namespace App\Controller\Component;
 
 use Cake\Controller\Component;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 
 class NavigationComponent extends Component
@@ -156,6 +157,7 @@ class NavigationComponent extends Component
 		$controllerActionLink = $linkName;
 		if (!empty($pass[0])) {
 			$linkName .= '.'.$pass[0];
+
 		}
 		if (!in_array($linkName, $navigations)) {
 			$selectedArray = $this->array_column($navigations, 'selected');
@@ -170,6 +172,46 @@ class NavigationComponent extends Component
 		foreach ($children as $key => $child) {
 			if ($child == $linkName) {
 				unset($navigations[$key]);
+			}
+		}
+	}
+
+	public function checkClassification(array &$navigations)
+	{
+		$session = $this->request->session();
+		$institutionId = $session->read('Institution.Institutions.id');
+
+		if (!empty($institutionId)) {
+			$Institutions = TableRegistry::get('Institution.Institutions');
+			$currentInstitution = $Institutions->get($institutionId);
+
+			if ($currentInstitution) {
+				$classification = $currentInstitution->classification;
+
+				if ($classification == $Institutions::NON_ACADEMIC) {
+					// navigation items to exclude from non-academic institutions
+					$academicArray = [
+						'Institution.Academic',
+						'Institutions.Students.index',
+						'Institutions.StudentAttendances.index',
+						'Institutions.StudentBehaviours.index',
+						'Institutions.Assessments.index',
+						'Institutions.Examinations',
+						'Institutions.Fees',
+						'Institutions.StudentFees',
+						'Institutions.Rubrics',
+						'Institutions.VisitRequests',
+						'Institution.Competencies'
+					];
+
+					$navigationParentList = $this->array_column($navigations, 'parent');
+					foreach ($navigationParentList as $navigationKey => $parent) {
+						// unset navigation item and all children if in academicArray
+						if (in_array($parent, $academicArray) || in_array($navigationKey, $academicArray)) {
+							unset($navigations[$navigationKey]);
+						}
+					}
+				}
 			}
 		}
 	}
@@ -203,31 +245,33 @@ class NavigationComponent extends Component
 		$institutionStaffActions = ['Staff', 'StaffUser', 'StaffAccount'];
 		$institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
 
-
 		if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+			$this->checkClassification($navigations);
 		} elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
+			$this->checkClassification($navigations);
 		} elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
 			$navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
 			$navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
+			$this->checkClassification($navigations);
 		} elseif ($controller->name == 'Directories' && $action != 'index') {
-			$navigations = $this->appendNavigation('Directories.index', $navigations, $this->getDirectoryNavigation());
+			$navigations = $this->appendNavigation('Directories.Directories.index', $navigations, $this->getDirectoryNavigation());
 
 			$session = $this->request->session();
 			$isStudent = $session->read('Directory.Directories.is_student');
 			$isStaff = $session->read('Directory.Directories.is_staff');
 
 			if ($isStaff) {
-				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStaffNavigation());
+				$navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStaffNavigation());
 				$session->write('Directory.Directories.reload', true);
 			}
 
 			if ($isStudent) {
-				$navigations = $this->appendNavigation('Directories.view', $navigations, $this->getDirectoryStudentNavigation());
+				$navigations = $this->appendNavigation('Directories.Directories.view', $navigations, $this->getDirectoryStudentNavigation());
 				$session->write('Directory.Directories.reload', true);
 			}
 		}
@@ -268,11 +312,11 @@ class NavigationComponent extends Component
 				'selected' => ['Institutions.add', 'Institutions.ImportInstitutions.add', 'Institutions.ImportInstitutions.results']
 			],
 
-			'Directories.index' => [
+			'Directories.Directories.index' => [
 				'title' => 'Directory',
 				'icon' => '<span><i class="fa kd-guardian"></i></span>',
 				'params' => ['plugin' => 'Directory'],
-				'selected' => ['Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
+				'selected' => ['Directories.Directories.add', 'Directories.ImportUsers.add', 'Directories.ImportUsers.results']
 			],
 
 			'Reports' => [
@@ -300,7 +344,7 @@ class NavigationComponent extends Component
 				'title' => 'Dashboard',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.dashboard'],
-				'params' => ['plugin' => 'Institution', 0 => $id]
+				'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 			],
 
 			'Institution.General' => [
@@ -313,14 +357,14 @@ class NavigationComponent extends Component
 					'title' => 'Overview',
 					'parent' => 'Institution.General',
 					'selected' => ['Institutions.view', 'Institutions.edit'],
-					'params' => ['plugin' => 'Institution']
+					'params' => ['plugin' => 'Institution', $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 				],
 
 				'Institutions.Contacts.view' => [
 					'title' => 'Contacts',
 					'parent' => 'Institution.General',
 					'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
-					'params' => ['plugin' => 'Institution', 0 => $id]
+					'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
 				],
 
 				'Institutions.Attachments.index' => [
@@ -371,11 +415,18 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
+				'Institutions.Textbooks' => [
+					'title' => 'Textbooks',
+					'parent' => 'Institution.Academic',
+					'selected' => ['Institutions.Textbooks', 'Institutions.ImportTextbooks'],
+					'params' => ['plugin' => 'Institution']
+				],
+
 			'Institutions.Students.index' => [
 				'title' => 'Students',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
-					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentDropout', 'Institutions.DropoutRequests', 'Institutions.StudentUser.add',
+					'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
 					'Institutions.ImportStudents', 'Institutions.Students'],
 				'params' => ['plugin' => 'Institution']
 			],
@@ -384,7 +435,7 @@ class NavigationComponent extends Component
 				'title' => 'Staff',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.ImportStaff']
+				'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferRequests']
 			],
 
 			'Institution.Attendance' => [
@@ -427,10 +478,24 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Institution']
 				],
 
+			'Institutions.StudentCompetencies' => [
+				'title' => 'Competencies',
+				'parent' => 'Institutions.index',
+				'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
+				'params' => ['plugin' => 'Institution']
+			],
+
 			'Institutions.Assessments.index' => [
-				'title' => 'Results',
+				'title' => 'Assessments',
 				'parent' => 'Institutions.index',
 				'selected' => ['Institutions.Assessments', 'Institutions.Results'],
+				'params' => ['plugin' => 'Institution'],
+			],
+
+			'Institutions.Indexes.index' => [
+				'title' => 'Indexes',
+				'parent' => 'Institutions.index',
+				'selected' => ['Institutions.Indexes','Institutions.InstitutionStudentIndexes'],
 				'params' => ['plugin' => 'Institution'],
 			],
 
@@ -448,6 +513,12 @@ class NavigationComponent extends Component
 
 					'Institutions.ExaminationStudents' => [
 						'title' => 'Students',
+						'parent' => 'Institutions.Examinations',
+						'params' => ['plugin' => 'Institution']
+					],
+
+					'Institutions.ExaminationResults' => [
+						'title' => 'Results',
 						'parent' => 'Institutions.Examinations',
 						'params' => ['plugin' => 'Institution']
 					],
@@ -525,22 +596,24 @@ class NavigationComponent extends Component
 	public function getInstitutionStudentNavigation()
 	{
 		$session = $this->request->session();
-		$id = $session->read('Institution.Students.id');
+		$id = !empty($this->controller->ControllerAction->getQueryString('institution_student_id')) ? $this->controller->ControllerAction->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
 		$studentId = $session->read('Student.Students.id');
+		$institutionId = $session->read('Institution.Institutions.id');
+		$queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $institutionId, 'institution_student_id' => $id]);
 		$navigation = [
 			'Institutions.StudentUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Students.index',
-				'params' => ['plugin' => 'Institution', '1' => $studentId, 'id' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $studentId]), 'queryString' => $queryString],
 				'selected' => ['Institutions.StudentUser.edit', 'Institutions.StudentAccount.view', 'Institutions.StudentAccount.edit', 'Institutions.StudentSurveys', 'Institutions.StudentSurveys.edit', 'Institutions.IndividualPromotion',
 					'Students.Identities', 'Students.Nationalities', 'Students.Contacts', 'Students.Guardians', 'Students.Languages', 'Students.SpecialNeeds', 'Students.Attachments', 'Students.Comments',
-					'Students.History', 'Students.GuardianUser']],
+					'Students.History', 'Students.GuardianUser', 'Institutions.StudentUser.pull']],
 			'Institutions.StudentProgrammes.index' => [
 				'title' => 'Academic',
 				'parent' => 'Institutions.Students.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.Awards',
-					'Students.Extracurriculars', 'Institutions.Students.view', 'Institutions.Students.edit']],
+				'selected' => ['Students.Classes', 'Students.Subjects', 'Students.Absences', 'Students.Behaviours', 'Students.Results', 'Students.ExaminationResults', 'Students.Awards',
+					'Students.Extracurriculars', 'Institutions.StudentTextbooks', 'Institutions.Students.view', 'Institutions.Students.edit', 'Institutions.StudentIndexes']],
 			'Students.BankAccounts' => [
 				'title' => 'Finance',
 				'parent' => 'Institutions.Students.index',
@@ -563,7 +636,7 @@ class NavigationComponent extends Component
 			'Institutions.StaffUser.view' => [
 				'title' => 'General',
 				'parent' => 'Institutions.Staff.index',
-				'params' => ['plugin' => 'Institution', '1' => $id],
+				'params' => ['plugin' => 'Institution', '1' => $this->controller->ControllerAction->paramsEncode(['id' => $id])],
 				'selected' => ['Institutions.StaffUser.edit', 'Institutions.StaffAccount', 'Staff.Identities', 'Staff.Nationalities',
 					'Staff.Contacts', 'Staff.Guardians', 'Staff.Languages', 'Staff.SpecialNeeds', 'Staff.Attachments', 'Staff.Comments', 'Staff.History']
 			],
@@ -572,7 +645,7 @@ class NavigationComponent extends Component
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.Employments', 'Staff.Positions', 'Staff.Classes', 'Staff.Subjects', 'Staff.Absences',
-					'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view',],
+					'Institutions.StaffLeave', 'Staff.Behaviours', 'Staff.Awards', 'Institutions.Staff.edit', 'Institutions.Staff.view', 'Institutions.StaffPositionProfiles.add'],
 			],
 			'Staff.Qualifications' => [
 				'title' => 'Professional Development',
@@ -605,16 +678,16 @@ class NavigationComponent extends Component
 	public function getDirectoryNavigation()
 	{
 		$navigation = [
-			'Directories.view' => [
+			'Directories.Directories.view' => [
 				'title' => 'General',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'params' => ['plugin' => 'Directory'],
-				'selected' => ['Directories.view', 'Directories.edit', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments',
+				'selected' => ['Directories.Directories.view', 'Directories.Directories.edit', 'Directories.Directories.pull', 'Directories.Accounts', 'Directories.Identities', 'Directories.Nationalities', 'Directories.Languages', 'Directories.Comments', 'Directories.Attachments',
 					'Directories.History', 'Directories.SpecialNeeds', 'Directories.Contacts']
 			],
 			'Directories.Healths' => [
 				'title' => 'Health',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'params' => ['plugin' => 'Directory'],
 				'selected' => ['Directories.Healths', 'Directories.HealthAllergies', 'Directories.HealthConsultations', 'Directories.HealthFamilies', 'Directories.HealthHistories', 'Directories.HealthImmunizations', 'Directories.HealthMedications', 'Directories.HealthTests']
 			]
@@ -630,7 +703,7 @@ class NavigationComponent extends Component
 		$navigation = [
 			'Directories.Staff' => [
 				'title' => 'Staff',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'link' => false,
 			],
 				'Directories.StaffEmployments' => [
@@ -669,7 +742,7 @@ class NavigationComponent extends Component
 		$navigation = [
 			'Directories.Student' => [
 				'title' => 'Student',
-				'parent' => 'Directories.index',
+				'parent' => 'Directories.Directories.index',
 				'link' => false,
 			],
 				'Directories.StudentGuardians' => [
@@ -683,7 +756,7 @@ class NavigationComponent extends Component
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
 					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-						'Directories.StudentResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars']
+						'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
 				],
 				'Directories.StudentBankAccounts' => [
 					'title' => 'Finance',
@@ -710,6 +783,16 @@ class NavigationComponent extends Component
 			],
 			'Reports.Staff' => [
 				'title' => 'Staff',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Report'],
+			],
+            'Reports.Textbooks' => [
+                'title' => 'Textbooks',
+                'parent' => 'Reports',
+                'params' => ['plugin' => 'Report'],
+            ],
+			'Reports.Examinations' => [
+				'title' => 'Examinations',
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
 			],
@@ -744,6 +827,7 @@ class NavigationComponent extends Component
 
 	public function getAdministrationNavigation()
 	{
+		$queryString = $this->request->query('queryString');
 		$navigation = [
 			'SystemSetup' => [
 				'title' => 'System Setup',
@@ -766,38 +850,9 @@ class NavigationComponent extends Component
 					'title' => 'Education Structure',
 					'parent' => 'SystemSetup',
 					'params' => ['plugin' => 'Education'],
-					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.Certifications',
+					'selected' => ['Educations.Systems', 'Educations.Levels', 'Educations.Cycles', 'Educations.Programmes', 'Educations.Grades', 'Educations.Subjects', 'Educations.GradeSubjects', 'Educations.Certifications',
 							'Educations.FieldOfStudies', 'Educations.ProgrammeOrientations']
 				],
-				'Assessments.Assessments' => [
-					'title' => 'Assessments',
-					'parent' => 'SystemSetup',
-					'params' => ['plugin' => 'Assessment'],
-					'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
-				],
-				'Examinations' => [
-					'title' => 'Examinations',
-					'parent' => 'SystemSetup',
-					'link' => false,
-				],
-					'Examinations.Exams' => [
-						'title' => 'Exams',
-						'parent' => 'Examinations',
-						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.Exams', 'Examinations.ExamCentres', 'Examinations.GradingTypes']
-					],
-					'Examinations.RegisteredStudents' => [
-						'title' => 'Students',
-						'parent' => 'Examinations',
-						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.RegisteredStudents', 'Examinations.NotRegisteredStudents']
-					],
-					// 'Examinations.Results' => [
-					// 	'title' => 'Results',
-					// 	'parent' => 'Examinations',
-					// 	'params' => ['plugin' => 'Examination'],
-					// 	'selected' => ['Examinations.Results']
-					// ],
 				'FieldOptions.index' => [
 					'title' => 'Field Options',
 					'parent' => 'SystemSetup',
@@ -855,7 +910,12 @@ class NavigationComponent extends Component
 					'parent' => 'SystemSetup',
 					'selected' => ['Notices.index', 'Notices.add', 'Notices.view', 'Notices.edit']
 				],
-
+				'Indexes.Indexes' => [
+					'title' => 'Indexes',
+					'parent' => 'SystemSetup',
+					'params' => ['plugin' => 'Indexes'],
+					'selected' => ['Indexes.Indexes']
+				],
 			'Security' => [
 				'title' => 'Security',
 				'parent' => 'Administration',
@@ -909,19 +969,19 @@ class NavigationComponent extends Component
 				'link' => false,
 			],
 
-				'Alerts.Questions' => [
-					'title' => 'Questions',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Questions']
-				],
+				'Alerts.Alerts' => [
+						'title' => 'Alerts',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.Alerts']
+					],
 
-				'Alerts.Responses' => [
-					'title' => 'Responses',
-					'parent' => 'Administration.Communications',
-					'params' => ['plugin' => 'Alert'],
-					'selected' => ['Alerts.Responses']
-				],
+				'Alerts.AlertRules' => [
+						'title' => 'Alert Rules',
+						'parent' => 'Administration.Communications',
+						'params' => ['plugin' => 'Alert'],
+						'selected' => ['Alerts.AlertRules']
+					],
 
 				'Alerts.Logs' => [
 					'title' => 'Logs',
@@ -956,12 +1016,82 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Training'],
 					'selected' => ['Trainings.Results']
 				],
+            'Assessments.Assessments' => [
+                'title' => 'Assessments',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Assessment'],
+                'selected' => ['Assessments.Assessments', 'Assessments.AssessmentPeriods', 'Assessments.GradingTypes']
+            ],
+            'Administration.Competencies' => [
+                'title' => 'Competencies',
+                'parent' => 'Administration',
+                'link' => false,
+                'params' => ['plugin' => 'Competency'],
+            ],
+            	'Competencies.Templates' => [
+            		'title' => 'Templates',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.Templates', 'Competencies.Items', 'Competencies.Criterias']
+            	],
+            	'Competencies.Periods' => [
+            		'title' => 'Periods',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.Periods']
+            	],
+            	'Competencies.GradingTypes' => [
+            		'title' => 'Grading Types',
+                	'parent' => 'Administration.Competencies',
+                	'params' => ['plugin' => 'Competency'],
+                	'selected' => ['Competencies.GradingTypes']
+            	],
 
+			'Administration.Examinations' => [
+					'title' => 'Examinations',
+					'parent' => 'Administration',
+					'link' => false,
+				],
+					'Examinations.Exams' => [
+						'title' => 'Exams',
+						'parent' => 'Administration.Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.Exams', 'Examinations.GradingTypes']
+					],
+					'Examinations.ExamCentres'  => [
+						'title' => 'Centres',
+						'parent' => 'Administration.Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.ExamCentres', 'Examinations.ExamCentreStudents', 'Examinations.LinkedInstitutionAddStudents', 'Examinations.ExamCentreRooms', 'Examinations.ImportExaminationCentreRooms']
+					],
+					'Examinations.RegisteredStudents' => [
+						'title' => 'Students',
+						'parent' => 'Administration.Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.RegisteredStudents', 'Examinations.RegistrationDirectory', 'Examinations.NotRegisteredStudents']
+					],
+					'Examinations.ExamResults' => [
+						'title' => 'Results',
+						'parent' => 'Administration.Examinations',
+						'params' => ['plugin' => 'Examination'],
+						'selected' => ['Examinations.ExamResults', 'Examinations.Results', 'Examinations.ImportResults']
+					],
+            'Textbooks.Textbooks' => [
+                'title' => 'Textbooks',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'Textbook'],
+                'selected' => ['Textbooks.Textbooks']
+            ],
 			'Workflows.Workflows' => [
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
 				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Statuses']
+			],
+			'Systems.Updates' => [
+				'title' => 'Updates',
+				'parent' => 'Administration',
+				'params' => ['plugin' => 'System']
 			]
 		];
 		return $navigation;

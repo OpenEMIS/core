@@ -81,7 +81,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			$StaffTable = TableRegistry::get('Institution.Staff');
 			$url = $this->url('view');
 			$url['action'] = 'Staff';
-			$url[1] = $entity['institution_staff_id'];
+			$url[1] = $this->paramsEncode(['id' => $entity['institution_staff_id']]);
 			$event->stopPropagation();
 			$this->Session->write('Institution.StaffPositionProfiles.addSuccessful', true);
 			return $this->controller->redirect($url);
@@ -289,7 +289,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 			'controller' => 'Institutions',
 			'action' => 'Staff',
 			'0' => 'view',
-			'1' => $entity->institution_staff_id
+			'1' => $this->paramsEncode(['id' => $entity->institution_staff_id])
 		];
 
 		// To investigate
@@ -432,7 +432,25 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$attr['type'] = 'date';
 				if ($this->Session->check('Institution.StaffPositionProfiles.staffRecord')) {
 					$entity = $this->Session->read('Institution.StaffPositionProfiles.staffRecord');
-					$attr['date_options']['startDate'] = $entity->start_date->format('d-m-Y');
+
+					$InstitutionSubjectStaff = TableRegistry::get('Institution.InstitutionSubjectStaff');
+					$latestSubjectStartDate = $InstitutionSubjectStaff->find()
+						->where([
+							$InstitutionSubjectStaff->aliasField('staff_id') => $entity->staff_id,
+							$InstitutionSubjectStaff->aliasField('institution_id') => $entity->institution_id,
+							$InstitutionSubjectStaff->aliasField('start_date') . ' IS NOT NULL'
+						])
+						->order([$InstitutionSubjectStaff->aliasField('start_date') => 'DESC'])
+						->first();
+
+					if (!empty($latestSubjectStartDate)) {
+						// restrict earliest end of assignment date to the day after latest subject start date
+						$earliestEndDate = $latestSubjectStartDate->start_date->modify('+1 day');
+					} else {
+						$earliestEndDate = $entity->start_date;
+					}
+
+					$attr['date_options']['startDate'] = $earliestEndDate->format('d-m-Y');
 				}
 			} else {
 				$attr['type'] = 'hidden';
@@ -476,6 +494,9 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 
 	private function initialiseVariable($entity) {
 		$institutionStaffId = $this->request->query('institution_staff_id');
+
+		$institutionStaffId = $this->paramsDecode($institutionStaffId)['id'];
+
 		if (is_null($institutionStaffId)) {
 			return true;
 		}
@@ -530,7 +551,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 				$staffTableViewUrl[1] = $institutionStaffId;
 				$this->Session->write('Institution.StaffPositionProfiles.viewBackUrl', $staffTableViewUrl);
 				$url = $this->url('view');
-				$url[1] = $addOperation->id;
+				$url[1] = $this->paramsEncode(['id' => $addOperation->id]);
 			}
 			$event->stopPropagation();
 			return $this->controller->redirect($url);
@@ -581,7 +602,7 @@ class StaffPositionProfilesTable extends ControllerActionTable {
 						'controller' => 'Institutions',
 						'action' => 'StaffPositionProfiles',
 						'view',
-						$row->id,
+						$this->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 

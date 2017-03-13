@@ -16,7 +16,7 @@
 		?>
 	</div>
 	<?php endif;?>
-	
+
 	<div class="table-wrapper">
 		<div class="table-responsive">
 			<table class="table table-curved">
@@ -34,8 +34,8 @@
 				</thead>
 
 				<tbody>
-				<?php 
-				foreach($attr['data']['students'] as $i => $obj) : 
+				<?php
+				foreach($attr['data']['students'] as $i => $obj) :
 
 					if ($action=='edit') :
 						$n = $obj->student_id;
@@ -56,7 +56,7 @@
 						<td><?= __($obj->user->gender->name) ?></td>
 						<td><?= $obj->education_grade->name ?></td>
 						<td><?= __($obj->student_status_name) ?></td>
-						<td> 
+						<td>
 							<!--<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemoveAndReload(this)">-->
 							<button class="btn btn-dropdown action-toggle btn-single-action" type="button" aria-expanded="true" onclick="jsTable.doRemove(this);">
 								<?= __('<i class="fa fa-close"></i> Remove') ?>
@@ -68,13 +68,18 @@
 
 					<tr>
 						<td>
-							<?= $this->html->link($obj->student_openemis_no, [
+							<?php
+								$url = [
 									'plugin' => 'Institution',
 									'controller' => 'Institutions',
 									'action' => 'StudentUser',
 									'view',
-									$obj->student_user_id
-								]) ?>
+									$this->ControllerAction->paramsEncode(['id' => $obj->student_user_id])
+								];
+
+								$newUrl = $this->ControllerAction->setQueryString($url, ['institution_id' => $obj->institution_id]);
+							?>
+							<?= $this->html->link($obj->student_openemis_no, $newUrl) ?>
 						</td>
 						<td><?= $obj->student_name ?></td>
 						<td><?= __($obj->student_gender) ?></td>
@@ -85,8 +90,8 @@
 				<?php endif;?>
 
 			<?php endforeach ?>
-					
+
 				</tbody>
 			</table>
-		</div>	
+		</div>
 	</div>
