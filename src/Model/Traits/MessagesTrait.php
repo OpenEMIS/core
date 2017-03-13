@@ -30,7 +30,8 @@ trait MessagesTrait {
             'assessmentGradingType' => 'Assessment Grading Type',
             'educationSubject' => 'Education Subject',
             'subjectWeight' => 'Subject Weight',
-            'periodWeight' => 'Period Weight'
+            'periodWeight' => 'Period Weight',
+            'classification' => 'Classification'
         ],
         'CustomGroups' => [
             'custom_modules' => 'Module'
@@ -53,6 +54,7 @@ trait MessagesTrait {
             'exists' => 'The record exists in the system.',
             'noData' => 'There are no records.',
             'noRecords' => 'No Record',
+            'failConnectToExternalSource' => 'There is an issue establishing connection to the External Datasource. Please contact the administrator for assistance.',
             'select' => [
                 'noOptions' => 'No options'
             ],
@@ -88,6 +90,7 @@ trait MessagesTrait {
             'academicPeriod' => [
                 'notEditable' => 'The chosen academic period is not editable',
             ],
+            'uniqueCodeForm' => 'Code must be unique from other codes in this form',
             'invalidTime' => 'You have entered an invalid time.',
             'invalidDate' => 'You have entered an invalid date.',
             'invalidUrl' => 'You have entered an invalid URL.',
@@ -213,6 +216,10 @@ trait MessagesTrait {
             'multiGrade' => 'Multi Grade',
             'noShift' => 'There are no shifts configured for the selected academic period'
         ],
+        'InstitutionStudentIndexes' => [
+            'noClasses' => 'No Classes',
+            'noStudents' => 'No Students'
+        ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
             'noClasses' => 'No Classes',
@@ -231,6 +238,7 @@ trait MessagesTrait {
             'allSubjectsAlreadyAdded' => 'All Subjects for the assigned grade already added previously',
             'noSubjectsInClass' => 'There are no subjects in the assigned grade',
             'noSubjectSelected' => 'There is no subject selected',
+            'noProgrammes' => 'There is no programme set for available Academic Period on this institution'
         ],
         'InstitutionFees' => [
             'fee_types' => 'Fee Types',
@@ -343,7 +351,8 @@ trait MessagesTrait {
             'lateTime' => 'Late time should not be earlier than start time.'
         ],
         'StaffAbsences' => [
-            'noStaff' => 'No Available Staff'
+            'noStaff' => 'No Available Staff',
+            'noShift' => 'There are no shifts configured for the selected academic period, will be using system configuration timing.'
         ],
         'StaffBehaviours' => [
             'date_of_behaviour' => 'Date',
@@ -420,12 +429,16 @@ trait MessagesTrait {
         ],
         'StudentBehaviours' => [
             'noClasses' => 'No Classes',
-            'noStudents' => 'No Students'
+            'noStudents' => 'No Students',
+            'date_of_behaviour' => [
+                'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+            ],
         ],
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
             'enrolled' => 'This student has already been enrolled in an institution.',
-            'hasDropoutApplication' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.'
+            'hasWithdrawApplication' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
+            'invalidEndDate' => 'Transfer is not allowed as the student has already completed the grade.'
         ],
         'TransferApprovals' => [
             'existsInNewSchool' => 'Student is already exists in the new school',
@@ -466,14 +479,14 @@ trait MessagesTrait {
             'savingPromotionError' => 'The student record was not updated succesfully',
             'noNextAcademicPeriod' => 'There is no next academic period for the promotion.',
             'pendingTransfer' => 'There is a pending transfer request for this student.',
-            'pendingDropout' => 'There is a pending dropout request for this student.',
+            'pendingWithdraw' => 'There is a pending withdraw request for this student.',
         ],
         'StudentTransfer' => [
             'noGrades' => 'No Available Grades',
             'noStudents' => 'No Available Students',
             'noInstitutions' => 'No Available Institutions',
             'noData' => 'There are no available Students for Transfer.',
-            'success' => 'Students have been transferred.'
+            'success' => 'The selected students are pending for transfer approval.'
         ],
         'StaffPositionProfiles' => [
             'request' => 'Request for Change in Assignment has been submitted successfully.',
@@ -511,14 +524,14 @@ trait MessagesTrait {
             'approve' => 'Student admission has been approved successfully.',
             'reject' => 'Student admission has been rejected successfully.'
         ],
-        'DropoutRequests' => [
-            'request' => 'Dropout request hsa been submitted successfully.',
+        'WithdrawRequests' => [
+            'request' => 'Withdraw request has been submitted successfully.',
             'notEligible' =>  'This student is not eligible for this action. Please reject this request.'
         ],
-        'StudentDropout' => [
+        'StudentWithdraw' => [
             'exists' => 'Student has already dropped out from the school.',
-            'approve' => 'Dropout request has been approved successfully.',
-            'reject' => 'Dropout request has been rejected successfully.',
+            'approve' => 'Withdraw request has been approved successfully.',
+            'reject' => 'Withdraw request has been rejected successfully.',
             'hasTransferApplication' => 'There is a pending transfer application for this student at the moment, please remove the transfer application before making another request.'
         ],
         'Import' => [
@@ -545,10 +558,12 @@ trait MessagesTrait {
             'success' => 'is successfully imported.',
             'failed' => 'failed to import.',
             'partial_failed' => 'failed to import completely.',
+            'value_not_in_list' => 'Selected value is not in the list',
             'survey_code_not_found' => 'Survey code is missing from the file. Please make sure that survey code exists on sheet "References" cell B4.',
             'survey_not_found' => 'No identifiable survey found',
             'no_answers' => 'No record were found in the file imported',
-            'institution_network_connectivity_id' => 'code'
+            'institution_network_connectivity_id' => 'code',
+            'exam_centre_dont_match' => 'Examination and centre combination cannot be found.'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
@@ -572,6 +587,9 @@ trait MessagesTrait {
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
         ],
+        'InstitutionExaminations' => [
+            'noGrades' => 'There are no available grades set for this institution',
+        ],
         'InstitutionExaminationsUndoRegistration' => [
             'success' => 'Undo of student examination registration is successful.',
             'fail' => 'Undo of student examination registration is successful.',
@@ -580,6 +598,60 @@ trait MessagesTrait {
         'InstitutionExaminationStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
+        ],
+        'Examinations' => [
+            'noExaminationItems' => 'There are no examination items for this examination'
+        ],
+        'ExaminationCentres' => [
+            'savingProcessStarted' => 'Examination centres are currently being added in the background'
+        ],
+        'ExaminationCentreStudents' => [
+            'notAvailableForRegistration' => 'Not available for registration',
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'This student is not assigned to a room as there are no available rooms.',
+        ],
+
+        'LinkedInstitutionAddStudents' => [
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+        ],
+
+        'BulkStudentRegistration' => [
+            'noStudentSelected' => 'There are no students selected',
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+        ],
+        'Textbooks' => [
+            'noTextbooks' => 'No Textbooks',
+            'noProgrammes' => 'No Programmes',
+            'noGrades' => 'No Grades',
+            'noClassSubjectSelected' => 'Please select Subject and Textbook before adding record',
+            'noTextbookStatusCondition' => 'Please define Textbook Status and Condition before proceed',
+            'noTextbookStudent' => 'Please add physical textbook to be added'
+        ],
+        'InstitutionTextbooks' => [
+            'noTextbooks' => 'No Textbooks',
+            'noClasses' => 'No Classes',
+            'noRecords' => 'No Records'
+        ],
+        'Templates' => [
+            'addSuccess' => 'Competency Template was added successfully, please set up the Competency Items'
+        ],
+        'Items' => [
+            'addSuccess' => 'Competency Item was added successfully, please set up the Competency Criterias'
+        ],
+        'StudentCompetencies' => [
+            'noPeriod' => 'No Period',
+            'noItem' => 'No Item',
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
+        ],
+        'UserNationalities' => [
+            'noRecordRemain' => 'There should be at least one Nationality record'
+        ],
+        'UserContacts' => [
+            'noEmailRemain' => 'There should be at least one Email record'
         ],
 
         // Validation Messages
@@ -731,7 +803,7 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ],
                 'student_id' => [
-                    'ruleNoNewDropoutRequestInGradeAndInstitution' => 'There is a pending dropout application for this student at the moment, please reject the dropout application before making another request.',
+                    'ruleNoNewWithdrawRequestInGradeAndInstitution' => 'There is a pending withdraw application for this student at the moment, please reject the withdraw application before making another request.',
                     'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem' => [
                         'inTargetSchool' => 'Student is already enrolled in this school.',
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
@@ -770,7 +842,10 @@ trait MessagesTrait {
                     'ruleInstitutionStaffId' => 'Staff has already been added.'
                 ],
                 'institution_position_id' => [
-                    'ruleCheckFTE' => 'No available FTE.',
+                    'ruleCheckFTE' => 'No available FTE.'
+                ],
+                'staff_assignment' => [
+                    'ruleCheckStaffAssignment' => 'The staff has already been assigned to another Institution.'
                 ],
                 'start_date' => [
                     'ruleStaffExistWithinPeriod' => 'The staff has already exist within the start date and end date specified.',
@@ -821,19 +896,24 @@ trait MessagesTrait {
                     'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
                 ]
             ],
-            'DropoutRequests' => [
+            'WithdrawRequests' => [
                 'effective_date' => [
                     'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
             ],
-            'StudentDropout' => [
+            'StudentWithdraw' => [
                 'effective_date' => [
                     'ruleDateAfterEnrollment' => 'Effective Date cannot be earlier than the Enrollment Date'
                 ]
             ],
             'InstitutionExaminationStudents' => [
-                'available_capacity' => [
-                    'ruleAvailable' => 'Total students exceeded examination centre capacity'
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ]
+            ],
+            'InstitutionTextbooks' => [
+                'code' => [
+                    'ruleUnique' => 'Code must be unique for the same academic period',
                 ]
             ]
         ],
@@ -904,7 +984,7 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ]
+                ],
             ],
             'Accounts' => [
                 'username' => [
@@ -942,9 +1022,10 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
-                    'ruleValidatePreferred' => 'Please select a preferred contact type'
+                    'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
             'Identities' => [
@@ -1021,6 +1102,11 @@ trait MessagesTrait {
                 ],
                 'bank_branch_id' => [
                     'ruleNotBlank' => 'Please select a Bank Branch'
+                ]
+            ],
+            'UserNationalities' => [
+                'preferred' => [
+                    'ruleValidatePreferredNationality' => 'There must be at least one Preferred Nationality'
                 ]
             ],
         ],
@@ -1199,6 +1285,15 @@ trait MessagesTrait {
                 'final_rating' => 'Final Rating',
                 'deleted_competencies' => 'This competency has been removed'
             ],
+            'Competencies' => [
+                'min' => [
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ],
+                'max' => [
+                    'ruleCompare' => 'Max value must be greater than min value',
+                    'ruleRange' => 'Value must be within 0 to 100'
+                ]
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
@@ -1207,6 +1302,18 @@ trait MessagesTrait {
                 ],
                 'current' => [
                     'ruleValidateNeeded' => 'Academic Period needs to be set as current'
+                ]
+            ]
+        ],
+        'Education' => [
+            'EducationGradesSubjects' => [
+                'hours_required' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ]
+            ],
+            'EducationSubjects' => [
+                'code' => [
+                    'ruleUnique' => 'This code already exists in the system'
                 ]
             ]
         ],
@@ -1381,18 +1488,35 @@ trait MessagesTrait {
                 ]
             ],
             'ExaminationCentres' => [
-                'total_capacity' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
-                ],
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
                 ],
+                'examination_id' => [
+                    'ruleNoRunningSystemProcess' => 'There is currently a running process for this examination'
+                ],
+            ],
+            'ExaminationCentreRooms' => [
+                'name' => [
+                    'ruleUnique' => 'Please enter a unique name for this examination centre room'
+                ],
+                'size' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value',
+                    'ruleRoomSize' => 'Room size is out of range'
+                ],
+                'number_of_seats' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value',
+                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available',
+                    'ruleSeatsNumber' => 'Number of seats is out of range'
+                ]
             ],
             'ExaminationItems' => [
                 'weight' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleWeightRange' => 'Value must be positive and less than 2.0'
-                ]
+                ],
+                'code' => [
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
+                ],
             ],
             'ExaminationGradingTypes' => [
                 'code' => [
@@ -1423,17 +1547,104 @@ trait MessagesTrait {
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'
                 ]
+            ],
+            'ExaminationCentreStudents' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ],
+                'student_id' => [
+                    'ruleUnique' => 'This student is already registered to the selected exam',
+                    'ruleNotInvigilator' => 'This student is an invigilator in this examination'
+                ]
+            ],
+            'BulkStudentRegistration' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ]
+            ],
+            'LinkedInstitutionAddStudents' => [
+                'registration_number' => [
+                    'ruleUnique' => 'Registration Number must be unique'
+                ]
+            ]
+        ],
+        'Indexes' => [
+            'TableHeader' => [
+                'Criteria',
+                'Operator',
+                'Threshold',
+                'Index'
+            ],
+            'IndexesCriterias' => [
+                'threshold' => [
+                    'ruleRange' => 'Value must be within 1 to 99',
+                    'criteriaThresholdRange' => 'Value must be within %s to %s'
+                ],
+                'index_value' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ]
+            ]
+        ],
+        'Textbook' => [
+            'Textbooks' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ]
+            ],
+        ],
+        'Competency' => [
+            'GradingOptions' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ],
+                'point' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'CompetencyGradingTypes' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique',
+                    'ruleUniqueCodeWithinForm' => 'Code must be unique from other codes in this form'
+                ],
+            ],
+            'CompetencyCriterias' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'percentage' => [
+                    'ruleIsDecimal' => 'Value is not a valid decimal',
+                    'ruleRange' => 'Mark entered exceeds system limit'
+                ]
+            ],
+            'CompetencyTemplates' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
+            'CompetencyPeriods' => [
+                'code' => [
+                    'ruleUniqueCode' => 'Code must be unique'
+                ],
+            ],
+        ],
+        'FieldOption' => [
+            'LicenseClassifications' => [
+                'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
             ]
         ],
         'Configuration' => [
-        	'ConfigProductLists' => [
-        		'name' => [
-        			'ruleUnique' => 'This product already exists in the system',
-        		],
-        		'url' => [
-        			'invalidUrl' => 'You have entered an invalid URL.',
-        		]
-        	],
+            'ConfigProductLists' => [
+                'name' => [
+                    'ruleUnique' => 'This product already exists in the system',
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL.',
+                ]
+            ],
             'ConfigAdministrativeBoundaries' => [
                 'name' => [
                     'ruleUnique' => 'This product already exists in the system',
@@ -1443,7 +1654,14 @@ trait MessagesTrait {
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
             ]
-        ]
+        ],
+        'Alert' => [
+            'AlertRules' => [
+                'name' => [
+                    'ruleUnique' => 'This field has to be unique',
+                ]
+            ],
+        ],
     ];
 
 

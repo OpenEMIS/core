@@ -35,14 +35,14 @@ class ImportLinkBehavior extends Behavior {
 	}
 
     //using after action for ordering of toolbar buttons (because export also using afteraction)
-    public function indexAfterActionImportv4(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    public function indexAfterActionImportv4(Event $event, Query $query, $data, ArrayObject $extra)
     {
         $attr = $this->_table->getButtonAttr();
         $action = $this->_table->action;
         $customButton = [];
         switch ($action) {
             case 'index':
-                if ($extra['indexButtons']['view']['url']['action']=='Surveys') {
+                if (isset($extra['indexButtons']['view']) && $extra['indexButtons']['view']['url']['action']=='Surveys') {
                     break;
                 }
                 $customButton['url'] = $this->_table->request->params;

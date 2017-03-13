@@ -56,8 +56,8 @@ class TransferRequestsTable extends ControllerActionTable
         $validator
             ->requirePresence('new_education_grade_id')
 
-            ->add('student_id', 'ruleNoNewDropoutRequestInGradeAndInstitution', [
-                'rule' => ['noNewDropoutRequestInGradeAndInstitution'],
+            ->add('student_id', 'ruleNoNewWithdrawRequestInGradeAndInstitution', [
+                'rule' => ['noNewWithdrawRequestInGradeAndInstitution'],
                 'on' => 'create'
             ])
             ->add('student_id', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
@@ -119,7 +119,7 @@ class TransferRequestsTable extends ControllerActionTable
                     'controller' => $urlParams['controller'],
                     'action' => $action,
                     '0' => 'edit',
-                    '1' => $entity->id
+                    '1' => $this->paramsEncode(['id' => $entity->id])
                 ]);
             }
         }
@@ -158,7 +158,7 @@ class TransferRequestsTable extends ControllerActionTable
                 $backBtn = $extra['toolbarButtons']['back'];
                 $backBtn['url']['action'] = 'StudentUser';
                 $backBtn['url'][0] = 'view';
-                $backBtn['url'][1] = $params['user_id'];
+                $backBtn['url'][1] = $this->paramsEncode(['id' => $params['user_id']]);
                 $backBtn['url']['id'] = $params['student_id'];
                 $extra['toolbarButtons']['back'] = $backBtn;
 
@@ -199,7 +199,7 @@ class TransferRequestsTable extends ControllerActionTable
     {
         $extra['redirect']['action'] = 'StudentUser';
         $extra['redirect'][0] = 'view';
-        $extra['redirect'][1] = $entity->student_id;
+        $extra['redirect'][1] = $this->paramsEncode(['id' => $entity->student_id]);
         $extra['redirect']['id'] = $extra['params']['student_id'];
     }
 
@@ -434,6 +434,18 @@ class TransferRequestsTable extends ControllerActionTable
     }
     */
 
+    public function onGetFormButtons(Event $event, ArrayObject $buttons) 
+    {
+        $todayDate = Time::now();
+        $studentEndDate = new Time($this->request->data[$this->alias()]['end_date']);
+
+        if ($studentEndDate < $todayDate) { //disable save transfer request if student end_date is already passed.
+            $this->Alert->warning('TransferRequests.invalidEndDate');
+            unset($buttons[0]);
+            unset($buttons[1]);
+        }
+    }
+
     public function onUpdateFieldTransferStatus(Event $event, array $attr, $action, $request)
     {
         if ($action == 'add') {
@@ -477,6 +489,7 @@ class TransferRequestsTable extends ControllerActionTable
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
     {
+        $today = Date::now();
         if ($action == 'add') {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $institutionId = $this->Session->read('Institution.Institutions.id');
@@ -508,7 +521,9 @@ class TransferRequestsTable extends ControllerActionTable
                         $InstitutionGrades->aliasField('start_date') . ' <= ' => $academicPeriodEndDate,
                         'OR' => [
                             $InstitutionGrades->aliasField('end_date') . ' IS NULL',
-                            $InstitutionGrades->aliasField('end_date') . ' >=' => $academicPeriodStartDate
+                            // Previously as long as the programme end date is later than academicPeriodStartDate, institution will be in the list.
+                            // POCOR-3134 request to only displayed institution with active grades (end-date is later than today-date)
+                            $InstitutionGrades->aliasField('end_date') . ' >=' => $today->format('Y-m-d'),
                         ]
                     ]
                 ])

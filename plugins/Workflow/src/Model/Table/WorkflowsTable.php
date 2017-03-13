@@ -106,11 +106,11 @@ class WorkflowsTable extends AppTable {
 		$modelOptions = ['-1' => __('All Workflows')] + $modelOptions;
 		$selectedModel = $this->queryString('model', $modelOptions);
 		$this->controller->set(compact('modelOptions', 'selectedModel'));
-		
+
 		$query->matching('WorkflowModels');
 		$options['order'] = [
-			$this->aliasField('workflow_model_id') => 'asc', 
-			$this->aliasField('code') => 'asc', 
+			$this->aliasField('workflow_model_id') => 'asc',
+			$this->aliasField('code') => 'asc',
 			$this->aliasField('name') => 'asc'
 		];
 
@@ -186,7 +186,7 @@ class WorkflowsTable extends AppTable {
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
 		$paramsPass = $this->ControllerAction->paramsPass();
-		$workflowId = current($paramsPass);
+		$workflowId = $this->paramsDecode(current($paramsPass));
 		$selectedModel = $this->get($workflowId)->workflow_model_id;
 		$this->addAssociation($selectedModel);
 
@@ -293,7 +293,7 @@ class WorkflowsTable extends AppTable {
 
 		// Staff Leaves / Institution Surveys & Institution Student Surveys
 		$registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
-		
+
 		$featureList = [];
 		$featureList[] = $registryAlias;
 		if ($registryAlias == 'Institution.InstitutionSurveys') {
@@ -310,20 +310,20 @@ class WorkflowsTable extends AppTable {
 					$targetModel->aliasField('status_id IN') => $stepIds
 				])
 				->count();
-			$tableCells[] = $rowData;	
+			$tableCells[] = $rowData;
 		}
 		// End
 
 		$this->controller->set(compact('steps', 'convertStepOptions', 'tableHeaders', 'tableCells'));
 	}
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
+	public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
 		$requestData = $this->request->data;
 		$submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
 		if ($submit == 'save') {
-			$process = function($model, $id, $options) {
-				$entity = $model->get($id);
+			$process = function($model, $ids, $options) {
+				$entity = $model->get($ids);
 				// Overwrite $process and skip delete, delete is done in onDeleteTransfer
 				return true;
 			};
@@ -491,7 +491,7 @@ class WorkflowsTable extends AppTable {
 				$filterOptions = $newEvent->result;
 			}
 			// End
-			
+
 			// Logic to remove filter from the list if already in used
 			$Workflows = TableRegistry::get('Workflow.Workflows');
 
@@ -508,7 +508,7 @@ class WorkflowsTable extends AppTable {
 
 			if ($action == 'edit') {
 				$paramsPass = $this->ControllerAction->paramsPass();
-				$workflowId = current($paramsPass);
+				$workflowId = $this->paramsDecode(current($paramsPass))['id'];
 				$filterQuery->where([
 					$this->WorkflowsFilters->aliasField('workflow_id <> ') => $workflowId
 				]);
@@ -839,7 +839,7 @@ class WorkflowsTable extends AppTable {
 						])
 						->toArray();
 					}
-					
+
 					$Workflows = TableRegistry::get('Workflow.Workflows');
 					$defaultWorkflowId = $this->WorkflowsFilters
 						->find('list', ['keyField' => 'workflow_id', 'valueField' => 'workflow_id'])

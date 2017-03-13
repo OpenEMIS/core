@@ -27,15 +27,15 @@ class ContactTypesTable extends ControllerActionTable
 
 		$this->addBehavior('FieldOption.FieldOption');
 		$this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add']
+            'Students' => ['index', 'add'],
+            'Staff' => ['index', 'add']
         ]);
 	}
 
 	public function findWithContactOptions(Query $query, array $options)
 	{
 		return $query
-			->contain(['ContactOptions'])
-			->order([$this->aliasField('order') => 'ASC']);
+			->contain(['ContactOptions']);
 	}
 
 	public function validationDefault(Validator $validator) {

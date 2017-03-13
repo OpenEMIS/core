@@ -35,12 +35,13 @@ class FieldOptionComponent extends Component
         'Statuses' => ['className' => 'Institution.Statuses', 'parent' => 'Institution'],
         'Types' => ['className' => 'Institution.Types', 'parent' => 'Institution'],
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
-
+        'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
+        'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Student'],
         'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],
         'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
-        'StudentDropoutReasons' => ['className' => 'Student.StudentDropoutReasons', 'parent' => 'Student'],
+        'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
 
     // Staff
         'StaffAbsenceReasons' => ['className' => 'Institution.StaffAbsenceReasons', 'parent' => 'Staff'],
@@ -94,6 +95,7 @@ class FieldOptionComponent extends Component
         'IdentityTypes' => ['className' => 'FieldOption.IdentityTypes', 'parent' => 'Others'],
         'Languages' => ['className' => 'Languages', 'parent' => 'Others'],
         'LicenseTypes' => ['className' => 'FieldOption.LicenseTypes', 'parent' => 'Others'],
+        'LicenseClassifications' => ['className' => 'FieldOption.LicenseClassifications', 'parent' => 'Others'],
         'SpecialNeedTypes' => ['className' => 'FieldOption.SpecialNeedTypes', 'parent' => 'Others'],
         'SpecialNeedDifficulties' => ['className' => 'FieldOption.SpecialNeedDifficulties', 'parent' => 'Others'],
         'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],

@@ -198,13 +198,13 @@ class AccessControlComponent extends Component {
 	public function check($url=[], $roleIds=[]) {
 		$superAdmin = $this->Auth->user('super_admin');
 
-		if ($superAdmin) {
+		if ($superAdmin || !is_array($url)) { // if $url is a string, then skip checking of permission
 			return true;
 		}
 
 		// we only need controller and action
 		foreach ($url as $i => $val) {
-			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val)) {
+			if (($i != 'controller' && $i != 'action' && !is_numeric($i)) || is_numeric($val) || empty($val) || $this->isUuid($val) || $this->isSHA256($val) || $this->isEncodedParam($val)) {
 				unset($url[$i]);
 			}
 		}
@@ -219,17 +219,20 @@ class AccessControlComponent extends Component {
 		}
 		$url = $this->checkAccessMap($url);
 		$checkUrl = [];
-		if (array_key_exists('0', $url) && array_key_exists('1', $url) && array_key_exists('2', $url)) {
-			$url['controller'] = $url[0];
-			$url['action'] = $url[1];
-			$url[0] = $url[2];
-			unset($url[1]);
-			unset($url[2]);
-		} else if (array_key_exists('0', $url) && array_key_exists('1', $url)) {
-			$url['controller'] = $url[0];
-			$url['action'] = $url[1];
-			unset($url[0]);
-			unset($url[1]);
+
+		if (!(array_key_exists('controller', $url) && array_key_exists('action', $url) && array_key_exists('0', $url))) {
+			if (array_key_exists('0', $url) && array_key_exists('1', $url) && array_key_exists('2', $url)) {
+				$url['controller'] = $url[0];
+				$url['action'] = $url[1];
+				$url[0] = $url[2];
+				unset($url[1]);
+				unset($url[2]);
+			} else if (array_key_exists('0', $url) && array_key_exists('1', $url)) {
+				$url['controller'] = $url[0];
+				$url['action'] = $url[1];
+				unset($url[0]);
+				unset($url[1]);
+			}
 		}
 
 		if (array_key_exists('controller', $url)) {
@@ -308,6 +311,23 @@ class AccessControlComponent extends Component {
 		} else {
 			return false;
 		}
+	}
+
+	private function isSHA256($input) {
+		if (preg_match('/^\{?[a-f0-9]{64}\}?$/', strtolower($input))) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private function isEncodedParam($input) {
+		if (strpos($input, '.') !== false) {
+			if (count(explode('.', $input)) == 2) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public function isAdmin() {

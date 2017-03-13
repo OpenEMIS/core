@@ -20,7 +20,8 @@ class GendersTable extends AppTable {
 		// $this->hasMany('CensusSanitations', ['className' => 'User.CensusSanitations']);
 		// $this->hasMany('CensusGraduates', ['className' => 'User.CensusGraduates']);
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Students' => ['index']
+        	'Students' => ['index', 'add'],
+        	'Staff' => ['index', 'add'],
         ]);
 	}
 
@@ -29,4 +30,15 @@ class GendersTable extends AppTable {
 		return $validator;
 	}
 
+	public function getThresholdOptions()
+    {
+        // options only female
+        $options = ['F'];
+
+        return $this
+            ->find('list')
+            ->where([$this->aliasField('code') . ' IN ' => $options])
+            ->toArray()
+        ;
+    }
 }

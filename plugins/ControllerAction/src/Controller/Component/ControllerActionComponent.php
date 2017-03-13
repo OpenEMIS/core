@@ -72,9 +72,11 @@ use Cake\Controller\Exception\SecurityException;
 use Cake\Log\Log;
 
 use ControllerAction\Model\Traits\ControllerActionV4Trait;
+use ControllerAction\Model\Traits\SecurityTrait;
 
 class ControllerActionComponent extends Component {
     use ControllerActionV4Trait; // extended functionality from v4
+    use SecurityTrait;
 
     private $plugin;
     private $controller;
@@ -154,6 +156,7 @@ class ControllerActionComponent extends Component {
                 foreach ($this->models as $name => $attr) {
                     if (strtolower($action) === strtolower($name)) { // model class found
                         $this->debug(__METHOD__, ': ' . $name . ' found');
+                        $this->debug(__METHOD__, ': ControllerAction v3 has been deprecated, please convert '. $name . ' to v4');
                         $currentAction = 'index';
                         if (!empty($this->paramsPass)) {
                             $currentAction = array_shift($this->paramsPass);
@@ -524,10 +527,8 @@ class ControllerActionComponent extends Component {
             if ($action != 'index') {
                 if ($this->currentAction != 'index') {
                     $model = $this->model;
-                    $primaryKey = $this->getPrimaryKey($model);
-                    $idKey = $model->aliasField($primaryKey);
-                    $sessionKey = $model->registryAlias() . '.' . $primaryKey;
-                    $extra['primaryKeyValue'] = $this->Session->read($sessionKey);
+                    $sessionKey = $model->registryAlias() . '.primaryKey';
+                    $extra['primaryKeyValue'] = $this->paramsEncode($this->Session->read($sessionKey));
                     if (empty($pass)) {
                         if ($this->Session->check($sessionKey)) {
                             $pass = [$extra['primaryKeyValue']];
@@ -717,7 +718,7 @@ class ControllerActionComponent extends Component {
             $modal['form'] = [
                 'model' => $this->model,
                 'formOptions' => ['type' => 'delete', 'url' => $this->url('remove')],
-                'fields' => ['id' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
+                'fields' => ['primaryKey' => ['type' => 'hidden', 'id' => 'recordId', 'unlockField' => true]]
             ];
 
             $modal['buttons'] = [
@@ -915,10 +916,9 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->getPrimaryKey($model);
+        $ids = !empty($id) ? $this->paramsDecode($id) : $id;
 
-        $idKey = $model->aliasField($primaryKey);
-        $sessionKey = $model->registryAlias() . '.' . $primaryKey;
+        $sessionKey = $model->registryAlias() . '.primaryKey';
         $contain = [];
 
         foreach ($model->associations() as $assoc) {
@@ -927,14 +927,16 @@ class ControllerActionComponent extends Component {
             }
         }
 
-        if (empty($id)) {
+        if (empty($ids)) {
             if ($this->Session->check($sessionKey)) {
-                $id = $this->Session->read($sessionKey);
+                $ids = $this->Session->read($sessionKey);
             }
         }
 
-        if ($model->exists([$idKey => $id])) {
-            $query = $model->find()->where([$idKey => $id])->contain($contain);
+        $idKeys = $this->getIdKeys($model, $ids);
+
+        if ($model->exists($idKeys)) {
+            $query = $model->find()->where($idKeys)->contain($contain);
 
             // Event: viewEditBeforeQuery
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
@@ -961,7 +963,7 @@ class ControllerActionComponent extends Component {
             if ($event->isStopped()) { return $event->result; }
             // End Event
 
-            $this->Session->write($sessionKey, $id);
+            $this->Session->write($sessionKey, $ids);
             $modals = ['delete-modal' => $this->getModalOptions('remove')];
             $this->controller->set('data', $entity);
             $this->controller->set('modals', $modals);
@@ -996,7 +998,7 @@ class ControllerActionComponent extends Component {
 
         $entity = $model->newEntity();
 
-    if ($request->is(['get'])) {
+        if ($request->is(['get'])) {
             // Event: addOnInitialize
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.add.onInitialize');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.add.onInitialize', null, [$entity]);
@@ -1122,12 +1124,11 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->getPrimaryKey($model);
+        $ids = $this->paramsDecode($id);
+        $idKeys = $this->getIdKeys($model, $ids);
 
-        $idKey = $model->aliasField($primaryKey);
-
-        if ($model->exists([$idKey => $id])) {
-            $query = $model->find()->where([$idKey => $id]);
+        if ($model->exists($idKeys)) {
+            $query = $model->find()->where($idKeys);
 
             // Event: viewEditBeforeQuery
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.viewEdit.beforeQuery');
@@ -1260,6 +1261,7 @@ class ControllerActionComponent extends Component {
     }
 
     public function remove($id=0) {
+        $ids = ($id) ? $this->paramsDecode($id) : 0;
         $request = $this->request;
         $model = $this->model;
         $settings = new ArrayObject([]);
@@ -1280,19 +1282,12 @@ class ControllerActionComponent extends Component {
         }
         // End Event
 
-        $primaryKey = $this->getPrimaryKey($model);
-
-        $idKey = $model->aliasField($primaryKey);
+        $primaryKey = $model->primaryKey();
 
         if ($request->is('get')) {
-            if ($model->exists([$idKey => $id])) {
-
-                if (is_array($model->primaryKey())) {
-                    // For table with composite primary key
-                    $entity = $model->find()->where([$idKey => $id])->first();
-                } else {
-                    $entity = $model->get($id);
-                }
+            $idKeys = $this->getIdKeys($model, $ids);
+            if ($model->exists($idKeys)) {
+                $entity = $model->get($idKeys);
 
                 $query = $model->find();
                 $extra = new ArrayObject([]);
@@ -1309,7 +1304,7 @@ class ControllerActionComponent extends Component {
                     $label['tableLabel'] = 'Associated Records';
                 }
 
-                $extra['keyField'] = 'id';
+                $extra['keyField'] = $model->primaryKey();
                 $extra['valueField'] = 'name';
 
                 // Event: deleteOnInitialize
@@ -1319,14 +1314,24 @@ class ControllerActionComponent extends Component {
                 // End Event
 
                 if ($this->deleteStrategy != 'restrict') {
-                    $query->find('list', $extra->getArrayCopy())->where([$idKey . ' <> ' => $id]);
+                    $notIdKeys = $idKeys;
+                    foreach ($notIdKeys as $key => $value) {
+                        $notIdKeys[$key.' <>'] = $value;
+                        unset($notIdKeys[$key]);
+                    }
+                    $query->find()->where($notIdKeys);
 
                     // Event: deleteUpdateCovertOptions
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
                     $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onGetConvertOptions', null, [$entity, $query]);
                     if ($event->isStopped()) { return $event->result; }
 
-                    $convertOptions = $query->toArray();
+                    foreach ($convertOptions as $value) {
+                        $keysToEncode = $model->getIdKeys($model, $value, false);
+                        $encodedKey = $model->paramsEncode($keysToEncode);
+                        $convertOptions[$encodedKey] = $value->$extra['valueField'];
+                    }
+
                     if (empty($convertOptions)) {
                         $convertOptions[''] = __('No Available Options');
                     }
@@ -1344,16 +1349,24 @@ class ControllerActionComponent extends Component {
                             }
                             if (!array_key_exists($assoc->alias(), $associations) && !in_array($assoc->alias(), $excludedModels)) {
                                 $count = 0;
-                                if($assoc->type() == 'oneToMany') {
-                                    $count = $assoc->find()
-                                    ->where([$assoc->aliasField($assoc->foreignKey()) => $id])
-                                    ->count();
-                                } else {
+                                $modelAssociationTable = $assoc;
+                                if ($assoc->type() == 'manyToMany') {
                                     $modelAssociationTable = $assoc->junction();
-                                    $count = $modelAssociationTable->find()
-                                        ->where([$modelAssociationTable->aliasField($assoc->foreignKey()) => $id])
-                                        ->count();
                                 }
+                                $bindingKey = $assoc->bindingKey();
+                                $foreignKey = $assoc->foreignKey();
+                                $conditions = [];
+                                if (is_array($foreignKey)) {
+                                    foreach ($foreignKey as $index => $key) {
+                                        $conditions[$modelAssociationTable->aliasField($key)] = $ids[$bindingKey[$index]];
+                                    }
+                                } else {
+                                    $conditions[$modelAssociationTable->aliasField($foreignKey)] = $ids[$bindingKey];
+                                }
+
+                                $count = $modelAssociationTable->find()
+                                    ->where($conditions)
+                                    ->count();
                                 $title = $this->Alert->getMessage($assoc->aliasField('title'));
                                 if ($title == '[Message Not Found]') {
                                     $title = $assoc->name();
@@ -1382,28 +1395,48 @@ class ControllerActionComponent extends Component {
                 $this->controller->set(compact('showFormButton'));
                 $this->controller->set('deleteStrategy', $this->deleteStrategy);
                 $this->controller->set('data', $entity);
+                if (!is_array($primaryKey)) {
+                    $primaryKey = [$primaryKey];
+                }
+                $this->controller->set('primaryKey', $primaryKey);
                 $this->controller->set('associations', $associations);
             } else {
                 $this->Alert->warning('general.notExists');
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             }
-        } else if ($request->is('delete') && !empty($request->data[$primaryKey])) {
+        } else if ($request->is('delete')) {
             $this->autoRender = false;
-            $id = $request->data[$primaryKey];
+
+            if ($this->deleteStrategy == 'restrict' || $this->deleteStrategy == 'transfer') {
+                $primaryKeyArr = [];
+                if (!is_array($primaryKey)) {
+                    $primaryKeyArr[] = $primaryKey;
+                } else {
+                    $primaryKeyArr = $primaryKey;
+                }
+                $primaryKeyValue = array_intersect_key($request->data, array_flip($primaryKeyArr));
+                $ids = $this->getIdKeys($model, $primaryKeyValue, false);
+            } else {
+                $id = $this->paramsDecode($request->data('primaryKey'));
+                $ids = $this->getIdKeys($model, $id, false);
+            }
+
             $deleteOptions = new ArrayObject([]);
             $extra = new ArrayObject(['excludedModels' => []]);
 
-            $process = function ($model, $id, $deleteOptions) {
-                $primaryKey = $this->getPrimaryKey($model);
-
-                $idKey = $model->aliasField($primaryKey);
-                if ($model->exists([$idKey => $id])) {
-                    if (is_array($model->primaryKey())) {
-                        // For table with composite primary key
-                        $entity = $model->find()->where([$idKey => $id])->first();
-                    } else {
-                        $entity = $model->get($id);
+            $process = function ($model, $ids, $deleteOptions) {
+                $primaryKey = $model->primaryKey();
+                $idKeys = [];
+                if (is_array($primaryKey)) {
+                    foreach($primaryKey as $key) {
+                        $idKeys[$model->aliasField($key)] = $ids[$key];
                     }
+                } else {
+                    $idKeys[$model->aliasField($primaryKey)] = $ids[$primaryKey];
+                }
+
+                if ($model->exists($idKeys)) {
+                    $entity = $model->get($ids);
                     return $model->delete($entity, $deleteOptions->getArrayCopy());
                 } else {
                     // If id(to be deleted) cannot be found, return a successful deletion message
@@ -1412,7 +1445,7 @@ class ControllerActionComponent extends Component {
             };
 
             // Event: onBeforeDelete
-            $params = [$deleteOptions, $id, $extra];
+            $params = [$deleteOptions, $ids, $extra];
             $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onBeforeDelete');
             $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onBeforeDelete', null, $params);
             if ($event->isStopped()) { return $event->result; }
@@ -1421,15 +1454,15 @@ class ControllerActionComponent extends Component {
             }
             // End Event
             if ($this->deleteStrategy == 'cascade' || $this->deleteStrategy == 'restrict') {
-                if ($process($model, $id, $deleteOptions)) {
+                if ($process($model, $ids, $deleteOptions)) {
                     $this->Alert->success('general.delete.success');
                 } else {
                     $this->Alert->error('general.delete.failed');
                 }
                 return $this->controller->redirect($this->url('index', 'QUERY'));
             } else {
-                $transferFrom = $this->request->data('id');
-                $transferTo = $this->request->data('transfer_to');
+                $transferFrom = $this->getIdKeys($model, $request->data, false);
+                $transferTo = $this->paramsDecode($this->request->data('transfer_to'));
 
                 // Checking of association for delete transfer, if the association count is 0,
                 // it means that no record is associated with it and it is safe to delete the record
@@ -1474,51 +1507,104 @@ class ControllerActionComponent extends Component {
                     }
 
                     if ($process($model, $transferFrom, $deleteOptions)) {
-                        $id = $request->data[$primaryKey];
+                        $ids = $this->getIdKeys($model, $request->data, false);
                         $transferOptions = new ArrayObject([]);
 
                         $transferProcess = function($associations, $transferFrom, $transferTo, $model) {
                             foreach ($associations as $assoc) {
                                 if ($assoc->type() == 'oneToMany') {
+                                    $bindingKey = $assoc->bindingKey();
+                                    $foreignKey = $assoc->foreignKey();
+
+                                    $fromConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $fromConditions[$key] = $transferFrom[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $fromConditions[$foreignKey] = $transferFrom[$bindingKey];
+                                    }
+
+                                    $toConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $toConditions[$key] = $transferTo[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $toConditions[$foreignKey] = $transferTo[$bindingKey];
+                                    }
+
                                     $assoc->updateAll(
-                                        [$assoc->foreignKey() => $transferTo],
-                                        [$assoc->foreignKey() => $transferFrom]
+                                        [$toConditions],
+                                        [$fromConditions]
                                     );
 
                                 } else if ($assoc->type() == 'manyToMany') {
                                     $modelAssociationTable = $assoc->junction();
 
+                                    $bindingKey = $association->bindingKey();
+                                    $foreignKey = $association->foreignKey();
+
+                                    $toConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $toConditions[$key] = $transferTo[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $toConditions[$foreignKey] = $transferTo[$bindingKey];
+                                    }
+
+                                    $fromConditions = [];
+
+                                    if (is_array($foreignKey)) {
+                                        foreach ($foreignKey as $index => $key) {
+                                            $fromConditions[$key] = $transferFrom[$bindingKey[$index]];
+                                        }
+                                    } else {
+                                        $fromConditions[$foreignKey] = $transferFrom[$bindingKey];
+                                    }
+
+                                    $targetForeignKey = $association->targetForeignKey();
+
                                     // List of the target foreign keys for subqueries
                                     $targetForeignKeys = $modelAssociationTable->find()
-                                        ->select(['target' => $modelAssociationTable->aliasField($assoc->targetForeignKey())])
-                                        ->where([
-                                            $modelAssociationTable->aliasField($assoc->foreignKey()) => $transferTo
-                                        ]);
+                                        ->select($targetForeignKey)
+                                        ->where($toConditions);
 
                                     $notUpdateQuery = $modelAssociationTable->query()
-                                        ->select(['target_foreign_key' => 'TargetTable.target'])
+                                        ->select($targetForeignKey)
                                         ->from(['TargetTable' => $targetForeignKeys]);
 
                                     if (!empty($notUpdateQuery)) {
                                         $condition = [];
 
+                                        $targetForeignKeyString = '';
+                                        if (is_array($targetForeignKey)) {
+                                            $targetForeignKeyString = '('. impode(', ', $targetForeignKey) . ')';
+                                        } else {
+                                            $targetForeignKeyString = $targetForeignKey;
+                                        }
+
+                                        $notCondition = $fromConditions;
+                                        $notCondition[$association->targetForeignKey().' IN '] = $notUpdateQuery;
+
                                         $condition = [
-                                            $assoc->foreignKey() => $transferFrom,
-                                            'NOT' => [
-                                                $assoc->foreignKey() => $transferFrom,
-                                                $assoc->targetForeignKey().' IN ' => $notUpdateQuery
-                                            ]
+                                            $fromConditions,
+                                            'NOT' => $notCondition
                                         ];
 
                                         // Update all transfer records
                                         $modelAssociationTable->updateAll(
-                                            [$assoc->foreignKey() => $transferTo],
+                                            $toConditions,
                                             $condition
                                         );
 
                                         // Delete orphan records
                                         $modelAssociationTable->deleteAll(
-                                            [$assoc->foreignKey() => $transferFrom]
+                                            $fromConditions
                                         );
                                     }
                                 }
@@ -1526,7 +1612,7 @@ class ControllerActionComponent extends Component {
                         };
 
                         // Event: onDeleteTransfer
-                        $params = [$transferOptions, $id];
+                        $params = [$transferOptions, $ids];
                         $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onDeleteTransfer');
                         $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onDeleteTransfer', null, $params);
                         if ($event->isStopped()) { return $event->result; }
@@ -1549,6 +1635,7 @@ class ControllerActionComponent extends Component {
     }
 
     public function download($id) {
+        $ids = $this->paramsDecode($id);
         $fileUpload = $this->model->behaviors()->get('FileUpload');
         $name = '';
         if (!empty($fileUpload)) {
@@ -1556,7 +1643,7 @@ class ControllerActionComponent extends Component {
             $content = $fileUpload->config('content');
         }
 
-        $data = $this->model->get($id);
+        $data = $this->model->get($ids);
         $fileName = $data->$name;
         $pathInfo = pathinfo($fileName);
 
@@ -1589,19 +1676,31 @@ class ControllerActionComponent extends Component {
             $primaryKey = $model->primaryKey();
             $orderField = $this->orderField;
 
-            $ids = json_decode($request->data("ids"));
+            $encodedIds = json_decode($request->data("ids"));
+
+            $ids = [];
+            $idKeys = [];
+
+            foreach ($encodedIds as $id) {
+                $ids[] = $this->paramsDecode($id);
+                $idKeys[] = $model->getIdKeys($model, $this->paramsDecode($id));
+            }
+
             if (!empty($ids)) {
-                $originalOrder = $model->find('list')
-                    ->where([$model->aliasField($primaryKey).' IN ' => $ids])
-                    ->select(['id' => $model->aliasField($primaryKey), 'name' => $model->aliasField($orderField)])
+                $originalOrder = $model
+                    ->find()
+                    ->select($primaryKey)
+                    ->select($orderField)
+                    ->where(['OR' => $idKeys])
                     ->order([$model->aliasField($orderField)])
+                    ->hydrate(false)
                     ->toArray();
 
                 $originalOrder = array_reverse($originalOrder);
 
-                foreach ($ids as $order => $id) {
+                foreach ($ids as $id) {
                     $orderValue = array_pop($originalOrder);
-                    $model->updateAll([$orderField => $orderValue], [$primaryKey => $id]);
+                    $model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
                 }
             }
         }
@@ -1940,85 +2039,5 @@ class ControllerActionComponent extends Component {
             }
         }
         return $found;
-    }
-
-    public function urlsafeB64Encode($input)
-    {
-        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
-    }
-
-    public function urlsafeB64Decode($input)
-    {
-        $remainder = strlen($input) % 4;
-        if ($remainder) {
-            $padlen = 4 - $remainder;
-            $input .= str_repeat('=', $padlen);
-        }
-        return base64_decode(strtr($input, '-_', '+/'));
-    }
-
-    public function getQueryString($queryString = null)
-    {
-        $query = $this->request->query('queryString');
-        $query = $this->paramsDecode($query);
-
-        if (is_null($queryString)) {
-            return $query;
-        } else if (!isset($query[$queryString])) {
-            return null;
-        } else {
-            return $query[$queryString];
-        }
-    }
-
-    public function setQueryString($url, $params)
-    {
-        if (is_array($url)) {
-            $url['queryString'] = $this->paramsEncode($params);
-        } else if (is_string($url)) {
-            if (strpos($url, '?')) {
-                $url .= '&queryString='.$this->paramsEncode($params);
-            } else {
-                $url .= '?queryString='.$this->paramsEncode($params);
-            }
-        }
-        return $url;
-    }
-
-    public function paramsDecode($params)
-    {
-        $paramArr = explode('.', $params);
-        if (count($paramArr) != 2) {
-            throw new SecurityException('Wrong number of segments');
-        }
-        list($payload, $signature) = $paramArr;
-        $payload = $this->urlsafeB64Decode($payload);
-        $signature = $this->urlsafeB64Decode($signature);
-
-        $payload = json_decode($payload, true);
-        $sessionId = Security::hash('session_id', 'sha256');
-        if (!isset($payload[$sessionId])) {
-            throw new SecurityException('No session id in payload');
-        } else {
-            $checkPayload = $payload;
-            $checkPayload[$sessionId] = session_id();
-            $checkSignature = Security::hash(json_encode($checkPayload), 'sha256');
-            if ($signature !== $checkSignature) {
-                throw new SecurityException('Query String has been tampered');
-            }
-        }
-        unset($payload[$sessionId]);
-        return $payload;
-    }
-
-    public function paramsEncode($params = [])
-    {
-        $sessionId = Security::hash('session_id', 'sha256');
-        $params[$sessionId] = session_id();
-        $jsonParam = json_encode($params);
-        $base64Param = $this->urlsafeB64Encode($jsonParam);
-        $signature = Security::hash($jsonParam, 'sha256');
-        $base64Signature = $this->urlsafeB64Encode($signature);
-        return "$base64Param.$base64Signature";
     }
 }

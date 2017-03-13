@@ -57,8 +57,10 @@ $description = __d('open_emis', $_productName);
 				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'postLogin'],
 				'class' => 'form-horizontal'
 			]);
-			echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
-			echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
+			if (!$_sso) {
+				echo $this->Form->input('username', ['placeholder' => __('Username'), 'label' => false, 'value' => $username]);
+				echo $this->Form->input('password', ['placeholder' => __('Password'), 'label' => false, 'value' => $password]);
+			}
 			?>
 			<?php
 				if (isset($showLanguage) && $showLanguage) :

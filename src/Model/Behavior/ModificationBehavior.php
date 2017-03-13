@@ -18,7 +18,7 @@ class ModificationBehavior extends Behavior
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
         $schema = $this->_table->schema();
         $columns = $schema->columns();
-        
+
         $userId = null;
         if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
             $userId = $_SESSION['Auth']['User']['id'];
@@ -33,6 +33,16 @@ class ModificationBehavior extends Behavior
                     $entity->created_user_id = $userId;
                 }
             }
+        } else { // set default user id to administrator
+            if (!$entity->isNew()) {
+                if (in_array('modified_user_id', $columns) && !$entity->has('modified_user_id')) {
+                    $entity->modified_user_id = 1;
+                }
+            } else {
+                if (in_array('created_user_id', $columns) && !$entity->has('created_user_id')) {
+                    $entity->created_user_id = 1;
+                }
+            }
         }
-    } 
+    }
 }

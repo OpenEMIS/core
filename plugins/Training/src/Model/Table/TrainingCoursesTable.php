@@ -238,7 +238,7 @@ class TrainingCoursesTable extends ControllerActionTable
 		$this->field('credit_hours', ['type' => 'select']);
 		$this->field('target_populations', [
 			'type' => 'chosenSelect',
-			'placeholder' => __('Select Target Populations'),
+			'placeholder' => __('Select Target Populations, Leave Empty if Open for All Staff'),
 			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
 		]);
 		$this->field('training_providers', [
@@ -310,7 +310,7 @@ class TrainingCoursesTable extends ControllerActionTable
 						'controller' => 'Trainings',
 						'action' => 'Courses',
 						'view',
-						$row->id
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {

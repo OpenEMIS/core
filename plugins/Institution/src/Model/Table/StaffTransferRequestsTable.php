@@ -20,18 +20,25 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
+
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'Dashboard' => ['index']
+        	'Dashboard' => ['index'],
+        	'Staff' => ['index', 'add']
         ]);
 	}
 
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
-		return $validator->requirePresence('institution_position_id');
+		return $validator
+			->add('update', 'ruleTransferRequestExists', [
+				'rule' => ['checkPendingStaffTransfer'],
+				'on' => 'create'
+			])
+			->requirePresence('institution_position_id');
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
-		parent::beforeAction($event, $extra);		
+		parent::beforeAction($event, $extra);
 		$toolbarButtons = $extra['toolbarButtons'];
 
 		if ($this->action != 'index') {
@@ -59,6 +66,15 @@ class StaffTransferRequestsTable extends StaffTransfer {
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
 		parent::editAfterAction($event, $entity, $extra);
+
+        if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
+            $errors = $this->Session->read('Institution.StaffTransferRequests.errors');
+            $this->Alert->error('StaffTransferRequests.errorApproval');
+            foreach ($errors as $error) {
+                $this->Alert->error($error, ['type' => 'text']);
+            }
+            $this->Session->delete('Institution.StaffTransferRequests.errors');
+        }
 
 		$this->field('previous_institution_id', ['type' => 'readonly', 'after' => 'staff_id', 'attr' => ['value' => $entity->previous_institution->code_name]]);
 		$this->field('institution_position_id', ['type' => 'select', 'attr' => ['value' => $this->getEntityProperty($entity, 'institution_position_id')]]);
@@ -164,7 +180,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			} else {
 				$roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
 			}
-			
+
 			// Filter by active status
 			$activeStatusId = $this->Workflow->getStepsByModelCode($positionTable->registryAlias(), 'ACTIVE');
 			$positionConditions = [];
@@ -202,7 +218,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 			$attr['options'] = $options;
 			return $attr;
 		}
-		
+
 	}
 
 	public function onGetFormButtons(Event $event, ArrayObject $buttons) {
@@ -251,17 +267,6 @@ class StaffTransferRequestsTable extends StaffTransfer {
 					$this->controller->redirect($url);
 				}
 			}
-		}
-	}
-
-	public function editBeforeAction(Event $event, $extra) {
-		if ($this->Session->check('Institution.StaffTransferRequests.errors')) {
-			$errors = $this->Session->read('Institution.StaffTransferRequests.errors');
-			$this->Alert->error('StaffTransferRequests.errorApproval');
-			foreach ($errors as $error) {
-				$this->Alert->error($error, ['type' => 'text']);
-			}
-			$this->Session->delete('Institution.StaffTransferRequests.errors');
 		}
 	}
 
@@ -344,7 +349,7 @@ class StaffTransferRequestsTable extends StaffTransfer {
 						'controller' => 'Institutions',
 						'action' => 'StaffTransferRequests',
 						'edit',
-						$row->id,
+						$this->paramsEncode(['id' => $row->id]),
 						'institution_id' => $row->institution_id
 					];
 

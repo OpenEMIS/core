@@ -76,7 +76,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 					}
 				}
 
-				return true;
+                return true;
 			} else {
 				return false;
 			}
@@ -88,7 +88,6 @@ class TrainingSessionResultsTable extends ControllerActionTable
 	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
 	{
 		// redirect back to edit page
-		$event->stopPropagation();
 		return $this->controller->redirect($this->url('edit'));
 	}
 
@@ -231,8 +230,9 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$rowData[] = $event->subject()->Html->link($traineeObj->openemis_no , [
 					'plugin' => 'Directory',
 					'controller' => 'Directories',
-					'action' => 'view',
-					$traineeObj->id
+					'action' => 'Directories',
+					'view',
+					$this->paramsEncode(['id' => $traineeObj->id])
 				]);
 				$rowData[] = $traineeObj->name;
 				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
@@ -529,7 +529,7 @@ class TrainingSessionResultsTable extends ControllerActionTable
 						'controller' => 'Trainings',
 						'action' => 'Results',
 						'view',
-						$row->id
+						$this->paramsEncode(['id' => $row->id])
 					];
 
 					if (is_null($row->modified)) {

@@ -26,9 +26,9 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             cols: workbenchItemTypes.FIXED,
             model: 'Institution.StudentAdmission'
         },
-        StudentDropoutTable: {
+        StudentWithdrawTable: {
             cols: workbenchItemTypes.FIXED,
-            model: 'Institution.StudentDropout'
+            model: 'Institution.StudentWithdraw'
         },
         StaffTransferApprovalTable: {
             cols: workbenchItemTypes.FIXED,
@@ -79,6 +79,10 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         StaffTrainingApplicationsTable: {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Training.TrainingApplications'
+        },
+        StaffLicensesTable: {
+            cols: workbenchItemTypes.NON_SCHOOL_BASED,
+            model: 'Staff.Licenses'
         }
     };
 

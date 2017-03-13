@@ -1,6 +1,7 @@
 <?php
 namespace Education\Model\Table;
 
+use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class EducationSubjectsTable extends ControllerActionTable {
@@ -19,4 +20,32 @@ class EducationSubjectsTable extends ControllerActionTable {
 		]);
         $this->setDeleteStrategy('restrict');
 	}
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->add('code', 'ruleUnique', [
+                'rule' => 'validateUnique',
+                'provider' => 'table'
+            ]);
+        return $validator;
+    }
+
+    public function getEducationSubjectsByGrades($gradeId)
+    {
+        if ($gradeId) {
+            $subjectOptions = $this
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
+                        ->find('visible')
+                        ->innerJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
+                            'EducationGradesSubjects.education_subject_id = '.$this->aliasField('id'),
+                            'EducationGradesSubjects.education_grade_id' => $gradeId
+                        ])
+                        ->order([$this->aliasField('order') => 'ASC'])
+                        ->toArray();
+        
+            return $subjectOptions;
+        }
+    }
 }

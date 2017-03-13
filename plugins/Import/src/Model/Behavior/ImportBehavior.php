@@ -18,6 +18,8 @@ use Cake\Routing\Router;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
 use PHPExcel_Worksheet;
+use PHPExcel_Style_NumberFormat;
+use PHPExcel_Shared_Date;
 
 /**
  * ImportBehavior is to be used with import_mapping table.
@@ -75,7 +77,8 @@ class ImportBehavior extends Behavior {
         'plugin' => '',
         'model' => '',
         'max_rows' => 2000,
-        'max_size' => 524288
+        'max_size' => 524288,
+        'backUrl' => []
     ];
     protected $rootFolder = 'import';
     private $_fileTypesMap = [
@@ -154,7 +157,9 @@ class ImportBehavior extends Behavior {
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
                 break;
         }
-        if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
+        if (!empty($this->config('backUrl'))) {
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
+        } else if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
             if ($this->_table->request->params['pass'][0] == 'add') {
                 $back = str_replace('Import', '', $this->_table->alias());
             } else  if ($this->_table->request->params['pass'][0] == 'results') {
@@ -329,6 +334,7 @@ class ImportBehavior extends Behavior {
             $importedUniqueCodes = new ArrayObject;
             $dataFailed = [];
             $dataPassed = [];
+            $extra = new ArrayObject(['lookup' => [], 'entityValidate' => true]);
 
             $activeModel = TableRegistry::get($this->config('plugin').'.'.$this->config('model'));
             $activeModel->addBehavior('DefaultValidation');
@@ -380,7 +386,8 @@ class ImportBehavior extends Behavior {
 
                 $originalRow = new ArrayObject;
                 $checkCustomColumn = new ArrayObject;
-                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols);
+                $extra['entityValidate'] = true;
+                $rowPass = $this->_extractRecord($references, $tempRow, $originalRow, $rowInvalidCodeCols, $extra);
 
                 $tempRow = $tempRow->getArrayCopy();
                 // $tempRow['entity'] must exists!!! should be set in individual model's onImportCheckUnique function
@@ -390,7 +397,11 @@ class ImportBehavior extends Behavior {
                     $tableEntity = $tempRow['entity'];
                     unset($tempRow['entity']);
                 }
-                $activeModel->patchEntity($tableEntity, $tempRow);
+
+                if ($extra['entityValidate'] == true) {
+                    $activeModel->patchEntity($tableEntity, $tempRow);
+                }
+
                 $errors = $tableEntity->errors();
                 $rowInvalidCodeCols = $rowInvalidCodeCols->getArrayCopy();
                 if (!empty($rowInvalidCodeCols) || $errors) { // row contains error or record is a duplicate based on unique key(s)
@@ -445,17 +456,20 @@ class ImportBehavior extends Behavior {
                     $dataPassed[] = $tempPassedRecord->getArrayCopy();
                 }
 
+                // to-do: saving of entity into table with composite primary keys (Exam Results) give wrong isNew value
                 $isNew = $tableEntity->isNew();
-                $newEntity = $activeModel->save($tableEntity);
-                if ($newEntity) {
-                    if ($isNew) {
-                        $totalImported++;
-                    } else {
-                        $totalUpdated++;
-                    }
 
-                    // update importedUniqueCodes either a single key or composite primary keys
-                    $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
+                if ($extra['entityValidate'] == true) {
+                    $newEntity = $activeModel->save($tableEntity);
+                    if ($newEntity) {
+                        if ($isNew) {
+                            $totalImported++;
+                        } else {
+                            $totalUpdated++;
+                        }
+                        // update importedUniqueCodes either a single key or composite primary keys
+                        $this->dispatchEvent($this->_table, $this->eventKey('onImportUpdateUniqueKeys'), 'onImportUpdateUniqueKeys', [$importedUniqueCodes, $tableEntity]);
+                    }
                 }
 
                 // $model->log('ImportBehavior: '.$row.' records imported', 'info');
@@ -616,6 +630,16 @@ class ImportBehavior extends Behavior {
     public function setImportDataTemplate( $objPHPExcel, $dataSheetName, $header ) {
 
         $objPHPExcel->setActiveSheetIndex(0);
+        // column_name in import_mapping that have date format, after the humanize
+        // to compare, to know that the column are date format.
+        $description = ' ( DD/MM/YYYY )';
+        $dateHeader = [
+            __('Date Closed') . $description,
+            __('Date Opened') . $description,
+            __('Start Date') . $description,
+            __('End Date') . $description,
+            __('Date Of Birth') . $description
+        ];
 
         $this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName );
 
@@ -624,10 +648,15 @@ class ImportBehavior extends Behavior {
         foreach ($header as $key=>$value) {
             $alpha = $this->getExcelColumnAlpha($key);
             $activeSheet->setCellValue( $alpha . "2", $value);
+            $activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
             if (strlen($value)<50) {
-                $activeSheet->getColumnDimension( $alpha )->setAutoSize(true);
+                // if the $value is in $dateHeader array, it is a date format.
+                if (in_array($value, $dateHeader)) {
+                    $activeSheet->getStyle( $alpha )
+                        ->getNumberFormat()
+                        ->setFormatCode('dd/mm/yyyy');
+                }
             } else {
-                $activeSheet->getColumnDimension( $alpha )->setWidth(35);
                 $currentRowHeight = $this->suggestRowHeight( strlen($value), $currentRowHeight );
                 $activeSheet->getRowDimension(2)->setRowHeight( $currentRowHeight );
                 $activeSheet->getStyle( $alpha . "2" )->getAlignment()->setWrapText(true);
@@ -1106,7 +1135,7 @@ class ImportBehavior extends Behavior {
      * @param  ArrayObject  $rowInvalidCodeCols for holding error messages found on option field columns
      * @return boolean                          returns whether the row being checked pass option field columns check
      */
-    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    protected function _extractRecord($references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols, ArrayObject $extra) {
         // $references = [$sheet, $mapping, $columns, $lookup, $totalColumns, $row, $activeModel, $systemDateFormat];
         $sheet = $references['sheet'];
         $mapping = $references['mapping'];
@@ -1123,7 +1152,13 @@ class ImportBehavior extends Behavior {
 
         for ($col = 0; $col < $totalColumns; ++$col) {
             $cell = $sheet->getCellByColumnAndRow($col, $row);
-            $originalValue = $cell->getValue();
+
+            if (PHPExcel_Shared_Date::isDateTime($cell)) {
+                $cell->getStyle()->getNumberFormat()->setFormatCode('dd/mm/yyyy');
+                $originalValue = $cell->getFormattedValue();
+            } else {
+                $originalValue = $cell->getValue();
+            }
 
             $cellValue = $originalValue;
             // need to understand this check
@@ -1136,9 +1171,14 @@ class ImportBehavior extends Behavior {
 
             $excelMappingObj = $mapping[$col];
             $foreignKey = $excelMappingObj->foreign_key;
+            $lookupPlugin = $excelMappingObj->lookup_plugin;
+            $lookupModel = $excelMappingObj->lookup_model;
+            $lookupColumn = $excelMappingObj->lookup_column;
             $columnName = $columns[$col];
             $originalRow[$col] = $originalValue;
             $val = $cellValue;
+
+            $datePattern = "/(0[1-9]|[1-2][0-9]|3[0-1])\/(0[1-9]|1[0-2])\/[0-9]{4}/"; // dd/mm/yyyy
 
             // skip a record column which has value defined earlier before this function is called
             // example; openemis_no
@@ -1148,24 +1188,28 @@ class ImportBehavior extends Behavior {
                 continue;
             }
             if (!empty($val)) {
-                if($activeModel->schema()->column($columnName)['type'] == 'date') {// checking the main table schema data type
+                $columnAttr = $activeModel->schema()->column($columnName);
+                if ($columnAttr['type'] == 'date') { // checking the main table schema data type
                     $originalRow[$col] = $val;
-                    if (is_numeric($val)) {
-                        // convert the numerical value to date format specified on the template for converting to a compatible date string for Date object
-                        $val = date('d/m/Y', \PHPExcel_Shared_Date::ExcelToPHP($val));
-                    }
 
-                    // converts val to Date object so that this field will pass 'validDate' check since
-                    // different model has different date format checking. Example; user->date_of_birth is using dmY while others using Y-m-d,
-                    // so it is best to convert the date here instead of adjusting individual model's date validation format
-                    try {
-                        // parse the retrieved value using the format specified on the template
-                        $formattedDate = Date::createFromFormat('d/m/Y', $val);
-                        $val = $formattedDate;
-                        // follow date format as required on the template
-                        $originalRow[$col] = $val->format('d/m/Y');
-                    } catch (InvalidArgumentException $e) {
-                        // pr($e->getMessage());
+                    if (!empty($val) && preg_match($datePattern, $val)) {
+                        $split = explode('/', $val);
+                        $dateObject = new Date();
+                        $dateObject->setDate($split[2], $split[1], $split[0]);
+
+                        // compare the date input and new formatted date to cater (31/02/2016 changed to 02/03/2016)
+                        if ($val != $dateObject->format('d/m/Y')) {
+                            $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
+                            $rowPass = false;
+                            $extra['entityValidate'] = false;
+                        } else {
+                            $originalRow[$col] = $dateObject->format('d/m/Y');
+                        }
+                    } else {
+                        // string input without the correct format (not dd/mm/yyyy)
+                        $rowInvalidCodeCols[$columnName] = __('You have entered an invalid date');
+                        $rowPass = false;
+                        $extra['entityValidate'] = false;
                     }
                 }
             }
@@ -1181,14 +1225,14 @@ class ImportBehavior extends Behavior {
                         $val = $lookup[$col][$cellValue]['id'];
                     } else { // if the cell value not found in lookup
                         $rowPass = false;
-                        $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                        $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else { // if cell is empty
                     $rowPass = false;
                     $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
                 }
-            } elseif ($foreignKey == self::DIRECT_TABLE) {
-                $registryAlias = $excelMappingObj->lookup_plugin . '.' . $excelMappingObj->lookup_model;
+            } else if ($foreignKey == self::DIRECT_TABLE) {
+                $registryAlias = $lookupPlugin . '.' . $lookupModel;
                 if (!empty($this->directTables) && isset($this->directTables[$registryAlias])) {
                     $excelLookupModel = $this->directTables[$registryAlias]['excelLookupModel'];
                 } else {
@@ -1197,12 +1241,24 @@ class ImportBehavior extends Behavior {
                 }
                 $excludeValidation = false;
                 if (!empty($cellValue)) {
-                    $record = $excelLookupModel->find()->where([$excelLookupModel->aliasField($excelMappingObj->lookup_column) => $cellValue]);
-                    // if($excelLookupModel->alias()=='Students') {pr($cellValue);pr($record->sql());die;}
-                    $record = $record->first();
+                    if (isset($extra['lookup'][$excelLookupModel->alias()][$cellValue])) {
+                        $record = $extra['lookup'][$excelLookupModel->alias()][$cellValue];
+                    } else {
+                        $lookupQuery = $excelLookupModel->find()->where([$excelLookupModel->aliasField($lookupColumn) => $cellValue]);
+                        $record = $lookupQuery->first();
+
+                        $extra['lookup'][$excelLookupModel->alias()][$cellValue] = $record;
+                    }
                 } else {
-                    if ($activeModel->schema()->column($columnName) && !$activeModel->schema()->column($columnName)['null']) {
-                        $record = '';
+                    $columnAttr = $activeModel->schema()->column($columnName);
+                    // when blank and the field is not nullable, set cell value as default value setup in database
+                    if ($columnAttr && !$columnAttr['null']) {
+                        if (isset($columnAttr['default']) && strlen($columnAttr['default']) > 0) {
+                            $cellValue = $columnAttr['default'];
+                            $excludeValidation = true;
+                        } else {
+                            $record = '';
+                        }
                     } else {
                         $excludeValidation = true;
                     }
@@ -1214,7 +1270,10 @@ class ImportBehavior extends Behavior {
                     } else {
                         if (!empty($cellValue)) {
                             $rowPass = false;
-                            $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                            // allow to overwrite from lookup before query event
+                            if (!$rowInvalidCodeCols->offsetExists($columnName)) {
+                                $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
+                            }
                         } else {
                             $rowPass = false;
                             $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
@@ -1223,7 +1282,7 @@ class ImportBehavior extends Behavior {
                 } else {
                     $val = $cellValue;
                 }
-            } elseif ($foreignKey == self::NON_TABLE_LIST) {
+            } else if ($foreignKey == self::NON_TABLE_LIST) {
                 if (!empty($cellValue)) {
                     $getIdEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportGet'.$excelMappingObj->lookup_model.'Id'), 'onImportGet'.$excelMappingObj->lookup_model.'Id', [$cellValue]);
                     $recordId = $getIdEvent->result;
@@ -1231,7 +1290,7 @@ class ImportBehavior extends Behavior {
                         $val = $recordId;
                     } else {
                         $rowPass = false;
-                        $rowInvalidCodeCols[$columnName] = __('Selected value is not in the list');
+                        $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else {
                     if (!$isOptional) {
@@ -1242,7 +1301,7 @@ class ImportBehavior extends Behavior {
             } else if ($foreignKey == self::CUSTOM) { //foreign_key = 4
 
                 $params = [$tempRow, $cellValue];
-                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.$excelMappingObj->column_name.'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
+                $event = $this->dispatchEvent($this->_table, $this->eventKey('onImportCheck'.ucfirst($excelMappingObj->column_name).'Config'), 'onImportCheck'.$excelMappingObj->column_name.'Config', $params);
 
                 if ($event->result !== true) {
                     $rowInvalidCodeCols[$columnName] = __($event->result);
@@ -1277,6 +1336,8 @@ class ImportBehavior extends Behavior {
             $rowPassEvent = $this->dispatchEvent($this->_table, $this->eventKey('onImportModelSpecificValidation'), 'onImportModelSpecificValidation', [$references, $tempRow, $originalRow, $rowInvalidCodeCols]);
             $rowPass = $rowPassEvent->result;
         }
+
+
         return $rowPass;
     }
 

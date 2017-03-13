@@ -6,6 +6,7 @@ use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\ResultSet;
+use Cake\ORM\TableRegistry;
 
 use App\Model\Traits\MessagesTrait;
 use App\Model\Table\ControllerActionTable;
@@ -62,10 +63,11 @@ class StudentClassesTable extends ControllerActionTable {
 		if (array_key_exists('view', $buttons)) {
 			$institutionId = $entity->institution_class->institution_id;
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'Classes',
-				'view', $entity->institution_class->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->institution_class->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;
@@ -79,5 +81,19 @@ class StudentClassesTable extends ControllerActionTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Classes');
 	}
+
+    public function getClassStudents($classId, $periodId, $institutionId)
+    {
+    	$enrolledStatus = TableRegistry::get('Student.StudentStatuses')->getIdByCode('CURRENT');
+        return $this->find()
+                ->contain('Users')
+                ->where([
+                    $this->aliasField('institution_class_id') => $classId,
+                    $this->aliasField('academic_period_id') => $periodId,
+                    $this->aliasField('institution_id') => $institutionId,
+                    $this->aliasField('student_status_id') => $enrolledStatus
+                ])
+                ->toArray();
+    }
 
 }

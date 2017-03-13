@@ -38,6 +38,7 @@ var Workflow = {
 		Workflow.getAssigneeOptions(assigneeUrl, jsonObj.is_school_based, jsonObj.next_step_id);
 		Workflow.resetError();
 		Workflow.toggleAssignee(jsonObj.assignee_required);
+		Workflow.toggleComment(jsonObj.comment_required);
 	},
 
 	hideError: function() {
@@ -56,9 +57,18 @@ var Workflow = {
 
 	toggleAssignee: function(required) {
 		if (required == 0) {
-			$('.workflowtransition-assignee-id').closest('.input').hide();
+			$('.workflowtransition-assignee-id').closest('.input').hide().removeClass('required');
 		} else {
-			$('.workflowtransition-assignee-id').closest('.input').show();
+			$('.workflowtransition-assignee-id').closest('.input').show().addClass('required');
+		}
+	},
+
+	toggleComment: function(required) {
+		console.log('toggleComment: ' + required);
+		if (required == 0) {
+			$('.workflowtransition-comment').closest('.input').removeClass('required');
+		} else {
+			$('.workflowtransition-comment').closest('.input').addClass('required');
 		}
 	},
 
