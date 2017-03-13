@@ -105,7 +105,7 @@ class TrainingCoursesTable extends ControllerActionTable
 					'message' =>  __('Duration must be positive with 3 digits at maximum')
 				],
 				'bet' => [
-					'rule'	=> ['range', 1, 999],
+					'rule'	=> ['range', 0, 999],
 					'message' => __('Duration must be positive with 3 digits at maximum')
 				]
 			])
@@ -115,7 +115,7 @@ class TrainingCoursesTable extends ControllerActionTable
                     'message' =>  __('Experience must be positive with 3 digits at maximum')
                 ],
                 'bet' => [
-                    'rule'  => ['range', 1, 999],
+                    'rule'  => ['range', 0, 999],
                     'message' => __('Experience must be positive with 3 digits at maximum')
                 ]
             ])
