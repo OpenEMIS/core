@@ -5,15 +5,18 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
-use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 use Cake\Utility\Inflector;
 use Cake\I18n\Time;
 
-class StaffAttendancesTable extends AppTable {
+use App\Model\Table\ControllerActionTable;
+
+class StaffAttendancesTable extends ControllerActionTable
+{
 	use OptionsTrait;
 	use MessagesTrait;
 	private $allDayOptions = [];
@@ -21,11 +24,11 @@ class StaffAttendancesTable extends AppTable {
 	private $typeOptions = [];
 	private $reasonOptions = [];
 	private $_fieldOrder = ['openemis_no', 'staff_id'];
-	private $dataCount = null;
 	private $_absenceData = [];
 	const PRESENT = 0;
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
 		$this->table('institution_staff');
 		$config['Modified'] = false;
 		$config['Created'] = false;
@@ -58,15 +61,22 @@ class StaffAttendancesTable extends AppTable {
 		$AbsenceTypesTable = TableRegistry::get('Institution.AbsenceTypes');
 		$this->absenceList = $AbsenceTypesTable->getAbsenceTypeList();
 		$this->absenceCodeList = $AbsenceTypesTable->getCodeList();
+
+		$this->toggle('search', false);
+		$this->toggle('add', false);
+		$this->toggle('edit', false);
+		$this->toggle('view', false);
+		$this->toggle('remove', false);
 	}
 
 	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.indexEdit'] = 'indexEdit';
+        return $events;
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
 		$academicPeriodId = $this->request->query['academic_period_id'];
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
@@ -75,7 +85,8 @@ class StaffAttendancesTable extends AppTable {
 			->find('academicPeriod', ['academic_period_id' => $academicPeriodId]);
 	}
 
-    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$startDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->start_date->format('Y-m-d');
 		$endDate = $AcademicPeriodTable->get($this->request->query['academic_period_id'])->end_date->format('Y-m-d');
@@ -111,7 +122,8 @@ class StaffAttendancesTable extends AppTable {
 		}
 	}
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
+    {
     	$newArray = [];
 		$newArray[] = [
 			'key' => 'Users.openemis_no',
@@ -146,7 +158,8 @@ class StaffAttendancesTable extends AppTable {
 		$this->_absenceData = $this->getData($startDate, $endDate, $sheet['institutionId']);
 	}
 
-	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr) {
+	public function onExcelRenderAttendance(Event $event, Entity $entity, array $attr)
+	{
 		// get the data from the temporary variable
 		$absenceData = $this->_absenceData;
 		$absenceCodeList = $this->absenceCodeList;
@@ -182,7 +195,8 @@ class StaffAttendancesTable extends AppTable {
 		}
 	}
 
-	public function getData($monthStartDay, $monthEndDay, $institutionId) {
+	public function getData($monthStartDay, $monthEndDay, $institutionId)
+	{
 		$StaffAbsencesTable = TableRegistry::get('Institution.StaffAbsences');
 		$absenceData = $StaffAbsencesTable->find('all')
 				->contain(['StaffAbsenceReasons', 'AbsenceTypes'])
@@ -228,8 +242,8 @@ class StaffAttendancesTable extends AppTable {
 		return $absenceCheckList;
 	}
 
-	public function beforeAction(Event $event) {
-		$this->fields['security_group_user_id']['visible'] = false;
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
 		$tabElements = [
 			'Attendance' => [
 				'url' => ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'StaffAttendances'],
@@ -244,33 +258,29 @@ class StaffAttendancesTable extends AppTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', 'Attendance');
 
-		$this->ControllerAction->field('openemis_no');
-		$this->ControllerAction->field('staff_id', ['order' => 2]);
+		$this->field('openemis_no');
+		$this->field('staff_id', ['order' => 2]);
 
-		$this->ControllerAction->field('FTE', ['visible' => false]);
-		$this->ControllerAction->field('start_date', ['visible' => false]);
-		$this->ControllerAction->field('start_year', ['visible' => false]);
-		$this->ControllerAction->field('end_date', ['visible' => false]);
-		$this->ControllerAction->field('end_year', ['visible' => false]);
-		$this->ControllerAction->field('staff_type_id', ['visible' => false]);
-		$this->ControllerAction->field('staff_status_id', ['visible' => false]);
-		$this->ControllerAction->field('institution_position_id', ['visible' => false]);
+		$this->field('FTE', ['visible' => false]);
+		$this->field('start_date', ['visible' => false]);
+		$this->field('start_year', ['visible' => false]);
+		$this->field('end_date', ['visible' => false]);
+		$this->field('end_year', ['visible' => false]);
+		$this->field('staff_type_id', ['visible' => false]);
+		$this->field('staff_status_id', ['visible' => false]);
+		$this->field('institution_position_id', ['visible' => false]);
+		$this->field('security_group_user_id', ['visible' => false]);
 	}
 
 	// Event: ControllerAction.Model.afterAction
-	public function afterAction(Event $event, ArrayObject $config) {
-		if (!is_null($this->request->query('mode'))) {
-			if ($this->dataCount > 0) {
-				$config['formButtons'] = true;
-				$config['url'] = $config['buttons']['index']['url'];
-				$config['url'][0] = 'indexEdit';
-			}
-		}
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
+	public function afterAction(Event $event, ArrayObject $extra)
+	{
+		$this->setFieldOrder($this->_fieldOrder);
 	}
 
 	// Function use by the mini dashboard
-	public function getNumberOfStaffByAttendance($params=[]) {
+	public function getNumberOfStaffByAttendance($params=[])
+	{
 		$query = $params['query'];
 		$selectedDay = $params['selectedDay'];
 
@@ -345,7 +355,8 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.onGetOpenemisNo
-	public function onGetOpenemisNo(Event $event, Entity $entity) {
+	public function onGetOpenemisNo(Event $event, Entity $entity)
+	{
 		$sessionPath = 'Users.staff_absences.';
 		$timeError = $this->Session->read($sessionPath.$entity->staff_id.'.timeError');
 		$startTimestamp = $this->Session->read($sessionPath.$entity->staff_id.'.startTimestamp');
@@ -375,7 +386,7 @@ class StaffAttendancesTable extends AppTable {
 	{
 		$html = '';
 
-		if (!is_null($this->request->query('mode'))) {
+		if (!is_null($this->request->query('mode')) && $this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
 			$Form = $event->subject()->Form;
 
 			$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -468,10 +479,11 @@ class StaffAttendancesTable extends AppTable {
 	}
 
 	// Event: ControllerAction.Model.onGetReason
-	public function onGetReason(Event $event, Entity $entity) {
+	public function onGetReason(Event $event, Entity $entity)
+	{
 		$html = '';
 
-		if (!is_null($this->request->query('mode'))) {
+		if (!is_null($this->request->query('mode')) && $this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
 			$Form = $event->subject()->Form;
 
 			$id = $entity->staff_id;
@@ -552,35 +564,43 @@ class StaffAttendancesTable extends AppTable {
 		return $html;
 	}
 
-	public function onGetSunday(Event $event, Entity $entity) {
+	public function onGetSunday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'sunday');
 	}
 
-	public function onGetMonday(Event $event, Entity $entity) {
+	public function onGetMonday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'monday');
 	}
 
-	public function onGetTuesday(Event $event, Entity $entity) {
+	public function onGetTuesday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'tuesday');
 	}
 
-	public function onGetWednesday(Event $event, Entity $entity) {
+	public function onGetWednesday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'wednesday');
 	}
 
-	public function onGetThursday(Event $event, Entity $entity) {
+	public function onGetThursday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'thursday');
 	}
 
-	public function onGetFriday(Event $event, Entity $entity) {
+	public function onGetFriday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'friday');
 	}
 
-	public function onGetSaturday(Event $event, Entity $entity) {
+	public function onGetSaturday(Event $event, Entity $entity)
+	{
 		return $this->getAbsenceData($event, $entity, 'saturday');
 	}
 
-	public function getAbsenceData(Event $event, Entity $entity, $key) {
+	public function getAbsenceData(Event $event, Entity $entity, $key)
+	{
 		$value = '<i class="fa fa-check"></i>';
 		$currentDay = $this->allDayOptions[$key]['date'];
 
@@ -614,7 +634,11 @@ class StaffAttendancesTable extends AppTable {
 
 		$query = $this->find()
 			->select(['start_date' => $this->aliasField('start_date')])
-			->where([$this->aliasField('staff_id') => $entity->staff_id])
+			->where([
+				$this->aliasField('staff_id') => $entity->staff_id,
+				$this->aliasField('institution_id') => $entity->institution_id
+			])
+			->order([$this->aliasField('start_date') => 'ASC'])
 			->first();
 		$staffStartDate = $query->start_date->format('Y-m-d');
 
@@ -625,9 +649,8 @@ class StaffAttendancesTable extends AppTable {
 		return $value;
 	}
 
-	// Event: ControllerAction.Model.index.beforeAction
-    public function indexBeforeAction(Event $event, ArrayObject $settings) {
-        $query = $settings['query'];
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$periodOptionsData = $AcademicPeriod->getList();
@@ -651,8 +674,14 @@ class StaffAttendancesTable extends AppTable {
 					->count();
 			}
 		]);
+
+		// To add the academic_period_id to export
+        if (isset($extra['toolbarButtons']['export']['url'])) {
+            $extra['toolbarButtons']['export']['url']['academic_period_id'] = $selectedPeriod;
+        }
+
+        $this->request->query['academic_period_id'] = $selectedPeriod;
 		// End setup periods
-		$this->request->query['academic_period_id'] = $selectedPeriod;
 
 		if ($selectedPeriod != 0) {
 			$todayDate = date("Y-m-d");
@@ -660,10 +689,8 @@ class StaffAttendancesTable extends AppTable {
 
 			// Setup week options
 			$weeks = $AcademicPeriod->getAttendanceWeeks($selectedPeriod);
-			$weekStr = 'Week %d (%s - %s)';
 			$weekOptions = [];
 			$currentWeek = null;
-			$selectedWeekDate = [];
 			foreach ($weeks as $index => $dates) {
 				if ($todayDate >= $dates[0]->format('Y-m-d') && $todayDate <= $dates[1]->format('Y-m-d')) {
 					$weekStr = __('Current Week') . ' %d (%s - %s)';
@@ -756,8 +783,6 @@ class StaffAttendancesTable extends AppTable {
 			$this->controller->set(compact('dayOptions', 'selectedDay'));
 			// End setup days
 
-			$settings['pagination'] = false;
-
 			if ($selectedDay == -1) {
 				$startDate = $weekStartDate;
 				$endDate = $weekEndDate;
@@ -769,6 +794,7 @@ class StaffAttendancesTable extends AppTable {
 			$query
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->find('inDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
+				->select(['institution_id'])
 				->contain(['Users'])
 				->find('withAbsence', ['date' => $this->selectedDate])
 				->where([$this->aliasField('institution_id') => $institutionId])
@@ -807,32 +833,27 @@ class StaffAttendancesTable extends AppTable {
 				$staffAttendanceArray[] = ['label' => 'No. of Staff Late for the week', 'value' => $late];
 			}
 
-			$toolbarElements[] = [
+			$extra['elements']['dashboard'] = [
 				'name' => $indexDashboard,
 				'data' => [
 					'model' => 'staff',
 					'modelCount' => $totalStaff,
 					'modelArray' => $staffAttendanceArray,
 				],
-				'options' => []
+				'options' => [],
+				'order' => 0
 			];
 
-			$toolbarElements[] = [
-				'name' => 'Institution.Attendance/controls',
-				'data' => [],
-				'options' => []
-			];
-
-			$this->controller->set('toolbarElements', $toolbarElements);
+			$extra['elements']['controls'] = ['name' => 'Institution.Attendance/controls', 'data' => [], 'options' => [], 'order' => 1];
 
 			if ($selectedDay == -1) {
 				foreach ($this->allDayOptions as $key => $obj) {
-					$this->ControllerAction->addField($key);
+					$this->field($key);
 					$this->_fieldOrder[] = $key;
 				}
 			} else {
-				$this->ControllerAction->field('type', ['tableColumnClass' => 'vertical-align-top']);
-				$this->ControllerAction->field('reason', ['tableColumnClass' => 'vertical-align-top']);
+				$this->field('type', ['tableColumnClass' => 'vertical-align-top']);
+				$this->field('reason', ['tableColumnClass' => 'vertical-align-top']);
 				$this->_fieldOrder[] = 'type';
 				$this->_fieldOrder[] = 'reason';
 				$typeOptions = [self::PRESENT => __('Present')];
@@ -842,22 +863,83 @@ class StaffAttendancesTable extends AppTable {
 				$this->reasonOptions = $StaffAbsenceReasons->getList()->toArray();
 			}
 		} else {
-			$settings['pagination'] = false;
-			$query
-				->where([$this->aliasField('staff_id') => 0]);
+			$query->where([$this->aliasField('staff_id') => 0]);
 
-			$this->ControllerAction->field('type');
-			$this->ControllerAction->field('reason');
+			$this->field('type');
+			$this->field('reason');
 
 			$this->Alert->warning('StaffAttendances.noStaff');
 		}
 	}
 
-	public function indexAfterAction(Event $event, $data) {
-		$this->dataCount = $data->count();
+	public function indexAfterAction(Event $event, Query $query, ResultSet $resultSet, ArrayObject $extra)
+	{
+		$dataCount = $resultSet->count();
+
+		$btnTemplate = [
+			'type' => 'button',
+			'attr' => [
+	            'class' => 'btn btn-xs btn-default',
+	            'data-toggle' => 'tooltip',
+	            'data-placement' => 'bottom',
+	            'escape' => false
+	        ],
+	        'url' => $this->url('index')
+        ];
+
+		if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
+	    	if ($this->request->query('day') != -1) { // only one day selected
+	    		if (!is_null($this->request->query('mode'))) { // edit mode
+
+	    			// enable form, change form action to indexEdit
+	    			$extra['config']['form']['url'] = $this->url('indexEdit');
+
+	    			// Back button
+	    			$extra['toolbarButtons']['back'] = $btnTemplate;
+	    			$extra['toolbarButtons']['back']['attr']['title'] = __('Back');
+	    			$extra['toolbarButtons']['back']['label'] = '<i class="fa kd-back"></i>';
+					if ($extra['toolbarButtons']['back']['url']['mode']) {
+						unset($extra['toolbarButtons']['back']['url']['mode']);
+					}
+
+					// Save button, only can save if there is data
+					if ($dataCount > 0) {
+						$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+						$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Save');
+						$extra['toolbarButtons']['indexEdit']['attr']['onclick'] = 'jsForm.submit();';
+						$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-save"></i>';
+						$extra['toolbarButtons']['indexEdit']['url'] = '#';
+					}
+
+					// unset export button
+					if (isset($extra['toolbarButtons']['export'])) {
+						unset($extra['toolbarButtons']['export']);
+					}
+				} else { // not edit mode
+					// unset Back button
+					if (isset($extra['toolbarButtons']['back'])) {
+						unset($extra['toolbarButtons']['back']);
+					}
+
+					// Edit button, only can edit if there is data
+					if ($dataCount > 0) {
+						$extra['toolbarButtons']['indexEdit'] = $btnTemplate;
+						$extra['toolbarButtons']['indexEdit']['attr']['title'] = __('Edit');
+						$extra['toolbarButtons']['indexEdit']['label'] = '<i class="fa kd-edit"></i>';
+						$extra['toolbarButtons']['indexEdit']['url']['mode'] = 'edit';
+					}
+				}
+			} else { // if user selected All Days, Edit operation will not be allowed
+				// unset Edit button
+				if ($extra['toolbarButtons']->offsetExists('indexEdit')) {
+					$extra['toolbarButtons']->offsetUnset('indexEdit');
+				}
+			}
+		}
 	}
 
-	public function findWithAbsence(Query $query, array $options) {
+	public function findWithAbsence(Query $query, array $options)
+	{
 		$date = $options['date'];
 
 		$conditions = ['StaffAbsences.staff_id = StaffAttendances.staff_id'];
@@ -920,34 +1002,6 @@ class StaffAttendancesTable extends AppTable {
 			->order(['Users.openemis_no'])
 			;
     }
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-    	if ($this->AccessControl->check(['Institutions', 'StaffAttendances', 'indexEdit'])) {
-	    	if ($this->request->query('day') != -1) {
-	    		if (!is_null($this->request->query('mode'))) {
-	    			$toolbarButtons['back'] = $buttons['back'];
-					if ($toolbarButtons['back']['url']['mode']) {
-						unset($toolbarButtons['back']['url']['mode']);
-					}
-					$toolbarButtons['back']['type'] = 'button';
-					$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-					$toolbarButtons['back']['attr'] = $attr;
-					$toolbarButtons['back']['attr']['title'] = __('Back');
-
-					if (isset($toolbarButtons['export'])) {
-						unset($toolbarButtons['export']);
-					}
-				} else {
-					$toolbarButtons['back'] = $buttons['back'];
-					$toolbarButtons['back']['type'] = null;
-				}
-			} else { // if user selected All Days, Edit operation will not be allowed
-				if ($toolbarButtons->offsetExists('edit')) {
-					$toolbarButtons->offsetUnset('edit');
-				}
-			}
-		}
-	}
 
 	public function indexEdit()
 	{
