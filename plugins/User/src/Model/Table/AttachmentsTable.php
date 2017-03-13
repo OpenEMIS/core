@@ -62,7 +62,7 @@ class AttachmentsTable extends ControllerActionTable
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+    	// $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
     	return $events;
     }
 
@@ -81,7 +81,7 @@ class AttachmentsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
     	$query->contain(['SecurityRoles']);
-    }
+	}
 
 	private function setupTabElements() {
 		$options = [
@@ -159,28 +159,28 @@ class AttachmentsTable extends ControllerActionTable
 ** adding download button to index page
 **
 ******************************************************************************************************************/
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+	// public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+	// 	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+	// 	$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
-		$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
-		$buttons['download']['attr'] = $indexAttr;
-		$buttons['download']['url']['action'] = $this->alias.'/download';
-		$buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+	// 	$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
+	// 	$buttons['download']['attr'] = $indexAttr;
+	// 	$buttons['download']['url']['action'] = $this->alias.'/download';
+	// 	$buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
 
-		return $buttons;
-	}
+	// 	return $buttons;
+	// }
 
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if($action == "view"){
-			$toolbarButtons['download']['type'] = 'button';
-			$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
-			$toolbarButtons['download']['attr'] = $attr;
-			$toolbarButtons['download']['attr']['title'] = __('Download');
-			$url = $this->url('download');
-			if(!empty($url['action'])){
-				$toolbarButtons['download']['url'] = $url;
-			}
-		}
-	}
+	// public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+	// 	if($action == "view"){
+	// 		$toolbarButtons['download']['type'] = 'button';
+	// 		$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
+	// 		$toolbarButtons['download']['attr'] = $attr;
+	// 		$toolbarButtons['download']['attr']['title'] = __('Download');
+	// 		$url = $this->url('download');
+	// 		if(!empty($url['action'])){
+	// 			$toolbarButtons['download']['url'] = $url;
+	// 		}
+	// 	}
+	// }
 }
