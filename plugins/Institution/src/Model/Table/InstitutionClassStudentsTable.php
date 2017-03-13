@@ -566,6 +566,7 @@ class InstitutionClassStudentsTable extends AppTable {
         }
     }
 
+<<<<<<< HEAD
     public function findAbsencesByDate(Query $query, array $options) {
         $classId = $options['institution_class_id'];
         $absenceDate = $options['absence_date'];
@@ -617,5 +618,25 @@ class InstitutionClassStudentsTable extends AppTable {
             ->autoFields(true);
 
         return $query;
+=======
+    public function getStudentsList($academicPeriodId, $institutionId, $classId)
+    {
+        $studentResults = $this->find()
+            ->where([
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('institution_class_id') => $classId,
+            ])
+            ->all();
+
+        $studentList = [];
+        if (!$studentResults->isEmpty()) {
+            foreach ($studentResults as $key => $obj) {
+                $studentList[$obj->student_id] = $obj->student_id;
+            }
+        }
+
+        return $studentList;
+>>>>>>> dabd0e9f7b2c021afb8f8073db0f49a9c5f845da
     }
 }

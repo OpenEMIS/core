@@ -120,15 +120,24 @@ class AcademicPeriodBehavior extends Behavior {
 							if ($academicPeriodId != 0 || !empty($academicPeriodId)) {
 								$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 							}
-							if ($editable) {
-								if( !isset($this->_table->request->query['mode'])) {
-									$toolbarButtons['edit'] = $buttons['index'];
-							    	$toolbarButtons['edit']['url'][0] = 'index';
-									$toolbarButtons['edit']['url']['mode'] = 'edit';
-									$toolbarButtons['edit']['type'] = 'button';
-									$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-									$toolbarButtons['edit']['attr'] = $attr;
-									$toolbarButtons['edit']['attr']['title'] = __('Edit');
+							if (!isset($this->_table->request->query['mode'])) {
+								if ($editable) {
+									if ($tableAlias == 'StudentAttendances') {
+										$toolbarButtons['edit'] = $buttons['index'];
+								    	$toolbarButtons['edit']['url'][0] = 'index';
+										$toolbarButtons['edit']['url']['mode'] = 'edit';
+										$toolbarButtons['edit']['type'] = 'button';
+										$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+										$toolbarButtons['edit']['attr'] = $attr;
+										$toolbarButtons['edit']['attr']['title'] = __('Edit');
+									}
+								} else {
+									if ($tableAlias == 'StaffAttendances') {
+										// used for CAv4 logic in StaffAttendance
+										if ($toolbarButtons->offsetExists('indexEdit')) {
+											$toolbarButtons->offsetUnset('indexEdit');
+										}
+									}
 								}
 							}
 						}

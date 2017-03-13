@@ -67,14 +67,26 @@ class FieldOptionBehavior extends Behavior {
 
     public function buildValidator(Event $event, Validator $validator, $name)
     {
-        $validator
-            ->add('name', [
-                'ruleUnique' => [
-                    'rule' => 'validateUnique',
-                    'provider' => 'table',
-                    'message' => __('This field has to be unique')
-                ]
-            ]);
+        $addUniqueName = false;
+        if ($validator->hasField('name')) {
+            $set = $validator->field('name');
+            if (!$set->rule('ruleUnique')) {
+                $addUniqueName = true;
+            }
+        } else {
+            $addUniqueName = true;
+        }
+
+        if ($addUniqueName) {
+            $validator
+                ->add('name', [
+                    'ruleUnique' => [
+                        'rule' => 'validateUnique',
+                        'provider' => 'table',
+                        'message' => __('This field has to be unique')
+                    ]
+                ]);
+        }
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
@@ -138,6 +150,8 @@ class FieldOptionBehavior extends Behavior {
         if ($entity->has('editable') && $entity->editable == false) {
             $model->fields['name']['type'] = 'disabled';
             $model->fields['visible']['type'] = 'disabled';
+            $model->fields['international_code']['type'] = 'disabled';
+            $model->fields['national_code']['type'] = 'disabled';
         }
     }
 
