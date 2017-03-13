@@ -230,7 +230,8 @@ class TrainingSessionResultsTable extends ControllerActionTable
 				$rowData[] = $event->subject()->Html->link($traineeObj->openemis_no , [
 					'plugin' => 'Directory',
 					'controller' => 'Directories',
-					'action' => 'view',
+					'action' => 'Directories',
+					'view',
 					$this->paramsEncode(['id' => $traineeObj->id])
 				]);
 				$rowData[] = $traineeObj->name;

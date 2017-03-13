@@ -642,10 +642,16 @@ trait MessagesTrait {
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
-            'noCriterias' => 'Please setup competency criterias for the selected item',
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
+        ],
+        'UserContacts' => [
+            'noEmailRemain' => 'There should be at least one Email record'
         ],
 
         // Validation Messages
@@ -1016,9 +1022,10 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
-                    'ruleValidatePreferred' => 'Please select a preferred contact type'
+                    'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
             'Identities' => [
@@ -1621,6 +1628,13 @@ trait MessagesTrait {
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
             ],
+        ],
+        'FieldOption' => [
+            'LicenseClassifications' => [
+                'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
