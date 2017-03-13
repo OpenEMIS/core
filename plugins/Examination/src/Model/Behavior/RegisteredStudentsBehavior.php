@@ -94,6 +94,7 @@ class RegisteredStudentsBehavior extends Behavior {
                 $educationGradeId = $entity->education_grade_id;
                 $academicPeriodId = $entity->academic_period_id;
                 $examinationId = $entity->examination_id;
+                $examinationCentreId = $entity->examination_centre_id;
 
                 $result = $model->deleteAll([
                     'student_id' => $studentId,
@@ -103,6 +104,10 @@ class RegisteredStudentsBehavior extends Behavior {
                 ]);
 
                 if ($result) {
+                    // event to delete all associated records for student
+                    $listeners[] = TableRegistry::get('Examination.ExaminationCentreStudents');
+                    $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $academicPeriodId, $examinationId, $examinationCentreId], $this, $listeners);
+
                     $model->Alert->success('general.delete.success', ['reset' => 'override']);
                 } else {
                     $model->Alert->error('general.delete.failed', ['reset' => 'override']);
@@ -153,8 +158,10 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('education_subject_id', ['visible' => false]);
     }
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         $model = $this->_table;
+        $session = $this->_table->Session;
         $where = [];
 
         // Academic Period
@@ -166,7 +173,8 @@ class RegisteredStudentsBehavior extends Behavior {
         // End
 
         // Examination
-        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
+        $institutionId = $session->read('Institution.Institutions.id');
+        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod, $institutionId);
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
         $selectedExamination = !is_null($model->request->query('examination_id')) ? $model->request->query('examination_id') : -1;
         $model->controller->set(compact('examinationOptions', 'selectedExamination'));
@@ -655,13 +663,24 @@ class RegisteredStudentsBehavior extends Behavior {
         return $attr;
     }
 
-    public function getExaminationOptions($selectedAcademicPeriod) {
+    private function getExaminationOptions($selectedAcademicPeriod, $institutionId = null)
+    {
         $model = $this->_table;
-        $examinationOptions = $model->Examinations
+        $examinationQuery = $model->Examinations
             ->find('list')
-            ->where([$model->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
-            ->toArray();
+            ->where([$model->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
+        // in institutions, only show examinations for grades available in the institution
+        if ($model->alias() == 'InstitutionExaminationStudents' && !is_null($institutionId)) {
+            $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+            $availableGrades = $InstitutionGrades
+                ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
+                ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
+                ->toArray();
+            $examinationQuery->where([$model->Examinations->aliasField('education_grade_id IN ') => $availableGrades]);
+        }
+
+        $examinationOptions = $examinationQuery->toArray();
         return $examinationOptions;
     }
 

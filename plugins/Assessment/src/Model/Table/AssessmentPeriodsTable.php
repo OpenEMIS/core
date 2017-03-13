@@ -176,7 +176,6 @@ class AssessmentPeriodsTable extends ControllerActionTable {
                     $requestData[$this->alias()]['education_subjects'][$key]['_joinData']['assessment_id'] = $requestData[$this->alias()]['assessment_id'];
                 }
             }
-            pr($requestData);//die;
         }
 
         $newOptions = ['associated' => ['EducationSubjects']];
