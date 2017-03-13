@@ -17,7 +17,7 @@ class StaffController extends AppController {
 		$this->ControllerAction->models = [
 			'Accounts'			=> ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Attachments'		=> ['className' => 'User.Attachments'],
+			// 'Attachments'		=> ['className' => 'User.Attachments'],
 			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
