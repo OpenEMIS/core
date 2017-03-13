@@ -224,6 +224,12 @@ class InstitutionsTable extends AppTable  {
 			->add('area_id', 'ruleAuthorisedArea', [
 					'rule' => ['checkAuthorisedArea']
 				])
+			->add('area_id', 'ruleConfiguredArea', [
+                    'rule' => ['checkConfiguredArea']
+                ])
+            ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+                    'rule' => ['checkConfiguredArea']
+                ])
 			->add('institution_provider_id', 'ruleLinkedSector', [
 						'rule' => 'checkLinkedSector',
 						'provider' => 'table'

@@ -677,7 +677,11 @@ trait MessagesTrait {
                     'ruleLatitude' => 'Please enter a valid Latitude'
                 ],
                 'area_id' => [
-                    'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.'
+                    'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.',
+                    'configuredArea' => 'Please select area from %s level.'
+                ],
+                'area_administrative_id' => [
+                    'configuredArea' => 'Please select area administrative from %s level.'
                 ],
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
