@@ -445,37 +445,54 @@ class ValidationBehavior extends Behavior {
 	 * @param  array  $globalData [description]
 	 * @return [type]             [description]
 	 */
-	public static function validatePreferred($field, array $globalData) {
-		$flag = false;
-		$preferred = $field;
-		$contactOption = $globalData['data']['contact_option_id'];
-		$userId = $globalData['data']['security_user_id'];
+    public static function validateContact($field, array $globalData) 
+    {
+    	$flag = false;
+        $contactOption = $globalData['data']['contact_option_id'];
+        $userId = $globalData['data']['security_user_id'];
+        $currentField = $globalData['field'];
 
-		if ($preferred == "0" && $contactOption != "5") {
-			$Contacts = TableRegistry::get('User.Contacts');
-			$contactId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
+        $Contacts = TableRegistry::get('User.Contacts');
+    	$contactId = (array_key_exists('id', $globalData['data']))? $globalData['data']['id']: null;
 
-			$query = $Contacts->find();
-			$query->matching('ContactTypes', function ($q) use ($contactOption) {
-				return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-			});
+    	$query = $Contacts
+    			->find()
+    			->matching('ContactTypes', function ($q) use ($contactOption) {
+            		return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+        		})
+        		->where([$Contacts->aliasField('security_user_id') => $userId]);
 
-			if (!empty($contactId)) {
-				$query->where([$Contacts->aliasField($Contacts->primaryKey()) .'!='. $contactId]);
-			}
+        if (!empty($contactId)) {
+            $query->where([$Contacts->aliasField($Contacts->primaryKey()) .'!='. $contactId]);
+        }
 
-			$query->where([$Contacts->aliasField('preferred') => 1]);
-			$query->where([$Contacts->aliasField('security_user_id') => $userId]);
-			$count = $query->count();
+        if ($currentField == 'preferred') {
+        	$preferred = $field;
 
-			if ($count != 0) {
-				$flag = true;
-			}
-		} else {
-			$flag = true;
-		}
-		return $flag;
-	}
+        	if ($preferred == "0" && $contactOption != "5") { //during not preferred set ot contact type is 'others'
+
+	            $query->where([$Contacts->aliasField('preferred') => 1]);
+	            $count = $query->count();
+
+	            if ($count != 0) {
+	                $flag = true;
+	            }
+	        } else {
+	            $flag = true;
+	        }
+
+        } else if ($currentField == 'value') {
+        	$value = $field;
+
+        	$query->where([$Contacts->aliasField('value') => $value]);
+	        $count = $query->count();
+
+            if ($count == 0) {
+                $flag = true;
+            }
+	    }
+        return $flag;
+    }
 
 	public static function validateNeeded($field, $fieldName, array $additionalParameters, array $globalData) {
 		$flag = false;
