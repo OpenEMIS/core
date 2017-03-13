@@ -108,6 +108,17 @@ class ExaminationsTable extends ControllerActionTable {
         }
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        // used to do validation for examination item date
+        if (array_key_exists('examination_items', $data)) {
+            $registrationEndDate = $data['registration_end_date'];
+            foreach ($data['examination_items'] as $key => $value) {
+                $data['examination_items'][$key]['registration_end_date'] = $registrationEndDate;
+            }
+        }
+    }
+
     public function setupFields(Entity $entity)
     {
         $this->field('code');
