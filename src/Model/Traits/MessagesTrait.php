@@ -216,6 +216,10 @@ trait MessagesTrait {
             'multiGrade' => 'Multi Grade',
             'noShift' => 'There are no shifts configured for the selected academic period'
         ],
+        'InstitutionStudentIndexes' => [
+            'noClasses' => 'No Classes',
+            'noStudents' => 'No Students'
+        ],
         'InstitutionSubjects' => [
             'noGrades' => 'No Grades Assigned',
             'noClasses' => 'No Classes',
@@ -425,7 +429,10 @@ trait MessagesTrait {
         ],
         'StudentBehaviours' => [
             'noClasses' => 'No Classes',
-            'noStudents' => 'No Students'
+            'noStudents' => 'No Students',
+            'date_of_behaviour' => [
+                'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+            ],
         ],
         'TransferRequests' => [
             'request' => 'Transfer request has been submitted successfully.',
@@ -635,10 +642,16 @@ trait MessagesTrait {
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
-            'noCriterias' => 'Please setup competency criterias for the selected item',
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
+        ],
+        'UserContacts' => [
+            'noEmailRemain' => 'There should be at least one Email record'
         ],
 
         // Validation Messages
@@ -1009,9 +1022,10 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
-                    'ruleValidatePreferred' => 'Please select a preferred contact type'
+                    'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
             'Identities' => [
@@ -1554,6 +1568,23 @@ trait MessagesTrait {
                 ]
             ]
         ],
+        'Indexes' => [
+            'TableHeader' => [
+                'Criteria',
+                'Operator',
+                'Threshold',
+                'Index'
+            ],
+            'IndexesCriterias' => [
+                'threshold' => [
+                    'ruleRange' => 'Value must be within 1 to 99',
+                    'criteriaThresholdRange' => 'Value must be within %s to %s'
+                ],
+                'index_value' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ]
+            ]
+        ],
         'Textbook' => [
             'Textbooks' => [
                 'code' => [
@@ -1579,6 +1610,9 @@ trait MessagesTrait {
                 ],
             ],
             'CompetencyCriterias' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
                 'percentage' => [
                     'ruleIsDecimal' => 'Value is not a valid decimal',
                     'ruleRange' => 'Mark entered exceeds system limit'
@@ -1594,6 +1628,13 @@ trait MessagesTrait {
                     'ruleUniqueCode' => 'Code must be unique'
                 ],
             ],
+        ],
+        'FieldOption' => [
+            'LicenseClassifications' => [
+                'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
+            ]
         ],
         'Configuration' => [
             'ConfigProductLists' => [
