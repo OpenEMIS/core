@@ -16,7 +16,7 @@ class StaffSystemUsageTable extends AppTable  {
         parent::initialize($config);
 
         $this->addBehavior('Excel', [
-            'excludes' => ['preferred_name', 'email', 'address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'nationality_id', 'identity_type_id', 'identity_number', 'external_reference', 'super_admin', 'status', 'last_login', 'photo_name', 'photo_content', 'preferred_language', 'is_student', 'is_staff', 'is_guardian'],
+            'excludes' => ['preferred_name', 'email', 'address', 'postal_code', 'address_area_id', 'birthplace_area_id', 'gender_id', 'date_of_birth', 'date_of_death', 'nationality_id', 'identity_type_id', 'identity_number', 'external_reference', 'super_admin', 'status', 'photo_name', 'photo_content', 'preferred_language', 'is_student', 'is_staff', 'is_guardian'],
             'pages' => false
         ]);
         $this->addBehavior('Report.ReportList');
@@ -38,26 +38,6 @@ class StaffSystemUsageTable extends AppTable  {
             $lastSevenDays = new Date('-7 days');
             $formattedDate = $lastSevenDays->format('Y-m-d H:i:s');
             $query->where([$this->aliasField('last_login').' >= ' => $formattedDate]);
-        }
-    }
-
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
-    {
-        $fields[] = [
-            'key' => 'StaffSystemUsage.last_login',
-            'field' => 'last_login',
-            'type' => 'integer',
-            'label' => '',
-        ];
-    }
-
-    public function onExcelGetLastLogin(Event $event, Entity $entity)
-    {
-        if ($entity->has('last_login')) {
-            $lastlogin = $entity->last_login;
-            return $lastlogin->nice();
-        } else {
-            return '';
         }
     }
 }
