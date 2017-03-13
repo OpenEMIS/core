@@ -1523,6 +1523,9 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
                 ],
+                'examination_date' => [
+                    'ruleCompareDateReverse' => 'Date should not be earlier than Registration End Date'
+                ]
             ],
             'ExaminationGradingTypes' => [
                 'code' => [
