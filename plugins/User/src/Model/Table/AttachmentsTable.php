@@ -25,7 +25,7 @@ class AttachmentsTable extends ControllerActionTable
 		$this->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
             'joinTable' => 'user_attachments_roles',
-            'foreignKey' => 'attachment_id',
+            'foreignKey' => 'user_attachment_id',
             'targetForeignKey' => 'security_role_id',
             'through' => 'User.AttachmentRoles',
             'dependent' => true
@@ -90,7 +90,7 @@ class AttachmentsTable extends ControllerActionTable
 
             $query->leftJoin(
                     ['AttachmentRoles' => 'user_attachments_roles'],
-                    ['AttachmentRoles.attachment_id = ' . $this->aliasField('id')])
+                    ['AttachmentRoles.user_attachment_id = ' . $this->aliasField('id')])
                 ->where([
                     'OR' => [
                         ['AttachmentRoles.id IS NULL'],
