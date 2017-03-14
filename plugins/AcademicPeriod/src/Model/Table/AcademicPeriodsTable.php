@@ -98,14 +98,15 @@ class AcademicPeriodsTable extends AppTable
         return $events;
     }
 
-    public function onBeforeGetData(Event $event, $primaryKey, $action, ArrayObject $extra)
+    public function onBeforeGetData(Event $event, $action, ArrayObject $extra)
     {
         switch ($action) {
             case 'weeklist':
                 $todayDate = date("Y-m-d");
                 $weekOptions = [];
-                if (is_array($primaryKey) && isset($primaryKey['id'])) {
-                    $academicPeriodId = $primaryKey['id'];
+
+                if (isset($extra['primaryKey']) && is_array($extra['primaryKey']) && isset($extra['primaryKey']['id'])) {
+                    $academicPeriodId = $extra['primaryKey']['id'];
 
                     $weeks = $this->getAttendanceWeeks($academicPeriodId);
                     $weekStr = 'Week %d (%s - %s)';
