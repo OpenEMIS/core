@@ -18,7 +18,7 @@ class AttachmentsTable extends ControllerActionTable
 		$this->table('user_attachments');
 		parent::initialize($config);
 
-		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
+        $this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		
@@ -30,6 +30,15 @@ class AttachmentsTable extends ControllerActionTable
             'through' => 'User.AttachmentRoles',
             'dependent' => true
         ]);
+
+        //change behaviour config
+        if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->config([
+                'actions' => [
+                    'download' => ['show' => true] //to show download on toolbar
+                ]
+            ]);
+        }
 	}
 
 	public function beforeAction(Event $event, ArrayObject $extra) {
@@ -60,12 +69,6 @@ class AttachmentsTable extends ControllerActionTable
         ]);
 	}
 
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	// $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
-
 /******************************************************************************************************************
 **
 ** index action logics
@@ -80,8 +83,24 @@ class AttachmentsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-    	$query->contain(['SecurityRoles']);
-	}
+        //if not super admin then get the security role for filtering purpose
+        if (!$this->AccessControl->isAdmin()) {
+            $securityRole = $this->AccessControl->getRolesByUser($this->Auth->user('id'))->toArray();
+            $securityRole = $securityRole[0]['security_role_id'];
+
+            $query->leftJoin(
+                    ['AttachmentRoles' => 'user_attachments_roles'],
+                    ['AttachmentRoles.attachment_id = ' . $this->aliasField('id')])
+                ->where([
+                    'OR' => [
+                        ['AttachmentRoles.id IS NULL'],
+                        ['AttachmentRoles.security_role_id' => $securityRole]
+                    ]
+                ]);
+        }
+
+        $query->contain(['SecurityRoles']);
+    }
 
 	private function setupTabElements() {
 		$options = [
@@ -118,8 +137,8 @@ class AttachmentsTable extends ControllerActionTable
     	if (!empty($entity->modified_user_id)) {
 	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
 	    }
-
-		return $entity;
+        
+        return $entity;
     }
 
 
@@ -143,7 +162,7 @@ class AttachmentsTable extends ControllerActionTable
 **
 ******************************************************************************************************************/
 	public function onGetFileType(Event $event, Entity $entity) {
-		return $this->getFileTypeForView($entity->file_name);
+        return $this->getFileTypeForView($entity->file_name);
 	}
 
     public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request)
@@ -159,28 +178,21 @@ class AttachmentsTable extends ControllerActionTable
 ** adding download button to index page
 **
 ******************************************************************************************************************/
-	// public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-	// 	$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-	// 	$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        
+        $downloadAccess = $this->AccessControl->check([$this->controller->name, 'Attachments', 'download']);
 
-	// 	$buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
-	// 	$buttons['download']['attr'] = $indexAttr;
-	// 	$buttons['download']['url']['action'] = $this->alias.'/download';
-	// 	$buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+        if ($downloadAccess) {
+            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
-	// 	return $buttons;
-	// }
+            $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
+            $buttons['download']['attr'] = $indexAttr;
+            $buttons['download']['url']['action'] = $this->alias.'/download';
+            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+        }
 
-	// public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-	// 	if($action == "view"){
-	// 		$toolbarButtons['download']['type'] = 'button';
-	// 		$toolbarButtons['download']['label'] = '<i class="fa kd-download"></i>';
-	// 		$toolbarButtons['download']['attr'] = $attr;
-	// 		$toolbarButtons['download']['attr']['title'] = __('Download');
-	// 		$url = $this->url('download');
-	// 		if(!empty($url['action'])){
-	// 			$toolbarButtons['download']['url'] = $url;
-	// 		}
-	// 	}
-	// }
+        return $buttons;
+	}
 }
