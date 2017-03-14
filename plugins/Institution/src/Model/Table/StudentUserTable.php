@@ -134,6 +134,13 @@ class StudentUserTable extends ControllerActionTable
 		$model->hasMany('Extracurriculars', ['className' => 'Student.Extracurriculars',	'foreignKey' => 'security_user_id', 'dependent' => true]);
 	}
 
+	public function implementedEvents()
+	{
+    	$events = parent::implementedEvents();
+        $events['Model.Students.afterSave'] = 'studentsAfterSave';
+    	return $events;
+    }
+
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
@@ -458,6 +465,13 @@ class StudentUserTable extends ControllerActionTable
 		}
 		return $attr;
 	}
+
+    public function studentsAfterSave(Event $event, $student)
+    {
+    	if ($student->isNew()) {
+        	$this->updateAll(['is_student' => 1],['id' => $student->student_id]);
+        }
+    }
 
 	private function checkClassPermission($studentId, $userId)
 	{

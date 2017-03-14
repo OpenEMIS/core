@@ -117,6 +117,12 @@ class StaffUserTable extends ControllerActionTable {
         $model->hasMany('InstitutionRubrics',       ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Staff.afterSave'] = 'staffAfterSave';
+        return $events;
+    }
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $options['associated']['Nationalities'] = [
@@ -203,6 +209,13 @@ class StaffUserTable extends ControllerActionTable {
 
         $this->controller->set('tabElements', $tabElements);
         $this->controller->set('selectedAction', $this->alias());
+    }
+
+    public function staffAfterSave(Event $event, $staff)
+    {
+        if ($staff->isNew()) {
+            $this->updateAll(['is_staff' => 1], ['id' => $staff->staff_id]);
+        }
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)

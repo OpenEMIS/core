@@ -74,23 +74,94 @@ class ContactsTable extends ControllerActionTable {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-    	if ($entity->preferred && $entity->contact_option_id == 4) { // preferred and email
-    		$securityUserId = $entity->security_user_id;
-    		$email = $entity->value;
+        //if preferred set, then unset other preferred for the same contact option
+        if ($entity->dirty('preferred')) {
+            if ($entity->preferred == 1) {
+                $contactOption = $entity->contact_option_id;
+                $contacts = $this->find()
+                            ->matching('ContactTypes', function ($q) use ($contactOption) {
+                                return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                            })
+                            ->where([
+                                $this->aliasField('id !=') => $entity->id,
+                                $this->aliasField('security_user_id') => $entity->security_user_id
+                            ]);
 
-    		// update the user email with preferred email
-    		$this->Users->updateAll(['email' => $email],['id' => $securityUserId]);
-    	}
+                if (!empty($contacts->toArray())) {
+                    foreach ($contacts->toArray() as $key => $value) {
+                        $value->preferred = 0;
+                        $this->save($value);
+                    }
+                }
+
+                if ($contactOption == 4) { //if updating preferred email
+                    //update information on security user table
+                    $listeners = [
+                        TableRegistry::get('User.Users')
+                    ];
+                    $this->dispatchEventToModels('Model.UserContacts.onChange', [$entity], $this, $listeners);
+                }
+            }
+        }
     }
 
-	public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-	{
-		$securityUserId = $entity->security_user_id;
-		$deletedEmail = $entity->value;
+    public function beforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        //for email, check whether has minimum one email record.
+        $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
+        $extra['contactOption'] = $contactOption;//to be passed to afterDelete
+        
+        if ($contactOption == 4) {
+            $query = $this
+                ->find()
+                ->matching('ContactTypes', function ($q) use ($contactOption) {
+                    return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                })
+                ->where([
+                    $this->aliasField('id != ') => $entity->id,
+                    $this->aliasField('security_user_id') => $entity->security_user_id
+                ])
+                ->count();
 
-		// delete the user email
-		$this->Users->updateAll(['email' => NULL],['email' => $deletedEmail]);
-	}
+            if (!$query) {
+                $this->Alert->warning('UserContacts.noEmailRemain', ['reset'=>true]);
+                return false;
+            }
+        }
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $contactOption = $extra['contactOption'];
+        
+        if ($entity->preferred == 1) { //if the preferred contact deleted
+
+            $query = $this->find()
+                    ->matching('ContactTypes', function ($q) use ($contactOption) {
+                        return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                    })
+                    ->where([
+                        $this->aliasField('security_user_id') => $entity->security_user_id,
+                    ])
+                    ->order($this->aliasField('created') . ' DESC')
+                    ->first();
+
+            if (!empty($query)) {
+                $this->updateAll(
+                    ['preferred' => 1], 
+                    ['id' => $query->id]
+                );
+
+                if ($contactOption == 4) { //if the deleted contact option is email
+                    //update information on security user table
+                    $listeners = [
+                        TableRegistry::get('User.Users')
+                    ];
+                    $this->dispatchEventToModels('Model.UserContacts.onChange', [$query], $this, $listeners);
+                }
+            }
+        }
+    }
 
 	// public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
 	// 	//Required by patchEntity for associated data
@@ -170,11 +241,14 @@ class ContactsTable extends ControllerActionTable {
 					return ($contactOptionId == 5);
 				},
 			])
-			// end of value validators
+			//validate at least one preferred on each contact type
 			->add('preferred', 'ruleValidatePreferred', [
-				'rule' => ['validatePreferred'],
+				'rule' => ['validateContact'],
 			])
-			;
+			//validate unique contact value per contact type
+			->add('value', 'ruleUniqueContactValue', [
+                    'rule' => ['validateContact']
+            ]);
 
 		// validation code must always be set because this is also being used by prefererences 'usercontacts'
 		$this->setValidationCode('value.ruleNotBlank', 'User.Contacts');
@@ -182,8 +256,7 @@ class ContactsTable extends ControllerActionTable {
 		$this->setValidationCode('value.ruleValidateEmail', 'User.Contacts');
 		$this->setValidationCode('value.ruleValidateEmergency', 'User.Contacts');
 		$this->setValidationCode('preferred.ruleValidatePreferred', 'User.Contacts');
-
-
+		$this->setValidationCode('value.ruleUniqueContactValue', 'User.Contacts');
 		return $validator;
 	}
 
