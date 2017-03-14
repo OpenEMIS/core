@@ -816,6 +816,8 @@ class InstitutionsController extends AppController
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
         $positionTable = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
+        $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
         $userId = $this->Auth->user('id');
 
         $selectedFTE = empty($fte) ? 0 : $fte;
@@ -829,6 +831,7 @@ class InstitutionsController extends AppController
             ])
             ->where([
                 $StaffTable->aliasField('institution_id') => $institutionId,
+                $StaffTable->aliasField('staff_status_id') => $assignedStatus
             ])
             ->group($StaffTable->aliasField('institution_position_id'))
             ->having([
