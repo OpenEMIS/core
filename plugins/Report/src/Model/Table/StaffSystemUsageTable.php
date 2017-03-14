@@ -37,7 +37,7 @@ class StaffSystemUsageTable extends AppTable  {
         } else if ($selectedUsageType == 2) {
             $lastSevenDays = new Date('-7 days');
             $formattedDate = $lastSevenDays->format('Y-m-d H:i:s');
-            $query->where([$this->aliasField('last_login').' >= ' => $formattedDate]);
+            $query->where([$this->aliasField('last_login').' > ' => $formattedDate]);
         }
     }
 }
