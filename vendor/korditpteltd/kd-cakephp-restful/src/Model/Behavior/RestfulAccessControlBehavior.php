@@ -4,6 +4,7 @@ namespace Restful\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
+use Cake\Log\Log;
 
 class RestfulAccessControlBehavior extends Behavior {
 
@@ -67,12 +68,16 @@ class RestfulAccessControlBehavior extends Behavior {
      */
     public function isAuthorized(Event $event, $scope, $action, ArrayObject $extra)
     {
+        Log::write('debug', $scope);
+        Log::write('debug', $action);
         $authorisedScopes = $this->getScopes();
         if (array_key_exists($scope, $authorisedScopes)) {
             if (in_array($action, $authorisedScopes[$scope])) {
+                Log::write('debug', 'ok pass');
                 return true;
             }
         }
+        Log::write('debug', 'not ok');
         return false;
     }
 }
