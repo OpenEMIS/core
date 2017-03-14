@@ -538,15 +538,21 @@ class InstitutionRoomsTable extends AppTable
 	public function onUpdateFieldRoomTypeId(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add') {
-			$roomTypeRecords = $this->RoomTypes
+			$classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
+			$roomTypeOptions = $this->RoomTypes
+					->find('list', [
+						'keyField' => 'id',
+					    'valueField' => 'name',
+					    'groupField' => function ($roomType) use ($classificationOptions) {
+					        return $classificationOptions[$roomType->classification];
+					    }
+					])
 					->find('visible')
-					->order(['order']);
-
-			$roomTypeOptions = [];
-			foreach ($roomTypeRecords as $obj) {
-				$classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
-				$roomTypeOptions[$classificationOptions[$obj->classification]][$obj->id] = $obj->name;
-			}
+					->order([
+						$this->RoomTypes->aliasField('classification') => 'ASC',
+						$this->RoomTypes->aliasField('order') => 'ASC'
+					])
+					->toArray();
 
 			$attr['options'] = $roomTypeOptions;
 			$attr['onChangeReload'] = 'changeRoomType';
