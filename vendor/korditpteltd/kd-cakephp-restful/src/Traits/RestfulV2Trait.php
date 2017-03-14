@@ -442,6 +442,7 @@ trait RestfulV2Trait {
         if ($attribute instanceof MutableDateTime || $attribute instanceof Chronos) {
             $attribute = $attribute->format('H:i:s');
         }
+        return $attribute;
     }
 
     private function convertBase64ToBinary(Entity $entity)
