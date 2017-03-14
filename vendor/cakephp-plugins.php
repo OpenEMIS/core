@@ -49,6 +49,7 @@ return [
         'Textbook' => $baseDir . '/plugins/Textbook/',
         'Training' => $baseDir . '/plugins/Training/',
         'User' => $baseDir . '/plugins/User/',
+        'Webhook' => $baseDir . '/plugins/Webhook/',
         'Workflow' => $baseDir . '/plugins/Workflow/'
     ]
 ];
