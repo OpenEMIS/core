@@ -62,6 +62,34 @@ class InstitutionStudentAbsencesTable extends AppTable {
         return $events;
     }
 
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+    	if (array_key_exists('full_day', $data) && !empty($data['full_day'])) {
+    		$fullDay = $data['full_day'];
+    		if ($fullDay == 1) {
+				$data['start_time'] = null;
+				$data['end_time'] = null;
+    		}
+    	}
+
+    	if (array_key_exists('absence_type_id', $data) && !empty($data['absence_type_id'])) {
+			$absenceTypeId = $data['absence_type_id'];
+			$absenceTypeCode = $this->absenceCodeList[$absenceTypeId];
+			switch ($absenceTypeCode) {
+				case 'EXCUSED':
+					$data['start_time'] = null;
+					$data['end_time'] = null;
+					break;
+
+				case 'UNEXCUSED':
+					$data['start_time'] = null;
+					$data['end_time'] = null;
+					$data['student_absence_reason_id'] = 0;
+					break;
+			}
+    	}
+    }
+
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
 		$query
