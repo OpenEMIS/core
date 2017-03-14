@@ -5,18 +5,24 @@ use App\Model\Table\ControllerActionTable;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
-use Cake\Network\Session;
 use Cake\ORM\Entity;
-use Cake\Filesystem\Folder;
-use Cake\Filesystem\File;
+use Cake\ORM\Query;
 use ArrayObject;
+use Cake\ORM\TableRegistry;
+use App\Model\Traits\OptionsTrait;
 
 class ConfigWebhooksTable extends ControllerActionTable {
+    use OptionsTrait;
+
+    private $eventKeyOptions = [
+        'login' => 'Login',
+        'logout' => 'Logout'
+    ];
 
 	public function initialize(array $config) {
 		$this->table('webhooks');
 		parent::initialize($config);
-        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace']);
+        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id']);
         $this->addBehavior('Configuration.ConfigItems');
 	}
 
@@ -30,10 +36,18 @@ class ConfigWebhooksTable extends ControllerActionTable {
                 'provider' => 'table'
             ])
             ->requirePresence('url')
-            ->requirePresence('event_key')
-            ->notEmpty('event_key')
             ->add('url', 'invalidUrl', [
                 'rule' => ['url', true]
+            ])
+            ->add('triggered_event', 'ruleNotEmpty', [
+                'rule' => function ($value, $context) {
+                    if (empty($value)) {
+                        return false;
+                    } else if (isset($value['_ids']) && empty($value['_ids'])) {
+                        return false;
+                    }
+                    return true;
+                }
             ])
             ;
         return $validator;
@@ -41,9 +55,61 @@ class ConfigWebhooksTable extends ControllerActionTable {
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $supportedMethod = TableRegistry::get('Webhook.Webhooks')->supportedMethod;
+        $this->fields['description']['visible']['index'] = false;
         $this->field('name');
         $this->field('url', ['type' => 'string']);
-        $this->field('file_name', ['visible' => false]);
-        $this->fields['deletable']['visible'] = false;
+        $this->field('status', ['options' => $this->getSelectOptions('general.active')]);
+        $this->field('method', ['options' => $supportedMethod]);
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('triggered_event', [
+            'type' => 'chosenSelect',
+            'options' => $this->eventKeyOptions,
+            'before' => 'description',
+            'attr' => ['required' => true]
+        ]);
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $data['webhook_events'] = [];
+        if (is_array($data['triggered_event']['_ids'])) {
+            foreach ($data['triggered_event']['_ids'] as $event) {
+                $data['webhook_events'][] = ['event_key' => $event];
+            }
+        }
+        $options['associated'] = [
+            'WebhookEvents' => [
+                'validate' => false
+            ]
+        ];
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $extra['elements']['indexElement'] = $this->buildSystemConfigFilters();
+    }
+
+    public function buildSystemConfigFilters() {
+        $toolbarElements = [
+            ['name' => 'Configuration.webhook_controls', 'data' => [], 'options' => []]
+        ];
+        $eventKeyOptions = $this->eventKeyOptions;
+        $selectedKey = $this->queryString('event_key', $eventKeyOptions);
+        $this->request->query['event_key'] = $eventKeyOptions[$selectedKey];
+        $this->advancedSelectOptions($eventKeyOptions, $selectedKey);
+        $eventKeyOptions = array_values($eventKeyOptions);
+        $controlElement = $toolbarElements[0];
+        $controlElement['data'] = ['eventKeyOptions' => $eventKeyOptions];
+        $controlElement['order'] = 2;
+        return $controlElement;
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->innerJoinWith('WebhookEvents')->where(['WebhookEvents.event_key' => $this->request->query('event_key')]);
     }
 }
