@@ -131,7 +131,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'on' => 'create'
 				]
 			])
-
+			->allowEmpty('start_time', function ($context) {
+			    if (array_key_exists('full_day', $context['data'])) {
+			        return $context['data']['full_day'];
+			    }
+			    return false;
+			})
 			->requirePresence('start_time', function ($context) {
 			    if (array_key_exists('full_day', $context['data'])) {
 			        return !$context['data']['full_day'];
@@ -144,6 +149,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'on' => 'create'
 				]
 			])
+			->allowEmpty('end_time', function ($context) {
+			    if (array_key_exists('full_day', $context['data'])) {
+			        return $context['data']['full_day'];
+			    }
+			    return false;
+			})
 			->requirePresence('end_time', function ($context) {
 			    if (array_key_exists('full_day', $context['data'])) {
 			        return !$context['data']['full_day'];
