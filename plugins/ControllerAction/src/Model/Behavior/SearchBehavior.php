@@ -27,7 +27,6 @@ class SearchBehavior extends Behavior {
 		$session = $request->session();
 		$pageOptions = $extra['config']['pageOptions'];
 
-		$limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : key($pageOptions);
 		$search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';
 
 		if ($request->is(['post', 'put'])) {
@@ -35,23 +34,13 @@ class SearchBehavior extends Behavior {
 				if (array_key_exists('searchField', $request->data['Search'])) {
 					$search = trim($request->data['Search']['searchField']);
 				}
-
-				if (array_key_exists('limit', $request->data['Search'])) {
-					$limit = $request->data['Search']['limit'];
-					$session->write($alias.'.search.limit', $limit);
-				}
 			}
 		}
 
 		$session->write($alias.'.search.key', $search);
 		$request->data['Search']['searchField'] = $search;
-		$request->data['Search']['limit'] = $limit;
 
 		$extra['config']['search'] = $search;
-
-		if ($extra['pagination']) {
-			$extra['options']['limit'] = $pageOptions[$limit];
-		}
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {

@@ -42,6 +42,27 @@ class IndexBehavior extends Behavior {
 
 		$event = $model->dispatchEvent('ControllerAction.Model.index.beforeAction', [$extra], $this);
 
+		if ($extra['pagination']) {
+			$alias = $model->registryAlias();
+			$session = $model->request->session();
+			$request = $model->request;
+			$pageOptions = $extra['config']['pageOptions'];
+
+			$limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : key($pageOptions);
+
+			if ($request->is(['post', 'put'])) {
+				if (isset($request->data['Search'])) {
+					if (array_key_exists('limit', $request->data['Search'])) {
+						$limit = $request->data['Search']['limit'];
+						$session->write($alias.'.search.limit', $limit);
+					}
+				}
+			}
+
+			$request->data['Search']['limit'] = $limit;
+			$extra['options']['limit'] = $pageOptions[$limit];
+		}
+
 		if ($event->isStopped()) {
             $mainEvent->stopPropagation();
             return $event->result;
