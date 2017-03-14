@@ -38,6 +38,7 @@ class RestfulController extends BaseController
             'controller' => 'Users',
             'action' => 'login'
         ]);
+        Log::write('debug', $this->request);
     }
 
     public function beforeFilter(Event $event)
