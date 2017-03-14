@@ -21,7 +21,7 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
         $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
-        $this->belongsTo('IdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
+        $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
         $this->hasMany('Identities',        ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
@@ -73,11 +73,11 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             ]
         ]);
 
-        $query->contain(['MainNationalities', 'IdentityTypes']);
+        $query->contain(['MainNationalities', 'MainIdentityTypes']);
 
         $query->select([
                     'EndDate' => 'InstitutionStudent.end_date', 'StudentStatus' => 'StudentStatus.name', 'AcademicPeriod' => 'AcademicPeriod.name', 'EducationGrade' => 'EducationGrade.name',
-                    'nationality_id' => 'MainNationalities.name', 'identity_type_id' => 'IdentityTypes.name'
+                    'nationality_id' => 'MainNationalities.name', 'identity_type_id' => 'MainIdentityTypes.name'
                 ]);
         $query->autoFields('true');
 
