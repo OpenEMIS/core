@@ -1653,6 +1653,14 @@ trait MessagesTrait {
                     'invalidUrl' => 'You have entered an invalid URL.',
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
+            ],
+            'ConfigWebhooks' => [
+                'triggered_event' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL'
+                ]
             ]
         ],
         'Alert' => [

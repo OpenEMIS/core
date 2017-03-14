@@ -12,6 +12,14 @@ class WebhooksTable extends Table
     const ACTIVE = 1;
     const INACTIVE = 0;
 
+    public $supportedMethod = [
+        'GET' => 'GET',
+        'POST' => 'POST',
+        'PUT' => 'PUT',
+        'PATCH' => 'PATCH',
+        'DELETE' => 'DELETE'
+    ];
+
     public function initialize(array $config)
     {
         parent::initialize($config);
