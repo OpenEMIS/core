@@ -60,6 +60,6 @@ class WebhooksTable extends Table
                 'WebhookEvents.event_key' => $eventKey,
                 $this->aliasField('status') => self::ACTIVE
             ])
-            ->select([$this->aliasField('url')]);
+            ->select([$this->aliasField('url'), $this->aliasField('method')]);
     }
 }
