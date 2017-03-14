@@ -653,6 +653,9 @@ trait MessagesTrait {
         'UserContacts' => [
             'noEmailRemain' => 'There should be at least one Email record'
         ],
+        'Reports' => [
+            'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
+        ],
 
         // Validation Messages
         'Institution' => [
