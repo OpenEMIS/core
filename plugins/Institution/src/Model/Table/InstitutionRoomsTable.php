@@ -538,6 +538,23 @@ class InstitutionRoomsTable extends AppTable
 	public function onUpdateFieldRoomTypeId(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'add') {
+			$classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
+			$roomTypeOptions = $this->RoomTypes
+					->find('list', [
+						'keyField' => 'id',
+					    'valueField' => 'name',
+					    'groupField' => function ($roomType) use ($classificationOptions) {
+					        return $classificationOptions[$roomType->classification];
+					    }
+					])
+					->find('visible')
+					->order([
+						$this->RoomTypes->aliasField('classification') => 'ASC',
+						$this->RoomTypes->aliasField('order') => 'ASC'
+					])
+					->toArray();
+
+			$attr['options'] = $roomTypeOptions;
 			$attr['onChangeReload'] = 'changeRoomType';
 		} else if ($action == 'edit') {
 			$selectedEditType = $request->query('edit_type');
@@ -641,6 +658,7 @@ class InstitutionRoomsTable extends AppTable
 	{
 		if ($action == 'add' || $action == 'edit') {
 			$session = $request->session();
+			$entity = $attr['entity'];
 
 			if ($session->check('Institution.Institutions.id') && !is_null($this->currentAcademicPeriod)) {
                 $institutionId = $session->read('Institution.Institutions.id');
@@ -648,6 +666,18 @@ class InstitutionRoomsTable extends AppTable
 
 				$attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
 			}
+
+			// POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
+			$visibility = false;
+			if ($entity->has('room_type_id')) {
+				$classificationTypeId = $this->RoomTypes->getClassificationTypes($entity->room_type_id);
+
+				if ($classificationTypeId == 1) { // Classroom
+					$visibility = true;
+				}
+			}
+			$attr['visible'] = $visibility;
+			// end POCOR-3849
 
 			if (!$this->canUpdateDetails) {
 				$attr['visible'] = false;
@@ -757,7 +787,8 @@ class InstitutionRoomsTable extends AppTable
             'fieldNameKey' => 'subjects',
             'fieldName' => $this->alias() . '.subjects._ids',
             'placeholder' => $this->getMessage($this->aliasField('select_subject')),
-            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>'
+            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>',
+            'entity' => $entity
         ]);
 		$this->ControllerAction->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
 		$this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
