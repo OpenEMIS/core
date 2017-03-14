@@ -59,6 +59,9 @@ trait OptionsTrait {
 					'1' => '100%'
 				],
 			],
+			'RoomTypes' => [
+				'classifications' => [0 => __('Non-Classroom'), 1 => __('Classroom')]
+			],
 			'InstitutionRooms' => [
 				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Room Type')]
 			],
