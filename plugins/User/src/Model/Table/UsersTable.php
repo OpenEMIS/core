@@ -113,7 +113,50 @@ class UsersTable extends AppTable {
     }
 
 	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
-        return false;
+       	$openemisNo = $this->getUniqueOpenemisId();
+
+        $GenderTable = TableRegistry::get('User.Genders');
+        $genderList = $GenderTable->find('list')->toArray();
+
+        // Just in case the gender is others
+        if (!isset($userInfo['gender'])) {
+        	$userInfo['gender'] = null;
+        }
+        $gender = array_search($userInfo['gender'], $genderList);
+        if ($gender === false) {
+            $gender = key($genderList);
+        }
+
+        if (isset($userInfo['dateOfBirth'])) {
+			try {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', $userInfo['dateOfBirth']);
+			} catch (\Exception $e) {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+			}
+        } else {
+        	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+        }
+
+
+        $date = Time::now();
+        $data = [
+            'username' => $userName,
+            'openemis_no' => $openemisNo,
+            'first_name' => $userInfo['firstName'],
+            'last_name' => $userInfo['lastName'],
+            'gender_id' => $gender,
+            'date_of_birth' => $dateOfBirth,
+            'super_admin' => 0,
+            'status' => 1,
+            'created_user_id' => 1,
+            'created' => $date,
+        ];
+        $userEntity = $this->newEntity($data, ['validate' => false]);
+        if ($this->save($userEntity)) {
+        	return $userName;
+        } else {
+        	return false;
+        }
 	}
 
 	public static function handleAssociations($model) {
@@ -659,7 +702,7 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function onChangeUserNationalities(Event $event, Entity $entity) 
+	public function onChangeUserNationalities(Event $event, Entity $entity)
 	{
 		$nationalityId = $entity->nationality_id;
 		$Nationalities = TableRegistry::get('FieldOption.Nationalities');
@@ -693,15 +736,15 @@ class UsersTable extends AppTable {
                 'nationality_id' => $nationalityId,
                 'identity_type_id' => $nationality->identity_type_id,
                 'identity_number' => $identityNumber
-            ], 
+            ],
             ['id' => $entity->security_user_id]
         );
 	}
 
-    public function onChangeUserIdentities(Event $event, Entity $entity) 
+    public function onChangeUserIdentities(Event $event, Entity $entity)
     {
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
-        
+
         //check whether identity number / type is tied to preferred nationality.
         $isPreferredNationality = $UserNationalityTable
                                 ->find()
@@ -737,13 +780,13 @@ class UsersTable extends AppTable {
                     'nationality_id' => $preferredNationality->nationality_id,
                     'identity_type_id' => $preferredNationality->identityTypeId,
                     'identity_number' => $identityNumber
-                ], 
+                ],
                 ['id' => $entity->security_user_id]
             );
         }
     }
 
-	public function onChangeNationalities(Event $event, Entity $entity) 
+	public function onChangeNationalities(Event $event, Entity $entity)
     {
         $nationalityId = $entity->id;
         $identityTypeId = $entity->identity_type_id;
@@ -758,24 +801,24 @@ class UsersTable extends AppTable {
                 SELECT `security_user_id`, `identity_type_id`, `number`
                 FROM `user_identities` `U1`
                 WHERE `created` = (
-                    SELECT MAX(`created`) 
-                    FROM `user_identities` 
+                    SELECT MAX(`created`)
+                    FROM `user_identities`
                     WHERE  `security_user_id` = `U1`.`security_user_id`
                     AND `identity_type_id` = ?
                 )
-            )AS UI 
+            )AS UI
                 ON (
-                    `UI`.`identity_type_id` = `N`.`identity_type_id` 
+                    `UI`.`identity_type_id` = `N`.`identity_type_id`
                     AND `UI`.`security_user_id` = `SU`.`id`
                 )
-            SET 
-                `SU`.`identity_type_id` = ?, 
+            SET
+                `SU`.`identity_type_id` = ?,
                 `SU`.`identity_number` = `UI`.`number`',
             [$nationalityId,$identityTypeId,$identityTypeId],['integer','integer','integer']
         );
     }
 
-    public function onChangeUserContacts(Event $event, Entity $entity) 
+    public function onChangeUserContacts(Event $event, Entity $entity)
     {
         $securityUserId = $entity->security_user_id;
         $email = $entity->value;
