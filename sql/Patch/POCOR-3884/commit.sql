@@ -26,3 +26,13 @@ CREATE TABLE `webhook_events` (
   `event_key` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`webhook_id`, `event_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of webhook events';
+
+-- config_product_lists
+CREATE TABLE `z_3884_config_product_lists` LIKE `config_product_lists`;
+
+INSERT INTO `z_3884_config_product_lists`
+SELECT * FROM `config_product_lists`;
+
+ALTER TABLE `config_product_lists`
+DROP COLUMN `auto_logout_url`,
+DROP COLUMN `auto_login_url`;
