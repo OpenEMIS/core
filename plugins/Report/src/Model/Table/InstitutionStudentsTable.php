@@ -62,13 +62,85 @@ class InstitutionStudentsTable extends AppTable  {
 				$this->aliasField('student_status_id') => $statusId
 			]);
 		}
+
+        $statusOptions = $this->StudentStatuses
+            ->find('list', ['keyField' => 'id', 'valueField' => 'code'])
+            ->toArray();
 		
 		$query
 			->contain(['Users.Genders', 'Users.MainNationalities', 'Institutions.Areas', 'Institutions.Types'])
 			->select([
                 'openemis_no' => 'Users.openemis_no', 'number' => 'Users.identity_number', 'code' => 'Institutions.code', 'preferred_nationality' => 'MainNationalities.name', 
                 'gender_name' => 'Genders.name', 'area_name' => 'Areas.name', 'area_code' => 'Areas.code', 'institution_type' => 'Types.name'
-            ]);
+            ])
+            ->formatResults(function (ResultSetInterface $results) use ($statusOptions, $statusId) {
+                return $results->map(function ($row) use ($statusOptions, $statusId) {
+                    $statusCode = $statusOptions[$statusId];
+
+                    $studentId = $row['student_id'];
+                    $institutionId = $row['institution_id'];
+                    $educationGradeId = $row['education_grade_id'];
+                    $academicPeriodId = $row['academic_period_id'];
+
+                    switch ($statusCode) {
+                        case 'TRANSFERRED':
+                            $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+                            $query = $StudentAdmission->find()
+                                    ->contain(['StudentTransferReasons', 'Institutions.Areas'])
+                                    ->where([
+                                        $StudentAdmission->aliasField('student_id') => $studentId,
+                                        $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
+                                        $StudentAdmission->aliasField('education_grade_id') => $educationGradeId,
+                                        $StudentAdmission->aliasField('academic_period_id') => $academicPeriodId,
+                                        $StudentAdmission->aliasField('status') => 1 //approved
+                                    ])
+                                    ->first();
+                            
+                            if (!empty($query)) {
+                                $row['transfer_institution'] = $query->institution->code_name;
+                                $row['transfer_institution_area_name'] = $query->institution->area->name;
+                                $row['transfer_institution_area_code'] = $query->institution->area->code;
+                                $row['transfer_comment'] = $query->comment;
+                                $row['transfer_reason'] = $query->student_transfer_reason->name;
+                            }
+                            break;
+
+                        case 'WITHDRAWN':
+                            $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
+                            $studentWithdrawEntity = $StudentWithdraw
+                                ->find()
+                                ->contain(['StudentWithdrawReasons'])
+                                ->where([
+                                    $StudentWithdraw->aliasField('student_id') => $studentId,
+                                    $StudentWithdraw->aliasField('institution_id') => $institutionId,
+                                    $StudentWithdraw->aliasField('education_grade_id') => $educationGradeId,
+                                    $StudentWithdraw->aliasField('academic_period_id') => $academicPeriodId,
+                                    $StudentWithdraw->aliasField('status') => 1 //approved
+                                ])
+                                ->first();
+                            
+                            if (!empty($studentWithdrawEntity)) {
+                                $row['withdraw_comment'] = $studentWithdrawEntity->comment;
+                                $row['withdraw_reason'] = $studentWithdrawEntity->student_withdraw_reason->name;
+                            }
+                            break;
+
+                        case 'GRADUATED':
+                            break;
+
+                        case 'PROMOTED':
+                            break;
+
+                        case 'REPEATED':
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    return $row;
+                });
+            });
     }
 
 	public function onExcelRenderAge(Event $event, Entity $entity, $attr) {
@@ -82,100 +154,7 @@ class InstitutionStudentsTable extends AppTable  {
 			}
 		}
 		return $age;
-	}
-
-    public function onExcelGetWithdrawComment(Event $event, Entity $entity)
-    {
-        $StudentWithdraw = TableRegistry::get('Institution.StudentWithdraw');
-        $query = $StudentWithdraw->find()
-                ->where([
-                    $StudentWithdraw->aliasField('student_id') => $entity->student_id,
-                    $StudentWithdraw->aliasField('institution_id') => $entity->institution_id,
-                    $StudentWithdraw->aliasField('education_grade_id') => $entity->education_grade_id,
-                    $StudentWithdraw->aliasField('academic_period_id') => $entity->academic_period_id,
-                    $StudentWithdraw->aliasField('status') => 1 //approved
-                ])
-                ->first();
-
-        $entity->student_withdraw_reasons = '';
-        if (!empty($query)) {
-            $entity->student_withdraw_reasons = $query->student_withdraw_reason_id;
-            return $query->comment;
-        }
-    }
-
-    public function onExcelGetWithdrawReason(Event $event, Entity $entity)
-    {
-        $StudentWithdrawReasons = TableRegistry::get('Institution.StudentWithdrawReasons');
-
-        if (!empty($entity->student_withdraw_reasons)) {
-            return $StudentWithdrawReasons->get($entity->student_withdraw_reasons)->name;
-        }
-    }
-
-    public function onExcelGetTransferComment(Event $event, Entity $entity)
-    {
-        $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-        $query = $StudentAdmission->find()
-                ->where([
-                    $StudentAdmission->aliasField('student_id') => $entity->student_id,
-                    $StudentAdmission->aliasField('previous_institution_id') => $entity->institution_id,
-                    $StudentAdmission->aliasField('education_grade_id') => $entity->education_grade_id,
-                    $StudentAdmission->aliasField('academic_period_id') => $entity->academic_period_id,
-                    $StudentAdmission->aliasField('status') => 1 //approved
-                ])
-                ->first();
-
-        $entity->student_transfer_reasons = '';
-        $entity->student_transfer_to_institution = '';
-        if (!empty($query)) {
-            $entity->student_transfer_reasons = $query->student_transfer_reason_id;
-            $entity->student_transfer_to_institution = $query->institution_id;
-            return $query->comment;
-        }
-    }
-
-    public function onExcelGetTransferReason(Event $event, Entity $entity)
-    {
-        $StudentTransferReasons = TableRegistry::get('Institution.StudentTransferReasons');
-
-        if (!empty($entity->student_transfer_reasons)) {
-            return $StudentTransferReasons->get($entity->student_transfer_reasons)->name;
-        }
-    }
-
-    public function onExcelGetTransferInstitution(Event $event, Entity $entity)
-    {
-        if (!empty($entity->student_transfer_to_institution)) {
-            $query = $this->Institutions->get($entity->student_transfer_to_institution);
-            $student_transfer_to_institution_area = '';
-            if (!empty($query)) {
-                $entity->student_transfer_to_institution_area = $query->area_id;
-                return $query->code_name;
-            }
-        }
-    }
-
-    public function onExcelGetTransferInstitutionAreaName(Event $event, Entity $entity)
-    {
-        $Areas = TableRegistry::get('Area.Areas');
-        if (!empty($entity->student_transfer_to_institution_area)) {
-            $query = $Areas->get($entity->student_transfer_to_institution_area);
-            if (!empty($query)) {
-                $entity->student_transfer_to_institution_area_code = $query->code;
-                return $query->name;
-            }
-        }
-    }
-
-    public function onExcelGetTransferInstitutionAreaCode(Event $event, Entity $entity)
-    {
-        if (!empty($entity->student_transfer_to_institution_area_code)) {
-            return $entity->student_transfer_to_institution_area_code;
-        }
-    }
-
-    
+	}    
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
 		$IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
@@ -287,14 +266,14 @@ class InstitutionStudentsTable extends AppTable  {
         $newFields = array_merge($extraField, $fields->getArrayCopy());
         
         if ($statusId == $this->statuses['CURRENT']) {
-            $withdrawExtraField[] = [
+            $enrolledExtraField[] = [
                 'key' => 'MainNationalities.name',
                 'field' => 'preferred_nationality',
                 'type' => 'string',
                 'label' => __('Preferred Nationality')
             ];
 
-            $outputFields = array_merge($newFields, $withdrawExtraField);
+            $outputFields = array_merge($newFields, $enrolledExtraField);
             $fields->exchangeArray($outputFields);
 
         } else if ($statusId == $this->statuses['WITHDRAWN']) {
