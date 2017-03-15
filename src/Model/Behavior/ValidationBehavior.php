@@ -187,7 +187,7 @@ class ValidationBehavior extends Behavior {
         if ($globalData['field'] == 'area_id') {
             $Areas = TableRegistry::get('Area.Areas');
             $AreaLevels = TableRegistry::get('Area.AreaLevels');
-            $check = $Areas->get($check)->area_level_id;
+            $check = $AreaLevels->get($Areas->get($check)->area_level_id)->level;
             if ($check != $validateAreaLevel) {
                 $configuredAreaLevel = $AreaLevels->get($validateAreaLevel)->name;
                 $validationErrorMsg = $model->getMessage('Institution.Institutions.area_id.configuredArea', ['sprintf' => [$configuredAreaLevel]]);
