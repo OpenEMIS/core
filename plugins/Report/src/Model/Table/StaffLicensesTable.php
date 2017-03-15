@@ -57,6 +57,13 @@ class StaffLicensesTable extends AppTable  {
         $newArray = [];
 
         $newArray[] = [
+            'key' => 'StaffLicenses.status_id',
+            'field' => 'status_id',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newArray[] = [
             'key' => 'Users.openemis_no',
             'field' => 'openemis_no',
             'type' => 'string',
