@@ -15,14 +15,13 @@ class ConfigWebhooksTable extends ControllerActionTable {
     use OptionsTrait;
 
     private $eventKeyOptions = [
-        'login' => 'Login',
         'logout' => 'Logout'
     ];
 
 	public function initialize(array $config) {
 		$this->table('webhooks');
 		parent::initialize($config);
-        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id']);
+        $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
 	}
 
@@ -51,6 +50,25 @@ class ConfigWebhooksTable extends ControllerActionTable {
             ])
             ;
         return $validator;
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->contain(['WebhookEvents']);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['WebhookEvents']);
+    }
+
+    public function editOnInitialize(Event $event, Entity $entity)
+    {
+        $this->request->data[$this->alias()]['triggered_event']['_ids'] = [];
+        foreach ($entity->webhook_events as $event) {
+            $this->request->data[$this->alias()]['triggered_event']['_ids'][] = $event->event_key;
+        }
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -90,7 +108,18 @@ class ConfigWebhooksTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $extra['elements']['indexElement'] = $this->buildSystemConfigFilters();
+        $this->field('event');
+        $this->setFieldOrder(['event', 'name', 'url', 'status', 'method']);
+        // $extra['elements']['indexElement'] = $this->buildSystemConfigFilters();
+    }
+
+    public function onGetEvent(Event $event, Entity $entity)
+    {
+        $returnString = '';
+        foreach ($entity->webhook_events as $event) {
+            $returnString = $returnString . ', ' . __($this->eventKeyOptions[$event->event_key]);
+        }
+        return ltrim($returnString, ', ');
     }
 
     public function buildSystemConfigFilters() {
@@ -106,10 +135,5 @@ class ConfigWebhooksTable extends ControllerActionTable {
         $controlElement['data'] = ['eventKeyOptions' => $eventKeyOptions];
         $controlElement['order'] = 2;
         return $controlElement;
-    }
-
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query->innerJoinWith('WebhookEvents')->where(['WebhookEvents.event_key' => $this->request->query('event_key')]);
     }
 }
