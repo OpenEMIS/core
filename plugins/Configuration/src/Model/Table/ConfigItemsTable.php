@@ -160,7 +160,7 @@ class ConfigItemsTable extends AppTable {
 				$ids = $this->paramsDecode($pass[0]);
 				$entity = $this->get($ids);
 
-
+				// pr($entity);
 				if ($entity->field_type == 'Dropdown') {
 
 					$exp = explode(':', $entity->option_type);
@@ -272,7 +272,7 @@ class ConfigItemsTable extends AppTable {
 				$model = $this->getActualModeLocation($model);
 				$optionsModel = TableRegistry::get($model);
 
-				if ($entity->code == 'institution_area_level_id') {
+				if ($entity->code == 'institution_area_level_id' || $entity->code == 'institution_validate_area_level_id') {
 	                // get area level from value
 	                $value = $optionsModel->find()
 	                    ->where([$optionsModel->aliasField('level') => $entity->$valueField])
