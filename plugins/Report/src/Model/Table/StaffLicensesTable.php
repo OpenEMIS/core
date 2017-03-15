@@ -13,8 +13,10 @@ class StaffLicensesTable extends AppTable  {
     {
         $this->table('staff_licenses');
         parent::initialize($config);
+        $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
         $this->belongsToMany('LicenseClassifications', [
             'className' => 'FieldOption.LicenseClassifications',
             'joinTable' => 'staff_licenses_classifications',
@@ -22,7 +24,6 @@ class StaffLicensesTable extends AppTable  {
             'targetForeignKey' => 'license_classification_id',
             'through' => 'Staff.StaffLicensesClassifications'
         ]);
-        $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 
         $this->addBehavior('Excel', [
             'excludes' => ['status_id', 'assignee_id', 'staff_id', 'license_type_id'],
