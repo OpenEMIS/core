@@ -169,12 +169,17 @@ class RestfulController extends AppController
 
     private function _instantiateModel($model)
     {
+        Log::write('debug', '_instantiateModel before: ' . $model);
         $model = str_replace('-', '.', $model);
+        Log::write('debug', '_instantiateModel after: ' . $model);
         if (Configure::read('debug')) {
             $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+            Log::write('debug', '_instantiateModel 1111: ' . $_connectionName);
             $target = TableRegistry::get($model, ['connectionName' => $_connectionName]);
+            Log::write('debug', '_instantiateModel 1111 after: ' . $_connectionName);
         } else {
             $target = TableRegistry::get($model);
+            Log::write('debug', '_instantiateModel 2222: ' . $target);
         }
 
         try {
