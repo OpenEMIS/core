@@ -17,12 +17,13 @@ class StaffLicensesTable extends AppTable  {
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('LicenseTypes', ['className' => 'FieldOption.LicenseTypes']);
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
-        $this->belongsToMany('LicenseClassifications', [
+        $this->belongsToMany('Classifications', [
             'className' => 'FieldOption.LicenseClassifications',
             'joinTable' => 'staff_licenses_classifications',
             'foreignKey' => 'staff_license_id',
             'targetForeignKey' => 'license_classification_id',
-            'through' => 'Staff.StaffLicensesClassifications'
+            'through' => 'Staff.StaffLicensesClassifications',
+            'dependent' => true
         ]);
 
         $this->addBehavior('Excel', [
@@ -39,17 +40,15 @@ class StaffLicensesTable extends AppTable  {
         $selectedStatus = !empty($requestData->status) ? $requestData->status : null;
 
         $query
-            ->select([
-                'openemis_no' => 'Users.openemis_no',
-                'classification' => 'LicenseClassifications.name'
-            ])
-            ->contain(['Users'])
-            ->matching('WorkflowSteps.WorkflowStatuses')
-            ->matching('LicenseClassifications')
+            ->select(['openemis_no' => 'Users.openemis_no'])
+            ->contain(['Users', 'Classifications'])
             ->order([$this->aliasField('staff_id')]);
 
         if (!is_null($selectedStatus)) {
-            $query->where(['WorkflowStatuses.id' => $selectedStatus]);
+            $query
+                ->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
+                    return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
+                });
         }
     }
 
@@ -72,7 +71,7 @@ class StaffLicensesTable extends AppTable  {
         ];
 
         $newArray[] = [
-            'key' => 'LicenseClassifications.name',
+            'key' => 'Classifications.name',
             'field' => 'classification',
             'type' => 'string',
             'label' => _('Classification'),
@@ -87,5 +86,18 @@ class StaffLicensesTable extends AppTable  {
 
         $newFields = array_merge($newArray, $fields->getArrayCopy());
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelGetClassification(Event $event, Entity $entity)
+    {
+        if ($entity->has('classifications')) {
+            $classifications = [];
+            foreach ($entity->classifications as $obj) {
+                $classifications[] = $obj->name;
+            }
+            return implode(', ', $classifications);
+        } else {
+            return '';
+        }
     }
 }
