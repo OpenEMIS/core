@@ -137,21 +137,16 @@ class RestfulV2Component extends Component implements RestfulInterface
     public function add()
     {
         $table = $this->initTable($this->model);
-        Log::write('debug', 'in add');
         if ($table) {
-            Log::write('debug', 'in add -> table found');
             $user = $this->controller->getUser();
             $extra = new ArrayObject(['table' => $table, 'action' => 'custom', 'functionName' => 'add', 'blobContent' => true, 'user' => $user]);
             $requestQueries = $this->request->query;
             $this->processQueryString($requestQueries, null, $extra);
             $action = $extra['action'];
             $options = ['extra' => $extra];
-            Log::write('debug', 'in add -> before new entity');
             $entity = $table->newEntity($this->request->data, $options);
-            Log::write('debug', 'in add -> after patching');
             $entity = $this->convertBase64ToBinary($entity);
             $table->save($entity, $options);
-            Log::write('debug', 'in add -> after save');
             $errors = $entity->errors();
             $data = $this->formatResultSet($table, $entity, $extra);
             if ($extra->offsetExists('flatten') && $extra['flatten'] === true) {
