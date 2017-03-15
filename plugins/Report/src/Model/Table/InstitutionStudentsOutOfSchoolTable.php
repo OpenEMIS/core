@@ -20,6 +20,8 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         $this->belongsTo('Genders', ['className' => 'User.Genders']);
         $this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
         $this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+        $this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+        $this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
         $this->hasMany('Identities',        ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('Excel', [
@@ -71,7 +73,12 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             ]
         ]);
 
-        $query->select(['EndDate' => 'InstitutionStudent.end_date', 'StudentStatus' => 'StudentStatus.name', 'AcademicPeriod' => 'AcademicPeriod.name', 'EducationGrade' => 'EducationGrade.name']);
+        $query->contain(['MainNationalities', 'MainIdentityTypes']);
+
+        $query->select([
+                    'EndDate' => 'InstitutionStudent.end_date', 'StudentStatus' => 'StudentStatus.name', 'AcademicPeriod' => 'AcademicPeriod.name', 'EducationGrade' => 'EducationGrade.name',
+                    'nationality_id' => 'MainNationalities.name', 'identity_type_id' => 'MainIdentityTypes.name'
+                ]);
         $query->autoFields('true');
 
         $query->where([$this->aliasField('is_student') => 1]);
@@ -160,19 +167,6 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
             'type' => 'Age',
             'label' => 'Age',
         ];
-
-        foreach ($fields as $key => $field) { 
-            //get the value from the table, but change the label to become default identity type.
-            if ($field['field'] == 'identity_number') { 
-                $fields[$key] = [
-                    'key' => 'InstitutionStudentsOutOfSchool.identity_number',
-                    'field' => 'identity_number',
-                    'type' => 'string',
-                    'label' => __($identity->name)
-                ];
-                break;
-            }
-        }
 
         $newFields = array_merge($extraField, $fields->getArrayCopy());
         $fields->exchangeArray($newFields);
