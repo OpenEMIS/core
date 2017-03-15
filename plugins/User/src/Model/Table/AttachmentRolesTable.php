@@ -19,7 +19,7 @@ class AttachmentRolesTable extends AppTable {
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {	
         if ($entity->isNew()) {
-            $hashString = $entity->attachment_id . ',' . $entity->security_role_id;
+            $hashString = $entity->user_attachment_id . ',' . $entity->security_role_id;
             $entity->id = Security::hash($hashString, 'sha256');
         }
     }

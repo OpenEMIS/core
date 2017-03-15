@@ -92,11 +92,15 @@ class AttachmentsTable extends ControllerActionTable
                     ['AttachmentRoles' => 'user_attachments_roles'],
                     ['AttachmentRoles.user_attachment_id = ' . $this->aliasField('id')])
                 ->where([
-                    'OR' => [
-                        ['AttachmentRoles.id IS NULL'],
-                        ['AttachmentRoles.security_role_id' => $securityRole]
-                    ]
-                ]);
+                	'OR' => [
+	                    'OR' => [ //if share not set or has the active user security roles
+	                        ['AttachmentRoles.id IS NULL'],
+	                        ['AttachmentRoles.security_role_id' => $securityRole]
+	                    ],
+	                    $this->aliasField('created_user_id') => $this->Auth->user('id') //show to the creator
+	                ]
+                ])
+                ->distinct();
         }
 
         $query->contain(['SecurityRoles']);
