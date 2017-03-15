@@ -33,6 +33,10 @@ CREATE TABLE `z_3884_config_product_lists` LIKE `config_product_lists`;
 INSERT INTO `z_3884_config_product_lists`
 SELECT * FROM `config_product_lists`;
 
+UPDATE `config_product_lists`
+SET `config_product_lists`.`url` = `config_product_lists`.`auto_login_url`
+WHERE `config_product_lists`.`auto_login_url` IS NOT NULL OR `config_product_lists`.`auto_login_url` <> '';
+
 ALTER TABLE `config_product_lists`
 DROP COLUMN `auto_logout_url`,
 DROP COLUMN `auto_login_url`;

@@ -14,7 +14,9 @@ ADD COLUMN `auto_logout_url` TEXT NULL AFTER `auto_login_url`;
 
 UPDATE `config_product_lists`
 INNER JOIN `z_3884_config_product_lists` on `z_3884_config_product_lists`.`id` = `config_product_lists`.`id`
-SET `config_product_lists`.`auto_login_url` = `z_3884_config_product_lists`.`auto_login_url`, `config_product_lists`.`auto_logout_url` = `z_3884_config_product_lists`.`auto_logout_url`;
+SET `config_product_lists`.`auto_login_url` = `z_3884_config_product_lists`.`auto_login_url`,
+    `config_product_lists`.`auto_logout_url` = `z_3884_config_product_lists`.`auto_logout_url`,
+    `config_product_lists`.`url` = `z_3884_config_product_lists`.`url`;
 
 DROP TABLE `z_3884_config_product_lists`;
 
