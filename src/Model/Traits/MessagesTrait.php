@@ -663,8 +663,12 @@ trait MessagesTrait {
                 'noSubjectSelected' => 'There is no subject selected',
                 'noProgrammes' => 'There is no programme set for this institution',
                 'noSections' => 'There is no class under the selected academic period',
+                'date_opened' => [
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
                 'date_closed' => [
-                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
+                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened',
+                    'ruleMoreThanToday' => 'Date should not be earlier than today'
                 ],
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email',
