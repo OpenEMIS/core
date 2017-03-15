@@ -44,21 +44,7 @@ if ($session->check('System.User.roles')) {
 					if ($name != '_divider') {
 						$target = isset($attr['target']) ? $attr['target'] : '_self';
 						echo '<li>';
-						echo '<a href="'.$this->Url->build($attr['url']).'" target="' . $target. '"';
-
-						if ($name == 'Logout') {
-							$url = [
-								'plugin' => 'Webhook',
-								'controller' => 'Webhooks',
-								'action' => 'listWebhooks'
-							];
-							echo ' onclick="Webhook.triggerEvent(\''.$this->Url->build($url).'\', \'logout\');"';
-						}
-
-						echo '>';
-						echo '<i class="fa ' . $attr['icon'] . '"></i>';
-						echo '<span> ' . __($name) . '</span>';
-						echo '</a>';
+						echo $this->Html->link('<i class="fa ' . $attr['icon'] . '"></i><span> ' . __($name) . '</span>', $this->Url->build($attr['url']), $attr);
 						echo '</li>';
 					} else {
 						echo '<li class="divider"></li>';

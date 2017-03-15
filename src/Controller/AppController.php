@@ -19,6 +19,7 @@ use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
 
 /**
  * Application Controller
@@ -51,7 +52,7 @@ class AppController extends Controller {
 	public function initialize() {
 		parent::initialize();
 
-		
+
 
 		// ControllerActionComponent must be loaded before AuthComponent for it to work
 		$this->loadComponent('ControllerAction.ControllerAction', [
@@ -89,11 +90,21 @@ class AppController extends Controller {
 		$this->loadComponent('Localization.Localization', [
 			'productName' => $this->productName
 		]);
+		$url = [
+			'plugin' => 'Webhook',
+			'controller' => 'Webhooks',
+			'action' => 'listWebhooks'
+		];
+		$logoutWebhook = 'Webhook.triggerEvent(\''.Router::url($url).'\', \'logout\');';
 		$this->loadComponent('OpenEmis.OpenEmis', [
 			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
 			'headerMenu' => [
 				'Preferences' => [
 					'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
+				],
+				'Logout' => [
+					'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
+					'onclick' => $logoutWebhook
 				]
 			],
 			'productName' => $this->productName,
