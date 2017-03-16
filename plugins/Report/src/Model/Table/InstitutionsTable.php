@@ -282,7 +282,7 @@ class InstitutionsTable extends AppTable
 					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
 				return $attr;
-			} else if ((in_array($feature, ['Report.StaffAbsences'])) || (in_array($feature, ['Report.StudentAbsences']))) {
+			} else if (in_array($feature, ['Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave'])) {
 				$academicPeriodOptions = [];
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 				$periodOptions = $AcademicPeriodTable->getList();
