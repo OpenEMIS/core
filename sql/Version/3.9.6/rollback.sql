@@ -1,3 +1,8 @@
+-- POCOR-2059
+-- db_patches
+DELETE FROM `system_patches` WHERE `issue`='POCOR-2509';
+
+
 -- POCOR-3680
 -- security_group_users
 DROP TABLE IF EXISTS `security_group_users`;
