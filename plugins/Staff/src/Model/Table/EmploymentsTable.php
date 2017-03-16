@@ -4,6 +4,7 @@ namespace Staff\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class EmploymentsTable extends ControllerActionTable {
@@ -25,6 +26,14 @@ class EmploymentsTable extends ControllerActionTable {
 		]);
 	}
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->allowEmpty('file_content');
+    }
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('employment_type_id', ['type' => 'select', 'before' => 'employment_date']);
 
@@ -42,10 +51,16 @@ class EmploymentsTable extends ControllerActionTable {
     public function onGetEmploymentTypeId(Event $event, Entity $entity) 
     {
         if ($this->action == 'index') {
+            if ($this->controller->plugin == 'Staff') {
+                $action = 'Employments';
+            } else if ($this->controller->plugin == 'Directory') {
+                $action = 'StaffEmployments';
+            }
+            
             $url = $event->subject()->HtmlField->link($entity->employment_type->name, [
                         'plugin' => $this->controller->plugin,
                         'controller' => $this->controller->name,
-                        'action' => 'StaffEmployments',
+                        'action' => $action,
                         'view',
                         $this->paramsEncode(['id' => $entity->id])
                     ]);
