@@ -153,10 +153,6 @@ class UsersController extends AppController
             $user = $this->Auth->user();
 
             if (!empty($user)) {
-                if ($this->SSO->getAuthenticationType() != 'Local') {
-                    $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_login_url'])->toArray();
-                    TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
-                }
                 $listeners = [
                     TableRegistry::get('Security.SecurityUserLogins'),
                     $this->Users

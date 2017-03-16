@@ -38,7 +38,7 @@ class ValidationBehavior extends Behavior {
 					}
 					$ruleAttr['message'] = $this->getMessage($code);
 				}
-				if (method_exists($this, $ruleAttr['rule'])) {
+				if (!is_callable ($ruleAttr['rule']) && method_exists($this, $ruleAttr['rule'])) {
 					$ruleAttr['provider'] = 'custom';
 				}
 				$set->add($ruleName, $ruleAttr);
@@ -445,7 +445,7 @@ class ValidationBehavior extends Behavior {
 	 * @param  array  $globalData [description]
 	 * @return [type]             [description]
 	 */
-    public static function validateContact($field, array $globalData) 
+    public static function validateContact($field, array $globalData)
     {
     	$flag = false;
         $contactOption = $globalData['data']['contact_option_id'];
