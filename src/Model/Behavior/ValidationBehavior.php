@@ -438,8 +438,8 @@ class ValidationBehavior extends Behavior {
 	 */
 	public static function moreThanToday($field, $equal = false, array $globalData) {
 		$label = Inflector::humanize($field);
-		$enteredDate = new Date($field);
-		$today = new Date('now');
+		$enteredDate = new DateTime($field);
+		$today = new DateTime('now');
 		if($equal) {
 			return $enteredDate >= $today;
 		} else {
