@@ -15,7 +15,8 @@ class ConfigWebhooksTable extends ControllerActionTable {
     use OptionsTrait;
 
     private $eventKeyOptions = [
-        'logout' => 'Logout'
+        'logoutSSODisabled' => 'Logout (SSO Disabled)',
+        'logoutSSOEnabled' => 'Logout (SSO Enabled)'
     ];
 
 	public function initialize(array $config) {

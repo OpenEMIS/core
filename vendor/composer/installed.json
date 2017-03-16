@@ -3045,17 +3045,17 @@
     },
     {
         "name": "korditpteltd/kd-cakephp-webhooks",
-        "version": "v1.0.2",
-        "version_normalized": "1.0.2.0",
+        "version": "v1.0.3",
+        "version_normalized": "1.0.3.0",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
-            "reference": "204c193f4fb980cb49bec56d9cccaf98d628d0d7"
+            "reference": "b90ddf4fd8fe65f36ce8d566edd8e96a80974642"
         },
         "require": {
             "cakephp/cakephp": ">3.1.0"
         },
-        "time": "2017-03-15 02:59:33",
+        "time": "2017-03-16 01:31:27",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
