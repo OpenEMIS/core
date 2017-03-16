@@ -12,7 +12,7 @@ class EmploymentsTable extends ControllerActionTable {
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('EmploymentTypes',` ['className' => 'FieldOption.EmploymentTypes']);
+		$this->belongsTo('EmploymentTypes', ['className' => 'FieldOption.EmploymentTypes']);
 
 		$this->behaviors()->get('ControllerAction')->config('actions.search', false);
 		$this->addBehavior('ControllerAction.FileUpload', [
