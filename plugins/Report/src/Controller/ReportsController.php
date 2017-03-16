@@ -65,7 +65,8 @@ class ReportsController extends AppController {
 				'Report.Staff' => __('Staff'),
 				'Report.StaffIdentities' => __('Identities'),
 				'Report.StaffContacts' => __('Contacts'),
-				'Report.StaffQualifications' => __('Qualifications')
+				'Report.StaffQualifications' => __('Qualifications'),
+				'Report.StaffEmployment' => __('Employment')
 			];
         } else if ($module == 'Textbooks') {
             $options = [
