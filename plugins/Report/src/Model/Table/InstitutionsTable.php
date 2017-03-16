@@ -91,7 +91,6 @@ class InstitutionsTable extends AppTable
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('type', ['type' => 'hidden']);
 		// $this->ControllerAction->field('license', ['type' => 'hidden']);
-		$this->ControllerAction->field('leaveDate', ['type' => 'hidden']);
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -170,19 +169,6 @@ class InstitutionsTable extends AppTable
 				$attr['value'] = self::NO_FILTER;
 			}
 		}
-	}
-
-	public function onUpdateFieldLeaveDate(Event $event, array $attr, $action, Request $request) {
-		if (isset($this->request->data[$this->alias()]['feature'])) {
-			$feature = $this->request->data[$this->alias()]['feature'];
-			if (in_array($feature, ['Report.InstitutionStaffOnLeave'])) {
-				$attr['type'] = 'date';
-				return $attr;
-			}
-		} else {
-			$attr['value'] = self::NO_FILTER;
-		}
-
 	}
 
 	public function onUpdateFieldLicense(Event $event, array $attr, $action, Request $request) {
