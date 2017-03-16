@@ -19,6 +19,7 @@ use Cake\Event\Event;
 use ControllerAction\Model\Traits\ControllerActionTrait;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
 
 /**
  * Application Controller
@@ -41,6 +42,12 @@ class AppController extends Controller {
 		'OpenEmis.Resource'
 	];
 
+	private $webhookListUrl = [
+			'plugin' => 'Webhook',
+			'controller' => 'Webhooks',
+			'action' => 'listWebhooks'
+		];
+
 	/**
 	 * Initialization hook method.
 	 *
@@ -51,7 +58,7 @@ class AppController extends Controller {
 	public function initialize() {
 		parent::initialize();
 
-		
+
 
 		// ControllerActionComponent must be loaded before AuthComponent for it to work
 		$this->loadComponent('ControllerAction.ControllerAction', [
@@ -89,11 +96,16 @@ class AppController extends Controller {
 		$this->loadComponent('Localization.Localization', [
 			'productName' => $this->productName
 		]);
+		$logoutWebhook = 'Webhook.triggerEvent(\''.Router::url($this->webhookListUrl).'\', [\'logoutSSODisabled\']);';
 		$this->loadComponent('OpenEmis.OpenEmis', [
 			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
 			'headerMenu' => [
 				'Preferences' => [
 					'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
+				],
+				'Logout' => [
+					'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
+					'onclick' => $logoutWebhook
 				]
 			],
 			'productName' => $this->productName,
@@ -140,6 +152,18 @@ class AppController extends Controller {
 		if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
+	}
+
+	public function beforeFilter(Event $event)
+	{
+		if ($this->SSO->getAuthenticationType() != 'Local') {
+			$logoutWebhook = 'Webhook.triggerEvent(\''.Router::url($this->webhookListUrl).'\', [\'logoutSSOEnabled\']);';
+			$this->OpenEmis->config('headerMenu', [
+				'Logout' => [
+					'onclick' => $logoutWebhook
+				]
+			]);
+		}
 	}
 
 	// Triggered from LocalizationComponent
