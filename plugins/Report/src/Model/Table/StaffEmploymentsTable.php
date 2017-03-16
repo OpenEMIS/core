@@ -8,10 +8,9 @@ use Cake\ORM\Query;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class StaffEmploymentTable extends AppTable {
+class StaffEmploymentsTable extends AppTable {
     public function initialize(array $config)
     {
-        $this->table('staff_employments');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
         $this->belongsTo('EmploymentTypes', ['className' => 'FieldOption.EmploymentTypes']);
@@ -42,14 +41,14 @@ class StaffEmploymentTable extends AppTable {
         ];
 
         $newArray[] = [
-            'key' => 'StaffEmployment.staff_id',
+            'key' => 'StaffEmployments.staff_id',
             'field' => 'staff_id',
             'type' => 'integer',
             'label' => ''
         ];
 
         $newArray[] = [
-            'key' => 'StaffEmployment.employment_type_id',
+            'key' => 'StaffEmployments.employment_type_id',
             'field' => 'employment_type_id',
             'type' => 'integer',
             'label' => ''
