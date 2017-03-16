@@ -26,7 +26,8 @@ class StaffEmploymentTable extends AppTable {
     {
         $query
             ->select(['openemis_no' => 'Users.openemis_no'])
-            ->contain(['Users']);
+            ->contain(['Users'])
+            ->order([$this->aliasField('staff_id')]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
