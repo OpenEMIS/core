@@ -26,16 +26,22 @@ class StaffLeaveTable extends AppTable {
         $this->addBehavior('Report.ReportList');
     }
 
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+        $sheets[] = [
+            'name' => $this->alias(),
+            'table' => $this,
+            'query' => $this->find(),
+            'orientation' => 'landscape'
+        ];
+    }
+
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
 
-        $query
-            ->select(['openemis_no' => 'Users.openemis_no'])
-            ->contain(['Users']);
-
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
+            // cannot use academic period finder because date fields are not start_date and end_date
             $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
             $periodObj = $AcademicPeriods->findById($academicPeriodId)->first();
 
@@ -70,6 +76,11 @@ class StaffLeaveTable extends AppTable {
                 ]);
             }
         }
+
+        $query
+            ->select(['openemis_no' => 'Users.openemis_no', 'code' => 'Institutions.code'])
+            ->contain(['Users', 'Institutions'])
+            ->order([$this->aliasField('date_from')]);
     }
 
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields)
@@ -84,9 +95,16 @@ class StaffLeaveTable extends AppTable {
         ];
 
         $newFields[] = [
+            'key' => 'Institutions.code',
+            'field' => 'code',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
             'key' => 'StaffLeave.institution_id',
             'field' => 'institution_id',
-            'type' => 'string',
+            'type' => 'integer',
             'label' => ''
         ];
 
@@ -140,9 +158,5 @@ class StaffLeaveTable extends AppTable {
         ];
 
         $fields->exchangeArray($newFields);
-    }
-
-    public function onExcelGetInstitutionId(Event $event, Entity $entity) {
-        return $entity->institution->code_name;
     }
 }
