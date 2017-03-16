@@ -81,7 +81,7 @@ class StaffLicensesTable extends AppTable  {
             'key' => 'Classifications.name',
             'field' => 'classification',
             'type' => 'string',
-            'label' => _('Classification'),
+            'label' => __('Classification'),
         ];
 
         $newArray[] = [
