@@ -6,12 +6,10 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
-use OpenEmis\Model\Traits\ProductListsTrait;
 use Cake\Event\Event;
 use Cake\I18n\Time;
 
 class ApplicationSwitcherComponent extends Component {
-    use ProductListsTrait;
 
     private $controller;
     private $productName;
@@ -22,14 +20,13 @@ class ApplicationSwitcherComponent extends Component {
     }
 
     public function startup(Event $event) {
-        $productList = $this->productList;
         $controller = $this->controller;
-        $displayProducts = $this->onUpdateProductList($productList);
+        $displayProducts = $this->onUpdateProductList();
         $controller->set('products', $displayProducts);
         $controller->set('showProductList', !empty($displayProducts));
     }
 
-    public function onUpdateProductList(array $productList)
+    public function onUpdateProductList()
     {
         $displayProducts = [];
         $session = $this->request->session();
@@ -45,20 +42,6 @@ class ApplicationSwitcherComponent extends Component {
                 ])
                 ->hydrate(false)
                 ->toArray();
-            $productListData = array_flip(array_column($productListOptions, 'name'));
-            $productListData[$this->productName] = '';
-            $productLists = array_diff_key($productList, $productListData);
-            foreach ($productLists as $product => $value) {
-                $data = [
-                    'name' => $product,
-                    'url' => '',
-                    'deletable' => 0,
-                    'created_user_id' => 1,
-                    'created' => Time::now()
-                ];
-                $entity = $ConfigProductLists->newEntity($data);
-                $ConfigProductLists->save($entity);
-            }
 
             $dir = new Folder(WWW_ROOT . 'img' . DS . 'product_list_logo', true);
             $filesAndFolders = $dir->read();
@@ -67,40 +50,32 @@ class ApplicationSwitcherComponent extends Component {
             foreach ($productListOptions as $product) {
                 $name = $product['name'];
                 if (!empty($product['url'])) {
-                    if (isset($productList[$name])) {
-                        $displayProducts[$name] = [
-                            'name' => $productList[$name]['name'],
-                            'icon' => $productList[$name]['icon'],
-                            'url' => $product['url']
-                        ];
-                    } else {
-                        $icon = 'kd-openemis';
-                        $imagePath = '';
-                        if (!empty($product['file_name'])) {
-                            $imagePath = WWW_ROOT . 'img' . DS . 'product_list_logo' . DS . $product['file_name'];
-                        }
-
-                        if (!empty($product['file_name']) && !empty($product['file_content'])) {
-                            if (!in_array($product['file_name'], $files)) {
-                                $newImage = new File($imagePath, true);
-                                $status = $newImage->write(stream_get_contents($product['file_content']));
-                                if ($status) {
-                                    $icon = '';
-                                } else {
-                                    $newImage->delete();
-                                }
-                            } else {
-                                $icon = '';
-                            }
-                        }
-
-                        $displayProducts[$name] = [
-                            'name' => $name,
-                            'icon' => $icon,
-                            'file_name' => $product['file_name'],
-                            'url' => $product['url']
-                        ];
+                    $icon = 'kd-openemis';
+                    $imagePath = '';
+                    if (!empty($product['file_name'])) {
+                        $imagePath = WWW_ROOT . 'img' . DS . 'product_list_logo' . DS . $product['file_name'];
                     }
+
+                    if (!empty($product['file_name']) && !empty($product['file_content'])) {
+                        if (!in_array($product['file_name'], $files)) {
+                            $newImage = new File($imagePath, true);
+                            $status = $newImage->write(stream_get_contents($product['file_content']));
+                            if ($status) {
+                                $icon = '';
+                            } else {
+                                $newImage->delete();
+                            }
+                        } else {
+                            $icon = '';
+                        }
+                    }
+
+                    $displayProducts[$name] = [
+                        'name' => $name,
+                        'icon' => $icon,
+                        'file_name' => $product['file_name'],
+                        'url' => $product['url']
+                    ];
                 }
             }
             $session->write('ConfigProductLists.list', $displayProducts);
