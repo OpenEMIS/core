@@ -265,18 +265,16 @@ class InstitutionStudentsTable extends AppTable  {
 
         $newFields = array_merge($extraField, $fields->getArrayCopy());
         
-        if ($statusId == $this->statuses['CURRENT']) {
-            $enrolledExtraField[] = [
-                'key' => 'MainNationalities.name',
-                'field' => 'preferred_nationality',
-                'type' => 'string',
-                'label' => __('Preferred Nationality')
-            ];
+        $enrolledExtraField[] = [
+            'key' => 'MainNationalities.name',
+            'field' => 'preferred_nationality',
+            'type' => 'string',
+            'label' => __('Preferred Nationality')
+        ];
 
-            $outputFields = array_merge($newFields, $enrolledExtraField);
-            $fields->exchangeArray($outputFields);
+        $newFields = array_merge($newFields, $enrolledExtraField);
 
-        } else if ($statusId == $this->statuses['WITHDRAWN']) {
+        if ($statusId == $this->statuses['WITHDRAWN']) {
             $withdrawExtraField[] = [
                 'key' => 'StudentWithdraw.comment',
                 'field' => 'withdraw_comment',
