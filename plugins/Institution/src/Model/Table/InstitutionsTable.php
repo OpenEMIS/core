@@ -165,11 +165,8 @@ class InstitutionsTable extends AppTable  {
 	        ->add('date_opened', 'ruleLessThanToday', [
 				'rule' => ['lessThanToday', true]
 				])
-			->add('date_closed', 'ruleMoreThanToday', [
-				'rule' => ['moreThanToday', true]
-				])
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'date_opened', false]
+		            'rule' => ['compareDateReverse', 'date_opened', true]
 	    	    ])
 	        ->allowEmpty('longitude')
 			->add('longitude', 'ruleLongitude', [
@@ -349,8 +346,6 @@ class InstitutionsTable extends AppTable  {
 
 	public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
 	{
-		$today = new Date();
-		$attr['date_options']['startDate'] = $today->format('d-m-Y');
 		$attr['default_date'] = false;
 		return $attr;
 	}
