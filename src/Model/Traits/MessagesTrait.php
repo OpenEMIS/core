@@ -667,8 +667,7 @@ trait MessagesTrait {
                     'ruleLessThanToday' => 'Date should not be later than today'
                 ],
                 'date_closed' => [
-                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened',
-                    'ruleMoreThanToday' => 'Date should not be earlier than today'
+                    'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
                 ],
                 'email' => [
                     'ruleValidEmail' => 'Please enter a valid Email',
