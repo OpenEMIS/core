@@ -81,10 +81,6 @@ class AttendanceAlertShell extends Shell
                     }
                 }
             }
-            sleep(15); // 15 seconds
-
-            // trigger the send email shell
-            $this->AlertLogs->triggerSendingAlertShell('SendingAlert');
 
             $filesArray = $dir->find('AttendanceAlert.stop');
         } while (empty($filesArray));
