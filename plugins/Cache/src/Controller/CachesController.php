@@ -5,6 +5,7 @@ use Cache\Controller\AppController;
 use Cake\Event\Event;
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
+use Cake\Core\Configure;
 
 class CachesController extends AppController
 {
@@ -16,7 +17,7 @@ class CachesController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $this->Auth->allow(['clear', 'server']);
+        $this->Auth->allow(['clear', 'server', 'pull']);
     }
 
     public function clear()
@@ -35,5 +36,15 @@ class CachesController extends AppController
     {
         $this->autoRender = false;
         echo gethostname();
+    }
+
+    public function pull()
+    {
+        $this->autoRender = false;
+        if (Configure::read('debug')) {
+            $output = [];
+            exec('git pull', $output);
+            pr($output);
+        }
     }
 }
