@@ -45,6 +45,9 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			],
 			'pages' => ['index']
 		]);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
+        ]);
 
 		$this->addBehavior('Indexes.Indexes');
 
@@ -57,6 +60,27 @@ class InstitutionStudentAbsencesTable extends AppTable {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
         return $events;
+    }
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+    	if (array_key_exists('full_day', $data) && !empty($data['full_day'])) {
+    		$fullDay = $data['full_day'];
+    		if ($fullDay == 1) {
+				$data['start_time'] = null;
+				$data['end_time'] = null;
+    		}
+    	}
+
+    	if (array_key_exists('absence_type_id', $data) && !empty($data['absence_type_id'])) {
+			$absenceTypeId = $data['absence_type_id'];
+			$absenceTypeCode = $this->absenceCodeList[$absenceTypeId];
+			switch ($absenceTypeCode) {
+				case 'UNEXCUSED':
+					$data['student_absence_reason_id'] = 0;
+					break;
+			}
+    	}
     }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
@@ -128,7 +152,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'on' => 'create'
 				]
 			])
-
+			->allowEmpty('start_time', function ($context) {
+			    if (array_key_exists('full_day', $context['data'])) {
+			        return $context['data']['full_day'];
+			    }
+			    return false;
+			})
 			->requirePresence('start_time', function ($context) {
 			    if (array_key_exists('full_day', $context['data'])) {
 			        return !$context['data']['full_day'];
@@ -141,6 +170,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'on' => 'create'
 				]
 			])
+			->allowEmpty('end_time', function ($context) {
+			    if (array_key_exists('full_day', $context['data'])) {
+			        return $context['data']['full_day'];
+			    }
+			    return false;
+			})
 			->requirePresence('end_time', function ($context) {
 			    if (array_key_exists('full_day', $context['data'])) {
 			        return !$context['data']['full_day'];
