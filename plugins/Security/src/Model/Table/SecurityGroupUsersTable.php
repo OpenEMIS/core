@@ -43,7 +43,12 @@ class SecurityGroupUsersTable extends AppTable {
         $statusId = 0;
         $groupId = 0;
         $userId = $entity->security_user_id;
-        $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
+
+        if ($entity->has('updateWorkflowAssignee') && $entity->updateWorkflowAssignee == false) {
+            // don't trigger shell
+        } else {
+            $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
+        }
 	}
 
     private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
