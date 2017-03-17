@@ -1660,7 +1660,10 @@ trait MessagesTrait {
                 ],
                 'url' => [
                     'invalidUrl' => 'You have entered an invalid URL'
-                ]
+                ],
+                'name' => [
+                    'ruleUnique' => 'This webhook name already exists in the system',
+                ],
             ]
         ],
         'Alert' => [
