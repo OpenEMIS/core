@@ -64,7 +64,6 @@ class ConfigProductListsTable extends ControllerActionTable {
         $this->field('name');
         $this->field('url', ['type' => 'string']);
         $this->field('file_name', ['visible' => false]);
-        $this->fields['deletable']['visible'] = false;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -77,49 +76,15 @@ class ConfigProductListsTable extends ControllerActionTable {
         $this->field('file_content', ['type' => 'image', 'defaultWidth' => 95]);
     }
 
-    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        $requestData[$this->alias()]['deletable'] = 1;
-    }
-
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($entity->deletable) {
-            $this->field('file_content', ['type' => 'image']);
-        } else {
-            $this->field('file_content', ['visible' => false]);
-        }
-
-        $toolbarButtons = $extra['toolbarButtons'];
-
-        if (!$entity->deletable) {
-            if (isset($toolbarButtons['remove'])) {
-                unset($toolbarButtons['remove']);
-            }
-        }
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        if (!$entity->deletable) {
-            if (isset($buttons['remove'])) {
-                unset($buttons['remove']);
-            }
-        }
-        return $buttons;
+        $this->field('file_content', ['type' => 'image']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        if ($entity->deletable) {
-            $this->field('file_content', ['type' => 'image']);
-        } else {
-            $this->fields['name']['type'] = 'readonly';
-            $this->field('file_content', ['visible' => false]);
-        }
+        $this->field('file_content', ['type' => 'image']);
     }
-
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {

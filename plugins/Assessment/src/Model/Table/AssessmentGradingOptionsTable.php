@@ -20,6 +20,10 @@ class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 		$this->fields['min']['attr']['min'] = 0;
 		$this->fields['min']['required'] = true;
 		$this->fields['min']['length'] = 7;
+
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index']
+        ]);
 	}
 
 	public function getFormFields($action = 'edit') {
