@@ -67,10 +67,10 @@ class ConfigItemsTable extends AppTable {
 				$value = '';
 				if ($extra->offsetExists('conditions') && isset($extra['conditions'][$this->aliasField('code')])) {
 					$code = $extra['conditions'][$this->aliasField('code')];
-					return $this->value($code);
+					$value = $this->value($code);
 				}
 
-				return $value;
+				return ['value' => $value];
 				break;
 			default:
                 break;
