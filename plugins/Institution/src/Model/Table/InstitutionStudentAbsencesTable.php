@@ -76,14 +76,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			$absenceTypeId = $data['absence_type_id'];
 			$absenceTypeCode = $this->absenceCodeList[$absenceTypeId];
 			switch ($absenceTypeCode) {
-				case 'EXCUSED':
-					$data['start_time'] = null;
-					$data['end_time'] = null;
-					break;
-
 				case 'UNEXCUSED':
-					$data['start_time'] = null;
-					$data['end_time'] = null;
 					$data['student_absence_reason_id'] = 0;
 					break;
 			}
