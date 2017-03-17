@@ -172,40 +172,63 @@ class RestfulV1Component extends Component implements RestfulInterface
         }
     }
 
-    public function edit($id)
+    public function edit()
     {
         $target = $this->model;
         if ($target) {
-            if ($target->exists([$target->primaryKey() => $id])) {
-                $primaryKey = $this->getIdKeys($target, [$target->primaryKey() => $id]);
-                $this->editEntity($target, $primaryKey, $this->request->data);
-            } else if ($this->urlsafeB64Decode($id) && $target->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
-                $primaryKey = $this->getIdKeys($target, json_decode($this->urlsafeB64Decode($id), true));
-                $this->editEntity($target, $primaryKey, $this->request->data);
+            $requestData = $this->request->data;
+
+            if (!is_array($target->primaryKey())) {
+                $primaryKey = [$target->primaryKey()];
+            } else {
+                // composite keys
+                $primaryKey = $target->primaryKey();
+            }
+            $flipKey = array_flip($primaryKey);
+            $keyCount = count($primaryKey);
+            $keyValues = array_intersect_key($requestData, $flipKey);
+            if (count($keyValues) != $keyCount) {
+                // throw exception
+            }
+            $primaryKeyValues = $this->getIdKeys($target, $keyValues);
+            if ($target->exists([$primaryKeyValues])) {
+                $entity = $table->get($primaryKeyValues);
+                $entity = $table->patchEntity($entity, $requestData);
+                $entity = $this->convertBase64ToBinary($entity);
+                $table->save($entity);
+                $this->controller->set([
+                    'data' => $entity,
+                    'error' => $entity->errors(),
+                    '_serialize' => ['data', 'error']
+                ]);
             } else {
                 $this->_outputError('Record does not exists');
             }
         }
     }
 
-    public function delete($id)
+    public function delete()
     {
         $target = $this->model;
         if ($target) {
-            if ($target->exists([$target->primaryKey() => $id])) {
-                $primaryKey = $this->getIdKeys($target, [$target->primaryKey() => $id]);
-                $entity = $target->get($primaryKey);
-                $message = 'Deleted';
-                if (!$target->delete($entity)) {
-                    $message = 'Error';
-                }
-                $this->controller->set([
-                    'result'=> $message,
-                    '_serialize' => ['result']
-                ]);
-            } else if ($this->urlsafeB64Decode($id) && $target->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
-                $primaryKey = $this->getIdKeys($target, json_decode($this->urlsafeB64Decode($id), true));
-                $entity = $target->get($primaryKey);
+            $requestData = $this->request->data;
+
+            if (!is_array($target->primaryKey())) {
+                $primaryKey = [$target->primaryKey()];
+            } else {
+                // composite keys
+                $primaryKey = $target->primaryKey();
+            }
+            $flipKey = array_flip($primaryKey);
+            $keyCount = count($primaryKey);
+            $keyValues = array_intersect_key($requestData, $flipKey);
+            if (count($keyValues) != $keyCount) {
+                // throw exception
+            }
+            $primaryKeyValues = $this->getIdKeys($target, $keyValues);
+
+            if ($target->exists([$primaryKeyValues])) {
+                $entity = $target->get($primaryKeyValues);
                 $message = 'Deleted';
                 if (!$target->delete($entity)) {
                     $message = 'Error';

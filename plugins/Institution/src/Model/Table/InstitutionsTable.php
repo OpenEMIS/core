@@ -11,6 +11,7 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
+use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
 use Cake\Network\Session;
 use App\Model\Table\AppTable;
@@ -161,10 +162,12 @@ class InstitutionsTable extends AppTable  {
 				])
 
 	        ->allowEmpty('date_closed')
+	        ->add('date_opened', 'ruleLessThanToday', [
+				'rule' => ['lessThanToday', true]
+				])
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'date_opened', false]
+		            'rule' => ['compareDateReverse', 'date_opened', true]
 	    	    ])
-
 	        ->allowEmpty('longitude')
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
@@ -224,6 +227,12 @@ class InstitutionsTable extends AppTable  {
 			->add('area_id', 'ruleAuthorisedArea', [
 					'rule' => ['checkAuthorisedArea']
 				])
+			->add('area_id', 'ruleConfiguredArea', [
+                    'rule' => ['checkConfiguredArea']
+                ])
+            ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+                    'rule' => ['checkConfiguredArea']
+                ])
 			->add('institution_provider_id', 'ruleLinkedSector', [
 						'rule' => 'checkLinkedSector',
 						'provider' => 'table'
@@ -334,6 +343,13 @@ class InstitutionsTable extends AppTable  {
 		return ['downloadFile'];
 	}
 
+	public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Request $request)
+	{
+		$today = new Date();
+		$attr['date_options']['endDate'] = $today->format('d-m-Y');
+		return $attr;
+	}
+
 	public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
 	{
 		$attr['default_date'] = false;
@@ -349,6 +365,7 @@ class InstitutionsTable extends AppTable  {
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
+		$this->ControllerAction->field('date_opened');
 		$this->ControllerAction->field('date_closed');
 		$this->ControllerAction->field('modified', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);

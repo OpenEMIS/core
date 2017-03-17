@@ -18,7 +18,8 @@ class AssessmentItemsGradingTypesTable extends AppTable {
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index']
+            'Results' => ['index'],
+            'OpenEMIS_Classroom' => ['index']
         ]);
     }
 

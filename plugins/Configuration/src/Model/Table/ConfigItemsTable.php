@@ -32,6 +32,7 @@ class ConfigItemsTable extends AppTable {
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index'],
         	'Staff' => ['index'],
+        	'OpenEMIS_Classroom' => ['index']
         ]);
 	}
 
@@ -53,7 +54,27 @@ class ConfigItemsTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.AreaLevel.afterDelete'] = 'areaLevelAfterDelete';
+		$events['Restful.Model.onAfterFormatResult'] = 'onAfterFormatResult';
 		return $events;
+	}
+
+	public function onAfterFormatResult(Event $event, $data, ArrayObject $schema, ArrayObject $extra)
+	{
+		$action = $extra['action'];
+
+		switch ($action) {
+			case 'get_value':
+				$value = '';
+				if ($extra->offsetExists('conditions') && isset($extra['conditions'][$this->aliasField('code')])) {
+					$code = $extra['conditions'][$this->aliasField('code')];
+					$value = $this->value($code);
+				}
+
+				return ['value' => $value];
+				break;
+			default:
+                break;
+		}
 	}
 
 /******************************************************************************************************************
@@ -160,7 +181,7 @@ class ConfigItemsTable extends AppTable {
 				$ids = $this->paramsDecode($pass[0]);
 				$entity = $this->get($ids);
 
-
+				// pr($entity);
 				if ($entity->field_type == 'Dropdown') {
 
 					$exp = explode(':', $entity->option_type);
@@ -272,7 +293,7 @@ class ConfigItemsTable extends AppTable {
 				$model = $this->getActualModeLocation($model);
 				$optionsModel = TableRegistry::get($model);
 
-				if ($entity->code == 'institution_area_level_id') {
+				if ($entity->code == 'institution_area_level_id' || $entity->code == 'institution_validate_area_level_id') {
 	                // get area level from value
 	                $value = $optionsModel->find()
 	                    ->where([$optionsModel->aliasField('level') => $entity->$valueField])
