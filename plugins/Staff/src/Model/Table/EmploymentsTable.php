@@ -24,6 +24,12 @@ class EmploymentsTable extends ControllerActionTable {
 			'allowable_file_types' => 'all',
 			'useDefaultName' => true
 		]);
+
+		// setting this up to be overridden in viewAfterAction(), this code is required
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			true 
+		);
 	}
 
     public function validationDefault(Validator $validator)
@@ -37,8 +43,31 @@ class EmploymentsTable extends ControllerActionTable {
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('employment_type_id', ['type' => 'select', 'before' => 'employment_date']);
 
-		$this->field('file_name', ['visible' => false]);
+		$visible = ['index' => false, 'view' => false, 'add' => true, 'edit' => true];
+        $this->field('file_content', ['visible' => $visible]);
+
+        $this->field('file_name', ['type' => 'hidden']);
+        if ($this->action == 'index' || $this->action == 'view') {
+        	$this->field('file_name', ['visible' => false]);
+        }
+
+		$this->setFieldOrder(['employment_type_id', 'employment_date', 'comment', 'file_content']);
+
         $this->setupTabElements();
+	}
+
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		// if has attachment, then show download button
+		$showFunc = function() use ($entity) {
+			$filename = $entity->file_content;
+			return !empty($filename);
+		};
+		$this->behaviors()->get('ControllerAction')->config(
+			'actions.download.show',
+			$showFunc
+		);
+		// End
 	}
 
 	private function setupTabElements() {
@@ -47,24 +76,4 @@ class EmploymentsTable extends ControllerActionTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
-
-    public function onGetEmploymentTypeId(Event $event, Entity $entity) 
-    {
-        if ($this->action == 'index') {
-            if ($this->controller->plugin == 'Staff') {
-                $action = 'Employments';
-            } else if ($this->controller->plugin == 'Directory') {
-                $action = 'StaffEmployments';
-            }
-            
-            $url = $event->subject()->HtmlField->link($entity->employment_type->name, [
-                        'plugin' => $this->controller->plugin,
-                        'controller' => $this->controller->name,
-                        'action' => $action,
-                        'view',
-                        $this->paramsEncode(['id' => $entity->id])
-                    ]);
-            return $url;
-        }
-    }
 }
