@@ -1182,8 +1182,8 @@ class ValidationBehavior extends Behavior {
 
 		$recordId = $globalData['data']['id'];
 		$institutionId = $globalData['data']['institution_id'];
-		$newEndDate = strtotime($globalData['data']['end_date']);
-		$newStartDate = strtotime($globalData['data']['start_date']);
+		$newEndDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
+		$newStartDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
 		$staffId = $globalData['data']['staff_id'];
 		$positionId = $globalData['data']['institution_position_id'];
 
