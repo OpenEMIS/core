@@ -23,11 +23,18 @@ class SendingAlertShell extends Shell
         $today = Time::now();
         $todayDate = Date::now();
 
+        $feature = !empty($this->args[0]) ? $this->args[0] : 0;
+        $alertLogId = !empty($this->args[1]) ? $this->args[1] : 0;
+
         $alertLogsList = $this->AlertLogs->find()
-            ->where(['status' => 0]) // pending
+            ->where([
+                'status' => 0,
+                'feature' => $feature,
+                'id' => $alertLogId
+            ]) // pending
             ->all();
 
-        foreach ($alertLogsList as $key => $obj) {
+        foreach ($alertLogsList as $obj) {
             if ($obj->destination != 'No Email' || $obj->destination != 'No Security Role') {
                 $emailArray = explode(', ', $obj->destination); // also can used
 

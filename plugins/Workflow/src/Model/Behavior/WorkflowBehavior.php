@@ -138,13 +138,6 @@ class WorkflowBehavior extends Behavior {
         } catch (RecordNotFoundException $e) {
             // Do nothing
         }
-
-        // Trigger event on the alert log model (status and assignee transition triggered here)
-        $AlertLogs = TableRegistry::get('Alert.AlertLogs');
-        $entity = $this->_table->get($id);
-        $event = $AlertLogs->dispatchEvent('Model.Workflow.onAssignBack', [$entity], $this->_table);
-        if ($event->isStopped()) { return $event->result; }
-        // End
     }
 
     private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
@@ -265,6 +258,17 @@ class WorkflowBehavior extends Behavior {
             ];
             $this->setToolbarButtons($toolbarButtons, $toolbarAttr, $action);
             $extra['toolbarButtons'] = $toolbarButtons;
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if (!$entity->isNew() && $entity->dirty('assignee_id')) {
+            // Trigger event on the alert log model (status and assignee transition triggered here)
+            $AlertLogs = TableRegistry::get('Alert.AlertLogs');
+            $event = $AlertLogs->dispatchEvent('Model.Workflow.afterSave', [$entity], $this->_table);
+            if ($event->isStopped()) { return $event->result; }
+            // End
         }
     }
 
@@ -1193,7 +1197,8 @@ class WorkflowBehavior extends Behavior {
         $entity->assignee_id = $assigneeId;
     }
 
-    public function setAssigneeId(Entity $entity, $requestData) {
+    public function setAssigneeId(Entity $entity, $requestData)
+    {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
@@ -1203,15 +1208,15 @@ class WorkflowBehavior extends Behavior {
                     $assigneeId = 0;
                 }
 
-                $model->updateAll(
-                    ['assignee_id' => $assigneeId],
-                    ['id' => $entity->id]
-                );
+                // change to save instead of update all to trigger after save function.
+                $entity->assignee_id = $assigneeId;
+                $model->save($entity);
             }
         }
     }
 
-    public function setStatusId(Entity $entity, $requestData) {
+    public function setStatusId(Entity $entity, $requestData)
+    {
         $model = $this->_table;
         if ($model->hasBehavior('Workflow')) {
             if (array_key_exists($this->WorkflowTransitions->alias(), $requestData)) {
@@ -1242,14 +1247,8 @@ class WorkflowBehavior extends Behavior {
     {
         $entity = $this->_table->get($id);
 
-        $this->setAssigneeId($entity, $requestData);
         $this->setStatusId($entity, $requestData);
-
-        // Trigger event on the alert log model (status and assignee transition triggered here)
-        $AlertLogs = TableRegistry::get('Alert.AlertLogs');
-        $event = $AlertLogs->dispatchEvent('Model.Workflow.afterTransition', [$entity], $this->_table);
-        if ($event->isStopped()) { return $event->result; }
-        // End
+        $this->setAssigneeId($entity, $requestData);
     }
 
     public function processWorkflow() {
