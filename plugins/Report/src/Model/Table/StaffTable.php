@@ -35,13 +35,32 @@ class StaffTable extends AppTable  {
 	{
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('system_usage', ['type' => 'hidden']);
 		$this->ControllerAction->field('format');
 	}
 	
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
 		$attr['options'] = $this->controller->getFeatureOptions($this->alias());
+        $attr['onChangeReload'] = true;
 		return $attr;
 	}
+
+    public function onUpdateFieldSystemUsage(Event $event, array $attr, $action, Request $request)
+    {
+        if (isset($this->request->data[$this->alias()]['feature'])) {
+            $feature = $this->request->data[$this->alias()]['feature'];
+            if (in_array($feature, ['Report.StaffSystemUsage'])) {
+                $options = [
+                    '1' => __('No previous login'),
+                    '2' => __('Logged in within the last 7 days')
+                ];
+                $attr['type'] = 'select';
+                $attr['select'] = false;
+                $attr['options'] = $options;
+                return $attr;
+            }
+        }
+    }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$query->where([$this->aliasField('is_staff') => 1]);
