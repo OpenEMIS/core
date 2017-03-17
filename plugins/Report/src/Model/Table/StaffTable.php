@@ -51,7 +51,7 @@ class StaffTable extends AppTable  {
             $feature = $this->request->data[$this->alias()]['feature'];
             if (in_array($feature, ['Report.StaffSalaries'])) {
                 $AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-                $academicPeriodOptions = $AcademicPeriodTable->getList();
+                $academicPeriodOptions = $AcademicPeriodTable->getYearList();
 
                 $attr['options'] = $academicPeriodOptions;
                 $attr['type'] = 'select';
