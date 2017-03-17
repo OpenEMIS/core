@@ -158,11 +158,20 @@ class InstitutionRoomsTable extends AppTable
 
 	public function onGetSubjects(Event $event, Entity $entity)
 	{
+		$InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+		$InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+
 		if ($entity->has('subjects')) {
             $resultArray = [];
 
             foreach ($entity->subjects as $key => $obj) {
-                $resultArray[] = $obj->name;
+            	$records = $InstitutionClassSubjects->find()
+            		->where([$InstitutionClassSubjects->aliasField('institution_subject_id') => $obj->id])
+            		->first();
+
+            	$className = $InstitutionClasses->get($records->institution_class_id)->name;
+
+                $resultArray[] = $className . ' - ' . $obj->name;
             }
 
             if (!empty($resultArray)) {
@@ -656,9 +665,23 @@ class InstitutionRoomsTable extends AppTable
 
 	public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
 	{
+		// POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
+		$entity = $attr['entity'];
+
+		$visibility = false;
+		if ($entity->has('room_type_id')) {
+			$classificationTypeId = $this->RoomTypes->getClassificationTypes($entity->room_type_id);
+
+			if ($classificationTypeId == 1) { // Classroom
+				$visibility = true;
+			}
+		}
+
+		$attr['visible'] = $visibility;
+		// end POCOR-3849
+
 		if ($action == 'add' || $action == 'edit') {
 			$session = $request->session();
-			$entity = $attr['entity'];
 
 			if ($session->check('Institution.Institutions.id') && !is_null($this->currentAcademicPeriod)) {
                 $institutionId = $session->read('Institution.Institutions.id');
@@ -666,18 +689,6 @@ class InstitutionRoomsTable extends AppTable
 
 				$attr['options'] = $this->getSubjectOptions(['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId]);
 			}
-
-			// POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
-			$visibility = false;
-			if ($entity->has('room_type_id')) {
-				$classificationTypeId = $this->RoomTypes->getClassificationTypes($entity->room_type_id);
-
-				if ($classificationTypeId == 1) { // Classroom
-					$visibility = true;
-				}
-			}
-			$attr['visible'] = $visibility;
-			// end POCOR-3849
 
 			if (!$this->canUpdateDetails) {
 				$attr['visible'] = false;
@@ -1000,13 +1011,14 @@ class InstitutionRoomsTable extends AppTable
         		$Classes->aliasField('institution_id') => $institutionId,
         		$Classes->aliasField('academic_period_id') => $academicPeriodId
         	])
+        	->order([$Classes->aliasField('name') => 'ASC'])
         	->toArray();
 
         foreach ($classOptions as $classKey => $class) {
         	$className = $class->name;
         	if ($class->has('subjects')) {
         		foreach ($class->subjects as $subjectKey => $subject) {
-        			$options[$className][$subject->id] = $subject->name;
+        			$options[$subject->id] = $className . ' - ' . $subject->name;
         		}
         	}
         }
