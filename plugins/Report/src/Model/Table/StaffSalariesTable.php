@@ -41,7 +41,7 @@ class StaffSalariesTable extends AppTable {
         $query
             ->select(['openemis_no' => 'Users.openemis_no'])
             ->contain(['Users'])
-            ->order([$this->aliasField('staff_id'), $this->aliasField('salary_date')]);
+            ->order([$this->aliasField('salary_date')]);
 
         if (!empty($academicPeriodId)) {
             $query->find('inPeriod', ['field' => 'salary_date', 'academic_period_id' => $academicPeriodId]);
