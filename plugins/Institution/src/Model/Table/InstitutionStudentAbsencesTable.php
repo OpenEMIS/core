@@ -489,7 +489,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 	public function onUpdateFieldFullDay(Event $event, array $attr, $action, $request)
 	{
-		pr('onUpdateFieldFullDay');
 		$fullDayOptions = $attr['options'];
 		$selectedFullDay = isset($request->data[$this->alias()]['full_day']) ? $request->data[$this->alias()]['full_day'] : 1;
 		$this->advancedSelectOptions($fullDayOptions, $selectedFullDay);
