@@ -20,7 +20,7 @@ interface RestfulInterface
 
     public function view($id);
 
-    public function edit($id);
+    public function edit();
 
-    public function delete($id);
+    public function delete();
 }
