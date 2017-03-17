@@ -1096,6 +1096,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $rooms = $this->Rooms
             ->find('inUse', ['institution_id' => $entity->institution_id, 'academic_period_id' => $entity->academic_period_id])
             ->contain(['RoomTypes'])
+            ->where(['RoomTypes.classification' => 1]) // classification 1 is equal to Classroom, 0 is Non_Classroom
             ->order(['RoomTypes.order', $this->Rooms->aliasField('code'), $this->Rooms->aliasField('name')])
             ->toArray();
 
