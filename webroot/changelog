@@ -1,3 +1,10 @@
+v3.9.6
+- System will only allow linking of Classrooms to a Subject
+- Included more information for Transfer/Dropout Student Reports
+- System allows user to configure validation on Areas when creating/editing an Institution
+- Students Nationality is included in Reports>Institution>Student Reports
+- System usage reports for Staff is implemented in Reports>Staff>System Usage Reports
+
 v3.9.5
 - Applying Licenses for Staff has to go through a workflow
 - Additional fields added for Staff Licenses
