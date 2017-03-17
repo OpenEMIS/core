@@ -19,6 +19,7 @@ class StaffBehavioursTable extends AppTable {
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');

@@ -20,6 +20,7 @@ class BehaviourClassificationsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->hasMany('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
