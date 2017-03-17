@@ -64,14 +64,6 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-    	if (array_key_exists('full_day', $data) && !empty($data['full_day'])) {
-    		$fullDay = $data['full_day'];
-    		if ($fullDay == 1) {
-				$data['start_time'] = null;
-				$data['end_time'] = null;
-    		}
-    	}
-
     	if (array_key_exists('absence_type_id', $data) && !empty($data['absence_type_id'])) {
 			$absenceTypeId = $data['absence_type_id'];
 			$absenceTypeCode = $this->absenceCodeList[$absenceTypeId];
@@ -79,7 +71,19 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				case 'UNEXCUSED':
 					$data['student_absence_reason_id'] = 0;
 					break;
+
+				case 'LATE':
+					$data['full_day'] = 0;
+					break;
 			}
+    	}
+
+    	if (array_key_exists('full_day', $data) && !empty($data['full_day'])) {
+    		$fullDay = $data['full_day'];
+    		if ($fullDay == 1) {
+				$data['start_time'] = null;
+				$data['end_time'] = null;
+    		}
     	}
     }
 
@@ -485,6 +489,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 
 	public function onUpdateFieldFullDay(Event $event, array $attr, $action, $request)
 	{
+		pr('onUpdateFieldFullDay');
 		$fullDayOptions = $attr['options'];
 		$selectedFullDay = isset($request->data[$this->alias()]['full_day']) ? $request->data[$this->alias()]['full_day'] : 1;
 		$this->advancedSelectOptions($fullDayOptions, $selectedFullDay);
