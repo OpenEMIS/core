@@ -96,7 +96,7 @@ class AppController extends Controller {
 		$this->loadComponent('Localization.Localization', [
 			'productName' => $this->productName
 		]);
-		$logoutWebhook = 'Webhook.triggerEvent(\''.Router::url($this->webhookListUrl).'\', [\'logoutSSODisabled\']);';
+		$logoutWebhook = 'Webhook.triggerEvent(\''.Router::url($this->webhookListUrl).'\', [\'logout\']);';
 		$this->loadComponent('OpenEmis.OpenEmis', [
 			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
 			'headerMenu' => [
@@ -152,18 +152,6 @@ class AppController extends Controller {
 		if ($this->request->action == 'postLogin') {
             $this->eventManager()->off($this->Csrf);
         }
-	}
-
-	public function beforeFilter(Event $event)
-	{
-		if ($this->SSO->getAuthenticationType() != 'Local') {
-			$logoutWebhook = 'Webhook.triggerEvent(\''.Router::url($this->webhookListUrl).'\', [\'logoutSSOEnabled\']);';
-			$this->OpenEmis->config('headerMenu', [
-				'Logout' => [
-					'onclick' => $logoutWebhook
-				]
-			]);
-		}
 	}
 
 	// Triggered from LocalizationComponent

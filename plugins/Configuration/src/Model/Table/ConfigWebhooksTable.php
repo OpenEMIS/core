@@ -15,8 +15,7 @@ class ConfigWebhooksTable extends ControllerActionTable {
     use OptionsTrait;
 
     private $eventKeyOptions = [
-        'logoutSSODisabled' => 'Logout (SSO Disabled)',
-        'logoutSSOEnabled' => 'Logout (SSO Enabled)'
+        'logout' => 'Logout',
     ];
 
 	public function initialize(array $config) {
@@ -24,6 +23,10 @@ class ConfigWebhooksTable extends ControllerActionTable {
 		parent::initialize($config);
         $this->hasMany('WebhookEvents', ['className' => 'Webhook.WebhookEvents', 'dependent' => true, 'cascadeCallBack' => true, 'saveStrategy' => 'replace', 'foreignKey' => 'webhook_id', 'joinType' => 'INNER']);
         $this->addBehavior('Configuration.ConfigItems');
+
+        foreach ($this->eventKeyOptions as $key => $value) {
+            $this->eventKeyOptions[$key] = __($value);
+        }
 	}
 
     public function validationDefault(Validator $validator)
@@ -92,6 +95,13 @@ class ConfigWebhooksTable extends ControllerActionTable {
         ]);
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('triggered_event', [
+            'before' => 'description'
+        ]);
+    }
+
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $data['webhook_events'] = [];
@@ -109,12 +119,12 @@ class ConfigWebhooksTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('event');
-        $this->setFieldOrder(['event', 'name', 'url', 'status', 'method']);
+        $this->field('triggered_event');
+        $this->setFieldOrder(['triggered_event', 'name', 'url', 'status', 'method']);
         // $extra['elements']['indexElement'] = $this->buildSystemConfigFilters();
     }
 
-    public function onGetEvent(Event $event, Entity $entity)
+    public function onGetTriggeredEvent(Event $event, Entity $entity)
     {
         $returnString = '';
         foreach ($entity->webhook_events as $event) {
