@@ -32,6 +32,7 @@ class ConfigItemsTable extends AppTable {
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index'],
         	'Staff' => ['index'],
+        	'OpenEMIS_Classroom' => ['index']
         ]);
 	}
 
@@ -53,7 +54,27 @@ class ConfigItemsTable extends AppTable {
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
 		$events['Model.AreaLevel.afterDelete'] = 'areaLevelAfterDelete';
+		$events['Restful.Model.onAfterFormatResult'] = 'onAfterFormatResult';
 		return $events;
+	}
+
+	public function onAfterFormatResult(Event $event, $data, ArrayObject $schema, ArrayObject $extra)
+	{
+		$action = $extra['action'];
+
+		switch ($action) {
+			case 'get_value':
+				$value = '';
+				if ($extra->offsetExists('conditions') && isset($extra['conditions'][$this->aliasField('code')])) {
+					$code = $extra['conditions'][$this->aliasField('code')];
+					return $this->value($code);
+				}
+
+				return $value;
+				break;
+			default:
+                break;
+		}
 	}
 
 /******************************************************************************************************************
