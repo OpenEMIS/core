@@ -76,6 +76,30 @@ class AreaAdministrativesTable extends ControllerActionTable
             ]);
     }
 
+    public function findAreaList(Query $query, array $options)
+    {
+        return $query
+            ->find('threaded', [
+                'parentField' => 'parent_id',
+                'order' => ['lft' => 'ASC']
+            ])
+            ->formatResults(function($results) {
+                $returnArr = [];
+                $arr = $results->toArray();
+                $makeArray = function ($arr, $returnArr) {
+                    foreach ($arr as $a) {
+                        if (count($a['children']) == 0) {
+                            $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
+                        } else {
+                            $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr)];
+                        }
+                    }
+                    return $returnArr;
+                };
+                return $this->makeArray($arr, $returnArr);
+            });
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // Add breadcrumb
