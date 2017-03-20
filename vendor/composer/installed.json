@@ -14,7 +14,7 @@
             "reference": "52f8de3670cc1ef45a916f40f732937436d028c8",
             "shasum": ""
         },
-        "time": "2012-11-26 21:35:57",
+        "time": "2012-11-26T21:35:57+00:00",
         "type": "composer-installer",
         "extra": {
             "class": "Aura\\Composer\\DefaultInstaller"
@@ -57,7 +57,7 @@
             "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
             "shasum": ""
         },
-        "time": "2012-12-21 11:40:51",
+        "time": "2012-12-21T11:40:51+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -101,7 +101,7 @@
             "aura/installer-default": "1.0.*",
             "php": ">=5.4.0"
         },
-        "time": "2014-08-24 00:00:00",
+        "time": "2014-08-24T00:00:00+00:00",
         "type": "aura-package",
         "extra": {
             "aura": {
@@ -182,7 +182,7 @@
             "ext-xmlwriter": "*",
             "php": ">=5.2.0"
         },
-        "time": "2015-05-05 00:10:25",
+        "time": "2015-05-05T00:10:25+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -239,7 +239,7 @@
         "require-dev": {
             "phpunit/phpunit": "4.3.*"
         },
-        "time": "2015-07-28 16:24:47",
+        "time": "2015-07-28T16:24:47+00:00",
         "type": "project",
         "installation-source": "source",
         "autoload": {
@@ -279,7 +279,7 @@
         "require": {
             "php": ">=5.6"
         },
-        "time": "2016-02-04 12:56:52",
+        "time": "2016-02-04T12:56:52+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -324,7 +324,7 @@
         "require": {
             "php": ">=5.6.0"
         },
-        "time": "2015-07-28 20:34:47",
+        "time": "2015-07-28T20:34:47+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -371,7 +371,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.4"
         },
-        "time": "2015-11-11 19:50:13",
+        "time": "2015-11-11T19:50:13+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -427,7 +427,7 @@
         "require-dev": {
             "phpunit/phpunit": "~5"
         },
-        "time": "2016-01-28 13:25:10",
+        "time": "2016-01-28T13:25:10+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -477,7 +477,7 @@
         "suggest": {
             "ext-uopz": "*"
         },
-        "time": "2015-10-12 03:26:01",
+        "time": "2015-10-12T03:26:01+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -527,7 +527,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.8"
         },
-        "time": "2015-12-08 07:14:41",
+        "time": "2015-12-08T07:14:41+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -583,7 +583,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.4"
         },
-        "time": "2015-07-26 15:48:44",
+        "time": "2015-07-26T15:48:44+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -651,7 +651,7 @@
             "phpunit/phpunit": "~4.0",
             "squizlabs/php_codesniffer": "~2.0"
         },
-        "time": "2015-06-14 21:17:01",
+        "time": "2015-06-14T21:17:01+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -700,7 +700,7 @@
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2015-06-21 13:50:34",
+        "time": "2015-06-21T13:50:34+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -747,7 +747,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.2"
         },
-        "time": "2015-09-15 10:49:45",
+        "time": "2015-09-15T10:49:45+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -797,7 +797,7 @@
         "require-dev": {
             "phpunit/phpunit": "~5"
         },
-        "time": "2016-02-13 06:45:14",
+        "time": "2016-02-13T06:45:14+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -841,7 +841,7 @@
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2015-06-21 13:08:43",
+        "time": "2015-06-21T13:08:43+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -893,7 +893,7 @@
         "require-dev": {
             "phpunit/phpunit": "3.7.*"
         },
-        "time": "2014-01-12 16:20:24",
+        "time": "2014-01-12T16:20:24+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -949,7 +949,7 @@
             "phpunit/phpunit": "3.7.*",
             "squizlabs/php_codesniffer": "1.*"
         },
-        "time": "2014-04-08 15:00:19",
+        "time": "2014-04-08T15:00:19+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -995,7 +995,7 @@
             "phpunit/phpunit": "~4.0",
             "squizlabs/php_codesniffer": "~1.5"
         },
-        "time": "2015-04-20 18:58:01",
+        "time": "2015-04-20T18:58:01+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1036,7 +1036,7 @@
         "require-dev": {
             "phpunit/phpunit": "@stable"
         },
-        "time": "2014-10-24 07:27:01",
+        "time": "2014-10-24T07:27:01+00:00",
         "type": "project",
         "installation-source": "dist",
         "autoload": {
@@ -1085,7 +1085,7 @@
             "ext-posix": "If you have PCNTL, you'll want the POSIX extension as well.",
             "ext-readline": "Enables support for arrow-key history navigation, and showing and manipulating command history."
         },
-        "time": "2016-03-09 05:03:14",
+        "time": "2016-03-09T05:03:14+00:00",
         "bin": [
             "bin/psysh"
         ],
@@ -1142,7 +1142,7 @@
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2015-07-22 18:31:08",
+        "time": "2015-07-22T18:31:08+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1188,7 +1188,7 @@
             "cakephp/cakephp": "~3.1",
             "firebase/php-jwt": "~3.0"
         },
-        "time": "2016-04-02 19:34:30",
+        "time": "2016-04-02T19:34:30+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -1235,7 +1235,7 @@
             "cakephp/cakephp-codesniffer": "dev-master",
             "composer/composer": "1.0.*@dev"
         },
-        "time": "2016-04-28 03:01:34",
+        "time": "2016-04-28T03:01:34+00:00",
         "type": "composer-installer",
         "extra": {
             "class": "Cake\\Composer\\Installer\\PluginInstaller"
@@ -1281,7 +1281,7 @@
             "johnkary/phpunit-speedtrap": "~1.0@dev",
             "phpunit/phpunit": "*"
         },
-        "time": "2016-04-24 09:47:16",
+        "time": "2016-04-24T09:47:16+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1332,7 +1332,7 @@
         "require": {
             "php": ">=5.5.9"
         },
-        "time": "2016-06-14 11:18:07",
+        "time": "2016-06-14T11:18:07+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1388,7 +1388,7 @@
             "ext-mbstring": "*",
             "phpunit/phpunit": "~4.4"
         },
-        "time": "2016-06-17 09:04:28",
+        "time": "2016-06-17T09:04:28+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1455,7 +1455,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.4"
         },
-        "time": "2016-05-17 03:18:57",
+        "time": "2016-05-17T03:18:57+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1516,7 +1516,7 @@
         "suggest": {
             "ext-soap": "*"
         },
-        "time": "2016-06-12 07:37:26",
+        "time": "2016-06-12T07:37:26+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1568,7 +1568,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4|~5"
         },
-        "time": "2016-05-12 18:03:57",
+        "time": "2016-05-12T18:03:57+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1626,7 +1626,7 @@
             "ext-xdebug": ">=2.4.0",
             "ext-xmlwriter": "*"
         },
-        "time": "2016-06-03 05:03:56",
+        "time": "2016-06-03T05:03:56+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1679,7 +1679,7 @@
         "require-dev": {
             "phpunit/phpunit": "^4.6"
         },
-        "time": "2015-08-24 13:29:44",
+        "time": "2015-08-24T13:29:44+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1730,7 +1730,7 @@
         "require-dev": {
             "phpunit/phpunit": "^4.6"
         },
-        "time": "2015-12-27 11:43:31",
+        "time": "2015-12-27T11:43:31+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1788,7 +1788,7 @@
             "mockery/mockery": "^0.9.4",
             "phpunit/phpunit": "^5.2||^4.8.24"
         },
-        "time": "2016-06-10 07:14:17",
+        "time": "2016-06-10T07:14:17+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1839,7 +1839,7 @@
             "mockery/mockery": "^0.9.4",
             "phpunit/phpunit": "^4.4"
         },
-        "time": "2016-06-10 09:48:41",
+        "time": "2016-06-10T09:48:41+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1886,7 +1886,7 @@
         "require-dev": {
             "phpspec/phpspec": "^2.0"
         },
-        "time": "2016-06-07 08:13:47",
+        "time": "2016-06-07T08:13:47+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1947,7 +1947,7 @@
             "doctrine/collections": "1.*",
             "phpunit/phpunit": "~4.1"
         },
-        "time": "2015-11-20 12:04:31",
+        "time": "2015-11-20T12:04:31+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2014,7 +2014,7 @@
         "suggest": {
             "phpunit/php-invoker": "~1.1"
         },
-        "time": "2016-06-16 06:01:15",
+        "time": "2016-06-16T06:01:15+00:00",
         "bin": [
             "phpunit"
         ],
@@ -2072,7 +2072,7 @@
             "cakephp/cakephp-codesniffer": "dev-master",
             "phpunit/phpunit": "*"
         },
-        "time": "2016-06-15 06:26:37",
+        "time": "2016-06-15T06:26:37+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2150,7 +2150,7 @@
         "suggest": {
             "ext-openssl": "To use Security::encrypt() or have secure CSRF token generation."
         },
-        "time": "2016-06-21 03:01:37",
+        "time": "2016-06-21T03:01:37+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2201,7 +2201,7 @@
         "suggest": {
             "ext-mbstring": "For best performance"
         },
-        "time": "2016-05-18 14:26:46",
+        "time": "2016-05-18T14:26:46+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2270,7 +2270,7 @@
             "symfony/event-dispatcher": "",
             "symfony/process": ""
         },
-        "time": "2016-06-14 11:18:07",
+        "time": "2016-06-14T11:18:07+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2321,7 +2321,7 @@
         "require": {
             "php": ">=5.5.9"
         },
-        "time": "2016-04-12 18:27:47",
+        "time": "2016-04-12T18:27:47+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2376,7 +2376,7 @@
         "suggest": {
             "symfony/yaml": "To use the yaml reference dumper"
         },
-        "time": "2016-05-20 11:48:17",
+        "time": "2016-05-20T11:48:17+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2433,7 +2433,7 @@
         "require-dev": {
             "phpunit/phpunit": "^3.7|^4.0|^5.0"
         },
-        "time": "2016-03-07 14:09:22",
+        "time": "2016-03-07T14:09:22+00:00",
         "bin": [
             "bin/phinx"
         ],
@@ -2499,7 +2499,7 @@
         "suggest": {
             "cakephp/bake": "Required if you want to generate migrations."
         },
-        "time": "2016-06-14 21:01:47",
+        "time": "2016-06-14T21:01:47+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -2550,7 +2550,7 @@
         "suggest": {
             "ext-sqlite": "DebugKit needs to store panel data in a database. SQLite is simple and easy to use."
         },
-        "time": "2016-05-28 15:47:46",
+        "time": "2016-05-28T15:47:46+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -2605,7 +2605,7 @@
             "cakephp/cakephp-codesniffer": "dev-master",
             "phpunit/phpunit": "*"
         },
-        "time": "2016-06-28 01:58:30",
+        "time": "2016-06-28T01:58:30+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -2652,7 +2652,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.0"
         },
-        "time": "2016-04-19 13:41:41",
+        "time": "2016-04-19T13:41:41+00:00",
         "bin": [
             "bin/php-parse"
         ],
@@ -2708,7 +2708,7 @@
         "suggest": {
             "ext-symfony_debug": ""
         },
-        "time": "2016-05-24 10:06:56",
+        "time": "2016-05-24T10:06:56+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2782,7 +2782,7 @@
             "ext-mcrypt": "Install mcrypt and php5-mcrypt libs in order to support encryption",
             "lib-openssl": "Install openssl lib in order to handle with x509 certs (require to support sign and encryption)"
         },
-        "time": "2016-07-19 17:14:29",
+        "time": "2016-07-19T17:14:29+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2826,7 +2826,7 @@
             "phpunit/phpunit": "3.7.*",
             "squizlabs/php_codesniffer": "~2.3"
         },
-        "time": "2016-02-02 18:50:42",
+        "time": "2016-02-02T18:50:42+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2879,7 +2879,7 @@
             "ext-mcrypt": "Install the Mcrypt extension in order to speed up a few other cryptographic operations.",
             "ext-openssl": "Install the OpenSSL extension in order to speed up a wide variety of cryptographic operations."
         },
-        "time": "2016-10-04 00:57:04",
+        "time": "2016-10-04T00:57:04+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2944,22 +2944,67 @@
         ]
     },
     {
+        "name": "korditpteltd/kd-cakephp-sso",
+        "version": "v1.0.3.4",
+        "version_normalized": "1.0.3.4",
+        "source": {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
+            "reference": "566c803e34eb38ab30775d710e09e4c9959868bb"
+        },
+        "require": {
+            "cakephp/cakephp": ">3.0.0",
+            "firebase/php-jwt": "~3.0",
+            "google/apiclient": "1.1.7",
+            "onelogin/php-saml": "^2.9",
+            "phpseclib/phpseclib": "^2.0"
+        },
+        "time": "2017-02-09T05:44:10+00:00",
+        "type": "cakephp-plugin",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "SSO\\": "src"
+            }
+        },
+        "license": [
+            "GPL-2.0"
+        ],
+        "authors": [
+            {
+                "name": "KORDIT PHP DEVELOPERS",
+                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
+            }
+        ],
+        "description": "KORDIT CakePHP SSO Plugin",
+        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso",
+        "keywords": [
+            "cakephp",
+            "kordit",
+            "sso"
+        ],
+        "support": {
+            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
+        }
+    },
+    {
         "name": "korditpteltd/kd-cakephp-restful",
-        "version": "1.0.3.x-dev",
-        "version_normalized": "1.0.3.9999999-dev",
+        "version": "1.1.x-dev",
+        "version_normalized": "1.1.9999999.9999999-dev",
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "7078dcb3768294ea8a1dc143161dbbe2c6d692c0"
+            "reference": "1dec68e5fb3f99fc385e03afdb1cf5525597b9a8"
         },
         "require": {
-            "cakephp/cakephp": ">3.0.9"
+            "admad/cakephp-jwt-auth": "^2.0",
+            "cakephp/cakephp": ">=3.2"
         },
         "require-dev": {
-            "cakephp/cakephp-codesniffer": "dev-master",
-            "phpunit/phpunit": "4.1.*"
+            "cakephp/cakephp-codesniffer": "^2.3",
+            "phpunit/phpunit": "^5.7"
         },
-        "time": "2016-12-29 03:11:24",
+        "time": "2017-03-14T02:55:11+00:00",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
@@ -2997,50 +3042,6 @@
         ],
         "support": {
             "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
-        }
-    },
-    {
-        "name": "korditpteltd/kd-cakephp-sso",
-        "version": "v1.0.3.4",
-        "version_normalized": "1.0.3.4",
-        "source": {
-            "type": "git",
-            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-            "reference": "566c803e34eb38ab30775d710e09e4c9959868bb"
-        },
-        "require": {
-            "cakephp/cakephp": ">3.0.0",
-            "firebase/php-jwt": "~3.0",
-            "google/apiclient": "1.1.7",
-            "onelogin/php-saml": "^2.9",
-            "phpseclib/phpseclib": "^2.0"
-        },
-        "time": "2017-02-09 05:44:10",
-        "type": "cakephp-plugin",
-        "installation-source": "source",
-        "autoload": {
-            "psr-4": {
-                "SSO\\": "src"
-            }
-        },
-        "license": [
-            "GPL-2.0"
-        ],
-        "authors": [
-            {
-                "name": "KORDIT PHP DEVELOPERS",
-                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
-            }
-        ],
-        "description": "KORDIT CakePHP SSO Plugin",
-        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso",
-        "keywords": [
-            "cakephp",
-            "kordit",
-            "sso"
-        ],
-        "support": {
-            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
         }
     },
     {
