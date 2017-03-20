@@ -101,6 +101,8 @@ class UsersController extends AppController
         $username = empty($username) ? $this->Auth->user()['username'] : $username;
         $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
         $SecurityUserSessions->deleteEntries($username);
+        $Webhooks = TableRegistry::get('Webhook.Webhooks');
+        $Webhooks->triggerShell('logout');
         return $this->redirect($this->Auth->logout());
     }
 

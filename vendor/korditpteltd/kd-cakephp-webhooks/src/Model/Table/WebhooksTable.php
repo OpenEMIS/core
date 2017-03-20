@@ -62,4 +62,23 @@ class WebhooksTable extends Table
             ])
             ->select([$this->aliasField('url'), $this->aliasField('method')]);
     }
+
+    public function triggerShell($eventKey)
+    {
+        $webhooks = $this->find()
+            ->innerJoinWith('WebhookEvents')
+            ->where(['WebhookEvents.event_key' => $eventKey])
+            ->toArray();
+
+        foreach ($webhooks as $webhook) {
+            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method;
+            $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+            try {
+                $pid = exec($shellCmd);
+            } catch(\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
+            }
+        }
+    }
 }
