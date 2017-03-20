@@ -96,8 +96,11 @@ class UsersController extends AppController
         $this->SSO->doAuthentication();
     }
 
-    public function logout($sessionId = null)
+    public function logout($username = null)
     {
+        $username = empty($username) ? $this->Auth->user()['username'] : $username;
+        $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+        $SecurityUserSessions->deleteEntries($username);
         return $this->redirect($this->Auth->logout());
     }
 
@@ -149,6 +152,10 @@ class UsersController extends AppController
                     $this->Users
                 ];
                 $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
+                $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+
+                $SecurityUserSessions->addEntry($user['username'], $this->request->session()->id());
 
                 // Labels
                 $labels = TableRegistry::get('Labels');

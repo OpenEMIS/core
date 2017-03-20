@@ -42,6 +42,13 @@ ALTER TABLE `config_product_lists`
 DROP COLUMN `auto_logout_url`,
 DROP COLUMN `auto_login_url`;
 
+-- security_user_sessions
+CREATE TABLE `security_user_sessions` (
+  `id` VARCHAR(40) NOT NULL default '',
+  `username` VARCHAR(50) NOT NULL default '',
+  PRIMARY KEY (`id`, `username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of user sessions';
+
 
 -- 3.9.6.1
 UPDATE config_items SET value = '3.9.6.1' WHERE code = 'db_version';
