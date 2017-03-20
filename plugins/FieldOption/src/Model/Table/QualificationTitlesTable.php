@@ -21,6 +21,14 @@ class QualificationTitlesTable extends ControllerActionTable
 		$this->addBehavior('FieldOption.FieldOption');
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->requirePresence('qualification_level_id')
+		;
+	}
+
 	public function afterAction(Event $event) {
 		$this->field('qualification_level_id', [
 			'type' => 'select',
