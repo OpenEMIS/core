@@ -31,6 +31,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'W' => 
         array (
             'Webmozart\\Assert\\' => 17,
+            'Webhook\\' => 8,
         ),
         'S' => 
         array (
@@ -108,6 +109,10 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'Webmozart\\Assert\\' => 
         array (
             0 => __DIR__ . '/..' . '/webmozart/assert/src',
+        ),
+        'Webhook\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/korditpteltd/kd-cakephp-webhooks/src',
         ),
         'Symfony\\Polyfill\\Mbstring\\' => 
         array (

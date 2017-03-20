@@ -8,6 +8,9 @@ trait OptionsTrait {
 				'active' => [1 => __('Active'), 0 => __('Inactive')],
 				'yesno' => [1 => __('Yes'), 0 => __('No')],
 			],
+			'Authentication' => [
+				'yesno' => [0 => __('No'), 1 => __('Yes')]
+			],
 			'Staff' => [
 				'position_types' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
 			],
