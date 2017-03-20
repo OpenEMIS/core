@@ -4,7 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "42c2479832912a9925906f60d8e3d156",
+    "hash": "b927a79ac183eadd97c203f7bb30ad14",
+    "content-hash": "b595068d0512b934feda715b2de2f939",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -440,11 +441,11 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "v1.0.3.4",
+            "version": "v1.0.3.5",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "566c803e34eb38ab30775d710e09e4c9959868bb"
+                "reference": "414493493f22757a0e16e1059c83c551f535b491"
             },
             "require": {
                 "cakephp/cakephp": ">3.0.0",
@@ -478,7 +479,45 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-02-09T05:44:10+00:00"
+            "time": "2017-03-16 03:35:04"
+        },
+        {
+            "name": "korditpteltd/kd-cakephp-webhooks",
+            "version": "v1.0.3",
+            "source": {
+                "type": "git",
+                "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
+                "reference": "b90ddf4fd8fe65f36ce8d566edd8e96a80974642"
+            },
+            "require": {
+                "cakephp/cakephp": ">3.1.0"
+            },
+            "type": "cakephp-plugin",
+            "autoload": {
+                "psr-4": {
+                    "Webhook\\": "src"
+                }
+            },
+            "license": [
+                "GPL-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "KORDIT PHP DEVELOPERS",
+                    "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+                }
+            ],
+            "description": "KORDIT CakePHP Webhook Plugin",
+            "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks",
+            "keywords": [
+                "cakephp",
+                "kordit",
+                "webhook"
+            ],
+            "support": {
+                "source": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+            },
+            "time": "2017-03-16 01:31:27"
         },
         {
             "name": "mk-j/php_xlsxwriter",
