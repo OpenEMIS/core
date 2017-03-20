@@ -37,7 +37,6 @@ class ApplicationSwitcherComponent extends Component {
                 ->select([
                     $ConfigProductLists->aliasField('name'),
                     $ConfigProductLists->aliasField('url'),
-                    $ConfigProductLists->aliasField('auto_login_url'),
                     $ConfigProductLists->aliasField('file_name'),
                     $ConfigProductLists->aliasField('file_content')
                 ])
@@ -51,9 +50,6 @@ class ApplicationSwitcherComponent extends Component {
             foreach ($productListOptions as $product) {
                 $name = $product['name'];
                 if (!empty($product['url'])) {
-                    if (!empty($product['auto_login_url'])) {
-                        $product['url'] = rtrim($product['auto_login_url'], '/');
-                    }
                     $icon = 'kd-openemis';
                     $imagePath = '';
                     if (!empty($product['file_name'])) {
