@@ -2988,6 +2988,46 @@
         }
     },
     {
+        "name": "korditpteltd/kd-cakephp-webhooks",
+        "version": "v1.0.3",
+        "version_normalized": "1.0.3.0",
+        "source": {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
+            "reference": "b90ddf4fd8fe65f36ce8d566edd8e96a80974642"
+        },
+        "require": {
+            "cakephp/cakephp": ">3.1.0"
+        },
+        "time": "2017-03-16 01:31:27",
+        "type": "cakephp-plugin",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "Webhook\\": "src"
+            }
+        },
+        "license": [
+            "GPL-2.0"
+        ],
+        "authors": [
+            {
+                "name": "KORDIT PHP DEVELOPERS",
+                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+            }
+        ],
+        "description": "KORDIT CakePHP Webhook Plugin",
+        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks",
+        "keywords": [
+            "cakephp",
+            "kordit",
+            "webhook"
+        ],
+        "support": {
+            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+        }
+    },
+    {
         "name": "korditpteltd/kd-cakephp-restful",
         "version": "1.1.x-dev",
         "version_normalized": "1.1.9999999.9999999-dev",
