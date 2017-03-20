@@ -86,7 +86,6 @@ class ConfigProductListsTable extends ControllerActionTable {
         $this->field('file_content', ['type' => 'image']);
     }
 
-
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         $session = new Session();
