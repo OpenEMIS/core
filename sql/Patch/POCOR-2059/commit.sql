@@ -1,4 +1,5 @@
 -- db_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-2059', NOW());
 
-ALTER TABLE institution_subject_students DROP PRIMARY KEY, ADD PRIMARY KEY(student_id, academic_period_id, education_subject_id, education_grade_id);
+ALTER TABLE `institution_subject_students` ADD INDEX(`id`);
+ALTER TABLE `assessment_item_results` ADD INDEX(`id`);
