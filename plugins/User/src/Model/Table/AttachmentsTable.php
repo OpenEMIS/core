@@ -41,31 +41,18 @@ class AttachmentsTable extends ControllerActionTable
         }
 	}
 
-	public function beforeAction(Event $event, ArrayObject $extra) {
-        // pr($this->associations());
-		$this->field('security_user_id',	['type' => 'hidden', 'visible' => ['edit' => true]]);
-
-		$this->field('modified',			['visible' => ['view' => true]]);
-		$this->field('modified_user_id',	['visible' => ['view' => true]]);
-		$this->field('created', 			['type' => 'datetime', 'visible' => ['index'=>true, 'view'=>true]]);
-		$this->field('created_user_id',		['visible' => ['view' => true]]);
-
-		$this->field('file_name',			['visible' => false]);
-		$this->field('file_content',		['type' => 'binary', 'visible' => ['edit' => true]]);
-		$this->field('date_on_file',		['type' => 'date', 'visible' => true]);
-
-		$this->field('name',				['type' => 'string', 'visible' => true]);
-		$this->field('description',			['type' => 'text', 'visible' => true]);
-
-		$this->field('file_type',			['type' => 'string', 'visible' => ['index'=>true]]);
-
+	public function beforeAction(Event $event, ArrayObject $extra) 
+	{
+    	$this->field('file_name', ['visible' => false]);
+		$this->field('file_content', ['type' => 'binary', 'visible' => ['edit' => true]]);
+		
 		$this->field('security_roles', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Add specific role to share or leave empty to share to All')
 		]);
 
         $this->setFieldOrder([
-            'name', 'description', 'file_content', 'date_on_file', 'security_roles'
+            'name', 'description', 'date_on_file', 'file_content', 'security_roles'
         ]);
 	}
 
@@ -76,6 +63,10 @@ class AttachmentsTable extends ControllerActionTable
 ******************************************************************************************************************/
     public function indexBeforeAction(Event $event, ArrayObject $extra) 
     {
+    	$this->field('file_type', ['type' => 'string', 'visible' => ['index'=>true]]);
+
+		$this->field('created', ['type' => 'datetime', 'visible' => ['index'=>true, 'view'=>true]]);
+
 		$this->setFieldOrder([
 			'name', 'description', 'file_type', 'date_on_file', 'security_roles', 'created'
 		]);
@@ -128,23 +119,6 @@ class AttachmentsTable extends ControllerActionTable
 	public function afterAction(Event $event, ArrayObject $extra) {
 		$this->setupTabElements();
 	}
-
-
-/******************************************************************************************************************
-**
-** view action logics
-**
-******************************************************************************************************************/
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
-    {
-    	$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
-    	if (!empty($entity->modified_user_id)) {
-	    	$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
-	    }
-        
-        return $entity;
-    }
-
 
 /******************************************************************************************************************
 **
