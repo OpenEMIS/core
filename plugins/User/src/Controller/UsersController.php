@@ -101,19 +101,10 @@ class UsersController extends AppController
         return $this->redirect($this->Auth->logout());
     }
 
-    public function afterLogout(Event $event, $user)
-    {
-        if ($this->SSO->getAuthenticationType() != 'Local') {
-            $autoLogoutUrl = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
-            TableRegistry::get('SSO.SingleLogout')->afterLogout($user, $autoLogoutUrl);
-        }
-    }
-
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
-        $events['Auth.logout'] = 'afterLogout';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
@@ -153,10 +144,6 @@ class UsersController extends AppController
             $user = $this->Auth->user();
 
             if (!empty($user)) {
-                if ($this->SSO->getAuthenticationType() != 'Local') {
-                    $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_login_url'])->toArray();
-                    TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
-                }
                 $listeners = [
                     TableRegistry::get('Security.SecurityUserLogins'),
                     $this->Users
