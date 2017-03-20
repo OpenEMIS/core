@@ -12,7 +12,7 @@ class AttachmentRolesTable extends AppTable {
     	$this->table('user_attachments_roles');
         parent::initialize($config);
         
-        $this->belongsTo('Attachments', ['className' => 'User.Attachments']);
+        $this->belongsTo('Attachments', ['className' => 'User.Attachments', 'foreign_key' => 'user_attachment_id']);
         $this->belongsTo('SecurityRoles', ['className' => 'Security.SecurityRoles']);
     }
 
