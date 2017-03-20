@@ -49,6 +49,7 @@ class AlertLogsTable extends ControllerActionTable
     {
         $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
         $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+        $Users = TableRegistry::get('User.Users');
         $model = TableRegistry::get($recordEntity->source());
         $modelAlias = $model->alias();
         $modelRegistryAlias = $model->registryAlias();
@@ -79,8 +80,13 @@ class AlertLogsTable extends ControllerActionTable
                 $query->contain($contain);
             }
 
+            $lastExecutorId = !empty($records->modified_user_id) ? $records->modified_user_id : $records->created_user_id;
+            $lastExecutorName = $Users->get($lastExecutorId)->first_name . ' ' . $Users->get($lastExecutorId)->last_name;
+
             $vars = $query->hydrate(false)->first();
             $vars['feature'] = $feature;
+            $vars['last_executor_id'] = $lastExecutorId;
+            $vars['last_executor_name'] = $lastExecutorName;
             $vars['workflow_comment'] = $records->comment;
 
             if (!empty($vars['assignee']['email'])) { // if no email will not insert to alertlog.
@@ -94,7 +100,7 @@ class AlertLogsTable extends ControllerActionTable
                 $defaultMessage = __('Your action is required for [${feature} Workflow].');
                 $defaultMessage .= "\n"; // line break
                 $defaultMessage .= "\n" . __('Status')      . ': ' . "\t \t"    . '${status.name}' ;
-                $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${modified_user.first_name} ${modified_user.last_name}' ;
+                $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${last_executor_name}' ;
                 $defaultMessage .= "\n" . __('Comments')    . ': ' . "\t"    . '${workflow_comment}' ;
 
                 $message = $this->getWorkflowEmailMessage($recordEntity->source());

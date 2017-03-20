@@ -51,7 +51,7 @@ class SendingAlertShell extends Shell
                 $emailObj
                     ->to($sendTo)
                     ->subject($obj->subject)
-                    ->send($obj->message);
+                    ->send(htmlspecialchars($obj->message)); // message is html ready
 
                 // update the alertLog
                 $this->AlertLogs->updateAll(
