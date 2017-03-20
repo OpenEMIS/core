@@ -39,9 +39,6 @@ class ConfigWebhooksTable extends ControllerActionTable {
                 'provider' => 'table'
             ])
             ->requirePresence('url')
-            ->add('url', 'invalidUrl', [
-                'rule' => ['url', true]
-            ])
             ->add('triggered_event', 'ruleNotEmpty', [
                 'rule' => function ($value, $context) {
                     if (empty($value)) {
