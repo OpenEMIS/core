@@ -12,7 +12,8 @@
         "mk-j/php_xlsxwriter": "dev-master",
         "korditpteltd/kd-cakephp-restful": "1.1.x-dev",
         "admad/cakephp-jwt-auth": "2.0.1",
-        "korditpteltd/kd-cakephp-sso": "1.0.*"
+        "korditpteltd/kd-cakephp-sso": "1.0.*",
+        "korditpteltd/kd-cakephp-webhooks": "^1.0"
     },
     "require-dev": {
         "psy/psysh": "@stable",
@@ -53,6 +54,10 @@
         {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git"
+        },
+        {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git"
         }
     ]
 }
