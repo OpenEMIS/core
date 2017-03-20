@@ -27,12 +27,25 @@ class SecurityGroupUsersTable extends AppTable {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         // only update workflow assignee if the user is added to the group or the role of the user has changed
-        if ($entity->isNew() || $entity->dirty('security_role_id')) {
+        if ($entity->isNew()) {
+            $model = 0;
+            $id = 0;
+            $statusId = 0;
+            $groupId = $entity->security_group_id;
+            $userId = 0;
+
+            if ($entity->has('updateWorkflowAssignee') && $entity->updateWorkflowAssignee == false) {
+                // don't trigger shell
+            } else {
+                $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
+            }
+        } else if ($entity->dirty('security_role_id')) {
             $model = 0;
             $id = 0;
             $statusId = 0;
             $groupId = $entity->security_group_id;
             $userId = $entity->security_user_id;
+
             $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
         }
 	}
