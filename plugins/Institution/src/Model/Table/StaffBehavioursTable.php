@@ -192,13 +192,26 @@ class StaffBehavioursTable extends AppTable {
 	}
 
 	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, $request) {
-		if(!empty($request->data[$this->alias()]['staff_behaviour_category_id'])) {
-			$behaviourCategoryId = $request->data[$this->alias()]['staff_behaviour_category_id'];
-			$defaultClassificationId = $this->StaffBehaviourCategories->get($behaviourCategoryId)->behaviour_classification_id;
+		if ($action == 'add' || $action == 'edit') {
+			$defaultCategory = $this->StaffBehaviourCategories
+				->find()
+				->where([$this->StaffBehaviourCategories->aliasField('default') => 1])
+				->first();
 
-			$attr['value'] = $defaultClassificationId;
-			$attr['attr']['value'] = $defaultClassificationId;
+			if (!empty($defaultCategory)) {
+				// set default classification if there is a default category
+				$attr['default'] = $defaultCategory->behaviour_classification_id;
+			}
+
+			if(!empty($request->data[$this->alias()]['staff_behaviour_category_id'])) {
+				$behaviourCategoryId = $request->data[$this->alias()]['staff_behaviour_category_id'];
+				$defaultClassificationId = $this->StaffBehaviourCategories->get($behaviourCategoryId)->behaviour_classification_id;
+
+				$attr['value'] = $defaultClassificationId;
+				$attr['attr']['value'] = $defaultClassificationId;
+			}
 		}
+
 		return $attr;
 	}
 }
