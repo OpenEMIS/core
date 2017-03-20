@@ -43,10 +43,11 @@ class StaffBehavioursTable extends AppTable {
 	public function beforeAction() {
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('staff_id');
-		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select']);
+		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select', 'onChangeReload' => true]);
+		$this->ControllerAction->field('behaviour_classification_id', ['type' => 'select']);
 
 		if ($this->action == 'view' || $this->action == 'edit') {
-			$this->ControllerAction->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'staff_behaviour_category_id']);
+			$this->ControllerAction->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 		}
 	}
 
@@ -55,7 +56,7 @@ class StaffBehavioursTable extends AppTable {
 		$this->ControllerAction->field('action', ['visible' => false]);
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
 
-		$this->ControllerAction->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'title', 'staff_behaviour_category_id']);
+		$this->ControllerAction->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
@@ -107,7 +108,7 @@ class StaffBehavioursTable extends AppTable {
 
 	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('academic_period_id');
-		$this->ControllerAction->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'date_of_behaviour', 'time_of_behaviour']);
+		$this->ControllerAction->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query) {
@@ -186,6 +187,17 @@ class StaffBehavioursTable extends AppTable {
 			$attr['options'] = $staffOptions;
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';
+		}
+		return $attr;
+	}
+
+	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, $request) {
+		if(!empty($request->data[$this->alias()]['staff_behaviour_category_id'])) {
+			$behaviourCategoryId = $request->data[$this->alias()]['staff_behaviour_category_id'];
+			$defaultClassificationId = $this->StaffBehaviourCategories->get($behaviourCategoryId)->behaviour_classification_id;
+
+			$attr['value'] = $defaultClassificationId;
+			$attr['attr']['value'] = $defaultClassificationId;
 		}
 		return $attr;
 	}
