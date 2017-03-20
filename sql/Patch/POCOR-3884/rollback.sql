@@ -20,5 +20,8 @@ SET `config_product_lists`.`auto_login_url` = `z_3884_config_product_lists`.`aut
 
 DROP TABLE `z_3884_config_product_lists`;
 
+-- security_user_sessions
+DROP TABLE `security_user_sessions`;
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3884';

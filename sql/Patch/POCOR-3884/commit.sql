@@ -40,3 +40,10 @@ WHERE `config_product_lists`.`auto_login_url` IS NOT NULL OR `config_product_lis
 ALTER TABLE `config_product_lists`
 DROP COLUMN `auto_logout_url`,
 DROP COLUMN `auto_login_url`;
+
+-- security_user_sessions
+CREATE TABLE `security_user_sessions` (
+  `id` VARCHAR(40) NOT NULL default '',
+  `username` VARCHAR(50) NOT NULL default '',
+  PRIMARY KEY (`id`, `username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of user sessions';
