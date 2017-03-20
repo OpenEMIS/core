@@ -10,7 +10,7 @@
         "mobiledetect/mobiledetectlib": "2.*",
         "PHPOffice/PHPExcel": "dev-master",
         "mk-j/php_xlsxwriter": "dev-master",
-        "korditpteltd/kd-cakephp-restful": "1.0.3.x-dev",
+        "korditpteltd/kd-cakephp-restful": "1.1.x-dev",
         "admad/cakephp-jwt-auth": "2.0.1",
         "korditpteltd/kd-cakephp-sso": "1.0.*",
         "korditpteltd/kd-cakephp-webhooks": "^1.0"
