@@ -27,6 +27,7 @@ class ConfigurationsController extends AppController
         $this->set('contentHeader', __($header));
     }
 
+    public function Webhooks()                  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigWebhooks']); }
     public function ProductLists()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']); }
     public function Authentication()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAuthentication']); }
     public function ExternalDataSource()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']); }

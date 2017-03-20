@@ -1,3 +1,4 @@
+<?= $this->Html->script('Webhook.webhook') ?>
 <?php
 $session = $this->request->session();
 $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
@@ -12,7 +13,6 @@ if ($session->check('System.User.roles')) {
 	$roles = $session->read('System.User.roles');
 }
 ?>
-
 <div class="header-navigation">
 	<div class="username">
 		<span><?= sprintf('%s %s', $firstName, $lastName) ?></span>
@@ -44,10 +44,7 @@ if ($session->check('System.User.roles')) {
 					if ($name != '_divider') {
 						$target = isset($attr['target']) ? $attr['target'] : '_self';
 						echo '<li>';
-						echo '<a href="' . $this->Url->build($attr['url']) . '" target="' . $target. '">';
-						echo '<i class="fa ' . $attr['icon'] . '"></i>';
-						echo '<span> ' . __($name) . '</span>';
-						echo '</a>';
+						echo $this->Html->link('<i class="fa ' . $attr['icon'] . '"></i><span> ' . __($name) . '</span>', $attr['url'], $attr);
 						echo '</li>';
 					} else {
 						echo '<li class="divider"></li>';
