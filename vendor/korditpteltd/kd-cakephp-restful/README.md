@@ -1,4 +1,4 @@
-# Restful Plugin 
+# Restful Plugin
 
 [![Version](https://img.shields.io/badge/Version-1.0.1-green.svg)](https://demo.openemis.org/integrator)
 
@@ -8,12 +8,12 @@ KORDIT CakePHP V3 Restful Plugin.
 ## Requirements
 The `master` branch has the following requirements:
 
-* [![CakePHP](https://img.shields.io/badge/CakePHP->3.0.9-yellowgreen.svg)](http://cakephp.org)
-* [![PHP](https://img.shields.io/badge/PHP->%3D5.4.16-yellowgreen.svg)](http://cakephp.org)
+* [![CakePHP](https://img.shields.io/badge/CakePHP->=3.2-yellowgreen.svg)](http://cakephp.org)
+* [![PHP](https://img.shields.io/badge/PHP->%3D5.5.9-yellowgreen.svg)](http://cakephp.org)
 
 
 ## Installation
-Install this plugin using `composer` from your CakePHP V3 Project ROOT directory (where the `composer.json` file is located). 
+Install this plugin using `composer` from your CakePHP V3 Project ROOT directory (where the `composer.json` file is located).
 
 
 * Edit `composer.json` file by adding the following lines:
