@@ -1,3 +1,9 @@
+v1.0.7
+- Updated code syntax to be backward compatible with older version of cakephp
+
+v1.0.6
+- Updated webhooks table and added webhook shell
+
 v1.0.5
 - Added username mapping
 
