@@ -7,7 +7,7 @@ use Cake\Utility\Security;
 use Cake\Event\Event;
 use ArrayObject;
 
-class AttachmentRolesTable extends AppTable {
+class AttachmentsRolesTable extends AppTable {
     public function initialize(array $config) {
     	$this->table('user_attachments_roles');
         parent::initialize($config);
