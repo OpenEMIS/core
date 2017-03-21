@@ -13,7 +13,7 @@ class TrainingCoursesTable extends AppTable  {
     {
         parent::initialize($config);
 
-        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('TrainingFieldStudies', ['className' => 'Training.TrainingFieldStudies', 'foreignKey' => 'training_field_of_study_id']);
         $this->belongsTo('TrainingCourseTypes', ['className' => 'Training.TrainingCourseTypes', 'foreignKey' => 'training_course_type_id']);
         $this->belongsTo('TrainingModeDeliveries', ['className' => 'Training.TrainingModeDeliveries', 'foreignKey' => 'training_mode_of_delivery_id']);
@@ -148,7 +148,7 @@ class TrainingCoursesTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetCoursePrerequisites(Event $event, Entity $entity, array $attr)
+    public function onExcelGetCoursePrerequisites(Event $event, Entity $entity)
     {
         if ($entity->has('course_prerequisites') && !empty($entity->course_prerequisites)) {
             $prerequisites = [];
@@ -161,7 +161,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetTrainingProviders(Event $event, Entity $entity, array $attr)
+    public function onExcelGetTrainingProviders(Event $event, Entity $entity)
     {
         if ($entity->has('training_providers') && !empty($entity->training_providers)) {
             $providers = [];
@@ -174,7 +174,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetResultTypes(Event $event, Entity $entity, array $attr)
+    public function onExcelGetResultTypes(Event $event, Entity $entity)
     {
         if ($entity->has('result_types') && !empty($entity->result_types)) {
             $types = [];
@@ -187,7 +187,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetSpecialisations(Event $event, Entity $entity, array $attr)
+    public function onExcelGetSpecialisations(Event $event, Entity $entity)
     {
         if ($entity->has('specialisations') && !empty($entity->specialisations)) {
             $specialisations = [];
@@ -200,7 +200,7 @@ class TrainingCoursesTable extends AppTable  {
         }
     }
 
-    public function onExcelGetTargetPopulations(Event $event, Entity $entity, array $attr)
+    public function onExcelGetTargetPopulations(Event $event, Entity $entity)
     {
         if ($entity->has('target_populations') && !empty($entity->target_populations)) {
             $targetPopulations = [];
