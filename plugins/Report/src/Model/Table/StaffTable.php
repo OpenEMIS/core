@@ -37,8 +37,8 @@ class StaffTable extends AppTable  {
 		$this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('system_usage', ['type' => 'hidden']);
         $this->ControllerAction->field('status', ['type' => 'hidden']);
-		$this->ControllerAction->field('format');
         $this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
+		$this->ControllerAction->field('format');
 	}
 	
 	public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request) {
@@ -47,7 +47,6 @@ class StaffTable extends AppTable  {
 		return $attr;
 	}
 
-<<<<<<< HEAD
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -65,7 +64,10 @@ class StaffTable extends AppTable  {
                     $request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
                 }
                 return $attr;
-=======
+            }
+        }
+    }
+
     public function onUpdateFieldSystemUsage(Event $event, array $attr, $action, Request $request)
     {
         if (isset($this->request->data[$this->alias()]['feature'])) {
@@ -98,7 +100,6 @@ class StaffTable extends AppTable  {
                     $attr['options'] = $licenseStatuses;
                     return $attr;
                 }
->>>>>>> acd8f76003761c742be81f6418744b90686cba5a
             }
         }
     }
