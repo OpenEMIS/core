@@ -786,16 +786,16 @@ class NavigationComponent extends Component
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
 			],
-            'Reports.Textbooks' => [
-                'title' => 'Textbooks',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
-            'Reports.ProfessionalDevelopment' => [
-                'title' => 'Professional Development',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
+			'Reports.Textbooks' => [
+				'title' => 'Textbooks',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Report'],
+			],
+			'Reports.ProfessionalDevelopment' => [
+				'title' => 'Professional Development',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Report'],
+			],
 			'Reports.Examinations' => [
 				'title' => 'Examinations',
 				'parent' => 'Reports',

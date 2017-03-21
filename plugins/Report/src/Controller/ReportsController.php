@@ -69,17 +69,17 @@ class ReportsController extends AppController {
 				'Report.StaffQualifications' => __('Qualifications'),
 				'Report.StaffSystemUsage' => __('System Usage')
 			];
-        } else if ($module == 'Textbooks') {
-            $options = [
-                'Report.Textbooks' => __('Textbooks'),
-                'Report.InstitutionTextbooks' => __('Institution Textbooks')
-            ];
-        } else if ($module == 'ProfessionalDevelopment') {
-            $options = [
-                'Report.TrainingCourses' => __('Courses'),
-                'Report.TrainingSessions' => __('Sessions'),
-                'Report.TrainingSessionResults' => __('Results')
-            ];
+		} else if ($module == 'Textbooks') {
+			$options = [
+				'Report.Textbooks' => __('Textbooks'),
+				'Report.InstitutionTextbooks' => __('Institution Textbooks')
+			];
+		} else if ($module == 'ProfessionalDevelopment') {
+			$options = [
+				'Report.TrainingCourses' => __('Courses'),
+				'Report.TrainingSessions' => __('Sessions'),
+				'Report.TrainingSessionResults' => __('Results')
+			];
 		} else if ($module == 'Surveys') {
 			$options = [
 				'Report.Surveys' => __('Institutions')
