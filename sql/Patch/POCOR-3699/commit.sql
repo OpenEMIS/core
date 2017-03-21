@@ -1,48 +1,50 @@
 -- `system_patches`
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3699', NOW());
 
-
--- `qualification_specialisations`
+-- backup old tables
 RENAME TABLE `qualification_specialisations` TO `z_3699_qualification_specialisations`;
-
+RENAME TABLE `qualification_specialisation_subjects` TO `z_3699_qualification_specialisation_subjects`;
+RENAME TABLE `qualification_institutions` TO `z_3699_qualification_institutions`;
+RENAME TABLE `qualification_levels` TO `z_3699_qualification_levels`;
+RENAME TABLE `staff_qualifications` TO `z_3699_staff_qualifications`;
 
 -- `qualification_levels`
 #ensure that there is at least one default qualification_levels
-DROP PROCEDURE IF EXISTS `ensureDefaultQualificationLevel`;
+-- DROP PROCEDURE IF EXISTS `ensureDefaultQualificationLevel`;
 
-DELIMITER $$
-CREATE PROCEDURE `ensureDefaultQualificationLevel` (OUT defaultQualificationLevelId int)
-BEGIN
-    DECLARE recordCount INT;
-    DECLARE defaultId INT;
+-- DELIMITER $$
+-- CREATE PROCEDURE `ensureDefaultQualificationLevel` (OUT defaultQualificationLevelId int)
+-- BEGIN
+--     DECLARE recordCount INT;
+--     DECLARE defaultId INT;
 
-    SELECT COUNT(*) INTO recordCount 
-    FROM `qualification_levels`;
+--     SELECT COUNT(*) INTO recordCount 
+--     FROM `qualification_levels`;
 
-    SELECT `id` INTO defaultId 
-    FROM `qualification_levels`
-    WHERE `default` = 1;
+--     SELECT `id` INTO defaultId 
+--     FROM `qualification_levels`
+--     WHERE `default` = 1;
 
-    SET defaultQualificationLevelId = NULL;
+--     SET defaultQualificationLevelId = NULL;
 
-    IF (defaultId IS NOT NULL) THEN #if default is set, then return it
-        SET defaultQualificationLevelId = defaultId;
-    ELSE #else, get 1 record and set it as default
-        IF (recordCount > 0) THEN
-            UPDATE `qualification_levels`
-            SET `default` = 1 
-            ORDER BY `id` LIMIT 1;
+--     IF (defaultId IS NOT NULL) THEN #if default is set, then return it
+--         SET defaultQualificationLevelId = defaultId;
+--     ELSE #else, get 1 record and set it as default
+--         IF (recordCount > 0) THEN
+--             UPDATE `qualification_levels`
+--             SET `default` = 1 
+--             ORDER BY `id` LIMIT 1;
 
-            SELECT `id` INTO defaultQualificationLevelId 
-            FROM `qualification_levels`
-            WHERE `default` = 1;
-        END IF;
-    END IF;
-END $$
-DELIMITER ;
+--             SELECT `id` INTO defaultQualificationLevelId 
+--             FROM `qualification_levels`
+--             WHERE `default` = 1;
+--         END IF;
+--     END IF;
+-- END $$
+-- DELIMITER ;
 
-SET @a = 0;
-call ensureDefaultQualificationLevel(@a);
+-- SET @a = 0;
+-- call ensureDefaultQualificationLevel(@a);
 #SELECT @a;
 
 
@@ -50,7 +52,7 @@ call ensureDefaultQualificationLevel(@a);
 DROP TABLE IF EXISTS `qualification_titles`;
 CREATE TABLE IF NOT EXISTS `qualification_titles` (
   `id` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL,
+  `name` varchar(250) NOT NULL,
   `order` int(3) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `editable` int(1) NOT NULL DEFAULT '1',
@@ -58,6 +60,7 @@ CREATE TABLE IF NOT EXISTS `qualification_titles` (
   `international_code` varchar(50) DEFAULT NULL,
   `national_code` varchar(50) DEFAULT NULL,
   `qualification_level_id` int(11) NULL COMMENT 'links to qualification_levels.id',
+  -- `qualification_temp_code` varchar(250) NOT NULL,
   `modified_user_id` int(11) DEFAULT NULL,
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
@@ -66,19 +69,29 @@ CREATE TABLE IF NOT EXISTS `qualification_titles` (
 
 ALTER TABLE `qualification_titles`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `qualification_level_id` (`qualification_level_id`);
+  ADD KEY `qualification_level_id` (`qualification_level_id`),
+  -- ADD KEY `qualification_temp_code` (`qualification_temp_code`);
 
 ALTER TABLE `qualification_titles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 #re-insert the data
-INSERT INTO `qualification_titles`
-SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, @a, `modified_user_id`, `modified`, `created_user_id`, `created`
-FROM `z_3699_qualification_specialisations`;
+-- INSERT INTO `qualification_titles`
+-- SELECT `id`, `name`, `order`, `visible`, `editable`, `default`, `international_code`, `national_code`, @a, `modified_user_id`, `modified`, `created_user_id`, `created`
+-- FROM `z_3699_qualification_specialisations`;
 
+#re-insert the data from `staff_qualifications` table
+INSERT INTO `qualification_titles` (`name`, `order`, `qualification_level_id`, `qualification_temp_code`, `created_user_id`, `created`)
+SELECT DISTINCT CONCAT(trim(`SQ`.`qualification_title`), ' ', trim(`QS`.`name`), ' ', trim(`QL`.`name`)) AS `qualification_title_name`, 
+1, `SQ`.`qualification_level_id`,
+CONCAT(trim(`SQ`.`qualification_title`), '.', trim(`SQ`.`qualification_specialisation_id`), '.', trim(`SQ`.`qualification_level_id`)) AS `qualification_title_code`,
+1, '1970-01-01'
+FROM `z_3699_staff_qualifications` `SQ`
+INNER JOIN `z_3699_qualification_specialisations` `QS` ON `QS`.`id` = `SQ`.`qualification_specialisation_id`
+INNER JOIN `z_3699_qualification_levels` `QL` ON `QL`.id = `SQ`.`qualification_level_id`
+ORDER BY `qualification_title_code`;
 
 -- `staff_qualifications`
-RENAME TABLE `staff_qualifications` TO `z_3699_staff_qualifications`;
 
 DROP TABLE IF EXISTS `staff_qualifications`;
 CREATE TABLE IF NOT EXISTS `staff_qualifications` (
@@ -116,8 +129,16 @@ ALTER TABLE `staff_qualifications`
 -- INNER JOIN `qualification_institutions` `Q`
 --     ON `Z`.`qualification_institution_id` = `Q`.`id`;
 
+-- SELECT `SQ`.*, `QT`.`id`, `QI`.`name`
+-- FROM `z_3699_staff_qualifications` `SQ`
+-- INNER JOIN `qualification_titles` `QT` ON (
+--     CONCAT(trim(`SQ`.`qualification_title`), '.', trim(`SQ`.`qualification_specialisation_id`), '.', trim(`SQ`.`qualification_level_id`)) = `QT`.`qualification_temp_code`
+-- )
+-- INNER JOIN `z_3699_qualification_institutions` `QI` ON (
+--   `QI`.id = `SQ`.`qualification_institution_id`
+-- )
+
 -- `qualification_specialisation_subjects`
-RENAME TABLE `qualification_specialisation_subjects` TO `z_3699_qualification_specialisation_subjects`;
 
 
 -- `staff_qualifications_subjects`
@@ -137,8 +158,3 @@ ALTER TABLE `staff_qualifications_subjects`
 --`labels`
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
 VALUES ('5c3ddc98-0aec-11e7-b9c5-525400b263eb', 'Qualifications', 'file_content', 'Staff > Qualifications', 'Attachment', NULL, NULL, '1', NULL, NULL, '1', '2017-03-17 00:00:00');
-
-
--- `qualification_institutions`
-RENAME TABLE `qualification_institutions` TO `z_3699_qualification_institutions`;
-
