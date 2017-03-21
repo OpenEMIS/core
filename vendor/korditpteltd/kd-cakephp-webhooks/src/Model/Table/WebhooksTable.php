@@ -62,4 +62,27 @@ class WebhooksTable extends Table
             ])
             ->select([$this->aliasField('url'), $this->aliasField('method')]);
     }
+
+    public function triggerShell($eventKey, $params = [])
+    {
+        $webhooks = $this->find()
+            ->innerJoinWith('WebhookEvents')
+            ->where(['WebhookEvents.event_key' => $eventKey])
+            ->toArray();
+
+        $username = isset($params['username']) ? $params['username'] : null;
+        foreach ($webhooks as $key => $value) {
+            $webhooks[$key]->url = str_replace('{username}', $username, $value->url);
+        }
+        foreach ($webhooks as $webhook) {
+            $cmd = ROOT . DS . 'bin' . DS . 'cake Webhook ' . $webhook->url . ' ' . $webhook->method;
+            $logs = ROOT . DS . 'logs' . DS . 'Webhook.log & echo $!';
+            $shellCmd = $cmd . ' >> ' . $logs;
+            try {
+                $pid = exec($shellCmd);
+            } catch(\Exception $ex) {
+                Log::write('error', __METHOD__ . ' exception when triggering : '. $ex);
+            }
+        }
+    }
 }
