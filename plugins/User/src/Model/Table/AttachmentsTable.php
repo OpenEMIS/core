@@ -27,7 +27,7 @@ class AttachmentsTable extends ControllerActionTable
             'joinTable' => 'user_attachments_roles',
             'foreignKey' => 'user_attachment_id',
             'targetForeignKey' => 'security_role_id',
-            'through' => 'User.AttachmentRoles',
+            'through' => 'User.AttachmentsRoles',
             'dependent' => true
         ]);
 
@@ -61,11 +61,10 @@ class AttachmentsTable extends ControllerActionTable
 ** index action logics
 **
 ******************************************************************************************************************/
-    public function indexBeforeAction(Event $event, ArrayObject $extra) 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-    	$this->field('file_type', ['type' => 'string', 'visible' => ['index'=>true]]);
-
-		$this->field('created', ['type' => 'datetime', 'visible' => ['index'=>true, 'view'=>true]]);
+    	$this->field('file_type');
+		$this->field('created', ['visible' => true]);
 
 		$this->setFieldOrder([
 			'name', 'description', 'file_type', 'date_on_file', 'security_roles', 'created'
@@ -76,22 +75,30 @@ class AttachmentsTable extends ControllerActionTable
     {
         //if not super admin then get the security role for filtering purpose
         if (!$this->AccessControl->isAdmin()) {
-            $securityRole = $this->AccessControl->getRolesByUser($this->Auth->user('id'))->toArray();
-            $securityRole = $securityRole[0]['security_role_id'];
+        	$AttachmentsRoles = TableRegistry::get('User.AttachmentsRoles');
+        	$userId = $this->Auth->user('id');
 
-            $query->leftJoin(
-                    ['AttachmentRoles' => 'user_attachments_roles'],
-                    ['AttachmentRoles.user_attachment_id = ' . $this->aliasField('id')])
-                ->where([
+            $securityRoles = $this->AccessControl->getRolesByUser($userId)->toArray();
+            $securityRoleIds = [];
+            foreach ($securityRoles as $key => $value) {
+            	$securityRoleIds[] = $value->security_role_id;
+            }
+            
+            $query
+            	->leftJoin(
+            		[$AttachmentsRoles->alias() => $AttachmentsRoles->table()],
+            		[$AttachmentsRoles->aliasField('user_attachment_id = ') . $this->aliasField('id')]
+            	)
+            	->where([
                 	'OR' => [
 	                    'OR' => [ //if share not set or has the active user security roles
-	                        ['AttachmentRoles.id IS NULL'],
-	                        ['AttachmentRoles.security_role_id' => $securityRole]
+	                        [$AttachmentsRoles->aliasField('id IS NULL')],
+	                        [$AttachmentsRoles->aliasField('security_role_id IN') => $securityRoleIds]
 	                    ],
-	                    $this->aliasField('created_user_id') => $this->Auth->user('id') //show to the creator
+	                    $this->aliasField('created_user_id') => $userId //show to the creator
 	                ]
                 ])
-                ->distinct();
+            	->distinct();
         }
 
         $query->contain(['SecurityRoles']);
