@@ -60,7 +60,12 @@ class ProfessionalDevelopmentTable extends AppTable {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
 
-                list($modelplugin, $modelAlias) = explode('.', $feature);
+                if ($feature == 'Report.TrainingResults') {
+                    $modelAlias = 'TrainingSessionResults';
+                } else {
+                    $modelAlias = explode('.', $feature)[1];
+                }
+
                 $workflowStatuses = $this->Workflow->getWorkflowStatuses('Training.' . $modelAlias);
                 if (empty($workflowStatuses)) {
                     $this->Alert->warning('Reports.noWorkflowStatus');
