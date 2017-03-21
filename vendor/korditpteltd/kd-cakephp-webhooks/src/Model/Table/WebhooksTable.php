@@ -67,7 +67,10 @@ class WebhooksTable extends Table
     {
         $webhooks = $this->find()
             ->innerJoinWith('WebhookEvents')
-            ->where(['WebhookEvents.event_key' => $eventKey])
+            ->where([
+                'WebhookEvents.event_key' => $eventKey,
+                $this->aliasField('status') => self::ACTIVE
+            ])
             ->toArray();
 
         $username = isset($params['username']) ? $params['username'] : null;
