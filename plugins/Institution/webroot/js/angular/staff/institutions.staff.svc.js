@@ -374,6 +374,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
                         vm.importMappingObj(genderName, nationality, identityType)
                         .then(function(promiseArr) {
+                            delete newUserRecord['nationality_id'];
+                            delete newUserRecord['identity_type_id'];
                             newUserRecord['gender_id'] = promiseArr[0];
                             newUserRecord['nationality_id'] = promiseArr[1];
                             newUserRecord['identity_type_id'] = promiseArr[2];
