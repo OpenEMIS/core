@@ -28,6 +28,12 @@ class ProfessionalDevelopmentTable extends AppTable {
 
     public function beforeAction(Event $event)
     {
+        // fix header and breadcrumbs
+        $controllerName = $this->controller->name;
+        $reportName = __('Professional Development');
+        $this->controller->Navigation->substituteCrumb($this->alias(), $reportName);
+        $this->controller->set('contentHeader', __($controllerName).' - '.$reportName);
+
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('status');
