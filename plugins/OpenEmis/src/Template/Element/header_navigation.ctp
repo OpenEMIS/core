@@ -1,4 +1,3 @@
-<?= $this->Html->script('Webhook.webhook') ?>
 <?php
 $session = $this->request->session();
 $firstName = $session->check('Auth.User.first_name') ? $session->read('Auth.User.first_name') : 'System';
