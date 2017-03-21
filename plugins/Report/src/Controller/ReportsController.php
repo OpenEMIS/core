@@ -68,6 +68,7 @@ class ReportsController extends AppController {
 				'Report.StaffQualifications' => __('Qualifications'),
 				'Report.StaffLicenses' => __('Licenses'),
 				'Report.StaffEmployments' => __('Employments'),
+				'Report.StaffSalaries' => __('Salaries'),
 				'Report.StaffSystemUsage' => __('System Usage')
 			];
         } else if ($module == 'Textbooks') {
