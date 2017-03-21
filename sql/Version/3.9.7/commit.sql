@@ -32,7 +32,7 @@ CREATE TABLE `z_3570_institutions` LIKE `institutions`;
 INSERT INTO `z_3570_institutions`
 SELECT * FROM `institutions`;
 
-UPDATE `institutions` SET `year_opened` = YEAR('date_opened');
+UPDATE `institutions` SET `year_opened` = YEAR(`date_opened`);
 
 
 -- POCOR-3886
