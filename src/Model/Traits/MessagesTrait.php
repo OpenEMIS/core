@@ -642,10 +642,16 @@ trait MessagesTrait {
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
-            'noCriterias' => 'Please setup competency criterias for the selected item',
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
+        ],
+        'UserContacts' => [
+            'noEmailRemain' => 'There should be at least one Email record'
         ],
 
         // Validation Messages
@@ -657,6 +663,9 @@ trait MessagesTrait {
                 'noSubjectSelected' => 'There is no subject selected',
                 'noProgrammes' => 'There is no programme set for this institution',
                 'noSections' => 'There is no class under the selected academic period',
+                'date_opened' => [
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
                 'date_closed' => [
                     'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
                 ],
@@ -671,7 +680,11 @@ trait MessagesTrait {
                     'ruleLatitude' => 'Please enter a valid Latitude'
                 ],
                 'area_id' => [
-                    'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.'
+                    'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.',
+                    'configuredArea' => 'Please select area from %s level.'
+                ],
+                'area_administrative_id' => [
+                    'configuredArea' => 'Please select area administrative from %s level.'
                 ],
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
@@ -1016,9 +1029,10 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
-                    'ruleValidatePreferred' => 'Please select a preferred contact type'
+                    'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
             'Identities' => [
@@ -1622,6 +1636,13 @@ trait MessagesTrait {
                 ],
             ],
         ],
+        'FieldOption' => [
+            'LicenseClassifications' => [
+                'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
+            ]
+        ],
         'Configuration' => [
             'ConfigProductLists' => [
                 'name' => [
@@ -1639,6 +1660,17 @@ trait MessagesTrait {
                     'invalidUrl' => 'You have entered an invalid URL.',
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
+            ],
+            'ConfigWebhooks' => [
+                'triggered_event' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL'
+                ],
+                'name' => [
+                    'ruleUnique' => 'This webhook name already exists in the system',
+                ],
             ]
         ],
         'Alert' => [
