@@ -82,17 +82,16 @@ class TrainingCoursesTable extends AppTable  {
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $selectedStatus = !empty($requestData->status) ? $requestData->status : null;
+        $selectedStatus = $requestData->status;
 
         $query
             ->contain(['CoursePrerequisites', 'TrainingProviders', 'ResultTypes', 'Specialisations', 'TargetPopulations'])
             ->order([$this->aliasField('code')]);
 
-        if (!is_null($selectedStatus)) {
-            $query
-                ->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
-                    return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
-                });
+        if (!empty($selectedStatus)) {
+            $query->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
+                return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
+            });
         }
     }
 
