@@ -13,20 +13,28 @@ class OpenEmisComponent extends Component {
 	protected $_defaultConfig = [
 		'theme' => 'auto',
 		'homeUrl' => ['controller' => '/'],
-		'logoutUrl' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
 		'headerMenu' => [
 			'About' => [
 				'url' => ['plugin' => false, 'controller' => 'About', 'action' => 'index'],
-				'icon' => 'fa-info-circle'
+				'icon' => 'fa-info-circle',
+				'escapeTitle' => false
 			],
 			'Preferences' => [
 				'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index'],
-				'icon' => 'fa-cog'
+				'icon' => 'fa-cog',
+				'escapeTitle' => false
 			],
 			'Help' => [
 				'url' => 'https://support.openemis.org/',
 				'icon' => 'fa-question-circle',
-				'target' => '_blank'
+				'target' => '_blank',
+				'escapeTitle' => false
+			],
+			'0' => '_divider',
+			'Logout' => [
+				'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
+				'icon' => 'fa-power-off',
+				'escapeTitle' => false
 			]
 		]
 	];
@@ -90,13 +98,6 @@ class OpenEmisComponent extends Component {
 
 	private function getHeaderMenu() {
 		$headerMenu = $this->config('headerMenu');
-
-		$headerMenu[] = '_divider';
-		$headerMenu['Logout'] = [
-			'url' => $this->config('logoutUrl'),
-			'icon' => 'fa-power-off'
-		];
-
 		return $headerMenu;
 	}
 
