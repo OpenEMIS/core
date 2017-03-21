@@ -110,7 +110,7 @@ class QualificationsTable extends ControllerActionTable {
 
     public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, Request $request)
     {
-        pr($attr);
+        // pr($attr);
         $attr['onChangeReload'] = 'changeQualificationTitleId';
 
         return $attr;
