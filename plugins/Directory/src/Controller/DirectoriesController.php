@@ -19,23 +19,10 @@ class DirectoriesController extends AppController {
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 
-
-			// Users - Health
-			'Healths' 				=> ['className' => 'Health.Healths'],
-			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
-			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
-			'HealthFamilies' 		=> ['className' => 'Health.Families'],
-			'HealthHistories' 		=> ['className' => 'Health.Histories'],
-			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
-			'HealthMedications' 	=> ['className' => 'Health.Medications'],
-			'HealthTests' 			=> ['className' => 'Health.Tests'],
-
-
 			// Student
 			'StudentAbsences' 		=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'StudentBehaviours' 	=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
-
 
 			// Staff
 			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
@@ -89,7 +76,17 @@ class DirectoriesController extends AppController {
 	public function StudentTextbooks() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
-	// End
+
+	// health
+	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
+	public function HealthAllergies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']); }
+	public function HealthConsultations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']); }
+	public function HealthFamilies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']); }
+	public function HealthHistories()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']); }
+	public function HealthImmunizations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']); }
+	public function HealthMedications()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
+	public function HealthTests()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
+	// End Health
 
 	// AngularJS
 	public function StudentResults() {
