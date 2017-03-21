@@ -36,6 +36,7 @@ class StaffTable extends AppTable  {
 		$this->fields = [];
 		$this->ControllerAction->field('feature', ['select' => false]);
         $this->ControllerAction->field('system_usage', ['type' => 'hidden']);
+        $this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('format');
 	}
 	
@@ -58,6 +59,25 @@ class StaffTable extends AppTable  {
                 $attr['select'] = false;
                 $attr['options'] = $options;
                 return $attr;
+            }
+        }
+    }
+
+    public function onUpdateFieldStatus(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'add') {
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
+
+                if (in_array($feature, ['Report.StaffLicenses'])) {
+                    $licenseStatuses = $this->Workflow->getWorkflowStatuses('Staff.Licenses');
+                    if (empty($licenseStatuses)) {
+                        $this->Alert->warning('Reports.noWorkflowStatus');
+                    }
+
+                    $attr['type'] = 'select';
+                    $attr['options'] = $licenseStatuses;
+                    return $attr;
+                }
             }
         }
     }
