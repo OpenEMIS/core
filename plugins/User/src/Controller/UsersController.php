@@ -102,7 +102,9 @@ class UsersController extends AppController
         $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
         $SecurityUserSessions->deleteEntries($username);
         $Webhooks = TableRegistry::get('Webhook.Webhooks');
-        $Webhooks->triggerShell('logout');
+        if ($this->Auth->user()) {
+            $Webhooks->triggerShell('logout', ['username' => $username]);
+        }
         return $this->redirect($this->Auth->logout());
     }
 

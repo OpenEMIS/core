@@ -18,7 +18,6 @@ class WebhookShell extends Shell {
 			$url = $this->args[0];
 			$method = strtolower($this->args[1]);
 			$response = $http->$method($url);
-			$this->out($response->getStatusCode());
 			$this->out('End Processing Webhook Shell');
 		} catch (\Exception $e) {
 			$this->out('Logout Shell > Exception : ');
