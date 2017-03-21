@@ -226,7 +226,7 @@ class InstitutionGradesTable extends ControllerActionTable
             $dateOpened = $institution->date_opened;
         }
 
-        $this->fields['start_date']['value'] = $dateOpened;
+        $this->fields['start_date']['value'] = isset($entity->start_date) ? $entity->start_date : $dateOpened;
         $this->fields['start_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');
         $this->fields['end_date']['date_options']['startDate'] = $dateOpened->format('d-m-Y');
     }
