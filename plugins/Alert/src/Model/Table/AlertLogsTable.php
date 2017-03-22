@@ -55,9 +55,9 @@ class AlertLogsTable extends ControllerActionTable
         $modelRegistryAlias = $model->registryAlias();
         $feature = __(Inflector::humanize(Inflector::underscore($modelAlias))); // feature for control filter
 
-        $method = __('Email'); // method will be predefined
+        $method = 'Email'; // method will be predefined
 
-        if ($recordEntity->assignee_id > 0) {
+        if ($recordEntity->has('assignee_id') && $recordEntity->assignee_id > 0) {
             // to get the comment inputted on the workflow popup
             $workflowModelId = $WorkflowModels->find()
                 ->where([$WorkflowModels->aliasField('model') => $modelRegistryAlias])
@@ -81,7 +81,7 @@ class AlertLogsTable extends ControllerActionTable
             }
 
             $lastExecutorId = !empty($records->modified_user_id) ? $records->modified_user_id : $records->created_user_id;
-            $lastExecutorName = $Users->get($lastExecutorId)->first_name . ' ' . $Users->get($lastExecutorId)->last_name;
+            $lastExecutorName = $Users->get($lastExecutorId)->name;
 
             $vars = $query->hydrate(false)->first();
             $vars['feature'] = $feature;
@@ -90,7 +90,7 @@ class AlertLogsTable extends ControllerActionTable
             $vars['workflow_comment'] = $records->comment;
 
             if (!empty($vars['assignee']['email'])) { // if no email will not insert to alertlog.
-                $assigneeName = $vars['assignee']['first_name'] . ' ' . $vars['assignee']['last_name'];
+                $assigneeName = $Users->get($vars['assignee']['id'])->name;
                 $assigneeEmail = $vars['assignee']['email'];
                 $recipient = $assigneeName . ' <' . $assigneeEmail . '>';
 
