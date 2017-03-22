@@ -99,6 +99,26 @@ class TrainingCoursesTable extends ControllerActionTable
 					'provider' => 'table'
 				]
 			])
+			->add('duration', [
+				'num' => [
+					'rule'  => 'numeric',
+					'message' =>  __('Duration must be positive with 3 digits at maximum')
+				],
+				'bet' => [
+					'rule'	=> ['range', 0, 999],
+					'message' => __('Duration must be positive with 3 digits at maximum')
+				]
+			])
+            ->add('number_of_months', [
+                'num' => [
+                    'rule'  => 'numeric',
+                    'message' =>  __('Experience must be positive with 3 digits at maximum')
+                ],
+                'bet' => [
+                    'rule'  => ['range', 0, 999],
+                    'message' => __('Experience must be positive with 3 digits at maximum')
+                ]
+            ])
 			->allowEmpty('file_content');
 	}
 
@@ -108,8 +128,26 @@ class TrainingCoursesTable extends ControllerActionTable
 		$visible = ['index' => false, 'view' => true, 'edit' => true, 'add' => true];
 		$this->field('description', ['visible' => $visible]);
 		$this->field('objective', ['visible' => $visible]);
-		$this->field('duration', ['visible' => $visible]);
-		$this->field('number_of_months', ['visible' => $visible]);
+        $this->field('duration', [
+            'visible' => $visible,
+            'attr' => [
+                'label' => [
+                    'text' => __('Duration') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="bottom" uib-tooltip="' . __('Number of Hours') . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false, //disable the htmlentities (on LabelWidget) so can show html on label.
+                    'class' => 'tooltip-desc' //css class for label
+                ]
+            ]
+        ]);
+        $this->field('number_of_months', [
+            'visible' => $visible,
+            'attr' => [
+                'label' => [
+                    'text' => __('Experiences') . ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="bottom" uib-tooltip="' . __('Number of Years') . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false, //disable the htmlentities (on LabelWidget) so can show html on label.
+                    'class' => 'tooltip-desc' //css class for label
+                ]
+            ]
+        ]);
 		$this->field('training_field_of_study_id', [
 			'type' => 'select',
 			'visible' => $visible

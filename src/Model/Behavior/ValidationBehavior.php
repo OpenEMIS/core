@@ -38,7 +38,7 @@ class ValidationBehavior extends Behavior {
 					}
 					$ruleAttr['message'] = $this->getMessage($code);
 				}
-				if (method_exists($this, $ruleAttr['rule'])) {
+				if (!is_callable ($ruleAttr['rule']) && method_exists($this, $ruleAttr['rule'])) {
 					$ruleAttr['provider'] = 'custom';
 				}
 				$set->add($ruleName, $ruleAttr);
@@ -173,6 +173,44 @@ class ValidationBehavior extends Behavior {
 	        }
     	}
         return $isValid;
+    }
+
+    //validate area and are administrative selection during add / edit institution according to config item.
+    public static function checkConfiguredArea($check, array $globalData)
+    {
+        $model = $globalData['providers']['table'];
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $validateAreaLevel = $ConfigItems->value('institution_validate_area_level_id');
+        $validateAreaAdministrativeLevel = $ConfigItems->value('institution_validate_area_administrative_level_id');
+
+        $validationErrorMsg = '';
+        if ($globalData['field'] == 'area_id') {
+            $Areas = TableRegistry::get('Area.Areas');
+            $AreaLevels = TableRegistry::get('Area.AreaLevels');
+            $check = $AreaLevels->get($Areas->get($check)->area_level_id)->level;
+            if ($check != $validateAreaLevel) {
+                $configuredAreaLevel = $AreaLevels->find()
+                						->where([
+                							$AreaLevels->aliasField('level') => $validateAreaLevel
+                						])
+                						->first();
+                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_id.configuredArea', ['sprintf' => [$configuredAreaLevel->name]]);
+            }
+        } else if ($globalData['field'] == 'area_administrative_id') {
+            $AreaAdministratives = TableRegistry::get('Area.AreaAdministratives');
+            $AreaAdministrativeLevels = TableRegistry::get('Area.AreaAdministrativeLevels');
+            $check = $AreaAdministratives->get($check)->area_administrative_level_id;
+            if ($check != $validateAreaAdministrativeLevel) {
+                $configuredAreaAdministrativeLevel = $AreaAdministrativeLevels->get($validateAreaAdministrativeLevel)->name;
+                $validationErrorMsg = $model->getMessage('Institution.Institutions.area_administrative_id.configuredArea', ['sprintf' => [$configuredAreaAdministrativeLevel]]);
+            }
+        }
+
+        if (!empty($validationErrorMsg)) {
+            return $validationErrorMsg;
+        } else {
+            return true;
+        }
     }
 
     public static function checkLatitude($check) {
@@ -445,7 +483,7 @@ class ValidationBehavior extends Behavior {
 	 * @param  array  $globalData [description]
 	 * @return [type]             [description]
 	 */
-    public static function validateContact($field, array $globalData) 
+    public static function validateContact($field, array $globalData)
     {
     	$flag = false;
         $contactOption = $globalData['data']['contact_option_id'];
