@@ -249,7 +249,7 @@ class AlertLogsTable extends ControllerActionTable
 
         $features = array_merge($alertFeatures,$workflowFeatures); // combine the alert and workflow feature
 
-        $featureOptions['AllFeatures'] = 'All Features'; // to show all the records
+        $featureOptions['AllFeatures'] = __('All Features'); // to show all the records
         foreach ($features as $key => $value) {
             if (array_key_exists($key, $alertFeatures)) {
                 $featureOptions[$this->featureGrouping['general']][$key] = $value;
@@ -276,7 +276,7 @@ class AlertLogsTable extends ControllerActionTable
             ->first();
 
         if (empty($results)) {
-            $this->controller->Alert->warning('Workflows.noWorkflows');
+            return null;
         } else {
             return $results->message;
         }
