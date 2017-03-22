@@ -465,9 +465,10 @@ class StaffTable extends ControllerActionTable {
                 ->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom', 'Institutions.security_group_id'])
                 ->first();
 
+            $securityGroupId = $positionEntity->institution->security_group_id;
+
             $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
             if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
-                $securityGroupId = $positionEntity->institution->security_group_id;
 
                 $securityGroupUsersRecord = [
                     'security_role_id' => $homeroomSecurityRoleId,

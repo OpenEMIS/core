@@ -35,30 +35,28 @@ class SendingAlertShell extends Shell
             ->all();
 
         foreach ($alertLogsList as $obj) {
-            if ($obj->destination != 'No Email' || $obj->destination != 'No Security Role') {
-                $emailArray = explode(', ', $obj->destination); // also can used
+            $emailArray = explode(', ', $obj->destination); // also can used
 
-                $sendTo = [];
-                foreach ($emailArray as $item) {
-                    list($name, $email) = explode('<', $item);
-                    $name = trim($name);
-                    $email = str_replace('>', '', $email);
-                    $sendTo[$email] = $name;
-                }
-
-                // sending Email if the destination email is exist
-                $emailObj = new Email('openemis');
-                $emailObj
-                    ->to($sendTo)
-                    ->subject($obj->subject)
-                    ->send(htmlspecialchars($obj->message)); // message is html ready
-
-                // update the alertLog
-                $this->AlertLogs->updateAll(
-                    ['status' => 1, 'processed_date' => $today],
-                    ['id' => $obj->id]
-                );
+            $sendTo = [];
+            foreach ($emailArray as $item) {
+                list($name, $email) = explode('<', $item);
+                $name = trim($name);
+                $email = str_replace('>', '', $email);
+                $sendTo[$email] = $name;
             }
+
+            // sending Email if the destination email is exist
+            $emailObj = new Email('openemis');
+            $emailObj
+                ->to($sendTo)
+                ->subject($obj->subject)
+                ->send(htmlspecialchars($obj->message)); // message is html ready
+
+            // update the alertLog
+            $this->AlertLogs->updateAll(
+                ['status' => 1, 'processed_date' => $today],
+                ['id' => $obj->id]
+            );
         }
     }
 }
