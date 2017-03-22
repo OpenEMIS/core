@@ -8,6 +8,7 @@ use Cake\Routing\Router;
 use Firebase\JWT\JWT;
 use Cake\Utility\Security;
 use Cake\Core\Configure;
+use Cake\Network\Exception\ForbiddenException;
 
 class UsersController extends AppController
 {
@@ -98,10 +99,18 @@ class UsersController extends AppController
 
     public function logout($username = null)
     {
-        $username = empty($username) ? $this->Auth->user()['username'] : $username;
-        $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
-        $SecurityUserSessions->deleteEntries($username);
-        return $this->redirect($this->Auth->logout());
+        if ($this->request->is('get')) {
+            $username = empty($username) ? $this->Auth->user()['username'] : $username;
+            $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+            $SecurityUserSessions->deleteEntries($username);
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('logout', ['username' => $username]);
+            }
+            return $this->redirect($this->Auth->logout());
+        } else {
+            throw new ForbiddenException();
+        }
     }
 
     public function implementedEvents()
