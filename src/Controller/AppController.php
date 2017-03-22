@@ -96,7 +96,6 @@ class AppController extends Controller {
 		$this->loadComponent('Localization.Localization', [
 			'productName' => $this->productName
 		]);
-		$logoutWebhook = 'Webhook.triggerEvent(\''.Router::url($this->webhookListUrl).'\', [\'logout\']);';
 		$this->loadComponent('OpenEmis.OpenEmis', [
 			'homeUrl' => ['plugin' => false, 'controller' => 'Dashboard', 'action' => 'index'],
 			'headerMenu' => [
@@ -104,8 +103,7 @@ class AppController extends Controller {
 					'url' => ['plugin' => false, 'controller' => 'Preferences', 'action' => 'index']
 				],
 				'Logout' => [
-					'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout'],
-					'onclick' => $logoutWebhook
+					'url' => ['plugin' => 'User', 'controller' => 'Users', 'action' => 'logout']
 				]
 			],
 			'productName' => $this->productName,
