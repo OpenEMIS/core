@@ -40,10 +40,10 @@ class StaffBehavioursTable extends AppTable {
 		}
 	}
 
-	public function beforeAction() {
+	public function afterAction(Event $event) {
 		$this->ControllerAction->field('openemis_no');
 		$this->ControllerAction->field('staff_id');
-		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select', 'onChangeReload' => true]);
+		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select', 'onChangeReload' => 'changeStaffBehaviourCategoryId']);
 		$this->ControllerAction->field('behaviour_classification_id', ['type' => 'select']);
 
 		if ($this->action == 'view' || $this->action == 'edit') {
@@ -191,9 +191,26 @@ class StaffBehavioursTable extends AppTable {
 		return $attr;
 	}
 
+	public function addEditOnChangeStaffBehaviourCategoryId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($data[$this->alias()]['behaviour_classification_id']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('staff_behaviour_category_id', $request->data[$this->alias()])) {
+					$selectedCategory = $this->StaffBehaviourCategories->get($request->data[$this->alias()]['staff_behaviour_category_id']);
+
+					if (!empty($selectedCategory)) {
+						$data[$this->alias()]['behaviour_classification_id'] = $selectedCategory->behaviour_classification_id;
+					}
+				}
+			}
+		}
+	}
+
 	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, $request) {
-		if ($action == 'add' || $action == 'edit') {
-			$defaultCategory = $this->StaffBehaviourCategories
+		if ($action == 'add') {
+            $defaultCategory = $this->StaffBehaviourCategories
 				->find()
 				->where([$this->StaffBehaviourCategories->aliasField('default') => 1])
 				->first();
@@ -202,16 +219,8 @@ class StaffBehavioursTable extends AppTable {
 				// set default classification if there is a default category
 				$attr['default'] = $defaultCategory->behaviour_classification_id;
 			}
+        }
 
-			if(!empty($request->data[$this->alias()]['staff_behaviour_category_id'])) {
-				$behaviourCategoryId = $request->data[$this->alias()]['staff_behaviour_category_id'];
-				$defaultClassificationId = $this->StaffBehaviourCategories->get($behaviourCategoryId)->behaviour_classification_id;
-
-				$attr['value'] = $defaultClassificationId;
-				$attr['attr']['value'] = $defaultClassificationId;
-			}
-		}
-
-		return $attr;
+        return $attr;
 	}
 }
