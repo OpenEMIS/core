@@ -194,7 +194,7 @@ class StaffTable extends ControllerActionTable {
 		return (array_key_exists($entity->position_title_teaching, $yesno))? $yesno[$entity->position_title_teaching]: '';
 	}
 
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) 
+	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
     {
 		$fieldArray = $fields->getArrayCopy();
 
@@ -445,105 +445,96 @@ class StaffTable extends ControllerActionTable {
 		$this->dashboardQuery = clone $query;
 	}
 
-	public function addStaffRole($staffEntity) {
-		$positionEntity = null;
+	public function addStaffRole($staffEntity)
+    {
+        $positionEntity = null;
 
-		if (empty($staffEntity->security_group_user_id)) {
-			// every staff record in school will be linked to a security role record in security_group_users
-			$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
-			$positionEntity = $this->Positions->find()
-				->where([
-					$this->Positions->aliasField('id') => $staffEntity->institution_position_id
-				])
-				->matching('StaffPositionTitles.SecurityRoles')
-				->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom'])
-				->first();
+        if (empty($staffEntity->security_group_user_id)) {
+            // every staff record in school will be linked to a security role record in security_group_users
+            $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+            $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+            $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+            $securityGroupUserId = $staffEntity->security_group_user_id;
 
-			$securityRoleId = $positionEntity->security_role_id;
+            $positionEntity = $this->Positions->find()
+                ->where([
+                    $this->Positions->aliasField('id') => $staffEntity->institution_position_id
+                ])
+                ->matching('StaffPositionTitles.SecurityRoles')
+                ->contain(['Institutions'])
+                ->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom', 'Institutions.security_group_id'])
+                ->first();
 
-			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-			$securityGroupUsersRecord = [
-				'security_role_id' => $securityRoleId,
-				'security_group_id' => $securityGroupId,
-				'security_user_id' => $staffEntity->staff_id
-			];
+            $securityGroupId = $positionEntity->institution->security_group_id;
 
-			$newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
-			$entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
-			$this->updateSecurityGroupUserId($staffEntity, $entity->id);
+            $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
+            if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
 
-			if (!empty($positionEntity) && $positionEntity->is_homeroom) {
-				// add homeroomrole
-				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
-				if (!empty($homeroomSecurityRoleId)) {
-					try {
-						$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-						$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
-						$securityRoleId = $homeroomSecurityRoleId;
+                $securityGroupUsersRecord = [
+                    'security_role_id' => $homeroomSecurityRoleId,
+                    'security_group_id' => $securityGroupId,
+                    'security_user_id' => $staffEntity->staff_id
+                ];
 
-						$securityGroupUsersRecord = [
-							'security_role_id' => $homeroomSecurityRoleId,
-							'security_group_id' => $securityGroupId,
-							'security_user_id' => $staffEntity->staff_id
-						];
-						$newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
-						$entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
-					} catch (InvalidPrimaryKeyException $ex) {
-						Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
-					}
-				}
-			}
-		}
+                $newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
+                $newSecurityGroupEntity->updateWorkflowAssignee = false;
+                $SecurityGroupUsersTable->save($newSecurityGroupEntity);
+            }
+
+            $securityRoleId = $positionEntity->security_role_id;
+
+            $securityGroupUsersRecord = [
+                'security_role_id' => $securityRoleId,
+                'security_group_id' => $securityGroupId,
+                'security_user_id' => $staffEntity->staff_id
+            ];
+
+            $newSecurityGroupEntity = $SecurityGroupUsersTable->newEntity($securityGroupUsersRecord);
+            $entity = $SecurityGroupUsersTable->save($newSecurityGroupEntity);
+            $this->updateSecurityGroupUserId($staffEntity, $entity->id);
+        }
 	}
 
 	// IMPORTANT: when editing this method, need to consider impact on removeInactiveStaffSecurityRole()
-	public function removeStaffRole($staffEntity) {
-		$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-		$securityGroupUserResults = $SecurityGroupUsersTable->find()->where([$SecurityGroupUsersTable->aliasField('id') => $staffEntity->security_group_user_id])->all();
+	public function removeStaffRole($staffEntity)
+    {
+        $SecurityRoles = TableRegistry::get('Security.SecurityRoles');
+        $SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+        $homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+        $securityGroupUserId = $staffEntity->security_group_user_id;
 
-		$affectedRows = 0;
-		if (!$securityGroupUserResults->isEmpty()) {
-			$affectedRows = $securityGroupUserResults->count();
-			$deleteEntity = $securityGroupUserResults->first();
-			$SecurityGroupUsersTable->delete($deleteEntity);
-		}
-		$this->updateSecurityGroupUserId($staffEntity, NULL);
+        $positionEntity = $this->Positions->find()
+            ->where([
+                $this->Positions->aliasField('id') => $staffEntity->institution_position_id
+            ])
+            ->matching('StaffPositionTitles.SecurityRoles')
+            ->contain(['Institutions'])
+            ->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom', 'Institutions.security_group_id'])
+            ->first();
 
-		if ($affectedRows) {
-			$positionEntity = $this->Positions->find()
-				->where([
-					$this->Positions->aliasField('id') => $staffEntity->institution_position_id
-				])
-				->matching('StaffPositionTitles.SecurityRoles')
-				->select(['security_role_id' => 'SecurityRoles.id', 'is_homeroom'])
-				->first();
-			if (!empty($positionEntity) && $positionEntity->is_homeroom) {
-				// remove homeroom role
-				// delete 1 entry only
-				$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-				$homeroomSecurityRoleId = $SecurityRoles->getHomeroomRoleId();
+        $isHomeroomRole = !empty($positionEntity) && $positionEntity->is_homeroom;
+        if (!empty($homeroomSecurityRoleId) && $isHomeroomRole) {
+            $securityGroupId = $positionEntity->institution->security_group_id;
 
-				if (!empty($homeroomSecurityRoleId)) {
-					try {
-						$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-						$securityGroupId = $this->Institutions->get($staffEntity->institution_id)->security_group_id;
-						$deleteEntity = $SecurityGroupUsersTable->find()
-							->where([
-								$SecurityGroupUsersTable->aliasField('security_group_id') => $securityGroupId,
-								$SecurityGroupUsersTable->aliasField('security_user_id') => $staffEntity->staff_id,
-								$SecurityGroupUsersTable->aliasField('security_role_id') => $homeroomSecurityRoleId
-							])
-							->first();
-						if (!empty($deleteEntity)) {
-							$SecurityGroupUsersTable->delete($deleteEntity);
-						}
-					} catch (InvalidPrimaryKeyException $ex) {
-						Log::write('error', __METHOD__ . ': ' . $this->Institutions->alias() . ' primary key not found (' . $institutionId . ')');
-					}
-				}
-			}
-		}
+            $deleteEntity = $SecurityGroupUsersTable->find()
+                ->where([
+                    $SecurityGroupUsersTable->aliasField('security_group_id') => $securityGroupId,
+                    $SecurityGroupUsersTable->aliasField('security_user_id') => $staffEntity->staff_id,
+                    $SecurityGroupUsersTable->aliasField('security_role_id') => $homeroomSecurityRoleId
+                ])
+                ->first();
+            if (!empty($deleteEntity)) {
+                $deleteEntity->updateWorkflowAssignee = false;
+                $SecurityGroupUsersTable->delete($deleteEntity);
+            }
+        }
+
+        $conditions = [$SecurityGroupUsersTable->aliasField('id') => $securityGroupUserId];
+        if (!is_null($securityGroupUserId) && $SecurityGroupUsersTable->exists($conditions)) {
+            $groupUserEntity = $SecurityGroupUsersTable->get($securityGroupUserId);
+            $SecurityGroupUsersTable->delete($groupUserEntity);
+            $this->updateSecurityGroupUserId($staffEntity, NULL);
+        }
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
