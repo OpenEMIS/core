@@ -24,6 +24,7 @@ class StaffLeaveTable extends AppTable {
 
         $this->addBehavior('Excel');
         $this->addBehavior('Report.ReportList');
+        $this->addBehavior('AcademicPeriod.Period');
     }
 
     public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -41,40 +42,7 @@ class StaffLeaveTable extends AppTable {
         $academicPeriodId = $requestData->academic_period_id;
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
-            // cannot use academic period finder because date fields are not start_date and end_date
-            $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-            $periodObj = $AcademicPeriods->findById($academicPeriodId)->first();
-
-            if (!empty($periodObj)) {
-                if ($periodObj->start_date instanceof Time || $periodObj->start_date instanceof Date) {
-                    $startDate = $periodObj->start_date->format('Y-m-d');
-                } else {
-                    $startDate = date('Y-m-d', strtotime($periodObj->start_date));
-                }
-
-                if ($periodObj->end_date instanceof Time || $periodObj->end_date instanceof Date) {
-                    $endDate = $periodObj->end_date->format('Y-m-d');
-                } else {
-                    $endDate = date('Y-m-d', strtotime($periodObj->end_date));
-                }
-
-                $query->where([
-                    'OR' => [
-                        [
-                            $this->aliasField('date_from') . ' <=' => $startDate,
-                            $this->aliasField('date_to') . ' >=' => $startDate
-                        ],
-                        [
-                            $this->aliasField('date_from') . ' <=' => $endDate,
-                            $this->aliasField('date_to') . ' >=' => $endDate
-                        ],
-                        [
-                            $this->aliasField('date_from') . ' >=' => $startDate,
-                            $this->aliasField('date_to') . ' <=' => $endDate
-                        ]
-                    ]
-                ]);
-            }
+            $query->find('academicPeriod', ['academic_period_id' => $academicPeriodId, 'start_date_field' => 'date_from', 'end_date_field' => 'date_to']);
         }
 
         $query
