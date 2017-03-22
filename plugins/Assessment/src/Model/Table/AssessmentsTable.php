@@ -59,7 +59,8 @@ class AssessmentsTable extends ControllerActionTable {
             'useDefaultName' => true
         ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index', 'view']
+            'Results' => ['index', 'view'],
+            'OpenEMIS_Classroom' => ['index']
         ]);
         $this->behaviors()->get('ControllerAction')->config(
             'actions.download.show',
