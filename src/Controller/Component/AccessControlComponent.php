@@ -89,7 +89,7 @@ class AccessControlComponent extends Component {
 
 			if (!is_null($entity)) {
 				$lastModified = $this->Session->read('Permissions.lastModified');
-				if (is_null($lastModified)) {
+				if (empty($lastModified)) {
 					$isChanged = true;
 				} else {
 					if (!is_null($entity->modified) && $entity->modified->gt($lastModified)) {

@@ -16,6 +16,10 @@ class AbsenceTypesTable extends ControllerActionTable {
 		parent::initialize($config);
 		$this->hasMany('StudentAbsences', ['className' => 'Institution.InstitutionStudentAbsences', 'foreignKey' =>'absence_type_id']);
 		$this->hasMany('StaffAbsences', ['className' => 'Institution.InstitutionStaffAbsences', 'foreignKey' =>'absence_type_id']);
+
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index']
+        ]);
 	}
 
 	public function getCodeList() {
