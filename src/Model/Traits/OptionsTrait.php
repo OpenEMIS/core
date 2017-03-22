@@ -8,6 +8,9 @@ trait OptionsTrait {
 				'active' => [1 => __('Active'), 0 => __('Inactive')],
 				'yesno' => [1 => __('Yes'), 0 => __('No')],
 			],
+			'Authentication' => [
+				'yesno' => [0 => __('No'), 1 => __('Yes')]
+			],
 			'Staff' => [
 				'position_types' => [1 => __('Teaching'), 0 => __('Non-Teaching')]
 			],
@@ -58,6 +61,9 @@ trait OptionsTrait {
 					'0.75' => '75%',
 					'1' => '100%'
 				],
+			],
+			'RoomTypes' => [
+				'classifications' => [0 => __('Non-Classroom'), 1 => __('Classroom')]
 			],
 			'InstitutionRooms' => [
 				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Room Type')]
