@@ -158,6 +158,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         if (!$this->controller->Auth->user()) {
             $action = $this->request->params['action'];
             if ($action == $this->config('loginAction') && !$this->session->read('OAuth2OpenIDConnect.remoteFail') && !$this->session->read('Auth.fallback')) {
+                $this->session->delete('OAuth2OpenIDConnect.accessToken');
                 $this->idpLogin();
             }
         }
@@ -242,6 +243,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         if ($this->request->is('get')) {
             if ($this->request->query('submit') == 'retry') {
                 $this->session->delete('OAuth2OpenIDConnect.remoteFail');
+                $this->session->delete('Auth.fallback');
                 $this->session->write('OAuth2OpenIDConnect.reLogin', true);
                 return $this->controller->redirect($this->redirectUri);
             }
