@@ -49,19 +49,20 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 		if ($this->action == 'view' || $this->action == 'edit') {
 			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
+
 		} else if ($this->action == 'add') {
 			$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
+
+		} else if ($this->action == 'index') {
+			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 		}
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
-		$this->field('date_of_behaviour');
 		$this->field('description', ['visible' => false]);
 		$this->field('action', ['visible' => false]);
 		$this->field('time_of_behaviour', ['visible' => false]);
-
-		$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
