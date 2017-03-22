@@ -49,11 +49,14 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 		if ($this->action == 'view' || $this->action == 'edit') {
 			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
+		} else if ($this->action == 'add') {
+			$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
 		}
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
+		$this->field('date_of_behaviour');
 		$this->field('description', ['visible' => false]);
 		$this->field('action', ['visible' => false]);
 		$this->field('time_of_behaviour', ['visible' => false]);
@@ -108,12 +111,7 @@ class StaffBehavioursTable extends ControllerActionTable {
 			$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
 		}
 		$this->field('date_of_behaviour');
-	}
-
-	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-	{
 		$this->field('academic_period_id');
-		$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -202,7 +200,7 @@ class StaffBehavioursTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function addEditOnChangeAcademicPeriod(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+	public function addEditOnChangeStaffBehaviourCategoryId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
 	{
 		$request = $this->request;
 		unset($data[$this->alias()]['behaviour_classification_id']);
@@ -220,7 +218,8 @@ class StaffBehavioursTable extends ControllerActionTable {
 		}
 	}
 
-	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, Request $request) {
+	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, Request $request)
+	{
 		if ($action == 'add') {
             $defaultCategory = $this->StaffBehaviourCategories
 				->find()
