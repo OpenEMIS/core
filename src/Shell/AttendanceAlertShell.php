@@ -77,14 +77,10 @@ class AttendanceAlertShell extends Shell
                         $message = $this->AlertLogs->replaceMessage('Attendance', $rule->message, $vars);
 
                         // insert record to  the alertLog
-                        $this->AlertLogs->insertAlertLog($rule, $email, $subject, $message);
+                        $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
                     }
                 }
             }
-            sleep(15); // 15 seconds
-
-            // trigger the send email shell
-            $this->AlertLogs->triggerSendingAlertShell('SendingAlert');
 
             $filesArray = $dir->find('AttendanceAlert.stop');
         } while (empty($filesArray));
