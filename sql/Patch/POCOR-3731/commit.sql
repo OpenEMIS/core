@@ -1,10 +1,6 @@
 -- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3731', NOW());
 
--- staff_behaviour_categories
-ALTER TABLE `staff_behaviour_categories`
-    ADD COLUMN `behaviour_classification_id` INT(11) NOT NULL COMMENT 'links to behaviour_classifications.id' AFTER `national_code`;
-
 -- staff_behaviours
 RENAME TABLE `staff_behaviours` TO `z_3731_staff_behaviours`;
 
