@@ -10,6 +10,8 @@ use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
 class TrainingResultsTable extends AppTable  {
+    private $trainingSessionResults = [];
+
     public function initialize(array $config)
     {
         $this->table('training_session_trainee_results');
@@ -121,26 +123,46 @@ class TrainingResultsTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'TrainingResults.training_result_type_id',
-            'field' => 'training_result_type_id',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
-            'key' => 'TrainingResults.result',
-            'field' => 'result',
-            'type' => 'integer',
-            'label' => '',
-        ];
-
-        $newFields[] = [
             'key' => 'Courses.credit_hours',
             'field' => 'credit_hours',
             'type' => 'integer',
             'label' => '',
         ];
 
+        $requestData = json_decode($settings['process']['params']);
+        $selectedCourse = $requestData->training_course_id;
+
+        $TrainingCourses = TableRegistry::get('Training.TrainingCourses');
+        $course = $TrainingCourses->get($selectedCourse, ['contain' => ['ResultTypes']]);
+        $resultTypes = $course->result_types;
+
+        foreach ($resultTypes as $type) {
+            $newFields[] = [
+                'key' => 'result',
+                'field' => 'result',
+                'type' => 'result',
+                'label' => __($type->name),
+                'resultTypeId' => $type->id
+            ];
+        }
+
         $fields->exchangeArray($newFields);
+    }
+
+    public function onExcelRenderResult(Event $event, Entity $entity, array $attr)
+    {
+        $sessionId = $entity->training_session_id;
+        $traineeId = $entity->trainee_id;
+        $resultTypeId = $attr['resultTypeId'];
+
+        $trainingSessionResults = $this->trainingSessionResults;
+        if (!isset($trainingSessionResults[$sessionId][$traineeId][$resultTypeId])) {
+            $TrainingResultsTable = TableRegistry::get('Training.TrainingSessionTraineeResults');
+            $this->trainingSessionResults = $TrainingResultsTable->getTrainingSessionTraineeResults($sessionId);
+            $trainingSessionResults = $this->trainingSessionResults;
+        }
+
+        $result = $trainingSessionResults[$sessionId][$traineeId][$resultTypeId];
+        return $result;
     }
 }
