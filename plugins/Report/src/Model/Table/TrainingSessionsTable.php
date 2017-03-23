@@ -18,9 +18,7 @@ class TrainingSessionsTable extends AppTable  {
         $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
         $this->addBehavior('Excel', [
-            'excludes' => ['code', 'name', 'assignee_id', 'status_id', 'training_course_id'],
-            'pages' => false,
-            'orientation' => 'landscape'
+            'excludes' => ['code', 'name', 'assignee_id', 'status_id', 'training_course_id']
         ]);
         $this->addBehavior('Report.ReportList');
     }
