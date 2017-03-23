@@ -10,4 +10,16 @@ class TrainingSessionTraineeResultsTable extends AppTable {
 		$this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
 		$this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
 	}
+
+    public function getTrainingSessionTraineeResults($sessionId) {
+        $results = $this->find()
+            ->where([$this->aliasField('training_session_id') => $sessionId])
+            ->toArray();
+
+        $returnArray = [];
+        foreach ($results as $result) {
+            $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['result'];
+        }
+        return $returnArray;
+    }
 }
