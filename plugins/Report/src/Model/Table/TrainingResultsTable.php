@@ -18,10 +18,7 @@ class TrainingResultsTable extends AppTable  {
         $this->belongsTo('Trainees', ['className' => 'User.Users', 'foreignKey' => 'trainee_id']);
         $this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
 
-        $this->addBehavior('Excel', [
-            'pages' => false,
-            'orientation' => 'landscape'
-        ]);
+        $this->addBehavior('Excel');
         $this->addBehavior('Report.ReportList');
     }
 
@@ -40,8 +37,10 @@ class TrainingResultsTable extends AppTable  {
         $TrainingSessionResults = TableRegistry::get('Training.TrainingSessionResults');
         $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
         $WorkflowStatusesSteps = TableRegistry::get('Workflow.WorkflowStatusesSteps');
+
         $requestData = json_decode($settings['process']['params']);
         $selectedStatus = $requestData->status;
+        $selectedCourse = $requestData->training_course_id;
 
         $query
             ->select(['workflow_step_name' => 'WorkflowSteps.name', 'openemis_no' => 'Trainees.openemis_no', 'course_code' => 'Courses.code', 'course_name' => 'Courses.name', 'credit_hours' => 'Courses.credit_hours', 'session_code' => 'Sessions.code'])
@@ -54,8 +53,9 @@ class TrainingResultsTable extends AppTable  {
                 [$WorkflowSteps->alias() => $WorkflowSteps->table()],
                 [$WorkflowSteps->aliasField('id = ') . $TrainingSessionResults->aliasField('status_id')]
             )
-            ->order([$this->aliasField('training_session_id'), $this->aliasField('trainee_id')])
-            ->autoFields(true);
+            ->where(['Courses.id' => $selectedCourse])
+            ->group([$this->aliasField('training_session_id'), $this->aliasField('trainee_id')])
+            ->order([$this->aliasField('training_session_id'), $this->aliasField('trainee_id')]);
 
         if (!empty($selectedStatus)) {
             $query
@@ -95,21 +95,21 @@ class TrainingResultsTable extends AppTable  {
         $newFields[] = [
             'key' => 'Courses.course_code',
             'field' => 'course_code',
-            'type' => 'integer',
+            'type' => 'string',
             'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'Courses.course_name',
             'field' => 'course_name',
-            'type' => 'integer',
+            'type' => 'string',
             'label' => '',
         ];
 
         $newFields[] = [
             'key' => 'Sessions.session_code',
             'field' => 'session_code',
-            'type' => 'integer',
+            'type' => 'string',
             'label' => '',
         ];
 

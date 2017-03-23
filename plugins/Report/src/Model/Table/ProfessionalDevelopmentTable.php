@@ -36,6 +36,7 @@ class ProfessionalDevelopmentTable extends AppTable {
 
         $this->fields = [];
         $this->ControllerAction->field('feature', ['select' => false]);
+        $this->ControllerAction->field('training_course_id', ['type' => 'hidden']);
         $this->ControllerAction->field('status');
         $this->ControllerAction->field('format');
     }
@@ -51,6 +52,23 @@ class ProfessionalDevelopmentTable extends AppTable {
                 $this->request->data[$this->alias()]['feature'] = key($option);
             }
             return $attr;
+        }
+    }
+
+    public function onUpdateFieldTrainingCourseId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (isset($this->request->data[$this->alias()]['feature'])) {
+                $feature = $this->request->data[$this->alias()]['feature'];
+
+                if (in_array($feature, ['Report.TrainingResults'])) {
+                    $options = $this->find('list')->toArray();
+                    $attr['type'] = 'select';
+                    $attr['select'] = false;
+                    $attr['options'] = $options;
+                    return $attr;
+                }
+            }
         }
     }
 
