@@ -61,9 +61,7 @@ class TrainingCoursesTable extends AppTable  {
         ]);
 
         $this->addBehavior('Excel', [
-            'excludes' => ['file_name', 'assignee_id', 'status_id'],
-            'pages' => false,
-            'orientation' => 'landscape'
+            'excludes' => ['file_name', 'assignee_id', 'status_id']
         ]);
         $this->addBehavior('Report.ReportList');
     }
