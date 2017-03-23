@@ -19,6 +19,8 @@ class ImportUsersTable extends AppTable {
 	    // register table once
 		$this->Users = TableRegistry::get('User.Users');
 	    $this->ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $this->Nationalities = TableRegistry::get('FieldOption.Nationalities');
+        $this->UserIdentities = TableRegistry::get('User.Identities');
 
 	    $prefix = $this->ConfigItems->value('openemis_id_prefix');
 		$prefix = explode(",", $prefix);
@@ -185,7 +187,38 @@ class ImportUsersTable extends AppTable {
 		}
 	}
 
-	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+	public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
+    {   
+        //check combination of nationality and identity whether according to the setting on nationality field options
+        if ($tempRow->offsetExists('nationality_id') && !empty($tempRow['nationality_id'])) {
+            if ($tempRow->offsetExists('identity_type_id') && !empty($tempRow['identity_type_id'])) {
+                $query = $this->Nationalities
+                        ->find()
+                        ->where([
+                            $this->Nationalities->aliasField('id') => $tempRow['nationality_id'],
+                            $this->Nationalities->aliasField('identity_type_id') => $tempRow['identity_type_id']
+                        ]);
+
+                if (!$query->count()) {
+                    $rowInvalidCodeCols['identity_type_id'] = $this->getExcelLabel('Import', 'identity_type_doesnt_match');
+                    return false;
+                } else {
+                    // check whether same identity number exist for the selected identity type
+                    $query = $this->UserIdentities
+                            ->find()
+                            ->where([
+                                $this->UserIdentities->aliasField('number') => $tempRow['identity_number'],
+                                $this->UserIdentities->aliasField('identity_type_id') => $tempRow['identity_type_id']
+                            ]);
+                    if ($query->count()) {
+                        $rowInvalidCodeCols['identity_number'] = $this->getExcelLabel('Import', 'identity_number_exist');
+                        return false;
+                    }
+                }
+            }
+            //add identifier that later will be used on User afterSave
+            $tempRow['record_source'] = 'import_user';
+        }
 		return true;
 	}
 
