@@ -40,6 +40,24 @@ class EmploymentsTable extends ControllerActionTable {
             ->allowEmpty('file_content');
     }
 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    {
+		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        
+        $downloadAccess = $this->AccessControl->check([$this->controller->name, 'Attachments', 'download']);
+
+        if ($downloadAccess) {
+            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+
+            $buttons['download']['label'] = '<i class="kd-download"></i>' . __('Download');
+            $buttons['download']['attr'] = $indexAttr;
+            $buttons['download']['url']['action'] = $this->alias.'/download';
+            $buttons['download']['url'][1] = $this->paramsEncode(['id' => $entity->id]);
+        }
+
+        return $buttons;
+	}
+
 	public function beforeAction(Event $event, ArrayObject $extra) {
 		$this->field('employment_type_id', ['type' => 'select', 'before' => 'employment_date']);
 
