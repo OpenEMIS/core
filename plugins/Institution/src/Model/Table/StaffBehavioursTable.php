@@ -40,21 +40,15 @@ class StaffBehavioursTable extends ControllerActionTable {
 		}
 	}
 
-	public function afterAction(Event $event, ArrayObject $extra)
+	public function beforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('openemis_no');
 		$this->field('staff_id');
-		$this->field('staff_behaviour_category_id', ['type' => 'select', 'onChangeReload' => 'changeStaffBehaviourCategoryId']);
+		$this->field('staff_behaviour_category_id', ['type' => 'select']);
 		$this->field('behaviour_classification_id', ['type' => 'select']);
 
 		if ($this->action == 'view' || $this->action == 'edit') {
 			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
-
-		} else if ($this->action == 'add') {
-			$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
-
-		} else if ($this->action == 'index') {
-			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 		}
 	}
 
@@ -63,6 +57,8 @@ class StaffBehavioursTable extends ControllerActionTable {
 		$this->field('description', ['visible' => false]);
 		$this->field('action', ['visible' => false]);
 		$this->field('time_of_behaviour', ['visible' => false]);
+
+		$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -108,8 +104,10 @@ class StaffBehavioursTable extends ControllerActionTable {
 			$this->request->data[$this->alias()]['academic_start_date'] = $academicPeriod->start_date;
 			$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
 		}
+
 		$this->field('date_of_behaviour');
 		$this->field('academic_period_id');
+		$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -196,40 +194,5 @@ class StaffBehavioursTable extends ControllerActionTable {
 			$attr['type'] = 'readonly';
 		}
 		return $attr;
-	}
-
-	public function addEditOnChangeStaffBehaviourCategoryId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-	{
-		$request = $this->request;
-		unset($data[$this->alias()]['behaviour_classification_id']);
-
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('staff_behaviour_category_id', $request->data[$this->alias()])) {
-					$selectedCategory = $this->StaffBehaviourCategories->get($request->data[$this->alias()]['staff_behaviour_category_id']);
-
-					if (!empty($selectedCategory)) {
-						$data[$this->alias()]['behaviour_classification_id'] = $selectedCategory->behaviour_classification_id;
-					}
-				}
-			}
-		}
-	}
-
-	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add') {
-            $defaultCategory = $this->StaffBehaviourCategories
-				->find()
-				->where([$this->StaffBehaviourCategories->aliasField('default') => 1])
-				->first();
-
-			if (!empty($defaultCategory)) {
-				// set default classification if there is a default category
-				$attr['default'] = $defaultCategory->behaviour_classification_id;
-			}
-        }
-
-        return $attr;
 	}
 }
