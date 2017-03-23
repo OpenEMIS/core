@@ -30,6 +30,6 @@ CREATE TABLE `staff_behaviours` (
  KEY `institution_id` (`institution_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COMMENT='This table contains all behavioural records of staff';
 
-INSERT INTO `staff_behaviours` (`id`, `description`, `action`, `date_of_behaviour`, `time_of_behaviour`, `staff_id`, `institution_id`, `staff_behaviour_category_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT `id`, CONCAT(`title`, ' - ',`description`), `action`, `date_of_behaviour`, `time_of_behaviour`, `staff_id`, `institution_id`, `staff_behaviour_category_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+INSERT INTO `staff_behaviours` (`id`, `description`, `action`, `date_of_behaviour`, `time_of_behaviour`, `staff_id`, `institution_id`, `staff_behaviour_category_id`, `behaviour_classification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, CONCAT(`title`, ' - ',`description`), `action`, `date_of_behaviour`, `time_of_behaviour`, `staff_id`, `institution_id`, `staff_behaviour_category_id`, 0, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3731_staff_behaviours`;
