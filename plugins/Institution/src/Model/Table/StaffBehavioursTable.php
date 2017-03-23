@@ -67,10 +67,7 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$toolbarElements = [
-			['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => []]
-		];
-		$this->controller->set('toolbarElements', $toolbarElements);
+		$extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
 
 		// Setup period options
 		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
