@@ -65,9 +65,10 @@ class AttachmentsTable extends ControllerActionTable
     {
     	$this->field('file_type');
 		$this->field('created', ['visible' => true]);
+        $this->field('created_user_id', ['visible' => true]);
 
 		$this->setFieldOrder([
-			'name', 'description', 'file_type', 'date_on_file', 'security_roles', 'created'
+			'name', 'description', 'file_type', 'date_on_file', 'security_roles', 'created_user_id', 'created'
 		]);
     }
 
