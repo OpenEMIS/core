@@ -89,7 +89,7 @@ webhook_id | event_key
 
 
 
-
+### Using JavaScript Webhook
 In the ctp file you may have the following event implemented:
 ```php
 // load the javascript file from the plugin
@@ -106,3 +106,11 @@ $webhookListUrl = [
 echo $this->Html->link('Logout Link', 'http://someurl.com/logout', ['onclick' => 'Webhook.triggerEvent(\''.Router::url($webhookListUrl).'\', [\'logout\']);']);
 ```
 
+### Using Backend CakePHP Client Service with Shell
+
+```php
+$Webhooks = TableRegistry::get('Webhook.Webhooks');
+
+// Setting the 'username' parameter will replace the url with the username that you have specified
+$Webhooks->triggerShell('logout', ['username' => $username]);
+```
