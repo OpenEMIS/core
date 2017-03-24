@@ -587,6 +587,12 @@ class NavigationComponent extends Component
 				'title' => 'Visits',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution']
+			],
+
+			'Institutions.Workflows' => [
+				'title' => 'Workflows',
+				'parent' => 'Institutions.index',
+				'params' => ['plugin' => 'Institution']
 			]
 		];
 
