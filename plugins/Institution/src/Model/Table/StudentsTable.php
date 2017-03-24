@@ -1126,6 +1126,7 @@ class StudentsTable extends ControllerActionTable
         foreach ($genderOptions as $key => $value) {
             $dataSet[$value] = ['name' => __($value), 'data' => []];
         }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         $academicPeriodList = [];
         $found = false;
@@ -1144,6 +1145,12 @@ class StudentsTable extends ControllerActionTable
         $academicPeriodList = array_reverse($academicPeriodList, true);
 
         foreach ($academicPeriodList as $periodId => $periodName) {
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$periodName] = 0;
+                }
+            }
+
             foreach ($genderOptions as $genderId => $genderName) {
                 $queryCondition = array_merge(['Genders.id' => $genderId, 'AcademicPeriods.id' => $periodId], $_conditions);
 
@@ -1167,7 +1174,10 @@ class StudentsTable extends ControllerActionTable
                 ->toArray()
                 ;
 
-                $dataSet[$genderName]['data'][$periodName] = !empty($studentsByYear) ? $studentsByYear[$genderName][$periodName] : 0;
+                if (!empty($studentsByYear)) {
+                    $dataSet[$genderName]['data'][$periodName] = $studentsByYear[$genderName][$periodName];
+                    $dataSet['Total']['data'][$periodName] += $studentsByYear[$genderName][$periodName];
+                }
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();
@@ -1232,6 +1242,7 @@ class StudentsTable extends ControllerActionTable
         foreach ($genderOptions as $key => $value) {
             $dataSet[$value] = array('name' => __($value), 'data' => array());
         }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         foreach ($studentByGrades as $key => $studentByGrade) {
             $gradeId = $studentByGrade->education_grade_id;
@@ -1247,6 +1258,7 @@ class StudentsTable extends ControllerActionTable
                 }
             }
             $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+            $dataSet['Total']['data'][$gradeId] += $gradeTotal;
         }
 
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
