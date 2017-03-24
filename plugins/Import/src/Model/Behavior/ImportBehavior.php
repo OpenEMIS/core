@@ -1228,8 +1228,10 @@ class ImportBehavior extends Behavior {
                         $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else { // if cell is empty
-                    $rowPass = false;
-                    $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                    if (!$isOptional) {
+                        $rowPass = false;
+                        $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                    }
                 }
             } else if ($foreignKey == self::DIRECT_TABLE) {
                 $registryAlias = $lookupPlugin . '.' . $lookupModel;
