@@ -103,7 +103,7 @@ class AlertLogsTable extends ControllerActionTable
                 $defaultMessage .= "\n" . __('Sent By')     . ': ' . "\t \t"    . '${last_executor_name}' ;
                 $defaultMessage .= "\n" . __('Comments')    . ': ' . "\t"    . '${workflow_comment}' ;
 
-                $message = $this->getWorkflowEmailMessage($recordEntity->source());
+                $message = $this->getWorkflowEmailMessage($recordEntity);
 
                 if (is_null($message)) {
                     $message = $this->replaceMessage($modelAlias, $defaultMessage, $vars);
@@ -261,25 +261,27 @@ class AlertLogsTable extends ControllerActionTable
         return $featureOptions;
     }
 
-    public function getWorkflowEmailMessage($registryAlias)
+    public function getWorkflowEmailMessage($recordEntity)
     {
-        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
-        $Workflows = TableRegistry::get('Workflow.Workflows');
+        $message = null;
 
-        $results = $Workflows
-            ->find()
-            ->matching('WorkflowModels', function($q) use ($WorkflowModels, $registryAlias) {
-                return $q->where([
-                    $WorkflowModels->aliasField('model') => $registryAlias
-                ]);
-            })
-            ->first();
+        if ($recordEntity->has('status_id') && !empty($recordEntity->status_id)) {
+            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+            $Workflows = TableRegistry::get('Workflow.Workflows');
+            $WorkflowSteps = TableRegistry::get('Workflow.WorkflowSteps');
 
-        if (empty($results)) {
-            return null;
-        } else {
-            return $results->message;
+            $workflowStepEntity = $WorkflowSteps
+                ->find()
+                ->contain(['Workflows'])
+                ->where([$WorkflowSteps->aliasField('id') => $recordEntity->status_id])
+                ->first();
+
+            if (!empty($workflowStepEntity)) {
+                $message = $workflowStepEntity->workflow->message;
+            }
         }
+
+        return $message;
     }
 
     public function triggerSendingAlertShell($shellName, $feature=null, $alertLogId=0)
