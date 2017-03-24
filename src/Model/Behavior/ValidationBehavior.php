@@ -391,7 +391,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function compareWithInstitutionDateOpened($field, array $globalData) {
 		$model = $globalData['providers']['table'];
-		$startDate = new DateTime($field);
+		$startDate = new Date($field);
 		if (isset($globalData['data']['institution_id'])) {
 			$Institution = TableRegistry::get('Institution.Institutions');
 			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $globalData['data']['institution_id']])->first();
