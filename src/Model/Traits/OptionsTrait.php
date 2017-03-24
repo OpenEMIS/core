@@ -88,7 +88,13 @@ trait OptionsTrait {
 	    			2 => __('In Progress'),
 	    			3 => __('Done')
 	    		]
-        	]
+        	],
+        	'AlertLogs' => [
+        		'feature_grouping' => [
+        			'general' => __('General'),
+        			'workflow' => __('Workflow')
+        		]
+        	],
 		];
 
 		$index = explode('.', $code);
