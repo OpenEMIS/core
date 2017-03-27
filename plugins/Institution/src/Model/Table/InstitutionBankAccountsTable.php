@@ -97,6 +97,7 @@ class InstitutionBankAccountsTable extends AppTable {
 
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->find('visible')
 			->where(['bank_id'=>$this->_selectedBankId])
 			->order(['order'])
 			->toArray();
@@ -141,6 +142,7 @@ class InstitutionBankAccountsTable extends AppTable {
 		$this->_selectedBankId = $this->postString('bank', $this->_bankOptions);
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->find('visible')
 			->where(['bank_id'=>$this->_selectedBankId])
 			->toArray();
 		$attr['options'] = $bankBranches;
@@ -168,6 +170,7 @@ class InstitutionBankAccountsTable extends AppTable {
 	{
 		return $this->_bankOptions = $this->BankBranches->Banks
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->find('visible')
 			->order(['order'])
 			->toArray();
 	}
