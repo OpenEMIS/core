@@ -9,18 +9,18 @@ use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use Cake\Log\Log;
 
+use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
 class AlertsTable extends ControllerActionTable
 {
-    private $statusTypes = [
-        '0' => 'Stop',
-        '1' => 'Running'
-    ];
+    private $statusTypes = [];
 
     public function initialize(array $config)
     {
         parent::initialize($config);
+
+        $this->statusTypes = $this->getSelectOptions('Alert.status_types');
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
