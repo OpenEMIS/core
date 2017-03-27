@@ -37,14 +37,14 @@ class StaffLicensesTable extends AppTable  {
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
         $requestData = json_decode($settings['process']['params']);
-        $selectedStatus = !empty($requestData->status) ? $requestData->status : null;
+        $selectedStatus = $requestData->status;
 
         $query
             ->select(['openemis_no' => 'Users.openemis_no'])
             ->contain(['Users', 'Classifications'])
             ->order([$this->aliasField('staff_id')]);
 
-        if (!is_null($selectedStatus)) {
+        if ($selectedStatus != '-1') {
             $query
                 ->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
                     return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
