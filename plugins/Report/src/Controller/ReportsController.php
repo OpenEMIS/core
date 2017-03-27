@@ -22,6 +22,7 @@ class ReportsController extends AppController {
 			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
 			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
 		];
+		$this->loadComponent('Training.Training');
 	}
 
 	public function beforeFilter(Event $event) {
