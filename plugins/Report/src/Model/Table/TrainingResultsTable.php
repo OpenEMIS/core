@@ -59,7 +59,7 @@ class TrainingResultsTable extends AppTable  {
             ->group([$this->aliasField('training_session_id'), $this->aliasField('trainee_id')])
             ->order([$this->aliasField('training_session_id'), $this->aliasField('trainee_id')]);
 
-        if (!empty($selectedStatus)) {
+        if ($selectedStatus != '-1') {
             $query
                 ->innerJoin(
                     [$WorkflowStatusesSteps->alias() => $WorkflowStatusesSteps->table()],

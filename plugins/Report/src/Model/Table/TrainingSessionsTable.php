@@ -42,7 +42,7 @@ class TrainingSessionsTable extends AppTable  {
             ->select(['course_code' => 'Courses.code'])
             ->order([$this->Courses->aliasField('code'), $this->aliasField('code')]);
 
-        if (!empty($selectedStatus)) {
+        if ($selectedStatus != '-1') {
             $query->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
                 return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
             });
@@ -61,10 +61,10 @@ class TrainingSessionsTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'Courses.code',
+            'key' => 'Courses.course_code',
             'field' => 'course_code',
             'type' => 'string',
-            'label' => __('Course Code'),
+            'label' => '',
         ];
 
         $newFields[] = [
