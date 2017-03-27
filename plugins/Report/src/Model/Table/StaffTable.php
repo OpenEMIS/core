@@ -92,11 +92,10 @@ class StaffTable extends AppTable  {
 
                 if (in_array($feature, ['Report.StaffLicenses'])) {
                     $licenseStatuses = $this->Workflow->getWorkflowStatuses('Staff.Licenses');
-                    if (empty($licenseStatuses)) {
-                        $this->Alert->warning('Reports.noWorkflowStatus');
-                    }
+                    $licenseStatuses = ['-1' => __('All Statuses')] + $licenseStatuses;
 
                     $attr['type'] = 'select';
+                    $attr['select'] = false;
                     $attr['options'] = $licenseStatuses;
                     return $attr;
                 }
