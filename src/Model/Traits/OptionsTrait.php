@@ -95,6 +95,18 @@ trait OptionsTrait {
         			'workflow' => __('Workflow')
         		]
         	],
+        	'Alert' => [
+        		'status_types' => [
+	    			0 => __('Stop'),
+	    			1 => __('Running')
+	    		]
+        	],
+        	'AlertRules' => [
+        		'before_after' => [
+	    			1 => __('Before'),
+	    			2 => __('After')
+	    		]
+        	]
 		];
 
 		$index = explode('.', $code);
