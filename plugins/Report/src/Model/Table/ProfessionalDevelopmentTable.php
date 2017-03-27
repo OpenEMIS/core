@@ -62,7 +62,7 @@ class ProfessionalDevelopmentTable extends AppTable {
                 $feature = $this->request->data[$this->alias()]['feature'];
 
                 if (in_array($feature, ['Report.TrainingResults'])) {
-                    $options = $this->find('list')->toArray();
+                    $options = $this->Training->getCourseList();
                     $attr['type'] = 'select';
                     $attr['select'] = false;
                     $attr['options'] = $options;
@@ -78,13 +78,19 @@ class ProfessionalDevelopmentTable extends AppTable {
             if (isset($this->request->data[$this->alias()]['feature'])) {
                 $feature = $this->request->data[$this->alias()]['feature'];
 
-                if ($feature == 'Report.TrainingResults') {
-                    $modelAlias = 'TrainingSessionResults';
-                } else {
-                    $modelAlias = explode('.', $feature)[1];
+                switch ($feature) {
+                    case 'Report.TrainingCourses':
+                        $modelAlias = 'Training.TrainingCourses';
+                        break;
+                    case 'Report.TrainingSessions':
+                        $modelAlias = 'Training.TrainingSessions';
+                        break;
+                    case 'Report.TrainingResults':
+                        $modelAlias = 'Training.TrainingSessionResults';
+                        break;
                 }
 
-                $workflowStatuses = $this->Workflow->getWorkflowStatuses('Training.' . $modelAlias);
+                $workflowStatuses = $this->Workflow->getWorkflowStatuses($modelAlias);
                 $workflowStatuses = ['-1' => __('All Statuses')] + $workflowStatuses;
 
                 $attr['type'] = 'select';
