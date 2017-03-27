@@ -85,11 +85,10 @@ class ProfessionalDevelopmentTable extends AppTable {
                 }
 
                 $workflowStatuses = $this->Workflow->getWorkflowStatuses('Training.' . $modelAlias);
-                if (empty($workflowStatuses)) {
-                    $this->Alert->warning('Reports.noWorkflowStatus');
-                }
+                $workflowStatuses = ['-1' => __('All Statuses')] + $workflowStatuses;
 
                 $attr['type'] = 'select';
+                $attr['select'] = false;
                 $attr['options'] = $workflowStatuses;
                 return $attr;
             }

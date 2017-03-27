@@ -85,7 +85,7 @@ class TrainingCoursesTable extends AppTable  {
             ->contain(['CoursePrerequisites', 'TrainingProviders', 'ResultTypes', 'Specialisations', 'TargetPopulations'])
             ->order([$this->aliasField('code')]);
 
-        if (!empty($selectedStatus)) {
+        if ($selectedStatus != '-1') {
             $query->matching('WorkflowSteps.WorkflowStatuses', function ($q) use ($selectedStatus) {
                 return $q->where(['WorkflowStatuses.id' => $selectedStatus]);
             });
