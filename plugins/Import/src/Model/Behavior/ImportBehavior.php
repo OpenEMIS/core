@@ -157,8 +157,17 @@ class ImportBehavior extends Behavior {
                 $this->_table->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
                 break;
         }
+
+        //back button
         if (!empty($this->config('backUrl'))) {
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $this->config('backUrl'));
+        } else if ($toolbarButtons['back']['url']['plugin']=='Directory') { //back button for directory
+            if ($this->_table->request->params['pass'][0] == 'add') {
+                $back = 'Directories';
+            } else  if ($this->_table->request->params['pass'][0] == 'results') {
+                $back = $this->_table->alias() . '/add';
+            };
+            $toolbarButtons['back']['url']['action'] = $back;
         } else if ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
             if ($this->_table->request->params['pass'][0] == 'add') {
                 $back = str_replace('Import', '', $this->_table->alias());
