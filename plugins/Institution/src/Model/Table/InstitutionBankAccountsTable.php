@@ -23,10 +23,10 @@ class InstitutionBankAccountsTable extends AppTable {
 ******************************************************************************************************************/
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
 		$this->belongsTo('BankBranches', ['className' => 'FieldOption.BankBranches']);
-	
+
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -42,7 +42,7 @@ class InstitutionBankAccountsTable extends AppTable {
 		$this->ControllerAction->field('remarks', ['type' => 'text', 'visible' => ['view'=>true, 'edit'=>true]]);
 
 		$this->ControllerAction->field('bank', ['type' => 'select', 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'onChangeReload' => true]);
-		
+
 		$this->ControllerAction->setFieldOrder([
 			'active', 'account_name', 'account_number', 'bank', 'bank_branch_id',
 		]);
@@ -78,11 +78,12 @@ class InstitutionBankAccountsTable extends AppTable {
 		]);
 	}
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
-
+	public function addEditAfterAction(Event $event, Entity $entity)
+	{
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
 		}
+
 		if (($entity->toArray())) {
 			if ($entity->has('bank')) {
 				$this->_selectedBankId = $entity->bank;
@@ -93,10 +94,13 @@ class InstitutionBankAccountsTable extends AppTable {
 			// 1st instance of add
 			$this->_selectedBankId = '';
 		}
+
 		$bankBranches = $this->BankBranches
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
 			->where(['bank_id'=>$this->_selectedBankId])
+			->order(['order'])
 			->toArray();
+
 		$this->fields['bank_branch_id']['options'] = $bankBranches;
 	}
 
@@ -129,7 +133,7 @@ class InstitutionBankAccountsTable extends AppTable {
 		$attr['options'] = $this->_bankOptions;
 		return $attr;
 	}
-	
+
 	public function onUpdateFieldBankBranchId(Event $event, array $attr, $action, $request) {
 		if (empty($this->_bankOptions)) {
 			$this->_bankOptions = $this->getBankOptions();
@@ -148,7 +152,7 @@ class InstitutionBankAccountsTable extends AppTable {
 
 	public function onGetActive(Event $event, Entity $entity) {
 		$icons = [
-			0 => '<i class="fa kd-cross red"></i>', 
+			0 => '<i class="fa kd-cross red"></i>',
 			1 => '<i class="fa kd-check green"></i>'
 		];
 
@@ -160,9 +164,11 @@ class InstitutionBankAccountsTable extends AppTable {
 ** essential methods
 **
 ******************************************************************************************************************/
-	private function getBankOptions() {
+	private function getBankOptions()
+	{
 		return $this->_bankOptions = $this->BankBranches->Banks
 			->find('list', ['keyField' => 'id', 'valueField' => 'name'])
+			->order(['order'])
 			->toArray();
 	}
 }
