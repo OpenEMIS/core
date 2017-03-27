@@ -158,7 +158,7 @@ class TrainingResultsTable extends AppTable  {
         $trainingSessionResults = $this->trainingSessionResults;
         if (!isset($trainingSessionResults[$sessionId][$traineeId][$resultTypeId])) {
             $TrainingResultsTable = TableRegistry::get('Training.TrainingSessionTraineeResults');
-            $this->trainingSessionResults = $TrainingResultsTable->getTrainingSessionTraineeResults($sessionId);
+            $this->trainingSessionResults = $TrainingResultsTable->getTrainingSessionResults($sessionId);
             $trainingSessionResults = $this->trainingSessionResults;
         }
 

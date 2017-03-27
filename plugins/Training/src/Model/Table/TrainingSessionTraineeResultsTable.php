@@ -11,7 +11,7 @@ class TrainingSessionTraineeResultsTable extends AppTable {
 		$this->belongsTo('TrainingResultTypes', ['className' => 'Training.TrainingResultTypes']);
 	}
 
-    public function getTrainingSessionTraineeResults($sessionId) {
+    public function getTrainingSessionResults($sessionId) {
         $results = $this->find()
             ->where([$this->aliasField('training_session_id') => $sessionId])
             ->toArray();
