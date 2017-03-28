@@ -122,11 +122,15 @@ class AlertLogsTable extends ControllerActionTable
         $today = Time::now();
         $todayDate = Date::now();
 
+        // general feature options from alertRules
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+
         // checksum hash($subject,$message)
         $checksum = Security::hash($subject . ',' . $message, 'sha256');
 
         // to update and add new records into the alert_logs
-        if ($this->exists(['checksum' => $checksum]) && $feature == 'Attendance') {
+        if ($this->exists(['checksum' => $checksum]) && array_key_exists($feature, $alertFeatures)) {
             $record = $this->find()
                 ->where(['checksum' => $checksum])
                 ->first();
@@ -144,6 +148,7 @@ class AlertLogsTable extends ControllerActionTable
                 'message' => $message,
                 'checksum' => $checksum
             ]);
+
             $this->save($entity);
         }
     }
