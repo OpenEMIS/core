@@ -23,6 +23,9 @@ class StudentBehaviourCategoriesTable extends ControllerActionTable
         $this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index']
+        ]);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)

@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "ca5d6a07502ebb33b5da7fc4c62339ee",
-    "content-hash": "5bf21aa1cb68d9a99e63fc2c19656811",
+    "hash": "1c54fad3a5cbb6bc391e28a150e9fb8c",
+    "content-hash": "31952743da8265db5809112b333ed5a4",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -386,18 +386,19 @@
         },
         {
             "name": "korditpteltd/kd-cakephp-restful",
-            "version": "1.0.3.x-dev",
+            "version": "1.1.x-dev",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "7078dcb3768294ea8a1dc143161dbbe2c6d692c0"
+                "reference": "1dec68e5fb3f99fc385e03afdb1cf5525597b9a8"
             },
             "require": {
-                "cakephp/cakephp": ">3.0.9"
+                "admad/cakephp-jwt-auth": "^2.0",
+                "cakephp/cakephp": ">=3.2"
             },
             "require-dev": {
-                "cakephp/cakephp-codesniffer": "dev-master",
-                "phpunit/phpunit": "4.1.*"
+                "cakephp/cakephp-codesniffer": "^2.3",
+                "phpunit/phpunit": "^5.7"
             },
             "type": "cakephp-plugin",
             "extra": {
@@ -436,18 +437,18 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-            "time": "2016-12-29 03:11:24"
+            "time": "2017-03-14 02:55:11"
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
-            "version": "v1.0.3.4",
+            "version": "v1.0.3.7",
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "566c803e34eb38ab30775d710e09e4c9959868bb"
+                "reference": "5ec99366e68fdea6a267976c56a7c5e539387337"
             },
             "require": {
-                "cakephp/cakephp": ">3.0.0",
+                "cakephp/cakephp": ">3.0.0 <3.3.0",
                 "firebase/php-jwt": "~3.0",
                 "google/apiclient": "1.1.7",
                 "onelogin/php-saml": "^2.9",
@@ -478,7 +479,45 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-            "time": "2017-02-09 05:44:10"
+            "time": "2017-03-20 09:46:41"
+        },
+        {
+            "name": "korditpteltd/kd-cakephp-webhooks",
+            "version": "v1.0.8",
+            "source": {
+                "type": "git",
+                "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
+                "reference": "ccdc6b88ed7f4f4027499501587992e37cab8cd5"
+            },
+            "require": {
+                "cakephp/cakephp": ">3.1.0"
+            },
+            "type": "cakephp-plugin",
+            "autoload": {
+                "psr-4": {
+                    "Webhook\\": "src"
+                }
+            },
+            "license": [
+                "GPL-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "KORDIT PHP DEVELOPERS",
+                    "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+                }
+            ],
+            "description": "KORDIT CakePHP Webhook Plugin",
+            "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks",
+            "keywords": [
+                "cakephp",
+                "kordit",
+                "webhook"
+            ],
+            "support": {
+                "source": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+            },
+            "time": "2017-03-21 08:52:27"
         },
         {
             "name": "mk-j/php_xlsxwriter",

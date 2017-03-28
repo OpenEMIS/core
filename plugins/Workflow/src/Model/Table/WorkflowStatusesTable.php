@@ -82,7 +82,7 @@ class WorkflowStatusesTable extends AppTable {
 			case 'view':
 				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name')];
 				$tableCells = [];
-				$workflowStatusId = $this->request->pass[1];
+				$workflowStatusId = $this->paramsDecode($this->request->pass[1])['id'];
 				$workflowSteps = $this->getWorkflowSteps($workflowStatusId);
 				if (!empty($workflowSteps)) {
 					$workflowStepOptions = $this->WorkflowSteps
@@ -132,7 +132,7 @@ class WorkflowStatusesTable extends AppTable {
 				
 				if ($this->request->is(['get'])) {
 					if(isset($this->request->pass[1])){
-						$modelId = $this->request->pass[1];
+						$modelId = $this->paramsDecode($this->request->pass[1])['id'];
 						$steps = $this->getSteps($modelId);
 						foreach($steps as $step) {
 							$stepInfo = $step['_matchingData']['WorkflowSteps'];
