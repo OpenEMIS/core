@@ -5,13 +5,15 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Console\Shell;
 
-class UpdateAssigneeShell extends Shell {
+class UpdateAssigneeShell extends Shell
+{
 	// Workflow Steps - category
 	const TO_DO = 1;
 	const IN_PROGRESS = 2;
 	const DONE = 3;
 
-	public function initialize() {
+	public function initialize()
+	{
 		parent::initialize();
 		$this->loadModel('Workflow.WorkflowModels');
 		$this->loadModel('Workflow.WorkflowTransitions');
@@ -19,7 +21,8 @@ class UpdateAssigneeShell extends Shell {
 		$this->loadModel('Institution.Institutions');
 	}
 
- 	public function main() {
+ 	public function main()
+ 	{
  		if (empty($this->args[0])) {
  			$workflowModelResults = $this->WorkflowModels->find()->all();
 
@@ -35,7 +38,8 @@ class UpdateAssigneeShell extends Shell {
  		}
 	}
 
-	public function autoAssignAssignee(Entity $workflowModelEntity, $id=0, $statusId=0, $groupId=0, $userId=0, $roleId=0) {
+	public function autoAssignAssignee(Entity $workflowModelEntity, $id=0, $statusId=0, $groupId=0, $userId=0, $roleId=0)
+	{
 		try {
 			$model = TableRegistry::get($workflowModelEntity->model);
 			$isSchoolBased = $workflowModelEntity->is_school_based;
@@ -99,12 +103,16 @@ class UpdateAssigneeShell extends Shell {
 					$this->out($workflowModelEntity->name.' : Affected Record Id: '.$unassignedEntity->id.'; Set to unassigned.');
 				}
 
-				$model->updateAll(
-					['assignee_id' => $assigneeId],
-					['id' => $unassignedEntity->id]
-				);
-
+				/* POCOR-3726 - Adding alert to workflow
+				- This logic will add the update assignee commment to the workflow transition.
+				- Put before the saving so the aftersave will be able to get the latest update assignee comment.
+				*/
 				$this->WorkflowTransitions->trackChanges($workflowModelEntity, $unassignedEntity, $assigneeId);
+
+				// using save instead of updateAll to trigger aftersave.
+				$unassignedEntity->assignee_id = $assigneeId;
+                $model->save($unassignedEntity);
+                // end of POCOR-3726
 			}
 
 			$this->out("End Processing Update Assignee Shell of ".$workflowModelEntity->name);

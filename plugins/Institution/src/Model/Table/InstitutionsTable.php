@@ -11,8 +11,11 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
+use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
 use Cake\Network\Session;
+use Cake\Log\Log;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -161,10 +164,12 @@ class InstitutionsTable extends AppTable  {
 				])
 
 	        ->allowEmpty('date_closed')
+	        ->add('date_opened', 'ruleLessThanToday', [
+				'rule' => ['lessThanToday', true]
+				])
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'date_opened', false]
+		            'rule' => ['compareDateReverse', 'date_opened', true]
 	    	    ])
-
 	        ->allowEmpty('longitude')
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
@@ -224,6 +229,12 @@ class InstitutionsTable extends AppTable  {
 			->add('area_id', 'ruleAuthorisedArea', [
 					'rule' => ['checkAuthorisedArea']
 				])
+			->add('area_id', 'ruleConfiguredArea', [
+                    'rule' => ['checkConfiguredArea']
+                ])
+            ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+                    'rule' => ['checkConfiguredArea']
+                ])
 			->add('institution_provider_id', 'ruleLinkedSector', [
 						'rule' => 'checkLinkedSector',
 						'provider' => 'table'
@@ -334,6 +345,13 @@ class InstitutionsTable extends AppTable  {
 		return ['downloadFile'];
 	}
 
+	public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Request $request)
+	{
+		$today = new Date();
+		$attr['date_options']['endDate'] = $today->format('d-m-Y');
+		return $attr;
+	}
+
 	public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
 	{
 		$attr['default_date'] = false;
@@ -344,11 +362,15 @@ class InstitutionsTable extends AppTable  {
 		if ($entity->isNew()) {
 			$entity->shift_type = 0;
 		}
+
+        // adding debug log to monitor when there was a different between date_opened's year and year_opened
+		$this->debugMonitorYearOpened($entity, $options);
 	}
 
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
+		$this->ControllerAction->field('date_opened');
 		$this->ControllerAction->field('date_closed');
 		$this->ControllerAction->field('modified', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
@@ -921,6 +943,22 @@ class InstitutionsTable extends AppTable  {
 		$groupIds = $this->getSecurityGroupId($userId, $institutionId);
 		$SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
+	}
+
+	public function debugMonitorYearOpened($entity, $options)
+	{
+        $time = strtotime($entity->date_opened);
+        $yearDateOpened = date("Y",$time);
+        $yearOpened = $entity->year_opened;
+
+        if ($yearDateOpened != $yearOpened) {
+        	$debugInfo = $this->alias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
+
+            Log::write('debug',$debugInfo);
+            Log::write('debug',$entity);
+            Log::write('debug',$options);
+            Log::write('debug', 'End of monitoring year opened');
+        }
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
