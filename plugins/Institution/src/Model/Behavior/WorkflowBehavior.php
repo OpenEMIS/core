@@ -45,7 +45,7 @@ class WorkflowBehavior extends Behavior
 		return $events;
 	}
 
-	private function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+	public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
 	{
 		foreach ($this->workflowEvents as $key => $attr) {
 			$attr['text'] = __($attr['text']);
