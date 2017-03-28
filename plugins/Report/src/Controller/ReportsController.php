@@ -47,9 +47,9 @@ class ReportsController extends AppController {
 				'Report.InstitutionStudents' => __('Students'),
 				// 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
 				'Report.InstitutionStaff' => __('Staff'),
-				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 				'Report.StudentAbsences' => __('Student Absence'),
 				'Report.StaffAbsences' => __('Staff Absence'),
+				'Report.StaffLeave' => __('Staff Leave'),
 				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
 				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
 			];
@@ -65,7 +65,11 @@ class ReportsController extends AppController {
 				'Report.Staff' => __('Staff'),
 				'Report.StaffIdentities' => __('Identities'),
 				'Report.StaffContacts' => __('Contacts'),
-				'Report.StaffQualifications' => __('Qualifications')
+				'Report.StaffQualifications' => __('Qualifications'),
+				'Report.StaffLicenses' => __('Licenses'),
+				'Report.StaffEmployments' => __('Employments'),
+				'Report.StaffSalaries' => __('Salaries'),
+				'Report.StaffSystemUsage' => __('System Usage')
 			];
         } else if ($module == 'Textbooks') {
             $options = [
