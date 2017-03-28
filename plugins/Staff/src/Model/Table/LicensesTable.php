@@ -55,7 +55,7 @@ class LicensesTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->add('issue_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'expiry_date', false]
@@ -252,5 +252,62 @@ class LicensesTable extends ControllerActionTable
 			});
 
 		return $query;
+	}
+
+	public function getLicenseData($threshold)
+	{
+		$thresholdArray = json_decode($threshold, true);
+
+		$operandConditions = [
+			1 => ('DATEDIFF(' . $this->aliasField('expiry_date') . ', NOW()) <= ' . $thresholdArray['value']), // before
+			2 => ('DATEDIFF(NOW(), ' . $this->aliasField('expiry_date') . ') <= ' . $thresholdArray['value']), // after
+		];
+
+		// will do the comparison with threshold when retrieving the absence data
+		$licenseData = $this->find()
+			// ->select([
+			// 	'total_days' => $this->find()->func()->sum(
+			// 		'DATEDIFF(end_date, start_date)+1' // MYSQL:-SPECIFIC CODE
+			// 	),
+			// 	'Institutions.id',
+			// 	'Institutions.name',
+			// 	'Institutions.code',
+			// 	'Institutions.address',
+	  //           'Institutions.postal_code',
+	  //           'Institutions.contact_person',
+	  //           'Institutions.telephone',
+	  //           'Institutions.fax',
+	  //           'Institutions.email',
+	  //           'Institutions.website',
+	  //           'Users.id',
+	  //           'Users.openemis_no',
+	  //           'Users.first_name',
+	  //           'Users.middle_name',
+	  //           'Users.third_name',
+	  //           'Users.last_name',
+	  //           'Users.preferred_name',
+	  //           'Users.email',
+	  //           'Users.address',
+	  //           'Users.postal_code',
+	  //           'Users.date_of_birth',
+	  //           'Users.identity_number',
+	  //           'Users.photo_name',
+	  //           'Users.photo_content',
+	  //           'MainNationalities.name',
+	  //           'MainIdentityTypes.name',
+	  //           'Genders.name'
+			// ])
+			->contain(['Statuses', 'Users', 'LicenseTypes', 'Assignees'])
+			->where([
+				$this->Statuses->aliasField('name') => 'Active',
+				$this->aliasField('license_type_id') => $thresholdArray['license_type_id'],
+				$this->aliasField('expiry_date') . ' IS NOT NULL',
+				$operandConditions[$thresholdArray['operand_id']]
+			])
+			->hydrate(false)
+			;
+// pr($licenseData->toArray());
+// die;
+		return $licenseData->toArray();
 	}
 }
