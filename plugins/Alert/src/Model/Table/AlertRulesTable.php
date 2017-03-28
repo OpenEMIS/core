@@ -49,7 +49,7 @@ class AlertRulesTable extends ControllerActionTable
                 '${institution.address}' => 'Institution address.',
                 '${institution.postal_code}' => 'Institution postal code.',
                 '${institution.contact_person}' => 'Institution contact person.',
-                    '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.telephone}' => 'Institution telephone number.',
                 '${institution.fax}' => 'Institution fax number.',
                 '${institution.email}' => 'Institution email.',
                 '${institution.website}' => 'Institution website.',
@@ -76,10 +76,31 @@ class AlertRulesTable extends ControllerActionTable
                 ],
             ],
             'placeholder' => [
-                // '${institution.telephone}' => 'Institution telephone number.',
-                // '${institution.fax}' => 'Institution fax number.',
-                // '${institution.email}' => 'Institution email.',
-                // '${institution.website}' => 'Institution website.',
+                '${threshold}' => 'Threshold value.',
+                '${license_type.name}' => 'License type.',
+                '${license_number}' => 'License number.',
+                '${issue_date}' => 'Issue date.',
+                '${expiry_date}' => 'Expiry date.',
+                '${issuer}' => 'Issuer.',
+                '${user.openemis_no}' => 'Student OpenEMIS number.',
+                '${user.first_name}' => 'Student first name.',
+                '${user.middle_name}' => 'Student middle name.',
+                '${user.third_name}' => 'Student third name.',
+                '${user.last_name}' => 'Student last name.',
+                '${user.preferred_name}' => 'Student preferred name.',
+                '${user.email}' => 'Student email.',
+                '${user.address}' => 'Student address.',
+                '${user.postal_code}' => 'Student postal code.',
+                '${user.date_of_birth}' => 'Student date of birth.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.address}' => 'Institution address.',
+                '${institution.postal_code}' => 'Institution postal code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.fax}' => 'Institution fax number.',
+                '${institution.email}' => 'Institution email.',
+                '${institution.website}' => 'Institution website.',
             ]
         ],
     ];
@@ -108,7 +129,28 @@ class AlertRulesTable extends ControllerActionTable
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
                 'provider' => 'table'
-            ]);
+            ])
+            ->add('value', 'ruleRange', [
+                'rule' => ['range', 1, 30],
+                'on' => function ($context) { //validate when only value is not empty
+                    return isset($context['data']['value']);
+                }
+            ])
+            ->add('threshold', 'ruleRange', [
+                'rule' => ['range', 1, 30],
+                'on' => function ($context) { //validate when only threshold contain type and not empty
+                    $feature = $context['data']['feature'];
+                    $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+                    $threshold = $alertTypeDetails[$feature]['threshold'];
+
+                    if (array_key_exists('type', $threshold)) {
+                        return isset($context['data']['threshold']);
+                    }
+
+                    return false;
+                }
+            ])
+            ;
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -124,7 +166,7 @@ class AlertRulesTable extends ControllerActionTable
         // element control
         $featureOptions = $this->getFeatureOptions();
         if (!empty($featureOptions)) {
-            $featureOptions = [0 => 'All Features'] + $featureOptions;
+            $featureOptions = ['AllFeatures' => 'All Features'] + $featureOptions;
         }
 
         $selectedFeature = $this->queryString('feature', $featureOptions);
@@ -146,7 +188,7 @@ class AlertRulesTable extends ControllerActionTable
     {
         $selectedFeature = $extra['selectedFeature'];
 
-        if ($selectedFeature != 0) {
+        if ($selectedFeature != 'AllFeatures') {
             $query->where(['feature' => $selectedFeature]);
         }
     }
@@ -174,18 +216,18 @@ class AlertRulesTable extends ControllerActionTable
         $query->contain(['SecurityRoles']);
     }
 
-    public function beforeSave(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['feature'])) {
             $feature = $data['feature'];
             $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
 
-            if (!array_key_exists('type', $alertTypeDetails[$feature]['threshold'])) {
+            if (!empty($alertTypeDetails[$feature]['threshold']) && !array_key_exists('type', $alertTypeDetails[$feature]['threshold'])) {
                 $threshold = $alertTypeDetails[$feature]['threshold'];
                 $records = [];
 
                 foreach ($threshold as $key => $obj) {
-                    $records[$key] = $data[$obj['field']];
+                    $records[$key] = !empty($data[$obj['field']]) ? $data[$obj['field']] : null;
                 }
 
                 $data['threshold'] = json_encode($records, JSON_UNESCAPED_UNICODE);
@@ -316,6 +358,7 @@ class AlertRulesTable extends ControllerActionTable
                 $type = $this->getThresholdType($feature);
                 if ($type == 'integer') {
                     $attr['attr']['min'] = 1;
+                    $attr['attr']['max'] = 30;
                 }
             } else {
                 $type = 'hidden';
@@ -387,6 +430,7 @@ class AlertRulesTable extends ControllerActionTable
 
                     if ($type == 'integer') {
                         $attr['attr']['min'] = 1;
+                        $attr['attr']['max'] = 30;
                     } else if ($type = 'select') {
                         if (!empty($options)) {
                             $attr['options'] = $options;
