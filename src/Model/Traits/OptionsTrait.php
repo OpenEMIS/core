@@ -103,8 +103,8 @@ trait OptionsTrait {
         	],
         	'AlertRules' => [
         		'before_after' => [
-	    			1 => __('Before'),
-	    			2 => __('After')
+	    			1 => __('Before expiry date'),
+	    			2 => __('After expiry date')
 	    		]
         	]
 		];

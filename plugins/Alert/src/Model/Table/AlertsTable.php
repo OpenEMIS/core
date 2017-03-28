@@ -7,6 +7,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
 use App\Model\Traits\OptionsTrait;
@@ -125,6 +126,11 @@ class AlertsTable extends ControllerActionTable
         $url = $this->url($params['action']);
         $event->stopPropagation();
         return $this->controller->redirect($url);
+    }
+
+    public function onGetName(Event $event, Entity $entity)
+    {
+        return Inflector::humanize(Inflector::underscore($entity['name']));
     }
 
     public function onGetStatus(Event $event, Entity $entity)

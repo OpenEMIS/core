@@ -265,38 +265,24 @@ class LicensesTable extends ControllerActionTable
 
 		// will do the comparison with threshold when retrieving the absence data
 		$licenseData = $this->find()
-			// ->select([
-			// 	'total_days' => $this->find()->func()->sum(
-			// 		'DATEDIFF(end_date, start_date)+1' // MYSQL:-SPECIFIC CODE
-			// 	),
-			// 	'Institutions.id',
-			// 	'Institutions.name',
-			// 	'Institutions.code',
-			// 	'Institutions.address',
-	  //           'Institutions.postal_code',
-	  //           'Institutions.contact_person',
-	  //           'Institutions.telephone',
-	  //           'Institutions.fax',
-	  //           'Institutions.email',
-	  //           'Institutions.website',
-	  //           'Users.id',
-	  //           'Users.openemis_no',
-	  //           'Users.first_name',
-	  //           'Users.middle_name',
-	  //           'Users.third_name',
-	  //           'Users.last_name',
-	  //           'Users.preferred_name',
-	  //           'Users.email',
-	  //           'Users.address',
-	  //           'Users.postal_code',
-	  //           'Users.date_of_birth',
-	  //           'Users.identity_number',
-	  //           'Users.photo_name',
-	  //           'Users.photo_content',
-	  //           'MainNationalities.name',
-	  //           'MainIdentityTypes.name',
-	  //           'Genders.name'
-			// ])
+			->select([
+				'LicenseTypes.name',
+				'license_number',
+				'issue_date',
+				'expiry_date',
+				'issuer',
+				'Users.id',
+				'Users.openemis_no',
+				'Users.first_name',
+				'Users.middle_name',
+				'Users.third_name',
+				'Users.last_name',
+				'Users.preferred_name',
+				'Users.email',
+				'Users.address',
+				'Users.postal_code',
+				'Users.date_of_birth',
+			])
 			->contain(['Statuses', 'Users', 'LicenseTypes', 'Assignees'])
 			->where([
 				$this->Statuses->aliasField('name') => 'Active',
@@ -306,8 +292,7 @@ class LicensesTable extends ControllerActionTable
 			])
 			->hydrate(false)
 			;
-// pr($licenseData->toArray());
-// die;
+
 		return $licenseData->toArray();
 	}
 }
