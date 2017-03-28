@@ -319,25 +319,41 @@ class AreasTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
+        $table = $this;
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
                 'order' => ['lft' => 'ASC']
             ])
-            ->formatResults(function($results) {
+            ->formatResults(function($results) use ($options, $table) {
                 $returnArr = [];
                 $arr = $results->toArray();
-                $makeArray = function ($arr, $returnArr) {
+                $parentIds = [];
+                $makeArray = function ($arr, $returnArr, $parentIds, $options, $table) {
                     foreach ($arr as $a) {
-                        if (count($a['children']) == 0) {
-                            $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
+                        if (isset($options['authorised_area_ids']) && is_array($options['authorised_area_ids'])) {
+                            if (in_array($a['id'], $options['authorised_area_ids']) || array_intersect($options['authorised_area_ids'], $parentIds)) {
+                                if (count($a['children']) == 0) {
+                                    $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
+                                } else {
+                                    $parentIds[] = $a['id'];
+                                    $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr, $parentIds, $options, $table)];
+                                }
+                            } else {
+                                $returnArr[] = $this->makeArray($a['children'], $returnArr, $parentIds, $options, $table);
+                            }
                         } else {
-                            $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr)];
+                            if (count($a['children']) == 0) {
+                                $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
+                            } else {
+                                $parentIds[] = $a['id'];
+                                $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr, $parentIds, $options, $table)];
+                            }
                         }
                     }
                     return $returnArr;
                 };
-                return $this->makeArray($arr, $returnArr);
+                return $this->makeArray($arr, $returnArr, $parentIds, $options, $table);
             });
     }
 
