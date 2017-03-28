@@ -14,6 +14,8 @@ use App\Model\Table\ControllerActionTable;
 
 class AlertsTable extends ControllerActionTable
 {
+    use OptionsTrait;
+
     private $statusTypes = [];
 
     public function initialize(array $config)

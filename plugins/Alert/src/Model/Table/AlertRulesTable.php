@@ -164,12 +164,17 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+    }
+
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
         $query->contain(['SecurityRoles']);
     }
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function beforeSave(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['feature'])) {
             $feature = $data['feature'];
@@ -299,11 +304,9 @@ class AlertRulesTable extends ControllerActionTable
         return $attr;
     }
 
-/*************************************************************************************************************************
-**                                                                                                                      **
-**                                     Threshold                                                                        **
-**                                                                                                                      **
-*************************************************************************************************************************/
+/********************************************************************************
+**                               Threshold                                     **
+*********************************************************************************/
 
     public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
     {
@@ -319,7 +322,7 @@ class AlertRulesTable extends ControllerActionTable
             }
 
             $attr['type'] = $type;
-        } else if ($action == 'edit') {
+        } else if ($action == 'edit' || $action == 'view') {
             if (!empty($this->paramsPass(0))) {
                 $alertRuleId = $this->paramsDecode($this->paramsPass(0));
                 $entity = $this->get($alertRuleId);
@@ -398,18 +401,46 @@ class AlertRulesTable extends ControllerActionTable
             }
 
             $attr['type'] = $type;
-        } else if ($action == 'edit') {
+        } else if ($action == 'edit' || $action == 'view') {
             if (!empty($this->paramsPass(0))) {
                 $alertRuleId = $this->paramsDecode($this->paramsPass(0));
                 $entity = $this->get($alertRuleId);
                 $feature = $entity->feature;
+                $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+
                 $threshold = $entity->threshold;
                 $thresholdArray = json_decode($entity->threshold, true);
 
                 if (is_array($thresholdArray) && array_key_exists($fieldKey, $thresholdArray)) {
+                    $thresholdData = $alertTypeDetails[$feature]['threshold'][$fieldKey];
+                    $type = $thresholdData['type'];
+
+                    if (array_key_exists('option', $thresholdData)) {
+                        $options = $this->getSelectOptions($this->aliasField($thresholdData['option']));
+                    }
+
+                    if (array_key_exists('lookupModel', $thresholdData)) {
+                        $ModelTable = TableRegistry::get($thresholdData['lookupModel']);
+                        $options = $ModelTable
+                            ->find('list')
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+                    }
+
+                    if ($type == 'integer') {
+                        $attr['value'] = $thresholdArray[$fieldKey];
+                        $attr['attr']['value'] = $thresholdArray[$fieldKey];
+                    } else if ($type = 'select') {
+                        if (!empty($options) && $action == 'edit') {
+                            $attr['value'] = $thresholdArray[$fieldKey];
+                            $attr['attr']['value'] = $options[$thresholdArray[$fieldKey]];
+                        } else if (!empty($options) && $action == 'view') {
+                            $attr['value'] = $options[$thresholdArray[$fieldKey]];
+                        }
+                    }
+
                     $attr['type'] = 'readOnly';
-                    $attr['value'] = $thresholdArray[$fieldKey];
-                    $attr['attr']['value'] = $thresholdArray[$fieldKey];
                     $attr['visible'] = true;
                 }
             }
@@ -442,15 +473,20 @@ class AlertRulesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
+        // Rule set up section
         $this->field('rule_set_up', ['type' => 'section']);
         $this->field('feature', ['type' => 'select']);
         $this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
+        $this->field('security_roles', ['after' => 'method']);
+
+        // threshold field
         $this->field('threshold', ['after' => 'security_roles']);
         $this->field('value', ['visible' => false, 'after' => 'security_roles']);
         $this->field('operand', ['visible' => false, 'after' => 'value']);
         $this->field('license_type', ['visible' => false, 'after' => 'operand']);
-        $this->field('security_roles', ['after' => 'method']);
+
+        // Alert section
         $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);
     }
 
