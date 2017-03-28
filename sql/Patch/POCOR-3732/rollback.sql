@@ -16,5 +16,8 @@ DELETE FROM `workflow_statuses` WHERE NOT EXISTS (SELECT 1 FROM `workflow_models
 DELETE FROM `workflow_statuses_steps` WHERE NOT EXISTS (SELECT 1 FROM `workflow_statuses` WHERE `workflow_statuses`.`id` = `workflow_statuses_steps`.`workflow_status_id`);
 DELETE FROM `workflow_transitions` WHERE NOT EXISTS (SELECT 1 FROM `workflow_models` WHERE `workflow_models`.`id` = `workflow_transitions`.`workflow_model_id`);
 
+-- security_functions
+DELETE FROM `security_functions` WHERE `id` = 1056;
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3732';
