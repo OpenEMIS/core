@@ -8,7 +8,6 @@ CREATE TABLE IF NOT EXISTS `institution_workflows` (
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `feature` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
-  `workflow_id` int(11) NOT NULL COMMENT 'links to workflows.id',
   `assignee_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to security_users.id',
   `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
   `modified_user_id` int(11) DEFAULT NULL,
@@ -18,7 +17,6 @@ CREATE TABLE IF NOT EXISTS `institution_workflows` (
   PRIMARY KEY (`id`),
   KEY `feature` (`feature`),
   KEY `status_id` (`status_id`),
-  KEY `workflow_id` (`workflow_id`),
   KEY `assignee_id` (`assignee_id`),
   KEY `institution_id` (`institution_id`),
   KEY `modified_user_id` (`modified_user_id`),
@@ -79,3 +77,7 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Approve', NULL, 0, 0, 0, 0, NULL, @approvedStatusId, 0, 1, NOW()),
 ('Reject', NULL, 1, 0, 0, 0, NULL, @approvedStatusId, 0, 1, NOW()),
 ('Reopen', NULL, NULL, 1, 0, 0, NULL, @approvedStatusId, @openStatusId, 1, NOW());
+
+-- security_functions
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
+(1056, 'Workflows', 'Institutions', 'Institutions', 'Workflows', 1000, 'Workflows.index|Workflows.view', NULL, NULL, NULL, NULL, 1056, 1, 1, NOW());
