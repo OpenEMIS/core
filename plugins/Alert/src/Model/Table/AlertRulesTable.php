@@ -166,7 +166,7 @@ class AlertRulesTable extends ControllerActionTable
         // element control
         $featureOptions = $this->getFeatureOptions();
         if (!empty($featureOptions)) {
-            $featureOptions = ['AllFeatures' => 'All Features'] + $featureOptions;
+            $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }
 
         $selectedFeature = $this->queryString('feature', $featureOptions);
@@ -188,7 +188,7 @@ class AlertRulesTable extends ControllerActionTable
     {
         $selectedFeature = $extra['selectedFeature'];
 
-        if ($selectedFeature != 'AllFeatures') {
+        if ($selectedFeature != -1) {
             $query->where(['feature' => $selectedFeature]);
         }
     }

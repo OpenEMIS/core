@@ -285,7 +285,6 @@ class LicensesTable extends ControllerActionTable
 			])
 			->contain(['Statuses', 'Users', 'LicenseTypes', 'Assignees'])
 			->where([
-				$this->Statuses->aliasField('name') => 'Active',
 				$this->aliasField('license_type_id') => $thresholdArray['license_type_id'],
 				$this->aliasField('expiry_date') . ' IS NOT NULL',
 				$operandConditions[$thresholdArray['operand_id']]
