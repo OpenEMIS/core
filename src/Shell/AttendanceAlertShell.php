@@ -50,18 +50,18 @@ class AttendanceAlertShell extends Shell
                         foreach ($rule['security_roles'] as $securityRolesObj) {
                             $securityRoleId = $securityRolesObj->id;
                             $institutionId = $vars['institution']['id'];
+
                             // all staff within securityRole and institution
                             $emailListResult = $this->SecurityGroupUsers
                                 ->find('emailList', ['securityRoleId' => $securityRoleId, 'institutionId' => $institutionId])
-                                ->where(['email' . ' IS NOT NULL'])
                                 ->toArray()
                             ;
 
                             // combine all email to the email list
                             if (!empty($emailListResult)) {
                                 foreach ($emailListResult as $obj) {
-                                    if (!empty($obj->user->email)) {
-                                        $recipient = $obj->user->name . ' <' . $obj->user->email . '>';
+                                    if (!empty($obj->_matchingData['Users']->email)) {
+                                        $recipient = $obj->_matchingData['Users']->name . ' <' . $obj->_matchingData['Users']->email . '>';
                                         if (!in_array($recipient, $emailList)) {
                                             $emailList[] = $recipient;
                                         }
