@@ -67,9 +67,9 @@ SELECT `id` INTO @approvedStatusId FROM `workflow_steps` WHERE `workflow_id` = @
 
 -- Pre-insert workflow_actions
 INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `comment_required`, `allow_by_assignee`, `event_key`, `workflow_step_id`, `next_workflow_step_id`, `created_user_id`, `created`) VALUES
-('Submit For Approval', NULL, 0, 1, 0, 1, 'Workflow.onAssignBack', @openStatusId, @pendingStatusId, 1, NOW()),
+('Submit For Approval', NULL, 0, 1, 0, 1, NULL, @openStatusId, @pendingStatusId, 1, NOW()),
 ('Cancel', NULL, 1, 1, 0, 1, NULL, @openStatusId, @closedStatusId, 1, NOW()),
-('Approve', NULL, 0, 1, 0, 0, NULL, @pendingStatusId, @closedStatusId, 1, NOW()),
+('Approve', NULL, 0, 1, 0, 0, NULL, @pendingStatusId, @approvedStatusId, 1, NOW()),
 ('Reject', NULL, 1, 1, 0, 0, NULL, @pendingStatusId, @openStatusId, 1, NOW()),
 ('Approve', NULL, 0, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
 ('Reject', NULL, 1, 0, 0, 0, NULL, @closedStatusId, 0, 1, NOW()),
