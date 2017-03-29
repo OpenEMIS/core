@@ -2,9 +2,11 @@
 namespace Alert\Model\Behavior;
 
 use ArrayObject;
+
+use Alert\Model\Behavior\AlertRuleBehavior;
+
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Alert\Model\Behavior\AlertRuleBehavior;
 use Cake\Event\Event;
 
 class AlertRuleAttendanceBehavior extends AlertRuleBehavior
