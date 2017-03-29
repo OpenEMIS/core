@@ -8,6 +8,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Routing\Router;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
@@ -219,10 +220,12 @@ class InstitutionWorkflowsTable extends ControllerActionTable
     {
         $featureOptions = $this->getFeatureOptions();
         $selectedFeature = !is_null($this->request->query('feature')) ? $this->request->query('feature') : key($featureOptions);
-        $filterOptions = [];
-        $selectedFilter = '';
-        $statusOptions = [];
-        $selectedStatus = '';
+
+        $filterOptions = $this->getFilterOptions($selectedFeature);
+        $selectedFilter = !is_null($this->request->query('filter')) ? $this->request->query('filter') : '-1';
+
+        $statusOptions = $this->getStatusOptions($selectedFeature, $selectedFilter);
+        $selectedStatus = !is_null($this->request->query('status')) ? $this->request->query('status') : '';
 
         $extra['selectedFeature'] = $selectedFeature;
         $extra['selectedFilter'] = $selectedFilter;
@@ -249,6 +252,14 @@ class InstitutionWorkflowsTable extends ControllerActionTable
         $where = [];
         if (isset($extra['selectedFeature']) && !empty($extra['selectedFeature'])) {
             $where[$this->aliasField('feature')] = $extra['selectedFeature'];
+        }
+        if (isset($extra['selectedFilter']) && $extra['selectedFilter'] != '-1') {
+            $selectedFilter = $extra['selectedFilter'];
+            $query
+                ->matching('LinkedRecords', function($q) use ($selectedFilter) {
+                    return $q->where(['behaviour_classification_id' => $selectedFilter]);
+                })
+                ->group($this->aliasField('id'));
         }
         if (isset($extra['selectedStatus']) && !empty($extra['selectedStatus'])) {
             $where[$this->aliasField('status_id')] = $extra['selectedStatus'];
@@ -280,7 +291,7 @@ class InstitutionWorkflowsTable extends ControllerActionTable
 		$this->setFieldOrder(['feature', 'status_id', 'assignee_id', 'title', 'linked_records']);
     }
 
-    public function getFeatureOptions()
+    private function getFeatureOptions()
     {
         $featureOptions = [];
         foreach ($this->features as $key => $obj) {
@@ -288,6 +299,45 @@ class InstitutionWorkflowsTable extends ControllerActionTable
         }
 
         return $featureOptions;
+    }
+
+    private function getFilterOptions($selectedFeature)
+    {
+        $filterOptions = [];
+
+        $registryAlias = $this->getRegistryAliasByFeature($selectedFeature);
+        $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+        $workflowModelEntity = $WorkflowModels
+            ->find()
+            ->where([$WorkflowModels->aliasField('model') => $registryAlias])
+            ->first();
+
+        if ($workflowModelEntity->has('filter') && !empty($workflowModelEntity->filter)) {
+            // Wofkflow Filter Options
+            $filterOptions = TableRegistry::get($workflowModelEntity->filter)->getList()->toArray();
+
+            // Trigger event to get the correct wofkflow filter options
+            $subject = TableRegistry::get($registryAlias);
+            $event = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
+            if ($event->isStopped()) { return $event->result; }
+            if (!empty($event->result)) {
+                $filterOptions = $event->result;
+            }
+            // End
+
+            $filterOptions = ['-1' => __('All Filters')] + $filterOptions;
+        }
+
+        return $filterOptions;
+    }
+
+    private function getStatusOptions($selectedFeature, $selectedFilter)
+    {
+        $statusOptions = [];
+        if ($selectedFilter != '-1') {
+        }
+
+        return $statusOptions;
     }
 
     private function addToolbarButtons(Entity $entity, ArrayObject $extra)
@@ -437,7 +487,7 @@ class InstitutionWorkflowsTable extends ControllerActionTable
 
             $userId = $this->Auth->user('id');
             $isAdmin = $this->AccessControl->isAdmin();
-            $registryAlias = $this->features[$entity->feature]['className'];
+            $registryAlias = $this->getRegistryAliasByFeature($entity->feature);
             $model = TableRegistry::get($registryAlias);
 
             $workflowStepId = $entity->status_id;
@@ -536,6 +586,12 @@ class InstitutionWorkflowsTable extends ControllerActionTable
         }
 
         return $workflowStepEntity;
+    }
+
+    private function getRegistryAliasByFeature($feature)
+    {
+        $registryAlias = $this->features[$feature]['className'];
+        return $registryAlias;
     }
 
     private function addWorkflowTransitionModal(Entity $entity, ArrayObject $extra)
