@@ -149,6 +149,52 @@ class AlertRulesTable extends ControllerActionTable
                 '${institution.website}' => 'Institution website.',
             ]
         ],
+        'Staff' => [
+            'feature' => 'EmploymentPeriod',
+            'name' => 'Employment Period',
+            'method' => 'Email',
+            'threshold' => [
+                'value' => [
+                    'type' => 'integer',
+                    'field' => 'value'
+                ],
+                'operand_id' => [
+                    'type' => 'select',
+                    'field' => 'operand',
+                    'option' => 'before_after'
+                ],
+                'staff_type_id' => [
+                    'type' => 'select',
+                    'field' => 'staff_type',
+                    'lookupModel' => 'Staff.StaffTypes'
+                ],
+            ],
+            'placeholder' => [
+                '${threshold.value}' => 'Threshold value.',
+                '${staff_type.name}' => 'Staff employment type.',
+                '${start_date}' => 'Staff start date.',
+                '${end_date}' => 'Staff end date.',
+                '${user.openemis_no}' => 'Student OpenEMIS number.',
+                '${user.first_name}' => 'Student first name.',
+                '${user.middle_name}' => 'Student middle name.',
+                '${user.third_name}' => 'Student third name.',
+                '${user.last_name}' => 'Student last name.',
+                '${user.preferred_name}' => 'Student preferred name.',
+                '${user.email}' => 'Student email.',
+                '${user.address}' => 'Student address.',
+                '${user.postal_code}' => 'Student postal code.',
+                '${user.date_of_birth}' => 'Student date of birth.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.address}' => 'Institution address.',
+                '${institution.postal_code}' => 'Institution postal code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.fax}' => 'Institution fax number.',
+                '${institution.email}' => 'Institution email.',
+                '${institution.website}' => 'Institution website.',
+            ]
+        ],
     ];
 
     public function initialize(array $config)
@@ -306,6 +352,8 @@ class AlertRulesTable extends ControllerActionTable
             $featureOptions[$obj['feature']] = __(Inflector::humanize(Inflector::underscore($obj['feature'])));
         }
 
+        ksort($featureOptions);
+
         return $featureOptions;
     }
 
@@ -454,6 +502,12 @@ class AlertRulesTable extends ControllerActionTable
         return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
     }
 
+    public function onUpdateFieldStaffType(Event $event, array $attr, $action, Request $request)
+    {
+        $fieldKey = 'staff_type_id';
+        return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
+    }
+
     public function getUpdateFieldAttr($fieldKey, $attr, $action, $request)
     {
         if ($action == 'add') {
@@ -582,6 +636,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('operand', ['visible' => false, 'after' => 'value']);
         $this->field('license_type', ['visible' => false, 'after' => 'operand']);
         $this->field('staff_leave_type', ['visible' => false, 'after' => 'operand']);
+        $this->field('staff_type', ['visible' => false, 'after' => 'operand']);
 
         // Alert section
         $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);
