@@ -2,10 +2,12 @@
 namespace Alert\Model\Behavior;
 
 use ArrayObject;
+
+use Alert\Model\Behavior\AlertRuleBehavior;
+
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Network\Request;
-use Alert\Model\Behavior\AlertRuleBehavior;
 use Cake\Event\Event;
 
 class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
@@ -31,7 +33,7 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
             ],
         ],
         'placeholder' => [
-            '${threshold}' => 'Threshold value.',
+            '${threshold.value}' => 'Threshold value.',
             '${license_type.name}' => 'License type.',
             '${license_number}' => 'License number.',
             '${issue_date}' => 'Issue date.',
