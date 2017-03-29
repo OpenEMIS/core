@@ -17,12 +17,13 @@ class LicenseValidityAlertShell extends Shell
         $this->loadModel('Alert.Alerts');
         $this->loadModel('Alert.AlertRules');
         $this->loadModel('Alert.AlertLogs');
-        $this->loadModel('Staff.Licenses');
-        $this->loadModel('Staff.StaffStatuses');
-        $this->loadModel('Institution.Staff');
         $this->loadModel('Institution.Institutions');
         $this->loadModel('Security.Users');
         $this->loadModel('Security.SecurityGroupUsers');
+
+        $this->loadModel('Staff.Licenses');
+        $this->loadModel('Staff.StaffStatuses');
+        $this->loadModel('Institution.Staff');
     }
 
     public function main()

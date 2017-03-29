@@ -76,12 +76,58 @@ class AlertRulesTable extends ControllerActionTable
                 ],
             ],
             'placeholder' => [
-                '${threshold}' => 'Threshold value.',
+                '${threshold.value}' => 'Threshold value.',
                 '${license_type.name}' => 'License type.',
                 '${license_number}' => 'License number.',
                 '${issue_date}' => 'Issue date.',
                 '${expiry_date}' => 'Expiry date.',
                 '${issuer}' => 'Issuer.',
+                '${user.openemis_no}' => 'Student OpenEMIS number.',
+                '${user.first_name}' => 'Student first name.',
+                '${user.middle_name}' => 'Student middle name.',
+                '${user.third_name}' => 'Student third name.',
+                '${user.last_name}' => 'Student last name.',
+                '${user.preferred_name}' => 'Student preferred name.',
+                '${user.email}' => 'Student email.',
+                '${user.address}' => 'Student address.',
+                '${user.postal_code}' => 'Student postal code.',
+                '${user.date_of_birth}' => 'Student date of birth.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.address}' => 'Institution address.',
+                '${institution.postal_code}' => 'Institution postal code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.fax}' => 'Institution fax number.',
+                '${institution.email}' => 'Institution email.',
+                '${institution.website}' => 'Institution website.',
+            ]
+        ],
+        'StaffLeave' => [
+            'feature' => 'StaffLeave',
+            'name' => 'Staff Leave',
+            'method' => 'Email',
+            'threshold' => [
+                'value' => [
+                    'type' => 'integer',
+                    'field' => 'value'
+                ],
+                'operand_id' => [
+                    'type' => 'select',
+                    'field' => 'operand',
+                    'option' => 'before_after'
+                ],
+                'staff_leave_type_id' => [
+                    'type' => 'select',
+                    'field' => 'staff_leave_type',
+                    'lookupModel' => 'Staff.StaffLeaveTypes'
+                ],
+            ],
+            'placeholder' => [
+                '${threshold.value}' => 'Threshold value.',
+                '${staff_leave_type.name}' => 'License type.',
+                '${date_from}' => 'Leave start date.',
+                '${date_to}' => 'Leave end date.',
                 '${user.openemis_no}' => 'Student OpenEMIS number.',
                 '${user.first_name}' => 'Student first name.',
                 '${user.middle_name}' => 'Student middle name.',
@@ -396,9 +442,15 @@ class AlertRulesTable extends ControllerActionTable
         return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
     }
 
-     public function onUpdateFieldLicenseType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldLicenseType(Event $event, array $attr, $action, Request $request)
     {
         $fieldKey = 'license_type_id';
+        return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
+    }
+
+    public function onUpdateFieldStaffLeaveType(Event $event, array $attr, $action, Request $request)
+    {
+        $fieldKey = 'staff_leave_type_id';
         return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
     }
 
@@ -529,6 +581,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('value', ['visible' => false, 'after' => 'security_roles']);
         $this->field('operand', ['visible' => false, 'after' => 'value']);
         $this->field('license_type', ['visible' => false, 'after' => 'operand']);
+        $this->field('staff_leave_type', ['visible' => false, 'after' => 'operand']);
 
         // Alert section
         $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);
