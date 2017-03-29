@@ -19,7 +19,187 @@ class AlertRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+<<<<<<< HEAD
     private $alertTypeFeatures = [];
+=======
+    private $alertTypeFeatures = [
+        'InstitutionStudentAbsences' => [
+            'feature' => 'Attendance',
+            'name' => 'Student Absent',
+            'method' => 'Email',
+            'threshold' => ['type' => 'integer'],
+            'placeholder' => [
+                '${total_days}' => 'Total number of unexcused absence.',
+                '${threshold}' => 'Threshold value.',
+                '${user.openemis_no}' => 'Student OpenEMIS number.',
+                '${user.first_name}' => 'Student first name.',
+                '${user.middle_name}' => 'Student middle name.',
+                '${user.third_name}' => 'Student third name.',
+                '${user.last_name}' => 'Student last name.',
+                '${user.preferred_name}' => 'Student preferred name.',
+                '${user.email}' => 'Student email.',
+                '${user.address}' => 'Student address.',
+                '${user.postal_code}' => 'Student postal code.',
+                '${user.date_of_birth}' => 'Student date of birth.',
+                '${user.identity_number}' => 'Student identity number.',
+                // '${user.photo_name}' => 'Student photo name.',
+                // '${user.photo_content}' => 'Student photo content.',
+                '${user.main_identity_type.name}' => 'Student identity type.',
+                '${user.main_nationality.name}' => 'Student nationality.',
+                '${user.gender.name}' => 'Student gender.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.address}' => 'Institution address.',
+                '${institution.postal_code}' => 'Institution postal code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.fax}' => 'Institution fax number.',
+                '${institution.email}' => 'Institution email.',
+                '${institution.website}' => 'Institution website.',
+            ]
+        ],
+        'Licenses' => [
+            'feature' => 'LicenseValidity',
+            'name' => 'License Validity',
+            'method' => 'Email',
+            'threshold' => [
+                'value' => [
+                    'type' => 'integer',
+                    'field' => 'value'
+                ],
+                'operand_id' => [
+                    'type' => 'select',
+                    'field' => 'operand',
+                    'option' => 'before_after'
+                ],
+                'license_type_id' => [
+                    'type' => 'select',
+                    'field' => 'license_type',
+                    'lookupModel' => 'FieldOption.LicenseTypes'
+                ],
+            ],
+            'placeholder' => [
+                '${threshold.value}' => 'Threshold value.',
+                '${license_type.name}' => 'License type.',
+                '${license_number}' => 'License number.',
+                '${issue_date}' => 'Issue date.',
+                '${expiry_date}' => 'Expiry date.',
+                '${issuer}' => 'Issuer.',
+                '${user.openemis_no}' => 'Student OpenEMIS number.',
+                '${user.first_name}' => 'Student first name.',
+                '${user.middle_name}' => 'Student middle name.',
+                '${user.third_name}' => 'Student third name.',
+                '${user.last_name}' => 'Student last name.',
+                '${user.preferred_name}' => 'Student preferred name.',
+                '${user.email}' => 'Student email.',
+                '${user.address}' => 'Student address.',
+                '${user.postal_code}' => 'Student postal code.',
+                '${user.date_of_birth}' => 'Student date of birth.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.address}' => 'Institution address.',
+                '${institution.postal_code}' => 'Institution postal code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.fax}' => 'Institution fax number.',
+                '${institution.email}' => 'Institution email.',
+                '${institution.website}' => 'Institution website.',
+            ]
+        ],
+        'StaffLeave' => [
+            'feature' => 'StaffLeave',
+            'name' => 'Staff Leave',
+            'method' => 'Email',
+            'threshold' => [
+                'value' => [
+                    'type' => 'integer',
+                    'field' => 'value'
+                ],
+                'operand_id' => [
+                    'type' => 'select',
+                    'field' => 'operand',
+                    'option' => 'before_after'
+                ],
+                'staff_leave_type_id' => [
+                    'type' => 'select',
+                    'field' => 'staff_leave_type',
+                    'lookupModel' => 'Staff.StaffLeaveTypes'
+                ],
+            ],
+            'placeholder' => [
+                '${threshold.value}' => 'Threshold value.',
+                '${staff_leave_type.name}' => 'License type.',
+                '${date_from}' => 'Leave start date.',
+                '${date_to}' => 'Leave end date.',
+                '${user.openemis_no}' => 'Student OpenEMIS number.',
+                '${user.first_name}' => 'Student first name.',
+                '${user.middle_name}' => 'Student middle name.',
+                '${user.third_name}' => 'Student third name.',
+                '${user.last_name}' => 'Student last name.',
+                '${user.preferred_name}' => 'Student preferred name.',
+                '${user.email}' => 'Student email.',
+                '${user.address}' => 'Student address.',
+                '${user.postal_code}' => 'Student postal code.',
+                '${user.date_of_birth}' => 'Student date of birth.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.address}' => 'Institution address.',
+                '${institution.postal_code}' => 'Institution postal code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.fax}' => 'Institution fax number.',
+                '${institution.email}' => 'Institution email.',
+                '${institution.website}' => 'Institution website.',
+            ]
+        ],
+        'Staff' => [
+            'feature' => 'EmploymentPeriod',
+            'name' => 'Employment Period',
+            'method' => 'Email',
+            'threshold' => [
+                'value' => [
+                    'type' => 'integer',
+                    'field' => 'value'
+                ],
+                'operand_id' => [
+                    'type' => 'select',
+                    'field' => 'operand',
+                    'option' => 'before_after'
+                ],
+                'staff_type_id' => [
+                    'type' => 'select',
+                    'field' => 'staff_type',
+                    'lookupModel' => 'Staff.StaffTypes'
+                ],
+            ],
+            'placeholder' => [
+                '${threshold.value}' => 'Threshold value.',
+                '${staff_type.name}' => 'Staff employment type.',
+                '${start_date}' => 'Staff start date.',
+                '${end_date}' => 'Staff end date.',
+                '${user.openemis_no}' => 'Student OpenEMIS number.',
+                '${user.first_name}' => 'Student first name.',
+                '${user.middle_name}' => 'Student middle name.',
+                '${user.third_name}' => 'Student third name.',
+                '${user.last_name}' => 'Student last name.',
+                '${user.preferred_name}' => 'Student preferred name.',
+                '${user.email}' => 'Student email.',
+                '${user.address}' => 'Student address.',
+                '${user.postal_code}' => 'Student postal code.',
+                '${user.date_of_birth}' => 'Student date of birth.',
+                '${institution.name}' => 'Institution name.',
+                '${institution.code}' => 'Institution code.',
+                '${institution.address}' => 'Institution address.',
+                '${institution.postal_code}' => 'Institution postal code.',
+                '${institution.contact_person}' => 'Institution contact person.',
+                '${institution.telephone}' => 'Institution telephone number.',
+                '${institution.fax}' => 'Institution fax number.',
+                '${institution.email}' => 'Institution email.',
+                '${institution.website}' => 'Institution website.',
+            ]
+        ],
+    ];
+>>>>>>> 1c93a7844208dc58d5970b11c23ff4fd6c814147
 
     public function initialize(array $config)
     {
@@ -152,6 +332,8 @@ class AlertRulesTable extends ControllerActionTable
             $featureOptions[$obj['feature']] = __(Inflector::humanize(Inflector::underscore($obj['feature'])));
         }
 
+        ksort($featureOptions);
+
         return $featureOptions;
     }
 
@@ -272,11 +454,132 @@ class AlertRulesTable extends ControllerActionTable
             $attr['visible'] = false;
         }
 
+<<<<<<< HEAD
         if ($entity->has('feature') && !empty($entity->feature)) {
             $event = $this->dispatchEvent('AlertRule.UpdateField.'.$entity->feature.'.Threshold', [$attr, $action, $request], $this);
             if ($event->isStopped()) { return $event->result; }
             if (!empty($event->result)) {
                 $attr = $event->result;
+=======
+        return $attr;
+    }
+
+    public function onUpdateFieldValue(Event $event, array $attr, $action, Request $request)
+    {
+        $fieldKey = 'value';
+        return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
+    }
+
+    public function onUpdateFieldOperand(Event $event, array $attr, $action, Request $request)
+    {
+        $fieldKey = 'operand_id';
+        return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
+    }
+
+    public function onUpdateFieldLicenseType(Event $event, array $attr, $action, Request $request)
+    {
+        $fieldKey = 'license_type_id';
+        return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
+    }
+
+    public function onUpdateFieldStaffLeaveType(Event $event, array $attr, $action, Request $request)
+    {
+        $fieldKey = 'staff_leave_type_id';
+        return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
+    }
+
+    public function onUpdateFieldStaffType(Event $event, array $attr, $action, Request $request)
+    {
+        $fieldKey = 'staff_type_id';
+        return $this->getUpdateFieldAttr($fieldKey, $attr, $action, $request);
+    }
+
+    public function getUpdateFieldAttr($fieldKey, $attr, $action, $request)
+    {
+        if ($action == 'add') {
+            if (isset($request->data[$this->alias()]['feature'])) {
+                $feature = $request->data[$this->alias()]['feature'];
+                $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+
+                if (isset($alertTypeDetails[$feature]['threshold']) && array_key_exists($fieldKey, $alertTypeDetails[$feature]['threshold'])) {
+                    $thresholdData = $alertTypeDetails[$feature]['threshold'][$fieldKey];
+                    $type = $thresholdData['type'];
+                    $attr['visible'] = true;
+                    $options = [];
+
+                    if (array_key_exists('option', $thresholdData)) {
+                        $options = $this->getSelectOptions($this->aliasField($thresholdData['option']));
+                    }
+
+                    if (array_key_exists('lookupModel', $thresholdData)) {
+                        $ModelTable = TableRegistry::get($thresholdData['lookupModel']);
+                        $options = $ModelTable
+                            ->find('list')
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+                    }
+
+                    if ($type == 'integer') {
+                        $attr['attr']['min'] = 1;
+                        $attr['attr']['max'] = 30;
+                    } else if ($type = 'select') {
+                        if (!empty($options)) {
+                            $attr['options'] = $options;
+                            $attr['select'] = false;
+                        }
+                    }
+                } else {
+                    $type = 'hidden';
+                }
+            } else {
+                $type = 'hidden';
+            }
+
+            $attr['type'] = $type;
+        } else if ($action == 'edit' || $action == 'view') {
+            if (!empty($this->paramsPass(0))) {
+                $alertRuleId = $this->paramsDecode($this->paramsPass(0));
+                $entity = $this->get($alertRuleId);
+                $feature = $entity->feature;
+                $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
+
+                $threshold = $entity->threshold;
+                $thresholdArray = json_decode($entity->threshold, true);
+
+                if (is_array($thresholdArray) && array_key_exists($fieldKey, $thresholdArray)) {
+                    $thresholdData = $alertTypeDetails[$feature]['threshold'][$fieldKey];
+                    $type = $thresholdData['type'];
+
+                    if (array_key_exists('option', $thresholdData)) {
+                        $options = $this->getSelectOptions($this->aliasField($thresholdData['option']));
+                    }
+
+                    if (array_key_exists('lookupModel', $thresholdData)) {
+                        $ModelTable = TableRegistry::get($thresholdData['lookupModel']);
+                        $options = $ModelTable
+                            ->find('list')
+                            ->find('visible')
+                            ->find('order')
+                            ->toArray();
+                    }
+
+                    if ($type == 'integer') {
+                        $attr['value'] = $thresholdArray[$fieldKey];
+                        $attr['attr']['value'] = $thresholdArray[$fieldKey];
+                    } else if ($type = 'select') {
+                        if (!empty($options) && $action == 'edit') {
+                            $attr['value'] = $thresholdArray[$fieldKey];
+                            $attr['attr']['value'] = $options[$thresholdArray[$fieldKey]];
+                        } else if (!empty($options) && $action == 'view') {
+                            $attr['value'] = $options[$thresholdArray[$fieldKey]];
+                        }
+                    }
+
+                    $attr['type'] = 'readOnly';
+                    $attr['visible'] = true;
+                }
+>>>>>>> 1c93a7844208dc58d5970b11c23ff4fd6c814147
             }
         }
 
@@ -313,7 +616,18 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('enabled', ['type' => 'select']);
         $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
         $this->field('security_roles', ['after' => 'method']);
+<<<<<<< HEAD
         $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
+=======
+
+        // threshold field
+        $this->field('threshold', ['after' => 'security_roles']);
+        $this->field('value', ['visible' => false, 'after' => 'security_roles']);
+        $this->field('operand', ['visible' => false, 'after' => 'value']);
+        $this->field('license_type', ['visible' => false, 'after' => 'operand']);
+        $this->field('staff_leave_type', ['visible' => false, 'after' => 'operand']);
+        $this->field('staff_type', ['visible' => false, 'after' => 'operand']);
+>>>>>>> 1c93a7844208dc58d5970b11c23ff4fd6c814147
 
         // Alert section
         $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);

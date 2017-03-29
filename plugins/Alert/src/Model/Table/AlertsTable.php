@@ -3,6 +3,7 @@ namespace Alert\Model\Table;
 
 use ArrayObject;
 
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
@@ -39,9 +40,15 @@ class AlertsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
         $this->field('status', ['after' => 'name']);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->order('name');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
