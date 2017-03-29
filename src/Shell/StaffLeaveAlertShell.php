@@ -9,7 +9,7 @@ use Cake\Mailer\Email;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
-class AttendanceAlertShell extends Shell
+class StaffLeaveAlertShell extends Shell
 {
     public function initialize()
     {
@@ -21,12 +21,12 @@ class AttendanceAlertShell extends Shell
         $this->loadModel('Security.Users');
         $this->loadModel('Security.SecurityGroupUsers');
 
-        $this->loadModel('Institution.InstitutionStudentAbsences');
+        $this->loadModel('Institution.StaffLeave');
     }
 
     public function main()
     {
-        $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => 'AttendanceAlert']);
+        $this->Alerts->updateAll(['process_id' => getmypid(), 'modified' => Time::now()], ['process_name' => 'StaffLeaveAlert']);
 
         $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
 
@@ -34,17 +34,19 @@ class AttendanceAlertShell extends Shell
             $rules = $this->AlertRules->find()
                 ->contain(['SecurityRoles'])
                 ->where([
-                    'feature' => 'Attendance',
+                    'feature' => 'StaffLeave',
                     'enabled' => 1
                 ])
                 ->all();
 
             foreach ($rules as $rule) {
                 $threshold = $rule->threshold;
-                $data = $this->InstitutionStudentAbsences->getUnexcusedAbsenceData($threshold);
+                $thresholdArray = json_decode($threshold, true);
+
+                $data = $this->StaffLeave->getStaffLeaveData($threshold);
 
                 foreach ($data as $key => $vars) {
-                    $vars['threshold'] = $threshold;
+                    $vars['threshold'] = $thresholdArray;
 
                     if (!empty($rule['security_roles'])) { //check if the alertRule have security role
                         $emailList = [];
@@ -83,9 +85,9 @@ class AttendanceAlertShell extends Shell
                 }
             }
 
-            $filesArray = $dir->find('AttendanceAlert.stop');
+            $filesArray = $dir->find('StaffLeaveAlert.stop');
         } while (empty($filesArray));
 
-        $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => 'AttendanceAlert']);
+        $this->Alerts->updateAll(['process_id' => NULL, 'modified' => Time::now()], ['process_name' => 'StaffLeaveAlert']);
     }
 }
