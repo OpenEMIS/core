@@ -26,6 +26,15 @@ class InstitutionWorkflowsTable extends ControllerActionTable
 			'className' => 'Institution.StudentBehaviours'
 		]
 	];
+    
+    private $workflowEvents = [
+        [
+            'value' => 'Workflow.onAssignBack',
+            'text' => 'Assign Back to Creator',
+            'description' => 'Performing this action will assign the current record back to creator.',
+            'method' => 'onAssignBack'
+        ]
+    ];
 
 	public function initialize(array $config)
 	{
@@ -53,6 +62,11 @@ class InstitutionWorkflowsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.processWorkflow'] = 'processWorkflow';
+        $events['Workflow.afterTransition'] = 'workflowAfterTransition';
+        $events['Workflow.getEvents'] = 'getWorkflowEvents';
+        foreach($this->workflowEvents as $event) {
+            $events[$event['value']] = $event['method'];
+        }
         return $events;
     }
 
@@ -61,13 +75,43 @@ class InstitutionWorkflowsTable extends ControllerActionTable
         if ($this->request->is(['post', 'put'])) {
             $requestData = $this->request->data;
 
+            $WorkflowModels = TableRegistry::get('Workflow.WorkflowModels');
+            $WorkflowActions = TableRegistry::get('Workflow.WorkflowActions');
             $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+
+            $workflowModelId = $requestData[$WorkflowTransitions->alias()]['workflow_model_id'];
+            $workflowModelEntity = $WorkflowModels->get($workflowModelId);
+            $subject = TableRegistry::get($workflowModelEntity->model);
+
+            // Trigger workflow before save event here
+            $event = $subject->dispatchEvent('Workflow.beforeTransition', [$requestData], $subject);
+            if ($event->isStopped()) { return $event->result; }
+            // End
+
             // Insert into workflow_transitions.
             $workflowTransitionEntity = $WorkflowTransitions->newEntity($requestData, ['validate' => false]);
             $recordId = $workflowTransitionEntity->model_reference;
 
             if ($WorkflowTransitions->save($workflowTransitionEntity)) {
                 $this->Alert->success('general.edit.success', ['reset' => true]);
+
+                // Trigger workflow after save event here
+                $event = $this->dispatchEvent('Workflow.afterTransition', [$recordId, $requestData], $this);
+                if ($event->isStopped()) { return $event->result; }
+                // End
+
+                // Trigger event here
+                $workflowActionEntity = $WorkflowActions->get($workflowTransitionEntity->workflow_action_id);
+
+                if (!empty($workflowActionEntity->event_key)) {
+                    $eventKeys = explode(",", $workflowActionEntity->event_key);
+
+                    foreach ($eventKeys as $eventKey) {
+                        $event = $this->dispatchEvent($eventKey, [$recordId, $workflowTransitionEntity], $this);
+                        if ($event->isStopped()) { return $event->result; }
+                    }
+                }
+                // End
             } else {
                 Log::write('debug', $workflowTransitionEntity->errors());
                 $this->Alert->error('general.edit.failed', ['reset' => true]);
@@ -75,6 +119,71 @@ class InstitutionWorkflowsTable extends ControllerActionTable
 
             $mainEvent->stopPropagation();
             return $this->controller->redirect($this->url('view'));
+        }
+    }
+
+    public function workflowAfterTransition(Event $event, $id=null, $requestData)
+    {
+        try {
+            $entity = $this->get($id);
+            $this->setStatusId($entity, $requestData);
+            $this->setAssigneeId($entity, $requestData);
+            $this->save($entity);
+        } catch (RecordNotFoundException $e) {
+            Log::write('debug', $e->getMessage());
+        }
+    }
+
+    private function setStatusId(Entity $entity, $requestData)
+    {
+        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+
+        if (array_key_exists($WorkflowTransitions->alias(), $requestData)) {
+            if (array_key_exists('workflow_step_id', $requestData[$WorkflowTransitions->alias()])) {
+                $statusId = $requestData[$WorkflowTransitions->alias()]['workflow_step_id'];
+                $entity->status_id = $statusId;
+            }
+        }
+    }
+
+    private function setAssigneeId(Entity $entity, $requestData)
+    {
+        $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+
+        if (array_key_exists($WorkflowTransitions->alias(), $requestData)) {
+            if (array_key_exists('assignee_id', $requestData[$WorkflowTransitions->alias()]) && !empty($requestData[$WorkflowTransitions->alias()]['assignee_id'])) {
+                $assigneeId = $requestData[$WorkflowTransitions->alias()]['assignee_id'];
+            } else {
+                $assigneeId = 0;
+            }
+            $entity->assignee_id = $assigneeId;
+        }
+    }
+
+    public function getWorkflowEvents(Event $event, ArrayObject $eventsObject)
+    {
+        foreach ($this->workflowEvents as $key => $attr) {
+            $attr['text'] = __($attr['text']);
+            $attr['description'] = __($attr['description']);
+            $eventsObject[] = $attr;
+        }
+    }
+
+    public function onAssignBack(Event $event, $id, Entity $workflowTransitionEntity)
+    {
+        try {
+            $entity = $this->get($id);
+            $this->setAssigneeAsCreator($entity);
+            $this->save($entity);
+        } catch (RecordNotFoundException $e) {
+            Log::write('debug', $e->getMessage());
+        }
+    }
+
+    public function setAssigneeAsCreator(Entity $entity)
+    {
+        if ($entity->has('created_user_id')) {
+            $entity->assignee_id = $entity->created_user_id;
         }
     }
 
@@ -155,9 +264,9 @@ class InstitutionWorkflowsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-    	$this->setupFields($entity, $extra);        
+    	$this->setupFields($entity, $extra);
         $this->addToolbarButtons($entity, $extra);
-        $this->addModal($entity, $extra);
+        $this->addWorkflowTransitionModal($entity, $extra);
         $this->addWorkflowTransitionElement($entity, $extra);
     }
 
@@ -429,7 +538,7 @@ class InstitutionWorkflowsTable extends ControllerActionTable
         return $workflowStepEntity;
     }
 
-    private function addModal(Entity $entity, ArrayObject $extra)
+    private function addWorkflowTransitionModal(Entity $entity, ArrayObject $extra)
     {
         $modal = [];
         $workflowEntity = $this->getWorkflow($entity);
