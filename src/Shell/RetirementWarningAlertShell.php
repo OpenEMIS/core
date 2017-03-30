@@ -8,18 +8,20 @@ use Cake\Filesystem\File;
 
 use App\Shell\GeneralAlertShell;
 
-class StaffLeaveAlertShell extends GeneralAlertShell
+class RetirementWarningAlertShell extends GeneralAlertShell
 {
     public function initialize()
     {
         parent::initialize();
 
-        $this->loadModel('Institution.StaffLeave');
+        // $this->loadModel('Institution.Staff');
     }
 
     public function main()
     {
-        $model = $this->StaffLeave;
+        // security user have DOB but no institutions, like license validity
+        // $model = $this->Staff;
+        // $model = $this->Users;
         $processName = $this->processName;
         $feature = $this->featureName;
 
@@ -30,6 +32,13 @@ class StaffLeaveAlertShell extends GeneralAlertShell
         do {
             $rules = $this->getAlertRules($feature);
 
+pr('RetirementWarningAlertShell - waiting the merging of configuration alert rule');
+pr($processName);
+pr($feature);
+pr($model);
+pr($rules);
+die;
+            /* waiting the merging of configuration alert rule
             foreach ($rules as $rule) {
                 $threshold = $rule->threshold;
                 $thresholdArray = json_decode($threshold, true);
@@ -54,6 +63,7 @@ class StaffLeaveAlertShell extends GeneralAlertShell
                     }
                 }
             }
+            */
 
             $filesArray = $dir->find($processName . '.stop');
         } while (empty($filesArray));

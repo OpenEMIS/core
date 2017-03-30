@@ -1402,7 +1402,7 @@ class StaffTable extends ControllerActionTable {
 		}
 	}
 
-    public function getStaffEmploymentData($threshold)
+    public function getModelAlertData($threshold)
     {
         $thresholdArray = json_decode($threshold, true);
 
