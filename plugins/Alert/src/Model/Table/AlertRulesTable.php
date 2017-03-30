@@ -54,6 +54,23 @@ class AlertRulesTable extends ControllerActionTable
             ;
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            if (isset($data['feature']) && !empty($data['feature'])) {
+                $alertRuleTypes = $this->getAlertRuleTypes();
+                $thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
+                if (!empty($thresholdConfig)) {
+                    $thresholdArray = [];
+                    foreach ($thresholdConfig as $key => $attr) {
+                        $thresholdArray[$key] = $data[$key];
+                    }
+                    $data['threshold'] = !empty($thresholdArray) ? json_encode($thresholdArray, JSON_UNESCAPED_UNICODE) : '';
+                }
+            }
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
