@@ -1,3 +1,8 @@
+v3.9.8
+- Implemented page to configure alert threshold for Staff leave, Staff licenses and Staff employment
+- Implemented Workflow report
+- Implemented Staff Professional Development Report
+
 v3.9.7
 - System now allows user to attach files to Staff Employment records
 - Implemented Staff Salary Report in Reports> Staff> Salaries
