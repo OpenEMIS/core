@@ -1499,7 +1499,7 @@ trait MessagesTrait {
             ],
             'ExaminationCentres' => [
                 'code' => [
-                    'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
+                    'ruleUnique' => 'Please enter a unique code for this examination centre in the selected academic period'
                 ],
                 'examination_id' => [
                     'ruleNoRunningSystemProcess' => 'There is currently a running process for this examination'
