@@ -254,7 +254,7 @@ class LicensesTable extends ControllerActionTable
 		return $query;
 	}
 
-	public function getLicenseData($threshold)
+	public function getModelAlertData($threshold)
 	{
 		$thresholdArray = json_decode($threshold, true);
 

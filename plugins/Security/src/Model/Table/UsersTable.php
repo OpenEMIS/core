@@ -279,4 +279,39 @@ class UsersTable extends AppTable
 	{
 		return $this->get($userId)->super_admin;
 	}
+
+	public function getModelAlertData($threshold)
+	{
+		$thresholdArray = json_decode($threshold, true);
+
+		$operandConditions = [
+			// only cater for age is more than and equal to threshold value.
+			2 => ('TIMESTAMPDIFF(YEAR, ' . $this->aliasField('date_of_birth') . ', NOW())' . ' >= ' . $thresholdArray['value']), // after
+		];
+
+		// will do the comparison with threshold when retrieving the absence data
+		$licenseData = $this->find()
+			->select([
+				'id',
+				'openemis_no',
+				'first_name',
+				'middle_name',
+				'third_name',
+				'last_name',
+				'preferred_name',
+				'email',
+				'address',
+				'postal_code',
+				'date_of_birth',
+			])
+			->where([
+				$this->aliasField('date_of_birth') . ' IS NOT NULL',
+				$operandConditions[$thresholdArray['operand_id']]
+			])
+
+			->hydrate(false)
+			;
+
+		return $licenseData->toArray();
+	}
 }
