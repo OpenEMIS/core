@@ -37,6 +37,7 @@ class AreaAdministrativesTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
+        pr($this->find('areaList')->toArray());
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -78,26 +79,35 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
+        $table = $this;
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
                 'order' => ['lft' => 'ASC']
             ])
-            ->formatResults(function($results) {
-                $returnArr = [];
-                $arr = $results->toArray();
-                $makeArray = function ($arr, $returnArr) {
-                    foreach ($arr as $a) {
-                        if (count($a['children']) == 0) {
-                            $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
-                        } else {
-                            $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr)];
-                        }
-                    }
-                    return $returnArr;
-                };
-                return $this->makeArray($arr, $returnArr);
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name'),
+                $this->aliasField('parent_id')
+            ])
+            ->hydrate(false)
+            ->formatResults(function ($results) use ($options) {
+                $results = $results->toArray();
+                $authorisedAreaIds = isset($options['authorisedAreaIds']) ? $options['authorisedAreaIds'] : [];
+                $this->unsetEmptyArr($results, $authorisedAreaIds);
+                return $results;
             });
+    }
+
+    private function unsetEmptyArr(&$array, &$authorisedAreaIds)
+    {
+        foreach ($array as $key => &$value) {
+            if (is_array($value) && empty($value)) {
+                unset($array[$key]);
+            } elseif (is_array($value)) {
+                $this->unsetEmptyArr($value, $authorisedAreaIds);
+            }
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

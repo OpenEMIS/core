@@ -21,7 +21,8 @@
         "cakephp/plugin-installer": "*",
         "cakephp/migrations": "~1.0",
         "cakephp/debug_kit": "~3.0",
-        "cakephp/bake": "~1.0"
+        "cakephp/bake": "~1.0",
+        "cakephp/cakephp-codesniffer": "^2.4"
     },
     "suggest": {
         "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",

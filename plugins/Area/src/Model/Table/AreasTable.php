@@ -115,7 +115,7 @@ class AreasTable extends ControllerActionTable
                     $this->controller->set('associatedRecords', $associatedRecords);
                     $this->controller->set('newAreaLists', $newAreaLists);
                 }
-            } else if ($this->request->is(['post', 'put'])) {
+            } elseif ($this->request->is(['post', 'put'])) {
                 // update the related table
                 $requestData = $this->request->data;
                 $this->doUpdateAssociatedRecord($requestData);
@@ -215,7 +215,7 @@ class AreasTable extends ControllerActionTable
         foreach ($jsonAreaArray as $key => $obj) {
             // Null is the root parent id, as per cake update
             if ($obj['pnid'] === '-1') {
-                $obj['pnid'] = NULL;
+                $obj['pnid'] = null;
             }
             $level = $obj['lvl'];
             $orderArray[$level] = array_key_exists($level, $orderArray) ? ++$orderArray[$level] : 1;
@@ -325,48 +325,29 @@ class AreasTable extends ControllerActionTable
                 'parentField' => 'parent_id',
                 'order' => ['lft' => 'ASC']
             ])
-            ->formatResults(function($results) use ($options, $table) {
-                $returnArr = [];
-                $arr = $results->toArray();
-                $parentIds = [];
-                $makeArray = function ($arr, $returnArr, $parentIds, $options, $table) {
-                    foreach ($arr as $a) {
-                        if (isset($options['authorised_area_ids']) && is_array($options['authorised_area_ids'])) {
-                            if (in_array($a['id'], $options['authorised_area_ids']) || array_intersect($options['authorised_area_ids'], $parentIds)) {
-                                if (count($a['children']) == 0) {
-                                    $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
-                                } else {
-                                    $parentIds[] = $a['id'];
-                                    $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr, $parentIds, $options, $table)];
-                                }
-                            } else {
-                                $returnArr[] = $this->makeArray($a['children'], $returnArr, $parentIds, $options, $table);
-                            }
-                        } else {
-                            if (count($a['children']) == 0) {
-                                $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
-                            } else {
-                                $parentIds[] = $a['id'];
-                                $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr, $parentIds, $options, $table)];
-                            }
-                        }
-                    }
-                    return $returnArr;
-                };
-                return $this->makeArray($arr, $returnArr, $parentIds, $options, $table);
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('name'),
+                $this->aliasField('parent_id')
+            ])
+            ->hydrate(false)
+            ->formatResults(function ($results) use ($options) {
+                $results = $results->toArray();
+                $authorisedAreaIds = isset($options['authorisedAreaIds']) ? $options['authorisedAreaIds'] : [];
+                $this->unsetEmptyArr($results, $authorisedAreaIds);
+                return $results;
             });
     }
 
-    private function makeArray($arr, $returnArr)
+    private function unsetEmptyArr(&$array, &$authorisedAreaIds)
     {
-        foreach ($arr as $a) {
-            if (count($a['children']) == 0) {
-                $returnArr[] = ['id' => $a['id'], 'name' => $a['name']];
-            } else {
-                $returnArr[] = ['id' => $a['id'], 'name' => $a['name'], 'children' => $this->makeArray($a['children'], $returnArr)];
+        foreach ($array as $key => &$value) {
+            if (is_array($value) && empty($value)) {
+                unset($array[$key]);
+            } elseif (is_array($value)) {
+                $this->unsetEmptyArr($value, $authorisedAreaIds);
             }
         }
-        return $returnArr;
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -466,7 +447,7 @@ class AreasTable extends ControllerActionTable
             ->all();
 
         $data = array();
-        foreach($list as $obj) {
+        foreach ($list as $obj) {
             $data[] = [
                 'label' => sprintf('%s - %s (%s)', $obj->area_level->name, $obj->name, $obj->code),
                 'value' => $obj->id
@@ -544,7 +525,7 @@ class AreasTable extends ControllerActionTable
         return $associatedRecords;
     }
 
-    public function isApiValid($url=null)
+    public function isApiValid($url = null)
     {
         // check if API is valid, have value and contain expected keys.
         if (is_null($url)) {
