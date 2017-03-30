@@ -55,7 +55,7 @@ class AlertRuleBehavior extends Behavior
     		if (isset($data['feature']) && !empty($data['feature'])) {
 	    		$alertRuleTypes = $this->_table->getAlertRuleTypes();
 	    		$thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
-	    		if (!array_key_exists('type', $thresholdConfig)) {
+	    		if (!empty($thresholdConfig)) {
 	    			$thresholdArray = [];
 		    		foreach ($thresholdConfig as $key => $attr) {
 		    			$thresholdArray[$key] = $data[$key];
@@ -70,7 +70,8 @@ class AlertRuleBehavior extends Behavior
 	{
 		$model = $this->_table;
 		$thresholdConfig = $this->config('threshold');
-		if (!array_key_exists('type', $thresholdConfig)) {
+		// logic to auto render fields based on setting in config threshold
+		if (!empty($thresholdConfig)) {
 			if ($model->action == 'view' || $model->action == 'edit') {
 				$thresholdArray = json_decode($entity->threshold, true);
 				foreach ($thresholdArray as $key => $value) {

@@ -15,7 +15,7 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
 		'feature' => 'Attendance',
         'name' => 'Student Absent',
         'method' => 'Email',
-        'threshold' => ['type' => 'integer'],
+        'threshold' => [],
         'placeholder' => [
             '${total_days}' => 'Total number of unexcused absence.',
             '${threshold}' => 'Threshold value.',
