@@ -237,7 +237,7 @@ class StaffLeaveTable extends ControllerActionTable
 		return $query;
 	}
 
-	public function getStaffLeaveData($threshold)
+	public function getModelAlertData($threshold)
 	{
 		$thresholdArray = json_decode($threshold, true);
 

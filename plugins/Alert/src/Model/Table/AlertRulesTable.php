@@ -40,6 +40,7 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('Alert.AlertRuleLicenseValidity');
         $this->addBehavior('Alert.AlertRuleStaffLeave');
         $this->addBehavior('Alert.AlertRuleEmploymentPeriod');
+        $this->addBehavior('Alert.AlertRuleRetirementWarning');
     }
 
     public function validationDefault(Validator $validator)
