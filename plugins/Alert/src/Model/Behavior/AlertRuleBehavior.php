@@ -49,23 +49,6 @@ class AlertRuleBehavior extends Behavior
 		return $events;
 	}
 
-	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-    	if (isset($data['submit']) && $data['submit'] == 'save') {
-    		if (isset($data['feature']) && !empty($data['feature'])) {
-	    		$alertRuleTypes = $this->_table->getAlertRuleTypes();
-	    		$thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
-	    		if (!empty($thresholdConfig)) {
-	    			$thresholdArray = [];
-		    		foreach ($thresholdConfig as $key => $attr) {
-		    			$thresholdArray[$key] = $data[$key];
-		    		}
-		    		$data['threshold'] = !empty($thresholdArray) ? json_encode($thresholdArray, JSON_UNESCAPED_UNICODE) : '';
-		    	}
-	    	}
-    	}
-    }
-
 	protected function onAlertRuleSetupFields(Event $event, Entity $entity)
 	{
 		$model = $this->_table;
