@@ -52,18 +52,11 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
 		parent::initialize($config);
 	}
 
-	public function implementedEvents()
-	{
-		$events = parent::implementedEvents();
-		$events['AlertRule.UpdateField.'.$this->alertRule.'.Threshold'] = 'onUpdateFieldAttendanceThreshold';
-		return $events;
-	}
-
 	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
     	$model = $this->_table;
-    	if (isset($data['submit']) && $data['submit'] == 'save') {
-    		if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+    	if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
 	    		$validator = $model->validator();
 				$validator->add('threshold', [
 					'ruleRange' => [
@@ -72,6 +65,11 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
 				]);
 	    	}
     	}
+    }
+
+    public function onAttendanceSetupFields(Event $event, Entity $entity)
+    {
+        $this->onAlertRuleSetupFields($event, $entity);
     }
 
 	public function onUpdateFieldAttendanceThreshold(Event $event, array $attr, $action, Request $request)
