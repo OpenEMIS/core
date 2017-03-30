@@ -155,14 +155,16 @@ class AlertLogsTable extends ControllerActionTable
 
     public function replaceMessage($feature, $message, $vars)
     {
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+
         $format = '${%s}';
         $strArray = explode('${', $message);
         array_shift($strArray); // first element will not contain the placeholder
 
         $availablePlaceholder = [];
-        if ($feature == 'Attendance') {
+        if (array_key_exists($feature, $alertFeatures)) {
             // for feature from alert Rule to get the availablePlaceholder
-            $AlertRules = TableRegistry::get('Alert.AlertRules');
             $alertTypeDetails = $AlertRules->getAlertTypeDetailsByFeature($feature);
 
             $availablePlaceholder = $alertTypeDetails[$feature]['placeholder'];
