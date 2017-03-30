@@ -1,6 +1,7 @@
 <?php
 namespace App\Shell;
 
+use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
@@ -14,14 +15,12 @@ class RetirementWarningAlertShell extends GeneralAlertShell
     {
         parent::initialize();
 
-        // $this->loadModel('Institution.Staff');
+        $this->loadModel('Institution.Staff');
     }
 
     public function main()
     {
-        // security user have DOB but no institutions, like license validity
-        // $model = $this->Staff;
-        // $model = $this->Users;
+        $model = $this->Users;
         $processName = $this->processName;
         $feature = $this->featureName;
 
@@ -32,13 +31,6 @@ class RetirementWarningAlertShell extends GeneralAlertShell
         do {
             $rules = $this->getAlertRules($feature);
 
-pr('RetirementWarningAlertShell - waiting the merging of configuration alert rule');
-pr($processName);
-pr($feature);
-pr($model);
-pr($rules);
-die;
-            /* waiting the merging of configuration alert rule
             foreach ($rules as $rule) {
                 $threshold = $rule->threshold;
                 $thresholdArray = json_decode($threshold, true);
@@ -47,23 +39,47 @@ die;
 
                 foreach ($data as $key => $vars) {
                     $vars['threshold'] = $thresholdArray;
-                    $institutionId = $vars['institution']['id'];
 
-                    if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
-                        $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+                    // security user doesn't have institution_id, check in institution staff if staff is assigned
+                    $institutionStaffRecords = $this->Staff
+                        ->find()
+                        ->contain(['StaffStatuses', 'Institutions'])
+                        ->where([
+                            $this->Staff->aliasField('staff_id') => $vars['id'],
+                            $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
+                        ])
+                        ->hydrate(false)
+                        ->all();
 
-                        $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+                    if (!empty($institutionStaffRecords)) {
+                        foreach ($institutionStaffRecords as $institutionStaffObj) {
+                            $vars['institution'] = $institutionStaffObj['institution'];
+                            $institutionId = $vars['institution']['id'];
 
-                        // subject and message for alert email
-                        $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
-                        $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
+                            // add the age to $vars.
+                            $dob = $vars['date_of_birth'];
+                            $diff = date_diff($dob, new Date());
+                            $age = $diff->y;
 
-                        // insert record to  the alertLog
-                        $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
+                            $vars['age'] = $age;
+                            // end of adding age to $vars
+
+                            if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
+                                $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+
+                                $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+
+                                // subject and message for alert email
+                                $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
+                                $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
+
+                                // insert record to  the alertLog if email available
+                                $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
+                            }
+                        }
                     }
                 }
             }
-            */
 
             $filesArray = $dir->find($processName . '.stop');
         } while (empty($filesArray));

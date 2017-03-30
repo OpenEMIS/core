@@ -105,7 +105,11 @@ trait OptionsTrait {
         		'before_after' => [
 	    			1 => __('Before expiry date'),
 	    			2 => __('After expiry date')
-	    		]
+	    		],
+                'before_after_age' => [
+                    // 1 => __('Before Retirement Value'),
+                    2 => __('After Retirement Value')
+                ]
         	]
 		];
 
