@@ -298,8 +298,10 @@ class AlertRulesTable extends ControllerActionTable
         $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);
         $this->field('alert_features', ['type' => 'custom_criterias', 'after' => 'message']);
 
-        $event = $this->dispatchEvent('AlertRule.setupFields', [$entity], $this);
-        if ($event->isStopped()) { return $event->result; }
+        if ($entity->has('feature') && !empty($entity->feature)) {
+            $event = $this->dispatchEvent('AlertRule.'.$entity->feature.'.SetupFields', [$entity], $this);
+            if ($event->isStopped()) { return $event->result; }
+        }
     }
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
