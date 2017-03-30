@@ -25,13 +25,11 @@ class ExaminationItemResultsTable extends AppTable
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('ExaminationGradingOptions', ['className' => 'Examination.ExaminationGradingOptions']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['index', 'add'],
             'StudentExaminationResults' => ['index']
         ]);
-
         $this->addBehavior('CompositeKey');
     }
 
