@@ -19,18 +19,25 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
             'threshold' => [
                 'value' => [
                     'type' => 'integer',
-                    'field' => 'value'
+                    'after' => 'security_roles',
+                    'attr' => [
+                        'min' => 1,
+                        'max' => 30,
+                        'required' => true
+                    ]
                 ],
-                'operand_id' => [
+                'operand' => [
                     'type' => 'select',
-                    'field' => 'operand',
-                    'option' => 'before_after'
+                    'select' => false,
+                    'after' => 'value',
+                    'options' => 'before_after'
                 ],
-                'staff_leave_type_id' => [
+                'staff_leave_type' => [
                     'type' => 'select',
-                    'field' => 'staff_leave_type',
+                    'select' => false,
+                    'after' => 'operand',
                     'lookupModel' => 'Staff.StaffLeaveTypes'
-                ],
+                ]
             ],
             'placeholder' => [
                 '${threshold.value}' => 'Threshold value.',
@@ -62,5 +69,31 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
 	public function initialize(array $config)
     {
         parent::initialize($config);
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $model = $this->_table;
+        if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
+                $validator = $model->validator();
+                $validator->add('value', [
+                    'ruleRange' => [
+                        'rule' => ['range', 1, 30]
+                    ]
+                ]);
+            }
+        }
+    }
+
+    public function onStaffLeaveSetupFields(Event $event, Entity $entity)
+    {
+        $this->onAlertRuleSetupFields($event, $entity);
+    }
+
+    public function onGetStaffLeaveThreshold(Event $event, Entity $entity)
+    {
+        $thresholdData = json_decode($entity->threshold, true);
+        return $thresholdData['value'];
     }
 }
