@@ -988,11 +988,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function findNotExamCentres(Query $query, array $options)
 	{
-		if (isset($options['examination_id'])) {
+		if (isset($options['academic_period_id'])) {
 			$query
 				->leftJoinWith('ExaminationCentres', function($q) use ($options) {
 					return $q
-						->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
+						->where(['ExaminationCentres.academic_period_id' => $options['academic_period_id']]);
 				})
 				->where([
 					'ExaminationCentres.institution_id IS NULL'
