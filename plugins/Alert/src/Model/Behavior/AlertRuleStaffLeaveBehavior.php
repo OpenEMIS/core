@@ -30,7 +30,7 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
                     'type' => 'select',
                     'select' => false,
                     'after' => 'value',
-                    'options' => 'before_after_day'
+                    'options' => 'before_after_leave'
                 ],
                 'staff_leave_type' => [
                     'type' => 'select',
