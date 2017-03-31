@@ -8,14 +8,27 @@ use Cake\Validation\Validator;
 use Cake\Utility\Security;
 use Cake\ORM\Entity;
 
-class ExaminationCentreSubjectsTable extends AppTable {
+class ExaminationCentresExaminationsSubjectsTable extends AppTable {
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
+        $this->belongsTo('ExaminationCentresExaminations', [
+            'className' => 'Examination.ExaminationCentresExaminations',
+            'foreignKey' => ['examination_centre_id', 'examination_id']
+        ]);
+        $this->belongsToMany('ExaminationCentresExaminationsStudents', [
+            'className' => 'Examination.ExaminationCentresExaminationsStudents',
+            'joinTable' => 'examination_centres_examinations_subjects_students',
+            'foreignKey' => ['examination_centre_id', 'examination_item_id'],
+            'targetForeignKey' => ['examination_centre_id', 'student_id', 'examination_id'],
+            'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('CompositeKey');
     }
