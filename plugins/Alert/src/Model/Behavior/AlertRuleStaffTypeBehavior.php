@@ -30,7 +30,7 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
                     'type' => 'select',
                     'select' => false,
                     'after' => 'value',
-                    'options' => 'before_after_day'
+                    'options' => 'before_after_expiry'
                 ],
                 'staff_type' => [
                     'type' => 'select',

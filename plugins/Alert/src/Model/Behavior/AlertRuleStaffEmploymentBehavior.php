@@ -22,7 +22,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                     'after' => 'security_roles',
                     'attr' => [
                         'min' => 1,
-                        'max' => 360,
+                        'max' => 365,
                         'required' => true
                     ]
                 ],
@@ -30,7 +30,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                     'type' => 'select',
                     'select' => false,
                     'after' => 'value',
-                    'options' => 'before_after_day'
+                    'options' => 'before_after_employment'
                 ],
                 'employment_type' => [
                     'type' => 'select',
@@ -79,8 +79,8 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                 $validator = $model->validator();
                 $validator->add('value', [
                     'ruleRange' => [
-                        'rule' => ['range', 1, 360],
-                        'message' => __('Staff employment must be between 1 to 360')
+                        'rule' => ['range', 1, 365],
+                        'message' => __('Staff employment must be between 1 to 365')
                     ]
                 ]);
             }
