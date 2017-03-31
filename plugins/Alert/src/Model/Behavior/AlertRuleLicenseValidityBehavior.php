@@ -11,32 +11,32 @@ use Cake\Event\Event;
 
 class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
 {
-	protected $_defaultConfig = [
-		'feature' => 'LicenseValidity',
+    protected $_defaultConfig = [
+        'feature' => 'LicenseValidity',
         'name' => 'License Validity',
         'method' => 'Email',
         'threshold' => [
-        	'value' => [
-				'type' => 'integer',
-				'after' => 'security_roles',
-				'attr' => [
-					'min' => 1,
-					'max' => 30,
-					'required' => true
-				]
-			],
-			'operand' => [
-				'type' => 'select',
-	        	'select' => false,
-	        	'after' => 'value',
-	        	'options' => 'before_after_expiry'
-			],
-			'license_type' => [
-				'type' => 'select',
-				'select' => false,
-				'after' => 'operand',
-				'lookupModel' => 'FieldOption.LicenseTypes'
-			]
+            'value' => [
+                'type' => 'integer',
+                'after' => 'security_roles',
+                'attr' => [
+                    'min' => 1,
+                    'max' => 30,
+                    'required' => true
+                ]
+            ],
+            'operand' => [
+                'type' => 'select',
+                'select' => false,
+                'after' => 'value',
+                'options' => 'before_after_expiry'
+            ],
+            'license_type' => [
+                'type' => 'select',
+                'select' => false,
+                'after' => 'operand',
+                'lookupModel' => 'FieldOption.LicenseTypes'
+            ]
         ],
         'placeholder' => [
             '${threshold.value}' => 'Threshold value.',
@@ -65,47 +65,47 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
             '${institution.email}' => 'Institution email.',
             '${institution.website}' => 'Institution website.',
         ]
-	];
+    ];
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
-	}
-
-	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function initialize(array $config)
     {
-    	$model = $this->_table;
-	    if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
-	    	if (isset($data['submit']) && $data['submit'] == 'save') {
-	    		$validator = $model->validator();
-				$validator->add('value', [
-					'ruleRange' => [
-						'rule' => ['range', 1, 30],
-                        'message' => __('Value must be within 1 to 30')
-					]
-				]);
-	    	}
-	    }
+        parent::initialize($config);
     }
 
-	public function onLicenseValiditySetupFields(Event $event, Entity $entity)
-	{
-		$this->onAlertRuleSetupFields($event, $entity);
-	}
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $model = $this->_table;
+        if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
+                $validator = $model->validator();
+                $validator->add('value', [
+                    'ruleRange' => [
+                        'rule' => ['range', 1, 30],
+                        'message' => __('Value must be within 1 to 30')
+                    ]
+                ]);
+            }
+        }
+    }
 
-	public function onGetLicenseValidityThreshold(Event $event, Entity $entity)
-	{
+    public function onLicenseValiditySetupFields(Event $event, Entity $entity)
+    {
+        $this->onAlertRuleSetupFields($event, $entity);
+    }
+
+    public function onGetLicenseValidityThreshold(Event $event, Entity $entity)
+    {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];
-	}
+    }
 
-	public function onUpdateFieldLicenseValidityThreshold(Event $event, array $attr, $action, Request $request)
-	{
-		if ($action == 'add' || $action == 'edit') {
-			$attr['type'] = 'hidden';
-			$attr['value'] = '';
-		}
+    public function onUpdateFieldLicenseValidityThreshold(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            $attr['type'] = 'hidden';
+            $attr['value'] = '';
+        }
 
-		return $attr;
-	}
+        return $attr;
+    }
 }

@@ -12,8 +12,8 @@ use Cake\Event\Event;
 
 class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
 {
-	protected $_defaultConfig = [
-		'feature' => 'StaffLeave',
+    protected $_defaultConfig = [
+        'feature' => 'StaffLeave',
             'name' => 'Staff Leave',
             'method' => 'Email',
             'threshold' => [
@@ -64,9 +64,9 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
                 '${institution.email}' => 'Institution email.',
                 '${institution.website}' => 'Institution website.',
         ]
-	];
+    ];
 
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
         parent::initialize($config);
     }
