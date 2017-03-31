@@ -4,6 +4,9 @@ DROP TABLE IF EXISTS `institution_workflows`;
 -- institution_workflows_records
 DROP TABLE IF EXISTS `institution_workflows_records`;
 
+-- workflow_rules
+DROP TABLE IF EXISTS `workflow_rules`;
+
 -- delete pre-insert workflow
 DELETE FROM `workflow_models` WHERE `id` = 12;
 

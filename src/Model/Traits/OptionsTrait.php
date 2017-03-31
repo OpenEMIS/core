@@ -88,6 +88,16 @@ trait OptionsTrait {
 	    			2 => __('In Progress'),
 	    			3 => __('Done')
 	    		]
+        	],
+        	'WorkflowRules' => [
+        		'features' => [
+        			'StaffBehaviours' => [
+						'className' => 'Institution.StaffBehaviours'
+					],
+					'StudentBehaviours' => [
+						'className' => 'Institution.StudentBehaviours'
+					]
+        		]
         	]
 		];
 

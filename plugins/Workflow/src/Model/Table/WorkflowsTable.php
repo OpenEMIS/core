@@ -822,7 +822,7 @@ class WorkflowsTable extends AppTable {
 
 			$subject = TableRegistry::get($model);
 
-			if ($entity->has('filters')) {
+			if ($entity->has($statusKey) && $entity->has('filters')) {
 				// When edit: If filterIds is clear, fall back to the first step of Default Workflows (Apply To All)
 				if (empty($entity->filters) && !$entity->isNew()) {
 					$originalFilters = $entity->extractOriginal(['filters']);
