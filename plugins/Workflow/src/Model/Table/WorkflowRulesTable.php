@@ -4,6 +4,7 @@ namespace Workflow\Model\Table;
 use ArrayObject;
 
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -24,7 +25,24 @@ class WorkflowRulesTable extends ControllerActionTable
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 
 		$this->addBehavior('Workflow.RuleStaffBehaviours');
+        $this->addBehavior('Workflow.RuleStudentBehaviours');
 	}
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $eventMap = [
+            'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields'
+        ];
+
+        foreach ($eventMap as $event => $method) {
+            if (!method_exists($this, $method)) {
+                continue;
+            }
+            $events[$event] = $method;
+        }
+        return $events;
+    }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
@@ -81,10 +99,39 @@ class WorkflowRulesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity, ArrayObject $extra)
     {
+        $fieldOrder = ['feature', 'workflow_id', 'threshold'];
+
         $this->field('feature', ['type' => 'select']);
         $this->field('workflow_id', ['type' => 'select']);
+        $this->field('threshold', ['type' => 'hidden']);
+
+        $event = $this->dispatchEvent('WorkflowRule.SetupFields', [$entity, $extra], $this);
+        if ($event->isStopped()) { return $event->result; }
 
         $this->setFieldOrder(['feature', 'workflow_id', 'threshold']);
+    }
+
+    public function onWorkflowRuleSetupFields(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($entity->has('feature') && !empty($entity->feature)) {
+            $ruleTypes = $this->getRuleTypes();
+            $thresholdConfig = $ruleTypes[$entity->feature]['threshold'];
+
+            foreach ($thresholdConfig as $key => $attr) {
+                if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
+                    $options = [];
+                    if (array_key_exists('options', $attr) && !empty($attr['options'])) {
+                        $options = $model->getSelectOptions($model->aliasField($attr['options']));
+                    } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
+                        $modelTable = TableRegistry::get($attr['lookupModel']);
+                        $options = $modelTable->getList()->toArray();
+                    }
+                    $attr['options'] = $options;
+                }
+
+                $this->field($key, $attr);
+            }
+        }
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)

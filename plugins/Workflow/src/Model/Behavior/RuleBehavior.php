@@ -16,7 +16,7 @@ class RuleBehavior extends Behavior
 		parent::initialize($config);
 
 		$class = basename(str_replace('\\', '/', get_class($this)));
-		$class = str_replace('WorkflowRule', '', $class);
+		$class = str_replace('Rule', '', $class);
 		$class = str_replace('Behavior', '', $class);
 
 		$this->_table->addRuleType($class, $this->config());
@@ -27,7 +27,7 @@ class RuleBehavior extends Behavior
 	{
     	$events = parent::implementedEvents();
     	$eventMap = [
-    		// 'AlertRule.'.$this->alertRule.'.SetupFields' => 'on'.$this->alertRule.'SetupFields'
+    		'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields'
         ];
 
         foreach ($eventMap as $event => $method) {
