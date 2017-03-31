@@ -45,16 +45,16 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
             '${issue_date}' => 'Issue date.',
             '${expiry_date}' => 'Expiry date.',
             '${issuer}' => 'Issuer.',
-            '${user.openemis_no}' => 'Student OpenEMIS number.',
-            '${user.first_name}' => 'Student first name.',
-            '${user.middle_name}' => 'Student middle name.',
-            '${user.third_name}' => 'Student third name.',
-            '${user.last_name}' => 'Student last name.',
-            '${user.preferred_name}' => 'Student preferred name.',
-            '${user.email}' => 'Student email.',
-            '${user.address}' => 'Student address.',
-            '${user.postal_code}' => 'Student postal code.',
-            '${user.date_of_birth}' => 'Student date of birth.',
+            '${user.openemis_no}' => 'OpenEMIS number.',
+            '${user.first_name}' => 'First name.',
+            '${user.middle_name}' => 'Middle name.',
+            '${user.third_name}' => 'Third name.',
+            '${user.last_name}' => 'Last name.',
+            '${user.preferred_name}' => 'Preferred name.',
+            '${user.email}' => 'Email.',
+            '${user.address}' => 'Address.',
+            '${user.postal_code}' => 'Postal code.',
+            '${user.date_of_birth}' => 'Date of birth.',
             '${institution.name}' => 'Institution name.',
             '${institution.code}' => 'Institution code.',
             '${institution.address}' => 'Institution address.',
@@ -97,15 +97,5 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];
-    }
-
-    public function onUpdateFieldLicenseValidityThreshold(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $attr['type'] = 'hidden';
-            $attr['value'] = '';
-        }
-
-        return $attr;
     }
 }
