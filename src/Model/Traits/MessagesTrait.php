@@ -1679,7 +1679,7 @@ trait MessagesTrait {
         'Alert' => [
             'AlertRules' => [
                 'name' => [
-                    'ruleUnique' => 'This field has to be unique',
+                    'ruleUnique' => 'This field has to be unique'
                 ]
             ],
         ],
