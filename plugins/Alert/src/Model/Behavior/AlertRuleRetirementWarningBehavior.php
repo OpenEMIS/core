@@ -12,8 +12,8 @@ use Cake\Event\Event;
 
 class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
 {
-	protected $_defaultConfig = [
-		'feature' => 'RetirementWarning',
+    protected $_defaultConfig = [
+        'feature' => 'RetirementWarning',
         'name' => 'Retirement Warning',
         'method' => 'Email',
         'threshold' => [
@@ -56,9 +56,9 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
             '${institution.email}' => 'Institution email.',
             '${institution.website}' => 'Institution website.',
         ]
-	];
+    ];
 
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
         parent::initialize($config);
     }

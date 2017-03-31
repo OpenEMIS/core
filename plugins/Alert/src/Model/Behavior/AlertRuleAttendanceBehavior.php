@@ -11,8 +11,8 @@ use Cake\Event\Event;
 
 class AlertRuleAttendanceBehavior extends AlertRuleBehavior
 {
-	protected $_defaultConfig = [
-		'feature' => 'Attendance',
+    protected $_defaultConfig = [
+        'feature' => 'Attendance',
         'name' => 'Student Absent',
         'method' => 'Email',
         'threshold' => [],
@@ -45,26 +45,26 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
             '${institution.email}' => 'Institution email.',
             '${institution.website}' => 'Institution website.',
         ]
-	];
+    ];
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
-	}
-
-	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    public function initialize(array $config)
     {
-    	$model = $this->_table;
-    	if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+        parent::initialize($config);
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $model = $this->_table;
+        if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
-	    		$validator = $model->validator();
-				$validator->add('threshold', [
-					'ruleRange' => [
-						'rule' => ['range', 1, 30]
-					]
-				]);
-	    	}
-    	}
+                $validator = $model->validator();
+                $validator->add('threshold', [
+                    'ruleRange' => [
+                        'rule' => ['range', 1, 30]
+                    ]
+                ]);
+            }
+        }
     }
 
     public function onAttendanceSetupFields(Event $event, Entity $entity)
@@ -72,17 +72,17 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
         $this->onAlertRuleSetupFields($event, $entity);
     }
 
-	public function onUpdateFieldAttendanceThreshold(Event $event, array $attr, $action, Request $request)
-	{
-		$attr['visible'] = true;
-		if ($action == 'add') {
-			$attr['type'] = 'integer';
-			$attr['attr']['min'] = 1;
-			$attr['attr']['max'] = 30;
-		} else if ($action == 'edit') {
-			$attr['type'] = 'readonly';
-		}
+    public function onUpdateFieldAttendanceThreshold(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['visible'] = true;
+        if ($action == 'add') {
+            $attr['type'] = 'integer';
+            $attr['attr']['min'] = 1;
+            $attr['attr']['max'] = 30;
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+        }
 
-		return $attr;
-	}
+        return $attr;
+    }
 }
