@@ -28,7 +28,6 @@ class AttendanceAlertShell extends GeneralAlertShell
         $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
 
         do {
-
             $rules = $this->getAlertRules($feature);
 
             foreach ($rules as $rule) {
