@@ -12,8 +12,8 @@ use Cake\Event\Event;
 
 class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
 {
-	protected $_defaultConfig = [
-		'feature' => 'StaffEmployment',
+    protected $_defaultConfig = [
+        'feature' => 'StaffEmployment',
             'name' => 'Staff Employment',
             'method' => 'Email',
             'threshold' => [
@@ -64,9 +64,9 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                 '${institution.email}' => 'Institution email.',
                 '${institution.website}' => 'Institution website.',
         ]
-	];
+    ];
 
-	public function initialize(array $config)
+    public function initialize(array $config)
     {
         parent::initialize($config);
     }
