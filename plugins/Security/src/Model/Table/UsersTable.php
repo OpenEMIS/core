@@ -306,7 +306,7 @@ class UsersTable extends AppTable
 			])
 			->where([
 				$this->aliasField('date_of_birth') . ' IS NOT NULL',
-				$operandConditions[$thresholdArray['operand_id']]
+				$operandConditions[$thresholdArray['operand']]
 			])
 
 			->hydrate(false)

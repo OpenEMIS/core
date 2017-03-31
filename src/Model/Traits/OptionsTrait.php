@@ -102,13 +102,13 @@ trait OptionsTrait {
 	    		]
         	],
         	'AlertRules' => [
-        		'before_after' => [
-	    			1 => __('Before expiry date'),
-	    			2 => __('After expiry date')
+        		'before_after_day' => [
+	    			1 => __('Days before expiry date'),
+	    			2 => __('Days after expiry date')
 	    		],
                 'before_after_age' => [
-                    // 1 => __('Before Retirement Value'),
-                    2 => __('After Retirement Value')
+                    // 1 => __('Before age retirement value'),
+                    2 => __('After age retirement value')
                 ]
         	]
 		];

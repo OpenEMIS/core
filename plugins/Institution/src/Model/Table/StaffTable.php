@@ -1441,9 +1441,9 @@ class StaffTable extends ControllerActionTable {
             ])
             ->contain(['Users', 'Institutions', 'StaffTypes'])
             ->where([
-                $this->aliasField('staff_type_id') => $thresholdArray['staff_type_id'],
+                $this->aliasField('staff_type_id') => $thresholdArray['staff_type'],
                 $this->aliasField('end_date') . ' IS NOT NULL',
-                $operandConditions[$thresholdArray['operand_id']]
+                $operandConditions[$thresholdArray['operand']]
             ])
             ->hydrate(false)
             ;
