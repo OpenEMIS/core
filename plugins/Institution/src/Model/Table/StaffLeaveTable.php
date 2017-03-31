@@ -276,9 +276,9 @@ class StaffLeaveTable extends ControllerActionTable
 			])
 			->contain(['Statuses', 'Users', 'Institutions', 'StaffLeaveTypes', 'Assignees'])
 			->where([
-				$this->aliasField('staff_leave_type_id') => $thresholdArray['staff_leave_type_id'],
+				$this->aliasField('staff_leave_type_id') => $thresholdArray['staff_leave_type'],
 				$this->aliasField('date_to') . ' IS NOT NULL',
-				$operandConditions[$thresholdArray['operand_id']]
+				$operandConditions[$thresholdArray['operand']]
 			])
 			->hydrate(false)
 			;

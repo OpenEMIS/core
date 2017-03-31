@@ -15,8 +15,6 @@ class LicenseValidityAlertShell extends GeneralAlertShell
         parent::initialize();
 
         $this->loadModel('Staff.Licenses');
-        $this->loadModel('Staff.StaffStatuses');
-        $this->loadModel('Institution.Staff');
     }
 
     public function main()

@@ -29,7 +29,7 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
 				'type' => 'select',
 	        	'select' => false,
 	        	'after' => 'value',
-	        	'options' => 'before_after'
+	        	'options' => 'before_after_day'
 			],
 			'license_type' => [
 				'type' => 'select',
@@ -80,7 +80,8 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
 	    		$validator = $model->validator();
 				$validator->add('value', [
 					'ruleRange' => [
-						'rule' => ['range', 1, 30]
+						'rule' => ['range', 1, 30],
+                        'message' => __('Value must be within 1 to 30')
 					]
 				]);
 	    	}

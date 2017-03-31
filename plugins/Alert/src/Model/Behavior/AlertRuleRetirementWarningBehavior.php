@@ -19,18 +19,19 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         'threshold' => [
             'value' => [
                 'type' => 'integer',
-                'field' => 'value'
+                'after' => 'security_roles',
+                'attr' => [
+                    'min' => 50,
+                    'max' => 75,
+                    'required' => true
+                ]
             ],
-            'operand_id' => [
+            'operand' => [
                 'type' => 'select',
-                'field' => 'operand',
-                'option' => 'before_after_age'
-            ],
-            // 'staff_leave_type_id' => [
-            //     'type' => 'select',
-            //     'field' => 'staff_leave_type',
-            //     'lookupModel' => 'Staff.StaffLeaveTypes'
-            // ],
+                'select' => false,
+                'after' => 'value',
+                'options' => 'before_after_age'
+            ]
         ],
         'placeholder' => [
             '${threshold.value}' => 'Threshold value.',
@@ -62,109 +63,30 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         parent::initialize($config);
     }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['AlertRule.setupFields'] = 'onAlertRuleSetupFields';
-        $events['AlertRule.UpdateField.'.$this->alertRule.'.Threshold'] = 'onUpdateFieldRetirementWarningThreshold';
-        $events['AlertRule.onGet.'.$this->alertRule.'.Threshold'] = 'onGetRetirementWarningThreshold';
-        return $events;
-    }
-
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         $model = $this->_table;
-        if (isset($data['submit']) && $data['submit'] == 'save') {
-            if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+        if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
                 $validator = $model->validator();
                 $validator->add('value', [
                     'ruleRange' => [
-                        'rule' => ['range', 49, 99]
+                        'rule' => ['range', 50, 75],
+                        'message' => __('Retirement age must be between 50 to 75')
                     ]
                 ]);
-
-                $thresholdArray = [];
-                if (isset($data['value'])) {
-                    $thresholdArray['value'] = $data['value'];
-                }
-                if (isset($data['operand'])) {
-                    $thresholdArray['operand'] = $data['operand'];
-                }
-                // if (isset($data['license_type'])) {
-                //     $thresholdArray['license_type'] = $data['license_type'];
-                // }
-                $data['threshold'] = json_encode($thresholdArray, JSON_UNESCAPED_UNICODE);
             }
         }
     }
 
-    public function onAlertRuleSetupFields(Event $event, Entity $entity)
+    public function onRetirementWarningSetupFields(Event $event, Entity $entity)
     {
-        // pr($this->_table->action);
-        // pr($entity->feature);
-        // pr($this->alertRule);
-        // pr($entity->threshold);
-        // die;
-
-        if ($entity->has('feature') && $entity->feature == $this->alertRule) {
-            // pr('if');
-            $thresholdArray=[];
-            if (!empty($entity->threshold)) {
-                $thresholdArray = json_decode($entity->threshold, true);
-            }
-            $model = $this->_table;
-
-            // value field
-            $model->field('value', [
-                'type' => 'integer',
-                'after' => 'security_roles',
-                'attr' => [
-                    'min' => 49,
-                    'max' => 99,
-                ]
-            ]);
-            // end
-
-            // operand field
-            $operandOptions = $model->getSelectOptions($model->aliasField('before_after_age'));
-            $model->field('operand', [
-                'type' => 'select',
-                'select' => false,
-                'after' => 'value',
-                'options' => $operandOptions
-            ]);
-            // end
-
-            // // license_type field
-            // $LicenseTypes = TableRegistry::get('FieldOption.LicenseTypes');
-            // $licenseTypesOptions = $LicenseTypes
-            //     ->find('list')
-            //     ->find('visible')
-            //     ->find('order')
-            //     ->toArray();
-            // $model->field('license_type', [
-            //     'type' => 'select',
-            //     'select' => false,
-            //     'after' => 'operand',
-            //     'options' => $licenseTypesOptions
-            // ]);
-            // // end
-        }
+        $this->onAlertRuleSetupFields($event, $entity);
     }
 
     public function onGetRetirementWarningThreshold(Event $event, Entity $entity)
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];
-    }
-
-    public function onUpdateFieldRetirementWarningThreshold(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add' || $action == 'edit') {
-            $attr['type'] = 'hidden';
-            $attr['value'] = '';
-        }
-
-        return $attr;
     }
 }

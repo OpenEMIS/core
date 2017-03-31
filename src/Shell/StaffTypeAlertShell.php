@@ -8,7 +8,7 @@ use Cake\Filesystem\File;
 
 use App\Shell\GeneralAlertShell;
 
-class EmploymentPeriodAlertShell extends GeneralAlertShell
+class StaffTypeAlertShell extends GeneralAlertShell
 {
     public function initialize()
     {

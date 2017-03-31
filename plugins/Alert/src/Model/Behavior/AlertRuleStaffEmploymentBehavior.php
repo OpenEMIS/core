@@ -10,11 +10,11 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
+class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
 {
 	protected $_defaultConfig = [
-		'feature' => 'StaffLeave',
-            'name' => 'Staff Leave',
+		'feature' => 'StaffEmployment',
+            'name' => 'Staff Employment',
             'method' => 'Email',
             'threshold' => [
                 'value' => [
@@ -22,7 +22,7 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
                     'after' => 'security_roles',
                     'attr' => [
                         'min' => 1,
-                        'max' => 30,
+                        'max' => 360,
                         'required' => true
                     ]
                 ],
@@ -32,18 +32,18 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
                     'after' => 'value',
                     'options' => 'before_after_day'
                 ],
-                'staff_leave_type' => [
+                'employment_type' => [
                     'type' => 'select',
                     'select' => false,
                     'after' => 'operand',
-                    'lookupModel' => 'Staff.StaffLeaveTypes'
+                    'lookupModel' => 'FieldOption.EmploymentTypes'
                 ]
             ],
             'placeholder' => [
                 '${threshold.value}' => 'Threshold value.',
-                '${staff_leave_type.name}' => 'License type.',
-                '${date_from}' => 'Leave start date.',
-                '${date_to}' => 'Leave end date.',
+                '${employment_type.name}' => 'Employment type.',
+                '${employment_date}' => 'Staff employment date.',
+                '${employment_period}' => 'Staff employment period.',
                 '${user.openemis_no}' => 'Student OpenEMIS number.',
                 '${user.first_name}' => 'Student first name.',
                 '${user.middle_name}' => 'Student middle name.',
@@ -79,20 +79,20 @@ class AlertRuleStaffLeaveBehavior extends AlertRuleBehavior
                 $validator = $model->validator();
                 $validator->add('value', [
                     'ruleRange' => [
-                        'rule' => ['range', 1, 30],
-                        'message' => __('Value must be within 1 to 30')
+                        'rule' => ['range', 1, 360],
+                        'message' => __('Staff employment must be between 1 to 360')
                     ]
                 ]);
             }
         }
     }
 
-    public function onStaffLeaveSetupFields(Event $event, Entity $entity)
+    public function onStaffEmploymentSetupFields(Event $event, Entity $entity)
     {
         $this->onAlertRuleSetupFields($event, $entity);
     }
 
-    public function onGetStaffLeaveThreshold(Event $event, Entity $entity)
+    public function onGetStaffEmploymentThreshold(Event $event, Entity $entity)
     {
         $thresholdData = json_decode($entity->threshold, true);
         return $thresholdData['value'];

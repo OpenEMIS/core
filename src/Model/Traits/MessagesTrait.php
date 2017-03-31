@@ -1679,13 +1679,7 @@ trait MessagesTrait {
         'Alert' => [
             'AlertRules' => [
                 'name' => [
-                    'ruleUnique' => 'This field has to be unique',
-                ],
-                'value' => [
-                    'ruleRange' => 'Value must be within 1 to 30'
-                ],
-                'threshold' => [
-                    'ruleRange' => 'Value must be within 1 to 30'
+                    'ruleUnique' => 'This field has to be unique'
                 ]
             ],
         ],
