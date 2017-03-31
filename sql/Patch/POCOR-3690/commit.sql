@@ -7,13 +7,15 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations` (
  `total_registered` int(11) NOT NULL DEFAULT '0',
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
+ `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
  PRIMARY KEY (`examination_centre_id`, `examination_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
- KEY `examination_id` (`examination_id`)
+ KEY `examination_id` (`examination_id`),
+ KEY `academic_period_id` (`academic_period_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination';
 
-INSERT INTO `examination_centres_examinations` (`id`, `total_registered`, `examination_centre_id`, `examination_id`)
-SELECT sha2(CONCAT(`id`, ',', `examination_id`), '256'), `total_registered`, `id`, `examination_id`
+INSERT INTO `examination_centres_examinations` (`id`, `total_registered`, `examination_centre_id`, `examination_id`, `academic_period_id`)
+SELECT sha2(CONCAT(`id`, ',', `examination_id`), '256'), `total_registered`, `id`, `examination_id`, `academic_period_id`
 FROM `examination_centres`;
 
 -- examination_centres
