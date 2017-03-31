@@ -32,7 +32,24 @@ CREATE TABLE IF NOT EXISTS `institution_workflows_records` (
   PRIMARY KEY (`id`),
   KEY `institution_workflow_id` (`institution_workflow_id`),
   KEY `record_id` (`record_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the list of records associates with institution_workflows';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of records associates with institution_workflows';
+
+-- workflow_rules
+DROP TABLE IF EXISTS `workflow_rules`;
+CREATE TABLE `workflow_rules` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `threshold` varchar(255) NOT NULL,
+  `feature` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `workflow_id` int(11) NOT NULL COMMENT 'links to workflows.id',
+  `modified_user_id` int(5) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(5) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `workflow_id` (`workflow_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains workflow rules associates with a specific workflow';
 
 -- workflow_models
 SET @modelId := 12;
