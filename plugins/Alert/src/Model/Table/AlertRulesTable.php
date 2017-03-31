@@ -116,6 +116,7 @@ class AlertRulesTable extends ControllerActionTable
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
+        $this->field('alert_features', ['visible' => false]);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query)
@@ -255,10 +256,6 @@ class AlertRulesTable extends ControllerActionTable
 
         return $attr;
     }
-
-/********************************************************************************
-**                               Threshold                                     **
-*********************************************************************************/
 
     public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
     {
