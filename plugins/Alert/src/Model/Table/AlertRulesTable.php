@@ -38,9 +38,10 @@ class AlertRulesTable extends ControllerActionTable
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Alert.AlertRuleAttendance');
         $this->addBehavior('Alert.AlertRuleLicenseValidity');
-        $this->addBehavior('Alert.AlertRuleStaffLeave');
-        $this->addBehavior('Alert.AlertRuleEmploymentPeriod');
         $this->addBehavior('Alert.AlertRuleRetirementWarning');
+        $this->addBehavior('Alert.AlertRuleStaffEmployment');
+        $this->addBehavior('Alert.AlertRuleStaffLeave');
+        $this->addBehavior('Alert.AlertRuleStaffType');
     }
 
     public function validationDefault(Validator $validator)

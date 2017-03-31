@@ -19,6 +19,10 @@ class GeneralAlertShell extends Shell
         $this->loadModel('Security.Users');
         $this->loadModel('Security.SecurityGroupUsers');
 
+        // to get institution
+        $this->loadModel('Staff.StaffStatuses');
+        $this->loadModel('Institution.Staff');
+
         $class = basename(str_replace('\\', '/', get_class($this)));
 
         $this->processName = str_replace('Shell', '', $class);
