@@ -44,6 +44,23 @@ class WorkflowRulesTable extends ControllerActionTable
         return $events;
     }
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            if (isset($data['feature']) && !empty($data['feature'])) {
+                $ruleTypes = $this->getRuleTypes();
+                $thresholdConfig = $ruleTypes[$data['feature']]['threshold'];
+                if (!empty($thresholdConfig)) {
+                    $thresholdArray = [];
+                    foreach ($thresholdConfig as $key => $attr) {
+                        $thresholdArray[$key] = $data[$key];
+                    }
+                    $data['threshold'] = !empty($thresholdArray) ? json_encode($thresholdArray, JSON_UNESCAPED_UNICODE) : '';
+                }
+            }
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $featureOptions = $this->getFeatureOptions();
@@ -117,6 +134,15 @@ class WorkflowRulesTable extends ControllerActionTable
             $ruleTypes = $this->getRuleTypes();
             $thresholdConfig = $ruleTypes[$entity->feature]['threshold'];
 
+            if (!empty($thresholdConfig)) {
+                if ($this->action == 'view' || $this->action == 'edit') {
+                    $thresholdArray = json_decode($entity->threshold, true);
+                    foreach ($thresholdArray as $key => $value) {
+                        $entity->{$key} = $value;
+                    }
+                }
+            }
+
             foreach ($thresholdConfig as $key => $attr) {
                 if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
                     $options = [];
@@ -130,6 +156,24 @@ class WorkflowRulesTable extends ControllerActionTable
                 }
 
                 $this->field($key, $attr);
+            }
+        }
+    }
+
+    public function onGetFeature(Event $event, Entity $entity)
+    {
+        return Inflector::humanize(Inflector::underscore($entity->feature));
+    }
+
+    public function onGetThreshold(Event $event, Entity $entity)
+    {
+        // temporary solution
+        $origEntity = $this->get($entity->id);
+        if ($origEntity->has('feature') && !empty($origEntity->feature)) {
+            $event = $this->dispatchEvent('WorkflowRule.onGet.'.$origEntity->feature.'.Threshold', [$origEntity], $this);
+            if ($event->isStopped()) { return $event->result; }
+            if (!empty($event->result)) {
+                return $event->result;
             }
         }
     }

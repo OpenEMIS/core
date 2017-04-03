@@ -394,4 +394,35 @@ class AssessmentsTable extends ControllerActionTable {
 
         return $hasTemplate;
     }
+
+    public function findByClass(Query $query, array $options)
+    {
+        if (array_key_exists('institution_class_id', $options) && !empty($options['institution_class_id'])) {
+            $classId = $options['institution_class_id'];
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $classResults = $InstitutionClasses
+                ->find()
+                ->contain(['ClassGrades'])
+                ->where([$InstitutionClasses->aliasField('id') => $classId])
+                ->all();
+
+            if (!$classResults->isEmpty()) {
+                $where = [];
+                $classEntity = $classResults->first();
+                $where[$this->aliasField('academic_period_id')] = $classEntity->academic_period_id;
+
+                $gradeIds = [];
+                foreach ($classEntity->class_grades as $key => $obj) {
+                    $gradeIds[$obj->education_grade_id] = $obj->education_grade_id;
+                }
+                if (!empty($gradeIds)) {
+                    $where[$this->aliasField('education_grade_id IN ')] = $gradeIds;
+                }
+
+                if (!empty($where)) {
+                    $query->where([$where]);
+                }
+            }
+        }
+    }
 }

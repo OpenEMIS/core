@@ -15,12 +15,14 @@ class ReportsController extends AppController {
 			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
 			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
             'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
+            'ProfessionalDevelopment' => ['className' => 'Report.ProfessionalDevelopment', 'actions' => ['index', 'add']],
 			'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
 			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
 			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
 		];
+		$this->loadComponent('Training.Training');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -47,9 +49,9 @@ class ReportsController extends AppController {
 				'Report.InstitutionStudents' => __('Students'),
 				// 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
 				'Report.InstitutionStaff' => __('Staff'),
-				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 				'Report.StudentAbsences' => __('Student Absence'),
 				'Report.StaffAbsences' => __('Staff Absence'),
+				'Report.StaffLeave' => __('Staff Leave'),
 				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
 				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
 			];
@@ -66,13 +68,22 @@ class ReportsController extends AppController {
 				'Report.StaffIdentities' => __('Identities'),
 				'Report.StaffContacts' => __('Contacts'),
 				'Report.StaffQualifications' => __('Qualifications'),
+				'Report.StaffLicenses' => __('Licenses'),
+				'Report.StaffEmployments' => __('Employments'),
+				'Report.StaffSalaries' => __('Salaries'),
 				'Report.StaffSystemUsage' => __('System Usage')
 			];
-        } else if ($module == 'Textbooks') {
-            $options = [
-                'Report.Textbooks' => __('Textbooks'),
-                'Report.InstitutionTextbooks' => __('Institution Textbooks')
-            ];
+		} else if ($module == 'Textbooks') {
+			$options = [
+				'Report.Textbooks' => __('Textbooks'),
+				'Report.InstitutionTextbooks' => __('Institution Textbooks')
+			];
+		} else if ($module == 'ProfessionalDevelopment') {
+			$options = [
+				'Report.TrainingCourses' => __('Courses'),
+				'Report.TrainingSessions' => __('Sessions'),
+				'Report.TrainingResults' => __('Results')
+			];
 		} else if ($module == 'Surveys') {
 			$options = [
 				'Report.Surveys' => __('Institutions')

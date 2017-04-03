@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS `institution_workflows_records` (
 DROP TABLE IF EXISTS `workflow_rules`;
 CREATE TABLE `workflow_rules` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `threshold` varchar(255) NOT NULL,
+  `rule` varchar(255) NOT NULL,
   `feature` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `workflow_id` int(11) NOT NULL COMMENT 'links to workflows.id',
   `modified_user_id` int(5) DEFAULT NULL,
