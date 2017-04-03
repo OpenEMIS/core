@@ -266,6 +266,7 @@ class ExaminationCentresTable extends ControllerActionTable {
 
             } else if ($this->action == 'edit') {
                 $this->field('area_id', ['entity' => $entity, 'visible' => true, 'type' => 'areapicker', 'source_model' => 'Area.Areas', 'displayCountry' => true]);
+                $this->field('examination_centre_rooms', ['type' => 'element', 'element' => 'Examination.exam_centre_rooms']);
                 $this->fields['name']['visible'] = true;
                 $this->fields['code']['visible'] = true;
                 $this->fields['address']['visible'] = true;
@@ -312,6 +313,11 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['website']['visible'] = true;
 
             $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'examination_centre_rooms', 'special_need_type_id']);
+        }
+
+        if (isset($extra['toolbarButtons']['edit']['url'])) {
+            $extra['toolbarButtons']['back']['url']['action'] = 'ExaminationCentres';
+            unset($extra['toolbarButtons']['back']['url']['queryString']);
         }
     }
 
