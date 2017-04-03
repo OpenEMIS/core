@@ -9,7 +9,7 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
 {
 	protected $_defaultConfig = [
 		'feature' => 'StaffBehaviours',
-        'threshold' => [
+        'rule' => [
 			'behaviour_classification' => [
 				'type' => 'select',
 				'after' => 'workflow_id',
