@@ -3,7 +3,7 @@ namespace App\Shell;
 
 use Cake\Console\Shell;
 
-class GeneralAlertShell extends Shell
+class AlertShell extends Shell
 {
     protected $processName;
     protected $featureName;
@@ -26,7 +26,7 @@ class GeneralAlertShell extends Shell
         $class = basename(str_replace('\\', '/', get_class($this)));
 
         $this->processName = str_replace('Shell', '', $class);
-        $this->featureName = str_replace('AlertShell', '', $class);
+        $this->featureName = str_replace('Alert', '', $this->processName);
     }
 
     public function getAlertRules($feature)

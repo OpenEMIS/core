@@ -1,6 +1,7 @@
 <?php
 namespace App\Shell;
 
+use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
@@ -8,18 +9,18 @@ use Cake\Filesystem\File;
 
 use App\Shell\GeneralAlertShell;
 
-class LicenseValidityAlertShell extends GeneralAlertShell
+class AlertStaffEmploymentShell extends AlertShell
 {
     public function initialize()
     {
         parent::initialize();
 
-        $this->loadModel('Staff.Licenses');
+        $this->loadModel('Staff.Employments');
     }
 
     public function main()
     {
-        $model = $this->Licenses;
+        $model = $this->Employments;
         $processName = $this->processName;
         $feature = $this->featureName;
 
@@ -39,7 +40,7 @@ class LicenseValidityAlertShell extends GeneralAlertShell
                 foreach ($data as $key => $vars) {
                     $vars['threshold'] = $thresholdArray;
 
-                    // license don't have institution_id, check in institution staff if staff is assigned
+                    // employment table don't have institution_id, check in institution staff if staff is assigned
                     $institutionStaffRecords = $this->Staff
                         ->find()
                         ->contain(['StaffStatuses', 'Institutions'])
@@ -54,6 +55,14 @@ class LicenseValidityAlertShell extends GeneralAlertShell
                         foreach ($institutionStaffRecords as $institutionStaffObj) {
                             $vars['institution'] = $institutionStaffObj['institution'];
                             $institutionId = $vars['institution']['id'];
+
+                            // add the employment period to $vars.
+                            $employmentDate = $vars['employment_date'];
+                            $diff = date_diff(new Date(), $employmentDate);
+                            $diffDays = $diff->days;
+
+                            $vars['employment_period'] = $diffDays;
+                            // end of adding age to $vars
 
                             if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
                                 $emailList = $this->getEmailList($rule['security_roles'], $institutionId);

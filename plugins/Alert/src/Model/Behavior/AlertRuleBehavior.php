@@ -55,11 +55,8 @@ class AlertRuleBehavior extends Behavior
 		$thresholdConfig = $this->config('threshold');
 		// logic to auto render fields based on setting in config threshold
 		if (!empty($thresholdConfig)) {
-			if ($model->action == 'view' || $model->action == 'edit') {
-				$thresholdArray = json_decode($entity->threshold, true);
-				foreach ($thresholdArray as $key => $value) {
-					$entity->{$key} = $value;
-				}
+			if ($model->action == 'view') {
+                $model->extractThresholdValuesFromEntity($entity);
 			}
 
 			foreach ($thresholdConfig as $key => $attr) {

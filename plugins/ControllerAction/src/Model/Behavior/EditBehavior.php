@@ -97,6 +97,8 @@ class EditBehavior extends Behavior {
 					}
 
 					$process = function ($model, $entity) {
+		// pr($entity);
+		// die;
 						return $model->save($entity);
 					};
 

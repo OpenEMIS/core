@@ -9,18 +9,16 @@ use Cake\Filesystem\File;
 
 use App\Shell\GeneralAlertShell;
 
-class StaffEmploymentAlertShell extends GeneralAlertShell
+class AlertRetirementWarningShell extends AlertShell
 {
     public function initialize()
     {
         parent::initialize();
-
-        $this->loadModel('Staff.Employments');
     }
 
     public function main()
     {
-        $model = $this->Employments;
+        $model = $this->Users;
         $processName = $this->processName;
         $feature = $this->featureName;
 
@@ -40,12 +38,12 @@ class StaffEmploymentAlertShell extends GeneralAlertShell
                 foreach ($data as $key => $vars) {
                     $vars['threshold'] = $thresholdArray;
 
-                    // employment table don't have institution_id, check in institution staff if staff is assigned
+                    // security user doesn't have institution_id, check in institution staff if staff is assigned
                     $institutionStaffRecords = $this->Staff
                         ->find()
                         ->contain(['StaffStatuses', 'Institutions'])
                         ->where([
-                            $this->Staff->aliasField('staff_id') => $vars['user']['id'],
+                            $this->Staff->aliasField('staff_id') => $vars['id'],
                             $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
                         ])
                         ->hydrate(false)
@@ -56,12 +54,12 @@ class StaffEmploymentAlertShell extends GeneralAlertShell
                             $vars['institution'] = $institutionStaffObj['institution'];
                             $institutionId = $vars['institution']['id'];
 
-                            // add the employment period to $vars.
-                            $employmentDate = $vars['employment_date'];
-                            $diff = date_diff(new Date(), $employmentDate);
-                            $diffDays = $diff->days;
+                            // add the age to $vars.
+                            $dob = $vars['date_of_birth'];
+                            $diff = date_diff($dob, new Date());
+                            $age = $diff->y;
 
-                            $vars['employment_period'] = $diffDays;
+                            $vars['age'] = $age;
                             // end of adding age to $vars
 
                             if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
