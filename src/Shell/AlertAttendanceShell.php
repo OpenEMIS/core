@@ -8,18 +8,18 @@ use Cake\Filesystem\File;
 
 use App\Shell\GeneralAlertShell;
 
-class StaffLeaveAlertShell extends GeneralAlertShell
+class AlertAttendanceShell extends AlertShell
 {
     public function initialize()
     {
         parent::initialize();
 
-        $this->loadModel('Institution.StaffLeave');
+        $this->loadModel('Institution.InstitutionStudentAbsences');
     }
 
     public function main()
     {
-        $model = $this->StaffLeave;
+        $model = $this->InstitutionStudentAbsences;
         $processName = $this->processName;
         $feature = $this->featureName;
 
@@ -32,13 +32,15 @@ class StaffLeaveAlertShell extends GeneralAlertShell
 
             foreach ($rules as $rule) {
                 $threshold = $rule->threshold;
-                $thresholdArray = json_decode($threshold, true);
 
                 $data = $this->getAlertData($threshold, $model);
 
                 foreach ($data as $key => $vars) {
-                    $vars['threshold'] = $thresholdArray;
-                    $institutionId = $vars['institution']['id'];
+                    $vars['threshold'] = $threshold;
+
+                    if (array_key_exists('institution', $vars)) {
+                        $institutionId = $vars['institution']['id'];
+                    }
 
                     if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
                         $emailList = $this->getEmailList($rule['security_roles'], $institutionId);

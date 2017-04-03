@@ -1,7 +1,6 @@
 <?php
 namespace App\Shell;
 
-use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
@@ -9,16 +8,18 @@ use Cake\Filesystem\File;
 
 use App\Shell\GeneralAlertShell;
 
-class RetirementWarningAlertShell extends GeneralAlertShell
+class AlertLicenseValidityShell extends AlertShell
 {
     public function initialize()
     {
         parent::initialize();
+
+        $this->loadModel('Staff.Licenses');
     }
 
     public function main()
     {
-        $model = $this->Users;
+        $model = $this->Licenses;
         $processName = $this->processName;
         $feature = $this->featureName;
 
@@ -38,12 +39,12 @@ class RetirementWarningAlertShell extends GeneralAlertShell
                 foreach ($data as $key => $vars) {
                     $vars['threshold'] = $thresholdArray;
 
-                    // security user doesn't have institution_id, check in institution staff if staff is assigned
+                    // license don't have institution_id, check in institution staff if staff is assigned
                     $institutionStaffRecords = $this->Staff
                         ->find()
                         ->contain(['StaffStatuses', 'Institutions'])
                         ->where([
-                            $this->Staff->aliasField('staff_id') => $vars['id'],
+                            $this->Staff->aliasField('staff_id') => $vars['user']['id'],
                             $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
                         ])
                         ->hydrate(false)
@@ -53,14 +54,6 @@ class RetirementWarningAlertShell extends GeneralAlertShell
                         foreach ($institutionStaffRecords as $institutionStaffObj) {
                             $vars['institution'] = $institutionStaffObj['institution'];
                             $institutionId = $vars['institution']['id'];
-
-                            // add the age to $vars.
-                            $dob = $vars['date_of_birth'];
-                            $diff = date_diff($dob, new Date());
-                            $age = $diff->y;
-
-                            $vars['age'] = $age;
-                            // end of adding age to $vars
 
                             if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
                                 $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
