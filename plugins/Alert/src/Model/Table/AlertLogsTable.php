@@ -122,11 +122,15 @@ class AlertLogsTable extends ControllerActionTable
         $today = Time::now();
         $todayDate = Date::now();
 
+        // general feature options from alertRules
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+
         // checksum hash($subject,$message)
         $checksum = Security::hash($subject . ',' . $message, 'sha256');
 
         // to update and add new records into the alert_logs
-        if ($this->exists(['checksum' => $checksum]) && $feature == 'Attendance') {
+        if ($this->exists(['checksum' => $checksum]) && array_key_exists($feature, $alertFeatures)) {
             $record = $this->find()
                 ->where(['checksum' => $checksum])
                 ->first();
@@ -144,20 +148,23 @@ class AlertLogsTable extends ControllerActionTable
                 'message' => $message,
                 'checksum' => $checksum
             ]);
+
             $this->save($entity);
         }
     }
 
     public function replaceMessage($feature, $message, $vars)
     {
+        $AlertRules = TableRegistry::get('Alert.AlertRules');
+        $alertFeatures = $AlertRules->getFeatureOptions();
+
         $format = '${%s}';
         $strArray = explode('${', $message);
         array_shift($strArray); // first element will not contain the placeholder
 
         $availablePlaceholder = [];
-        if ($feature == 'Attendance') {
+        if (array_key_exists($feature, $alertFeatures)) {
             // for feature from alert Rule to get the availablePlaceholder
-            $AlertRules = TableRegistry::get('Alert.AlertRules');
             $alertTypeDetails = $AlertRules->getAlertTypeDetailsByFeature($feature);
 
             $availablePlaceholder = $alertTypeDetails[$feature]['placeholder'];
@@ -183,6 +190,11 @@ class AlertLogsTable extends ControllerActionTable
         }
 
         return $message;
+    }
+
+    public function onGetFeature(Event $event, Entity $entity)
+    {
+        return Inflector::humanize(Inflector::underscore($entity['feature']));
     }
 
     public function onGetStatus(Event $event, Entity $entity)
