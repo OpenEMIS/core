@@ -31,6 +31,7 @@ class ExaminationsController extends AppController
     public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
     public function ExamResults() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationResults']); }
     public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']); }
+    public function ExaminationCentreSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsSubjects']); }
     // End
 
     // AngularJS
@@ -94,6 +95,10 @@ class ExaminationsController extends AppController
             'Centres' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Centres', 'view', 'queryString' => $queryString],
                 'text' => __('Overview')
+            ],
+            'ExaminationCentreSubjects' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExaminationCentreSubjects', 'queryString' => $queryString],
+                'text' => __('Subjects')
             ],
             'ExamCentreRooms' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreRooms', 'queryString' => $queryString],
