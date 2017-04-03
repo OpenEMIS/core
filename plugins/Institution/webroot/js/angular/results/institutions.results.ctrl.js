@@ -22,7 +22,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
             $scope.assessment = assessment;
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
-            
+
             return InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
         }, function(error) {
             // No Assessment
@@ -103,6 +103,18 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
                     params.data.total_mark = InstitutionsResultsSvc.calculateTotal(params.data);
                     // marked as dirty
                     params.data.is_dirty = true;
+
+                    var subject = $scope.subject;
+                    var gradingTypes = $scope.gradingTypes;
+                    var extra = {
+                        subject: subject,
+                        gradingTypes: gradingTypes
+                    };
+                    InstitutionsResultsSvc.saveSingleRecordData(params, extra)
+                    .then(function(response) {
+                    }, function(error) {
+                        console.log(error);
+                    });
                     // Important: to refresh the grid after data is modified
                     $scope.gridOptions.api.refreshView();
                 }
@@ -113,7 +125,7 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         };
     };
 
-    $scope.resetColumnDefs = function(action, subject, periods, gradingTypes) {
+    $scope.resetColumnDefs = function (action, subject, periods, gradingTypes) {
         var response = InstitutionsResultsSvc.getColumnDefs(action, subject, periods, gradingTypes, $scope.results, $scope.enrolledStatus);
 
         if (angular.isDefined(response.error)) {
@@ -191,38 +203,23 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
     $scope.onEditClick = function() {
         $scope.action = 'edit';
+        AlertSvc.info($scope, 'Student result will be save after the result has been entered.');
     };
 
     $scope.onBackClick = function() {
         $scope.action = 'view';
         $scope.onChangeSubject($scope.subject);
+        AlertSvc.reset($scope);
     };
 
-    $scope.onSaveClick = function() {
+    $scope.onReadonlyClick = function() {
         if ($scope.gridOptions != null) {
-            var resultTypes = InstitutionsResultsSvc.getResultTypes();
-
-            var assessmentId = $scope.gridOptions.context.assessment_id;
-            var educationSubjectId = $scope.gridOptions.context.education_subject_id;
-            var educationGradeId = $scope.gridOptions.context.education_grade_id;
-            var institutionId = $scope.gridOptions.context.institution_id;
-            var academicPeriodId = $scope.gridOptions.context.academic_period_id;
-            var classId = $scope.gridOptions.context.class_id;
-
-            UtilsSvc.isAppendSpinner(true, 'institution-result-table');
-            InstitutionsResultsSvc.saveRowData($scope.subject, $scope.gradingTypes, $scope.results, assessmentId, educationSubjectId, educationGradeId, institutionId, academicPeriodId)
-            .then(function(response) {
-            }, function(error) {
-                console.log(error);
-            })
-            .finally(function() {
-                $scope.action = 'view';
-                // reset results object
-                $scope.results = {};
-                UtilsSvc.isAppendSpinner(false, 'institution-result-table');
-            });
+            $scope.action = 'view';
+            // reset results object
+            $scope.results = {};
         } else {
             $scope.action = 'view';
         }
+        AlertSvc.reset($scope);
     };
 });
