@@ -89,6 +89,7 @@ trait OptionsTrait {
 	    			3 => __('Done')
 	    		]
         	],
+<<<<<<< HEAD
         	'WorkflowRules' => [
         		'features' => [
         			'StaffBehaviours' => [
@@ -99,6 +100,14 @@ trait OptionsTrait {
 					]
         		]
         	]
+=======
+        	'AlertLogs' => [
+        		'feature_grouping' => [
+        			'general' => __('General'),
+        			'workflow' => __('Workflow')
+        		]
+        	],
+>>>>>>> 2fb4a6ac245699c5d4bad246e11011932ab55b09
 		];
 
 		$index = explode('.', $code);

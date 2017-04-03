@@ -1,7 +1,9 @@
 <?php
 namespace Workflow\Model\Behavior;
 
+use ArrayObject;
 use Workflow\Model\Behavior\RuleBehavior;
+use Cake\Event\Event;
 
 class RuleStaffBehavioursBehavior extends RuleBehavior
 {
@@ -10,9 +12,11 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
         'threshold' => [
 			'behaviour_classification' => [
 				'type' => 'select',
-				'select' => false,
 				'after' => 'workflow_id',
-				'lookupModel' => 'Student.BehaviourClassifications'
+				'lookupModel' => 'Student.BehaviourClassifications',
+				'attr' => [
+                    'required' => true
+                ]
 			]
         ]
 	];
@@ -21,4 +25,16 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
 	{
 		parent::initialize($config);
 	}
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        $model = $this->_table;
+        if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->rule) {
+            if (isset($data['submit']) && $data['submit'] == 'save') {
+                $validator = $model->validator();
+                $validator->add('behaviour_classification', 'notBlank', ['rule' => 'notBlank']);
+				$validator->requirePresence('behaviour_classification');
+            }
+        }
+    }
 }
