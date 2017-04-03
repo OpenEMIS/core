@@ -40,8 +40,8 @@ $this->start('toolbar');
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
             <i class="fa kd-back"></i>
         </button>
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="onSaveClick()">
-            <i class="fa fa-save"></i>
+        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Read-only');?>" ng-show="action == 'edit'" ng-click="onReadonlyClick()">
+            <i class="fa fa-table"></i>
         </button>
         <!-- End -->
     <?php endif; ?>
