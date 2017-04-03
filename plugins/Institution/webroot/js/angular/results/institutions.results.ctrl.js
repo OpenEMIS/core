@@ -211,15 +211,4 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
         $scope.onChangeSubject($scope.subject);
         AlertSvc.reset($scope);
     };
-
-    $scope.onReadonlyClick = function() {
-        if ($scope.gridOptions != null) {
-            $scope.action = 'view';
-            // reset results object
-            $scope.results = {};
-        } else {
-            $scope.action = 'view';
-        }
-        AlertSvc.reset($scope);
-    };
 });
