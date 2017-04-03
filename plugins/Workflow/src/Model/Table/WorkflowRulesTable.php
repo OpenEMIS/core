@@ -49,13 +49,13 @@ class WorkflowRulesTable extends ControllerActionTable
         if (isset($data['submit']) && $data['submit'] == 'save') {
             if (isset($data['feature']) && !empty($data['feature'])) {
                 $ruleTypes = $this->getRuleTypes();
-                $thresholdConfig = $ruleTypes[$data['feature']]['threshold'];
-                if (!empty($thresholdConfig)) {
-                    $thresholdArray = [];
-                    foreach ($thresholdConfig as $key => $attr) {
-                        $thresholdArray[$key] = $data[$key];
+                $ruleConfig = $ruleTypes[$data['feature']]['rule'];
+                if (!empty($ruleConfig)) {
+                    $ruleArray = [];
+                    foreach ($ruleConfig as $key => $attr) {
+                        $ruleArray[$key] = $data[$key];
                     }
-                    $data['threshold'] = !empty($thresholdArray) ? json_encode($thresholdArray, JSON_UNESCAPED_UNICODE) : '';
+                    $data['rule'] = !empty($ruleArray) ? json_encode($ruleArray, JSON_UNESCAPED_UNICODE) : '';
                 }
             }
         }
@@ -90,7 +90,7 @@ class WorkflowRulesTable extends ControllerActionTable
             'order' => 1
         ];
 
-        $this->setFieldOrder(['workflow_id', 'threshold']);
+        $this->setFieldOrder(['feature', 'workflow_id', 'rule']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -102,6 +102,11 @@ class WorkflowRulesTable extends ControllerActionTable
         if ($extra->offsetExists('selectedWorkflow') && $extra['selectedWorkflow'] != '-1') {
             $query->where([$this->aliasField('workflow_id') => $extra['selectedWorkflow']]);
         }
+    }
+
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->extractRuleFromEntity($entity);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -116,34 +121,31 @@ class WorkflowRulesTable extends ControllerActionTable
 
     private function setupFields(Entity $entity, ArrayObject $extra)
     {
-        $fieldOrder = ['feature', 'workflow_id', 'threshold'];
+        $fieldOrder = ['feature', 'workflow_id', 'rule'];
 
         $this->field('feature', ['type' => 'select']);
         $this->field('workflow_id', ['type' => 'select']);
-        $this->field('threshold', ['type' => 'hidden']);
+        $this->field('rule', ['type' => 'hidden']);
 
         $event = $this->dispatchEvent('WorkflowRule.SetupFields', [$entity, $extra], $this);
         if ($event->isStopped()) { return $event->result; }
 
-        $this->setFieldOrder(['feature', 'workflow_id', 'threshold']);
+        $this->setFieldOrder(['feature', 'workflow_id', 'rule']);
     }
 
     public function onWorkflowRuleSetupFields(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->has('feature') && !empty($entity->feature)) {
             $ruleTypes = $this->getRuleTypes();
-            $thresholdConfig = $ruleTypes[$entity->feature]['threshold'];
+            $ruleConfig = $ruleTypes[$entity->feature]['rule'];
 
-            if (!empty($thresholdConfig)) {
+            if (!empty($ruleConfig)) {
                 if ($this->action == 'view' || $this->action == 'edit') {
-                    $thresholdArray = json_decode($entity->threshold, true);
-                    foreach ($thresholdArray as $key => $value) {
-                        $entity->{$key} = $value;
-                    }
+                    $this->extractRuleFromEntity($entity);
                 }
             }
 
-            foreach ($thresholdConfig as $key => $attr) {
+            foreach ($ruleConfig as $key => $attr) {
                 if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
                     $options = [];
                     if (array_key_exists('options', $attr) && !empty($attr['options'])) {
@@ -165,12 +167,12 @@ class WorkflowRulesTable extends ControllerActionTable
         return Inflector::humanize(Inflector::underscore($entity->feature));
     }
 
-    public function onGetThreshold(Event $event, Entity $entity)
+    public function onGetRule(Event $event, Entity $entity)
     {
         // temporary solution
         $origEntity = $this->get($entity->id);
         if ($origEntity->has('feature') && !empty($origEntity->feature)) {
-            $event = $this->dispatchEvent('WorkflowRule.onGet.'.$origEntity->feature.'.Threshold', [$origEntity], $this);
+            $event = $this->dispatchEvent('WorkflowRule.onGet.'.$origEntity->feature.'.Rule', [$origEntity], $this);
             if ($event->isStopped()) { return $event->result; }
             if (!empty($event->result)) {
                 return $event->result;
@@ -180,8 +182,7 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'view') {
-        } else if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add' || $action == 'edit') {
             $featureOptions = $this->getFeatureOptions();
 
             $attr['options'] = $featureOptions;
@@ -193,8 +194,7 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'view') {
-        } else if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add' || $action == 'edit') {
             $selectedFeature = $request->query('feature');
             $workflowOptions = $this->getWorkflowOptions($selectedFeature);
 
@@ -265,5 +265,13 @@ class WorkflowRulesTable extends ControllerActionTable
         }
 
         return $workflowOptions;
+    }
+
+    private function extractRuleFromEntity(Entity $entity)
+    {
+        $ruleArray = json_decode($entity->rule, true);
+        foreach ($ruleArray as $key => $value) {
+            $entity->{$key} = $value;
+        }
     }
 }

@@ -8,7 +8,7 @@ class RuleBehavior extends Behavior
 	protected $rule;
 	protected $_defaultConfig = [
 		'feature' => '',
-        'threshold' => []
+        'rule' => []
 	];
 
 	public function initialize(array $config)
