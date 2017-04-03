@@ -108,6 +108,11 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->extractThresholdValuesFromEntity($entity);
+    }
+
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
@@ -356,5 +361,13 @@ class AlertRulesTable extends ControllerActionTable
 
     public function addAlertRuleType($newAlertRuleType, $_config) {
         $this->alertTypeFeatures[$newAlertRuleType] = $_config;
+    }
+
+    public function extractThresholdValuesFromEntity(Entity $entity)
+    {
+        $thresholdArray = json_decode($entity->threshold, true);
+        foreach ($thresholdArray as $key => $value) {
+            $entity->{$key} = $value;
+        }
     }
 }
