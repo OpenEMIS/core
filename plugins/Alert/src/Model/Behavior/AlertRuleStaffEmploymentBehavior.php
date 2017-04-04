@@ -30,7 +30,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                     'type' => 'select',
                     'select' => false,
                     'after' => 'value',
-                    'options' => 'before_after_employment'
+                    'options' => 'StaffEmployment.before_after'
                 ],
                 'employment_type' => [
                     'type' => 'select',
