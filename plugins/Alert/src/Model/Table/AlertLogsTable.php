@@ -194,7 +194,7 @@ class AlertLogsTable extends ControllerActionTable
 
     public function onGetFeature(Event $event, Entity $entity)
     {
-        return Inflector::humanize(Inflector::underscore($entity['feature']));
+        return Inflector::humanize(Inflector::underscore($entity->feature));
     }
 
     public function onGetStatus(Event $event, Entity $entity)
