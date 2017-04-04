@@ -1,3 +1,10 @@
+-- POCOR-3851
+-- db_patches
+INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3851', NOW());
+
+ALTER TABLE `contact_types` ADD `validation_pattern` VARCHAR(100) NULL AFTER `name`;
+
+
 -- 3.9.9
 UPDATE config_items SET value = '3.9.9' WHERE code = 'db_version';
 UPDATE system_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
