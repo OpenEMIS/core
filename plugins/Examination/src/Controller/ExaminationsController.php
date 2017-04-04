@@ -30,7 +30,7 @@ class ExaminationsController extends AppController
     public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
     public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
     public function ExamResults() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationResults']); }
-    public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']); }
+    public function ExaminationCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
     public function ExaminationCentreSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsSubjects']); }
     // End
 
@@ -99,6 +99,10 @@ class ExaminationsController extends AppController
             'ExaminationCentreSubjects' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExaminationCentreSubjects', 'queryString' => $queryString],
                 'text' => __('Subjects')
+            ],
+            'ExaminationCentreStudents' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExaminationCentreStudents', 'queryString' => $queryString],
+                'text' => __('Students')
             ],
             'ExamCentreRooms' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreRooms', 'queryString' => $queryString],
