@@ -313,18 +313,19 @@ class InstitutionsTable extends AppTable
 			->select(['area_code' => 'Areas.code']);
 		switch ($filter) {
 			case self::NO_STUDENT:
-				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				$currentAcademicPeriodId = $AcademicPeriodTable->getCurrent();
+                $StudentsTable = TableRegistry::get('Institution.Students');
+				$AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$currentAcademicPeriodId = $AcademicPeriodsTable->getCurrent();
 
 				$query
 					->leftJoin(
-						['Students' => 'institution_students'],
-						[$this->aliasField('id').' = Students.institution_id']
+						[$StudentsTable->alias() => $StudentsTable->table()],
+						[
+							$StudentsTable->aliasField('institution_id') . ' = '. $this->aliasField('id'),
+                            $StudentsTable->aliasField('academic_period_id') => $currentAcademicPeriodId
+						]
 					)
-					// ->select(['student_count' => $query->func()->count('Students.id')])
-					->select([
-						'student_count' => '(SELECT Count(Students.id) FROM institution_students Students WHERE Students.institution_id = Institutions.id AND Students.academic_period_id = ' . $currentAcademicPeriodId . ')'
-					])
+					->select(['student_count' => $query->func()->count('Students.id')])
 					->group([$this->aliasField('id')])
 					->having(['student_count' => 0]);
 				break;
