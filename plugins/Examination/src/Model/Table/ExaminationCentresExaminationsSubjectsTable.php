@@ -2,10 +2,12 @@
 namespace Examination\Model\Table;
 
 use ArrayObject;
+use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Query;
-use Cake\Validation\Validator;
 use Cake\ORM\Entity;
+use Cake\Network\Request;
+use Cake\Validation\Validator;
 use App\Model\Table\ControllerActionTable;
 
 class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
@@ -39,6 +41,24 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('view', false);
         $this->toggle('remove', false);
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $queryString = $request->query['queryString'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres'];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $queryString];
+
+        $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+        $Navigation->substituteCrumb('Examination Centre Subjects', 'Examination Centre', $overviewUrl);
+        $Navigation->addCrumb('Subjects');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
