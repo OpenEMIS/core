@@ -237,9 +237,10 @@ class InstitutionTextbooksTable extends ControllerActionTable
         $this->field('comment', ['visible' => false]);
         $this->field('education_subject_id', ['visible' => false]);
         $this->field('education_grade_id', ['visible' => false]);
+        $this->field('student_status');
 
         $this->setFieldOrder([
-            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id'
+            'academic_period_id', 'code', 'textbook_id', 'textbook_condition_id', 'textbook_status_id', 'student_id', 'student_status'
         ]);
     }
 
@@ -278,7 +279,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $query->where([$conditions]);
         }
     }
-
+    
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
@@ -517,6 +518,26 @@ class InstitutionTextbooksTable extends ControllerActionTable
     public function onGetTextbookId(Event $event, Entity $entity)
     {
         return $entity->textbook->code_title;
+    }
+
+    public function onGetStudentStatus(Event $event, Entity $entity)
+    {
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $query = $InstitutionStudents
+                ->find()
+                ->matching('StudentStatuses')
+                ->select([
+                    'status_name' => 'StudentStatuses.name'
+                ])
+                ->where([
+                    $InstitutionStudents->aliasField('institution_id') => $entity->institution->id,
+                    $InstitutionStudents->aliasField('student_id') => $entity->user->id,
+                    $InstitutionStudents->aliasField('education_grade_id') => $entity->education_grade->id,
+                    $InstitutionStudents->aliasField('academic_period_id') => $entity->academic_period->id
+                ])
+                ->first();
+
+        return __($query->status_name);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -1135,6 +1156,8 @@ class InstitutionTextbooksTable extends ControllerActionTable
             'select' => true,
             'entity' => $entity
         ]);
+
+        $this->field('student_status');
     }
 
     public function getAcademicPeriodOptions($querystringPeriod)
