@@ -236,4 +236,53 @@ class StaffLeaveTable extends ControllerActionTable
 
 		return $query;
 	}
+
+	public function getModelAlertData($threshold)
+	{
+		$thresholdArray = json_decode($threshold, true);
+
+		$operandConditions = [
+			1 => ('DATEDIFF(' . $this->aliasField('date_to') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
+			2 => ('DATEDIFF(NOW(), ' . $this->aliasField('date_to') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
+		];
+
+		// will do the comparison with threshold when retrieving the absence data
+		$licenseData = $this->find()
+			->select([
+				'StaffLeaveTypes.name',
+				'date_from',
+				'date_to',
+				'Institutions.id',
+				'Institutions.name',
+				'Institutions.code',
+				'Institutions.address',
+	            'Institutions.postal_code',
+	            'Institutions.contact_person',
+	            'Institutions.telephone',
+	            'Institutions.fax',
+	            'Institutions.email',
+	            'Institutions.website',
+	            'Users.id',
+	            'Users.openemis_no',
+	            'Users.first_name',
+	            'Users.middle_name',
+	            'Users.third_name',
+	            'Users.last_name',
+	            'Users.preferred_name',
+	            'Users.email',
+	            'Users.address',
+	            'Users.postal_code',
+	            'Users.date_of_birth'
+			])
+			->contain(['Statuses', 'Users', 'Institutions', 'StaffLeaveTypes', 'Assignees'])
+			->where([
+				$this->aliasField('staff_leave_type_id') => $thresholdArray['staff_leave_type'],
+				$this->aliasField('date_to') . ' IS NOT NULL',
+				$operandConditions[$thresholdArray['operand']]
+			])
+			->hydrate(false)
+			;
+
+		return $licenseData->toArray();
+	}
 }
