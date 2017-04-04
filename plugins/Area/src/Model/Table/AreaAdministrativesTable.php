@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AreaAdministrativesTable extends ControllerActionTable
 {
-    private $_fieldOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
+    private $fieldOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
 
     public function initialize(array $config)
     {
@@ -37,7 +37,6 @@ class AreaAdministrativesTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
-        pr($this->find('areaList')->toArray());
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -66,7 +65,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->fieldOrder);
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
@@ -79,7 +78,6 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
-        $table = $this;
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
@@ -101,10 +99,17 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     private function unsetEmptyArr(&$array, &$authorisedAreaIds)
     {
-        foreach ($array as $key => &$value) {
+        foreach ($array as &$value) {
+            if (isset($value['id']) && !in_array($value['id'], $authorisedAreaIds)) {
+                $value['disabled'] = true;
+            }
             if (is_array($value) && empty($value)) {
-                unset($array[$key]);
+                unset($value);
             } elseif (is_array($value)) {
+                $parentIds = array_unique(array_column($value, 'parent_id'));
+                if (array_intersect($authorisedAreaIds, $parentIds)) {
+                    $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
+                }
                 $this->unsetEmptyArr($value, $authorisedAreaIds);
             }
         }
@@ -173,7 +178,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
-        $this->_fieldOrder = ['area_administrative_level_id', 'code', 'name'];
+        $this->fieldOrder = ['area_administrative_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
         $parentId = $this->request->query('parent');
@@ -200,7 +205,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 'attr' => ['value' => $parentPath]
             ]);
 
-            array_unshift($this->_fieldOrder, "parent");
+            array_unshift($this->fieldOrder, "parent");
         }
     }
 
@@ -219,8 +224,8 @@ class AreaAdministrativesTable extends ControllerActionTable
     {
         if ($action=='add') {
             $attr['visible'] = true;
-            $areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
-            if ($areaAdministrativeLevelId == 1) {
+            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
             } else {
@@ -230,8 +235,8 @@ class AreaAdministrativesTable extends ControllerActionTable
             }
         } elseif ($action == 'edit') {
             $attr['visible'] = true;
-            $areaAdministrativeLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
-            if ($areaAdministrativeLevelId == 1) {
+            $areaAdminLevelId = $request->data[$this->alias()]['area_administrative_level_id'];
+            if ($areaAdminLevelId == 1) {
                 $attr['options'] = $this->getSelectOptions('general.yesno');
                 return $attr;
             } else {

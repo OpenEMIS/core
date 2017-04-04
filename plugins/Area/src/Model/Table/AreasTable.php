@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AreasTable extends ControllerActionTable
 {
-    private $_fieldOrder = ['visible', 'code', 'name', 'area_level_id'];
+    private $fieldOrder = ['visible', 'code', 'name', 'area_level_id'];
 
     public function initialize(array $config)
     {
@@ -93,7 +93,6 @@ class AreasTable extends ControllerActionTable
             return $this->controller->redirect($url);
         } else {
             // API valid, run the process
-            $model = $this;
             $extra = [];
 
             $areasTableArray = $this->onGetAreasTableArrays();
@@ -164,7 +163,7 @@ class AreasTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder($this->_fieldOrder);
+        $this->setFieldOrder($this->fieldOrder);
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
@@ -191,7 +190,7 @@ class AreasTable extends ControllerActionTable
             ->toArray()
             ;
 
-        foreach ($results as $key => $obj) {
+        foreach ($results as $obj) {
             $areasTableArray[$obj->id] = [
                 'id' => $obj->id,
                 'parent_id' => $obj->parent_id,
@@ -212,7 +211,7 @@ class AreasTable extends ControllerActionTable
 
         $jsonArray = [];
         $orderArray = [];
-        foreach ($jsonAreaArray as $key => $obj) {
+        foreach ($jsonAreaArray as $obj) {
             // Null is the root parent id, as per cake update
             if ($obj['pnid'] === '-1') {
                 $obj['pnid'] = null;
@@ -236,7 +235,7 @@ class AreasTable extends ControllerActionTable
     {
         $jsonArray = $this->onGetJsonArrays($url);
         $newAreaLists = [];
-        foreach ($jsonArray as $key => $obj) {
+        foreach ($jsonArray as $obj) {
             $newAreaLists[$obj['id']] = $obj['name'];
         }
         return $newAreaLists;
@@ -319,7 +318,6 @@ class AreasTable extends ControllerActionTable
 
     public function findAreaList(Query $query, array $options)
     {
-        $table = $this;
         return $query
             ->find('threaded', [
                 'parentField' => 'parent_id',
@@ -341,10 +339,17 @@ class AreasTable extends ControllerActionTable
 
     private function unsetEmptyArr(&$array, &$authorisedAreaIds)
     {
-        foreach ($array as $key => &$value) {
+        foreach ($array as &$value) {
+            if (isset($value['id']) && !in_array($value['id'], $authorisedAreaIds)) {
+                $value['disabled'] = true;
+            }
             if (is_array($value) && empty($value)) {
-                unset($array[$key]);
+                unset($value);
             } elseif (is_array($value)) {
+                $parentIds = array_unique(array_column($value, 'parent_id'));
+                if (array_intersect($authorisedAreaIds, $parentIds)) {
+                    $authorisedAreaIds = array_unique(array_merge($authorisedAreaIds, array_column($value, 'id')));
+                }
                 $this->unsetEmptyArr($value, $authorisedAreaIds);
             }
         }
@@ -353,7 +358,7 @@ class AreasTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
-        $this->_fieldOrder = ['area_level_id', 'code', 'name'];
+        $this->fieldOrder = ['area_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
         $parentId = $this->request->query('parent');
@@ -379,7 +384,7 @@ class AreasTable extends ControllerActionTable
                 'attr' => ['value' => $parentPath]
             ]);
 
-            //array_unshift($this->_fieldOrder, "parent");
+            //array_unshift($this->fieldOrder, "parent");
         }
     }
 
@@ -550,9 +555,9 @@ class AreasTable extends ControllerActionTable
                 // will check if the json array contain the expected keys.
                 // if jsonArray have the key it will be removed.
                 // if $tempkeys not empty means the json array not in correct format.
-                foreach ($areas as $count => $area) {
+                foreach ($areas as $area) {
                     $tempKeys = $expectedKeys;
-                    foreach ($area as $key => $value) {
+                    foreach (array_keys($area) as $key) {
                         if (in_array($key, $tempKeys)) {
                             $tempKeys = array_diff($tempKeys, [$key]);
                         }
