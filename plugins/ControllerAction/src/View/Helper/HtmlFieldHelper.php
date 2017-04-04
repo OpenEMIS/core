@@ -741,15 +741,6 @@ class HtmlFieldHelper extends Helper {
 
 	public function chosenSelect($action, Entity $data, $attr, $options=[]) {
 		$value = '';
-		$_options = [
-			'class' => 'chosen-select',
-			'multiple' => 'true',
-			'type' => 'select'
-		];
-		if (I18n::locale() == 'ar') {
-			$_options['class'] = 'chosen-select chosen-rtl';
-		}
-
 		if ($action == 'index' || $action == 'view') {
 			$value = $data->$attr['field'];
 			$chosenSelectList = [];
@@ -764,39 +755,51 @@ class HtmlFieldHelper extends Helper {
 				$value = isset($attr['valueWhenEmpty']) ? $attr['valueWhenEmpty'] : '';
 			}
 		} else if ($action == 'edit') {
-			$_options['options'] = isset($attr['options']) ? $attr['options'] : [];
-			$_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
-			$options = array_merge($_options, $options);
-
-			$this->includes['chosen']['include'] = true;
-
-			$fieldName = $attr['model'] . '.' . $attr['field'];
-			if (array_key_exists('fieldName', $attr)) {
-				$fieldName = $attr['fieldName'];
-			} else {
-				if ($options['multiple']) {
-					$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
-				} else {
-					$fieldName = $attr['model'] . '.' . $attr['field'];
-				}
-			}
-
-			if ($options['multiple']) {
-				//logic when there is no option on multiple chosen select which unselectable
-				if (isset($options['empty'])) {
-					unset($options['empty']);
-
-					$options['options'][] = [
-						'text' => __('No options'),
-						'value' => '',
-						'disabled' => 'disabled'
-					];
-				}
-			}
-
-			$value = $this->Form->input($fieldName, $options);
+			$value = $this->chosenSelectInput($attr, $options);
 		}
 		return $value;
+	}
+
+	public function chosenSelectInput($attr, $options = [])
+	{
+		$_options = [
+			'class' => 'chosen-select',
+			'multiple' => 'true',
+			'type' => 'select'
+		];
+		if (I18n::locale() == 'ar') {
+			$_options['class'] = 'chosen-select chosen-rtl';
+		}
+		$_options['options'] = isset($attr['options']) ? $attr['options'] : [];
+		$_options['data-placeholder'] = isset($attr['placeholder']) ? $attr['placeholder'] : '';
+		$options = array_merge($_options, $options);
+
+		$this->includes['chosen']['include'] = true;
+
+		$fieldName = $attr['model'] . '.' . $attr['field'];
+		if (array_key_exists('fieldName', $attr)) {
+			$fieldName = $attr['fieldName'];
+		} else {
+			if ($options['multiple']) {
+				$fieldName = $attr['model'] . '.' . $attr['field'] . '._ids';
+			} else {
+				$fieldName = $attr['model'] . '.' . $attr['field'];
+			}
+		}
+
+		if ($options['multiple']) {
+			//logic when there is no option on multiple chosen select which unselectable
+			if (isset($options['empty'])) {
+				unset($options['empty']);
+
+				$options['options'][] = [
+					'text' => __('No options'),
+					'value' => '',
+					'disabled' => 'disabled'
+				];
+			}
+		}
+		return $this->Form->input($fieldName, $options);
 	}
 
 	public function binary($action, Entity $data, $attr, $options=[]) {
