@@ -195,4 +195,23 @@ class StaffBehavioursTable extends ControllerActionTable {
 		}
 		return $attr;
 	}
+
+	public function getWorkflowRuleData($rule)
+	{
+		$data = [];
+
+		$ruleArray = json_decode($rule, true);
+		if (array_key_exists('behaviour_classification', $ruleArray)) {
+			$behaviourClassificationId = $ruleArray['behaviour_classification'];
+
+			$data = $this
+				->find()
+				->where([
+					$this->aliasField('behaviour_classification_id') => $behaviourClassificationId
+				])
+				->toArray();
+		}
+
+		return $data;
+	}
 }

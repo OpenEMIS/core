@@ -9,6 +9,7 @@ use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Utility\Inflector;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
@@ -32,6 +33,7 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $eventMap = [
+            'ControllerAction.Model.process' => 'process',
             'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields'
         ];
 
@@ -42,6 +44,57 @@ class WorkflowRulesTable extends ControllerActionTable
             $events[$event] = $method;
         }
         return $events;
+    }
+
+    public function process(Event $mainEvent, ArrayObject $extra)
+    {
+        $extra['redirect'] = $this->url('index', 'QUERY');
+
+        $ids = empty($this->paramsPass(0)) ? [] : $this->paramsDecode($this->paramsPass(0));
+        $sessionKey = $this->registryAlias() . '.primaryKey';
+
+        if (empty($ids)) {
+            if ($this->Session->check($sessionKey)) {
+                $ids = $this->Session->read($sessionKey);
+            } else if (!empty($this->ControllerAction->getQueryString())) {
+                // Query string logic not implemented yet, will require to check if the query string contains the primary key
+                $primaryKey = $this->primaryKey();
+                $ids = $this->ControllerAction->getQueryString($primaryKey);
+            }
+        }
+
+        $idKeys = $this->getIdKeys($this, $ids);
+
+        $entity = false;
+
+        if ($this->exists($idKeys)) {
+            $query = $this->find()->where($idKeys);
+            $entity = $query->first();
+
+            $shellName = 'WorkflowRule'.$entity->feature;
+            $this->triggerWorkflowRuleShell($shellName, $entity->id);
+        }
+
+        $mainEvent->stopPropagation();
+        return $this->controller->redirect($extra['redirect']);
+    }
+
+    public function triggerWorkflowRuleShell($shellName, $recordId)
+    {
+        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . ' ' . $recordId;
+        $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+
+            $this->Alert->success($this->aliasField('process.start.success'));
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when process workflow rule : '. $ex);
+
+            $this->Alert->success($this->aliasField('process.start.failed'));
+        }
     }
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
@@ -178,6 +231,18 @@ class WorkflowRulesTable extends ControllerActionTable
                 return $event->result;
             }
         }
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $processButton = $buttons['view'];
+        $processButton['url'][0] = 'process';
+        $processButton['label'] = '<i class="fa fa-circle-o-notch"></i>' . __('Process');
+
+        $buttons['process'] = $processButton;
+
+        return $buttons;
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
