@@ -14,7 +14,7 @@ use App\Model\Table\ControllerActionTable;
 
 class AreaAdministrativesTable extends ControllerActionTable
 {
-    private $fieldOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
+    private $fieldsOrder = ['visible', 'code', 'name', 'area_administrative_level_id'];
 
     public function initialize(array $config)
     {
@@ -65,7 +65,7 @@ class AreaAdministrativesTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder($this->fieldOrder);
+        $this->setfieldOrder($this->fieldsOrder);
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
@@ -178,7 +178,7 @@ class AreaAdministrativesTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
-        $this->fieldOrder = ['area_administrative_level_id', 'code', 'name'];
+        $this->fieldsOrder = ['area_administrative_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
         $parentId = $this->request->query('parent');
@@ -205,7 +205,7 @@ class AreaAdministrativesTable extends ControllerActionTable
                 'attr' => ['value' => $parentPath]
             ]);
 
-            array_unshift($this->fieldOrder, "parent");
+            array_unshift($this->fieldsOrder, "parent");
         }
     }
 
