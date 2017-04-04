@@ -76,24 +76,9 @@ class GoogleAuthComponent extends Component {
 
     public function startup(Event $event) {
         if (!$this->controller->Auth->user() && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
-            $client = $this->client;
-            $authUrl = $client->createAuthUrl();
-
-            if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || $_SERVER['SERVER_PORT'] == 443) {
-                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            } else {
-                $redirect = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
-            }
-            if (isset(get_headers($authUrl, 1)['Set-Cookie'])) {
-                $cookieCounter = count(get_headers($authUrl, 1)['Set-Cookie']);
-                if ((empty($this->hostedDomain) && $cookieCounter != 3) || $cookieCounter < 2) {
-                    $this->session->write('Auth.fallback', true);
-                } else {
-                    $this->session->delete('Auth.fallback');
-                }
-            }
             $action = $this->request->params['action'];
             if ($action == $this->config('loginAction') && !$this->session->read('Google.remoteFail') && !$this->session->read('Auth.fallback')) {
+                $this->session->delete('Google.accessToken');
                 $this->idpLogin();
             }
         }
@@ -196,6 +181,7 @@ class GoogleAuthComponent extends Component {
         if ($this->request->is('get')) {
             if ($this->request->query('submit') == 'retry') {
                 $this->session->delete('Google.remoteFail');
+                $this->session->delete('Auth.fallback');
                 $this->session->write('Google.reLogin', true);
                 return $this->controller->redirect($this->redirectUri);
             }

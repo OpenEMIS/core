@@ -9,3 +9,9 @@ CREATE TABLE `single_logout` (
   INDEX `session_id` (`session_id`)
 );
 
+-- security_user_sessions
+CREATE TABLE `security_user_sessions` (
+  `id` VARCHAR(40) NOT NULL default '',
+  `username` VARCHAR(50) NOT NULL default '',
+  PRIMARY KEY (`id`, `username`)
+);
