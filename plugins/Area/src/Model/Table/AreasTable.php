@@ -11,10 +11,11 @@ use Cake\Event\Event;
 
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
+use Cake\Utility\Hash;
 
 class AreasTable extends ControllerActionTable
 {
-    private $fieldOrder = ['visible', 'code', 'name', 'area_level_id'];
+    private $fieldsOrder = ['visible', 'code', 'name', 'area_level_id'];
 
     public function initialize(array $config)
     {
@@ -43,6 +44,8 @@ class AreasTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
+        $authorisedAreaIds = [1];
+        $this->find('areaList', ['authorisedAreaIds' => $authorisedAreaIds])->toArray();
     }
 
     public function implementedEvents()
@@ -163,7 +166,7 @@ class AreasTable extends ControllerActionTable
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder($this->fieldOrder);
+        $this->setfieldOrder($this->fieldsOrder);
     }
 
     public function onGetConvertOptions(Event $event, Entity $entity, Query $query)
@@ -358,7 +361,7 @@ class AreasTable extends ControllerActionTable
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         //Setup fields
-        $this->fieldOrder = ['area_level_id', 'code', 'name'];
+        $this->fieldsOrder = ['area_level_id', 'code', 'name'];
 
         $this->fields['parent_id']['type'] = 'hidden';
         $parentId = $this->request->query('parent');
@@ -384,7 +387,7 @@ class AreasTable extends ControllerActionTable
                 'attr' => ['value' => $parentPath]
             ]);
 
-            //array_unshift($this->fieldOrder, "parent");
+            //array_unshift($this->fieldsOrder, "parent");
         }
     }
 
