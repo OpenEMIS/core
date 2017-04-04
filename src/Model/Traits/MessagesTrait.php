@@ -1495,6 +1495,12 @@ trait MessagesTrait {
             'Examinations' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
+                'registration_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'registration_end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
             'ExaminationCentres' => [
@@ -1527,6 +1533,9 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
                 ],
+                'examination_date' => [
+                    'ruleCompareDateReverse' => 'Date should not be earlier than Registration End Date'
+                ]
             ],
             'ExaminationGradingTypes' => [
                 'code' => [
