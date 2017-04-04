@@ -102,25 +102,35 @@ trait OptionsTrait {
 	    		]
         	],
         	'AlertRules' => [
-        		'before_after_expiry' => [
-	    			1 => __('Days before expiry date'),
-	    			2 => __('Days after expiry date')
-	    		],
-                'before_after_age' => [
-                    // 1 => __('Age before retirement value'),
-                    2 => __('Age after retirement value')
+                'LicenseValidity' => [
+                    'before_after' => [
+                        1 => __('Days before expiry date'),
+                        2 => __('Days after expiry date')
+                    ]
                 ],
-                'before_after_employment' => [
-                    1 => __('Days before employment date'),
-                    2 => __('Days after employment date')
+                'RetirementWarning' => [
+                    'before_after' => [
+                        // 1 => __('Age before retirement value'),
+                        2 => __('Age after retirement value')
+                    ]
                 ],
-                'before_after_leave' => [
-                    1 => __('Days before end of leave date'),
-                    2 => __('Days after end of leave date')
+                'StaffEmployment' => [
+                    'before_after' => [
+                        1 => __('Days before employment date'),
+                        2 => __('Days after employment date')
+                    ]
                 ],
-                'before_after_staff_type' => [
-                    1 => __('Days before staff end date'),
-                    2 => __('Days after staff end date')
+                'StaffLeave' => [
+                    'before_after' => [
+                        1 => __('Days before end of leave date'),
+                        2 => __('Days after end of leave date')
+                    ]
+                ],
+                'StaffType' => [
+                    'before_after' => [
+                        1 => __('Days before staff end date'),
+                        2 => __('Days after staff end date')
+                    ]
                 ]
         	]
 		];

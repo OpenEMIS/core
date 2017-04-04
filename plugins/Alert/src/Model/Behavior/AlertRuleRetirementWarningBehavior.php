@@ -30,7 +30,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
                 'type' => 'select',
                 'select' => false,
                 'after' => 'value',
-                'options' => 'before_after_age'
+                'options' => 'RetirementWarning.before_after'
             ]
         ],
         'placeholder' => [

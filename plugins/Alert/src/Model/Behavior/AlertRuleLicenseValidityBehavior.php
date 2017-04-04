@@ -29,7 +29,7 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
                 'type' => 'select',
                 'select' => false,
                 'after' => 'value',
-                'options' => 'before_after_expiry'
+                'options' => 'LicenseValidity.before_after'
             ],
             'license_type' => [
                 'type' => 'select',

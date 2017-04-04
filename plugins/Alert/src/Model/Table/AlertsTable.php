@@ -137,7 +137,7 @@ class AlertsTable extends ControllerActionTable
 
     public function onGetName(Event $event, Entity $entity)
     {
-        return Inflector::humanize(Inflector::underscore($entity['name']));
+        return Inflector::humanize(Inflector::underscore($entity->name));
     }
 
     public function onGetStatus(Event $event, Entity $entity)
