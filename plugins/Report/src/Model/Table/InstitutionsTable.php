@@ -12,7 +12,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 
-class InstitutionsTable extends AppTable  
+class InstitutionsTable extends AppTable
 {
     use OptionsTrait;
     private $classificationOptions = [];
@@ -40,7 +40,7 @@ class InstitutionsTable extends AppTable
 		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
         $this->belongsTo('NetworkConnectivities', [
-            'className' => 'Institution.NetworkConnectivities', 
+            'className' => 'Institution.NetworkConnectivities',
             'foreignKey' => 'institution_network_connectivity_id'
         ]);
 
@@ -313,12 +313,18 @@ class InstitutionsTable extends AppTable
 			->select(['area_code' => 'Areas.code']);
 		switch ($filter) {
 			case self::NO_STUDENT:
+				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+				$currentAcademicPeriodId = $AcademicPeriodTable->getCurrent();
+
 				$query
 					->leftJoin(
 						['Students' => 'institution_students'],
 						[$this->aliasField('id').' = Students.institution_id']
 					)
-					->select(['student_count' => $query->func()->count('Students.id')])
+					// ->select(['student_count' => $query->func()->count('Students.id')])
+					->select([
+						'student_count' => '(SELECT Count(Students.id) FROM institution_students Students WHERE Students.institution_id = Institutions.id AND Students.academic_period_id = ' . $currentAcademicPeriodId . ')'
+					])
 					->group([$this->aliasField('id')])
 					->having(['student_count' => 0]);
 				break;
