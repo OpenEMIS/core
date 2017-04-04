@@ -1100,6 +1100,8 @@ class StaffTable extends ControllerActionTable {
 		foreach ($genderOptions as $key => $value) {
 			$dataSet[$value] = array('name' => __($value), 'data' => []);
 		}
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
 		foreach ($dataSet as $key => $obj) {
 			foreach ($positionTypes as $id => $name) {
 				$dataSet[$key]['data'][$id] = 0;
@@ -1116,7 +1118,9 @@ class StaffTable extends ControllerActionTable {
 						$dataSet[$dkey]['data'][$positionType] = 0;
 					}
 				}
+
 				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+                $dataSet['Total']['data'][$positionType] += $StaffTotal;
 			}
 		}
 
@@ -1181,6 +1185,8 @@ class StaffTable extends ControllerActionTable {
 		foreach ($genderOptions as $key => $value) {
 			$dataSet[$value] = array('name' => __($value), 'data' => []);
 		}
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
 		foreach ($dataSet as $key => $obj) {
 			foreach ($positionTypes as $id => $name) {
 				$dataSet[$key]['data'][$id] = 0;
@@ -1198,6 +1204,7 @@ class StaffTable extends ControllerActionTable {
 					}
 				}
 				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+                $dataSet['Total']['data'][$positionType] += $StaffTotal;
 			}
 		}
 
