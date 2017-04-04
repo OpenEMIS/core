@@ -1062,7 +1062,7 @@ class NavigationComponent extends Component
 						'title' => 'Centres',
 						'parent' => 'Administration.Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.ExaminationCentres', 'Examinations.Centres', 'Examinations.ExaminationCentreSubjects', 'Examinations.ExamCentreStudents', 'Examinations.LinkedInstitutionAddStudents', 'Examinations.ExamCentreRooms', 'Examinations.ImportExaminationCentreRooms']
+						'selected' => ['Examinations.ExaminationCentres', 'Examinations.Centres', 'Examinations.ExaminationCentreSubjects', 'Examinations.ExaminationCentreStudents', 'Examinations.LinkedInstitutionAddStudents', 'Examinations.ExamCentreRooms', 'Examinations.ImportExaminationCentreRooms']
 					],
 					'Examinations.RegisteredStudents' => [
 						'title' => 'Students',
