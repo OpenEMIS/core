@@ -34,9 +34,7 @@ class InstitutionsController extends AppController
 
             'Staff'             => ['className' => 'Institution.Staff'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
-            'StaffAttendances'  => ['className' => 'Institution.StaffAttendances', 'actions' => ['index']],
 
-            'StaffBehaviours'   => ['className' => 'Institution.StaffBehaviours'],
             'StudentAccount'    => ['className' => 'Institution.StudentAccount', 'actions' => ['view', 'edit']],
             'StudentAbsences'   => ['className' => 'Institution.InstitutionStudentAbsences'],
             'StudentAttendances'=> ['className' => 'Institution.StudentAttendances', 'actions' => ['index']],
@@ -107,12 +105,13 @@ class InstitutionsController extends AppController
     public function StaffAppraisals()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']); }
     public function Programmes()                    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']); }
     public function StaffAbsences()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
+    public function StaffBehaviours()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffBehaviours']); }
     public function Textbooks()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
     public function StudentCompetencies()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']); }
     public function StudentCompetencyResults()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']); }
     public function StudentSurveys()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
     public function StudentTextbooks()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
-    // public function StaffAttendances()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
+    public function StaffAttendances()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     public function Indexes()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']); }
     public function StudentIndexes()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
     public function InstitutionStudentIndexes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }

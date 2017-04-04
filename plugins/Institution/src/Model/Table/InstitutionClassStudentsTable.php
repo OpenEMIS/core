@@ -3,6 +3,7 @@ namespace Institution\Model\Table;
 
 use ArrayObject;
 use Cake\Event\Event;
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
@@ -52,6 +53,10 @@ class InstitutionClassStudentsTable extends AppTable {
             'excludes' => ['id'],
             'pages' => ['index'],
             'orientation' => 'landscape'
+        ]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index', 'view']
         ]);
     }
 
@@ -559,6 +564,74 @@ class InstitutionClassStudentsTable extends AppTable {
         foreach ($deleteSubjectStudent as $key => $value) {
             $InstitutionSubjectStudentsTable->delete($value);
         }
+    }
+
+    public function findAbsencesByDate(Query $query, array $options) {
+        $classId = $options['institution_class_id'];
+        $absenceDate = $options['absence_date'];
+
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+        $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
+        $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
+        $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
+        $currentStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+        $query
+            ->select([
+                $StudentAbsences->aliasField('id'),
+                $StudentAbsences->aliasField('start_date'),
+                $StudentAbsences->aliasField('end_date'),
+                $StudentAbsences->aliasField('full_day'),
+                $StudentAbsences->aliasField('start_time'),
+                $StudentAbsences->aliasField('end_time'),
+                $StudentAbsences->aliasField('comment'),
+                $StudentAbsences->aliasField('absence_type_id'),
+                $StudentAbsences->aliasField('student_absence_reason_id'),
+                $AbsenceTypes->aliasField('code'),
+                $AbsenceTypes->aliasField('name'),
+                $StudentAbsenceReasons->aliasField('name'),
+                $StudentAbsenceReasons->aliasField('international_code'),
+                $StudentAbsenceReasons->aliasField('national_code')
+            ])
+            ->innerJoin(
+                [$Students->alias() => $Students->table()],
+                [
+                    $Students->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $Students->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $Students->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $Students->aliasField('student_status_id') => $currentStatus,
+                    $Students->aliasField('start_date <=') => $absenceDate,
+                    $Students->aliasField('end_date >=') => $absenceDate
+                ]
+            )
+            ->leftJoin(
+                [$StudentAbsences->alias() => $StudentAbsences->table()],
+                [
+                    $StudentAbsences->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $StudentAbsences->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $StudentAbsences->aliasField('start_date <=') => $absenceDate,
+                    $StudentAbsences->aliasField('end_date >=') => $absenceDate
+                ]
+            )
+            ->leftJoin(
+                [$AbsenceTypes->alias() => $AbsenceTypes->table()],
+                [
+                    $AbsenceTypes->aliasField('id = ') . $StudentAbsences->aliasField('absence_type_id')
+                ]
+            )
+            ->leftJoin(
+                [$StudentAbsenceReasons->alias() => $StudentAbsenceReasons->table()],
+                [
+                    $StudentAbsenceReasons->aliasField('id = ') . $StudentAbsences->aliasField('student_absence_reason_id')
+                ]
+            )
+            ->where([
+                $this->aliasField('institution_class_id') => $classId
+            ])
+            ->autoFields(true);
+
+        return $query;
     }
 
     public function getStudentsList($academicPeriodId, $institutionId, $classId)

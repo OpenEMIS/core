@@ -15,7 +15,6 @@ class DirectoriesController extends AppController {
 		parent::initialize();
 		$this->ControllerAction->models = [
 			// Users
-			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 
@@ -89,6 +88,7 @@ class DirectoriesController extends AppController {
 	public function StudentTextbooks() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
+	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
 	// End
 
 	// AngularJS
@@ -273,7 +273,7 @@ class DirectoriesController extends AppController {
 			} else if ($model->alias() != 'Directories') {
 				$this->Alert->warning('general.notExists');
 				$event->stopPropagation();
-				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'index']);
+				return $this->redirect(['plugin' => 'Directory', 'controller' => 'Directories', 'action' => 'Directories', 'index']);
 			}
 		}
 	}
