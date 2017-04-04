@@ -28,7 +28,7 @@ class EmploymentsTable extends ControllerActionTable {
 		// setting this up to be overridden in viewAfterAction(), this code is required
 		$this->behaviors()->get('ControllerAction')->config(
 			'actions.download.show',
-			true 
+			true
 		);
 	}
 
@@ -40,10 +40,10 @@ class EmploymentsTable extends ControllerActionTable {
             ->allowEmpty('file_content');
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) 
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
 		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        
+
         $downloadAccess = $this->AccessControl->check([$this->controller->name, 'Attachments', 'download']);
 
         if ($downloadAccess) {
@@ -94,4 +94,42 @@ class EmploymentsTable extends ControllerActionTable {
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 	}
+
+    public function getModelAlertData($threshold)
+    {
+        $thresholdArray = json_decode($threshold, true);
+
+        $operandConditions = [
+            1 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ') <= ' . $thresholdArray['value']), // before
+            2 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ') >= ' . $thresholdArray['value']), // after
+        ];
+
+        // will do the comparison with threshold when retrieving the absence data
+        $licenseData = $this->find()
+            ->select([
+                'EmploymentTypes.name',
+                'employment_date',
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name',
+                'Users.email',
+                'Users.address',
+                'Users.postal_code',
+                'Users.date_of_birth'
+            ])
+            ->contain(['Users', 'EmploymentTypes'])
+            ->where([
+                $this->aliasField('employment_type_id') => $thresholdArray['employment_type'],
+                $this->aliasField('employment_date') . ' IS NOT NULL',
+                $operandConditions[$thresholdArray['operand']]
+            ])
+            ->hydrate(false)
+            ;
+
+        return $licenseData->toArray();
+    }
 }
