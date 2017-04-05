@@ -258,7 +258,7 @@ class LicensesTable extends ControllerActionTable
 	{
 		$thresholdArray = json_decode($threshold, true);
 
-		$operandConditions = [
+		$conditions = [
 			1 => ('DATEDIFF(' . $this->aliasField('expiry_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
 			2 => ('DATEDIFF(NOW(), ' . $this->aliasField('expiry_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
 		];
@@ -287,7 +287,7 @@ class LicensesTable extends ControllerActionTable
 			->where([
 				$this->aliasField('license_type_id') => $thresholdArray['license_type'],
 				$this->aliasField('expiry_date') . ' IS NOT NULL',
-				$operandConditions[$thresholdArray['operand']]
+				$conditions[$thresholdArray['condition']]
 			])
 			->hydrate(false)
 			;

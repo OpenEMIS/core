@@ -19,7 +19,7 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
         'placeholder' => [
             '${total_days}' => 'Total number of unexcused absence.',
             '${threshold}' => 'Threshold value.',
-            '${user.openemis_no}' => 'Student OpenEMIS number.',
+            '${user.openemis_no}' => 'Student OpenEMIS ID.',
             '${user.first_name}' => 'Student first name.',
             '${user.middle_name}' => 'Student middle name.',
             '${user.third_name}' => 'Student third name.',
