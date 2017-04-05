@@ -24,9 +24,13 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                         'min' => 1,
                         'max' => 365,
                         'required' => true
+                    ],
+                    'tooltip' => [
+                        'label' => 'Value',
+                        'sprintf' => [1, 365]
                     ]
                 ],
-                'operand' => [
+                'condition' => [
                     'type' => 'select',
                     'select' => false,
                     'after' => 'value',
@@ -35,7 +39,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                 'employment_type' => [
                     'type' => 'select',
                     'select' => false,
-                    'after' => 'operand',
+                    'after' => 'condition',
                     'lookupModel' => 'FieldOption.EmploymentTypes'
                 ]
             ],
@@ -44,7 +48,7 @@ class AlertRuleStaffEmploymentBehavior extends AlertRuleBehavior
                 '${employment_type.name}' => 'Employment type.',
                 '${employment_date}' => 'Staff employment date.',
                 '${employment_period}' => 'Staff employment period.',
-                '${user.openemis_no}' => 'OpenEMIS number.',
+                '${user.openemis_no}' => 'OpenEMIS ID.',
                 '${user.first_name}' => 'First name.',
                 '${user.middle_name}' => 'Middle name.',
                 '${user.third_name}' => 'Third name.',
