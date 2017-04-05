@@ -99,7 +99,7 @@ class EmploymentsTable extends ControllerActionTable {
     {
         $thresholdArray = json_decode($threshold, true);
 
-        $operandConditions = [
+        $conditions = [
             1 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ') <= ' . $thresholdArray['value']), // before
             2 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ') >= ' . $thresholdArray['value']), // after
         ];
@@ -125,7 +125,7 @@ class EmploymentsTable extends ControllerActionTable {
             ->where([
                 $this->aliasField('employment_type_id') => $thresholdArray['employment_type'],
                 $this->aliasField('employment_date') . ' IS NOT NULL',
-                $operandConditions[$thresholdArray['operand']]
+                $conditions[$thresholdArray['condition']]
             ])
             ->hydrate(false)
             ;

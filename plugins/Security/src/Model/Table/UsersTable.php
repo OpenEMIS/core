@@ -284,7 +284,7 @@ class UsersTable extends AppTable
 	{
 		$thresholdArray = json_decode($threshold, true);
 
-		$operandConditions = [
+		$conditions = [
 			// only cater for age is more than and equal to threshold value.
 			2 => ('TIMESTAMPDIFF(YEAR, ' . $this->aliasField('date_of_birth') . ', NOW())' . ' >= ' . $thresholdArray['value']), // after
 		];
@@ -306,7 +306,7 @@ class UsersTable extends AppTable
 			])
 			->where([
 				$this->aliasField('date_of_birth') . ' IS NOT NULL',
-				$operandConditions[$thresholdArray['operand']]
+				$conditions[$thresholdArray['condition']]
 			])
 
 			->hydrate(false)
