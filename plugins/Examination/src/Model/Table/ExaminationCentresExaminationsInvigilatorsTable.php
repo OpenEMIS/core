@@ -2,14 +2,14 @@
 namespace Examination\Model\Table;
 
 use ArrayObject;
-
 use Cake\ORM\Entity;
-use Cake\Utility\Security;
+use Cake\ORM\Query;
+use Cake\Validation\Validator;
 use Cake\Event\Event;
+use App\Model\Table\ControllerActionTable;
 
-use App\Model\Table\AppTable;
-
-class ExaminationCentresExaminationsInvigilatorsTable extends AppTable {
+class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTable
+{
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
@@ -29,4 +29,67 @@ class ExaminationCentresExaminationsInvigilatorsTable extends AppTable {
 
         $this->addBehavior('CompositeKey');
 	}
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
+        $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+
+        // Set the header of the page
+        $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+        $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Invigilators'));
+
+        $this->fields['examination_id']['type'] = 'string';
+        $this->fields['invigilator_id']['type'] = 'string';
+        $this->field('rooms');
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->setFieldOrder(['invigilator_id', 'examination_id', 'rooms']);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        // Examination filter
+        $ExaminationCentresExaminations = $this->ExaminationCentresExaminations;
+        $examinationOptions = $ExaminationCentresExaminations
+            ->find('list', [
+                'keyField' => 'examination_id',
+                'valueField' => 'examination.code_name'
+            ])
+            ->contain('Examinations')
+            ->where([$ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
+            ->toArray();
+
+        $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
+        $recordExamId = $this->ControllerAction->getQueryString('examination_id');
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $recordExamId;
+        $this->controller->set(compact('examinationOptions', 'selectedExamination'));
+        if ($selectedExamination != -1) {
+            $where[$this->aliasField('examination_id')] = $selectedExamination;
+        }
+
+        $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
+        $query
+            ->contain('ExaminationCentreRoomsExaminationsInvigilators.ExaminationCentreRooms')
+            ->where([$where]);
+
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['auto_contain_fields'] = ['ExaminationItems' => ['code']];
+    }
+
+    public function onGetRooms(Event $event, Entity $entity)
+    {
+        if ($entity->has('examination_centre_rooms_examinations_invigilators')) {
+            $roomInvigilators = $entity->examination_centre_rooms_examinations_invigilators;
+
+            $rooms = [];
+            foreach ($roomInvigilators as $room) {
+                $rooms[] = $room->examination_centre_room->name;
+            }
+
+            return implode($rooms, ", ");
+        }
+    }
 }
