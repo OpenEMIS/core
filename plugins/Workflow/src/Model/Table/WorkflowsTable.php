@@ -38,6 +38,7 @@ class WorkflowsTable extends AppTable {
         'through' => 'Workflow.WorkflowsFilters',
         'dependent' => true
     ];
+    private $excludedModels = ['Institution.InstitutionCases'];
 
     public function initialize(array $config) {
         parent::initialize($config);
@@ -424,17 +425,21 @@ class WorkflowsTable extends AppTable {
 
             // Loop through modelOptions and unset it if the model do not have filter and already created workflow.
             foreach ($modelOptions as $key => $value) {
-                $filter = $this->WorkflowModels->get($key)->filter;
+                $workflowModelEntity = $this->WorkflowModels->get($key);
+                $filter = $workflowModelEntity->filter;
+                $registryAlias = $workflowModelEntity->model;
                 if (empty($filter)) {
-                    $workflowResults = $this
-                        ->find()
-                        ->where([
-                            $this->aliasField('workflow_model_id') => $key
-                        ])
-                        ->all();
+                    if (!in_array($registryAlias, $this->excludedModels)) {
+                        $workflowResults = $this
+                            ->find()
+                            ->where([
+                                $this->aliasField('workflow_model_id') => $key
+                            ])
+                            ->all();
 
-                    if (!$workflowResults->isEmpty()) {
-                        unset($modelOptions[$key]);
+                        if (!$workflowResults->isEmpty()) {
+                            unset($modelOptions[$key]);
+                        }
                     }
                 }
             }
@@ -537,7 +542,7 @@ class WorkflowsTable extends AppTable {
 
     private function setupFields(Entity $entity)
     {
-        $this->ControllerAction->field('message',['visible' => false]);
+        $this->ControllerAction->field('message', ['visible' => false]);
 
         $selectedModel = $entity->workflow_model_id;
 
