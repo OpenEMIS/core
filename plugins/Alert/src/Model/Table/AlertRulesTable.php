@@ -307,8 +307,8 @@ class AlertRulesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
-        // Rule set up section
-        $this->field('rule_set_up', ['type' => 'section']);
+        // Rule setting section
+        $this->field('rule_setup', ['type' => 'section']);
         $this->field('feature', ['type' => 'select', 'entity' => $entity]);
         $this->field('enabled', ['type' => 'select']);
         $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
@@ -328,7 +328,7 @@ class AlertRulesTable extends ControllerActionTable
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'add' || $action == 'edit') {
-            $tableHeaders =[__('Keyword'), __('Remarks')];
+            $tableHeaders =[__('Keywords'), __('Remarks')];
             $tableCells = [];
             $fieldKey = 'alert_features';
 
@@ -366,8 +366,11 @@ class AlertRulesTable extends ControllerActionTable
     public function extractThresholdValuesFromEntity(Entity $entity)
     {
         $thresholdArray = json_decode($entity->threshold, true);
-        foreach ($thresholdArray as $key => $value) {
-            $entity->{$key} = $value;
+
+        if (is_array($thresholdArray)) {
+            foreach ($thresholdArray as $key => $value) {
+                $entity->{$key} = $value;
+            }
         }
     }
 }
