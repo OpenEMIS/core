@@ -1,6 +1,7 @@
 <?php
 namespace App\Shell;
 
+use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
@@ -40,6 +41,14 @@ class AlertStaffLeaveShell extends AlertShell
                     $vars['threshold'] = $thresholdArray;
                     $institutionId = $vars['institution']['id'];
 
+                    // add the employment period to $vars.
+                    $dateTo = $vars['date_to'];
+                    $diff = date_diff(new Date(), $dateTo);
+                    $diffDays = $diff->days;
+
+                    $vars['day_difference'] = $diffDays;
+                    // end of adding age to $vars
+
                     if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
                         $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
 
@@ -54,6 +63,7 @@ class AlertStaffLeaveShell extends AlertShell
                     }
                 }
             }
+            sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');
         } while (empty($filesArray));
