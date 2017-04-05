@@ -243,7 +243,7 @@ class StaffLeaveTable extends ControllerActionTable
 
 		$operandConditions = [
 			1 => ('DATEDIFF(' . $this->aliasField('date_to') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
-			2 => ('DATEDIFF(NOW(), ' . $this->aliasField('date_to') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
+			// 2 => ('DATEDIFF(NOW(), ' . $this->aliasField('date_to') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
 		];
 
 		// will do the comparison with threshold when retrieving the absence data
