@@ -55,6 +55,60 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('CompositeKey');
+        $this->setDeleteStrategy('restrict');
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        $validator
+            ->requirePresence('examination_centres', 'create');
+
+        return $validator;
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        $params = [
+            'examination_centre_id' => $entity->examination_centre->id,
+            'examination_id' => $entity->examination_id
+        ];
+
+        if (isset($buttons['view']['url'])) {
+            $buttons['view']['url']['action'] = 'Centres';
+            $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
+        }
+
+        if (isset($buttons['edit']['url'])) {
+            $buttons['edit']['url']['action'] = 'Centres';
+            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
+        }
+
+        return $buttons;
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('examination_id', ['type' => 'select']);
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // link examinations button
+        $linkExamButton = $extra['toolbarButtons']['add'];
+        $linkExamButton['attr']['title'] = __('Link Examination');
+        $linkExamButton['label'] = '<i class="fa fa-link"></i>';
+        $extra['toolbarButtons']['linkExam'] = $linkExamButton;
+
+        // add examination centre button
+        if (isset($extra['toolbarButtons']['add'])) {
+            $extra['toolbarButtons']['add']['url']['action'] = 'Centres';
+            $extra['toolbarButtons']['add']['attr']['title'] = __('Add Examination Centre');
+        }
+
+        $this->fields['examination_centre_id']['type'] = 'string';
+        $this->setFieldOrder(['examination_centre_id', 'academic_period_id', 'examination_id', 'total_registered']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -79,33 +133,57 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         $query->where($where);
     }
 
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $params = [
-            'examination_centre_id' => $entity->examination_centre->id,
-            'examination_id' => $entity->examination_id
-        ];
-
-        if (isset($buttons['view']['url'])) {
-            $buttons['view']['url']['action'] = 'Centres';
-            $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
-        }
-
-        if (isset($buttons['edit']['url'])) {
-            $buttons['edit']['url']['action'] = 'Centres';
-            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
-        }
-
-        return $buttons;
+        $this->field('academic_period_id');
+        $this->field('examination_centres');
+        $this->fields['total_registered']['visible'] = false;
+        $this->setFieldOrder(['academic_period_id', 'examination_id', 'examination_centres']);
     }
 
-
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        $this->field('examination_centre_id', ['type' => 'select']);
-        $this->field('examination_id', ['type' => 'select']);
-        $this->setFieldOrder(['examination_centre_id', 'academic_period_id', 'examination_id', 'total_registered']);
+        $attr['options'] = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+        $attr['onChangeReload'] = true;
+        $attr['default'] = $this->AcademicPeriods->getCurrent();
+        $attr['type'] = 'select';
+        return $attr;
+    }
+
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            if (isset($request->data[$this->alias()]['academic_period_id'])) {
+                $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+                $examOptions = $this->getExaminationOptions($academicPeriodId);
+                $attr['options'] = $examOptions;
+            }
+
+            $attr['onChangeReload'] = true;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldExaminationCentres(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
+
+            $examCentreOptions = $this->ExaminationCentres
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->notMatching('Examinations', function ($q) use ($examinationId) {
+                    return $q->where(['Examinations.id' => $examinationId]);
+                })
+                ->order([$this->ExaminationCentres->aliasField('code')])
+                ->toArray();
+
+            $attr['type'] = 'chosenSelect';
+            $attr['options'] = $examCentreOptions;
+            return $attr;
+        }
     }
 
     public function onGetExaminationCentreId(Event $event, Entity $entity)
@@ -113,6 +191,29 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         return $entity->examination_centre->code_name;
     }
 
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        $requestData[$this->alias()]['examination_centre_id'] = 0;
+    }
+
+    public function addBeforeSave(Event $event, $entity, $requestData, $extra)
+    {
+        $process = function ($model, $entity) use ($requestData) {
+            if (array_key_exists('examination_centres', $requestData[$this->alias()])) {
+                if (is_array($requestData[$this->alias()]['examination_centres']['_ids'])) {
+                    $examCentreIds = $requestData[$model->alias()]['examination_centres']['_ids'];
+                    $newEntities = [];
+                    foreach ($examCentreIds as $centreId) {
+                        $requestData[$model->alias()]['examination_centre_id'] = $centreId;
+                        $newEntities[] = $model->newEntity($requestData->getArrayCopy());
+                    }
+                    return $model->saveMany($newEntities);
+                }
+            }
+        };
+
+        return $process;
+    }
     private function getExaminationOptions($selectedAcademicPeriod)
     {
         $examinationOptions = $this->Examinations
