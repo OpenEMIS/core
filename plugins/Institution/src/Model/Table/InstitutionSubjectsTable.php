@@ -724,6 +724,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
              * Changed in PHPOE-1799-2 for PHPOE-1780. convert security_users_id to student_id
              */
             if (array_key_exists('subject_students', $this->request->data[$this->alias()])) {
+                //decode the hidden fields sent from ctp
+                $subjectStudentsData = $this->request->data[$this->alias()]['subject_students'];
+                if (!empty($subjectStudentsData)) {
+                    foreach ($subjectStudentsData as $key => $value) {
+                        $this->request->data[$this->alias()]['subject_students'][$key] = $this->paramsDecode($subjectStudentsData[$key]['hiddenField']);
+                    }
+                }
                 foreach ($this->request->data[$this->alias()]['subject_students'] as $row) {
                     if (array_key_exists($row['student_id'], $studentOptions)) {
 
@@ -793,8 +800,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (!empty($roomOptions)) {
             $this->fields['rooms']['options'] = $roomOptions;
         }
+        
+        //cleanup hiddenField so it wont be listed.
+        $cleanStudents = [];
+        foreach ($students as $key => $value) {
+            if (!$students[$key]->has('hiddenField')) {
+                $cleanStudents[] = $students[$key];
+            }
+        }
         $this->fields['students']['data'] = [
-            'students' => $students,
+            'students' => $cleanStudents,
             'studentOptions' => $studentOptions
         ];
 
