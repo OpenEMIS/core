@@ -56,6 +56,7 @@ class AlertAttendanceShell extends AlertShell
                     }
                 }
             }
+            sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');
         } while (empty($filesArray));
