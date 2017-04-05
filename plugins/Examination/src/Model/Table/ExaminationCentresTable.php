@@ -116,15 +116,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $buttons;
     }
 
-    private function getExaminationOptions($selectedAcademicPeriod) {
-        $examinationOptions = $this->Examinations
-            ->find('list')
-            ->where([$this->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
-            ->toArray();
-
-        return $examinationOptions;
-    }
-
     public function findBySpecialNeeds(Query $query, array $options)
     {
         $selectedSpecialNeeds = $options['selectedSpecialNeeds'];
@@ -189,7 +180,6 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         $options['associated'][] = 'ExaminationCentreSpecialNeeds';
         $options['associated'][] = 'ExaminationCentreRooms';
-
     }
 
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
@@ -313,11 +303,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->fields['website']['visible'] = true;
 
             $this->setFieldOrder(['exam_centre_info_section', 'code', 'name', 'academic_period_id', 'area_id', 'address', 'postal_code', 'contact_person', 'telephone', 'fax', 'email', 'website', 'examination_centre_rooms', 'special_need_type_id']);
-        }
-
-        if (isset($extra['toolbarButtons']['edit']['url'])) {
-            $extra['toolbarButtons']['back']['url']['action'] = 'ExaminationCentres';
-            unset($extra['toolbarButtons']['back']['url']['queryString']);
         }
     }
 
@@ -593,6 +578,8 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
     {
+        $extra['redirect']['action'] = 'ExamCentres';
+
         $requestData[$this->alias()]['institution_id'] = 0;
         if (!isset($requestData[$this->alias()]['area_id'])) {
             $requestData[$this->alias()]['area_id'] = 0;
@@ -605,8 +592,6 @@ class ExaminationCentresTable extends ControllerActionTable {
         } else {
             $patchOptions['validate'] = 'institutions';
         }
-
-        $academicPeriodId = $requestData[$this->alias()]['academic_period_id'];
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
