@@ -22,16 +22,16 @@ class ExaminationsController extends AppController
     public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
     public function Centres($pass = 'index') { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);}
-    public function ExaminationCentres() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminations']);}
+    public function ExamCentres() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminations']);}
     public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
     public function BulkStudentRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
     public function RegistrationDirectory() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.RegistrationDirectory']); }
-    public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRooms']); }
+    public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRoomsExaminations']); }
     public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
     public function ExamResults() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationResults']); }
-    public function ExaminationCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
-    public function ExaminationCentreSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsSubjects']); }
+    public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreStudents']); }
+    public function ExamCentreSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsSubjects']); }
     // End
 
     // AngularJS
@@ -96,12 +96,12 @@ class ExaminationsController extends AppController
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Centres', 'view', 'queryString' => $queryString],
                 'text' => __('Overview')
             ],
-            'ExaminationCentreSubjects' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExaminationCentreSubjects', 'queryString' => $queryString],
+            'ExamCentreSubjects' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreSubjects', 'queryString' => $queryString],
                 'text' => __('Subjects')
             ],
-            'ExaminationCentreStudents' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExaminationCentreStudents', 'queryString' => $queryString],
+            'ExamCentreStudents' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreStudents', 'queryString' => $queryString],
                 'text' => __('Students')
             ],
             'ExamCentreRooms' => [
@@ -140,17 +140,7 @@ class ExaminationsController extends AppController
 
     private function attachAngularModules() {
         $action = $this->request->action;
-    //     $pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
         switch ($action) {
-    //         case 'Centres':
-    //             if ($pass == 'add' && $this->checkExamCentresPermission()) {
-    //                 $this->Angular->addModules([
-    //                     'alert.svc',
-    //                     'examination.centres.ctrl',
-    //                     'examination.centres.svc'
-    //                 ]);
-    //             }
-    //             break;
             case 'Results':
                 $this->Angular->addModules([
                     'alert.svc',
