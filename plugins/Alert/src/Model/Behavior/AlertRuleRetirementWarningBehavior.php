@@ -24,9 +24,13 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
                     'min' => 50,
                     'max' => 75,
                     'required' => true
+                ],
+                'tooltip' => [
+                    'label' => 'Value',
+                    'sprintf' => [50, 75]
                 ]
             ],
-            'operand' => [
+            'condition' => [
                 'type' => 'select',
                 'select' => false,
                 'after' => 'value',
@@ -36,7 +40,7 @@ class AlertRuleRetirementWarningBehavior extends AlertRuleBehavior
         'placeholder' => [
             '${threshold.value}' => 'Threshold value.',
             '${age}' => 'Age value.',
-            '${openemis_no}' => 'OpenEMIS number.',
+            '${openemis_no}' => 'OpenEMIS ID.',
             '${first_name}' => 'First name.',
             '${middle_name}' => 'Middle name.',
             '${third_name}' => 'Third name.',

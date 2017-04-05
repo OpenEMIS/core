@@ -23,9 +23,13 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
                     'min' => 1,
                     'max' => 30,
                     'required' => true
+                ],
+                'tooltip' => [
+                    'label' => 'Value',
+                    'sprintf' => [1, 30]
                 ]
             ],
-            'operand' => [
+            'condition' => [
                 'type' => 'select',
                 'select' => false,
                 'after' => 'value',
@@ -34,7 +38,7 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
             'license_type' => [
                 'type' => 'select',
                 'select' => false,
-                'after' => 'operand',
+                'after' => 'condition',
                 'lookupModel' => 'FieldOption.LicenseTypes'
             ]
         ],
@@ -45,7 +49,7 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
             '${issue_date}' => 'Issue date.',
             '${expiry_date}' => 'Expiry date.',
             '${issuer}' => 'Issuer.',
-            '${user.openemis_no}' => 'OpenEMIS number.',
+            '${user.openemis_no}' => 'OpenEMIS ID.',
             '${user.first_name}' => 'First name.',
             '${user.middle_name}' => 'Middle name.',
             '${user.third_name}' => 'Third name.',
