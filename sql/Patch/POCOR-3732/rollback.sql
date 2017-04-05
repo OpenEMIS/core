@@ -1,8 +1,8 @@
--- institution_workflows
-DROP TABLE IF EXISTS `institution_workflows`;
+-- institution_cases
+DROP TABLE IF EXISTS `institution_cases`;
 
--- institution_workflows_records
-DROP TABLE IF EXISTS `institution_workflows_records`;
+-- institution_cases_records
+DROP TABLE IF EXISTS `institution_cases_records`;
 
 -- workflow_rules
 DROP TABLE IF EXISTS `workflow_rules`;

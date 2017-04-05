@@ -18,6 +18,7 @@ class WorkflowRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
+    private $excludedModels = ['Institution.InstitutionCases'];
 	private $ruleTypes = [];
 
 	public function initialize(array $config)
@@ -26,14 +27,13 @@ class WorkflowRulesTable extends ControllerActionTable
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 
 		$this->addBehavior('Workflow.RuleStaffBehaviours');
-        $this->addBehavior('Workflow.RuleStudentBehaviours');
+        // $this->addBehavior('Workflow.RuleStudentBehaviours');
 	}
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $eventMap = [
-            'ControllerAction.Model.process' => 'process',
             'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields'
         ];
 
@@ -46,68 +46,19 @@ class WorkflowRulesTable extends ControllerActionTable
         return $events;
     }
 
-    public function process(Event $mainEvent, ArrayObject $extra)
-    {
-        $extra['redirect'] = $this->url('index', 'QUERY');
-
-        $ids = empty($this->paramsPass(0)) ? [] : $this->paramsDecode($this->paramsPass(0));
-        $sessionKey = $this->registryAlias() . '.primaryKey';
-
-        if (empty($ids)) {
-            if ($this->Session->check($sessionKey)) {
-                $ids = $this->Session->read($sessionKey);
-            } else if (!empty($this->ControllerAction->getQueryString())) {
-                // Query string logic not implemented yet, will require to check if the query string contains the primary key
-                $primaryKey = $this->primaryKey();
-                $ids = $this->ControllerAction->getQueryString($primaryKey);
-            }
-        }
-
-        $idKeys = $this->getIdKeys($this, $ids);
-
-        $entity = false;
-
-        if ($this->exists($idKeys)) {
-            $query = $this->find()->where($idKeys);
-            $entity = $query->first();
-
-            $shellName = 'WorkflowRule'.$entity->feature;
-            $this->triggerWorkflowRuleShell($shellName, $entity->id);
-        }
-
-        $mainEvent->stopPropagation();
-        return $this->controller->redirect($extra['redirect']);
-    }
-
-    public function triggerWorkflowRuleShell($shellName, $recordId)
-    {
-        $cmd = ROOT . DS . 'bin' . DS . 'cake ' . $shellName . ' ' . $recordId;
-        $logs = ROOT . DS . 'logs' . DS . $shellName . '.log & echo $!';
-        $shellCmd = $cmd . ' >> ' . $logs;
-
-        try {
-            $pid = exec($shellCmd);
-            Log::write('debug', $shellCmd);
-
-            $this->Alert->success($this->aliasField('process.start.success'));
-        } catch(\Exception $ex) {
-            Log::write('error', __METHOD__ . ' exception when process workflow rule : '. $ex);
-
-            $this->Alert->success($this->aliasField('process.start.failed'));
-        }
-    }
-
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
         if (isset($data['submit']) && $data['submit'] == 'save') {
             if (isset($data['feature']) && !empty($data['feature'])) {
-                $ruleTypes = $this->getRuleTypes();
-                $ruleConfig = $ruleTypes[$data['feature']]['rule'];
+                $ruleConfig = $this->getRuleConfigByFeature($data['feature']);
                 if (!empty($ruleConfig)) {
-                    $ruleArray = [];
+                    $where = [];
                     foreach ($ruleConfig as $key => $attr) {
-                        $ruleArray[$key] = $data[$key];
+                        $where[$key] = $data[$key];
                     }
+
+                    $ruleArray = [];
+                    $ruleArray['where'] = $where;
                     $data['rule'] = !empty($ruleArray) ? json_encode($ruleArray, JSON_UNESCAPED_UNICODE) : '';
                 }
             }
@@ -177,7 +128,7 @@ class WorkflowRulesTable extends ControllerActionTable
         $fieldOrder = ['feature', 'workflow_id', 'rule'];
 
         $this->field('feature', ['type' => 'select']);
-        $this->field('workflow_id', ['type' => 'select']);
+        $this->field('workflow_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('rule', ['type' => 'hidden']);
 
         $event = $this->dispatchEvent('WorkflowRule.SetupFields', [$entity, $extra], $this);
@@ -189,13 +140,10 @@ class WorkflowRulesTable extends ControllerActionTable
     public function onWorkflowRuleSetupFields(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->has('feature') && !empty($entity->feature)) {
-            $ruleTypes = $this->getRuleTypes();
-            $ruleConfig = $ruleTypes[$entity->feature]['rule'];
+            $ruleConfig = $this->getRuleConfigByFeature($entity->feature);
 
-            if (!empty($ruleConfig)) {
-                if ($this->action == 'view' || $this->action == 'edit') {
-                    $this->extractRuleFromEntity($entity);
-                }
+            if ($this->action == 'view' && !empty($ruleConfig)) {
+                $this->extractRuleFromEntity($entity);
             }
 
             foreach ($ruleConfig as $key => $attr) {
@@ -207,6 +155,7 @@ class WorkflowRulesTable extends ControllerActionTable
                         $modelTable = TableRegistry::get($attr['lookupModel']);
                         $options = $modelTable->getList()->toArray();
                     }
+
                     $attr['options'] = $options;
                 }
 
@@ -225,24 +174,12 @@ class WorkflowRulesTable extends ControllerActionTable
         // temporary solution
         $origEntity = $this->get($entity->id);
         if ($origEntity->has('feature') && !empty($origEntity->feature)) {
-            $event = $this->dispatchEvent('WorkflowRule.onGet.'.$origEntity->feature.'.Rule', [$origEntity], $this);
+            $event = $this->dispatchEvent('WorkflowRule.onGet'.$origEntity->feature.'Rule', [$origEntity], $this);
             if ($event->isStopped()) { return $event->result; }
             if (!empty($event->result)) {
                 return $event->result;
             }
         }
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $processButton = $buttons['view'];
-        $processButton['url'][0] = 'process';
-        $processButton['label'] = '<i class="fa fa-circle-o-notch"></i>' . __('Process');
-
-        $buttons['process'] = $processButton;
-
-        return $buttons;
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
@@ -259,11 +196,20 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add' || $action == 'edit') {
+        if ($action == 'add') {
             $selectedFeature = $request->query('feature');
             $workflowOptions = $this->getWorkflowOptions($selectedFeature);
 
             $attr['options'] = $workflowOptions;
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $selectedFeature = $entity->feature;
+
+            $workflowOptions = $this->getWorkflowOptions($selectedFeature);
+            
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->workflow_id;
+            $attr['attr']['value'] = $workflowOptions[$entity->workflow_id];
         }
 
         return $attr;
@@ -297,6 +243,14 @@ class WorkflowRulesTable extends ControllerActionTable
     	}
     }
 
+    public function getRuleConfigByFeature($selectedFeature)
+    {
+        $ruleTypes = $this->getRuleTypes();
+        $ruleConfig = $ruleTypes[$selectedFeature]['rule'];
+
+        return $ruleConfig;
+    }
+
     public function getFeatureOptions()
     {
         $featureOptions = [];
@@ -314,13 +268,12 @@ class WorkflowRulesTable extends ControllerActionTable
         $workflowOptions = [];
 
         if (!empty($selectedFeature) && $selectedFeature != '-1') {
-            $features = $this->getSelectOptions($this->aliasField('features'));
-            $registryAlias = $features[$selectedFeature]['className'];
-
+            $excludedModels = $this->excludedModels;
             $workflowResults = $this->Workflows
                 ->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
-                ->matching('WorkflowModels', function ($q) use ($registryAlias) {
-                    return $q->where(['model' => $registryAlias]);
+                ->matching('WorkflowModels', function ($q) use ($excludedModels) {
+                    return $q
+                        ->where(['model IN ' => $excludedModels]);
                 })
                 ->all();
 
@@ -332,11 +285,24 @@ class WorkflowRulesTable extends ControllerActionTable
         return $workflowOptions;
     }
 
+    public function getFeatureByRegistryAlias($registryAlias)
+    {
+        $features = $this->getSelectOptions($this->aliasField('features'));
+        $classNames = $this->array_column($features, 'className');
+        $feature = array_search($registryAlias, $classNames);
+
+        return $feature;
+    }
+
     private function extractRuleFromEntity(Entity $entity)
     {
         $ruleArray = json_decode($entity->rule, true);
-        foreach ($ruleArray as $key => $value) {
-            $entity->{$key} = $value;
+
+        if (array_key_exists('where', $ruleArray)) {
+            $where = $ruleArray['where'];
+            foreach ($where as $field => $value) {
+                $entity->{$field} = $value;
+            }
         }
     }
 }

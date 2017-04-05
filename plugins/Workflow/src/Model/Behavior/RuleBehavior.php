@@ -27,7 +27,8 @@ class RuleBehavior extends Behavior
 	{
     	$events = parent::implementedEvents();
     	$eventMap = [
-    		'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields'
+    		'WorkflowRule.SetupFields' => 'onWorkflowRuleSetupFields',
+    		'WorkflowRule.onGet'.$this->rule.'Rule' => 'onGet'.$this->rule.'Rule'
         ];
 
         foreach ($eventMap as $event => $method) {
