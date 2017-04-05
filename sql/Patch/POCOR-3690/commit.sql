@@ -167,6 +167,7 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations_students` (
  `examination_id` int(11) NOT NULL COMMENT 'links to examination.id',
  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
  `institution_id` int(11) NOT NULL DEFAULT '0' COMMENT 'links to institutions.id',
+ `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
  `modified_user_id` int(11) DEFAULT NULL,
  `modified` datetime DEFAULT NULL,
  `created_user_id` int(11) NOT NULL,
@@ -176,12 +177,13 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations_students` (
  KEY `examination_id` (`examination_id`),
  KEY `student_id` (`student_id`),
  KEY `institution_id` (`institution_id`),
+ KEY `academic_period_id` (`academic_period_id`),
  KEY `modified_user_id` (`modified_user_id`),
  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination';
 
-INSERT INTO `examination_centres_examinations_students` (`id`, `registration_number`, `examination_centre_id`, `examination_id`, `student_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_id`, ',', `student_id`), '256'), `registration_number`, `examination_centre_id`, `examination_id`, `student_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+INSERT INTO `examination_centres_examinations_students` (`id`, `registration_number`, `examination_centre_id`, `examination_id`, `student_id`, `institution_id`, `academic_period_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_id`, ',', `student_id`), '256'), `registration_number`, `examination_centre_id`, `examination_id`, `student_id`, `institution_id`, `academic_period_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3690_examination_centre_students`
 GROUP BY `examination_centre_id`, `examination_id`, `student_id`;
 
