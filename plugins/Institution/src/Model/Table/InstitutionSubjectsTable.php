@@ -688,6 +688,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
         // ensure that all students are removed from entity if all students are deleted
         if (!array_key_exists('subject_students', $data[$this->alias()])) {
             $data[$this->alias()]['subject_students'] = [];
+        } else {
+            //decode the hidden fields sent from ctp
+            $subjectStudentsData = $data[$this->alias()]['subject_students'];
+            if (!empty($subjectStudentsData)) {
+                foreach ($subjectStudentsData as $key => $value) {
+                    $data[$this->alias()]['subject_students'][$key] = $this->paramsDecode($subjectStudentsData[$key]['hiddenField']);
+                }
+            }
         }
     }
 
