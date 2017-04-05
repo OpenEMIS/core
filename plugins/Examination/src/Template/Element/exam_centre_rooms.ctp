@@ -54,7 +54,6 @@
                         <?php foreach ($data['examination_centre_rooms'] as $i => $item) : ?>
                              <?php
                                 $fieldPrefix = "$alias.examination_centre_rooms.$i";
-                                $joinDataPrefix = $fieldPrefix . '._joinData';
                             ?>
                             <tr>
                                 <td>
