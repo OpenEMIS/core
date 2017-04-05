@@ -418,6 +418,18 @@ trait MessagesTrait {
             'add_event' => 'Add Event',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
+        'WorkflowRules' => [
+            'process' => [
+                'start' => [
+                    'success' => 'The process has been started successfully.',
+                    'failed' => 'The process is not started due to errors encountered.'
+                ],
+                'abort' => [
+                    'success' => 'The process has been aborted successfully.',
+                    'failed' => 'The process is not aborted due to errors encountered.'
+                ]
+            ]
+        ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
         ],

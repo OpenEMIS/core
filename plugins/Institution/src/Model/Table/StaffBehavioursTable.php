@@ -23,7 +23,15 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('Institution.Case');
 	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+		$events['InstitutionCase.onGetCaseTitle'] = 'onGetCaseTitle';
+        return $events;
+    }
 
 	public function onGetOpenemisNo(Event $event, Entity $entity)
 	{
@@ -195,4 +203,15 @@ class StaffBehavioursTable extends ControllerActionTable {
 		}
 		return $attr;
 	}
+
+	public function onGetCaseTitle(Event $event, Entity $entity)
+    {
+    	$recordEntity = $this->get($entity->id, [
+    		'contain' => ['Staff', 'StaffBehaviourCategories', 'Institutions', 'BehaviourClassifications']
+    	]);
+    	$title = '';
+    	$title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
+    	
+    	return $title;
+    }
 }
