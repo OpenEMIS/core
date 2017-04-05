@@ -1,6 +1,7 @@
 <?php
 namespace App\Shell;
 
+use Cake\I18n\Date;
 use Cake\I18n\Time;
 use Cake\Console\Shell;
 use Cake\Filesystem\Folder;
@@ -55,6 +56,14 @@ class AlertLicenseValidityShell extends AlertShell
                             $vars['institution'] = $institutionStaffObj['institution'];
                             $institutionId = $vars['institution']['id'];
 
+                            // add the date difference to $vars.
+                            $expiryDate = $vars['expiry_date'];
+                            $diff = date_diff($expiryDate, new Date());
+                            $diffDays = $diff->days;
+
+                            $vars['day_difference'] = $diffDays;
+                            // end
+
                             if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
                                 $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
 
@@ -71,6 +80,7 @@ class AlertLicenseValidityShell extends AlertShell
                     }
                 }
             }
+            sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');
         } while (empty($filesArray));

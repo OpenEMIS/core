@@ -48,6 +48,7 @@ class AlertRuleLicenseValidityBehavior extends AlertRuleBehavior
             '${license_number}' => 'License number.',
             '${issue_date}' => 'Issue date.',
             '${expiry_date}' => 'Expiry date.',
+            '${day_difference}' => 'Days difference between today and expiry date.',
             '${issuer}' => 'Issuer.',
             '${user.openemis_no}' => 'OpenEMIS ID.',
             '${user.first_name}' => 'First name.',
