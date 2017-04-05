@@ -9,13 +9,12 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Controller\Component;
 use Cake\Utility\Text;
-use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
-use Cake\Log\Log;
+use App\Model\Table\ControllerActionTable;
 
-class ExaminationCentreStudentsTable extends ControllerActionTable {
+class ExamCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
     private $examCentreId;
@@ -124,10 +123,33 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // Examination filter
+        $ExaminationCentresExaminations = $this->ExaminationCentresExaminations;
+        $examinationOptions = $this->ExaminationCentresExaminations
+            ->find('list', [
+                'keyField' => 'examination_id',
+                'valueField' => 'examination.code_name'
+            ])
+            ->contain('Examinations')
+            ->where([$ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
+            ->toArray();
+
+        $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
+        $recordExamId = $this->ControllerAction->getQueryString('examination_id');
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $recordExamId;
+        $this->controller->set(compact('examinationOptions', 'selectedExamination'));
+        if ($selectedExamination != -1) {
+           $where[$this->aliasField('examination_id')] = $selectedExamination;
+        }
+
+        $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
+        $query->where([$where]);
+
+        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
 
         $query
-            ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
+            ->where([$where])
             ->group([$this->aliasField('student_id')]);
 
         //kiv
