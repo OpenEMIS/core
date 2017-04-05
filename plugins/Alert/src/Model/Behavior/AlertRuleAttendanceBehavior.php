@@ -75,6 +75,15 @@ class AlertRuleAttendanceBehavior extends AlertRuleBehavior
     public function onUpdateFieldAttendanceThreshold(Event $event, array $attr, $action, Request $request)
     {
         $attr['visible'] = true;
+
+        // info tooltip
+        $message = $this->_table->getmessage('AlertRules.Attendance.threshold');
+
+        $attr['attr']['label']['escape'] = false;
+        $attr['attr']['label']['class'] = 'tooltip-desc';
+        $attr['attr']['label']['text'] = __('Threshold') . $this->tooltipMessage($message);
+        // end of info tooltip
+
         if ($action == 'add') {
             $attr['type'] = 'integer';
             $attr['attr']['min'] = 1;

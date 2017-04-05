@@ -657,6 +657,9 @@ trait MessagesTrait {
             'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
         ],
         'AlertRules' => [
+            'Attendance' => [
+                'threshold' => 'Days within 1 to 30'
+            ],
             'LicenseValidity' => [
                 'value' => 'Days within %d to %d'
             ],
