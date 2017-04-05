@@ -656,6 +656,23 @@ trait MessagesTrait {
         'Reports' => [
             'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
         ],
+        'AlertRules' => [
+            'LicenseValidity' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'RetirementWarning' => [
+                'value' => 'Ages within %d to %d'
+            ],
+            'StaffEmployment' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffLeave' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffType' => [
+                'value' => 'Days within %d to %d'
+            ]
+        ],
 
         // Validation Messages
         'Institution' => [

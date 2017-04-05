@@ -1406,7 +1406,7 @@ class StaffTable extends ControllerActionTable {
     {
         $thresholdArray = json_decode($threshold, true);
 
-        $operandConditions = [
+        $conditions = [
             1 => ('DATEDIFF(' . $this->aliasField('end_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
             2 => ('DATEDIFF(NOW(), ' . $this->aliasField('end_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
         ];
@@ -1443,7 +1443,7 @@ class StaffTable extends ControllerActionTable {
             ->where([
                 $this->aliasField('staff_type_id') => $thresholdArray['staff_type'],
                 $this->aliasField('end_date') . ' IS NOT NULL',
-                $operandConditions[$thresholdArray['operand']]
+                $conditions[$thresholdArray['condition']]
             ])
             ->hydrate(false)
             ;

@@ -10,34 +10,34 @@ use Cake\Event\Event;
 
 class AlertRuleBehavior extends Behavior
 {
-	protected $alertRule;
-	protected $_defaultConfig = [
-		'feature' => '',
+    protected $alertRule;
+    protected $_defaultConfig = [
+        'feature' => '',
         'name' => '',
         'method' => '',
         'threshold' => [],
         'placeholder' => []
-	];
+    ];
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
 
-		$class = basename(str_replace('\\', '/', get_class($this)));
-		$class = str_replace('AlertRule', '', $class);
-		$class = str_replace('Behavior', '', $class);
+        $class = basename(str_replace('\\', '/', get_class($this)));
+        $class = str_replace('AlertRule', '', $class);
+        $class = str_replace('Behavior', '', $class);
 
-		$this->_table->addAlertRuleType($class, $this->config());
-		$this->alertRule = $class;
-	}
+        $this->_table->addAlertRuleType($class, $this->config());
+        $this->alertRule = $class;
+    }
 
-	public function implementedEvents()
-	{
-    	$events = parent::implementedEvents();
-    	$eventMap = [
-    		'AlertRule.'.$this->alertRule.'.SetupFields' => 'on'.$this->alertRule.'SetupFields',
-    		'AlertRule.UpdateField.'.$this->alertRule.'.Threshold' => 'onUpdateField'.$this->alertRule.'Threshold',
-			'AlertRule.onGet.'.$this->alertRule.'.Threshold' => 'onGet'.$this->alertRule.'Threshold'
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $eventMap = [
+            'AlertRule.'.$this->alertRule.'.SetupFields' => 'on'.$this->alertRule.'SetupFields',
+            'AlertRule.UpdateField.'.$this->alertRule.'.Threshold' => 'onUpdateField'.$this->alertRule.'Threshold',
+            'AlertRule.onGet.'.$this->alertRule.'.Threshold' => 'onGet'.$this->alertRule.'Threshold'
         ];
 
         foreach ($eventMap as $event => $method) {
@@ -46,33 +46,51 @@ class AlertRuleBehavior extends Behavior
             }
             $events[$event] = $method;
         }
-		return $events;
-	}
+        return $events;
+    }
 
-	protected function onAlertRuleSetupFields(Event $event, Entity $entity)
-	{
-		$model = $this->_table;
-		$thresholdConfig = $this->config('threshold');
-		// logic to auto render fields based on setting in config threshold
-		if (!empty($thresholdConfig)) {
-			if ($model->action == 'view') {
+    protected function onAlertRuleSetupFields(Event $event, Entity $entity)
+    {
+        $model = $this->_table;
+        $thresholdConfig = $this->config('threshold');
+        // logic to auto render fields based on setting in config threshold
+        if (!empty($thresholdConfig)) {
+            if ($model->action == 'view') {
                 $model->extractThresholdValuesFromEntity($entity);
-			}
+            }
 
-			foreach ($thresholdConfig as $key => $attr) {
-				if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
-					$options = [];
-					if (array_key_exists('options', $attr) && !empty($attr['options'])) {
-						$options = $model->getSelectOptions($model->aliasField($attr['options']));
-					} else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
-						$modelTable = TableRegistry::get($attr['lookupModel']);
-						$options = $modelTable->getList()->toArray();
-					}
-					$attr['options'] = $options;
-				}
+            foreach ($thresholdConfig as $key => $attr) {
+                if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
+                    $options = [];
+                    if (array_key_exists('options', $attr) && !empty($attr['options'])) {
+                        $options = $model->getSelectOptions($model->aliasField($attr['options']));
+                    } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
+                        $modelTable = TableRegistry::get($attr['lookupModel']);
+                        $options = $modelTable->getList()->toArray();
+                    }
+                    $attr['options'] = $options;
+                }
 
-				$model->field($key, $attr);
-			}
-		}
-	}
+                if (array_key_exists('tooltip', $attr)) {
+                    $sprintf = $attr['tooltip']['sprintf'];
+                    $message = $model->getMessage($model->aliasField($entity->feature.'.'.$key), ['sprintf' => $sprintf]);
+
+                    $label = $attr['tooltip']['label'];
+                    $attr['attr']['label']['escape'] = false;
+                    $attr['attr']['label']['class'] = 'tooltip-desc';
+                    $attr['attr']['label']['text'] = $label . $this->tooltipMessage($message);
+                }
+
+                $model->field($key, $attr);
+            }
+        }
+    }
+
+    // for info tooltip
+    private function tooltipMessage($message)
+    {
+        $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
+
+        return $tooltipMessage;
+    }
 }
