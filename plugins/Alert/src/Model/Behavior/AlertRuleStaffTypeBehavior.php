@@ -48,6 +48,7 @@ class AlertRuleStaffTypeBehavior extends AlertRuleBehavior
                 '${staff_type.name}' => 'Staff employment type.',
                 '${start_date}' => 'Staff start date.',
                 '${end_date}' => 'Staff end date.',
+                '${day_difference}' => 'Days difference between today and staff end date.',
                 '${user.openemis_no}' => 'OpenEMIS ID.',
                 '${user.first_name}' => 'First name.',
                 '${user.middle_name}' => 'Middle name.',
