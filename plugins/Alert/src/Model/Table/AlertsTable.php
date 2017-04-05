@@ -53,6 +53,9 @@ class AlertsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // for shell process the modified_user_id unable to get the auth user id.
+        $this->field('modified_user_id',['visible' => false]);
+
         $shellName = $entity->process_name;
         if ($this->isShellStopExist($shellName)) {
             $icon = '<i class="fa fa-play"></i>';
