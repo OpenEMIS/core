@@ -87,7 +87,7 @@ class AlertRuleBehavior extends Behavior
     }
 
     // for info tooltip
-    private function tooltipMessage($message)
+    protected function tooltipMessage($message)
     {
         $tooltipMessage = '&nbsp&nbsp;<i class="fa fa-info-circle fa-lg table-tooltip icon-blue" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $message . '"></i>';
 
