@@ -123,7 +123,7 @@ trait OptionsTrait {
                 'StaffLeave' => [
                     'before_after' => [
                         1 => __('Days before end of leave date'),
-                        2 => __('Days after end of leave date')
+                        // 2 => __('Days after end of leave date')
                     ]
                 ],
                 'StaffType' => [
