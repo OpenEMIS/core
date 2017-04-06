@@ -23,20 +23,18 @@ class InstitutionCasesTable extends ControllerActionTable
 		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
 		$this->belongsToMany('LinkedRecords', [
-			'className' => 'Institution.StaffBehaviours',
-			'joinTable' => 'institution_cases_records',
-			'foreignKey' => 'institution_case_id',
-			'targetForeignKey' => 'record_id',
-			'through' => 'Institution.InstitutionCasesRecords',
-			'dependent' => true,
+            'className' => 'Institution.StaffBehaviours',
+            'joinTable' => 'institution_cases_records',
+            'foreignKey' => 'institution_case_id',
+            'targetForeignKey' => 'record_id',
+            'through' => 'Institution.InstitutionCasesRecords',
+            'dependent' => true,
             'cascadeCallbacks' => true
-		]);
+        ]);
 
         $this->addBehavior('Workflow.Workflow');
 
         $this->toggle('add', false);
-        $this->toggle('edit', false);
-        $this->toggle('remove', false);
 	}
 
     public function implementedEvents()
@@ -102,7 +100,7 @@ class InstitutionCasesTable extends ControllerActionTable
                             'assignee_id' => $assigneeId,
                             'institution_id' => $institutionId,
                             'linked_records' => $linkedRecords,
-                            'workflow_rule_id' => $workflowRuleEntity->id
+                            'workflow_rule_id' => $workflowRuleEntity->id // required by workflow behavior to get the correct workflow
                         ];
                         $patchOptions = [
                             'associated' => [
@@ -111,9 +109,9 @@ class InstitutionCasesTable extends ControllerActionTable
                                 ]
                             ]
                         ];
+
                         $newEntity = $this->newEntity();
                         $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
-
                         $this->save($newEntity);
                     }
                 }
@@ -125,30 +123,23 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         $linkedRecords = [];
         if ($entity->has('linked_records')) {
-            foreach ($entity->linked_records as $key => $linkedRecordEntity) {
-                $primaryKey = $this->LinkedRecords->primaryKey();
-                $id = null;
-                $primaryKeyValue = [];
-                if (is_array($primaryKey)) {
-                    foreach ($primaryKey as $key) {
-                        $primaryKeyValue[$key] = $linkedRecordEntity->getOriginal($key);
-                    }
+            foreach ($entity->linked_records as $linkedRecordEntity) {
+                $id = $this->getEncodedKeys($linkedRecordEntity);
+
+                $value = $linkedRecordEntity->description;
+                if ($this->action == 'view') {
+                    $url = $event->subject()->HtmlField->link($value, [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffBehaviours',
+                        'view',
+                        $id
+                    ]);
+
+                    $linkedRecords[] = $url;
                 } else {
-                    $primaryKeyValue[$primaryKey] = $linkedRecordEntity->getOriginal($primaryKey);
+                    $linkedRecords[] = $value;
                 }
-
-                $encodedKeys = $this->paramsEncode($primaryKeyValue);
-                $id = $encodedKeys;
-
-                $url = $event->subject()->HtmlField->link($linkedRecordEntity->description, [
-                    'plugin' => 'Institution',
-                    'controller' => 'Institutions',
-                    'action' => 'StaffBehaviours',
-                    'view',
-                    $id
-                ]);
-
-                $linkedRecords[] = $url;
             }
         }
 

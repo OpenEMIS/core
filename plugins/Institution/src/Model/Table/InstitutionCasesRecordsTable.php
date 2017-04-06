@@ -9,5 +9,7 @@ class InstitutionCasesRecordsTable extends AppTable
 		parent::initialize($config);
 		$this->belongsTo('InstitutionCases', ['className' => 'Institution.InstitutionCases']);
 		$this->belongsTo('StaffBehaviours', ['className' => 'Institution.StaffBehaviours']);
+
+		$this->addBehavior('CompositeKey');
 	}
 }
