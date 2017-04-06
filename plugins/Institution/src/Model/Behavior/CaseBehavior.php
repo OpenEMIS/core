@@ -16,7 +16,8 @@ class CaseBehavior extends Behavior
 	{
 		parent::initialize($config);
 
-		$this->_table->belongsToMany('LinkedCases', [
+		$model = $this->_table;
+		$model->belongsToMany('LinkedCases', [
 			'className' => 'Institution.InstitutionCases',
 			'joinTable' => 'institution_cases_records',
 			'foreignKey' => 'record_id',
@@ -55,30 +56,23 @@ class CaseBehavior extends Behavior
 
 		$linkedCases = [];
 		if ($entity->has('linked_cases')) {
-			foreach ($entity->linked_cases as $key => $linkedCaseEntity) {
-				$primaryKey = $model->LinkedCases->primaryKey();
-		        $id = null;
-		    	$primaryKeyValue = [];
-		    	if (is_array($primaryKey)) {
-		    		foreach ($primaryKey as $key) {
-						$primaryKeyValue[$key] = $linkedCaseEntity->getOriginal($key);
-					}
-		    	} else {
-		    		$primaryKeyValue[$primaryKey] = $linkedCaseEntity->getOriginal($primaryKey);
-		    	}
+			foreach ($entity->linked_cases as $linkedCaseEntity) {
+				$id = $model->getEncodedKeys($linkedCaseEntity);
 
-				$encodedKeys = $model->paramsEncode($primaryKeyValue);
-				$id = $encodedKeys;
+				$value = $linkedCaseEntity->title;
+				if ($model->action == 'view') {
+					$url = $event->subject()->HtmlField->link($value, [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Cases',
+						'view',
+						$id
+					]);
 
-				$url = $event->subject()->HtmlField->link($linkedCaseEntity->title, [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'Cases',
-					'view',
-					$id
-				]);
-
-				$linkedCases[] = $url;
+					$linkedCases[] = $url;
+				} else {
+					$linkedCases[] = $value;
+				}
 			}
 		}
 
