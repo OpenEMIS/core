@@ -24,6 +24,8 @@ class StaffBehavioursTable extends ControllerActionTable {
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
 		$this->addBehavior('Institution.Case');
+
+		$this->setDeleteStrategy('restrict');
 	}
 
 	public function implementedEvents()
@@ -126,6 +128,11 @@ class StaffBehavioursTable extends ControllerActionTable {
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->fields['staff_id']['attr']['value'] = $entity->staff->name_with_id;
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	{
+		$entity->showDeletedValueAs = $entity->description;
 	}
 
 	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
