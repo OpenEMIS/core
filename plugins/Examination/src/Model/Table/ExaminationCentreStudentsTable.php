@@ -154,6 +154,23 @@ class ExaminationCentreStudentsTable extends ControllerActionTable {
         }
     }
 
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'Users.Nationalities.NationalitiesLookUp'
+        ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('nationalities', [
+            'type' => 'element',
+            'element' => 'nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
+    }
+
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // Set the header of the page
