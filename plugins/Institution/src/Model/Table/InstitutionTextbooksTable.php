@@ -410,6 +410,7 @@ class InstitutionTextbooksTable extends ControllerActionTable
             $this->setupFields($entity);
             $this->field('textbooks_students', ['visible' => false]);
         }
+        $this->field('student_status', ['visible' => false]);
     }
 
     public function onUpdateFieldAllocatedTo(Event $event, array $attr, $action, Request $request)
