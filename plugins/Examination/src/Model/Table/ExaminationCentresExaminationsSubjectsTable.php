@@ -12,6 +12,7 @@ use App\Model\Table\ControllerActionTable;
 
 class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 {
+    private $queryString;
     private $examCentreId;
 
     public function initialize(array $config)
@@ -52,12 +53,12 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
-        $queryString = $request->query['queryString'];
+        $this->queryString = $request->query['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres'];
-        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $queryString];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
-        $Navigation->substituteCrumb('Examination Centre Subjects', 'Examination Centre', $overviewUrl);
+        $Navigation->substituteCrumb('Exam Centre Subjects', 'Examination Centre', $overviewUrl);
         $Navigation->addCrumb('Subjects');
     }
 
@@ -88,6 +89,9 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // set queryString for page refresh
+        $this->controller->set('queryString', $this->queryString);
+
         // Examination filter
         $ExaminationCentresExaminations = $this->ExaminationCentresExaminations;
         $examinationOptions = $this->ExaminationCentresExaminations
@@ -110,7 +114,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
         $query->where([$where]);
 
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
         $extra['auto_contain_fields'] = ['ExaminationItems' => ['code']];
     }
 

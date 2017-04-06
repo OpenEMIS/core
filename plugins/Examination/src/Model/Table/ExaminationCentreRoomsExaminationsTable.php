@@ -2,6 +2,7 @@
 namespace Examination\Model\Table;
 
 use ArrayObject;
+use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -12,6 +13,7 @@ use App\Model\Table\ControllerActionTable;
 
 class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
 {
+    private $queryString;
     private $examCentreId = null;
 
     public function initialize(array $config) {
@@ -23,6 +25,24 @@ class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
         $this->hasMany('ExaminationCentreRoomsExaminationsStudents', ['className' => 'Examination.ExaminationCentreRoomsExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('CompositeKey');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $this->queryString = $request->query['queryString'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres'];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
+
+        $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+        $Navigation->substituteCrumb('Exam Centre Rooms', 'Examination Centre', $overviewUrl);
+        $Navigation->addCrumb('Rooms');
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
@@ -41,6 +61,9 @@ class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // set queryString for page refresh
+        $this->controller->set('queryString', $this->queryString);
+
         // Examination filter
         $ExaminationCentresExaminations = TableRegistry::get('Examination.ExaminationCentresExaminations');
         $examinationOptions = $ExaminationCentresExaminations
@@ -63,7 +86,7 @@ class ExaminationCentreRoomsExaminationsTable extends ControllerActionTable
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
         $query->where([$where]);
 
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
         $extra['auto_contain_fields'] = ['ExaminationItems' => ['code']];
     }
 
