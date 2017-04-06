@@ -620,7 +620,7 @@ class WorkflowBehavior extends Behavior {
                     $this->Workflows->aliasField('workflow_model_id') => $workflowModel->id
                 ]);
 
-            if (in_array($workflowModel->model, ['Institution.InstitutionCases']) && $entity->has('workflow_rule_id') && !empty($entity->workflow_rule_id)) {
+            if (in_array($workflowModel->model, ['Institution.InstitutionCases']) && !is_null($entity) && $entity->has('workflow_rule_id') && !empty($entity->workflow_rule_id)) {
                 $workflowRuleId = $entity->workflow_rule_id;
                 $workflowQuery->matching('WorkflowRules', function ($q) use ($workflowRuleId) {
                     return $q->where([
