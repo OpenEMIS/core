@@ -37,6 +37,18 @@ DROP TABLE infrastructure_custom_forms;
 ALTER TABLE `z_3853_infrastructure_custom_forms`
 RENAME TO `infrastructure_custom_forms`;
 
+-- infrastructure_custom_forms_filters
+DROP TABLE infrastructure_custom_forms_filters;
+
+ALTER TABLE `z_3853_infrastructure_custom_forms_filters`
+RENAME TO `infrastructure_custom_forms_filters`;
+
+-- infrastructure_custom_forms_fields
+DROP TABLE infrastructure_custom_forms_fields;
+
+ALTER TABLE `z_3853_infrastructure_custom_forms_fields`
+RENAME TO `infrastructure_custom_forms_fields`;
+
 -- institution_rooms
 ALTER TABLE `institution_rooms`
 CHANGE COLUMN `institution_floor_id` `institution_infrastructure_id` INT(11) NOT NULL,
@@ -48,6 +60,16 @@ CHANGE COLUMN `infrastructure_condition_id` `infrastructure_condition_id` INT(11
 -- institution_infrastructures
 ALTER TABLE `z_3853_institution_infrastructures`
 RENAME TO `institution_infrastructures`;
+
+-- custom_modules
+INSERT INTO custom_modules (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `created_user_id`, `created`)
+VALUES (4, 'Infrastructure', 'Institution - Infrastructure', 'Institution.InstitutionInfrastructures', 1, 1, 1, '1990-01-01 00:00:00');
+
+DELETE FROM custom_modules WHERE `id` IN (7,8,9);
+
+UPDATE custom_modules
+SET id = 7
+WHERE id = 10;
 
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3853';

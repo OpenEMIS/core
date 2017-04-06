@@ -657,15 +657,14 @@ UPDATE `custom_modules`
 SET `id` = 10
 WHERE `id` = 7;
 
-INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `created_user_id`, `created`) VALUES
-(7, 'Land', 'Institutiion > Land', 'Institution.InstitutionLands', 1, 1, 1, NOW()),
-(8, 'Building', 'Institution > Building', 'Institution.InstitutionBuildings', 1, 1, 1, NOW()),
-(9, 'Floor', 'Institution > Floor', 'Institution.InstitutionFloors', 1, 1, 1, NOW());
-
 UPDATE `infrastructure_custom_forms`
 SET `custom_module_id` = 10
 WHERE `custom_module_id` = 7;
 
+INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `created_user_id`, `created`) VALUES
+(7, 'Land', 'Institutiion > Land', 'Institution.InstitutionLands', 1, 1, 1, NOW()),
+(8, 'Building', 'Institution > Building', 'Institution.InstitutionBuildings', 1, 1, 1, NOW()),
+(9, 'Floor', 'Institution > Floor', 'Institution.InstitutionFloors', 1, 1, 1, NOW());
 
 -- Add new records to the general types
 INSERT INTO `infrastructure_custom_forms` (
@@ -770,7 +769,97 @@ LEFT JOIN `custom_modules` `CM2`
   ON `CM2`.`id` = 9
 WHERE `CM`.`code` = 'Infrastructure';
 
+-- Patch infrastructure_custom_forms_fields
+
+CREATE TABLE `z_3853_infrastructure_custom_forms_fields` LIKE `infrastructure_custom_forms_fields`;
+
+INSERT INTO `z_3853_infrastructure_custom_forms_fields`
+SELECT * FROM `infrastructure_custom_forms_fields`;
+
+INSERT INTO infrastructure_custom_forms_fields (
+  `id`,
+    `infrastructure_custom_form_id`,
+    `infrastructure_custom_field_id`,
+    `section`,
+    `name`,
+    `is_mandatory`,
+    `is_unique`,
+    `order`
+)
+SELECT
+  uuid() as `id`,
+    `ICF`.`id` as `infrastructure_custom_form_id`,
+    `ICFF`.`infrastructure_custom_field_id`,
+    `ICFF`.`section`,
+    `ICFF`.`name`,
+    `ICFF`.`is_mandatory`,
+    `ICFF`.`is_unique`,
+    `ICFF`.`order`
+FROM `infrastructure_custom_forms_fields` `ICFF`
+INNER JOIN `infrastructure_custom_forms` `ICF`
+  ON `ICF`.`original_id` = `ICFF`.`infrastructure_custom_form_id`;
+
+-- Patch infrastructure_custom_forms_filters
+CREATE TABLE `z_3853_infrastructure_custom_forms_filters` LIKE `infrastructure_custom_forms_filters`;
+
+INSERT INTO `z_3853_infrastructure_custom_forms_filters`
+SELECT * FROM `infrastructure_custom_forms_filters`;
+
+INSERT INTO infrastructure_custom_forms_filters (
+  `id`,
+    `infrastructure_custom_form_id`,
+    `infrastructure_custom_filter_id`
+)
+SELECT
+  uuid() as `id`,
+    `ICF`.`id` as `infrastructure_custom_form_id`,
+    `ICFF`.`infrastructure_custom_filter_id`
+FROM `infrastructure_custom_forms_filters` `ICFF`
+INNER JOIN `infrastructure_custom_forms` `ICF`
+  ON `ICFF`.`infrastructure_custom_form_id` = `ICF`.`original_id`;
+
+-- Patch land custom filter
+UPDATE `infrastructure_custom_forms_filters` `ICFF`
+INNER JOIN `infrastructure_custom_forms` `ICF`
+  ON `ICF`.`id` = `ICFF`.`infrastructure_custom_form_id`
+INNER JOIN `custom_modules` `CF`
+  ON `CF`.`id` = `ICF`.`custom_module_id`
+    AND `CF`.`code` = 'Land'
+INNER JOIN `land_types` `LT`
+  ON `LT`.`original_id` = `ICFF`.`infrastructure_custom_filter_id`
+SET `ICFF`.`infrastructure_custom_filter_id` = `LT`.`id`;
+
+-- Patch building custom filter
+UPDATE `infrastructure_custom_forms_filters` `ICFF`
+INNER JOIN `infrastructure_custom_forms` `ICF`
+  ON `ICF`.`id` = `ICFF`.`infrastructure_custom_form_id`
+INNER JOIN `custom_modules` `CF`
+  ON `CF`.`id` = `ICF`.`custom_module_id`
+    AND `CF`.`code` = 'Building'
+INNER JOIN `building_types` `BT`
+  ON `BT`.`original_id` = `ICFF`.`infrastructure_custom_filter_id`
+SET `ICFF`.`infrastructure_custom_filter_id` = `BT`.`id`;
+
+-- Patch floor custom filter
+UPDATE `infrastructure_custom_forms_filters` `ICFF`
+INNER JOIN `infrastructure_custom_forms` `ICF`
+  ON `ICF`.`id` = `ICFF`.`infrastructure_custom_form_id`
+INNER JOIN `custom_modules` `CF`
+  ON `CF`.`id` = `ICF`.`custom_module_id`
+    AND `CF`.`code` = 'Floor'
+INNER JOIN `floor_types` `FT`
+  ON `FT`.`original_id` = `ICFF`.`infrastructure_custom_filter_id`
+SET `ICFF`.`infrastructure_custom_filter_id` = `FT`.`id`;
+
 -- clean up
+DELETE FROM `custom_modules`
+WHERE `id` = 4;
+
+DELETE FROM `infrastructure_custom_forms_fields`
+WHERE `infrastructure_custom_form_id` IN (
+  SELECT DISTINCT `original_id` FROM `infrastructure_custom_forms`
+);
+
 DELETE FROM infrastructure_custom_forms
 WHERE id IN (SELECT original_id FROM (
   SELECT DISTINCT original_id
