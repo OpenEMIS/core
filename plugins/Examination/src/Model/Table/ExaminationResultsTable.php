@@ -16,27 +16,17 @@ class ExaminationResultsTable extends ControllerActionTable
 {
     public function initialize(array $config)
     {
-        $this->table('examination_centres');
+        $this->table('examination_centres_examinations');
         parent::initialize($config);
-
+        $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('Areas', ['className' => 'Area.Areas']);
-        $this->hasMany('ExaminationCentreSubjects', ['className' => 'Examination.ExaminationCentreSubjects', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreSpecialNeeds', ['className' => 'Examination.ExaminationCentreSpecialNeeds', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportResults']);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
-    }
-
-    public function onGetName(Event $event, Entity $entity)
-    {
-        return $entity->code_name;
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
@@ -50,7 +40,7 @@ class ExaminationResultsTable extends ControllerActionTable
                 'action' => 'Results',
                 'academic_period_id' => $entity->academic_period_id,
                 'examination_id' => $entity->examination_id,
-                'examination_centre_id' => $entity->id
+                'examination_centre_id' => $entity->examination_centre_id
             ];
         }
 
@@ -59,18 +49,9 @@ class ExaminationResultsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('code', ['visible' => false]);
-        $this->field('address', ['visible' => false]);
-        $this->field('postal_code', ['visible' => false]);
-        $this->field('contact_person', ['visible' => false]);
-        $this->field('telephone', ['visible' => false]);
-        $this->field('fax', ['visible' => false]);
-        $this->field('email', ['visible' => false]);
-        $this->field('website', ['visible' => false]);
-        $this->field('institution_id', ['visible' => false]);
-        $this->field('area_id', ['visible' => false]);
-
-        $this->setFieldOrder(['name', 'academic_period_id', 'examination_id', 'total_registered']);
+        $this->field('examination_id', ['type' => 'string']);
+        $this->field('examination_centre_id', ['type' => 'string']);
+        $this->setFieldOrder(['examination_centre_id', 'academic_period_id', 'examination_id', 'total_registered']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -97,7 +78,13 @@ class ExaminationResultsTable extends ControllerActionTable
         }
         // End
 
+        $extra['auto_contain_fields'] = ['ExaminationCentres' => ['code']];
         $query->where($where);
+    }
+
+    public function onGetExaminationCentreId(Event $event, Entity $entity)
+    {
+        return $entity->examination_centre->code_name;
     }
 
     private function getExaminationOptions($selectedAcademicPeriod)
