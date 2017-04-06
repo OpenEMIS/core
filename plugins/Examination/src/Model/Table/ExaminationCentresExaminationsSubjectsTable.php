@@ -40,7 +40,6 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
-        $this->toggle('view', false);
         $this->toggle('remove', false);
     }
 
@@ -54,7 +53,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         $this->queryString = $request->query['queryString'];
-        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
@@ -75,15 +74,17 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
         $this->field('code');
         $this->field('name');
+        $this->field('examination_date', ['type' => 'date']);
         $this->field('examination_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'education_subject_id', 'examination_id']);
+        $this->setFieldOrder(['code', 'name', 'education_subject_id', 'examination_date', 'examination_id']);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
     {
         if (is_null($this->examCentreId)) {
             $event->stopPropagation();
-            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres', 'index']);
+            $this->Alert->error('general.notExists', ['reset' => 'override']);
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
         }
     }
 
@@ -104,28 +105,107 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             ->toArray();
 
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $recordExamId = $this->ControllerAction->getQueryString('examination_id');
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $recordExamId;
+        $selectedRecordExamId = $this->ControllerAction->getQueryString('examination_id');
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $selectedRecordExamId;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
            $where[$this->aliasField('examination_id')] = $selectedExamination;
         }
 
-        $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
-        $query->where([$where]);
-
+        // exam centre controls
         $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
-        $extra['auto_contain_fields'] = ['ExaminationItems' => ['code']];
+
+        $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
+        $extra['auto_contain_fields'] = ['ExaminationItems' => ['code', 'examination_date']];
+
+        $query
+            ->contain('ExaminationItems')
+            ->where([$where])
+            ->order('ExaminationItems.examination_date', 'ExaminationItems.code');
+    }
+
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('weight');
+        $this->field('start_time', ['type' => 'time']);
+        $this->field('end_time', ['type' => 'time']);
+        $this->field('examination_grading_type_id');
+        $this->setFieldOrder(['code', 'name', 'education_subject_id',  'examination_date', 'start_time', 'end_time', 'weight', 'examination_grading_type_id', 'examination_id']);
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain('ExaminationItems.ExaminationGradingTypes');
     }
 
     public function onGetName(Event $event, Entity $entity)
     {
-        return $entity->examination_item->name;
+        $value = '';
+        if ($entity->has('examination_item')) {
+            $value = $entity->examination_item->name;
+        }
+
+        return $value;
     }
 
     public function onGetCode(Event $event, Entity $entity)
     {
-        return $entity->examination_item->code;
+        $value = '';
+        if ($entity->has('examination_item')) {
+            $value = $entity->examination_item->code;
+        }
+
+        return $value;
+    }
+
+    public function onGetExaminationDate(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination_item')) {
+            $value = $entity->examination_item->examination_date;
+        }
+
+        return $value;
+    }
+
+    public function onGetWeight(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination_item')) {
+            $value = $entity->examination_item->weight;
+        }
+
+        return $value;
+    }
+
+    public function onGetStartTime(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination_item')) {
+            $value = $entity->examination_item->start_time;
+        }
+
+        return $value;
+    }
+
+    public function onGetEndTime(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination_item')) {
+            $value = $entity->examination_item->end_time;
+        }
+
+        return $value;
+    }
+
+    public function onGetExaminationGradingTypeId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination_item') && $entity->examination_item->has('examination_grading_type')) {
+            $value = $entity->examination_item->examination_grading_type->code_name;
+        }
+
+        return $value;
     }
 
     public function getExaminationCentreSubjects($examinationCentreId)
