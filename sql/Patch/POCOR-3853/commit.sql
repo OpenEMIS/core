@@ -19,9 +19,6 @@ UPDATE `infrastructure_statuses`
 SET `code` = 'CHANGE_IN_TYPE', `name` = 'Change in Type'
 WHERE `code` = 'CHANGE_IN_ROOM_TYPE';
 
-ALTER TABLE `room_statuses`
-RENAME TO `z_3853_room_statuses`;
-
 -- institution_lands
 CREATE TABLE IF NOT EXISTS `institution_lands` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
@@ -800,6 +797,9 @@ INNER JOIN `infrastructure_custom_forms` `ICF`
   ON `ICF`.`original_id` = `ICFF`.`infrastructure_custom_form_id`;
 
 -- Patch infrastructure_custom_forms_filters
+ALTER TABLE `room_statuses`
+RENAME TO `z_3853_room_statuses`;
+
 CREATE TABLE `z_3853_infrastructure_custom_forms_filters` LIKE `infrastructure_custom_forms_filters`;
 
 INSERT INTO `z_3853_infrastructure_custom_forms_filters`
