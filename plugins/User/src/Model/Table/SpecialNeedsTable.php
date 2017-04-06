@@ -32,16 +32,10 @@ class SpecialNeedsTable extends ControllerActionTable {
 	public function beforeAction($event) {
 		$this->fields['special_need_type_id']['type'] = 'select';
 		$this->fields['special_need_difficulty_id']['type'] = 'select';
-	}
 
-	public function indexBeforeAction(Event $event) 
-    {
-		$this->setFieldOrder('special_need_date', 'special_need_type_id', 'special_need_difficulty_id', 'comment');
-	}
-
-	public function addEditBeforeAction(Event $event) 
-    {
-		$this->setFieldOrder('special_need_type_id', 'special_need_date', 'special_need_difficulty_id', 'comment');
+        $this->field('special_need_type_id', ['after' => 'special_need_date']);
+        $this->field('special_need_difficulty_id', ['after' => 'special_need_type_id']);
+        $this->field('comment', ['after' => 'special_need_difficulty_id']);
 	}
 
 	public function validationDefault(Validator $validator) {
