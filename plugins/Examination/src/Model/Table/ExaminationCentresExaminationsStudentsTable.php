@@ -21,6 +21,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     public function initialize(array $config)
     {
         parent::initialize($config);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);

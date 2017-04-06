@@ -17,12 +17,14 @@ use App\Model\Table\ControllerActionTable;
 class ExamCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
+    private $queryString;
     private $examCentreId;
     private $examCentreRoomStudents = [];
 
     public function initialize(array $config) {
         $this->table('examination_centres_examinations_students');
         parent::initialize($config);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
@@ -79,12 +81,12 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
-        $queryString = $request->query['queryString'];
+        $this->queryString = $request->query['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres'];
-        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $queryString];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
-        $Navigation->substituteCrumb('Examination Centre Students', 'Examination Centre', $overviewUrl);
+        $Navigation->substituteCrumb('Exam Centre Students', 'Examination Centre', $overviewUrl);
         $Navigation->addCrumb('Students');
     }
 
@@ -101,6 +103,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->field('openemis_no');
         $this->fields['examination_id']['type'] = 'string';
         $this->fields['student_id']['type'] = 'string';
+        $this->fields['academic_period_id']['visible'] = false;
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -123,6 +126,9 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // set queryString for page refresh
+        $this->controller->set('queryString', $this->queryString);
+
         // Examination filter
         $ExaminationCentresExaminations = $this->ExaminationCentresExaminations;
         $examinationOptions = $this->ExaminationCentresExaminations
@@ -142,15 +148,30 @@ class ExamCentreStudentsTable extends ControllerActionTable {
            $where[$this->aliasField('examination_id')] = $selectedExamination;
         }
 
+        $ExamCentreRoomsExams = TableRegistry::get('Examination.ExaminationCentreRoomsExaminations');
+        $roomOptions = $ExamCentreRoomsExams->find('list', [
+                'keyField' => 'examination_centre_room.id',
+                'valueField' => 'examination_centre_room.name'
+            ])
+            ->contain('ExaminationCentreRooms')
+            ->where([
+                $ExamCentreRoomsExams->aliasField('examination_id') => $selectedExamination,
+                $ExamCentreRoomsExams->aliasField('examination_centre_id') => $this->examCentreId
+            ])
+            ->toArray();
+        $roomOptions = ['-1' => __('All Rooms')] + $roomOptions;
+        $selectedRoom = !is_null($this->request->query('examination_centre_room_id')) ? $this->request->query('examination_centre_room_id') : -1;
+        $this->controller->set(compact('roomOptions', 'selectedRoom'));
+        if ($selectedRoom != -1) {
+            $query->matching('ExaminationCentreRoomsExaminationsStudents');
+            $where['ExaminationCentreRoomsExaminationsStudents.examination_centre_room_id'] = $selectedRoom;
+        }
+
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
         $query->where([$where]);
 
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
+        $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
         $extra['auto_contain_fields'] = ['Institutions' => ['code']];
-
-        $query
-            ->where([$where])
-            ->group([$this->aliasField('student_id')]);
 
         //kiv
         $ExamCentreRoomStudents = $this->ExaminationCentreRoomsExaminationsStudents;
