@@ -44,6 +44,7 @@ class WorkflowsTable extends AppTable {
         parent::initialize($config);
         $this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
         $this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('WorkflowRules', ['className' => 'Workflow.WorkflowRules', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
     }

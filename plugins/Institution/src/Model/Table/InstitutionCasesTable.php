@@ -101,7 +101,8 @@ class InstitutionCasesTable extends ControllerActionTable
                             'status_id' => $statusId,
                             'assignee_id' => $assigneeId,
                             'institution_id' => $institutionId,
-                            'linked_records' => $linkedRecords
+                            'linked_records' => $linkedRecords,
+                            'workflow_rule_id' => $workflowRuleEntity->id
                         ];
                         $patchOptions = [
                             'associated' => [
