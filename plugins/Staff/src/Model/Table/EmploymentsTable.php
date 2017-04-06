@@ -100,8 +100,8 @@ class EmploymentsTable extends ControllerActionTable {
         $thresholdArray = json_decode($threshold, true);
 
         $conditions = [
-            1 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ') <= ' . $thresholdArray['value']), // before
-            2 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ') >= ' . $thresholdArray['value']), // after
+            1 => ('DATEDIFF(' . $this->aliasField('employment_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
+            2 => ('DATEDIFF(NOW(), ' . $this->aliasField('employment_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
         ];
 
         // will do the comparison with threshold when retrieving the absence data
