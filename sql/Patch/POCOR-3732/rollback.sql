@@ -20,7 +20,7 @@ DELETE FROM `workflow_statuses_steps` WHERE NOT EXISTS (SELECT 1 FROM `workflow_
 DELETE FROM `workflow_transitions` WHERE NOT EXISTS (SELECT 1 FROM `workflow_models` WHERE `workflow_models`.`id` = `workflow_transitions`.`workflow_model_id`);
 
 -- security_functions
-DELETE FROM `security_functions` WHERE `id` = 1056;
+DELETE FROM `security_functions` WHERE `id` IN (1056, 5067);
 
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3732';

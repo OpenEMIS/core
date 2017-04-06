@@ -99,6 +99,8 @@ class WorkflowRulesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $query->matching('Workflows');
+
         if ($extra->offsetExists('selectedFeature') && !empty($extra['selectedFeature'])) {
             $query->where([$this->aliasField('feature') => $extra['selectedFeature']]);
         }
@@ -111,6 +113,11 @@ class WorkflowRulesTable extends ControllerActionTable
     public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->extractRuleFromEntity($entity);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->matching('Workflows');
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -167,6 +174,13 @@ class WorkflowRulesTable extends ControllerActionTable
     public function onGetFeature(Event $event, Entity $entity)
     {
         return Inflector::humanize(Inflector::underscore($entity->feature));
+    }
+
+    public function onGetWorkflowId(Event $event, Entity $entity)
+    {
+        if (isset($entity->_matchingData['Workflows'])) {
+            return $entity->_matchingData['Workflows']->code_name;
+        }
     }
 
     public function onGetRule(Event $event, Entity $entity)

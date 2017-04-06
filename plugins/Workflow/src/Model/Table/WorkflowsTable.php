@@ -924,4 +924,8 @@ class WorkflowsTable extends AppTable {
 
         return compact('isEditable', 'isDeletable');
     }
+
+    public function getExcludedModels() {
+        return $this->excludedModels;
+    }
 }

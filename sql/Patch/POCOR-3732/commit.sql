@@ -20,20 +20,21 @@ CREATE TABLE IF NOT EXISTS `institution_cases` (
   KEY `institution_id` (`institution_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the workflows in a particular institution';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the cases in a particular institution';
 
 -- institution_cases_records
 DROP TABLE IF EXISTS `institution_cases_records`;
 CREATE TABLE IF NOT EXISTS `institution_cases_records` (
-  `id` char(36) NOT NULL,
+  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `institution_case_id` int(11) NOT NULL COMMENT 'links to institution_cases.id',
   `record_id` int(11) NOT NULL,
   `feature` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
+  PRIMARY KEY (`institution_case_id`, `record_id`, `feature`),
+  KEY `id` (`id`),
   KEY `institution_case_id` (`institution_case_id`),
   KEY `record_id` (`record_id`),
   KEY `feature` (`feature`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of records associates with institution cases';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of records associates with cases';
 
 -- workflow_rules
 DROP TABLE IF EXISTS `workflow_rules`;
@@ -89,4 +90,5 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 
 -- security_functions
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
-(1056, 'Cases', 'Institutions', 'Institutions', 'Cases', 1000, 'Cases.index|Cases.view', NULL, NULL, NULL, NULL, 1056, 1, 1, NOW());
+(1056, 'Cases', 'Institutions', 'Institutions', 'Cases', 1000, 'Cases.index|Cases.view', NULL, NULL, NULL, NULL, 1056, 1, 1, NOW()),
+(5067, 'Rules', 'Workflows', 'Administration', 'Workflows', 5000, 'Rules.index|Rules.view', 'Rules.edit', 'Rules.add', 'Rules.remove', NULL, 5043, 1, 1, NOW());
