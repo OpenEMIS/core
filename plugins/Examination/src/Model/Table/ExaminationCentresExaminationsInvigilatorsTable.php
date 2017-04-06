@@ -44,7 +44,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         $this->queryString = $request->query['queryString'];
-        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
@@ -61,14 +61,24 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Invigilators'));
 
+        $this->field('openemis_no');
         $this->fields['examination_id']['type'] = 'string';
         $this->fields['invigilator_id']['type'] = 'string';
         $this->field('rooms');
     }
 
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if (is_null($this->examCentreId)) {
+            $event->stopPropagation();
+            $this->Alert->error('general.notExists', ['reset' => 'override']);
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['invigilator_id', 'examination_id', 'rooms']);
+        $this->setFieldOrder(['openemis_no', 'invigilator_id', 'examination_id', 'rooms']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -116,5 +126,15 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
             return implode($rooms, ", ");
         }
+    }
+
+    public function onGetOpenemisNo(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('invigilator')) {
+            $value = $entity->invigilator->openemis_no;
+        }
+
+        return $value;
     }
 }

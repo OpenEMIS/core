@@ -55,6 +55,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             'ExamResults' => ['index', 'add']
         ]);
         $this->addBehavior('CompositeKey');
+        $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -74,7 +75,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $validator
             ->allowEmpty('registration_number')
             ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id', 'examination_item_id']]],
+                'rule' => ['validateUnique', ['scope' => ['examination_id']]],
                 'provider' => 'table'
             ]);
     }
@@ -82,7 +83,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
         $this->queryString = $request->query['queryString'];
-        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExaminationCentres'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
@@ -100,10 +101,19 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Students'));
 
         $this->field('room');
-        $this->field('openemis_no');
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->field('student_id', ['type' => 'select', 'sort' => ['field' => 'Users.first_name']]);
         $this->fields['examination_id']['type'] = 'string';
-        $this->fields['student_id']['type'] = 'string';
         $this->fields['academic_period_id']['visible'] = false;
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if (is_null($this->examCentreId)) {
+            $event->stopPropagation();
+            $this->Alert->error('general.notExists', ['reset' => 'override']);
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -141,13 +151,14 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             ->toArray();
 
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $recordExamId = $this->ControllerAction->getQueryString('examination_id');
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $recordExamId;
+        $selectedRecordExamId = $this->ControllerAction->getQueryString('examination_id');
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $selectedRecordExamId;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
            $where[$this->aliasField('examination_id')] = $selectedExamination;
         }
 
+        // Room filter
         $ExamCentreRoomsExams = TableRegistry::get('Examination.ExaminationCentreRoomsExaminations');
         $roomOptions = $ExamCentreRoomsExams->find('list', [
                 'keyField' => 'examination_centre_room.id',
@@ -159,19 +170,39 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 $ExamCentreRoomsExams->aliasField('examination_centre_id') => $this->examCentreId
             ])
             ->toArray();
-        $roomOptions = ['-1' => __('All Rooms')] + $roomOptions;
-        $selectedRoom = !is_null($this->request->query('examination_centre_room_id')) ? $this->request->query('examination_centre_room_id') : -1;
+        $roomOptions = ['0' => __('All Rooms'), '-1' => __('Students without Room')] + $roomOptions;
+        $selectedRoom = !is_null($this->request->query('examination_centre_room_id')) ? $this->request->query('examination_centre_room_id') : 0;
         $this->controller->set(compact('roomOptions', 'selectedRoom'));
-        if ($selectedRoom != -1) {
+
+        if ($selectedRoom > 0) {
             $query->matching('ExaminationCentreRoomsExaminationsStudents');
             $where['ExaminationCentreRoomsExaminationsStudents.examination_centre_room_id'] = $selectedRoom;
+        } else if ($selectedRoom == -1) {
+            $query
+                ->leftJoinWith('ExaminationCentreRoomsExaminationsStudents')
+                ->where(['ExaminationCentreRoomsExaminationsStudents.examination_centre_room_id IS NULL']);
         }
 
+        // exam centre controls
+        $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
+
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
         $query->where([$where]);
 
-        $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
-        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
+        // sort
+        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
+        }
 
         //kiv
         $ExamCentreRoomStudents = $this->ExaminationCentreRoomsExaminationsStudents;

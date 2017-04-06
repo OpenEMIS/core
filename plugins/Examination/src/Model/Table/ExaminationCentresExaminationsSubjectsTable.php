@@ -40,6 +40,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
+        $this->toggle('search', false);
         $this->toggle('remove', false);
     }
 
@@ -72,9 +73,10 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Subjects'));
         }
 
-        $this->field('code');
-        $this->field('name');
-        $this->field('examination_date', ['type' => 'date']);
+        $this->field('code', ['sort' => ['field' => 'ExaminationItems.code']]);
+        $this->field('name', ['sort' => ['field' => 'ExaminationItems.name']]);
+        $this->field('education_subject_id', ['sort' => ['field' => 'EducationSubjects.name']]);
+        $this->field('examination_date', ['type' => 'date', 'sort' => ['field' => 'ExaminationItems.examination_date']]);
         $this->field('examination_id', ['type' => 'select']);
         $this->setFieldOrder(['code', 'name', 'education_subject_id', 'examination_date', 'examination_id']);
     }
@@ -118,10 +120,14 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
         $extra['auto_contain_fields'] = ['ExaminationItems' => ['code', 'examination_date']];
 
-        $query
-            ->contain('ExaminationItems')
-            ->where([$where])
-            ->order('ExaminationItems.examination_date', 'ExaminationItems.code');
+        $query->where([$where]);
+
+        // sorting columns
+        $sortList = ['ExaminationItems.code', 'ExaminationItems.name', 'ExaminationItems.examination_date', 'EducationSubjects.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
