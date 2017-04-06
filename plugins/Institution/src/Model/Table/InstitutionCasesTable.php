@@ -6,6 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+use Cake\Datasource\ResultSetInterface;
 use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
@@ -14,6 +15,11 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionCasesTable extends ControllerActionTable
 {
     use OptionsTrait;
+
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
 
 	public function initialize(array $config)
 	{
@@ -170,5 +176,69 @@ class InstitutionCasesTable extends ControllerActionTable
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['LinkedRecords']);
+    }
+
+    public function findWorkbench(Query $query, array $options)
+    {
+        $controller = $options['_controller'];
+        $session = $controller->request->session();
+
+        $userId = $session->read('Auth.User.id');
+        $Statuses = $this->Statuses;
+        $doneStatus = self::DONE;
+
+        $query
+            ->select([
+                $this->aliasField('id'),
+                $this->aliasField('title'),
+                $this->aliasField('status_id'),
+                $this->aliasField('institution_id'),
+                $this->aliasField('modified'),
+                $this->aliasField('created'),
+                $this->Statuses->aliasField('name'),
+                $this->Institutions->aliasField('code'),
+                $this->Institutions->aliasField('name'),
+                $this->CreatedUser->aliasField('openemis_no'),
+                $this->CreatedUser->aliasField('first_name'),
+                $this->CreatedUser->aliasField('middle_name'),
+                $this->CreatedUser->aliasField('third_name'),
+                $this->CreatedUser->aliasField('last_name'),
+                $this->CreatedUser->aliasField('preferred_name')
+            ])
+            ->contain([$this->Institutions->alias(), $this->CreatedUser->alias()])
+            ->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+                return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+            })
+            ->where([$this->aliasField('assignee_id') => $userId])
+            ->order([$this->aliasField('created') => 'DESC'])
+            ->formatResults(function (ResultSetInterface $results) {
+                return $results->map(function ($row) {
+                    $url = [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'Cases',
+                        'view',
+                        $this->paramsEncode(['id' => $row->id]),
+                        'institution_id' => $row->institution_id
+                    ];
+
+                    if (is_null($row->modified)) {
+                        $receivedDate = $this->formatDate($row->created);
+                    } else {
+                        $receivedDate = $this->formatDate($row->modified);
+                    }
+
+                    $row['url'] = $url;
+                    $row['status'] = $row->_matchingData['Statuses']->name;
+                    $row['request_title'] = $row->title;
+                    $row['institution'] = $row->institution->code_name;
+                    $row['received_date'] = $receivedDate;
+                    $row['requester'] = $row->created_user->name_with_id;
+
+                    return $row;
+                });
+            });
+
+        return $query;
     }
 }
