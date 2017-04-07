@@ -89,6 +89,12 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
     }
 
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('code', ['type' => 'readonly']);
+        $this->field('title', ['type' => 'readonly']);
+    }
+
     public function onGetCustomLinkedRecordsElement(Event $event, $action, $entity, $attr, $options=[])
     {
         if ($action == 'index') {
