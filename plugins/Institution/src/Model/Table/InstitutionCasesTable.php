@@ -170,25 +170,37 @@ class InstitutionCasesTable extends ControllerActionTable
                         ->where($where);
                     
                     if ($query->count() > 0) {
-                        $linkedRecords = [];
-                        $linkedRecords[] = [
-                            'record_id' => $recordId,
-                            'feature' => $feature
-                        ];
+                        $existingLinkedCaseResults = $this
+                            ->find()
+                            ->matching('LinkedRecords', function ($q) use ($recordId, $feature) {
+                                return $q->where([
+                                    'record_id' => $recordId,
+                                    'feature' => $feature
+                                ]);
+                            })
+                            ->all();
 
-                        $newData = [
-                            'code' => $autoGenerateCode,
-                            'title' => $title,
-                            'status_id' => $statusId,
-                            'assignee_id' => $assigneeId,
-                            'institution_id' => $institutionId,
-                            'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
-                            'linked_records' => $linkedRecords
-                        ];
+                        if ($existingLinkedCaseResults->isEmpty()) {
+                            $linkedRecords = [];
+                            $linkedRecords[] = [
+                                'record_id' => $recordId,
+                                'feature' => $feature
+                            ];
 
-                        $newEntity = $this->newEntity();
-                        $newEntity = $this->patchEntity($newEntity, $newData);
-                        $this->save($newEntity);
+                            $newData = [
+                                'code' => $autoGenerateCode,
+                                'title' => $title,
+                                'status_id' => $statusId,
+                                'assignee_id' => $assigneeId,
+                                'institution_id' => $institutionId,
+                                'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
+                                'linked_records' => $linkedRecords
+                            ];
+
+                            $newEntity = $this->newEntity();
+                            $newEntity = $this->patchEntity($newEntity, $newData);
+                            $this->save($newEntity);
+                        }
                     }
                 }
             }
