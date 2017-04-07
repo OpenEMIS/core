@@ -37,6 +37,9 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('CompositeKey');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['index']
+        ]);
 
         $this->toggle('add', false);
         $this->toggle('edit', false);

@@ -54,6 +54,9 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['index']
+        ]);
         $this->addBehavior('CompositeKey');
         $this->setDeleteStrategy('restrict');
     }

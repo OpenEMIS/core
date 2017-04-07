@@ -50,8 +50,8 @@ class ExaminationResultsTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('examination_id', ['type' => 'string']);
-        $this->field('examination_centre_id', ['type' => 'string']);
-        $this->setFieldOrder(['examination_centre_id', 'academic_period_id', 'examination_id', 'total_registered']);
+        $this->field('name');
+        $this->setFieldOrder(['name', 'academic_period_id', 'examination_id', 'total_registered']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -82,7 +82,7 @@ class ExaminationResultsTable extends ControllerActionTable
         $query->where($where);
     }
 
-    public function onGetExaminationCentreId(Event $event, Entity $entity)
+    public function onGetName(Event $event, Entity $entity)
     {
         return $entity->examination_centre->code_name;
     }

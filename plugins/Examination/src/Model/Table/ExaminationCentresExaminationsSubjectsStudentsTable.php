@@ -25,6 +25,9 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
             'foreignKey' => ['examination_centre_id', 'examination_item_id']
         ]);
 
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ExamResults' => ['add']
+        ]);
         $this->addBehavior('CompositeKey');
     }
 }
