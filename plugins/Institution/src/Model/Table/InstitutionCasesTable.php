@@ -45,6 +45,17 @@ class InstitutionCasesTable extends ControllerActionTable
         return $events;
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $newCode = $entity->code . "-" . $entity->id;
+            $this->updateAll(
+                ['code' => $newCode],
+                ['id' => $entity->id]
+            );
+        }
+    }
+
     public function linkedRecordAfterSave(Event $event, Entity $linkedRecordEntity)
     {
         $this->autoLinkRecordWithCases($linkedRecordEntity);
@@ -76,6 +87,12 @@ class InstitutionCasesTable extends ControllerActionTable
             'valueClass' => 'table-full-width',
             'after' => 'description'
         ]);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('code', ['type' => 'readonly']);
+        $this->field('title', ['type' => 'readonly']);
     }
 
     public function onGetCustomLinkedRecordsElement(Event $event, $action, $entity, $attr, $options=[])
@@ -159,25 +176,37 @@ class InstitutionCasesTable extends ControllerActionTable
                         ->where($where);
                     
                     if ($query->count() > 0) {
-                        $linkedRecords = [];
-                        $linkedRecords[] = [
-                            'record_id' => $recordId,
-                            'feature' => $feature
-                        ];
+                        $existingLinkedCaseResults = $this
+                            ->find()
+                            ->matching('LinkedRecords', function ($q) use ($recordId, $feature) {
+                                return $q->where([
+                                    'record_id' => $recordId,
+                                    'feature' => $feature
+                                ]);
+                            })
+                            ->all();
 
-                        $newData = [
-                            'code' => $autoGenerateCode,
-                            'title' => $title,
-                            'status_id' => $statusId,
-                            'assignee_id' => $assigneeId,
-                            'institution_id' => $institutionId,
-                            'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
-                            'linked_records' => $linkedRecords
-                        ];
+                        if ($existingLinkedCaseResults->isEmpty()) {
+                            $linkedRecords = [];
+                            $linkedRecords[] = [
+                                'record_id' => $recordId,
+                                'feature' => $feature
+                            ];
 
-                        $newEntity = $this->newEntity();
-                        $newEntity = $this->patchEntity($newEntity, $newData);
-                        $this->save($newEntity);
+                            $newData = [
+                                'code' => $autoGenerateCode,
+                                'title' => $title,
+                                'status_id' => $statusId,
+                                'assignee_id' => $assigneeId,
+                                'institution_id' => $institutionId,
+                                'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
+                                'linked_records' => $linkedRecords
+                            ];
+
+                            $newEntity = $this->newEntity();
+                            $newEntity = $this->patchEntity($newEntity, $newData);
+                            $this->save($newEntity);
+                        }
                     }
                 }
             }
@@ -186,9 +215,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     private function getAutoGenerateCode($institutionId)
     {
-        $codePrefix = '';
-        $codeSuffix = '';
-
+        $autoGenerateCode = '';
         $institutionEntity = $this->Institutions
             ->find()
             ->where([
@@ -198,12 +225,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ->first();
 
         $todayDate = date("dmY");
-        $codePrefix = $institutionEntity->code . "-" . $todayDate . "-";
-
-        $currentStamp = time();
-        $codeSuffix = $currentStamp;
-
-        $autoGenerateCode = $codePrefix . $codeSuffix;
+        $autoGenerateCode = $institutionEntity->code . "-" . $todayDate;
 
         return $autoGenerateCode;
     }
