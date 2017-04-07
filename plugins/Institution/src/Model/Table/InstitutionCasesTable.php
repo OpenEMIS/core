@@ -28,15 +28,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-		$this->belongsToMany('LinkedRecords', [
-            'className' => 'Institution.StaffBehaviours',
-            'joinTable' => 'institution_cases_records',
-            'foreignKey' => 'institution_case_id',
-            'targetForeignKey' => 'record_id',
-            'through' => 'Institution.InstitutionCasesRecords',
-            'dependent' => true,
-            'cascadeCallbacks' => true
-        ]);
+        $this->hasMany('LinkedRecords', ['className' => 'Institution.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Workflow.Workflow');
         $this->addBehavior('Restful.RestfulAccessControl', [
@@ -50,27 +42,97 @@ class InstitutionCasesTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.LinkedRecord.afterSave'] = 'linkedRecordAfterSave';
-        $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
-        $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
-        $events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
-        $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
         return $events;
     }
 
     public function linkedRecordAfterSave(Event $event, Entity $linkedRecordEntity)
     {
-        $statusId = 0;
-        $assigneeId = 0;
-        $institutionId = $linkedRecordEntity->has('institution_id') ? $linkedRecordEntity->institution_id : 0;
-        $recordId = $linkedRecordEntity->id;
+        $this->autoLinkRecordWithCases($linkedRecordEntity);
+    }
 
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('linked_records', [
+            'type' => 'custom_linked_records',
+            'valueClass' => 'table-full-width',
+            'after' => 'description'
+        ]);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['LinkedRecords']);
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['LinkedRecords']);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('linked_records', [
+            'type' => 'custom_linked_records',
+            'valueClass' => 'table-full-width',
+            'after' => 'description'
+        ]);
+    }
+
+    public function onGetCustomLinkedRecordsElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+        if ($action == 'index') {
+            if ($entity->has('linked_records')) {
+                $attr['value'] = sizeof($entity->linked_records);
+            }
+        } else if ($action == 'view') {
+            $tableHeaders = [__('Feature'), __('Summary')];
+            $tableCells = [];
+
+            if ($entity->has('linked_records')) {
+                $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+                $featureOptions = $WorkflowRules->getFeatureOptions();
+
+                foreach ($entity->linked_records as $recordEntity) {
+                    $rowData = [];
+
+                    $recordId = $recordEntity->record_id;
+                    $url = $event->subject()->Html->link($recordId, [
+                        'plugin' => 'Institution',
+                        'controller' => 'Institutions',
+                        'action' => 'StaffBehaviours',
+                        'view',
+                        $this->paramsEncode(['id' => $recordId])
+                    ]);
+
+                    $rowData[] = isset($featureOptions[$recordEntity->feature]) ? $featureOptions[$recordEntity->feature] : $recordEntity->feature;
+                    $rowData[] = $url;
+
+                    $tableCells[] = $rowData;
+                }
+            }
+
+            $attr['tableHeaders'] = $tableHeaders;
+            $attr['tableCells'] = $tableCells;
+        }
+
+        return $event->subject()->renderElement('Institution.Cases/linked_records', ['attr' => $attr]);
+    }
+
+    public function autoLinkRecordWithCases($linkedRecordEntity)
+    {
         $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
         $linkedRecordModel = TableRegistry::get($linkedRecordEntity->source());
         $registryAlias = $linkedRecordModel->registryAlias();
         $feature = $WorkflowRules->getFeatureByRegistryAlias($registryAlias);
 
+        $statusId = 0;
+        $assigneeId = 0;
+        $institutionId = $linkedRecordEntity->has('institution_id') ? $linkedRecordEntity->institution_id : 0;
+        $autoGenerateCode = $this->getAutoGenerateCode($institutionId);
+        $recordId = $linkedRecordEntity->id;
+
         $title = $feature;
-        $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onGetCaseTitle', [$linkedRecordEntity], $linkedRecordModel);
+        $event = $linkedRecordModel->dispatchEvent('InstitutionCase.onSetCustomCaseTitle', [$linkedRecordEntity], $linkedRecordModel);
         if ($event->isStopped()) { return $event->result; }
         if (!empty($event->result)) {
             $title = $event->result;
@@ -83,8 +145,10 @@ class InstitutionCasesTable extends ControllerActionTable
             ])
             ->all();
 
+        // loop through each rule setup for the feature
+        // if the record match the rule, then create a new case and linked it with the record
         if (!$workflowRuleResults->isEmpty()) {
-            foreach ($workflowRuleResults as $key => $workflowRuleEntity) {
+            foreach ($workflowRuleResults as $workflowRuleEntity) {
                 $ruleArray = json_decode($workflowRuleEntity->rule, true);
                 if (array_key_exists('where', $ruleArray)) {
                     $where = $ruleArray['where'];
@@ -97,30 +161,22 @@ class InstitutionCasesTable extends ControllerActionTable
                     if ($query->count() > 0) {
                         $linkedRecords = [];
                         $linkedRecords[] = [
-                            'id' => $recordId,
-                            '_joinData' => [
-                                'feature' => $feature
-                            ]
+                            'record_id' => $recordId,
+                            'feature' => $feature
                         ];
 
                         $newData = [
+                            'code' => $autoGenerateCode,
                             'title' => $title,
                             'status_id' => $statusId,
                             'assignee_id' => $assigneeId,
                             'institution_id' => $institutionId,
-                            'linked_records' => $linkedRecords,
-                            'workflow_rule_id' => $workflowRuleEntity->id // required by workflow behavior to get the correct workflow
-                        ];
-                        $patchOptions = [
-                            'associated' => [
-                                'LinkedRecords' => [
-                                    'validate' => false
-                                ]
-                            ]
+                            'workflow_rule_id' => $workflowRuleEntity->id, // required by workflow behavior to get the correct workflow
+                            'linked_records' => $linkedRecords
                         ];
 
                         $newEntity = $this->newEntity();
-                        $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
+                        $newEntity = $this->patchEntity($newEntity, $newData);
                         $this->save($newEntity);
                     }
                 }
@@ -128,57 +184,28 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    public function onGetLinkedRecords(Event $event, Entity $entity)
+    private function getAutoGenerateCode($institutionId)
     {
-        $linkedRecords = [];
-        if ($entity->has('linked_records')) {
-            foreach ($entity->linked_records as $linkedRecordEntity) {
-                $id = $this->getEncodedKeys($linkedRecordEntity);
+        $codePrefix = '';
+        $codeSuffix = '';
 
-                $value = $linkedRecordEntity->description;
-                if ($this->action == 'view') {
-                    $url = $event->subject()->HtmlField->link($value, [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'StaffBehaviours',
-                        'view',
-                        $id
-                    ]);
+        $institutionEntity = $this->Institutions
+            ->find()
+            ->where([
+                $this->Institutions->aliasField('id') => $institutionId
+            ])
+            ->select([$this->Institutions->aliasField('code')])
+            ->first();
 
-                    $linkedRecords[] = $url;
-                } else {
-                    $linkedRecords[] = $value;
-                }
-            }
-        }
+        $todayDate = date("dmY");
+        $codePrefix = $institutionEntity->code . "-" . $todayDate . "-";
 
-        return !empty($linkedRecords) ? implode(", ", $linkedRecords) : '';
-    }
+        $currentStamp = time();
+        $codeSuffix = $currentStamp;
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->field('linked_records', [
-            'type' => 'chosenSelect',
-            'after' => 'description'
-        ]);
-    }
+        $autoGenerateCode = $codePrefix . $codeSuffix;
 
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query->contain(['LinkedRecords']);
-    }
-
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        $this->field('linked_records', [
-            'type' => 'chosenSelect',
-            'after' => 'description'
-        ]);
-    }
-
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query->contain(['LinkedRecords']);
+        return $autoGenerateCode;
     }
 
     public function findWorkbench(Query $query, array $options)
