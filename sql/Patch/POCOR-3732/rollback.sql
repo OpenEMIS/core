@@ -22,5 +22,7 @@ DELETE FROM `workflow_transitions` WHERE NOT EXISTS (SELECT 1 FROM `workflow_mod
 -- security_functions
 DELETE FROM `security_functions` WHERE `id` IN (1056, 5067);
 
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 5043 AND `order` < 6000;
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3732';
