@@ -25,6 +25,7 @@ class InstitutionCasesTable extends AppTable
         $this->hasMany('InstitutionCaseRecords', ['className' => 'Institution.InstitutionCaseRecords', 'foreignKey' => 'institution_case_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('Excel');
+        $this->addBehavior('Report.InstitutionSecurity');
         $this->addBehavior('Report.ReportList');
         $this->addBehavior('AcademicPeriod.Period');
     }
@@ -36,12 +37,22 @@ class InstitutionCasesTable extends AppTable
             'query' => $this->find(),
             'orientation' => 'landscape'
         ];
+
+        $requestData = json_decode($settings['process']['params']);
+
+        $module = $requestData->module;
+
+        if ($module == 'StaffBehaviours') {
+            $this->InstitutionCaseRecords->belongsTo('StaffBehaviours', [
+                'className' => 'Institution.StaffBehaviours',
+                'foreignKey' => 'record_id',
+                'conditions' => ['feature' => 'StaffBehaviours']
+            ]);
+        }
     }
 
     public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
     {
-        $StaffBehaviours = TableRegistry::get('Institution.StaffBehaviours');
-        $Users = TableRegistry::get('User.Users');
         $requestData = json_decode($settings['process']['params']);
         $academicPeriodId = $requestData->academic_period_id;
 
@@ -53,37 +64,42 @@ class InstitutionCasesTable extends AppTable
                 'area_code' => 'Areas.code',
                 'area_name' => 'Areas.name',
                 'institution_code' => 'Institutions.code',
-                // 'status_from' => 'WorkflowTransitions.prev_workflow_step_name',
-                // 'status_to' => 'WorkflowTransitions.workflow_step_name',
-                // 'action' => 'WorkflowTransitions.workflow_action_name',
-                // 'comment' => 'WorkflowTransitions.comment',
-                // 'executed_by' => 'WorkflowTransitions.created_user_id',
-                // 'executed_date' => 'WorkflowTransitions.created',
-                'openemis_no' => 'Users.openemis_no',
-                'staff_name' => 'Users.first_name'
+                'status_from' => 'WorkflowTransitions.prev_workflow_step_name',
+                'status_to' => 'WorkflowTransitions.workflow_step_name',
+                'action' => 'WorkflowTransitions.workflow_action_name',
+                'comment' => 'WorkflowTransitions.comment',
+                'executed_by' => 'WorkflowTransitions.created_user_id',
+                'executed_date' => 'WorkflowTransitions.created',
+                'openemis_no' => 'Staff.openemis_no',
+                'Staff.first_name',
+                'Staff.middle_name',
+                'Staff.third_name',
+                'Staff.last_name',
+                'Staff.preferred_name',
+                'CreatedUser.first_name',
+                'CreatedUser.middle_name',
+                'CreatedUser.third_name',
+                'CreatedUser.last_name',
+                'CreatedUser.preferred_name'
             ])
-            // ->matching('Statuses.Workflows.WorkflowModels.WorkflowTransitions', function ($q) {
-            //         return $q->where(['WorkflowTransitions.model_reference = ' . $this->aliasField('id')]);
-            // })
+            ->matching('Statuses.Workflows.WorkflowModels.WorkflowTransitions.CreatedUser', function ($q) {
+                    return $q->where(['WorkflowTransitions.model_reference = ' . $this->aliasField('id')]);
+            })
             ->contain(['Institutions.Areas'])
-            ->innerJoin(
-                [$this->InstitutionCaseRecords->alias() => $this->InstitutionCaseRecords->table()],
-                [$this->InstitutionCaseRecords->aliasField('institution_case_id = ') . $this->aliasField('id')]
-            )
-            ->innerJoin(
-                [$StaffBehaviours->alias() => $StaffBehaviours->table()],
-                [$StaffBehaviours->aliasField('id = ') . 'InstitutionCaseRecords.record_id']
-            )
-            ->innerJoin(
-                [$Users->alias() => $Users->table()],
-                [$Users->aliasField('id = ') . $StaffBehaviours->aliasField('staff_id')]
-            )
-            ->order([$this->aliasField('code')]);
-
-        $this->log($query->toArray(), 'debug');
+            ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff')
+            ->order([$this->aliasField('code')])
+            ->formatResults(function ($results) {
+                $arrayRes = $results->toArray();
+                foreach ($arrayRes as &$arr) {
+                    $this->log($arr, 'debug');
+                    $arr->staff_name = $arr['_matchingData']['Staff']['name'];
+                    $arr->executed_by = $arr['_matchingData']['CreatedUser']['name'];
+                }
+                return $arrayRes;
+            });
 
         if (!is_null($academicPeriodId) && $academicPeriodId != 0) {
-            $query->find('inPeriod', ['field' => 'created', 'academic_period_id' => $academicPeriodId, 'table' => 'Institution.InstitutionCaseRecords']);
+            $query->find('inPeriod', ['field' => 'created', 'academic_period_id' => $academicPeriodId]);
         }
     }
 
@@ -133,47 +149,47 @@ class InstitutionCasesTable extends AppTable
             'label' => __('Case Title')
         ];
 
-    //     $newFields[] = [
-    //         'key' => 'WorkflowTransitions.prev_workflow_step_name',
-    //         'field' => 'status_from',
-    //         'type' => 'string',
-    //         'label' => ''
-    //     ];
+        $newFields[] = [
+            'key' => 'WorkflowTransitions.prev_workflow_step_name',
+            'field' => 'status_from',
+            'type' => 'string',
+            'label' => ''
+        ];
 
-    //     $newFields[] = [
-    //         'key' => 'WorkflowTransitions.workflow_step_name',
-    //         'field' => 'status_to',
-    //         'type' => 'string',
-    //         'label' => ''
-    //     ];
+        $newFields[] = [
+            'key' => 'WorkflowTransitions.workflow_step_name',
+            'field' => 'status_to',
+            'type' => 'string',
+            'label' => ''
+        ];
 
-    //     $newFields[] = [
-    //         'key' => 'WorkflowTransitions.workflow_action_name',
-    //         'field' => 'action',
-    //         'type' => 'string',
-    //         'label' => ''
-    //     ];
+        $newFields[] = [
+            'key' => 'WorkflowTransitions.workflow_action_name',
+            'field' => 'action',
+            'type' => 'string',
+            'label' => ''
+        ];
 
-    //     $newFields[] = [
-    //         'key' => 'WorkflowTransitions.comment',
-    //         'field' => 'comment',
-    //         'type' => 'string',
-    //         'label' => ''
-    //     ];
+        $newFields[] = [
+            'key' => 'WorkflowTransitions.comment',
+            'field' => 'comment',
+            'type' => 'string',
+            'label' => ''
+        ];
 
-    //     $newFields[] = [
-    //         'key' => 'WorkflowTransitions.executed_by',
-    //         'field' => 'executed_by',
-    //         'type' => 'string',
-    //         'label' => ''
-    //     ];
+        $newFields[] = [
+            'key' => 'WorkflowTransitions.executed_by',
+            'field' => 'executed_by',
+            'type' => 'string',
+            'label' => ''
+        ];
 
-    //     $newFields[] = [
-    //         'key' => 'WorkflowTransitions.executed_date',
-    //         'field' => 'executed_date',
-    //         'type' => 'string',
-    //         'label' => ''
-    //     ];
+        $newFields[] = [
+            'key' => 'WorkflowTransitions.executed_date',
+            'field' => 'executed_date',
+            'type' => 'string',
+            'label' => ''
+        ];
 
         $newFields[] = [
             'key' => 'Users.openemis_no',
@@ -188,7 +204,6 @@ class InstitutionCasesTable extends AppTable
             'type' => 'string',
             'label' => ''
         ];
-
 
         $fields->exchangeArray($newFields);
     }

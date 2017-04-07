@@ -199,8 +199,8 @@ class InstitutionsTable extends AppTable
 		if (isset($this->request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
 			if (in_array($feature, ['Report.InstitutionCases'])) {
-				// $features = $this->getSelectOptions('WorkflowRules.features');
-				$featureOptions = ['StaffBehaviours' => __('Staff Behaviours')];
+				$WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+                $featureOptions = $WorkflowRules->getFeatureOptions();
 
 				$attr['type'] = 'select';
 				$attr['options'] = $featureOptions;
