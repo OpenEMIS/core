@@ -337,13 +337,14 @@ class NavigationComponent extends Component
     public function getInstitutionNavigation()
     {
         $session = $this->request->session();
-        $id = $session->read('Institution.Institutions.id');
+        $id = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $id;
         $navigation = [
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',
                 'parent' => 'Institutions.index',
                 'selected' => ['Institutions.dashboard'],
-                'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
+                'params' => ['plugin' => 'Institution', 0 => ]
             ],
 
             'Institution.General' => [
@@ -356,14 +357,14 @@ class NavigationComponent extends Component
                     'title' => 'Overview',
                     'parent' => 'Institution.General',
                     'selected' => ['Institutions.view', 'Institutions.edit'],
-                    'params' => ['plugin' => 'Institution', $this->controller->ControllerAction->paramsEncode(['id' => $id])]
+                    'params' => ['plugin' => 'Institution', 0 => $institutionId]
                 ],
 
                 'Institutions.Contacts.view' => [
                     'title' => 'Contacts',
                     'parent' => 'Institution.General',
                     'selected' => ['Institutions.Contacts.view', 'Institutions.Contacts.edit'],
-                    'params' => ['plugin' => 'Institution', 0 => $this->controller->ControllerAction->paramsEncode(['id' => $id])]
+                    'params' => ['plugin' => 'Institution', 0 => $institutionId]
                 ],
 
                 'Institutions.Attachments.index' => [
@@ -556,11 +557,11 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.StudentFees'],
                 ],
 
-            'Institutions.Infrastructures' => [
+            'Institutions.Lands' => [
                 'title' => 'Infrastructures',
                 'parent' => 'Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Infrastructures', 'Institutions.Rooms']
+                'selected' => ['Institutions.Lands', 'Institutions.Buildings', 'Institutions.Floors', 'Institutions.Rooms']
             ],
 
             'Survey' => [
@@ -588,6 +589,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Institution']
             ]
         ];
+
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params']['institutionId'] = $institutionId;
+            }
+        }
 
         return $navigation;
     }
