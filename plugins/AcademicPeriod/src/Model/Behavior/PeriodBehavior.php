@@ -122,12 +122,7 @@ class PeriodBehavior extends Behavior {
 	}
 
 	public function findInPeriod(Query $query, array $options) {
-		if (array_key_exists('table', $options)) {
-			$table = TableRegistry::get($options['table']);
-		} else {
-			$table = $this->_table;
-		}
-
+		$table = $this->_table;
 		$field = $options['field'];
 		$academicPeriodId = $options['academic_period_id'];
 
