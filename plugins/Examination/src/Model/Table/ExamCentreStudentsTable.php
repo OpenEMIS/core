@@ -36,7 +36,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->belongsToMany('ExaminationCentresExaminationsSubjects', [
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
             'joinTable' => 'examination_centres_examinations_subjects_students',
-            'foreignKey' => ['examination_centre_id', 'student_id', 'examination_id'],
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
@@ -294,12 +294,12 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     }
 
     public function findResults(Query $query, array $options) {
-        $academicPeriodId = $options['academic_period_id'];
         $examinationId = $options['examination_id'];
         $examinationCentreId = $options['examination_centre_id'];
         $examinationItemId = $options['examination_item_id'];
 
         $Users = $this->Users;
+        $SubjectStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjectsStudents');
         $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
 
         return $query
@@ -311,8 +311,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 $this->aliasField('registration_number'),
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('education_grade_id'),
-                $this->aliasField('total_mark'),
+                $SubjectStudents->aliasField('total_mark'),
                 $Users->aliasField('openemis_no'),
                 $Users->aliasField('first_name'),
                 $Users->aliasField('middle_name'),
@@ -321,25 +320,30 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 $Users->aliasField('preferred_name')
             ])
             ->matching('Users')
+            ->innerJoin(
+                [$SubjectStudents->alias() => $SubjectStudents->table()],
+                [
+                    $SubjectStudents->aliasField('examination_id = ') . $this->aliasField('examination_id'),
+                    $SubjectStudents->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
+                    $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $SubjectStudents->aliasField('examination_item_id = ') . $examinationItemId
+                ]
+            )
             ->leftJoin(
                 [$ItemResults->alias() => $ItemResults->table()],
                 [
-                    $ItemResults->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
-                    $ItemResults->aliasField('examination_item_id = ') . $this->aliasField('examination_item_id'),
+                    $ItemResults->aliasField('examination_item_id = ') . $SubjectStudents->aliasField('examination_item_id'),
                     $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
             )
             ->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('examination_id') => $examinationId,
-                $this->aliasField('examination_centre_id') => $examinationCentreId,
-                $this->aliasField('examination_item_id') => $examinationItemId
+                $this->aliasField('examination_centre_id') => $examinationCentreId
             ])
             ->group([
                 $this->aliasField('student_id'),
-                $this->aliasField('academic_period_id'),
                 $this->aliasField('examination_id')
             ])
             ->order([
