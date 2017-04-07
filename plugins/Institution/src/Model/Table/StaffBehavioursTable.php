@@ -23,7 +23,17 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 		$this->addBehavior('AcademicPeriod.Period');
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
+		$this->addBehavior('Institution.Case');
+
+		$this->setDeleteStrategy('restrict');
 	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+		$events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
+        return $events;
+    }
 
 	public function onGetOpenemisNo(Event $event, Entity $entity)
 	{
@@ -120,6 +130,11 @@ class StaffBehavioursTable extends ControllerActionTable {
 		$this->fields['staff_id']['attr']['value'] = $entity->staff->name_with_id;
 	}
 
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	{
+		$entity->showDeletedValueAs = $entity->description;
+	}
+
 	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'edit' || $action == 'add') {
@@ -195,4 +210,15 @@ class StaffBehavioursTable extends ControllerActionTable {
 		}
 		return $attr;
 	}
+
+	public function onSetCustomCaseTitle(Event $event, Entity $entity)
+    {
+    	$recordEntity = $this->get($entity->id, [
+    		'contain' => ['Staff', 'StaffBehaviourCategories', 'Institutions', 'BehaviourClassifications']
+    	]);
+    	$title = '';
+    	$title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
+    	
+    	return $title;
+    }
 }
