@@ -1,8 +1,20 @@
+-- institutions
+DROP TABLE IF EXISTS `institutions`;
+RENAME TABLE `z_3732_institutions` TO `institutions`;
+
+-- workflow_transitions
+DROP TABLE IF EXISTS `workflow_transitions`;
+RENAME TABLE `z_3732_workflow_transitions` TO `workflow_transitions`;
+
+-- staff_behaviours
+DROP TABLE IF EXISTS `staff_behaviours`;
+RENAME TABLE `z_3732_staff_behaviours` TO `staff_behaviours`;
+
 -- institution_cases
 DROP TABLE IF EXISTS `institution_cases`;
 
--- institution_cases_records
-DROP TABLE IF EXISTS `institution_cases_records`;
+-- institution_case_records
+DROP TABLE IF EXISTS `institution_case_records`;
 
 -- workflow_rules
 DROP TABLE IF EXISTS `workflow_rules`;
