@@ -45,6 +45,17 @@ class InstitutionCasesTable extends ControllerActionTable
         return $events;
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $newCode = $entity->code . "-" . $entity->id;
+            $this->updateAll(
+                ['code' => $newCode],
+                ['id' => $entity->id]
+            );
+        }
+    }
+
     public function linkedRecordAfterSave(Event $event, Entity $linkedRecordEntity)
     {
         $this->autoLinkRecordWithCases($linkedRecordEntity);
@@ -186,9 +197,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     private function getAutoGenerateCode($institutionId)
     {
-        $codePrefix = '';
-        $codeSuffix = '';
-
+        $autoGenerateCode = '';
         $institutionEntity = $this->Institutions
             ->find()
             ->where([
@@ -198,12 +207,7 @@ class InstitutionCasesTable extends ControllerActionTable
             ->first();
 
         $todayDate = date("dmY");
-        $codePrefix = $institutionEntity->code . "-" . $todayDate . "-";
-
-        $currentStamp = time();
-        $codeSuffix = $currentStamp;
-
-        $autoGenerateCode = $codePrefix . $codeSuffix;
+        $autoGenerateCode = $institutionEntity->code . "-" . $todayDate;
 
         return $autoGenerateCode;
     }

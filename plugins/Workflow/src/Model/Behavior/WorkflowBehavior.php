@@ -445,7 +445,7 @@ class WorkflowBehavior extends Behavior {
                 $tableCells = [];
                 $transitionResults = $this->WorkflowTransitions
                     ->find()
-                    ->contain(['ModifiedUser', 'CreatedUser'])
+                    ->contain(['CreatedUser'])
                     ->where([
                         $this->WorkflowTransitions->aliasField('workflow_model_id') => $workflow->workflow_model_id,
                         $this->WorkflowTransitions->aliasField('model_reference') => $entity->id
