@@ -89,6 +89,18 @@ trait OptionsTrait {
 	    			3 => __('Done')
 	    		]
         	],
+        	'WorkflowRules' => [
+        		'features' => [
+        			'StaffBehaviours' => [
+						'className' => 'Institution.StaffBehaviours',
+						'url' => [
+							'plugin' => 'Institution',
+	                        'controller' => 'Institutions',
+	                        'action' => 'StaffBehaviours'
+						]
+					]
+        		]
+        	],
         	'AlertLogs' => [
         		'feature_grouping' => [
         			'general' => __('General'),
