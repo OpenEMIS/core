@@ -15,24 +15,14 @@ class CaseBehavior extends Behavior
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
-
-		$this->_table->belongsToMany('LinkedCases', [
-			'className' => 'Institution.InstitutionCases',
-			'joinTable' => 'institution_cases_records',
-			'foreignKey' => 'record_id',
-			'targetForeignKey' => 'institution_case_id',
-			'through' => 'Institution.InstitutionCasesRecords',
-			'dependent' => true
-		]);
 	}
 
 	public function implementedEvents()
 	{
 		$events = parent::implementedEvents();
 		$events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
-		$events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
-		$events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+        $events['ControllerAction.Model.delete.onInitialize'] = 'deleteOnInitialize';
 		return $events;
 	}
 
@@ -49,64 +39,94 @@ class CaseBehavior extends Behavior
         }
 	}
 
-	public function onGetLinkedCases(Event $event, Entity $entity)
-	{
-		$model = $this->_table;
-
-		$linkedCases = [];
-		if ($entity->has('linked_cases')) {
-			foreach ($entity->linked_cases as $key => $linkedCaseEntity) {
-				$primaryKey = $model->LinkedCases->primaryKey();
-		        $id = null;
-		    	$primaryKeyValue = [];
-		    	if (is_array($primaryKey)) {
-		    		foreach ($primaryKey as $key) {
-						$primaryKeyValue[$key] = $linkedCaseEntity->getOriginal($key);
-					}
-		    	} else {
-		    		$primaryKeyValue[$primaryKey] = $linkedCaseEntity->getOriginal($primaryKey);
-		    	}
-
-				$encodedKeys = $model->paramsEncode($primaryKeyValue);
-				$id = $encodedKeys;
-
-				$url = $event->subject()->HtmlField->link($linkedCaseEntity->title, [
-					'plugin' => 'Institution',
-					'controller' => 'Institutions',
-					'action' => 'Cases',
-					'view',
-					$id
-				]);
-
-				$linkedCases[] = $url;
-			}
-		}
-
-		return !empty($linkedCases) ? implode(", ", $linkedCases) : '';
-	}
-
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
     	$model = $this->_table;
-    	$model->field('linked_cases', ['type' => 'chosenSelect']);
-    }
-
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-		$query->contain(['LinkedCases']);
-    }
-
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-    	$query->contain(['LinkedCases']);
+    	$model->field('linked_cases', [
+    		'type' => 'custom_linked_cases',
+    		'valueClass' => 'table-full-width'
+    	]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+    	$showFieldBefore = $entity->has('modified_user_id') ? 'modified_user_id' : 'create__user_id';
+
     	$model = $this->_table;
     	$model->field('linked_cases', [
-            'type' => 'chosenSelect',
-            'before' => 'modified_user_id'
-        ]);
+    		'type' => 'custom_linked_cases',
+    		'valueClass' => 'table-full-width',
+    		'before' => $showFieldBefore
+    	]);
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	{
+		$linkedCaseQuery = $this->getLinkedCaseQuery($entity);
+		$linkedCaseCount = $linkedCaseQuery->count();
+
+		$extra['associatedRecords'][] = ['model' => 'Linked Cases', 'count' => $linkedCaseCount];
+    }
+
+	public function onGetCustomLinkedCasesElement(Event $event, $action, $entity, $attr, $options=[])
+    {
+    	$model = $this->_table;
+
+    	if ($action == 'index') {
+    		$linkedCaseQuery = $this->getLinkedCaseQuery($entity);
+
+			$attr['value'] = $linkedCaseQuery->count();
+    	} else if ($action == 'view') {
+			$tableHeaders = [__('Code'), __('Title'), __('Description')];
+			$tableCells = [];
+
+			$linkedCaseQuery = $this->getLinkedCaseQuery($entity);
+			$linkedCaseResults = $linkedCaseQuery->all();
+			if (!$linkedCaseResults->isEmpty()) {
+				foreach ($linkedCaseResults as $key => $caseEntity) {
+					$rowData = [];
+
+					$id = $model->getEncodedKeys($caseEntity);
+					$url = $event->subject()->Html->link($caseEntity->code, [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Cases',
+						'view',
+						$id
+					]);
+
+					$rowData[] = $url;
+					$rowData[] = $caseEntity->title;
+					$rowData[] = nl2br(htmlspecialchars($caseEntity->description));
+
+					$tableCells[] = $rowData;
+				}
+			}
+
+			$attr['tableHeaders'] = $tableHeaders;
+			$attr['tableCells'] = $tableCells;
+    	}
+
+    	return $event->subject()->renderElement('Institution.Cases/linked_cases', ['attr' => $attr]);
+    }
+
+    public function getLinkedCaseQuery(Entity $entity)
+    {
+    	$WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+    	$InstitutionCases = TableRegistry::get('Institution.InstitutionCases');
+
+    	$feature = $WorkflowRules->getFeatureByEntity($entity);
+    	$recordId = $entity->id;
+
+    	$query = $InstitutionCases
+			->find()
+			->matching('LinkedRecords', function ($q) use ($feature, $recordId) {
+				return $q->where([
+					'feature' => $feature,
+					'record_id' => $recordId
+				]);
+			});
+
+		return $query;
     }
 }

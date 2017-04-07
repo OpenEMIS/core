@@ -1,8 +1,20 @@
+-- institutions
+DROP TABLE IF EXISTS `institutions`;
+RENAME TABLE `z_3732_institutions` TO `institutions`;
+
+-- workflow_transitions
+DROP TABLE IF EXISTS `workflow_transitions`;
+RENAME TABLE `z_3732_workflow_transitions` TO `workflow_transitions`;
+
+-- staff_behaviours
+DROP TABLE IF EXISTS `staff_behaviours`;
+RENAME TABLE `z_3732_staff_behaviours` TO `staff_behaviours`;
+
 -- institution_cases
 DROP TABLE IF EXISTS `institution_cases`;
 
--- institution_cases_records
-DROP TABLE IF EXISTS `institution_cases_records`;
+-- institution_case_records
+DROP TABLE IF EXISTS `institution_case_records`;
 
 -- workflow_rules
 DROP TABLE IF EXISTS `workflow_rules`;
@@ -20,7 +32,9 @@ DELETE FROM `workflow_statuses_steps` WHERE NOT EXISTS (SELECT 1 FROM `workflow_
 DELETE FROM `workflow_transitions` WHERE NOT EXISTS (SELECT 1 FROM `workflow_models` WHERE `workflow_models`.`id` = `workflow_transitions`.`workflow_model_id`);
 
 -- security_functions
-DELETE FROM `security_functions` WHERE `id` = 1056;
+DELETE FROM `security_functions` WHERE `id` IN (1056, 5067);
+
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` >= 5043 AND `order` < 6000;
 
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3732';
