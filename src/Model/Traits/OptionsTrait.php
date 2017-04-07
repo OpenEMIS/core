@@ -92,10 +92,12 @@ trait OptionsTrait {
         	'WorkflowRules' => [
         		'features' => [
         			'StaffBehaviours' => [
-						'className' => 'Institution.StaffBehaviours'
-					],
-					'StudentBehaviours' => [
-						'className' => 'Institution.StudentBehaviours'
+						'className' => 'Institution.StaffBehaviours',
+						'url' => [
+							'plugin' => 'Institution',
+	                        'controller' => 'Institutions',
+	                        'action' => 'StaffBehaviours'
+						]
 					]
         		]
         	],
