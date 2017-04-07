@@ -42,9 +42,12 @@ class CaseBehavior extends Behavior
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
     	$model = $this->_table;
+    	$showFieldBefore = isset($model->fields['modified_user_id']) ? 'modified_user_id' : 'create__user_id';
+
     	$model->field('linked_cases', [
     		'type' => 'custom_linked_cases',
-    		'valueClass' => 'table-full-width'
+    		'valueClass' => 'table-full-width',
+    		'before' => $showFieldBefore
     	]);
     }
 
@@ -77,7 +80,7 @@ class CaseBehavior extends Behavior
 
 			$attr['value'] = $linkedCaseQuery->count();
     	} else if ($action == 'view') {
-			$tableHeaders = [__('Code'), __('Title'), __('Description')];
+			$tableHeaders = [__('Status'), __('Assignee'), __('Code'), __('Title')];
 			$tableCells = [];
 
 			$linkedCaseQuery = $this->getLinkedCaseQuery($entity);
@@ -85,6 +88,12 @@ class CaseBehavior extends Behavior
 			if (!$linkedCaseResults->isEmpty()) {
 				foreach ($linkedCaseResults as $key => $caseEntity) {
 					$rowData = [];
+
+					if (empty($caseEntity->assignee_id)) {
+			            $assignee = '<span>&lt;'.$model->getMessage('general.unassigned').'&gt;</span>';
+			        } else {
+			        	$assignee = $caseEntity->assignee->name;
+			        }
 
 					$id = $model->getEncodedKeys($caseEntity);
 					$url = $event->subject()->Html->link($caseEntity->code, [
@@ -95,9 +104,10 @@ class CaseBehavior extends Behavior
 						$id
 					]);
 
+					$rowData[] = '<span class="status highlight">' . $caseEntity->status->name . '</span>';
+					$rowData[] = $assignee;
 					$rowData[] = $url;
 					$rowData[] = $caseEntity->title;
-					$rowData[] = nl2br(htmlspecialchars($caseEntity->description));
 
 					$tableCells[] = $rowData;
 				}
@@ -120,6 +130,7 @@ class CaseBehavior extends Behavior
 
     	$query = $InstitutionCases
 			->find()
+			->contain(['Statuses', 'Assignees'])
 			->matching('LinkedRecords', function ($q) use ($feature, $recordId) {
 				return $q->where([
 					'feature' => $feature,
