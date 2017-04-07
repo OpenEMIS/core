@@ -39,6 +39,9 @@ class InstitutionCasesTable extends ControllerActionTable
         ]);
 
         $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Dashboard' => ['index']
+        ]);
 
         $this->toggle('add', false);
 	}

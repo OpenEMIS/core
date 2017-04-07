@@ -89,6 +89,8 @@ INSERT INTO `workflow_actions` (`name`, `description`, `action`, `visible`, `com
 ('Reopen', NULL, NULL, 1, 0, 0, NULL, @closedStatusId, @openStatusId, 1, NOW());
 
 -- security_functions
+UPDATE `security_functions` SET `order` = `order` + 1 WHERE `order` >= 5043 AND `order` < 6000;
+
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `created_user_id`, `created`) VALUES
-(1056, 'Cases', 'Institutions', 'Institutions', 'Cases', 1000, 'Cases.index|Cases.view', NULL, NULL, NULL, NULL, 1056, 1, 1, NOW()),
+(1056, 'Cases', 'Institutions', 'Institutions', 'Cases', 1000, 'Cases.index|Cases.view', 'Cases.edit', NULL, 'Cases.remove', NULL, 1056, 1, 1, NOW()),
 (5067, 'Rules', 'Workflows', 'Administration', 'Workflows', 5000, 'Rules.index|Rules.view', 'Rules.edit', 'Rules.add', 'Rules.remove', NULL, 5043, 1, 1, NOW());
