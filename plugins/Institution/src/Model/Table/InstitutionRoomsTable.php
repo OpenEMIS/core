@@ -19,7 +19,7 @@ class InstitutionRoomsTable extends AppTable
     use OptionsTrait;
     const UPDATE_DETAILS = 1;    // In Use
     const END_OF_USAGE = 2;
-    const CHANGE_IN_ROOM_TYPE = 3;
+    const CHANGE_IN_TYPE = 3;
 
     private $Levels = null;
     private $levelOptions = [];
@@ -32,7 +32,7 @@ class InstitutionRoomsTable extends AppTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('RoomStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
+        $this->belongsTo('RoomStatuses', ['className' => 'Infrastructure.InfrastructureStatuses', 'foreignKey' => 'room_status_id']);
         $this->belongsTo('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'foreignKey' => 'institution_floor_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
@@ -56,7 +56,7 @@ class InstitutionRoomsTable extends AppTable
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
-            'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
+            'fieldClass' => ['className' => 'Infrastructure.RoomCustomFields'],
             'formKey' => 'infrastructure_custom_form_id',
             'filterKey' => 'infrastructure_custom_filter_id',
             'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
@@ -103,7 +103,7 @@ class InstitutionRoomsTable extends AppTable
             ->requirePresence('new_room_type', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
                     $selectedEditType = $context['data']['change_type'];
-                    if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+                    if ($selectedEditType == self::CHANGE_IN_TYPE) {
                         return true;
                     }
                 }
@@ -113,7 +113,7 @@ class InstitutionRoomsTable extends AppTable
             ->requirePresence('new_start_date', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
                     $selectedEditType = $context['data']['change_type'];
-                    if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+                    if ($selectedEditType == self::CHANGE_IN_TYPE) {
                         return true;
                     }
                 }
@@ -180,7 +180,7 @@ class InstitutionRoomsTable extends AppTable
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Owner');
@@ -341,7 +341,7 @@ class InstitutionRoomsTable extends AppTable
             return $this->controller->redirect($url);
         } else {
             $selectedEditType = $this->request->query('edit_type');
-            if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+            if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
 
@@ -401,7 +401,7 @@ class InstitutionRoomsTable extends AppTable
     public function editAfterAction(Event $event, Entity $entity)
     {
         $selectedEditType = $this->request->query('edit_type');
-        if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+        if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
             foreach ($this->fields as $field => $attr) {
                 if ($this->startsWith($field, 'custom_') || $this->startsWith($field, 'section_')) {
                     $this->fields[$field]['visible'] = false;
@@ -420,7 +420,7 @@ class InstitutionRoomsTable extends AppTable
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
 
-            if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+            if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
                 $this->canUpdateDetails = false;
             }
 
@@ -704,7 +704,7 @@ class InstitutionRoomsTable extends AppTable
             $entity = $attr['entity'];
 
             $selectedEditType = $request->query('edit_type');
-            if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+            if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $roomTypeOptions = $this->RoomTypes
                     ->find('list')
                     ->find('visible')
@@ -728,7 +728,7 @@ class InstitutionRoomsTable extends AppTable
             $entity = $attr['entity'];
 
             $selectedEditType = $request->query('edit_type');
-            if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+            if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 /* restrict End Date from start date until end of academic period
                 $startDateObj = $entity->start_date->copy();
                 $startDateObj->addDay();
@@ -927,7 +927,7 @@ class InstitutionRoomsTable extends AppTable
         $oldEntity->end_date = $endDateObj;
 
         $where = ['id' => $oldEntity->id];
-        $this->updateRoomStatus('CHANGE_IN_ROOM_TYPE', $where);
+        $this->updateRoomStatus('CHANGE_IN_TYPE', $where);
         $this->save($oldEntity);
         // End
 
@@ -1036,7 +1036,7 @@ class InstitutionRoomsTable extends AppTable
                 $copyTo = $entity->id;
 
                 $previousEntity = $this->get($copyFrom);
-                $changeInRoomTypeId = $this->RoomStatuses->getIdByCode('CHANGE_IN_ROOM_TYPE');
+                $changeInRoomTypeId = $this->RoomStatuses->getIdByCode('CHANGE_IN_TYPE');
 
                 if ($previousEntity->room_status_id == $changeInRoomTypeId) {
                     // third parameters set to true means copy general only

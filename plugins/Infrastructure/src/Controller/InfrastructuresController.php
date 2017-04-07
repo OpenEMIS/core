@@ -13,7 +13,9 @@ class InfrastructuresController extends AppController
         parent::initialize();
         $this->ControllerAction->models = [
             'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields', 'options' => ['deleteStrategy' => 'restrict']],
-            'Pages' => ['className' => 'Infrastructure.InfrastructureCustomForms', 'options' => ['deleteStrategy' => 'restrict']],
+            'LandPages' => ['className' => 'Infrastructure.LandCustomForms', 'options' => ['deleteStrategy' => 'restrict']],
+            'BuildingPages' => ['className' => 'Infrastructure.BuildingCustomForms', 'options' => ['deleteStrategy' => 'restrict']],
+            'FloorPages' => ['className' => 'Infrastructure.FloorCustomForms', 'options' => ['deleteStrategy' => 'restrict']],
             'RoomPages' => ['className' => 'Infrastructure.RoomCustomForms', 'options' => ['deleteStrategy' => 'restrict']]
         ];
         $this->loadComponent('Paginator');
@@ -53,7 +55,7 @@ class InfrastructuresController extends AppController
                 'text' => __('Fields')
             ],
             'Pages' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Pages'],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'LandPages'],
                 'text' => __('Pages')
             ],
             'Types' => [

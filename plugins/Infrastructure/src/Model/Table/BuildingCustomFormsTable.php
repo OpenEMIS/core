@@ -6,13 +6,13 @@ use CustomField\Model\Table\CustomFormsTable;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class RoomCustomFormsTable extends CustomFormsTable
+class BuildingCustomFormsTable extends CustomFormsTable
 {
     public function initialize(array $config)
     {
         $config['extra'] = [
             'fieldClass' => [
-                'className' => 'Infrastructure.RoomCustomFields',
+                'className' => 'Infrastructure.BuildingCustomFields',
                 'joinTable' => 'infrastructure_custom_forms_fields',
                 'foreignKey' => 'infrastructure_custom_form_id',
                 'targetForeignKey' => 'infrastructure_custom_field_id',
@@ -20,17 +20,17 @@ class RoomCustomFormsTable extends CustomFormsTable
                 'dependent' => true
             ],
             'filterClass' => [
-                'className' => 'Infrastructure.RoomTypes',
+                'className' => 'Infrastructure.BuildingTypes',
                 'joinTable' => 'infrastructure_custom_forms_filters',
                 'foreignKey' => 'infrastructure_custom_form_id',
                 'targetForeignKey' => 'infrastructure_custom_filter_id',
-                'through' => 'Infrastructure.RoomCustomFormsFilters',
+                'through' => 'Infrastructure.BuildingCustomFormsFilters',
                 'dependent' => true
             ]
         ];
         $this->table('infrastructure_custom_forms');
         parent::initialize($config);
-        $this->addBehavior('Infrastructure.Pages', ['module' => 'Room']);
+        $this->addBehavior('Infrastructure.Pages', ['module' => 'Building']);
     }
 
     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)

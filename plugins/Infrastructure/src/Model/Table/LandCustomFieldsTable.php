@@ -3,15 +3,12 @@ namespace Infrastructure\Model\Table;
 
 use CustomField\Model\Table\CustomFieldsTable;
 
-class InfrastructureCustomFieldsTable extends CustomFieldsTable
+class LandCustomFieldsTable extends CustomFieldsTable
 {
     public function initialize(array $config)
     {
-        $this->supportedFieldTypes = $this->getSupportedFieldTypesByModel([
-            'Institution.InstitutionLands',
-            'Institution.InstitutionBuildings',
-            'Institution.InstitutionFloors',
-            'Institution.InstitutionRooms']);
+        $this->table('infrastructure_custom_fields');
+        $this->supportedFieldTypes = $this->getSupportedFieldTypesByModel('Institution.InstitutionLands');
         parent::initialize($config);
         $this->hasMany('CustomFieldOptions', ['className' => 'Infrastructure.InfrastructureCustomFieldOptions', 'foreignKey' => 'infrastructure_custom_field_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('CustomFieldValues', ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);
