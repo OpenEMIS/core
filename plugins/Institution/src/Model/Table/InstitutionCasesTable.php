@@ -68,6 +68,10 @@ class InstitutionCasesTable extends ControllerActionTable
             'valueClass' => 'table-full-width',
             'after' => 'description'
         ]);
+        $this->field('created', [
+            'visible' => true,
+            'after' => 'linked_records'
+        ]);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -95,7 +99,7 @@ class InstitutionCasesTable extends ControllerActionTable
         $this->field('title', ['type' => 'readonly']);
     }
 
-    public function onGetCustomLinkedRecordsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomLinkedRecordsElement(Event $mainEvent, $action, $entity, $attr, $options=[])
     {
         if ($action == 'index') {
             if ($entity->has('linked_records')) {
@@ -108,18 +112,28 @@ class InstitutionCasesTable extends ControllerActionTable
             if ($entity->has('linked_records')) {
                 $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
                 $featureOptions = $WorkflowRules->getFeatureOptions();
+                $featureAttr = $this->getSelectOptions('WorkflowRules.features');
 
                 foreach ($entity->linked_records as $recordEntity) {
                     $rowData = [];
 
                     $recordId = $recordEntity->record_id;
-                    $url = $event->subject()->Html->link($recordId, [
-                        'plugin' => 'Institution',
-                        'controller' => 'Institutions',
-                        'action' => 'StaffBehaviours',
-                        'view',
-                        $this->paramsEncode(['id' => $recordId])
-                    ]);
+                    $feature = $recordEntity->feature;
+
+                    $className = $featureAttr[$feature]['className'];
+                    $recordModel = TableRegistry::get($className);
+                    $summary = $recordId;
+                    $event = $recordModel->dispatchEvent('InstitutionCase.onSetCustomCaseSummary', [$recordId], $recordModel);
+                    if ($event->isStopped()) { return $event->result; }
+                    if (!empty($event->result)) {
+                        $summary = $event->result;
+                    }
+
+                    $baseUrl = $featureAttr[$feature]['url'];
+                    $baseUrl[] = 'view';
+                    $baseUrl[] = $this->paramsEncode(['id' => $recordId]);
+
+                    $url = $mainEvent->subject()->Html->link($summary, $baseUrl);
 
                     $rowData[] = isset($featureOptions[$recordEntity->feature]) ? $featureOptions[$recordEntity->feature] : $recordEntity->feature;
                     $rowData[] = $url;
@@ -132,7 +146,7 @@ class InstitutionCasesTable extends ControllerActionTable
             $attr['tableCells'] = $tableCells;
         }
 
-        return $event->subject()->renderElement('Institution.Cases/linked_records', ['attr' => $attr]);
+        return $mainEvent->subject()->renderElement('Institution.Cases/linked_records', ['attr' => $attr]);
     }
 
     public function autoLinkRecordWithCases($linkedRecordEntity)
