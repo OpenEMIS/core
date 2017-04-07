@@ -614,22 +614,23 @@ class WorkflowBehavior extends Behavior {
 
         if (!empty($workflowModel)) {
             // Find all Workflow setup for the model
-            $workflowQuery = $this->Workflows
+            $workflowIdsQuery = $this->Workflows
                 ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                 ->where([
                     $this->Workflows->aliasField('workflow_model_id') => $workflowModel->id
                 ]);
 
-            if (in_array($workflowModel->model, ['Institution.InstitutionCases']) && !is_null($entity) && $entity->has('workflow_rule_id') && !empty($entity->workflow_rule_id)) {
+            $excludedModels = $this->Workflows->getExcludedModels();
+            if (in_array($workflowModel->model, $excludedModels) && !is_null($entity) && $entity->has('workflow_rule_id') && !empty($entity->workflow_rule_id)) {
                 $workflowRuleId = $entity->workflow_rule_id;
-                $workflowQuery->matching('WorkflowRules', function ($q) use ($workflowRuleId) {
+                $workflowIdsQuery->matching('WorkflowRules', function ($q) use ($workflowRuleId) {
                     return $q->where([
                         'WorkflowRules.id' => $workflowRuleId
                     ]);
                 });
             }
 
-            $workflowIds = $workflowQuery->toArray();
+            $workflowIds = $workflowIdsQuery->toArray();
 
             $workflowQuery = $this->Workflows
                 ->find()
