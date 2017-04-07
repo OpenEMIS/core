@@ -8,8 +8,6 @@ use Cake\Event\Event;
 
 class InfrastructureCustomFormsTable extends CustomFormsTable
 {
-    private $modules = ['Infrastructure', 'Room'];
-
     public function initialize(array $config)
     {
         $config['extra'] = [
@@ -31,7 +29,6 @@ class InfrastructureCustomFormsTable extends CustomFormsTable
             ]
         ];
         parent::initialize($config);
-        $this->addBehavior('Infrastructure.Pages', ['module' => 'infrastructure']);
     }
 
     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)
@@ -47,15 +44,5 @@ class InfrastructureCustomFormsTable extends CustomFormsTable
         $attr['attr']['value'] = $module->name;
 
         return $attr;
-    }
-
-    public function getModuleQuery()
-    {
-        $query = parent::getModuleQuery();
-        if (!empty($this->modules)) {
-            $query->where([$this->CustomModules->aliasField('code IN') => $this->modules]);
-        }
-
-        return $query;
     }
 }

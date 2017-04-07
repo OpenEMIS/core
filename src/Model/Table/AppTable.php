@@ -424,10 +424,10 @@ class AppTable extends Table {
 		$id = $encodedKeys;
 
         if (array_key_exists('view', $buttons)) {
-            $buttons['view']['url'][1] = $id;
+            $buttons['view']['url'][] = $id;
         }
         if (array_key_exists('edit', $buttons)) {
-            $buttons['edit']['url'][1] = $id;
+            $buttons['edit']['url'][] = $id;
         }
         if (array_key_exists('remove', $buttons)) {
             if (in_array($buttons['remove']['strategy'], ['cascade'])) {
@@ -437,7 +437,7 @@ class AppTable extends Table {
                 $buttons['remove']['attr']['field-value'] = $id;
                 $buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
             } else {
-                $buttons['remove']['url'][1] = $id;
+                $buttons['remove']['url'][] = $id;
             }
         }
         return $buttons;

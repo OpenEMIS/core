@@ -145,31 +145,7 @@ class InstitutionLandsTable extends AppTable
         return $this->levelOptions[$this->landLevel];
     }
 
-    public function onGetSubjects(Event $event, Entity $entity)
-    {
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-
-        if ($entity->has('subjects')) {
-            $resultArray = [];
-
-            foreach ($entity->subjects as $key => $obj) {
-                $records = $InstitutionClassSubjects->find()
-                    ->where([$InstitutionClassSubjects->aliasField('institution_subject_id') => $obj->id])
-                    ->first();
-
-                $className = $InstitutionClasses->get($records->institution_class_id)->name;
-
-                $resultArray[] = $className . ' - ' . $obj->name;
-            }
-
-            if (!empty($resultArray)) {
-                return implode(', ', $resultArray);
-            }
-        }
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Owner');
@@ -211,7 +187,6 @@ class InstitutionLandsTable extends AppTable
         $this->ControllerAction->field('start_year', ['visible' => false]);
         $this->ControllerAction->field('end_date', ['visible' => false]);
         $this->ControllerAction->field('end_year', ['visible' => false]);
-        $this->ControllerAction->field('institution_infrastructure_id', ['visible' => false]);
         $this->ControllerAction->field('academic_period_id', ['visible' => false]);
         $this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
         $this->ControllerAction->field('previous_institution_land_id', ['visible' => false]);
@@ -225,20 +200,13 @@ class InstitutionLandsTable extends AppTable
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
         // get the list of owner institution id
-        $ownerInstitutionIds = $this->getOwnerInstitutionId();
+        // $ownerInstitutionIds = $this->getOwnerInstitutionId();
 
-        if (!empty($ownerInstitutionIds)) {
-            $conditions = [];
-            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
-            $query->where($conditions, [], true);
-        }
-
-        $parentId = $this->request->query('parent');
-        if (!is_null($parentId)) {
-            $query->where([$this->aliasField('institution_infrastructure_id') => $parentId]);
-        } else {
-            $query->where([$this->aliasField('institution_infrastructure_id IS NULL')]);
-        }
+        // if (!empty($ownerInstitutionIds)) {
+        //     $conditions = [];
+        //     $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
+        //     $query->where($conditions, [], true);
+        // }
 
         // Academic Period
         list($periodOptions, $selectedPeriod) = array_values($this->getPeriodOptions());
@@ -294,7 +262,7 @@ class InstitutionLandsTable extends AppTable
 
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
-        $query->contain(['AcademicPeriods', 'LandTypes', 'InfrastructureConditions', 'Subjects']);
+        $query->contain(['AcademicPeriods', 'LandTypes', 'InfrastructureConditions']);
     }
 
     public function editBeforeAction(Event $event)
@@ -434,46 +402,6 @@ class InstitutionLandsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionInfrastructureId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'view') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'hidden';
-            $parentId = $entity->institution_infrastructure_id;
-            if (!empty($parentId)) {
-                $list = $this->Parents->findPath(['for' => $parentId, 'withLevels' => true]);
-            } else {
-                $list = [];
-            }
-
-            $field = 'institution_infrastructure_id';
-            $after = $field;
-            foreach ($list as $key => $infrastructure) {
-                $this->ControllerAction->field($field.$key, [
-                    'type' => 'readonly',
-                    'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
-                    'value' => $infrastructure->code_name,
-                    'after' => $after
-                ]);
-                $after = $field.$key;
-            }
-        } elseif ($action == 'add' || $action == 'edit') {
-            $parentId = $this->request->query('parent');
-
-            if (is_null($parentId)) {
-                $attr['type'] = 'hidden';
-                $attr['value'] = null;
-            } else {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $parentId;
-                $attr['attr']['value'] = $this->Parents->getParentPath($parentId);
-            }
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -495,16 +423,16 @@ class InstitutionLandsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'index' || $action == 'view') {
-            if (!empty($this->getOwnerInstitutionId())) {
-                $attr['type'] = 'select';
-            }
-        }
+    // public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    // {
+    //     if ($action == 'index' || $action == 'view') {
+    //         if (!empty($this->getOwnerInstitutionId())) {
+    //             $attr['type'] = 'select';
+    //         }
+    //     }
 
-        return $attr;
-    }
+    //     return $attr;
+    // }
 
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
@@ -728,12 +656,11 @@ class InstitutionLandsTable extends AppTable
     private function setupFields(Entity $entity)
     {
         $this->ControllerAction->setFieldOrder([
-            'change_type', 'institution_infrastructure_id', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'area', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
         ]);
 
         $this->ControllerAction->field('change_type');
         $this->ControllerAction->field('land_status_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_infrastructure_id', ['entity' => $entity]);
         $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('code');
@@ -743,14 +670,6 @@ class InstitutionLandsTable extends AppTable
         $this->ControllerAction->field('end_date', ['entity' => $entity]);
         $this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
         $this->ControllerAction->field('previous_institution_land_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('subjects', [
-            'type' => 'chosenSelect',
-            'fieldNameKey' => 'subjects',
-            'fieldName' => $this->alias() . '.subjects._ids',
-            'placeholder' => $this->getMessage($this->aliasField('select_subject')),
-            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>',
-            'entity' => $entity
-        ]);
         $this->ControllerAction->field('new_land_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
         $this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
     }
@@ -760,19 +679,21 @@ class InstitutionLandsTable extends AppTable
         $codePrefix = '';
         $lastSuffix = '00';
         $conditions = [];
-        // has Parent then get the ID of the parent then followed by counter
-        $parentData = $this->InstitutionFloors->find()
+        $institutionId = $this->request->session()->read('Institution.Institutions.id');
+
+        $institutionData = $this->Institutions->find()
             ->where([
-                $this->InstitutionFloors->aliasField($this->InstitutionFloors->primaryKey()) => $parentId
+                $this->Institutions->aliasField($this->Institutions->primaryKey()) => $institutionId
             ])
+            ->select([$this->Institutions->aliasField('code')])
             ->first();
 
-        $codePrefix = $parentData->code;
+        $codePrefix = $institutionData->code.'-';
 
         // $conditions[] = $this->aliasField('code')." LIKE '" . $codePrefix . "%'";
         $lastRecord = $this->find()
             ->where([
-                $this->aliasField('institution_infrastructure_id') => $parentId,
+                // $this->aliasField('institution_infrastructure_id') => $parentId,
                 $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
             ])
             ->order($this->aliasField('code DESC'))
@@ -794,7 +715,7 @@ class InstitutionLandsTable extends AppTable
     private function addBreadcrumbElement($toolbarElements = [])
     {
         $parentId = $this->request->query('parent');
-        $crumbs = $this->Parents->findPath(['for' => $parentId]);
+        $crumbs = [];
         $toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
 
         return $toolbarElements;
@@ -889,36 +810,6 @@ class InstitutionLandsTable extends AppTable
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');
-    }
-
-    public function getSubjectOptions($params = [])
-    {
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : null;
-
-        $options = [];
-
-        $Classes = $this->Subjects->Classes;
-        $classOptions = $Classes
-            ->find()
-            ->contain(['Subjects'])
-            ->where([
-                $Classes->aliasField('institution_id') => $institutionId,
-                $Classes->aliasField('academic_period_id') => $academicPeriodId
-            ])
-            ->order([$Classes->aliasField('name') => 'ASC'])
-            ->toArray();
-
-        foreach ($classOptions as $classKey => $class) {
-            $className = $class->name;
-            if ($class->has('subjects')) {
-                foreach ($class->subjects as $subjectKey => $subject) {
-                    $options[$subject->id] = $className . ' - ' . $subject->name;
-                }
-            }
-        }
-
-        return $options;
     }
 
     public function processCopy(Entity $entity)

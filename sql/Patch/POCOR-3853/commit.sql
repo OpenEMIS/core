@@ -659,7 +659,7 @@ SET `custom_module_id` = 10
 WHERE `custom_module_id` = 7;
 
 INSERT INTO `custom_modules` (`id`, `code`, `name`, `model`, `visible`, `parent_id`, `created_user_id`, `created`) VALUES
-(7, 'Land', 'Institutiion > Land', 'Institution.InstitutionLands', 1, 1, 1, NOW()),
+(7, 'Land', 'Institution > Land', 'Institution.InstitutionLands', 1, 1, 1, NOW()),
 (8, 'Building', 'Institution > Building', 'Institution.InstitutionBuildings', 1, 1, 1, NOW()),
 (9, 'Floor', 'Institution > Floor', 'Institution.InstitutionFloors', 1, 1, 1, NOW());
 
@@ -767,6 +767,10 @@ LEFT JOIN `custom_modules` `CM2`
 WHERE `CM`.`code` = 'Infrastructure';
 
 -- Patch infrastructure_custom_forms_fields
+
+ALTER TABLE `infrastructure_custom_forms`
+DROP COLUMN `original_id`,
+DROP COLUMN `original_module_id`;
 
 CREATE TABLE `z_3853_infrastructure_custom_forms_fields` LIKE `infrastructure_custom_forms_fields`;
 

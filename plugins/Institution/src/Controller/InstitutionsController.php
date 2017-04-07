@@ -23,13 +23,15 @@ class InstitutionsController extends AppController
     public function initialize()
     {
         parent::initialize();
-
         $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],
             'History'           => ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
+            'Lands'             => ['className' => 'Institution.InstitutionLands', 'options' => ['deleteStrategy' => 'restrict']],
+            'Buildings'             => ['className' => 'Institution.InstitutionBuildings', 'options' => ['deleteStrategy' => 'restrict']],
+            'Floors'             => ['className' => 'Institution.InstitutionFloors', 'options' => ['deleteStrategy' => 'restrict']],
             'Rooms'             => ['className' => 'Institution.InstitutionRooms', 'options' => ['deleteStrategy' => 'restrict']],
 
             'Staff'             => ['className' => 'Institution.Staff'],
@@ -74,47 +76,170 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
-    public function Positions()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']); }
-    public function Shifts()                        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']); }
-    public function Fees()                          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFees']); }
-    public function StudentFees()                   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentFees']); }
-    public function StaffTransferRequests()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
-    public function StaffTransferApprovals()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
-    public function StaffPositionProfiles()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
-    public function Classes()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
-    public function Subjects()                      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
-    public function Assessments()                   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']); }
-    public function AssessmentResults()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentResults']); }
-    public function StudentProgrammes()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']); }
-    public function Exams()                         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']); }
-    public function UndoExaminationRegistration()   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']); }
-    public function ExaminationStudents()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']); }
-    public function ExaminationResults()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ExaminationResults']); }
-    public function Contacts()                      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']); }
-    public function IndividualPromotion()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.IndividualPromotion']); }
-    public function StudentUser()                   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']); }
-    public function StaffUser()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffUser']); }
-    public function TransferRequests()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']); }
-    public function StaffTrainingResults()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']); }
-    public function StaffTrainingNeeds()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']); }
-    public function StaffTrainingApplications()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']); }
-    public function CourseCatalogue()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CourseCatalogue']); }
-    public function StaffLeave()                    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']); }
-    public function VisitRequests()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.VisitRequests']); }
-    public function Visits()                        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionQualityVisits']); }
-    public function StaffAppraisals()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']); }
-    public function Programmes()                    { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']); }
-    public function StaffAbsences()                 { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']); }
-    public function StaffBehaviours()               { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffBehaviours']); }
-    public function Textbooks()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
-    public function StudentCompetencies()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']); }
-    public function StudentCompetencyResults()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']); }
-    public function StudentSurveys()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
-    public function StudentTextbooks()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
-    public function StaffAttendances()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
-    public function Indexes()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']); }
-    public function StudentIndexes()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
-    public function InstitutionStudentIndexes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
+    public function Positions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
+    }
+    public function Shifts()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionShifts']);
+    }
+    public function Fees()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFees']);
+    }
+    public function StudentFees()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentFees']);
+    }
+    public function StaffTransferRequests()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']);
+    }
+    public function StaffTransferApprovals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']);
+    }
+    public function StaffPositionProfiles()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']);
+    }
+    public function Classes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
+    }
+    public function Subjects()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']);
+    }
+    public function Assessments()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']);
+    }
+    public function AssessmentResults()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentResults']);
+    }
+    public function StudentProgrammes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Programmes']);
+    }
+    public function Exams()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminations']);
+    }
+    public function UndoExaminationRegistration()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationsUndoRegistration']);
+    }
+    public function ExaminationStudents()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionExaminationStudents']);
+    }
+    public function ExaminationResults()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ExaminationResults']);
+    }
+    public function Contacts()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionContacts']);
+    }
+    public function IndividualPromotion()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.IndividualPromotion']);
+    }
+    public function StudentUser()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentUser']);
+    }
+    public function StaffUser()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffUser']);
+    }
+    public function TransferRequests()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.TransferRequests']);
+    }
+    public function StaffTrainingResults()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingResults']);
+    }
+    public function StaffTrainingNeeds()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingNeeds']);
+    }
+    public function StaffTrainingApplications()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTrainingApplications']);
+    }
+    public function CourseCatalogue()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.CourseCatalogue']);
+    }
+    public function StaffLeave()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffLeave']);
+    }
+    public function VisitRequests()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.VisitRequests']);
+    }
+    public function Visits()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionQualityVisits']);
+    }
+    public function StaffAppraisals()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAppraisals']);
+    }
+    public function Programmes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionGrades']);
+    }
+    public function StaffAbsences()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAbsences']);
+    }
+    public function StaffBehaviours()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffBehaviours']);
+    }
+    public function Textbooks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']);
+    }
+    public function StudentCompetencies()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']);
+    }
+    public function StudentCompetencyResults()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']);
+    }
+    public function StudentSurveys()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']);
+    }
+    public function StudentTextbooks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']);
+    }
+    public function StaffAttendances()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']);
+    }
+    public function Indexes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']);
+    }
+    public function StudentIndexes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']);
+    }
+    public function InstitutionStudentIndexes()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']);
+    }
     // End
 
     // AngularJS
@@ -160,7 +285,8 @@ class InstitutionsController extends AppController
     }
     // End
 
-    public function Students($pass = 'index') {
+    public function Students($pass = 'index')
+    {
         if ($pass == 'add') {
             $session = $this->request->session();
             $roles = [];
@@ -185,7 +311,8 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function Staff($pass = 'index') {
+    public function Staff($pass = 'index')
+    {
         if ($pass == 'add') {
             $session = $this->request->session();
             $roles = [];
@@ -307,7 +434,6 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
-
             } else if ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
             }
@@ -329,7 +455,6 @@ class InstitutionsController extends AppController
         }
 
         $this->set('contentHeader', $header);
-
     }
 
     public function getUniqueOpenemisId()
@@ -479,7 +604,7 @@ class InstitutionsController extends AppController
                         ];
                         $exists = $model->exists($params);
                     } else {
-                        $checkExists = function($model, $params) {
+                        $checkExists = function ($model, $params) {
                             return $model->exists($params);
                         };
 
@@ -540,7 +665,7 @@ class InstitutionsController extends AppController
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
-    public function excel($id=0)
+    public function excel($id = 0)
     {
         $this->Institutions->excel($id);
         $this->autoRender = false;
@@ -591,9 +716,7 @@ class InstitutionsController extends AppController
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
             );
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_type', $params);
-
         } else if ($classification == $Institutions::NON_ACADEMIC) {
-
             //Staffs By Position Title for current year, only shows assigned staff
             $params = array(
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
@@ -615,8 +738,9 @@ class InstitutionsController extends AppController
             $session = $this->request->session();
             $institutionId = $session->read('Institution.Institutions.id');
             $params['conditions'] = [$Institutions->aliasField('id').' IS NOT ' => $institutionId];
-            if (!empty($term))
+            if (!empty($term)) {
                 $data = $Institutions->autocomplete($term, $params);
+            }
 
             echo json_encode($data);
             die;
@@ -779,7 +903,8 @@ class InstitutionsController extends AppController
         return $tabElements;
     }
 
-    public function getCareerTabElements($options = []) {
+    public function getCareerTabElements($options = [])
+    {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $session = $this->request->session();
         if ($session->check('Institution.Institutions.id')) {
@@ -789,7 +914,8 @@ class InstitutionsController extends AppController
         return TableRegistry::get('Staff.Staff')->getCareerTabElements($options);
     }
 
-    public function getTrainingTabElements($options = []) {
+    public function getTrainingTabElements($options = [])
+    {
         $tabElements = [];
         $trainingUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $trainingTabElements = [
@@ -806,7 +932,8 @@ class InstitutionsController extends AppController
         return $tabElements;
     }
 
-    public function getProfessionalDevelopmentTabElements($options = []) {
+    public function getProfessionalDevelopmentTabElements($options = [])
+    {
         $options['url'] = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         return TableRegistry::get('Staff.Staff')->getProfessionalDevelopmentTabElements($options);
     }
