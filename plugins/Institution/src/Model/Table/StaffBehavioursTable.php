@@ -55,7 +55,6 @@ class StaffBehavioursTable extends ControllerActionTable {
 		$this->field('openemis_no');
 		$this->field('staff_id');
 		$this->field('staff_behaviour_category_id', ['type' => 'select']);
-		$this->field('behaviour_classification_id', ['type' => 'select']);
 
 		if ($this->action == 'view' || $this->action == 'edit') {
 			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
@@ -117,17 +116,19 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 		$this->field('date_of_behaviour');
 		$this->field('academic_period_id');
+		$this->field('behaviour_classification_id', ['type' => 'select']);
 		$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$query->contain(['Staff']);
+		$query->contain(['Staff', 'BehaviourClassifications']);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->fields['staff_id']['attr']['value'] = $entity->staff->name_with_id;
+		$this->field('behaviour_classification_id', ['entity' => $entity]);
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -208,6 +209,19 @@ class StaffBehavioursTable extends ControllerActionTable {
 		} else if ($action == 'edit') {
 			$attr['type'] = 'readonly';
 		}
+		return $attr;
+	}
+
+	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'edit') {
+			$entity = $attr['entity'];
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $entity->behaviour_classification_id;
+			$attr['attr']['value'] = $entity->behaviour_classification->name;
+		}
+
 		return $attr;
 	}
 
