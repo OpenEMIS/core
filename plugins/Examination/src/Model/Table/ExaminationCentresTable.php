@@ -38,9 +38,6 @@ class ExaminationCentresTable extends ControllerActionTable {
             'cascadeCallbacks' => true
         ]);
 
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'ExamResults' => ['view']
-        ]);
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportExaminationCentreRooms']);

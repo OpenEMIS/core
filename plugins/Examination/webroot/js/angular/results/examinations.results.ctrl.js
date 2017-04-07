@@ -27,19 +27,19 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         ExaminationsResultsSvc.init(angular.baseUrl);
 
         UtilsSvc.isAppendLoader(true);
-        ExaminationsResultsSvc.getExaminationCentre(vm.examinationCentreId)
+        ExaminationsResultsSvc.getExaminationCentreExaminations(vm.examinationCentreId, vm.examinationId)
         // getExaminationCentre
         .then(function(response)
         {
-            var examinationCentreData = response.data;
-            var academicPeriodData = examinationCentreData.academic_period;
-            var examinationData = examinationCentreData.examination;
+            var data = response.data[0];
+            var examinationCentreData = data.examination_centre;
+            var academicPeriodData = data.academic_period;
+            var examinationData = data.examination;
 
             vm.academicPeriodOptions = [{text: academicPeriodData.name, value: academicPeriodData.id}];
             vm.examinationOptions = [{text: examinationData.code_name, value: examinationData.id}];
             vm.examinationCentreOptions = [{text: examinationCentreData.code_name, value: examinationCentreData.id}];
-
-            return ExaminationsResultsSvc.getSubjects(vm.examinationId);
+            return ExaminationsResultsSvc.getSubjects(vm.examinationId, vm.examinationCentreId);
         }, function(error)
         {
             // No Examination Centre
@@ -53,7 +53,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             if (angular.isObject(subjects) && subjects.length > 0) {
                 var subject = subjects[0];
 
-                vm.initGrid(vm.academicPeriodId, vm.examinationId, subject);
+                vm.initGrid(vm.academicPeriodId, vm.examinationId, vm.examinationCentreId, subject);
             }
         }, function(error)
         {
@@ -73,12 +73,12 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         }
     });
 
-    function initGrid(academicPeriodId, examinationId, subject) {
+    function initGrid(academicPeriodId, examinationId, examinationCentreId, subject) {
         vm.gridOptions = {
             context: {
                 academic_period_id: academicPeriodId,
                 examination_id: examinationId,
-                examination_centre_id: 0,
+                examination_centre_id: examinationCentreId,
                 education_subject_id: 0,
                 examination_item_id: 0
             },
@@ -215,7 +215,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
             })
             .finally(function() {
                 vm.gridOptions.api.forEachNode(function(row) {
-                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, row.data.institution_id, row.data.education_grade_id, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId);
+                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, examinationId, examinationCentreId, educationSubjectId, examinationItemId);
                 });
 
                 $scope.action = 'view';

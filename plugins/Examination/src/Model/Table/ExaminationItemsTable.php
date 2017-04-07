@@ -52,10 +52,6 @@ class ExaminationItemsTable extends AppTable {
                 'ExaminationItemResults.examination_grading_option_id IS NOT NULL'
             ]]
         ]);
-
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'ExamResults' => ['index']
-        ]);
     }
 
     public function validationDefault(Validator $validator)
