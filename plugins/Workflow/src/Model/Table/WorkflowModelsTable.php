@@ -11,6 +11,7 @@ class WorkflowModelsTable extends AppTable {
 		parent::initialize($config);
 		$this->hasMany('Workflows', ['className' => 'Workflow.Workflows', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('WorkflowStatuses', ['className' => 'Workflow.WorkflowStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('WorkflowTransitions', ['className' => 'Workflow.WorkflowTransitions', 'dependent' => true, 'cascadeCallbacks' => true]);
 	}
 
 	public function getWorkflowStatusSteps($modelName, $code) {
