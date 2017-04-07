@@ -180,7 +180,11 @@ class InstitutionLandsTable extends AppTable
     public function indexBeforeAction(Event $event)
     {
         $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'land_type_id', 'land_status_id']);
-
+        $this->fields['area']['visible'] = false;
+        $this->fields['comment']['visible'] = false;
+        $this->fields['infrastructure_ownership_id']['visible'] = false;
+        $this->fields['year_acquired']['visible'] = false;
+        $this->fields['year_disposed']['visible'] = false;
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
         $this->ControllerAction->field('start_date', ['visible' => false]);
@@ -353,6 +357,9 @@ class InstitutionLandsTable extends AppTable
     public function addEditAfterAction(Event $event, Entity $entity)
     {
         $this->setupFields($entity);
+        if ($this->action == 'add') {
+            $this->fields['year_disposed']['visible'] = false;
+        }
     }
 
     public function editAfterAction(Event $event, Entity $entity)
@@ -656,7 +663,7 @@ class InstitutionLandsTable extends AppTable
     private function setupFields(Entity $entity)
     {
         $this->ControllerAction->setFieldOrder([
-            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'area', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'year_acquired', 'area', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
         ]);
 
         $this->ControllerAction->field('change_type');
