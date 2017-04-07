@@ -32,6 +32,7 @@ class StaffBehavioursTable extends ControllerActionTable {
     {
         $events = parent::implementedEvents();
 		$events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
+		$events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         return $events;
     }
 
@@ -54,9 +55,8 @@ class StaffBehavioursTable extends ControllerActionTable {
 	{
 		$this->field('openemis_no');
 		$this->field('staff_id');
-		$this->field('staff_behaviour_category_id', ['type' => 'select']);
 
-		if ($this->action == 'view' || $this->action == 'edit') {
+		if ($this->action == 'view') {
 			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 		}
 	}
@@ -116,19 +116,23 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 		$this->field('date_of_behaviour');
 		$this->field('academic_period_id');
+		$this->field('staff_behaviour_category_id', ['type' => 'select']);
 		$this->field('behaviour_classification_id', ['type' => 'select']);
 		$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$query->contain(['Staff', 'BehaviourClassifications']);
+		$query->contain(['Staff', 'StaffBehaviourCategories', 'BehaviourClassifications']);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
 		$this->fields['staff_id']['attr']['value'] = $entity->staff->name_with_id;
+		$this->field('staff_behaviour_category_id', ['entity' => $entity]);
 		$this->field('behaviour_classification_id', ['entity' => $entity]);
+
+		$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -212,6 +216,19 @@ class StaffBehavioursTable extends ControllerActionTable {
 		return $attr;
 	}
 
+	public function onUpdateFieldStaffBehaviourCategoryId(Event $event, array $attr, $action, Request $request)
+	{
+		if ($action == 'edit') {
+			$entity = $attr['entity'];
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $entity->staff_behaviour_category_id;
+			$attr['attr']['value'] = $entity->staff_behaviour_category->name;
+		}
+
+		return $attr;
+	}
+
 	public function onUpdateFieldBehaviourClassificationId(Event $event, array $attr, $action, Request $request)
 	{
 		if ($action == 'edit') {
@@ -233,6 +250,17 @@ class StaffBehavioursTable extends ControllerActionTable {
     	$title = '';
     	$title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
     	
-    	return $title;
+		return $title;
+    }
+
+	public function onSetCustomCaseSummary(Event $event, $id=null)
+    {
+    	$recordEntity = $this->get($id, [
+    		'contain' => ['Staff', 'StaffBehaviourCategories', 'Institutions', 'BehaviourClassifications']
+    	]);
+    	$summary = '';
+    	$summary .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
+    	
+    	return $summary;
     }
 }
