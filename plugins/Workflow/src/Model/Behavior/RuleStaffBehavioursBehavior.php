@@ -46,30 +46,37 @@ class RuleStaffBehavioursBehavior extends RuleBehavior
     {
     	$model = $this->_table;
     	if ($model->action == 'index' && $entity->has('rule')) {
+    		$ruleConfig = $this->config('rule');
     		$ruleArray = json_decode($entity->rule, true);
 
+    		$list = [];
     		if (array_key_exists('where', $ruleArray)) {
     			$where = $ruleArray['where'];
-    			$field = 'behaviour_classification_id';
-    			if (array_key_exists($field, $where)) {
-    				$fieldId = $where[$field];
-	    			$lookupModel = $this->config('rule.'.$field.'.lookupModel');
-	    			$modelTable = TableRegistry::get($lookupModel);
-
-	    			$label = Inflector::humanize($field);
+    			foreach ($where as $field => $fieldValue) {
+    				$label = Inflector::humanize($field);
 					if ($model->endsWith($field, '_id') && $model->endsWith($label, ' Id')) {
 						$label = str_replace(' Id', '', $label);
 					}
-					$label = __($label);
+					$value = __($label) . ': ';
 
-	    			try {
-	    				$fieldRecord = $modelTable->get($fieldId);
-		    			$value = $label . ': ' . $fieldRecord->name;
-		    			return $value;
-					} catch (\Exception $e) {
-			            Log::write('debug', $e->getMessage());
-			        }
-				}
+    				if (isset($ruleConfig[$field]['lookupModel'])) {
+    					$lookupModel = $this->config('rule.'.$field.'.lookupModel');
+		    			$modelTable = TableRegistry::get($lookupModel);
+
+		    			try {
+		    				$fieldRecord = $modelTable->get($fieldValue);
+			    			$value .= $fieldRecord->name;
+						} catch (\Exception $e) {
+				            Log::write('debug', $e->getMessage());
+				        }
+    				}
+
+    				$list[] = $value;
+    			}
+    		}
+
+    		if (!empty($list)) {
+    			return implode("<br>", $list);
     		}
     	}
     }
