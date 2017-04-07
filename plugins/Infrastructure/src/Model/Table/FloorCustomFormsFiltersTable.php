@@ -3,13 +3,13 @@ namespace Infrastructure\Model\Table;
 
 use App\Model\Table\AppTable;
 
-class RoomCustomFormsFiltersTable extends AppTable
+class FloorCustomFormsFiltersTable extends AppTable
 {
     public function initialize(array $config)
     {
         $this->table('infrastructure_custom_forms_filters');
         parent::initialize($config);
         $this->belongsTo('CustomForms', ['className' => 'Infrastructure.InfrastructureCustomForms', 'foreignKey' => 'infrastructure_custom_form_id']);
-        $this->belongsTo('CustomFilters', ['className' => 'Infrastructure.RoomTypes', 'foreignKey' => 'infrastructure_custom_filter_id']);
+        $this->belongsTo('CustomFilters', ['className' => 'Infrastructure.FloorTypes', 'foreignKey' => 'infrastructure_custom_filter_id']);
     }
 }

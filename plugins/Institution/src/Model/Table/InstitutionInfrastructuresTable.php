@@ -121,7 +121,7 @@ class InstitutionInfrastructuresTable extends AppTable
         ]);
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Owner');
@@ -426,7 +426,7 @@ class InstitutionInfrastructuresTable extends AppTable
         $this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
     }
 
-    private function addBreadcrumbElement($toolbarElements=[])
+    private function addBreadcrumbElement($toolbarElements = [])
     {
         $parentId = $this->request->query('parent');
         $crumbs = $this->findPath(['for' => $parentId]);
@@ -436,7 +436,7 @@ class InstitutionInfrastructuresTable extends AppTable
         return $toolbarElements;
     }
 
-    private function addControlFilterElement($toolbarElements=[])
+    private function addControlFilterElement($toolbarElements = [])
     {
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
         if (count($typeOptions) > 1) {    // No need to show controls filter if only has one type options
@@ -470,7 +470,7 @@ class InstitutionInfrastructuresTable extends AppTable
         return $url;
     }
 
-    public function findPath($params=[])
+    public function findPath($params = [])
     {
         $parentId = array_key_exists('for', $params) ? $params['for'] : null;
         $withLevels = array_key_exists('withLevels', $params) ? $params['withLevels'] : false;
@@ -490,7 +490,7 @@ class InstitutionInfrastructuresTable extends AppTable
         return $paths;
     }
 
-    public function getParentPath($parentId=null)
+    public function getParentPath($parentId = null)
     {
         $crumbs = $this->findPath(['for' => $parentId]);
 
@@ -503,7 +503,7 @@ class InstitutionInfrastructuresTable extends AppTable
         return $parentPath;
     }
 
-    public function getLevelOptions($params=[])
+    public function getLevelOptions($params = [])
     {
         $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
 
@@ -525,7 +525,7 @@ class InstitutionInfrastructuresTable extends AppTable
         return compact('levelOptions', 'selectedLevel');
     }
 
-    public function getTypeOptions($params=[])
+    public function getTypeOptions($params = [])
     {
         $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
 
