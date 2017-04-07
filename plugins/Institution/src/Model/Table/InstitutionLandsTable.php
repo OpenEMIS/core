@@ -36,6 +36,7 @@ class InstitutionLandsTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('LandTypes', ['className' => 'Infrastructure.LandTypes']);
+        $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('PreviousLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'previous_institution_land_id']);
 
@@ -663,7 +664,7 @@ class InstitutionLandsTable extends AppTable
     private function setupFields(Entity $entity)
     {
         $this->ControllerAction->setFieldOrder([
-            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'year_acquired', 'area', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'area', 'year_acquired', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
         ]);
 
         $this->ControllerAction->field('change_type');
@@ -675,6 +676,7 @@ class InstitutionLandsTable extends AppTable
         $this->ControllerAction->field('land_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->ControllerAction->field('start_date', ['entity' => $entity]);
         $this->ControllerAction->field('end_date', ['entity' => $entity]);
+        $this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
         $this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
         $this->ControllerAction->field('previous_institution_land_id', ['type' => 'hidden']);
         $this->ControllerAction->field('new_land_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
