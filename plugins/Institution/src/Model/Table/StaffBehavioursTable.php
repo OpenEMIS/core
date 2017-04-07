@@ -31,7 +31,7 @@ class StaffBehavioursTable extends ControllerActionTable {
 	public function implementedEvents()
     {
         $events = parent::implementedEvents();
-		$events['InstitutionCase.onGetCaseTitle'] = 'onGetCaseTitle';
+		$events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
         return $events;
     }
 
@@ -211,7 +211,7 @@ class StaffBehavioursTable extends ControllerActionTable {
 		return $attr;
 	}
 
-	public function onGetCaseTitle(Event $event, Entity $entity)
+	public function onSetCustomCaseTitle(Event $event, Entity $entity)
     {
     	$recordEntity = $this->get($entity->id, [
     		'contain' => ['Staff', 'StaffBehaviourCategories', 'Institutions', 'BehaviourClassifications']

@@ -155,13 +155,7 @@ class WorkflowRulesTable extends ControllerActionTable
 
             foreach ($ruleConfig as $key => $attr) {
                 if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
-                    $options = [];
-                    if (array_key_exists('options', $attr) && !empty($attr['options'])) {
-                        $options = $model->getSelectOptions($model->aliasField($attr['options']));
-                    } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
-                        $modelTable = TableRegistry::get($attr['lookupModel']);
-                        $options = $modelTable->getList()->toArray();
-                    }
+                    $options = $this->getOptionsByConfig($attr);
 
                     $attr['options'] = $options;
                 }
@@ -169,6 +163,19 @@ class WorkflowRulesTable extends ControllerActionTable
                 $this->field($key, $attr);
             }
         }
+    }
+
+    public function getOptionsByConfig($attr)
+    {
+        $options = [];
+        if (array_key_exists('options', $attr) && !empty($attr['options'])) {
+            $options = $this->getSelectOptions($this->aliasField($attr['options']));
+        } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
+            $modelTable = TableRegistry::get($attr['lookupModel']);
+            $options = $modelTable->getList()->toArray();
+        }
+
+        return $options;
     }
 
     public function onGetFeature(Event $event, Entity $entity)
@@ -297,6 +304,15 @@ class WorkflowRulesTable extends ControllerActionTable
         }
 
         return $workflowOptions;
+    }
+
+    public function getFeatureByEntity(Entity $entity)
+    {
+        $model = TableRegistry::get($entity->source());
+        $registryAlias = $model->registryAlias();
+        $feature = $this->getFeatureByRegistryAlias($registryAlias);
+
+        return $feature;
     }
 
     public function getFeatureByRegistryAlias($registryAlias)
