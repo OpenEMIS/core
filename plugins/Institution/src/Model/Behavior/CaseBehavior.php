@@ -80,7 +80,7 @@ class CaseBehavior extends Behavior
 
 			$attr['value'] = $linkedCaseQuery->count();
     	} else if ($action == 'view') {
-			$tableHeaders = [__('Status'), __('Assignee'), __('Code'), __('Title')];
+			$tableHeaders = [__('Status'), __('Assignee'), __('Case Number'), __('Title')];
 			$tableCells = [];
 
 			$linkedCaseQuery = $this->getLinkedCaseQuery($entity);
@@ -96,7 +96,7 @@ class CaseBehavior extends Behavior
 			        }
 
 					$id = $model->getEncodedKeys($caseEntity);
-					$url = $event->subject()->Html->link($caseEntity->code, [
+					$url = $event->subject()->Html->link($caseEntity->case_number, [
 						'plugin' => 'Institution',
 						'controller' => 'Institutions',
 						'action' => 'Cases',
