@@ -90,6 +90,7 @@ class InstitutionsTable extends AppTable
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('type', ['type' => 'hidden']);
+		$this->ControllerAction->field('module', ['type' => 'hidden']);
 		// $this->ControllerAction->field('license', ['type' => 'hidden']);
 	}
 
@@ -194,6 +195,23 @@ class InstitutionsTable extends AppTable
 		}
 	}
 
+	public function onUpdateFieldModule(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionCases'])) {
+				$WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+                $featureOptions = $WorkflowRules->getFeatureOptions();
+
+				$attr['type'] = 'select';
+				$attr['options'] = $featureOptions;
+				$attr['select'] = false;
+				return $attr;
+			} else {
+				$attr['value'] = self::NO_FILTER;
+			}
+		}
+	}
+
 	public function onUpdateFieldType(Event $event, array $attr, $action, Request $request) {
 		if (isset($this->request->data[$this->alias()]['feature'])) {
 			$feature = $this->request->data[$this->alias()]['feature'];
@@ -282,7 +300,7 @@ class InstitutionsTable extends AppTable
 					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
 				return $attr;
-			} else if (in_array($feature, ['Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave'])) {
+			} else if (in_array($feature, ['Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases'])) {
 				$academicPeriodOptions = [];
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 				$periodOptions = $AcademicPeriodTable->getList();
