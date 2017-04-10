@@ -87,7 +87,7 @@ class InstitutionCasesTable extends AppTable
             })
             ->contain(['Institutions.Areas'])
             ->innerJoinWith('InstitutionCaseRecords.StaffBehaviours.Staff')
-            ->order([$this->aliasField('code')])
+            ->order([$this->aliasField('case_number')])
             ->formatResults(function ($results) {
                 $arrayRes = $results->toArray();
                 foreach ($arrayRes as &$arr) {
@@ -136,10 +136,10 @@ class InstitutionCasesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'StaffBehaviours.code',
-            'field' => 'code',
+            'key' => 'StaffBehaviours.case_number',
+            'field' => 'case_number',
             'type' => 'integer',
-            'label' => __('Case Code')
+            'label' => ''
         ];
 
         $newFields[] = [
@@ -187,7 +187,7 @@ class InstitutionCasesTable extends AppTable
         $newFields[] = [
             'key' => 'WorkflowTransitions.executed_date',
             'field' => 'executed_date',
-            'type' => 'string',
+            'type' => 'date',
             'label' => ''
         ];
 
