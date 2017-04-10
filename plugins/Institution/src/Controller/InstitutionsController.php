@@ -4,6 +4,7 @@ namespace Institution\Controller;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -13,6 +14,7 @@ use Cake\I18n\Date;
 use ControllerAction\Model\Traits\UtilityTrait;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
+use Exception;
 
 class InstitutionsController extends AppController
 {
@@ -29,7 +31,7 @@ class InstitutionsController extends AppController
             'History'           => ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
-            'Lands'             => ['className' => 'Institution.InstitutionLands', 'options' => ['deleteStrategy' => 'restrict']],
+            'Lands'             => ['className' => 'Institution.InstitutionLands'],
             'Buildings'             => ['className' => 'Institution.InstitutionBuildings', 'options' => ['deleteStrategy' => 'restrict']],
             'Floors'             => ['className' => 'Institution.InstitutionFloors', 'options' => ['deleteStrategy' => 'restrict']],
             'Rooms'             => ['className' => 'Institution.InstitutionRooms', 'options' => ['deleteStrategy' => 'restrict']],
@@ -341,7 +343,26 @@ class InstitutionsController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        $events['Model.custom.updateToolbarButtons'] = 'updateToolbarButtons';
         return $events;
+    }
+
+    public function updateToolbarButtons(Event $event, ArrayObject $toolbarButtons, ArrayObject $indexButtons)
+    {
+        if ($this->request->param('institutionId')) {
+            foreach ($toolbarButtons as $key => &$button) {
+                if ($key == 'search' && isset($button['data']['url'])) {
+                    $button['data']['url']['institutionId'] = $this->request->param('institutionId');
+                } elseif (isset($button['url'])) {
+                    $button['url']['institutionId'] = $this->request->param('institutionId');
+                }
+            }
+            foreach ($indexButtons as &$button) {
+                if (isset($button['url'])) {
+                    $button['url']['institutionId'] = $this->request->param('institutionId');
+                }
+            }
+        }
     }
 
     public function isActionIgnored(Event $event, $action)
@@ -407,7 +428,7 @@ class InstitutionsController extends AppController
                 return false;
             }
             $session->write('Institution.Institutions.id', $institutionId);
-        } else if (array_key_exists('institution_id', $query)) {
+        } elseif (array_key_exists('institution_id', $query)) {
             //check for permission
             $this->checkInstitutionAccess($query['institution_id'], $event);
             if ($event->isStopped()) {
@@ -418,13 +439,13 @@ class InstitutionsController extends AppController
 
         if ($action == 'index') {
             $session->delete('Institution.Institutions');
-        } else if ($action == 'StudentUser') {
+        } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
-        } else if ($action == 'StaffUser') {
+        } elseif ($action == 'StaffUser') {
             $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         }
 
-        if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
+        if (($session->check('Institution.Institutions.id') || $this->request->param('institutionId')) || in_array($action, ['view', 'edit', 'dashboard'])) {
             $id = 0;
             if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
                 $id = $this->request->pass[0];
@@ -434,7 +455,9 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
-            } else if ($session->check('Institution.Institutions.id')) {
+            } elseif ($this->request->param('institutionId')) {
+                $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+            } elseif ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
             }
             if (!empty($id)) {
@@ -510,7 +533,12 @@ class InstitutionsController extends AppController
     {
         if (!is_null($this->activeObj)) {
             $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+            try {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->params('institutionId'));
+            } catch (Exception $e) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
             $action = false;
             $params = $this->request->params;
             // do not hyperlink breadcrumb for Infrastructures and Rooms
@@ -556,14 +584,14 @@ class InstitutionsController extends AppController
                     $ids = empty($this->ControllerAction->paramsDecode($params['pass'][1])['id']) ? $session->read('Student.Students.id') : $this->ControllerAction->paramsDecode($params['pass'][1])['id'];
                     $persona = $model->get($ids);
                 }
-            } else if (isset($requestQuery['user_id'][1])) {
+            } elseif (isset($requestQuery['user_id'][1])) {
                 $persona = $model->Users->get($requestQuery['user_id']);
             }
 
             if (is_object($persona) && get_class($persona)=='User\Model\Entity\User') {
                 $header = $persona->name . ' - ' . $model->getHeader($alias);
                 $model->addBehavior('Institution.InstitutionUserBreadcrumbs');
-            } else if ($model->alias() == 'IndividualPromotion') {
+            } elseif ($model->alias() == 'IndividualPromotion') {
                 $header .= ' - '. __('Individual Promotion / Repeat');
             } else {
                 $header .= ' - ' . $model->getHeader($alias);
@@ -597,7 +625,7 @@ class InstitutionsController extends AppController
                     if (in_array($model->alias(), ['TransferRequests', 'StaffTransferApprovals'])) {
                         $params[$model->aliasField('previous_institution_id')] = $institutionId;
                         $exists = $model->exists($params);
-                    } else if (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
+                    } elseif (in_array($model->alias(), ['InstitutionShifts'])) { //this is to show information for the occupier
                         $params['OR'] = [
                             $model->aliasField('institution_id') => $institutionId,
                             $model->aliasField('location_institution_id') => $institutionId
@@ -653,7 +681,13 @@ class InstitutionsController extends AppController
                     // should redirect
                 } else {
                     if ($model->alias() != 'Programmes') {
-                        $query->where([$model->aliasField('institution_id') => $session->read('Institution.Institutions.id')]);
+                        $institutionId = $this->request->param('institutionId');
+                        try {
+                            $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];
+                        } catch (Exception $e) {
+                            $institutionId = $session->read('Institution.Institutions.id');
+                        }
+                        $query->where([$model->aliasField('institution_id') => $institutionId]);
                     }
                 }
             }
@@ -716,7 +750,7 @@ class InstitutionsController extends AppController
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
             );
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_type', $params);
-        } else if ($classification == $Institutions::NON_ACADEMIC) {
+        } elseif ($classification == $Institutions::NON_ACADEMIC) {
             //Staffs By Position Title for current year, only shows assigned staff
             $params = array(
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
