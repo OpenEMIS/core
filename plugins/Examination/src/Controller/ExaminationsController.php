@@ -51,8 +51,8 @@ class ExaminationsController extends AppController
             $header = __('Examination');
             $header .= ' - '.__(Inflector::humanize($action));
 
-            $this->Navigation->addCrumb('Examination', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
-            $this->Navigation->addCrumb(Inflector::humanize($action));
+            $this->Navigation->addCrumb('Examination', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamResults']);
+            $this->Navigation->addCrumb('Exam Results');
 
             $this->set('contentHeader', $header);
         }
