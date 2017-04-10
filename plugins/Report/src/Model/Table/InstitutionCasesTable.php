@@ -129,21 +129,21 @@ class InstitutionCasesTable extends AppTable
         ];
 
         $newFields[] = [
-            'key' => 'StaffBehaviours.institution_id',
+            'key' => 'InstitutionCases.institution_id',
             'field' => 'institution_id',
             'type' => 'integer',
             'label' => __('Institution Name')
         ];
 
         $newFields[] = [
-            'key' => 'StaffBehaviours.case_number',
+            'key' => 'InstitutionCases.case_number',
             'field' => 'case_number',
             'type' => 'integer',
             'label' => ''
         ];
 
         $newFields[] = [
-            'key' => 'StaffBehaviours.title',
+            'key' => 'InstitutionCases.title',
             'field' => 'title',
             'type' => 'integer',
             'label' => __('Case Title')
@@ -153,14 +153,14 @@ class InstitutionCasesTable extends AppTable
             'key' => 'WorkflowTransitions.prev_workflow_step_name',
             'field' => 'status_from',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Previous Status')
         ];
 
         $newFields[] = [
             'key' => 'WorkflowTransitions.workflow_step_name',
             'field' => 'status_to',
             'type' => 'string',
-            'label' => ''
+            'label' => __('Status')
         ];
 
         $newFields[] = [
