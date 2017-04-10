@@ -45,12 +45,20 @@ class InstitutionCasesTable extends ControllerActionTable
         return $events;
     }
 
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        if ($entity->isNew()) {
+            $autoGenerateCaseNumber = $this->getAutoGenerateCaseNumber($entity->institution_id);
+            $entity->case_number = $autoGenerateCaseNumber;
+        }
+    }
+
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if ($entity->isNew()) {
-            $newCode = $entity->code . "-" . $entity->id;
+            $newCaseNumber = $entity->case_number . "-" . $entity->id;
             $this->updateAll(
-                ['code' => $newCode],
+                ['case_number' => $newCaseNumber],
                 ['id' => $entity->id]
             );
         }
@@ -95,7 +103,7 @@ class InstitutionCasesTable extends ControllerActionTable
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('code', ['type' => 'readonly']);
+        $this->field('case_number', ['type' => 'readonly']);
         $this->field('title', ['type' => 'readonly']);
     }
 
@@ -159,7 +167,6 @@ class InstitutionCasesTable extends ControllerActionTable
         $statusId = 0;
         $assigneeId = 0;
         $institutionId = $linkedRecordEntity->has('institution_id') ? $linkedRecordEntity->institution_id : 0;
-        $autoGenerateCode = $this->getAutoGenerateCode($institutionId);
         $recordId = $linkedRecordEntity->id;
 
         $title = $feature;
@@ -208,7 +215,7 @@ class InstitutionCasesTable extends ControllerActionTable
                             ];
 
                             $newData = [
-                                'code' => $autoGenerateCode,
+                                'case_number' => '',
                                 'title' => $title,
                                 'status_id' => $statusId,
                                 'assignee_id' => $assigneeId,
@@ -217,8 +224,10 @@ class InstitutionCasesTable extends ControllerActionTable
                                 'linked_records' => $linkedRecords
                             ];
 
+                            $patchOptions = ['validate' => false];
+
                             $newEntity = $this->newEntity();
-                            $newEntity = $this->patchEntity($newEntity, $newData);
+                            $newEntity = $this->patchEntity($newEntity, $newData, $patchOptions);
                             $this->save($newEntity);
                         }
                     }
@@ -227,9 +236,9 @@ class InstitutionCasesTable extends ControllerActionTable
         }
     }
 
-    private function getAutoGenerateCode($institutionId)
+    private function getAutoGenerateCaseNumber($institutionId=0)
     {
-        $autoGenerateCode = '';
+        $autoGenerateCaseNumber = '';
         $institutionEntity = $this->Institutions
             ->find()
             ->where([
@@ -238,10 +247,14 @@ class InstitutionCasesTable extends ControllerActionTable
             ->select([$this->Institutions->aliasField('code')])
             ->first();
 
-        $todayDate = date("dmY");
-        $autoGenerateCode = $institutionEntity->code . "-" . $todayDate;
+        if (!empty($institutionId)) {
+            $autoGenerateCaseNumber .= $institutionEntity->code . "-";
+        }
 
-        return $autoGenerateCode;
+        $todayDate = date("dmY");
+        $autoGenerateCaseNumber .= $todayDate;
+
+        return $autoGenerateCaseNumber;
     }
 
     public function findWorkbench(Query $query, array $options)
