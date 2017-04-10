@@ -59,6 +59,10 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
             cols: workbenchItemTypes.SCHOOL_BASED,
             model: 'Institution.VisitRequests'
         },
+        CasesTable: {
+            cols: workbenchItemTypes.SCHOOL_BASED,
+            model: 'Institution.InstitutionCases'
+        },
         // NON_SCHOOL_BASED Workflow
         TrainingCoursesTable: {
             cols: workbenchItemTypes.NON_SCHOOL_BASED,
