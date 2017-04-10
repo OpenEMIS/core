@@ -49,7 +49,7 @@ FROM `z_3732_staff_behaviours`;
 DROP TABLE IF EXISTS `institution_cases`;
 CREATE TABLE IF NOT EXISTS `institution_cases` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `case_number` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text DEFAULT NULL,
   `status_id` int(11) NOT NULL COMMENT 'links to workflow_steps.id',
