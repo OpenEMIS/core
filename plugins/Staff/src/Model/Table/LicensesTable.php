@@ -55,7 +55,7 @@ class LicensesTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
-		
+
 		return $validator
 			->add('issue_date', 'ruleCompareDate', [
 				'rule' => ['compareDate', 'expiry_date', false]
@@ -252,5 +252,46 @@ class LicensesTable extends ControllerActionTable
 			});
 
 		return $query;
+	}
+
+	public function getModelAlertData($threshold)
+	{
+		$thresholdArray = json_decode($threshold, true);
+
+		$conditions = [
+			1 => ('DATEDIFF(' . $this->aliasField('expiry_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
+			2 => ('DATEDIFF(NOW(), ' . $this->aliasField('expiry_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
+		];
+
+		// will do the comparison with threshold when retrieving the absence data
+		$licenseData = $this->find()
+			->select([
+				'LicenseTypes.name',
+				'license_number',
+				'issue_date',
+				'expiry_date',
+				'issuer',
+				'Users.id',
+				'Users.openemis_no',
+				'Users.first_name',
+				'Users.middle_name',
+				'Users.third_name',
+				'Users.last_name',
+				'Users.preferred_name',
+				'Users.email',
+				'Users.address',
+				'Users.postal_code',
+				'Users.date_of_birth',
+			])
+			->contain(['Statuses', 'Users', 'LicenseTypes', 'Assignees'])
+			->where([
+				$this->aliasField('license_type_id') => $thresholdArray['license_type'],
+				$this->aliasField('expiry_date') . ' IS NOT NULL',
+				$conditions[$thresholdArray['condition']]
+			])
+			->hydrate(false)
+			;
+
+		return $licenseData->toArray();
 	}
 }
