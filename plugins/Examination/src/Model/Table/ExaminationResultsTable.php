@@ -49,8 +49,8 @@ class ExaminationResultsTable extends ControllerActionTable
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('examination_id', ['type' => 'string']);
-        $this->field('name');
+        $this->field('examination_id', ['type' => 'string', 'sort' => false]);
+        $this->field('name', ['sort' => ['field' => 'ExaminationCentres.name']]);
         $this->setFieldOrder(['name', 'academic_period_id', 'examination_id', 'total_registered']);
     }
 
@@ -80,6 +80,22 @@ class ExaminationResultsTable extends ControllerActionTable
 
         $extra['auto_contain_fields'] = ['ExaminationCentres' => ['code']];
         $query->where($where);
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $extra['OR'] = [
+                [$this->ExaminationCentres->aliasField('name').' LIKE' => '%' . $search . '%'],
+                [$this->ExaminationCentres->aliasField('code').' LIKE' => '%' . $search . '%']
+            ];
+        }
+
+        // sort
+        $sortList = ['ExaminationCentres.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
     }
 
     public function onGetName(Event $event, Entity $entity)
