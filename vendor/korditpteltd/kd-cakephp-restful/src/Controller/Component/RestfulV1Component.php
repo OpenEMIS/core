@@ -163,7 +163,7 @@ class RestfulV1Component extends Component implements RestfulInterface
             if ($table->exists([$table->primaryKey() => $id])) {
                 $primaryKey = $this->getIdKeys($table, [$table->primaryKey() => $id]);
                 $this->viewEntity($table, $primaryKey);
-            } else if ($this->urlsafeB64Decode($id) && $table->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
+            } elseif ($this->urlsafeB64Decode($id) && $table->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
                 $primaryKey = $this->getIdKeys($table, json_decode($this->urlsafeB64Decode($id), true));
                 $this->viewEntity($table, $primaryKey);
             } else {
@@ -192,10 +192,10 @@ class RestfulV1Component extends Component implements RestfulInterface
             }
             $primaryKeyValues = $this->getIdKeys($target, $keyValues);
             if ($target->exists([$primaryKeyValues])) {
-                $entity = $table->get($primaryKeyValues);
-                $entity = $table->patchEntity($entity, $requestData);
+                $entity = $target->get($primaryKeyValues);
+                $entity = $target->patchEntity($entity, $requestData);
                 $entity = $this->convertBase64ToBinary($entity);
-                $table->save($entity);
+                $target->save($entity);
                 $this->controller->set([
                     'data' => $entity,
                     'error' => $entity->errors(),
