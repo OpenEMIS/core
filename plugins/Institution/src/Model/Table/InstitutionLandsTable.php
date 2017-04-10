@@ -42,20 +42,19 @@ class InstitutionLandsTable extends AppTable
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        // $this->addBehavior('CustomField.Record', [
-        //     'fieldKey' => 'infrastructure_custom_field_id',
-        //     'tableColumnKey' => null,
-        //     'tableRowKey' => null,
-        //     'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
-        //     'formKey' => 'infrastructure_custom_form_id',
-        //     'filterKey' => 'infrastructure_custom_filter_id',
-        //     'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
-        //     'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
-        //     'recordKey' => 'institution_room_id',
-        //     'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
-        //     'tableCellClass' => null
-        // ]);
-        // $this->addBehavior('Institution.InfrastructureShift');
+        $this->addBehavior('CustomField.Record', [
+            'fieldKey' => 'infrastructure_custom_field_id',
+            'tableColumnKey' => null,
+            'tableRowKey' => null,
+            'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
+            'formKey' => 'infrastructure_custom_form_id',
+            'filterKey' => 'infrastructure_custom_filter_id',
+            'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
+            'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
+            'recordKey' => 'institution_room_id',
+            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => null
+        ]);
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
@@ -141,6 +140,20 @@ class InstitutionLandsTable extends AppTable
         $this->processCopy($entity);
     }
 
+    public function onGetCode(Event $event, Entity $entity)
+    {
+        $institutionId = $this->request->param('institutionId');
+        $url = [
+            'plugin' => $this->controller->plugin,
+            'controller' => $this->controller->name,
+            'action' => 'Buildings',
+            'institutionId' => $institutionId,
+            'index'
+        ];
+        $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->name]);
+        return $event->subject()->HtmlField->link($entity->code, $url);
+    }
+
     public function onGetInfrastructureLevel(Event $event, Entity $entity)
     {
         return $this->levelOptions[$this->landLevel];
@@ -204,15 +217,6 @@ class InstitutionLandsTable extends AppTable
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
-        // get the list of owner institution id
-        // $ownerInstitutionIds = $this->getOwnerInstitutionId();
-
-        // if (!empty($ownerInstitutionIds)) {
-        //     $conditions = [];
-        //     $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
-        //     $query->where($conditions, [], true);
-        // }
-
         // Academic Period
         list($periodOptions, $selectedPeriod) = array_values($this->getPeriodOptions());
         $query->where([$this->aliasField('academic_period_id') => $selectedPeriod]);
@@ -431,17 +435,6 @@ class InstitutionLandsTable extends AppTable
         return $attr;
     }
 
-    // public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
-    // {
-    //     if ($action == 'index' || $action == 'view') {
-    //         if (!empty($this->getOwnerInstitutionId())) {
-    //             $attr['type'] = 'select';
-    //         }
-    //     }
-
-    //     return $attr;
-    // }
-
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -472,7 +465,6 @@ class InstitutionLandsTable extends AppTable
     public function onUpdateFieldLandTypeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
             $landTypeOptions = $this->LandTypes
                     ->find('list', [
                         'keyField' => 'id',
@@ -723,10 +715,8 @@ class InstitutionLandsTable extends AppTable
 
     private function addBreadcrumbElement($toolbarElements = [])
     {
-        $parentId = $this->request->query('parent');
         $crumbs = [];
         $toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
-
         return $toolbarElements;
     }
 

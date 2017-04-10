@@ -418,6 +418,8 @@ class AppTable extends Table
             $controller->set('reorder', true);
         }
 
+        $controller->dispatchEvent('Model.custom.updateToolbarButtons', [$toolbarButtons, $indexButtons], $this);
+
         $event = new Event('Model.custom.onUpdateToolbarButtons', $this, [$buttons, $toolbarButtons, $toolbarAttr, $action, $isFromModel]);
         $this->eventManager()->dispatch($event);
 

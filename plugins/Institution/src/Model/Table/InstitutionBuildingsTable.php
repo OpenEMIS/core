@@ -37,24 +37,25 @@ class InstitutionBuildingsTable extends AppTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('BuildingTypes', ['className' => 'Infrastructure.BuildingTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
+        $this->belongsTo('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'institution_land_id']);
         $this->belongsTo('PreviousBuildings', ['className' => 'Institution.InstitutionBuildings', 'foreignKey' => 'previous_institution_building_id']);
+        $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
-        // $this->addBehavior('CustomField.Record', [
-        //     'fieldKey' => 'infrastructure_custom_field_id',
-        //     'tableColumnKey' => null,
-        //     'tableRowKey' => null,
-        //     'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
-        //     'formKey' => 'infrastructure_custom_form_id',
-        //     'filterKey' => 'infrastructure_custom_filter_id',
-        //     'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
-        //     'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
-        //     'recordKey' => 'institution_room_id',
-        //     'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
-        //     'tableCellClass' => null
-        // ]);
-        // $this->addBehavior('Institution.InfrastructureShift');
+        $this->addBehavior('CustomField.Record', [
+            'fieldKey' => 'infrastructure_custom_field_id',
+            'tableColumnKey' => null,
+            'tableRowKey' => null,
+            'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
+            'formKey' => 'infrastructure_custom_form_id',
+            'filterKey' => 'infrastructure_custom_filter_id',
+            'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
+            'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
+            'recordKey' => 'institution_room_id',
+            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'tableCellClass' => null
+        ]);
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
@@ -145,31 +146,7 @@ class InstitutionBuildingsTable extends AppTable
         return $this->levelOptions[$this->buildingLevel];
     }
 
-    public function onGetSubjects(Event $event, Entity $entity)
-    {
-        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
-        $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
-
-        if ($entity->has('subjects')) {
-            $resultArray = [];
-
-            foreach ($entity->subjects as $key => $obj) {
-                $records = $InstitutionClassSubjects->find()
-                    ->where([$InstitutionClassSubjects->aliasField('institution_subject_id') => $obj->id])
-                    ->first();
-
-                $className = $InstitutionClasses->get($records->institution_class_id)->name;
-
-                $resultArray[] = $className . ' - ' . $obj->name;
-            }
-
-            if (!empty($resultArray)) {
-                return implode(', ', $resultArray);
-            }
-        }
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
     {
         if ($field == 'institution_id') {
             return __('Owner');
@@ -192,15 +169,6 @@ class InstitutionBuildingsTable extends AppTable
         return $buttons;
     }
 
-    public function beforeAction(Event $event)
-    {
-        // For breadcrumb to build the baseUrl
-        $this->controller->set('breadcrumbPlugin', 'Institution');
-        $this->controller->set('breadcrumbController', 'Institutions');
-        $this->controller->set('breadcrumbAction', 'Infrastructures');
-        // End
-    }
-
     public function indexBeforeAction(Event $event)
     {
         $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'building_type_id', 'building_status_id']);
@@ -211,7 +179,7 @@ class InstitutionBuildingsTable extends AppTable
         $this->ControllerAction->field('start_year', ['visible' => false]);
         $this->ControllerAction->field('end_date', ['visible' => false]);
         $this->ControllerAction->field('end_year', ['visible' => false]);
-        $this->ControllerAction->field('institution_infrastructure_id', ['visible' => false]);
+        $this->ControllerAction->field('institution_land_id', ['visible' => false]);
         $this->ControllerAction->field('academic_period_id', ['visible' => false]);
         $this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
         $this->ControllerAction->field('previous_institution_building_id', ['visible' => false]);
@@ -224,20 +192,11 @@ class InstitutionBuildingsTable extends AppTable
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
-        // get the list of owner institution id
-        $ownerInstitutionIds = $this->getOwnerInstitutionId();
-
-        if (!empty($ownerInstitutionIds)) {
-            $conditions = [];
-            $conditions[$this->aliasField('institution_id IN ')] = $ownerInstitutionIds;
-            $query->where($conditions, [], true);
-        }
-
-        $parentId = $this->request->query('parent');
+        $parentId = $this->getQueryString('institution_land_id');
         if (!is_null($parentId)) {
-            $query->where([$this->aliasField('institution_infrastructure_id') => $parentId]);
+            $query->where([$this->aliasField('institution_land_id') => $parentId]);
         } else {
-            $query->where([$this->aliasField('institution_infrastructure_id IS NULL')]);
+            $query->where([$this->aliasField('institution_land_id IS NULL')]);
         }
 
         // Academic Period
@@ -294,7 +253,7 @@ class InstitutionBuildingsTable extends AppTable
 
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
-        $query->contain(['AcademicPeriods', 'BuildingTypes', 'InfrastructureConditions', 'Subjects']);
+        $query->contain(['AcademicPeriods', 'InstitutionLands', 'BuildingTypes', 'InfrastructureConditions']);
     }
 
     public function editBeforeAction(Event $event)
@@ -330,7 +289,7 @@ class InstitutionBuildingsTable extends AppTable
             return $this->controller->redirect($url);
         } else {
             $selectedEditType = $this->request->query('edit_type');
-            if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+            if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
 
@@ -434,46 +393,6 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionInfrastructureId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'view') {
-            $entity = $attr['entity'];
-
-            $attr['type'] = 'hidden';
-            $parentId = $entity->institution_infrastructure_id;
-            if (!empty($parentId)) {
-                $list = $this->Parents->findPath(['for' => $parentId, 'withLevels' => true]);
-            } else {
-                $list = [];
-            }
-
-            $field = 'institution_infrastructure_id';
-            $after = $field;
-            foreach ($list as $key => $infrastructure) {
-                $this->ControllerAction->field($field.$key, [
-                    'type' => 'readonly',
-                    'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
-                    'value' => $infrastructure->code_name,
-                    'after' => $after
-                ]);
-                $after = $field.$key;
-            }
-        } elseif ($action == 'add' || $action == 'edit') {
-            $parentId = $this->request->query('parent');
-
-            if (is_null($parentId)) {
-                $attr['type'] = 'hidden';
-                $attr['value'] = null;
-            } else {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $parentId;
-                $attr['attr']['value'] = $this->Parents->getParentPath($parentId);
-            }
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -495,21 +414,10 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'index' || $action == 'view') {
-            if (!empty($this->getOwnerInstitutionId())) {
-                $attr['type'] = 'select';
-            }
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $parentId = $request->query('parent');
+            $parentId = $this->getQueryString('institution_land_id');
             $autoGenerateCode = $this->getAutoGenerateCode($parentId);
 
             $attr['attr']['default'] = $autoGenerateCode;
@@ -728,12 +636,12 @@ class InstitutionBuildingsTable extends AppTable
     private function setupFields(Entity $entity)
     {
         $this->ControllerAction->setFieldOrder([
-            'change_type', 'institution_infrastructure_id', 'academic_period_id', 'institution_id', 'code', 'name', 'building_type_id', 'building_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_building_id', 'new_building_type', 'new_start_date'
+            'change_type', 'institution_land_id', 'academic_period_id', 'institution_id', 'code', 'name', 'building_type_id', 'building_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'infrastructure_condition_id', 'previous_institution_building_id', 'new_building_type', 'new_start_date'
         ]);
 
         $this->ControllerAction->field('change_type');
         $this->ControllerAction->field('building_status_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_infrastructure_id', ['entity' => $entity]);
+        $this->ControllerAction->field('institution_land_id', ['entity' => $entity]);
         $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('code');
@@ -742,17 +650,20 @@ class InstitutionBuildingsTable extends AppTable
         $this->ControllerAction->field('start_date', ['entity' => $entity]);
         $this->ControllerAction->field('end_date', ['entity' => $entity]);
         $this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
+        $this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
         $this->ControllerAction->field('previous_institution_building_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('subjects', [
-            'type' => 'chosenSelect',
-            'fieldNameKey' => 'subjects',
-            'fieldName' => $this->alias() . '.subjects._ids',
-            'placeholder' => $this->getMessage($this->aliasField('select_subject')),
-            'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>',
-            'entity' => $entity
-        ]);
         $this->ControllerAction->field('new_building_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
         $this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
+    }
+
+    public function onUpdateFieldInstitutionLandId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $this->getQueryString('institution_land_id');
+            $attr['attr']['value'] = $this->getQueryString('institution_land_name');
+        }
+        return $attr;
     }
 
     private function getAutoGenerateCode($parentId)
@@ -761,9 +672,9 @@ class InstitutionBuildingsTable extends AppTable
         $lastSuffix = '00';
         $conditions = [];
         // has Parent then get the ID of the parent then followed by counter
-        $parentData = $this->InstitutionFloors->find()
+        $parentData = $this->InstitutionLands->find()
             ->where([
-                $this->InstitutionFloors->aliasField($this->InstitutionFloors->primaryKey()) => $parentId
+                $this->InstitutionLands->aliasField($this->InstitutionLands->primaryKey()) => $parentId
             ])
             ->first();
 
@@ -772,7 +683,7 @@ class InstitutionBuildingsTable extends AppTable
         // $conditions[] = $this->aliasField('code')." LIKE '" . $codePrefix . "%'";
         $lastRecord = $this->find()
             ->where([
-                $this->aliasField('institution_infrastructure_id') => $parentId,
+                $this->aliasField('institution_land_id') => $parentId,
                 $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
             ])
             ->order($this->aliasField('code DESC'))
@@ -793,8 +704,10 @@ class InstitutionBuildingsTable extends AppTable
 
     private function addBreadcrumbElement($toolbarElements = [])
     {
-        $parentId = $this->request->query('parent');
-        $crumbs = $this->Parents->findPath(['for' => $parentId]);
+        $crumbs = [];
+        $crumbs[] = [
+            'name' => $this->getQueryString('institution_land_name')
+        ];
         $toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
 
         return $toolbarElements;
@@ -889,36 +802,6 @@ class InstitutionBuildingsTable extends AppTable
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');
-    }
-
-    public function getSubjectOptions($params = [])
-    {
-        $institutionId = array_key_exists('institution_id', $params) ? $params['institution_id'] : null;
-        $academicPeriodId = array_key_exists('academic_period_id', $params) ? $params['academic_period_id'] : null;
-
-        $options = [];
-
-        $Classes = $this->Subjects->Classes;
-        $classOptions = $Classes
-            ->find()
-            ->contain(['Subjects'])
-            ->where([
-                $Classes->aliasField('institution_id') => $institutionId,
-                $Classes->aliasField('academic_period_id') => $academicPeriodId
-            ])
-            ->order([$Classes->aliasField('name') => 'ASC'])
-            ->toArray();
-
-        foreach ($classOptions as $classKey => $class) {
-            $className = $class->name;
-            if ($class->has('subjects')) {
-                foreach ($class->subjects as $subjectKey => $subject) {
-                    $options[$subject->id] = $className . ' - ' . $subject->name;
-                }
-            }
-        }
-
-        return $options;
     }
 
     public function processCopy(Entity $entity)

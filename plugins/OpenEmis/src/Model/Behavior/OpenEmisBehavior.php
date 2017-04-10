@@ -400,6 +400,8 @@ class OpenEmisBehavior extends Behavior {
             $toolbarButtons['back']['attr']['title'] = __('Back');
         }
 
+        $controller->dispatchEvent('Model.custom.updateToolbarButtons', [$toolbarButtons, $indexButtons], $this);
+
         $extra['toolbarButtons'] = $toolbarButtons;
         $extra['indexButtons'] = $indexButtons;
 
