@@ -254,6 +254,15 @@ angular.module('kd.orm.svc', [])
                 data: data
             };
             return this.ajax(settings);
+        },
+
+        edit: function(data) {
+            this._method = 'PATCH';
+            var settings = {
+                headers: {'Content-Type': 'application/json'},
+                data: data
+            };
+            return this.ajax(settings);
         }
     };
 

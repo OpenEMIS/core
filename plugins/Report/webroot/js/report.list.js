@@ -27,7 +27,9 @@ var ReportList = {
 			}
 		});
 
-		ReportList.getProgress(ids);
+		if (ids.length > 0) {
+			ReportList.getProgress(ids);
+		}
 	},
 
 	getProgress: function(ids) {

@@ -361,7 +361,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         console.log(modifiedUser);
                         modifiedUser['is_staff'] = 1;
                         modifiedUser['start_date'] = userRecord['start_date'];
-                        StaffUser.save(modifiedUser)
+                        StaffUser.edit(modifiedUser)
                         .then(function(response) {
                             deferred.resolve([response.data, userData]);
                         }, function(error) {
