@@ -260,7 +260,14 @@ class UserBehavior extends Behavior {
         }
 
         if ($this->isCAv4()) {
-            $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
+            switch ($this->_table->alias()) {
+                case 'Guardians':
+                    $imageUrl =  ['plugin' => 'Student', 'controller' => 'Students', 'action' => $this->_table->alias(), 'image'];
+                    break;
+                default:
+                    $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => $this->_table->alias(), 'image'];
+                    break;
+            }
         } else if ($this->_table->ControllerAction->getTriggerFrom() == 'Controller') {
             // for controlleraction->model
             $imageUrl =  ['plugin' => $plugin, 'controller' => $name, 'action' => 'getImage'];
