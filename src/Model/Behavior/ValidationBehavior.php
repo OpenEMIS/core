@@ -391,7 +391,7 @@ class ValidationBehavior extends Behavior {
 
 	public static function compareWithInstitutionDateOpened($field, array $globalData) {
 		$model = $globalData['providers']['table'];
-		$startDate = new DateTime($field);
+		$startDate = new Date($field);
 		if (isset($globalData['data']['institution_id'])) {
 			$Institution = TableRegistry::get('Institution.Institutions');
 			$institution = $Institution->find()->where([$Institution->aliasField($Institution->primaryKey()) => $globalData['data']['institution_id']])->first();
@@ -1220,8 +1220,8 @@ class ValidationBehavior extends Behavior {
 
 		$recordId = $globalData['data']['id'];
 		$institutionId = $globalData['data']['institution_id'];
-		$newEndDate = strtotime($globalData['data']['end_date']);
-		$newStartDate = strtotime($globalData['data']['start_date']);
+		$newEndDate = date('Y-m-d', strtotime($globalData['data']['end_date']));
+		$newStartDate = date('Y-m-d', strtotime($globalData['data']['start_date']));
 		$staffId = $globalData['data']['staff_id'];
 		$positionId = $globalData['data']['institution_position_id'];
 
@@ -1756,6 +1756,22 @@ class ValidationBehavior extends Behavior {
 
 		if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
 			return $model->getMessage('general.custom_validation_pattern');
+		}
+
+		return true;
+	}
+
+	public static function validateContactValuePattern($field, array $globalData)
+	{
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+		$contactTypeId = $globalData['data']['contact_type_id'];
+
+		$ContactTypes = TableRegistry::get('User.ContactTypes');
+		$valuePattern = '/' . $ContactTypes->get($contactTypeId)->validation_pattern . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+			return $model->getMessage('User.Contacts.value.ruleContactValuePattern');
 		}
 
 		return true;

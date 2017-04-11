@@ -15,7 +15,6 @@ class DirectoriesController extends AppController {
 		parent::initialize();
 		$this->ControllerAction->models = [
 			// Users
-			'Attachments' 			=> ['className' => 'User.Attachments'],
 			'Accounts'				=> ['className' => 'Directory.Accounts', 'actions' => ['view', 'edit']],
 			'History' 				=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 
@@ -76,6 +75,7 @@ class DirectoriesController extends AppController {
 	public function StudentTextbooks() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
+<<<<<<< HEAD
 
 	// health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -87,6 +87,10 @@ class DirectoriesController extends AppController {
 	public function HealthMedications()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
 	public function HealthTests()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
 	// End Health
+=======
+	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+	// End
+>>>>>>> b8e7052b51045ebf12ebb673f580ae6933f26136
 
 	// AngularJS
 	public function StudentResults() {

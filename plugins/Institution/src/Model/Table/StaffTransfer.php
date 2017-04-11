@@ -83,7 +83,7 @@ class StaffTransfer extends ControllerActionTable {
 
 	public function viewAfterAction(Event $event, Entity $entity, $extra) {
 		$toolbarButtons = $extra['toolbarButtons'];
-		if (in_array($entity->status, [self::REJECTED, self::CLOSED])) {
+		if (in_array($entity->status, [self::APPROVED, self::REJECTED, self::CLOSED])) {
 			if (isset($toolbarButtons['edit'])) {
 				unset($toolbarButtons['edit']);
 			}
