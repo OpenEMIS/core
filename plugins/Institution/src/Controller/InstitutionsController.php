@@ -343,26 +343,7 @@ class InstitutionsController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
-        $events['Model.custom.updateToolbarButtons'] = 'updateToolbarButtons';
         return $events;
-    }
-
-    public function updateToolbarButtons(Event $event, ArrayObject $toolbarButtons, ArrayObject $indexButtons)
-    {
-        if ($this->request->param('institutionId')) {
-            foreach ($toolbarButtons as $key => &$button) {
-                if ($key == 'search' && isset($button['data']['url'])) {
-                    $button['data']['url']['institutionId'] = $this->request->param('institutionId');
-                } elseif (isset($button['url'])) {
-                    $button['url']['institutionId'] = $this->request->param('institutionId');
-                }
-            }
-            foreach ($indexButtons as &$button) {
-                if (isset($button['url'])) {
-                    $button['url']['institutionId'] = $this->request->param('institutionId');
-                }
-            }
-        }
     }
 
     public function isActionIgnored(Event $event, $action)
@@ -412,8 +393,8 @@ class InstitutionsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
         $session = $this->request->session();
+        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
         $action = $this->request->params['action'];
         $header = __('Institutions');
 

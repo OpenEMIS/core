@@ -260,15 +260,22 @@ class ControllerActionBehavior extends Behavior
             'action' => $this->_table->alias,
             0 => $action
         ];
+        $requestParams = $this->_table->request->params;
+        $cakephpReservedKeys = ['pass', '_matchedRoute', '_Token', '_csrfToken'];
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $cakephpReservedKeys)) {
+                unset($requestParams[$key]);
+            }
+        }
+        $url = array_merge($url, $requestParams);
 
         if ($params === true) {
             $url = array_merge($url, $this->params());
-        } else if ($params === 'PASS') {
+        } elseif ($params === 'PASS') {
             $url = array_merge($url, $this->paramsPass());
-        } else if ($params === 'QUERY') {
+        } elseif ($params === 'QUERY') {
             $url = array_merge($url, $this->paramsQuery());
         }
-
         return $url;
     }
 
@@ -304,7 +311,7 @@ class ControllerActionBehavior extends Behavior
         if (array_key_exists('after', $attr)) {
             $after = $attr['after'];
             $order = $this->getOrderValue($after, 'after');
-        } else if (array_key_exists('before', $attr)) {
+        } elseif (array_key_exists('before', $attr)) {
             $before = $attr['before'];
             $order = $this->getOrderValue($before, 'before');
         }
@@ -378,7 +385,7 @@ class ControllerActionBehavior extends Behavior
                     if ($field === $key) {
                         $found = true;
                         $fields[$key]['order'] = $order;
-                    } else if ($fields[$key]['order'] == $order) {
+                    } elseif ($fields[$key]['order'] == $order) {
                         $found = true;
                         $fields[$key]['order'] = $order + 1;
                     }
@@ -417,7 +424,7 @@ class ControllerActionBehavior extends Behavior
                 if ($field === $assoc->foreignKey()) {
                     $model = $assoc;
                     break;
-                } else if (is_array($assoc->foreignKey()) && in_array($field, $assoc->foreignKey())) {
+                } elseif (is_array($assoc->foreignKey()) && in_array($field, $assoc->foreignKey())) {
                     $model = $assoc;
                     break;
                 }
@@ -470,7 +477,7 @@ class ControllerActionBehavior extends Behavior
                         }
                     }
                     $contain[$assoc->name()] = ['fields' => $fields];
-                } else if (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
+                } elseif (in_array($assoc->name(), ['ModifiedUser', 'CreatedUser'])) {
                     $contain[$assoc->name()] = ['fields' => ['id', 'first_name', 'last_name']];
                 } else {
                     $contain[$assoc->name()] = [];
@@ -482,7 +489,7 @@ class ControllerActionBehavior extends Behavior
 
     public function endsWith($haystack, $needle)
     {
-        return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== FALSE);
+        return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== false);
     }
 
     private function getOrderValue($field, $insert)
@@ -504,7 +511,7 @@ class ControllerActionBehavior extends Behavior
                 }
                 $model->fields[$key]['order'] = $attr['order'] - 1;
             }
-        } else if ($insert == 'after') {
+        } elseif ($insert == 'after') {
             $start = false;
             foreach ($model->fields as $key => $attr) {
                 if ($start) {
@@ -523,9 +530,9 @@ class ControllerActionBehavior extends Behavior
     {
         if (!isset($a['order']) && !isset($b['order'])) {
             return true;
-        } else if (!isset($a['order']) && isset($b['order'])) {
+        } elseif (!isset($a['order']) && isset($b['order'])) {
             return true;
-        } else if (isset($a['order']) && !isset($b['order'])) {
+        } elseif (isset($a['order']) && !isset($b['order'])) {
             return false;
         } else {
             return $a["order"] - $b["order"];
