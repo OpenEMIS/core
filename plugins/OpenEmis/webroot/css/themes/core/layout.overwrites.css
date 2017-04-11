@@ -910,3 +910,11 @@ a,
 }
 
 /* End of Fix for POCOR-1908 */
+
+/* Fix for POCOR-3658 */
+
+.rtl .treemap-breadcrumb li:last-child:after {
+    display: none;
+}
+
+/* End of fix for POCOR-3658 */ 
