@@ -431,7 +431,7 @@ class ControllerActionComponent extends Component
             $url['action'] = $action;
         }
 
-        $requestParams = $this->_table->request->params;
+        $requestParams = $this->request->params;
         $cakephpReservedKeys = ['pass', '_matchedRoute', '_Token', '_csrfToken'];
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $cakephpReservedKeys)) {
