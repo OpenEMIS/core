@@ -334,6 +334,16 @@ class ExaminationsTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
+    public function getExaminationOptions($selectedAcademicPeriod)
+    {
+        $examinationOptions = $this
+            ->find('list')
+            ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->toArray();
+
+        return $examinationOptions;
+    }
+
     public function getGradingTypeOptions()
     {
         $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');

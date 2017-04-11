@@ -87,17 +87,17 @@ class ExaminationItemsTable extends AppTable {
     public function getExaminationItemSubjects($examinationId)
     {
         $subjectList = $this
-            ->find('list', [
-                    'keyField' => 'subject_id',
-                    'valueField' => 'subject_name'
-            ])
+            ->find()
             ->matching('EducationSubjects')
             ->select([
-                'subject_name' => 'EducationSubjects.name',
-                'subject_id' => $this->aliasField('education_subject_id')
+                'item_id' => $this->aliasField('id'),
+                'item_name' => $this->aliasField('name'),
+                'education_subject_id' => $this->aliasField('education_subject_id'),
+                'education_subject_name' => 'EducationSubjects.name'
             ])
             ->where([$this->aliasField('examination_id') => $examinationId])
             ->toArray();
+
         return $subjectList;
     }
 }
