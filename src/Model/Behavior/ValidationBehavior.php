@@ -1761,6 +1761,22 @@ class ValidationBehavior extends Behavior {
 		return true;
 	}
 
+	public static function validateContactValuePattern($field, array $globalData)
+	{
+		$pattern = '';
+		$model = $globalData['providers']['table'];
+		$contactTypeId = $globalData['data']['contact_type_id'];
+
+		$ContactTypes = TableRegistry::get('User.ContactTypes');
+		$valuePattern = '/' . $ContactTypes->get($contactTypeId)->validation_pattern . '/';
+
+		if (!empty($valuePattern) && !preg_match($valuePattern, $field)) {
+			return $model->getMessage('User.Contacts.value.ruleContactValuePattern');
+		}
+
+		return true;
+	}
+
 	public static function validateRoomCapacity($field, array $globalData)
 	{
 		if (array_key_exists('students', $globalData)) {
