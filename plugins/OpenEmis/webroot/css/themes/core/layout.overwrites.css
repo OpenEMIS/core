@@ -913,8 +913,8 @@ a,
 
 /* Fix for POCOR-3658 */
 
-.rtl .treemap-breadcrumb li:last-child:after {
-    display: none;
+.rtl .treemap-breadcrumb li:not(:first-child) {
+    direction: ltr;
 }
 
 /* End of fix for POCOR-3658 */ 
