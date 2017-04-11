@@ -39,6 +39,7 @@ class InstitutionLandsTable extends AppTable
         $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('PreviousLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'previous_institution_land_id']);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings']);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -211,7 +212,7 @@ class InstitutionLandsTable extends AppTable
 
         $toolbarElements = [];
         $toolbarElements = $this->addBreadcrumbElement($toolbarElements);
-        // $toolbarElements = $this->addControlFilterElement($toolbarElements);
+        $toolbarElements = $this->addControlFilterElement($toolbarElements);
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
@@ -307,7 +308,7 @@ class InstitutionLandsTable extends AppTable
             return $this->controller->redirect($url);
         } else {
             $selectedEditType = $this->request->query('edit_type');
-            if ($selectedEditType == self::CHANGE_IN_ROOM_TYPE) {
+            if ($selectedEditType == self::CHANGE_IN_TYPE) {
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
 
@@ -369,7 +370,7 @@ class InstitutionLandsTable extends AppTable
     public function editAfterAction(Event $event, Entity $entity)
     {
         $selectedEditType = $this->request->query('edit_type');
-        if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_LAND_TYPE) {
+        if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
             foreach ($this->fields as $field => $attr) {
                 if ($this->startsWith($field, 'custom_') || $this->startsWith($field, 'section_')) {
                     $this->fields[$field]['visible'] = false;
@@ -383,17 +384,17 @@ class InstitutionLandsTable extends AppTable
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
-            $editTypeOptions = $this->getSelectOptions($this->aliasField('change_types'));
+            $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
             $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
 
-            if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_LAND_TYPE) {
+            if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
                 $this->canUpdateDetails = false;
             }
 
             $attr['type'] = 'element';
-            $attr['element'] = 'Institution.Room/change_type';
+            $attr['element'] = 'Institution.Infrastructure/change_type';
 
             $this->controller->set(compact('editTypeOptions'));
         }
@@ -719,12 +720,11 @@ class InstitutionLandsTable extends AppTable
         return $toolbarElements;
     }
 
-    // private function addControlFilterElement($toolbarElements = [])
-    // {
-    //     $toolbarElements[] = ['name' => 'Institution.Room/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
-
-    //     return $toolbarElements;
-    // }
+    private function addControlFilterElement($toolbarElements = [])
+    {
+        $toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
+        return $toolbarElements;
+    }
 
     private function checkIfCanEditOrDelete($entity)
     {
@@ -814,16 +814,31 @@ class InstitutionLandsTable extends AppTable
     {
         // if is new and land status of previous land usage is change in land type then copy all general custom fields
         if ($entity->isNew()) {
-            if ($entity->has('previous_institution_land_id') && $entity->previous_institution_land_id != 0) {
+            if ($entity->has('previous_institution_land_id') && is_null($entity->previous_institution_land_id)) {
                 $copyFrom = $entity->previous_institution_land_id;
                 $copyTo = $entity->id;
 
                 $previousEntity = $this->get($copyFrom);
                 $changeInTypeId = $this->LandStatuses->getIdByCode('CHANGE_IN_TYPE');
+                $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
 
                 if ($previousEntity->land_status_id == $changeInTypeId) {
                     // third parameters set to true means copy general only
                     $this->copyCustomFields($copyFrom, $copyTo, true);
+                    $this->InstitutionBuildings->updateAll([
+                        'institution_land_id' => $copyTo
+                    ], [
+                        'institution_land_id' => $copyFrom
+                    ]);
+                } elseif ($previousEntity->land_status_id == $endOfUsageId) {
+                    $buildingEntities = $this->InstitutionBuildings
+                        ->find()
+                        ->where([$this->InstitutionBuildings->aliasField('institution_land_id') => $copyFrom])
+                        ->toArray();
+                    $buildingEndOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
+                    foreach ($buildingEntities as $buildingEntity) {
+                        $buildingEntity->building_status_id = $buildingEndOfUsageId;
+                    }
                 }
             }
         }

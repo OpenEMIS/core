@@ -190,7 +190,7 @@ class InstitutionBuildingsTable extends AppTable
 
         $toolbarElements = [];
         $toolbarElements = $this->addBreadcrumbElement($toolbarElements);
-        // $toolbarElements = $this->addControlFilterElement($toolbarElements);
+        $toolbarElements = $this->addControlFilterElement($toolbarElements);
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
@@ -369,7 +369,7 @@ class InstitutionBuildingsTable extends AppTable
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
-            $editTypeOptions = $this->getSelectOptions($this->aliasField('change_types'));
+            $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types')
             $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
@@ -379,7 +379,7 @@ class InstitutionBuildingsTable extends AppTable
             }
 
             $attr['type'] = 'element';
-            $attr['element'] = 'Institution.Room/change_type';
+            $attr['element'] = 'Institution.Infrastructure/change_type';
 
             $this->controller->set(compact('editTypeOptions'));
         }
@@ -732,12 +732,11 @@ class InstitutionBuildingsTable extends AppTable
         return $toolbarElements;
     }
 
-    // private function addControlFilterElement($toolbarElements = [])
-    // {
-    //     $toolbarElements[] = ['name' => 'Institution.Room/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
-
-    //     return $toolbarElements;
-    // }
+    private function addControlFilterElement($toolbarElements = [])
+    {
+        $toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
+        return $toolbarElements;
+    }
 
     private function checkIfCanEditOrDelete($entity)
     {

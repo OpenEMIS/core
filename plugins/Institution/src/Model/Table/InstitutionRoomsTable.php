@@ -434,7 +434,7 @@ class InstitutionRoomsTable extends AppTable
             }
 
             $attr['type'] = 'element';
-            $attr['element'] = 'Institution.Room/change_type';
+            $attr['element'] = 'Institution.Infrastructure/change_type';
 
             $this->controller->set(compact('editTypeOptions'));
         }
@@ -885,7 +885,7 @@ class InstitutionRoomsTable extends AppTable
 
     private function addControlFilterElement($toolbarElements = [])
     {
-        $toolbarElements[] = ['name' => 'Institution.Room/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
+        $toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
 
         return $toolbarElements;
     }
