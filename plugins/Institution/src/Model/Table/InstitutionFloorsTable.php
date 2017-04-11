@@ -14,7 +14,7 @@ use Cake\I18n\Date;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionBuildingsTable extends AppTable
+class InstitutionFloorsTable extends AppTable
 {
     use OptionsTrait;
     const UPDATE_DETAILS = 1;    // In Use
@@ -23,7 +23,7 @@ class InstitutionBuildingsTable extends AppTable
 
     private $Levels = null;
     private $levelOptions = [];
-    private $buildingLevel = null;
+    private $floorLevel = null;
 
     private $canUpdateDetails = true;
     private $currentAcademicPeriod = null;
@@ -32,14 +32,13 @@ class InstitutionBuildingsTable extends AppTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('BuildingStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
+        $this->belongsTo('FloorStatuses', ['className' => 'Infrastructure.InfrastructureStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('BuildingTypes', ['className' => 'Infrastructure.BuildingTypes']);
+        $this->belongsTo('FloorTypes', ['className' => 'Infrastructure.FloorTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
-        $this->belongsTo('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'institution_land_id']);
-        $this->belongsTo('PreviousBuildings', ['className' => 'Institution.InstitutionBuildings', 'foreignKey' => 'previous_institution_building_id']);
-        $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
+        $this->belongsTo('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'foreignKey' => 'institution_building_id']);
+        $this->belongsTo('PreviousFloors', ['className' => 'Institution.InstitutionFloors', 'foreignKey' => 'previous_institution_floor_id']);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -89,7 +88,7 @@ class InstitutionBuildingsTable extends AppTable
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
             ])
-            ->requirePresence('new_building_type', function ($context) {
+            ->requirePresence('new_floor_type', function ($context) {
                 if (array_key_exists('change_type', $context['data'])) {
                     $selectedEditType = $context['data']['change_type'];
                     if ($selectedEditType == self::CHANGE_IN_TYPE) {
@@ -123,7 +122,7 @@ class InstitutionBuildingsTable extends AppTable
     {
         if (!$entity->isNew() && $entity->has('change_type')) {
             $editType = $entity->change_type;
-            $statuses = $this->BuildingStatuses->find('list', ['keyField' => 'id', 'valueField' => 'code'])->toArray();
+            $statuses = $this->FloorStatuses->find('list', ['keyField' => 'id', 'valueField' => 'code'])->toArray();
             $functionKey = Inflector::camelize(strtolower($statuses[$editType]));
             $functionName = "process$functionKey";
 
@@ -136,13 +135,13 @@ class InstitutionBuildingsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        // logic to copy custom fields (general only) where new building is created when change in building type
+        // logic to copy custom fields (general only) where new floor is created when change in floor type
         $this->processCopy($entity);
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)
     {
-        return $this->levelOptions[$this->buildingLevel];
+        return $this->levelOptions[$this->floorLevel];
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize = true)
@@ -170,23 +169,20 @@ class InstitutionBuildingsTable extends AppTable
 
     public function indexBeforeAction(Event $event)
     {
-        $this->buildingLevel = $this->Levels->getFieldByCode('BUILDING', 'id');
-        $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'building_type_id', 'building_status_id']);
+        $this->floorLevel = $this->Levels->getFieldByCode('FLOOR', 'id');
+        $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'floor_type_id', 'floor_status_id']);
         $this->fields['area']['visible'] = false;
         $this->fields['comment']['visible'] = false;
-        $this->fields['infrastructure_ownership_id']['visible'] = false;
-        $this->fields['year_acquired']['visible'] = false;
-        $this->fields['year_disposed']['visible'] = false;
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
         $this->ControllerAction->field('start_date', ['visible' => false]);
         $this->ControllerAction->field('start_year', ['visible' => false]);
         $this->ControllerAction->field('end_date', ['visible' => false]);
         $this->ControllerAction->field('end_year', ['visible' => false]);
-        $this->ControllerAction->field('institution_land_id', ['visible' => false]);
+        $this->ControllerAction->field('institution_building_id', ['visible' => false]);
         $this->ControllerAction->field('academic_period_id', ['visible' => false]);
         $this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
-        $this->ControllerAction->field('previous_institution_building_id', ['visible' => false]);
+        $this->ControllerAction->field('previous_institution_floor_id', ['visible' => false]);
 
         $toolbarElements = [];
         $toolbarElements = $this->addBreadcrumbElement($toolbarElements);
@@ -196,11 +192,11 @@ class InstitutionBuildingsTable extends AppTable
 
     public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
     {
-        $parentId = $this->getQueryString('institution_land_id');
+        $parentId = $this->getQueryString('institution_building_id');
         if (!is_null($parentId)) {
-            $query->where([$this->aliasField('institution_land_id') => $parentId]);
+            $query->where([$this->aliasField('institution_building_id') => $parentId]);
         } else {
-            $query->where([$this->aliasField('institution_land_id IS NULL')]);
+            $query->where([$this->aliasField('institution_building_id IS NULL')]);
         }
 
         // Academic Period
@@ -209,15 +205,15 @@ class InstitutionBuildingsTable extends AppTable
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
 
-        // Building Types
+        // Floor Types
         list($typeOptions, $selectedType) = array_values($this->getTypeOptions(['withAll' => true]));
         if ($selectedType != '-1') {
-            $query->where([$this->aliasField('building_type_id') => $selectedType]);
+            $query->where([$this->aliasField('floor_type_id') => $selectedType]);
         }
         $this->controller->set(compact('typeOptions', 'selectedType'));
         // End
 
-        // Building Statuses
+        // Floor Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
                 'code IN' => ['IN_USE', 'END_OF_USAGE']
@@ -225,12 +221,12 @@ class InstitutionBuildingsTable extends AppTable
             'withAll' => true
         ]));
         if ($selectedStatus != '-1') {
-            $query->where([$this->aliasField('building_status_id') => $selectedStatus]);
+            $query->where([$this->aliasField('floor_status_id') => $selectedStatus]);
         } else {
             // default show In Use and End Of Usage
-            $query->matching('BuildingStatuses', function ($q) {
+            $query->matching('FloorStatuses', function ($q) {
                 return $q->where([
-                    'BuildingStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+                    'FloorStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
                 ]);
             });
         }
@@ -257,7 +253,7 @@ class InstitutionBuildingsTable extends AppTable
 
     public function viewEditBeforeQuery(Event $event, Query $query)
     {
-        $query->contain(['AcademicPeriods', 'InstitutionLands', 'BuildingTypes', 'InfrastructureConditions']);
+        $query->contain(['AcademicPeriods', 'InstitutionBuildings', 'FloorTypes', 'InfrastructureConditions']);
     }
 
     public function editBeforeAction(Event $event)
@@ -279,12 +275,12 @@ class InstitutionBuildingsTable extends AppTable
         $session = $this->request->session();
         $sessionKey = $this->registryAlias() . '.warning';
         if (!$isEditable) {
-            $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
-            $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
+            $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
+            $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
-            if ($entity->building_status_id == $inUseId) {
+            if ($entity->floor_status_id == $inUseId) {
                 $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
-            } elseif ($entity->building_status_id == $endOfUsageId) {
+            } elseif ($entity->floor_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
             }
 
@@ -297,9 +293,9 @@ class InstitutionBuildingsTable extends AppTable
                 $today = new DateTime();
                 $diff = date_diff($entity->start_date, $today);
 
-                // Not allowed to change building type in the same day
+                // Not allowed to change floor type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->aliasField('change_in_building_type.restrictEdit'));
+                    $session->write($sessionKey, $this->aliasField('change_in_floor_type.restrictEdit'));
 
                     $url = $this->ControllerAction->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
@@ -315,14 +311,14 @@ class InstitutionBuildingsTable extends AppTable
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
         if (!$isDeletable) {
-            $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
-            $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
+            $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
+            $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
-            if ($entity->building_status_id == $inUseId) {
+            if ($entity->floor_status_id == $inUseId) {
                 $session->write($sessionKey, $this->aliasField('in_use.restrictDelete'));
-            } elseif ($entity->building_status_id == $endOfUsageId) {
+            } elseif ($entity->floor_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
             }
 
@@ -387,12 +383,12 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldBuildingStatusId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFloorStatusId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'view') {
             $attr['type'] = 'select';
         } elseif ($action == 'add') {
-            $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
+            $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
             $attr['value'] = $inUseId;
         }
 
@@ -423,7 +419,7 @@ class InstitutionBuildingsTable extends AppTable
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $parentId = $this->getQueryString('institution_land_id');
+            $parentId = $this->getQueryString('institution_building_id');
             $autoGenerateCode = $this->getAutoGenerateCode($parentId);
 
             $attr['attr']['default'] = $autoGenerateCode;
@@ -447,23 +443,23 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldBuildingTypeId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldFloorTypeId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
             $classificationOptions = $this->getSelectOptions('RoomTypes.classifications');
-            $buildingTypeOptions = $this->BuildingTypes
+            $floorTypeOptions = $this->FloorTypes
                     ->find('list', [
                         'keyField' => 'id',
                         'valueField' => 'name'
                     ])
                     ->find('visible')
                     ->order([
-                        $this->BuildingTypes->aliasField('order') => 'ASC'
+                        $this->FloorTypes->aliasField('order') => 'ASC'
                     ])
                     ->toArray();
 
-            $attr['options'] = $buildingTypeOptions;
-            $attr['onChangeReload'] = 'changeBuildingType';
+            $attr['options'] = $floorTypeOptions;
+            $attr['onChangeReload'] = 'changeFloorType';
         } elseif ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
             if ($selectedEditType == self::END_OF_USAGE) {
@@ -472,8 +468,8 @@ class InstitutionBuildingsTable extends AppTable
                 $entity = $attr['entity'];
 
                 $attr['type'] = 'readonly';
-                $attr['value'] = $entity->building_type->id;
-                $attr['attr']['value'] = $entity->building_type->name;
+                $attr['value'] = $entity->floor_type->id;
+                $attr['attr']['value'] = $entity->floor_type->name;
             }
         }
 
@@ -562,23 +558,23 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldNewBuildingType(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldNewFloorType(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $entity = $attr['entity'];
 
             $selectedEditType = $request->query('edit_type');
             if ($selectedEditType == self::CHANGE_IN_TYPE) {
-                $buildingTypeOptions = $this->BuildingTypes
+                $floorTypeOptions = $this->FloorTypes
                     ->find('list')
                     ->find('visible')
                     ->where([
-                        $this->BuildingTypes->aliasField('id <>') => $entity->building_type_id
+                        $this->FloorTypes->aliasField('id <>') => $entity->floor_type_id
                     ])
                     ->toArray();
 
                 $attr['visible'] = true;
-                $attr['options'] = $buildingTypeOptions;
+                $attr['options'] = $floorTypeOptions;
                 $attr['select'] = false;
             }
         }
@@ -620,15 +616,15 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
-    public function addEditOnChangeBuildingType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function addEditOnChangeFloorType(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         $request = $this->request;
         unset($request->query['type']);
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('building_type_id', $request->data[$this->alias()])) {
-                    $selectedType = $request->data[$this->alias()]['building_type_id'];
+                if (array_key_exists('floor_type_id', $request->data[$this->alias()])) {
+                    $selectedType = $request->data[$this->alias()]['floor_type_id'];
                     $request->query['type'] = $selectedType;
                 }
 
@@ -642,31 +638,30 @@ class InstitutionBuildingsTable extends AppTable
     private function setupFields(Entity $entity)
     {
         $this->ControllerAction->setFieldOrder([
-            'change_type', 'institution_land_id', 'academic_period_id', 'institution_id', 'code', 'name', 'building_type_id', 'area', 'building_status_id', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_building_id', 'new_building_type', 'new_start_date'
+            'change_type', 'institution_building_id', 'academic_period_id', 'institution_id', 'code', 'name', 'floor_type_id', 'area', 'floor_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_floor_id', 'new_floor_type', 'new_start_date'
         ]);
 
         $this->ControllerAction->field('change_type');
-        $this->ControllerAction->field('building_status_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_land_id', ['entity' => $entity]);
+        $this->ControllerAction->field('floor_status_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('institution_building_id', ['entity' => $entity]);
         $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('code');
         $this->ControllerAction->field('name');
-        $this->ControllerAction->field('building_type_id', ['type' => 'select', 'entity' => $entity]);
+        $this->ControllerAction->field('floor_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->ControllerAction->field('start_date', ['entity' => $entity]);
         $this->ControllerAction->field('end_date', ['entity' => $entity]);
         $this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
-        $this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
-        $this->ControllerAction->field('previous_institution_building_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('new_building_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
+        $this->ControllerAction->field('previous_institution_floor_id', ['type' => 'hidden']);
+        $this->ControllerAction->field('new_floor_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
         $this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
     }
 
-    public function onUpdateFieldInstitutionLandId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldInstitutionBuildingId(Event $event, array $attr, $action, Request $request)
     {
         $attr['type'] = 'hidden';
         if ($action == 'add') {
-            $attr['value'] = $this->getQueryString('institution_land_id');
+            $attr['value'] = $this->getQueryString('institution_building_id');
         }
         return $attr;
     }
@@ -677,11 +672,11 @@ class InstitutionBuildingsTable extends AppTable
         $url = [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
-            'action' => 'Floors',
+            'action' => 'Rooms',
             'institutionId' => $institutionId,
             'index'
         ];
-        $url = $this->setQueryString($url, ['institution_building_id' => $entity->id, 'institution_building_name' => $entity->name]);
+        $url = $this->setQueryString($url, ['institution_floor_id' => $entity->id, 'institution_floor_name' => $entity->name]);
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
 
@@ -691,9 +686,9 @@ class InstitutionBuildingsTable extends AppTable
         $lastSuffix = '00';
         $conditions = [];
         // has Parent then get the ID of the parent then followed by counter
-        $parentData = $this->InstitutionLands->find()
+        $parentData = $this->InstitutionBuildings->find()
             ->where([
-                $this->InstitutionLands->aliasField($this->InstitutionLands->primaryKey()) => $parentId
+                $this->InstitutionBuildings->aliasField($this->InstitutionBuildings->primaryKey()) => $parentId
             ])
             ->first();
 
@@ -702,7 +697,7 @@ class InstitutionBuildingsTable extends AppTable
         // $conditions[] = $this->aliasField('code')." LIKE '" . $codePrefix . "%'";
         $lastRecord = $this->find()
             ->where([
-                $this->aliasField('institution_land_id') => $parentId,
+                $this->aliasField('institution_building_id') => $parentId,
                 $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
             ])
             ->order($this->aliasField('code DESC'))
@@ -724,8 +719,19 @@ class InstitutionBuildingsTable extends AppTable
     private function addBreadcrumbElement($toolbarElements = [])
     {
         $crumbs = [];
+        $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
+        $buildingUrl = $this->ControllerAction->url('index');
+        $buildingUrl['action'] = 'Buildings';
+        $buildingUrl = $this->setQueryString($buildingUrl, [
+            'institution_land_id' => $entity->institution_land->id,
+            'institution_land_name' => $entity->institution_land->name
+        ]);
         $crumbs[] = [
-            'name' => $this->getQueryString('institution_land_name')
+            'name' => $entity->institution_land->name,
+            'url' => $buildingUrl
+        ];
+        $crumbs[] = [
+            'name' => $this->getQueryString('institution_building_name')
         ];
         $toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
 
@@ -744,15 +750,15 @@ class InstitutionBuildingsTable extends AppTable
         $isEditable = true;
         $isDeletable = true;
 
-        $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
-        $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
+        $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
+        $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
-        if ($entity->building_status_id == $inUseId) {
-        // If is in use, not allow to delete if the buildings is appear in other academic period
+        if ($entity->floor_status_id == $inUseId) {
+        // If is in use, not allow to delete if the floors is appear in other academic period
             $count = $this
                 ->find()
                 ->where([
-                    $this->aliasField('previous_institution_building_id') => $entity->id
+                    $this->aliasField('previous_institution_floor_id') => $entity->id
                 ])
                 ->count();
 
@@ -768,7 +774,7 @@ class InstitutionBuildingsTable extends AppTable
             if ($count > 1) {
                 $isDeletable = false;
             }
-        } elseif ($entity->building_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
+        } elseif ($entity->floor_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
             $isEditable = false;
             $isDeletable = false;
         }
@@ -792,12 +798,12 @@ class InstitutionBuildingsTable extends AppTable
     {
         $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
 
-        $typeOptions = $this->BuildingTypes
+        $typeOptions = $this->FloorTypes
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->find('visible')
             ->toArray();
         if ($withAll && count($typeOptions) > 1) {
-            $typeOptions = ['-1' => __('All Building Types')] + $typeOptions;
+            $typeOptions = ['-1' => __('All Floor Types')] + $typeOptions;
         }
         $selectedType = $this->queryString('type', $typeOptions);
         $this->advancedSelectOptions($typeOptions, $selectedType);
@@ -810,7 +816,7 @@ class InstitutionBuildingsTable extends AppTable
         $conditions = array_key_exists('conditions', $params) ? $params['conditions'] : [];
         $withAll = array_key_exists('withAll', $params) ? $params['withAll'] : false;
 
-        $statusOptions = $this->BuildingStatuses
+        $statusOptions = $this->FloorStatuses
             ->find('list', ['keyField' => 'id', 'valueField' => 'name'])
             ->where($conditions)
             ->toArray();
@@ -825,16 +831,16 @@ class InstitutionBuildingsTable extends AppTable
 
     public function processCopy(Entity $entity)
     {
-        // if is new and building status of previous building usage is change in building type then copy all general custom fields
+        // if is new and floor status of previous floor usage is change in floor type then copy all general custom fields
         if ($entity->isNew()) {
-            if ($entity->has('previous_institution_building_id') && $entity->previous_institution_building_id != 0) {
-                $copyFrom = $entity->previous_institution_building_id;
+            if ($entity->has('previous_institution_floor_id') && $entity->previous_institution_floor_id != 0) {
+                $copyFrom = $entity->previous_institution_floor_id;
                 $copyTo = $entity->id;
 
                 $previousEntity = $this->get($copyFrom);
-                $changeInTypeId = $this->BuildingStatuses->getIdByCode('CHANGE_IN_TYPE');
+                $changeInTypeId = $this->FloorStatuses->getIdByCode('CHANGE_IN_TYPE');
 
-                if ($previousEntity->building_status_id == $changeInTypeId) {
+                if ($previousEntity->floor_status_id == $changeInTypeId) {
                     // third parameters set to true means copy general only
                     $this->copyCustomFields($copyFrom, $copyTo, true);
                 }
@@ -846,12 +852,12 @@ class InstitutionBuildingsTable extends AppTable
     {
         $institutionId = array_key_exists('institution_id', $options) ? $options['institution_id'] : null;
         $academicPeriodId = array_key_exists('academic_period_id', $options) ? $options['academic_period_id'] : null;
-        $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
+        $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
 
         $query->where([
             $this->aliasField('institution_id') => $institutionId,
             $this->aliasField('academic_period_id') => $academicPeriodId,
-            $this->aliasField('building_status_id') => $inUseId
+            $this->aliasField('floor_status_id') => $inUseId
         ]);
 
         return $query;
