@@ -394,8 +394,6 @@ class InstitutionsController extends AppController
     {
         parent::beforeFilter($event);
         $session = $this->request->session();
-        $instId = !is_null($this->request->param('institutionId')) ? $this->request->param('institutionId') : $this->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
-        $this->request->params['pass']['institutionId'] = $instId;
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
         $action = $this->request->params['action'];
         $header = __('Institutions');
@@ -454,7 +452,7 @@ class InstitutionsController extends AppController
                 } else {
                     $header = $name .' - '.__(Inflector::humanize($action));
                 }
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $id])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $id])], $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
             }
