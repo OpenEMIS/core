@@ -40,7 +40,6 @@ class ExaminationCentresTable extends ControllerActionTable {
 
         $this->addBehavior('Area.Areapicker');
         $this->addBehavior('OpenEmis.Section');
-        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportExaminationCentreRooms']);
 
         $this->setDeleteStrategy('restrict');
         $this->toggle('index', false);
@@ -639,7 +638,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                         $params = json_encode($passArray);
                         $systemProcessId = $SystemProcesses->addProcess($name, $pid, $processModel, $eventName, $params);
 
-                        $this->triggerAddAllInstitutionsExamCentreShell($academicPeriodId, $systemProcessId, $institutionTypeId);
+                        $this->triggerAddAllInstitutionsExamCentreShell($systemProcessId, $academicPeriodId, $institutionTypeId);
                         $this->Alert->warning($this->aliasField('savingProcessStarted'), ['reset' => true]);
                         return true;
                     }
@@ -652,12 +651,11 @@ class ExaminationCentresTable extends ControllerActionTable {
         return $process;
     }
 
-    // FIXME
-    private function triggerAddAllInstitutionsExamCentreShell($academicPeriodId, $systemProcessId, $institutionTypeId = null)
+    private function triggerAddAllInstitutionsExamCentreShell($systemProcessId, $academicPeriodId, $institutionTypeId = null)
     {
         $args = '';
-        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
         $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+        $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
         $args .= !is_null($institutionTypeId) ? ' '.$institutionTypeId : '';
 
         $cmd = ROOT . DS . 'bin' . DS . 'cake AddAllInstitutionsExamCentre '.$args;
