@@ -605,6 +605,9 @@ trait MessagesTrait {
         'ExaminationCentres' => [
             'savingProcessStarted' => 'Examination centres are currently being added in the background'
         ],
+        'ExaminationCentresExaminations' => [
+            'savingProcessStarted' => 'Examination centres are currently being linked in the background'
+        ],
         'ExaminationCentreStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
