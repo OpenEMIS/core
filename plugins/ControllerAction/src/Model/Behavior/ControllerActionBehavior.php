@@ -31,6 +31,17 @@ class ControllerActionBehavior extends Behavior
         ]
     ];
 
+    private $cakephpReservedPassKeys = [
+            'controller',
+            'action',
+            'plugin',
+            'pass',
+            '_matchedRoute',
+            '_Token',
+            '_csrfToken',
+            'paging'
+        ];
+
     public function initialize(array $config)
     {
         $this->attachActions();
@@ -251,6 +262,17 @@ class ControllerActionBehavior extends Behavior
         $this->config('actions', $actions);
     }
 
+    private function mergeRequestParams(array &$url)
+    {
+        $requestParams = $this->request->params;
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
+        }
+        $url = array_merge($url, $requestParams);
+    }
+
     public function url($action, $params = true /* 'PASS' | 'QUERY' | false */)
     {
         $controller = $this->_table->controller;
@@ -260,6 +282,8 @@ class ControllerActionBehavior extends Behavior
             'action' => $this->_table->alias,
             0 => $action
         ];
+
+        $this->mergeRequestParams($url);
 
         if ($params === true) {
             $url = array_merge($url, $this->params());
