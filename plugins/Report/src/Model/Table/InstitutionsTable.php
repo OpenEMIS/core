@@ -165,6 +165,7 @@ class InstitutionsTable extends AppTable
 				$option[self::NO_STAFF] = __('Institutions with No Staff');
 				$attr['type'] = 'select';
 				$attr['options'] = $option;
+				$attr['onChangeReload'] = true;
 				return $attr;
 			} else {
 				$attr['value'] = self::NO_FILTER;
@@ -300,7 +301,11 @@ class InstitutionsTable extends AppTable
 					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
 				return $attr;
-			} else if (in_array($feature, ['Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases'])) {
+			} else if (in_array($feature, ['Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases'])
+				|| (in_array($feature, ['Report.Institutions'])
+					&& !empty($request->data[$this->alias()]['institution_filter'])
+					&& $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT)
+				) {
 				$academicPeriodOptions = [];
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 				$periodOptions = $AcademicPeriodTable->getList();
@@ -332,15 +337,14 @@ class InstitutionsTable extends AppTable
 		switch ($filter) {
 			case self::NO_STUDENT:
                 $StudentsTable = TableRegistry::get('Institution.Students');
-				$AcademicPeriodsTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-				$currentAcademicPeriodId = $AcademicPeriodsTable->getCurrent();
+				$academicPeriodId = $requestData->academic_period_id;
 
 				$query
 					->leftJoin(
 						[$StudentsTable->alias() => $StudentsTable->table()],
 						[
 							$StudentsTable->aliasField('institution_id') . ' = '. $this->aliasField('id'),
-                            $StudentsTable->aliasField('academic_period_id') => $currentAcademicPeriodId
+                            $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
 						]
 					)
 					->select(['student_count' => $query->func()->count('Students.id')])
