@@ -172,7 +172,15 @@ class StudentUserTable extends ControllerActionTable
 				'on' => 'create'
 			])
 			->requirePresence('start_date', 'create')
+            ->add('start_date', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'start_date'],
+                'on' => 'create'
+            ])
 			->requirePresence('education_grade_id', 'create')
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
+                'on' => 'create'
+            ])
 			->requirePresence('academic_period_id', 'create')
 			->allowEmpty('postal_code')
 			->add('postal_code', 'ruleCustomPostalCode', [

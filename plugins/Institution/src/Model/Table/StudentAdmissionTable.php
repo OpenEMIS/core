@@ -13,6 +13,8 @@ use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Datasource\Exception\RecordNotFoundException;
 
+use App\Model\Traits\MessagesTrait;
+
 class StudentAdmissionTable extends AppTable {
 	const NEW_REQUEST = 0;
 	const APPROVED = 1;
@@ -21,6 +23,8 @@ class StudentAdmissionTable extends AppTable {
 	// Type status for admission
 	const TRANSFER = 2;
 	const ADMISSION = 1;
+
+    use MessagesTrait;
 
 	public function initialize(array $config) {
 		$this->table('institution_student_admission');
@@ -245,7 +249,7 @@ class StudentAdmissionTable extends AppTable {
 				Log::write('debug', $selectedClassId);
 				$selectedClassId = NULL;
 				$entity->institution_class_id = null;
-				$this->save($entity, ['validate' => false]);
+				$this->save($entity, ['validate' => 'StartDate']);
 			}
 		}
 
@@ -386,12 +390,15 @@ class StudentAdmissionTable extends AppTable {
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
+            if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
 				$startDate = $request->data[$this->alias()]['start_date'];
 				$attr['type'] = 'readonly';
 				$attr['attr']['value'] = $startDate->format('d-m-Y');
-			}
-			return $attr;
+			} else if (array_key_exists('startDate', $request->query)) {
+                $attr['value'] = $request->query['startDate'];
+                $attr['attr']['value'] = $request->query['startDate'];
+            }
+            return $attr;
 		}
 	}
 
@@ -472,97 +479,117 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$selectedClassId = $entity->institution_class_id;
-		$entity->comment = $data['StudentAdmission']['comment'];
-		$Students = TableRegistry::get('Institution.Students');
-		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-		$statuses = $StudentStatuses->findCodeList();
+        //calling the validation manually as there is existing save() logic that disable validation ($this->save($entity, ['validate' => false]), this wont effect existing logic
+        $modelTable = $this->alias();
 
-		$newSchoolId = $entity->institution_id;
-		$previousSchoolId = $entity->previous_institution_id;
-		$studentId = $entity->student_id;
-		$periodId = $entity->academic_period_id;
-		$gradeId = $entity->education_grade_id;
-		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
+        $param['data'] = [
+            'institution_id' => $data[$modelTable]['institution_id'],
+            'education_grade_id' => $data[$modelTable]['education_grade_id'],
+            'start_date' => $data[$modelTable]['start_date']
+        ];
+        $param['providers']['table'] = $modelTable;
+        
+        $validateEndProgramme = $this->checkProgrammeEndDate(null, 'model', $param);
+        
+        if ($validateEndProgramme !== true) {
+            $this->Alert->error($validateEndProgramme);
+            $urlParams = $this->ControllerAction->url('edit');
+            $urlParams['startDate'] = $data[$modelTable]['start_date'];
+            $event->stopPropagation();
+            return $this->controller->redirect($urlParams);
+        } else {
+    		$selectedClassId = $entity->institution_class_id;
+    		$entity->comment = $data['StudentAdmission']['comment'];
+    		$Students = TableRegistry::get('Institution.Students');
+    		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+    		$statuses = $StudentStatuses->findCodeList();
 
-		if (!is_null($selectedClassId)) {
-			$classData = [];
-			$classData['student_id'] = $studentId;
-			$classData['education_grade_id'] = $gradeId;
-			$classData['institution_class_id'] = $selectedClassId;
-			$classData['student_status_id'] = $statuses['CURRENT'];
-			$classData['institution_id'] = $newSchoolId;
-			$classData['academic_period_id'] = $periodId;
-			$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
-			$InstitutionClassStudents->autoInsertClassStudent($classData);
-		}
+    		$newSchoolId = $entity->institution_id;
+    		$previousSchoolId = $entity->previous_institution_id;
+    		$studentId = $entity->student_id;
+    		$periodId = $entity->academic_period_id;
+    		$gradeId = $entity->education_grade_id;
+    		$newSystemId = TableRegistry::get('Education.EducationGrades')->getEducationSystemId($gradeId);
 
-		$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
-		if (!empty($validateEnrolledInAnyInstitutionResult)) {
-			$this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
-		} else if ($Students->completedGrade($gradeId, $studentId)) {
-			$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
-		} else { // if not exists
-			$startDate = $data[$this->alias()]['start_date'];
-			$startDate = date('Y-m-d', strtotime($startDate));
+    		if (!is_null($selectedClassId)) {
+    			$classData = [];
+    			$classData['student_id'] = $studentId;
+    			$classData['education_grade_id'] = $gradeId;
+    			$classData['institution_class_id'] = $selectedClassId;
+    			$classData['student_status_id'] = $statuses['CURRENT'];
+    			$classData['institution_id'] = $newSchoolId;
+    			$classData['academic_period_id'] = $periodId;
+    			$InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+    			$InstitutionClassStudents->autoInsertClassStudent($classData);
+    		}
 
-			// add the student to the new school
-			$entityData = [
-				'institution_id' => $newSchoolId,
-				'student_id' => $studentId,
-				'academic_period_id' => $periodId,
-				'education_grade_id' => $gradeId,
-				'student_status_id' => $statuses['CURRENT']
-			];
-			$entityData['start_date'] = $startDate;
-			$entityData['end_date'] = $entity->end_date->format('Y-m-d');
-			$newEntity = $Students->newEntity($entityData);
-			if ($Students->save($newEntity)) {
-				$this->Alert->success('StudentAdmission.approve');
+    		$validateEnrolledInAnyInstitutionResult = $Students->validateEnrolledInAnyInstitution($studentId, $newSystemId, ['targetInstitutionId' => $newSchoolId]);
+    		if (!empty($validateEnrolledInAnyInstitutionResult)) {
+    			$this->Alert->error($validateEnrolledInAnyInstitutionResult, ['type' => 'message']);
+    		} else if ($Students->completedGrade($gradeId, $studentId)) {
+    			$this->Alert->error('Institution.Students.student_name.ruleStudentNotCompletedGrade');
+    		} else { // if not exists
+    			$startDate = $data[$this->alias()]['start_date'];
+    			$startDate = date('Y-m-d', strtotime($startDate));
 
-				$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
+    			// add the student to the new school
+    			$entityData = [
+    				'institution_id' => $newSchoolId,
+    				'student_id' => $studentId,
+    				'academic_period_id' => $periodId,
+    				'education_grade_id' => $gradeId,
+    				'student_status_id' => $statuses['CURRENT']
+    			];
+    			$entityData['start_date'] = $startDate;
+    			$entityData['end_date'] = $entity->end_date->format('Y-m-d');
+    			$newEntity = $Students->newEntity($entityData);
+    			if ($Students->save($newEntity)) {
+    				$this->Alert->success('StudentAdmission.approve');
 
-				$educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
-				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
+    				$EducationGradesTable = TableRegistry::get('Education.EducationGrades');
 
-				$conditions = [
-					'student_id' => $entity->student_id,
-					'status' => self::NEW_REQUEST,
-					'education_grade_id IN' => $educationGradesToUpdate
-				];
+    				$educationSystemId = $EducationGradesTable->getEducationSystemId($entity->education_grade_id);
+    				$educationGradesToUpdate = $EducationGradesTable->getEducationGradesBySystem($educationSystemId);
 
-				// Reject all other new pending admission / transfer application entry of the
-				// same student for the same academic period
-				$this->updateAll(
-					['status' => self::REJECTED],
-					[$conditions]
-				);
+    				$conditions = [
+    					'student_id' => $entity->student_id,
+    					'status' => self::NEW_REQUEST,
+    					'education_grade_id IN' => $educationGradesToUpdate
+    				];
 
-				// Update the status of the admission to be approved
-				$entity->start_date = $startDate;
-				$entity->status = self::APPROVED;
-				if (!$this->save($entity, ['validate' => false])) {
-					$this->log($entity->errors(), 'debug');
-				}
-			} else {
-				$this->Alert->error('general.edit.failed');
-				$this->log($newEntity->errors(), 'debug');
-			}
-		}
+    				// Reject all other new pending admission / transfer application entry of the
+    				// same student for the same academic period
+    				$this->updateAll(
+    					['status' => self::REJECTED],
+    					[$conditions]
+    				);
 
-		// To redirect back to the student admission if it is not access from the workbench
-		$urlParams = $this->ControllerAction->url('index');
-		$plugin = false;
-		$controller = 'Dashboard';
-		$action = 'index';
-		if ($urlParams['controller'] == 'Institutions') {
-			$plugin = 'Institution';
-			$controller = 'Institutions';
-			$action = 'StudentAdmission';
-		}
+    				// Update the status of the admission to be approved
+    				$entity->start_date = $startDate;
+    				$entity->status = self::APPROVED;
+    				if (!$this->save($entity, ['validate' => false])) {
+    					$this->log($entity->errors(), 'debug');
+    				}
+    			} else {
+    				$this->Alert->error('general.edit.failed');
+    				$this->log($newEntity->errors(), 'debug');
+    			}
+    		}
 
-		$event->stopPropagation();
-		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
+    		// To redirect back to the student admission if it is not access from the workbench
+    		$urlParams = $this->ControllerAction->url('index');
+    		$plugin = false;
+    		$controller = 'Dashboard';
+    		$action = 'index';
+    		if ($urlParams['controller'] == 'Institutions') {
+    			$plugin = 'Institution';
+    			$controller = 'Institutions';
+    			$action = 'StudentAdmission';
+    		}
+
+    		$event->stopPropagation();
+    		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
+        }
 	}
 
 	public function editOnReject(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
