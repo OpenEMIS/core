@@ -14,8 +14,6 @@
  */
 namespace Cake\Core;
 
-use Cake\Core\App;
-use Cake\Core\Plugin;
 use Cake\Utility\Inflector;
 
 /**
@@ -138,7 +136,7 @@ trait ConventionsTrait
         if (Plugin::loaded($pluginName)) {
             return Plugin::path($pluginName);
         }
-        return current(App::path('Plugin')) . $pluginName . DS;
+        return current(App::path('Plugin')) . $pluginName . DIRECTORY_SEPARATOR;
     }
 
     /**

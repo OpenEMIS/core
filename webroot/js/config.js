@@ -5,8 +5,8 @@
 
 
 $(document).ready(function() {
-	Config.init();
-	Config.applyRule(); 
+	// Config.init();
+	// Config.applyRule(); 
 });
 
 var Config = {

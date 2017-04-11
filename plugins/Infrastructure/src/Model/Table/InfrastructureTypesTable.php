@@ -2,69 +2,62 @@
 namespace Infrastructure\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
 use Cake\ORM\Query;
+use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 
-class InfrastructureTypesTable extends AppTable {
-	private $_fieldOrder = ['infrastructure_level_id', 'name'];
+use App\Model\Table\ControllerActionTable;
 
-	public function initialize(array $config) {
+class InfrastructureTypesTable extends ControllerActionTable
+{
+	public function initialize(array $config)
+	{
+		$this->table('infrastructure_types');
 		parent::initialize($config);
+
 		$this->belongsTo('Levels', ['className' => 'Infrastructure.InfrastructureLevels', 'foreignKey' => 'infrastructure_level_id']);
-	}
-
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
-	}
-
-	public function indexBeforeAction(Event $event) {
-		//Add controls filter to index page
-		$toolbarElements = [
-            ['name' => 'Infrastructure.controls', 'data' => [], 'options' => []]
-        ];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
-        $this->controller->set(compact('levelOptions', 'selectedLevel'));
-
-        if (empty($levelOptions)) {
-        	$this->Alert->warning('InfrastructureTypes.noLevels');
-        }
-
-		$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		//Setup fields
-		list($levelOptions, $selectedLevel) = array_values($this->getSelectOptions());
-		$this->fields['infrastructure_level_id']['type'] = 'hidden';
-		$this->fields['infrastructure_level_id']['attr']['value'] = $selectedLevel;
-
-		$levelName = '';
-		if (!empty($levelOptions)) {
-			$levelName = $this->Levels->get($selectedLevel)->name;
+		$this->hasMany('InstitutionInfrastructures', ['className' => 'Institution.InstitutionInfrastructures', 'dependent' => true, 'cascadeCallbacks' => true]);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'infrastructure_level_id'
+			]);
 		}
 
-		$this->ControllerAction->field('level_name', [
-			'type' => 'readonly',
-			'attr' => ['value' => $levelName]
-		]);
-
-		array_unshift($this->_fieldOrder, "level_name");
+		$this->addBehavior('FieldOption.FieldOption');
+		$this->addBehavior('Infrastructure.Types');
 	}
 
-	public function getSelectOptions() {
-		//Return all required options and their key
-		$levelId = $this->request->query('level');
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		if ($extra->offsetExists('params') && array_key_exists('selectedLevel', $extra['params'])) {
+			$selectedLevel = $extra['params']['selectedLevel'];
+			$query->where([$this->aliasField('infrastructure_level_id') => $selectedLevel]);
+		}
+	}
 
-		$levelOptions = $this->Levels->find('list')->toArray();
-		$selectedLevel = !is_null($levelId) ? $levelId : key($levelOptions);
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->setupFields($entity);
+	}
 
-		return compact('levelOptions', 'selectedLevel');
+	public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+		$this->setupFields($entity);
+	}
+
+	public function onUpdateFieldInfrastructureLevelId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+			$levelOptions = $this->Levels->getOptions();
+			$selectedLevel = $this->queryString('level', $levelOptions);
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedLevel;
+			$attr['attr']['value'] = $levelOptions[$selectedLevel];
+		}
+
+		return $attr;
+	}
+
+	private function setupFields(Entity $entity) {
+		$this->field('infrastructure_level_id', ['type' => 'select']);
 	}
 }

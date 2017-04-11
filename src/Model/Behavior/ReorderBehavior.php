@@ -44,7 +44,9 @@ class ReorderBehavior extends Behavior {
 
 	private function updateOrder($entity, $orderField, $filter = null, $filterValues = null) {
 		$table = $this->_table;
+		$reorderItems = [];
 		if (is_null($filter)) {
+			// this checking is for the table with no parent_id column
 			$reorderItems = $table->find('list')
 			->order([$table->aliasField($orderField)])
 			->toArray();
@@ -57,11 +59,15 @@ class ReorderBehavior extends Behavior {
 			} else {
 				$filterValue = $entity->$filter;
 			}
-			$reorderItems = $table
-				->find('list')
-				->where([$table->aliasField($filter).' IN ' => $filterValue])
-				->order([$table->aliasField($orderField)])
-				->toArray();
+			
+			if (!is_null($filterValue)) {
+				$where = [$table->aliasField($filter).' IN ' => $filterValue];
+				$reorderItems = $table
+					->find('list')
+					->where($where)
+					->order([$table->aliasField($orderField)])
+					->toArray();
+			}
 		}
 		$counter = 1;
 		foreach ($reorderItems as $key => $item) {

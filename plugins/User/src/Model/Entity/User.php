@@ -61,12 +61,12 @@ class User extends Entity {
 		$data = "";
 		$securityUserId = $this->id;
 
-		$UserIdentities = TableRegistry::get('User.Identities');
+        $UserIdentities = TableRegistry::get('User.Identities');
+        $IdentityTypes = $UserIdentities->IdentityTypes;
+        $default_identity_type = $IdentityTypes->getDefaultValue();
 		$UserIdentity = $UserIdentities
 				->find()
-				->contain(['IdentityTypes'])
-				->where(['security_user_id' => $this->id, 'IdentityTypes.default' => 1])
-				->order(['IdentityTypes.default DESC'])
+				->where(['security_user_id' => $this->id, 'identity_type_id' => $default_identity_type])
 				->first();
 
 		if(!empty($UserIdentity)) {

@@ -12,25 +12,42 @@ class SecurityAuthorize extends BaseAuthorize {
 		$AccessControl = $controller->AccessControl;
 		$authorized = false;
 
-		if (!$request->is('ajax')) {
-			if ($AccessControl->isIgnored($controller->name, $action) || $user['super_admin'] == true) {
+		if (!$request->is('ajax') && $request->params['_ext'] != 'json') {
+
+			// Set for roles belonging to the controller
+			$roles = [];
+			$event = $controller->dispatchEvent('Controller.SecurityAuthorize.onUpdateRoles', null, $this);
+	    	if ($event->result) {
+	    		$roles = $event->result;
+	    	}
+
+	    	$event = $controller->dispatchEvent('Controller.SecurityAuthorize.isActionIgnored', [$action], $this);
+	    	if ($event->result == true) {
+	    		$authorized = true;
+	    	}
+
+	    	if ($authorized || $user['super_admin'] == true) {
 				$authorized = true;
 			} else if ($action == 'ComponentAction') { // actions from ControllerActionComponent
 				$model = $controller->ControllerAction->model();
 				$action = $model->action;
 
-				if ($AccessControl->isIgnored($model->registryAlias(), $action)) {
-					$authorized = true;
+				if (array_key_exists($model->alias, $controller->ControllerAction->models)) {
+					$authorized = $AccessControl->check([$controller->name, $model->alias, $action], $roles);
 				} else {
-					// TODO-jeff: need to check for roles belonging to institutions
-					if (array_key_exists($model->alias, $controller->ControllerAction->models)) {
-						$authorized = $AccessControl->check([$controller->name, $model->alias, $action]);
-					} else {
-						$authorized = $AccessControl->check([$controller->name, $action]);
-					}
+					$authorized = $AccessControl->check([$controller->name, $action], $roles);
 				}
 			} else { // normal actions from Controller
-				$authorized = $AccessControl->check([$controller->name, $action]);
+				$isCAv4 = ctype_upper(substr($action, 0, 1));
+				if ($isCAv4) {
+					$pass = $request->pass;
+					$model = $action;
+					$action = isset($pass[0]) ? $pass[0] : 'index';
+
+					$authorized = $AccessControl->check([$controller->name, $model, $action], $roles);
+				} else {
+					$authorized = $AccessControl->check([$controller->name, $action], $roles);
+				}
 			}
 
 			if (!$authorized) {

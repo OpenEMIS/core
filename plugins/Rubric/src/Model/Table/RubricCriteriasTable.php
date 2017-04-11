@@ -21,10 +21,16 @@ class RubricCriteriasTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('RubricSections', ['className' => 'Rubric.RubricSections']);
 		$this->hasMany('RubricCriteriaOptions', ['className' => 'Rubric.RubricCriteriaOptions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->addBehavior('Reorder', ['filter' => 'rubric_section_id']);
+		if ($this->behaviors()->has('Reorder')) {
+			$this->behaviors()->get('Reorder')->config([
+				'filter' => 'rubric_section_id',
+			]);
+		}
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 	    	->add('name', [
 	    		'unique' => [

@@ -1,5 +1,7 @@
 <?php
 namespace App\Controller;
+
+use Cake\Event\Event;
 use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 
@@ -29,11 +31,29 @@ class AboutController extends AppController {
 		];
 
 		$this->Navigation->addCrumb($this->name);
-		$this->Navigation->addCrumb($tabElements[$this->request->action]['text']);
+		if ($this->request->action != 'index') {
+			$this->Navigation->addCrumb($tabElements[$this->request->action]['text']);
+		}
 
 		$this->set('tabElements', $tabElements);
 		$this->set('selectedAction', $this->request->action);
-		$this->set('contentHeader', $this->name);
+	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        return true;
+    }
+
+	public function beforeFilter(Event $event) {
+		parent::beforeFilter($event);
+		$this->set('contentHeader', __($this->name));
 	}
 
 	public function index() {

@@ -13,101 +13,47 @@
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
-$wantedOptions = array_flip(['length', 'limit', 'default', 'unsigned', 'null']);
-$tableMethod = $this->Migration->tableMethod($action);
-$columnMethod = $this->Migration->columnMethod($action);
-$indexMethod = $this->Migration->indexMethod($action);
+use Cake\Database\Schema\Table;
+
+$constraints = $foreignKeys = $dropForeignKeys = [];
+$hasUnsignedPk = $this->Migration->hasUnsignedPrimaryKey($tables);
+
+if ($autoId && $hasUnsignedPk) {
+    $autoId = false;
+}
 %>
 <?php
-use Phinx\Migration\AbstractMigration;
+use Migrations\AbstractMigration;
 
 class <%= $name %> extends AbstractMigration
 {
+    <%- if (!$autoId): %>
+
+    public $autoId = false;
+
+    <%- endif; %>
     public function up()
     {
-    <%- foreach ($tables as $table): %>
-        <%- $foreignKeys = [];
-        $primaryKeysColumns = $this->Migration->primaryKeysColumnsList($table);
-        $primaryKeys = $this->Migration->primaryKeys($table);
-        $specialPk = count($primaryKeys) > 1 || $primaryKeys[0]['name'] !== 'id' || $primaryKeys[0]['info']['columnType'] !== 'integer';
-        if ($specialPk) {
-        %>
-        $table = $this->table('<%= $table%>', ['id' => false, 'primary_key' => ['<%= implode("', '", \Cake\Utility\Hash::extract($primaryKeys, '{n}.name')) %>']]);
-        <%- } else { %>
-        $table = $this->table('<%= $table%>');
-        <%- } %>
-        $table
-        <%- if ($specialPk) { %>
-            <%- foreach ($primaryKeys as $primaryKey) :%>
-            -><%= $columnMethod %>('<%= $primaryKey['name'] %>', '<%= $primaryKey['info']['columnType'] %>', [<%
-                $options = [];
-                $columnOptions = array_intersect_key($primaryKey['info']['options'], $wantedOptions);
-                echo $this->Migration->stringifyList($columnOptions, ['indent' => 4]);
-            %>])
-            <%- endforeach; %>
-        <%- } %>
-        <%- foreach ($this->Migration->columns($table) as $column => $config): %>
-            -><%= $columnMethod %>('<%= $column %>', '<%= $config['columnType'] %>', [<%
-                $options = [];
-                $columnOptions = array_intersect_key($config['options'], $wantedOptions);
-                echo $this->Migration->stringifyList($columnOptions, ['indent' => 4]);
-            %>])
-        <%- endforeach; %>
-        <%- foreach ($this->Migration->constraints($table) as $constraint):
-            $constraintColumns = $constraint['columns'];
-            sort($constraintColumns);
-            if ($constraint['type'] !== 'unique'):
-                $foreignKeys += $constraint['columns'];
-
-                $columnsList = '\'' . $constraint['columns'][0] . '\'';
-                if (count($constraint['columns']) > 1):
-                    $columnsList = '[' . $this->Migration->stringifyList($constraint['columns'], ['indent' => 5]) . ']';
-                endif;
-
-                if (is_array($constraint['references'][1])):
-                    $columnsReference = '[' . $this->Migration->stringifyList($constraint['references'][1], ['indent' => 5]) . ']';
-                else:
-                    $columnsReference = '\'' . $constraint['references'][1] . '\'';
-                endif; %>
-            ->addForeignKey(
-                <%= $columnsList %>,
-                '<%= $constraint['references'][0] %>',
-                <%= $columnsReference %>,
-                [
-                    'update' => '<%= $constraint['update'] %>',
-                    'delete' => '<%= $constraint['delete'] %>'
-                ]
-            )
-            <%- elseif ($constraintColumns !== $primaryKeysColumns): %>
-            ->addIndex(
-                [<%
-                    echo $this->Migration->stringifyList($constraint['columns'], ['indent' => 5]);
-                %>],
-                ['unique' => true]
-            )
-            <%- endif; %>
-            <%- endforeach; %>
-        <%- foreach($this->Migration->indexes($table) as $index):
-            sort($foreignKeys);
-            $indexColumns = $index['columns'];
-            sort($indexColumns);
-            if ($foreignKeys !== $indexColumns):
-            %>
-            ->addIndex(
-                [<%
-                    echo $this->Migration->stringifyList($index['columns'], ['indent' => 5]);
-                %>]
-            )
-        <%- endif;
-            endforeach; %>
-            -><%= $tableMethod %>();
-    <%- endforeach; %>
+        <%- echo $this->element('Migrations.create-tables', ['tables' => $tables, 'autoId' => $autoId, 'useSchema' => false]) %>
     }
 
     public function down()
     {
-        <%- $tables = array_reverse($tables);
-            foreach ($tables as $table): %>
+        <%- if (!empty($this->Migration->returnedData['dropForeignKeys'])):
+            foreach ($this->Migration->returnedData['dropForeignKeys'] as $table => $columnsList):
+                $maxKey = count($columnsList) - 1;
+        %>
+        $this->table('<%= $table %>')
+            <%- foreach ($columnsList as $key => $columns): %>
+            ->dropForeignKey(
+                <%= $columns %>
+            )<%= ($key === $maxKey) ? ';' : '' %>
+            <%- endforeach; %>
+
+        <%- endforeach;
+            endif;
+        %>
+        <%- foreach ($tables as $table): %>
         $this->dropTable('<%= $table%>');
         <%- endforeach; %>
     }

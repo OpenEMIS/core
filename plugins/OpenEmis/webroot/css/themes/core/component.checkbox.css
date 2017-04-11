@@ -1,0 +1,122 @@
+/* CHECKBOX v.1.0.4 */
+
+.selection-label {
+    display: inline-block;
+    background: none!important;
+    border: 0!important;
+    padding: 0 10px!important;
+    width: 185px!important;
+    margin-top: 0;
+}
+
+.icheckbox_minimal-grey,
+.iradio_minimal-grey {
+    display: inline-block;
+    margin: -5px 0;
+}
+
+.icheck-input {
+    background-color: #FFF;
+    margin: 2px 5px 2px !important;
+    width: 18px;
+    height: 18px;
+    display: inline-block !important;
+}
+
+table .icheck-input {
+    margin: 0 !important;
+}
+
+.icheckbox_minimal-grey.disabled {
+    cursor: not-allowed !important;
+}
+
+.form-horizontal input[type="checkbox"],
+.form-horizontal input[type="radio"] {
+    height: 18px;
+    width: 18px;
+    margin-bottom: 0;
+}
+
+.input-selection-inline,
+.input-selection {
+    display: inline-block;
+    margin-bottom: 15px;
+    border: 1px solid #CCC;
+    -webkit-border-radius: 3px;
+    border-radius: 3px;
+    padding: 10px;
+    background-color: #FFF;
+    width: 50%;
+}
+
+.input-selection-inline .selection-label,
+.input-selection .selection-label {
+    background: transparent;
+    border: 0;    
+    margin: 4px !important;
+    padding: 0 !important;
+}
+
+.input-selection-inline .selection-label {
+    width: 30% !important;
+    font-weight: normal;
+}
+
+.input-selection .selection-label {
+    width: 80% !important;
+    margin-bottom: 10px;
+    font-weight: normal;
+}
+
+.input-selection-inline .input{
+    display: inline;
+}
+
+.checkbox,
+.checkbox-inline{
+    padding: 4px 0;
+}
+
+td.center .icheck-input {
+    float: none !important;
+    margin: 0 auto !important;
+}
+
+td.center .icheck-input input {
+    width: 18px !important;
+}
+
+
+/* RTL */
+
+.rtl .icheck-input {
+    float: right;
+}
+
+.rtl .icheckbox_minimal-grey, 
+.rtl .iradio_minimal-grey {
+    margin: 0;
+}
+
+.rtl .input-selection-inline .selection-label, 
+.rtl .input-selection .selection-label {
+    font-size: 14px;
+    line-height: 14px;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+/* Small Devices, Tablets */
+@media only screen and (max-width : 800px) {
+  
+}
+
+/* Extra Small Devices, Phones */ 
+@media only screen and (max-width : 480px) {
+    .input-selection-inline,
+    .input-selection {
+        width: 100% !important;
+    }
+}

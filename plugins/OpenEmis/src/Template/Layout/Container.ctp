@@ -19,14 +19,28 @@
 	if (isset($indexElements) && array_key_exists('advanced_search', $indexElements)) {
 		$toolbarClass[] = 'toolbar-search-adv';
 	}
+
+	// For Angular
+	if (isset($ngController)) {
+		$ngController = 'ng-controller="'.$ngController.'"';
+	} else {
+		$ngController = '';
+	}
+
+	// For page where no Breadcrumb
+	if (isset($noBreadcrumb)) {
+		$wrapperClass = 'wrapper no-breadcrumb';
+	} else {
+		$wrapperClass = 'wrapper';
+	}
 ?>
 
-<div class="content-wrapper">
+<div class="content-wrapper" <?= $ngController; ?>>
 
 	<?= $this->element('OpenEmis.breadcrumbs') ?>
 
 	<div class="page-header">
-		<h2><?= $this->fetch('contentHeader') ?></h2>
+		<h2 id="main-header"><?= $this->fetch('contentHeader') ?></h2>
 		<?php if (!empty($toolbar)) : ?>
 			<div class="toolbar <?= implode(' ', $toolbarClass) ?>">
 				<?= $this->fetch('toolbar') ?>
@@ -34,7 +48,7 @@
 		<?php endif ?>
 	</div>
 
-	<div class="wrapper">
+	<div class="<?= $wrapperClass;?>">
 		<div class="wrapper-child">
 			<?= $this->fetch('contentBody') ?>
 		</div>

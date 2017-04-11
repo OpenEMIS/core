@@ -14,7 +14,7 @@
 						<th class="checkbox-column"><input type="checkbox" class="icheck-input" /></th>
 						<th><?= $this->Label->get($attr['model'] .'.education_subject') ?></th>
 						<th><?= $this->Label->get('general.name') ?></th>
-						<th><?= $this->Label->get($attr['model'] .'.teacher') ?></th>
+						<th><?= $this->Label->get($attr['model'] .'.teacherOrTeachers') ?></th>
 					</tr>
 				</thead>
 				<?php if (isset($attr['data'])) : ?>
@@ -27,6 +27,7 @@
 							if ($selected) {
 								$attrValue = $attr['data']['existedSubjects'][$n]['name'];
 								$disabled = 'disabled';
+								$teachers = $attr['data']['existedSubjects'][$n]['teachers'];
 								unset($attr['data']['existedSubjects'][$n]);
 							} else {
 								if (!$obj->visible) {
@@ -40,7 +41,7 @@
 		    			<?php 
 	    				$attrErrors = [];
 	    				$selectedInForm = false;
-		    			if(!empty($this->request->data) && array_key_exists('MultiSubjects', $this->request->data['MultiSubjects']) && isset($this->request->data['MultiSubjects'][$i])) {
+		    			if(!empty($this->request->data) && array_key_exists('MultiSubjects', $this->request->data) && isset($this->request->data['MultiSubjects'][$i])) {
 		    				$requestData = $this->request->data['MultiSubjects'][$i];
 		    				if ($this->request->data['submit'] == 'save') {
 		    					if (!$selected) {
@@ -73,8 +74,16 @@
 						}
 						?>
 
-						<td class="checkbox-column">
-							<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiSubjects[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" <?php echo $selectedInForm;?> <?php echo $selected;?> <?php echo $disabled;?> />
+						<td <?php if(!$disabled){ ?> class="checkbox-column" <?php } ?>>
+							<?= $this->Form->input(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
+									'type' => 'checkbox',
+									'label' => false,
+									'class' => 'icheck-input',
+									'value' => $n,
+									'checked' => ($selected || $selectedInForm),
+									'disabled' => $disabled
+								]);
+							?>
 						</td>
 						<td><?= $obj->education_subject->name ?></td>
 
@@ -92,13 +101,23 @@
 						</td>
 
 						<td>
-							<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_class_staff][0][status]', $i) ?>" value="1" />
 							<?php 
+							echo $this->Form->input(sprintf('MultiSubjects[%d][subject_staff][0][status]', $i), [
+										'label' => false,
+										'type' => 'hidden',
+										'value' => 1
+									]);
 							if (!$selected) {
-								echo $this->Form->input(sprintf('MultiSubjects.%d.institution_class_staff.0.staff_id', $i), array(
+								echo $this->Form->input(sprintf('MultiSubjects.%d.subject_staff.0.staff_id', $i), array(
 									'options' => $attr['data']['teachers'], 
 									'label' => false,
 								));
+							} else {
+								if (count($teachers)>0) {
+									$teachers = new \Cake\Collection\Collection($teachers);
+									$names = $teachers->extract('name_with_id');
+									echo implode(', ', $names->toArray());
+								}
 							}
 							?>
 						</td>
@@ -129,8 +148,16 @@
 				    				],
 				    			];
 							?>
-							<td class="checkbox-column">
-								<input type="checkbox" class="icheck-input" name="<?php echo sprintf('MultiSubjects[%d][education_subject_id]', $i) ?>" value="<?php echo $n?>" checked disabled="disabled" />
+							<td>
+								<?= $this->Form->input(sprintf('MultiSubjects[%d][education_subject_id]', $i), [
+										'type' => 'checkbox',
+										'label' => false,
+										'class' => 'icheck-input',
+										'value' => $n,
+										'checked' => 'checked',
+										'disabled' => 'disabled'
+									]);
+								?>
 							</td>
 							<td><?= $obj['subject_name'] ?></td>
 
@@ -141,7 +168,12 @@
 							</td>
 
 							<td>
-								<input type="hidden" name="<?php echo sprintf('MultiSubjects[%d][institution_class_staff][0][status]', $i) ?>" value="1" />
+								<?= $this->Form->input(sprintf('MultiSubjects[%d][subject_staff][0][status]', $i), [
+										'label' => false,
+										'type' => 'hidden',
+										'value' => 1
+									]);
+								?>
 							</td>
 						</tr>
 						<?php endforeach;//end $attr['data']['existedSubjects'] ?>

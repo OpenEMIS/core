@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell
+ * This file is part of Psy Shell.
  *
- * (c) 2012-2014 Justin Hileman
+ * (c) 2012-2015 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -52,14 +52,14 @@ class DumpCommand extends ReflectingCommand implements PresenterAware
             ))
             ->setDescription('Dump an object or primitive.')
             ->setHelp(
-                <<<HELP
+                <<<'HELP'
 Dump an object or primitive.
 
 This is like var_dump but <strong>way</strong> awesomer.
 
 e.g.
-<return>>>> dump \$_</return>
-<return>>>> dump \$someVar</return>
+<return>>>> dump $_</return>
+<return>>>> dump $someVar</return>
 HELP
             );
     }

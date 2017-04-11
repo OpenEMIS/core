@@ -17,7 +17,7 @@ class AccountsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = $this->getAccountValidation($validator);
+		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 }

@@ -2,7 +2,7 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('panelBody');
 ?>
-<tab heading="License">
+
 	<!-- License -->
 	<div id="license" class="about-wrapper">
 		<div class="about-container">
@@ -105,5 +105,5 @@ $this->start('panelBody');
 			<p><center><strong>-- End of terms and conditions --</strong></center></p>	
 		</div>		
 	</div>
-</tab> 
+
 <?php $this->end() ?>

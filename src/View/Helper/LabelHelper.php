@@ -191,16 +191,15 @@ class LabelHelper extends Helper {
 			$labelKey = $attr['labelKey'];
 		}
 		$code = $labelKey .'.'. $key;
-		$label = $this->get($code);
+		$label = $this->getMessage($code, ['defaultMessage' => false]);
 		
-		if($label === false) {
-			$label = __(Inflector::humanize($key));
+		if ($label === false) {
+			$label = Inflector::humanize($key);
 
 			if ($this->endsWith($label, ' Id')) {
 				$label = str_replace(' Id', '', $label);
 			}
-		} elseif ($label == '[Message Not Found]' || is_array($label)) {
-			$label = $this->get($code.'.label');
+			$label == __($label);
 		}
 		return $label;
 	}

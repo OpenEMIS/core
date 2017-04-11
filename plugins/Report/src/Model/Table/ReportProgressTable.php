@@ -43,11 +43,7 @@ class ReportProgressTable extends AppTable  {
 		}
 		*/
 
-		$expiryDate = new Time();
-		$expiryDate->addDays(3);
-
 		$obj['file_path'] = NULL;
-		$obj['expiry_date'] = $expiryDate;
 		$obj['current_records'] = 0;
 		$obj['total_records'] = 0;
 		$obj['status'] = self::PENDING;

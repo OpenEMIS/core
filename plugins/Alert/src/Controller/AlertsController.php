@@ -1,26 +1,27 @@
 <?php
 namespace Alert\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 
 class AlertsController extends AppController
 {
 	public function initialize() {
 		parent::initialize();
 
-		$this->ControllerAction->models = [
-			'Questions' => ['className' => 'Alert.SmsMessages'],
-			'Responses'	=> ['className' => 'Alert.SmsResponses', 'actions' => ['index']],
-			'Logs'		=> ['className' => 'Alert.AlertLogs', 'actions' => ['index']]
-		];
     }
+
+    public function Alerts() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.Alerts']); }
+    public function AlertRules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertRules']); }
+    public function Logs() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Alert.AlertLogs']); }
 
     public function beforeFilter(Event $event) {
     	parent::beforeFilter($event);
 	}
 
-    public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Communications');
 
 		$header .= ' - ' . $model->getHeader($model->alias);

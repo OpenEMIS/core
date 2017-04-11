@@ -2,84 +2,64 @@
 namespace CustomField\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
 use Cake\ORM\Entity;
-use Cake\ORM\Query;
-use Cake\Network\Request;
 use Cake\Event\Event;
+use App\Model\Table\AppTable;
 
 class CustomRecordsTable extends AppTable {
-	private $_contain = ['CustomFieldValues', 'CustomTableCells'];
-
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('CustomForms', ['className' => 'CustomField.CustomForms']);
-		$this->addBehavior('CustomField.Record');
+		$this->addBehavior('CustomField.Record', [
+			'moduleKey' => null
+		]);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		//Add controls filter to index page
-		$toolbarElements = [
-            ['name' => 'CustomField.controls', 'data' => [], 'options' => []]
-        ];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
-	}
-
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list($moduleOptions, $selectedModule, $formOptions, $selectedForm) = array_values($this->getSelectOptions());
-        $this->controller->set(compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm'));
-
-		$query
-			->where([$this->aliasField('custom_form_id') => $selectedForm])
-			->contain($this->_contain);
-	}
-
-	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain($this->_contain);
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		//Setup fields
-		list(, , $formOptions) = array_values($this->getSelectOptions());
-
-		$this->fields['custom_form_id']['options'] = $formOptions;
-		$this->fields['custom_form_id']['onChangeReload'] = true;
-
-		$this->setFieldOrder();
+	public function editOnInitialize(Event $event, Entity $entity) {
+		$this->request->query['form'] = $entity->custom_form_id;
 	}
 
 	public function addEditAfterAction(Event $event, Entity $entity) {
-		if ($this->behaviors()->hasMethod('addEditAfterAction')) {
-			list($entity) = array_values($this->behaviors()->call('addEditAfterAction', [$event, $entity]));
+		$this->setupFields($entity);
+		$entity->custom_form_id = $this->request->query('form');
+	}
+
+	public function onUpdateFieldCustomFormId(Event $event, array $attr, $action, $request) {
+		if ($action == 'add') {
+			$formOptions = $this->CustomForms
+				->find('list')
+				->toArray();
+			$selectedForm = $this->queryString('form', $formOptions);
+			$this->advancedSelectOptions($formOptions, $selectedForm);
+
+			$attr['type'] = 'select';
+			$attr['options'] = $formOptions;
+			$attr['onChangeReload'] = 'changeForm';
+		} else if ($action == 'edit') {
+			$selectedForm = $this->request->query('form');
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $selectedForm;
+			$attr['attr']['value'] = $this->CustomForms->get($selectedForm)->name;
 		}
 
-		return $entity;
+		return $attr;
 	}
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-		//Initialize field values
-		list(, , , $selectedModule) = array_values($this->getSelectOptions());
-		$entity->custom_form_id = $selectedModule;
-		return $entity;
+	public function addEditOnChangeForm(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['form']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('custom_form_id', $request->data[$this->alias()])) {
+					$this->request->query['form'] = $request->data[$this->alias()]['custom_form_id'];
+				}
+			}
+		}
 	}
 
-	public function getSelectOptions() {
-		//Return all required options and their key
-		$query = $this->request->query;
-
-		$moduleOptions = $this->CustomForms->CustomModules->find('list')->toArray();
-		$selectedModule = isset($query['module']) ? $query['module'] : key($moduleOptions);
-
-		$formOptions = $this->CustomForms->find('list')->where([$this->CustomForms->aliasField('custom_module_id') => $selectedModule])->toArray();
-		$selectedForm = isset($query['form']) ? $query['form'] : key($formOptions);
-
-		return compact('moduleOptions', 'selectedModule', 'formOptions', 'selectedForm');
-	}
-
-	public function setFieldOrder() {
-		$order = 1;
-		$this->ControllerAction->setFieldOrder('custom_form_id', $order++);
-		$this->ControllerAction->setFieldOrder('name', $order++);
+	private function setupFields(Entity $entity) {
+		$this->ControllerAction->field('custom_form_id');
+		$this->ControllerAction->setFieldOrder(['custom_form_id', 'name']);
 	}
 }

@@ -4,6 +4,7 @@ namespace Education\Model\Behavior;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
+use ArrayObject;
 
 class SetupBehavior extends Behavior {
 	private $setups = ['subjects', 'certifications', 'field_of_studies', 'programme_orientations'];
@@ -24,15 +25,12 @@ class SetupBehavior extends Behavior {
     	return $events;
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$controller = $this->_table->controller;
+	private function addSetupControl(ArrayObject $extra, $data = []) {
+		$extra['elements']['controls'] = ['name' => 'Education.controls', 'data' => $data, 'order' => 2];
+	}
 
-		// Add controls to index page
-		$toolbarElements = [
-            ['name' => 'Education.controls', 'data' => [], 'options' => []]
-        ];
-		$controller->set('toolbarElements', $toolbarElements);
-		// End
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
+		$controller = $this->_table->controller;
 
 		// Get page options and their key
 		$setupOptions = [];
@@ -43,7 +41,6 @@ class SetupBehavior extends Behavior {
 		}
 		$selectedSetup = $this->_table->queryString('setup', $setupOptions);
 		$this->_table->advancedSelectOptions($setupOptions, $selectedSetup);
-        $controller->set('setupOptions', $setupOptions);
         // End
 
 		$selectedAction = Inflector::camelize($actionOptions[$selectedSetup]);
@@ -52,5 +49,7 @@ class SetupBehavior extends Behavior {
 	        $action['action'] = $selectedAction;
 			$controller->redirect($action);
 		}
+
+		$this->addSetupControl($extra, ['setupOptions' => $setupOptions]);
 	}
 }

@@ -1,0 +1,229 @@
+/* TOOLTIP v.1.0.7 */
+
+.tooltip {
+    z-index: 9999 !important;
+}
+
+.tooltip-inner {
+    max-width: 800px !important;
+}
+
+
+/* RED - ERROR */
+
+.icon-red {
+    color: #CC5C5C;
+}
+
+.tooltip.tooltip-container-red .tooltip-inner,
+.tooltip-red .tooltip-inner {
+    background-color: #CC5C5C !important;
+}
+
+.tooltip.top.tooltip-container-red .tooltip-arrow,
+.tooltip-red .tooltip.top .tooltip-arrow {
+    border-top-color: #CC5C5C !important;
+}
+
+.tooltip.right.tooltip-container-red .tooltip-arrow,
+.tooltip-red .tooltip.right .tooltip-arrow {
+    border-right-color: #CC5C5C !important;
+}
+
+.tooltip.left.tooltip-container-red .tooltip-arrow,
+.tooltip-red .tooltip.left .tooltip-arrow {
+    border-left-color: #CC5C5C !important;
+}
+
+.tooltip.bottom.tooltip-container-red .tooltip-arrow,
+.tooltip-red .tooltip.bottom .tooltip-arrow {
+    border-bottom-color: #CC5C5C !important;
+}
+
+
+/* BLUE - INFO */
+
+.icon-blue {
+    color: #5C82CC;
+}
+
+.tooltip-blue .tooltip-inner {
+    background-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip.top .tooltip-arrow {
+    border-top-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip.right .tooltip-arrow {
+    border-right-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip.left .tooltip-arrow {
+    border-left-color: #5C82CC !important;
+}
+
+.tooltip-blue .tooltip.bottom .tooltip-arrow {
+    border-bottom-color: #5C82CC !important;
+}
+
+
+/* ORANGE - WARNING */
+
+.icon-orange {
+    color: #E6BA64;
+}
+
+.tooltip-orange .tooltip-inner {
+    background-color: #E6BA64 !important;
+}
+
+.tooltip-orange .tooltip.top .tooltip-arrow {
+    border-top-color: #E6BA64 !important;
+}
+
+.tooltip-orange .tooltip.right .tooltip-arrow {
+    border-right-color: #E6BA64 !important;
+}
+
+.tooltip-orange .tooltip.left .tooltip-arrow {
+    border-left-color: #E6BA64 !important;
+}
+
+.tooltip-orange .tooltip.bottom .tooltip-arrow {
+    border-bottom-color: #E6BA64 !important;
+}
+
+
+/* GREEN - SUCCESS */
+
+.icon-green {
+    color: #77B576;
+}
+
+.tooltip-green .tooltip-inner {
+    background-color: #77B576 !important;
+}
+
+.tooltip-green .tooltip.top .tooltip-arrow {
+    border-top-color: #77B576 !important;
+}
+
+.tooltip-green .tooltip.right .tooltip-arrow {
+    border-right-color: #77B576 !important;
+}
+
+.tooltip-green .tooltip.left .tooltip-arrow {
+    border-left-color: #77B576 !important;
+}
+
+.tooltip-green .tooltip.bottom .tooltip-arrow {
+    border-bottom-color: #77B576 !important;
+}
+
+.tooltip-red .tooltip,
+.tooltip-blue .tooltip,
+.tooltip-orange .tooltip,
+.tooltip-green .tooltip {
+    /*margin-left: 83px !important;*/
+    white-space: normal;
+}
+
+.icon-red,
+.icon-blue,
+.icon-green,
+.icon-orange,
+.tooltip-red i[data-toggle="tooltip"],
+.tooltip-blue i[data-toggle="tooltip"],
+.tooltip-orange i[data-toggle="tooltip"],
+.tooltip-green i[data-toggle="tooltip"] {
+    cursor: pointer;
+}
+
+.table-tooltip-icon {
+    width: 40px;
+    text-align: center;
+}
+
+.tooltip-red i,
+.tooltip-blue i,
+.tooltip-orange i,
+.tooltip-green i {
+    transition: all .1s ease-in-out;
+    animation: pulse 1s infinite;
+    animation-play-state: running;
+    animation-delay: 0;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+
+/* RTL v.1.0.0 */
+
+.rtl tbody tr:first-child .tooltip-red .tooltip,
+.rtl tbody tr:first-child .tooltip-blue .tooltip,
+.rtl tbody tr:first-child .tooltip-orange .tooltip,
+.rtl tbody tr:first-child .tooltip-green .tooltip {
+    margin-left: -120px !important;
+}
+
+.rtl tbody tr:first-child .tooltip-red .tooltip-arrow,
+.rtl tbody tr:first-child .tooltip-blue .tooltip-arrow,
+.rtl tbody tr:first-child .tooltip-orange .tooltip-arrow,
+.rtl tbody tr:first-child .tooltip-green .tooltip-arrow {
+    right: -7px !important;
+    left: auto !important;
+    -ms-transform: rotate(-90deg) !important;
+    /* IE 9 */
+    -webkit-transform: rotate(-90deg) !important;
+    /* Chrome, Safari, Opera */
+    transform: rotate(-90deg) !important;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+
+/* Small Devices, Tablets */
+
+@media only screen and (max-width: 1024px) {
+    .table-tooltip {
+        font-size: 20px;
+    }
+    .tooltip-inner {
+        max-width: 450px !important;
+    }
+}
+
+@media only screen and (max-width: 480px) {
+    .table-tooltip {
+        font-size: 20px;
+    }
+    .tooltip-inner {
+        max-width: 250px !important;
+    }
+}
+
+
+/* Mobile */
+
+.mobile .table-tooltip {
+    font-size: 20px;
+}
+
+.mobile .tooltip-inner {
+    max-width: 250px !important;
+}

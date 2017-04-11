@@ -18,11 +18,15 @@ use Cake\Controller\Component;
 use Cake\Controller\ComponentRegistry;
 use Cake\Network\Exception\InternalErrorException;
 use Cake\Utility\Inflector;
+use Exception;
 
 /**
  * The CakePHP FlashComponent provides a way for you to write a flash variable
  * to the session from your controllers, to be rendered in a view with the
  * FlashHelper.
+ *
+ * @method void success(string $message, array $options = []) Set a message using "success" element
+ * @method void error(string $message, array $options = []) Set a message using "error" element
  */
 class FlashComponent extends Component
 {
@@ -49,7 +53,7 @@ class FlashComponent extends Component
     /**
      * Constructor
      *
-     * @param ComponentRegistry $registry A ComponentRegistry for this component
+     * @param \Cake\Controller\ComponentRegistry $registry A ComponentRegistry for this component
      * @param array $config Array of config.
      */
     public function __construct(ComponentRegistry $registry, array $config = [])
@@ -82,7 +86,7 @@ class FlashComponent extends Component
     {
         $options += $this->config();
 
-        if ($message instanceof \Exception) {
+        if ($message instanceof Exception) {
             $options['params'] += ['code' => $message->getCode()];
             $message = $message->getMessage();
         }

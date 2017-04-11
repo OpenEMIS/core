@@ -32,7 +32,7 @@ class ImportUserBehavior extends Behavior {
 		$model = $this->config('model');
 		
 		$prefix_key = strtolower(Inflector::singularize($model)).'_prefix';
-		$prefix = TableRegistry::get('ConfigItems')->value($prefix_key);
+		$prefix = TableRegistry::get('Configuration.ConfigItems')->value($prefix_key);
 		$prefix = explode(",", $prefix);
 		$prefix = (isset($prefix[1]) && $prefix[1]>0) ? $prefix[0] : '';
 		$this->config('prefix', $prefix);

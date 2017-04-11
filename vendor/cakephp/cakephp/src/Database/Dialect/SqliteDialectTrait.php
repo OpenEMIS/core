@@ -14,9 +14,9 @@
  */
 namespace Cake\Database\Dialect;
 
-use Cake\Database\Dialect\TupleComparisonTranslatorTrait;
 use Cake\Database\ExpressionInterface;
 use Cake\Database\Expression\FunctionExpression;
+use Cake\Database\Schema\SqliteSchema;
 use Cake\Database\SqlDialectTrait;
 use Cake\Database\SqliteCompiler;
 
@@ -95,12 +95,12 @@ trait SqliteDialectTrait
         switch ($expression->name()) {
             case 'CONCAT':
                 // CONCAT function is expressed as exp1 || exp2
-                $expression->name('')->type(' ||');
+                $expression->name('')->tieWith(' ||');
                 break;
             case 'DATEDIFF':
                 $expression
                     ->name('ROUND')
-                    ->type('-')
+                    ->tieWith('-')
                     ->iterateParts(function ($p) {
                         return new FunctionExpression('JULIANDAY', [$p['value']], [$p['type']]);
                     });
@@ -117,7 +117,7 @@ trait SqliteDialectTrait
             case 'EXTRACT':
                 $expression
                     ->name('STRFTIME')
-                    ->type(' ,')
+                    ->tieWith(' ,')
                     ->iterateParts(function ($p, $key) {
                         if ($key === 0) {
                             $value = rtrim(strtolower($p), 's');
@@ -131,7 +131,7 @@ trait SqliteDialectTrait
             case 'DATE_ADD':
                 $expression
                     ->name('DATE')
-                    ->type(',')
+                    ->tieWith(',')
                     ->iterateParts(function ($p, $key) {
                         if ($key === 1) {
                             $p = ['value' => $p, 'type' => null];
@@ -142,7 +142,7 @@ trait SqliteDialectTrait
             case 'DAYOFWEEK':
                 $expression
                     ->name('STRFTIME')
-                    ->type(' ')
+                    ->tieWith(' ')
                     ->add(["'%w', " => 'literal'], [], true)
                     ->add([') + (1' => 'literal']); // Sqlite starts on index 0 but Sunday should be 1
                 break;
@@ -213,7 +213,7 @@ trait SqliteDialectTrait
     public function schemaDialect()
     {
         if (!$this->_schemaDialect) {
-            $this->_schemaDialect = new \Cake\Database\Schema\SqliteSchema($this);
+            $this->_schemaDialect = new SqliteSchema($this);
         }
         return $this->_schemaDialect;
     }

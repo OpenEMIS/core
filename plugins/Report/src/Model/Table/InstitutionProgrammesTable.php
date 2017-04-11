@@ -21,6 +21,7 @@ class InstitutionProgrammesTable extends AppTable  {
 		
 		$this->addBehavior('Excel', ['excludes' => ['start_year', 'end_year', 'institution_programme_id']]);
 		$this->addBehavior('Report.ReportList');
+		$this->addBehavior('Report.InstitutionSecurity');
 	}
 
 	public function beforeAction(Event $event) {
@@ -42,5 +43,9 @@ class InstitutionProgrammesTable extends AppTable  {
 		if (!empty($entity->end_date)) {
 			return $this->formatDate($entity->end_date);
 		}
+	}
+
+	public function onExcelGetInstitutionId(Event $event, Entity $entity) {
+		return $entity->institution->code_name;
 	}
 }

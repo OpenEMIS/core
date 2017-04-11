@@ -1,0 +1,10 @@
+/* 
+School Overwrites: v.1.0.1
+*/
+
+
+/* Homepage Background */
+
+.body-wrapper {
+    background-image: url('../../../img/school-login-bg.jpg') !important;
+}

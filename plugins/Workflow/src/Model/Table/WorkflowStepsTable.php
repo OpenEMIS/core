@@ -8,28 +8,35 @@ use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\Network\Request;
 use Cake\Event\Event;
+use Cake\Validation\Validator;
 use App\Model\Traits\OptionsTrait;
 
 class WorkflowStepsTable extends AppTable {
 	use OptionsTrait;
 
-	// Workflow Steps - stage
-	const OPEN = 0;
-	const PENDING = 1;
-	const CLOSED = 2;
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
 
 	// Workflow Actions - action
 	const APPROVE = 0;
 	const REJECT = 1;
 
-	private $_fieldOrder = ['workflow_id', 'name', 'security_roles', 'is_editable', 'is_removable'];
-	private $_contain = ['WorkflowActions.NextWorkflowSteps', 'SecurityRoles'];
-
 	public function initialize(array $config) {
 		parent::initialize($config);
 		$this->belongsTo('Workflows', ['className' => 'Workflow.Workflows']);
 		$this->hasMany('WorkflowActions', ['className' => 'Workflow.WorkflowActions', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('NextWorkflowSteps', ['className' => 'Workflow.WorkflowActions', 'foreignKey' => 'next_workflow_step_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->hasMany('StaffLeave', ['className' => 'Institution.StaffLeave', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionSurveys', ['className' => 'Institution.InstitutionSurveys', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingCourses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingSessions', ['className' => 'Training.TrainingSessions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingSessionResults', ['className' => 'Training.TrainingSessionResults', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('InstitutionPositions', ['className' => 'Institution.InstitutionPositions', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('StaffPositionProfiles', ['className' => 'Institution.StaffPositionProfiles', 'foreignKey' => 'status_id', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->belongsToMany('WorkflowStatuses' , [
 			'className' => 'Workflow.WorkflowStatuses',
 			'joinTable' => 'workflow_statuses_steps',
@@ -48,11 +55,20 @@ class WorkflowStepsTable extends AppTable {
 		]);
 	}
 
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		return $validator
+			->requirePresence('category')
+			->requirePresence('is_editable')
+			->requirePresence('is_removable')
+			->requirePresence('is_system_defined');
+	}
+
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 		// Auto insert default workflow_actions when add
 		if ($entity->isNew()) {
-			if ($entity->has('stage') && in_array($entity->stage, [self::OPEN, self::PENDING, self::CLOSED])) {
+			if ($entity->has('is_system_defined') && $entity->is_system_defined == 1) {
 				$data = [
 					'workflow_actions' => []
 				];
@@ -64,39 +80,47 @@ class WorkflowStepsTable extends AppTable {
 							'action' => self::APPROVE,
 							'visible' => 1,
 							'next_workflow_step_id' => 0,
-							'comment_required' => 0
+							'comment_required' => 0,
+							'allow_by_assignee' => 0
 						],
 						[
 							'name' => __('Reject'),
 							'action' => self::REJECT,
 							'visible' => 1,
 							'next_workflow_step_id' => 0,
-							'comment_required' => 0
+							'comment_required' => 0,
+							'allow_by_assignee' => 0
 						]
 					]
 				];
 			}
 			$entity = $this->patchEntity($entity, $data);
 		}
+	}
 
-		// Always mark visible to dirty to handle retain Workflow Actions when update all visible to 0
-		foreach ($entity->workflow_actions as $key => $obj) {
-			$entity->workflow_actions[$key]->dirty('visible', true);
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+		$models = TableRegistry::get('Workflow.WorkflowModels')->find()->all();
+		$broadcaster = $this;
+		$listeners = [];
+		foreach ($models as $key => $obj) {
+			$listeners[] = TableRegistry::get($obj->model);
+		}
+
+		if (!empty($listeners)) {
+			$this->dispatchEventToModels('Model.WorkflowSteps.afterSave', [$entity], $broadcaster, $listeners);
 		}
 	}
 
-	public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-		$currentAction = $this->ControllerAction->action();
-
-		if ($currentAction == 'index' && $field == 'actions') {
-			$label = __('Actions');
-			$label .= '<span class="divider"></span>';
-			$label .= $this->ControllerAction->Alert->getMessage('WorkflowActions.next_step');
-
-			return $label;
+	public function onGetCategory(Event $event, Entity $entity) {
+		$value = '';
+		if (!empty($entity->category)) {
+			$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
+			$value = $categoryOptions[$entity->category];
 		} else {
-			return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+			$value = '<span>&lt;'.$this->getMessage($this->aliasField('notCategorized')).'&gt;</span>';
 		}
+
+		return $value;
 	}
 
 	public function onGetIsEditable(Event $event, Entity $entity) {
@@ -107,247 +131,247 @@ class WorkflowStepsTable extends AppTable {
 		return $entity->is_removable == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
 	}
 
-	public function onGetActions(Event $event, Entity $entity) {
-		$workflowActions = [];
-		foreach ($entity->workflow_actions as $key => $obj) {
-			if ($obj->visible == 1) {
-				$workflowAction = $obj->name;
-				$workflowAction .= '<span class="divider"></span>';
-				if (isset($obj->next_workflow_step)) {
-					$workflowAction .= $obj->next_workflow_step->name;
-				} else {
-					$workflowAction .= '(' . __('Not linked') . ')';
-				}
-				$workflowActions[$key] = $workflowAction;
-			}
-		}
-
-		return implode('<br>', $workflowActions);
-	}
-
 	public function beforeAction(Event $event) {
-		$this->fields['stage']['visible'] = false;
-		$this->ControllerAction->field('workflow_id');
-		$this->ControllerAction->field('is_editable');
-		$this->ControllerAction->field('is_removable');
 		$this->ControllerAction->field('security_roles', [
 			'type' => 'chosenSelect',
 			'placeholder' => __('Select Security Roles')
 		]);
-
-		if ($this->action != 'add') {
-			$this->ControllerAction->field('actions', [
-				'type' => 'element',
-				'element' => 'Workflow.WorkflowSteps/actions',
-				'valueClass' => 'table-full-width'
-			]);
-			$this->_fieldOrder[] = 'actions';
-		}
-
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
 	}
 
 	public function indexBeforeAction(Event $event) {
-		//Add controls filter to index page
-		$toolbarElements = [
-            ['name' => 'Workflow.WorkflowSteps/controls', 'data' => [], 'options' => []]
-        ];
-
-		$this->controller->set('toolbarElements', $toolbarElements);
-
-		// Purposely set to string to use onGetActions()
-		$this->fields['actions']['type'] = 'string';
+		$this->ControllerAction->field('is_system_defined', ['visible' => false]);
+		$this->ControllerAction->setFieldOrder(['workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
 	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list($modelOptions, $selectedModel, $workflowOptions, $selectedWorkflow) = array_values($this->_getSelectOptions());
-		$this->controller->set(compact('modelOptions', 'selectedModel', 'workflowOptions', 'selectedWorkflow'));
+		list($modelOptions, $selectedModel) = array_values($this->getModelOptions());
+		list($workflowOptions, $selectedWorkflow) = array_values($this->getWorkflowOptions($selectedModel));
+
+		//Add controls filter to index page
+		$toolbarElements = [
+            ['name' => 'Workflow.WorkflowSteps/controls', 'data' => compact('modelOptions', 'selectedModel', 'workflowOptions', 'selectedWorkflow'), 'options' => []]
+        ];
+		$this->controller->set('toolbarElements', $toolbarElements);
 
 		$query
-			->contain($this->_contain)
+			->contain(['SecurityRoles'])
 			->where([$this->aliasField('workflow_id') => $selectedWorkflow]);
 	}
 
+	public function indexAfterAction(Event $event, $data) {
+		$session = $this->request->session();
+
+		$sessionKey = $this->registryAlias() . '.warning';
+		if ($session->check($sessionKey)) {
+			$warningKey = $session->read($sessionKey);
+			$this->Alert->warning($warningKey);
+			$session->delete($sessionKey);
+		}
+	}
+
 	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain($this->_contain);
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		// Build Event Options
-		$eventOptions = $this->getEvents($entity);
-		$this->controller->set('eventOptions', $eventOptions);
-		// End
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		//Setup fields
-		list(, , $workflowOptions, , $securityRoleOptions) = array_values($this->_getSelectOptions());
-
-		$this->fields['workflow_id']['options'] = $workflowOptions;
-		$this->fields['workflow_id']['onChangeReload'] = true;
-		$this->fields['security_roles']['options'] = $securityRoleOptions;
-	}
-
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if (array_key_exists($this->alias(), $data)) {
-			if (!array_key_exists('workflow_actions', $data[$this->alias()])) {
-				$data[$this->alias()]['workflow_actions'] = [];
-			}
-
-			// Set all Workflow Actions to visible = 0 (edit)
-			if (array_key_exists('id', $data[$this->alias()])) {
-				$this->WorkflowActions->updateAll(
-					['visible' => 0],
-					['workflow_step_id' => $data[$this->alias()]['id']]
-				);
-			}
-		}
-
-		//Required by patchEntity for associated data
-		$newOptions = [];
-		$newOptions['associated'] = $this->_contain;
-
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
-	}
-
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		// Build Next Step Options
-		$where = [
-			$this->aliasField('workflow_id') => $entity->workflow_id
-		];
-
-		if (isset($entity->id)) { // edit
-			//do not allow to edit name of Open and Closed
-			$this->fields['name']['attr']['disabled'] = !is_null($entity->stage) ? 'disabled' : '';
-			//exclude ownself in nextStepOptions
-			$where[$this->aliasField('id !=')] = $entity->id;
-		}
-
-		$nextStepOptions = $this
-			->find('list')
-			->where($where)
-			->toArray();
-		$this->controller->set('nextStepOptions', $nextStepOptions);
-		// End
-
-		// Build Event Options
-		$eventOptions = $this->getEvents($entity, false);
-		$this->controller->set('eventOptions', $eventOptions);
-		// End
-	}
-
-	public function addEditOnReload(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
-		$options['associated'] = [
-			'WorkflowActions' => ['validate' => false]
-		];
-	}
-
-	public function addEditOnAddAction(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$actionOptions = [
-			'name' => '',
-			'visible' => 1,
-			'comment_required' => 0
-		];
-		$data[$this->alias()]['workflow_actions'][] = $actionOptions;
-
-		//Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
-		$options['associated'] = [
-			'WorkflowActions' => ['validate' => false]
-		];
+		$query->matching('Workflows')
+			->contain(['SecurityRoles']);
 	}
 
 	public function addOnInitialize(Event $event, Entity $entity) {
-		//Initialize field values
-		list(, , , $selectedWorkflow) = array_values($this->_getSelectOptions());
-		$entity->workflow_id = $selectedWorkflow;
+		unset($this->request->query['model']);
+	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+		list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
+
+		if (!$isDeletable) {
+			$session = $this->request->session();
+			$sessionKey = $this->registryAlias() . '.warning';
+			$session->write($sessionKey, $this->aliasField('restrictDelete'));
+
+			$url = $this->ControllerAction->url('index');
+			$event->stopPropagation();
+			return $this->controller->redirect($url);
+		}
+
+		$extra['excludedModels'] = [$this->WorkflowActions->alias()] + $this->getExcludedModels($entity);
+    }
+
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->setupFields($entity);
+	}
+
+	public function addEditAfterAction(Event $event, Entity $entity) {
+		$this->setupFields($entity);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity) {
+		if ($entity->has('is_system_defined') && !empty($entity->is_system_defined)) {
+			$this->Alert->info($this->aliasField('systemDefined'));
+		}
+	}
+
+	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'view' || $action == 'edit') {
+			$attr['visible'] = false;
+		} else if ($action == 'add') {
+			list($modelOptions) = array_values($this->getModelOptions());
+
+			$attr['type'] = 'select';
+			$attr['options'] = $modelOptions;
+			$attr['onChangeReload'] = 'changeModel';
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldWorkflowId(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$selectedModel = $request->query('model');
+			list($workflowOptions) = array_values($this->getWorkflowOptions($selectedModel));
+
+			$attr['options'] = $workflowOptions;
+		} else if ($action == 'edit') {
+			$entity = $attr['attr']['entity'];
+			$workflow = $entity->_matchingData['Workflows'];
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $workflow->id;
+			$attr['attr']['value'] = $workflow->code_name;
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldName(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'edit') {
+			$entity = $attr['attr']['entity'];
+
+			list($isEditable) = array_values($this->checkIfCanEditOrDelete($entity));
+			if (!$isEditable) {
+				$attr['attr']['disabled'] = 'disabled';
+			} else {
+				$attr['attr']['disabled'] = '';
+			}
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldSecurityRoles(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add' || $action == 'edit') {
+	        $securityRoleOptions = $this->SecurityRoles
+	        	->find('list')
+	        	->toArray();
+
+	        $attr['options'] = $securityRoleOptions;
+		}
+
+		return $attr;
+	}
+
+	public function onUpdateFieldCategory(Event $event, array $attr, $action, Request $request) {
+		$categoryOptions = $this->getSelectOptions('WorkflowSteps.category');
+		if ($action == 'view' || $action == 'add') {
+			$attr['type'] = 'select';
+			$attr['options'] = $categoryOptions;
+		} else if ($action == 'edit') {
+			$entity = $attr['attr']['entity'];
+
+			list($isEditable) = array_values($this->checkIfCanEditOrDelete($entity));
+			if (!$isEditable) {
+				$attr['type'] = 'readonly';
+				$attr['value'] = $entity->category;
+				$attr['attr']['value'] = $categoryOptions[$entity->category];
+			} else {
+				$attr['type'] = 'select';
+				$attr['options'] = $this->getSelectOptions('WorkflowSteps.category');
+			}
+		}
+
+		return $attr;
 	}
 
 	public function onUpdateFieldIsEditable(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->getSelectOptions('general.yesno');
+		if ($action == 'view' || $action == 'add' || $action == 'edit') {
+			$attr['type'] = 'select';
+			$attr['select'] = false;
+			$attr['options'] = $this->getSelectOptions('general.yesno');
+		}
 
 		return $attr;
 	}
 
 	public function onUpdateFieldIsRemovable(Event $event, array $attr, $action, Request $request) {
-		$attr['options'] = $this->getSelectOptions('general.yesno');
+		if ($action == 'view' || $action == 'add' || $action == 'edit') {
+			$attr['type'] = 'select';
+			$attr['select'] = false;
+			$attr['options'] = $this->getSelectOptions('general.yesno');
+		}
 
 		return $attr;
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-		// Do not allow user to delete Open and Closed
-		if (!is_null($entity->stage)) {
-			if (isset($buttons['remove'])) {
-				unset($buttons['remove']);
-			}
+	public function onUpdateFieldIsSystemDefined(Event $event, array $attr, $action, Request $request) {
+		if ($action == 'add') {
+			$attr['value'] = 0;
 		}
 
-		return $buttons;
+		return $attr;
 	}
 
-	public function getEvents(Entity $entity, $listOnly=true) {
-		$eventOptions = [];
+	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) 
+    {
+        $request = $this->request;
+        unset($request->query['model']);
 
-		// trigger Workflow.getEvents to retrieve the list of available events for the model
-		if (isset($entity->workflow_id)) {
-			$workflow = $this->Workflows
-				->find()
-				->matching('WorkflowModels')
-				->where([
-					$this->Workflows->aliasField('id') => $entity->workflow_id
-				])
-				->first();
-
-			$registryAlias = $workflow->_matchingData['WorkflowModels']->model;
-			$subject = TableRegistry::get($registryAlias);
-			$subjectEvent = $subject->dispatchEvent('Workflow.getEvents', null, $subject);
-			if ($subjectEvent->isStopped()) { return $subjectEvent->result; }
-
-			$events = $subjectEvent->result;
-			if (empty($events)) {
-				$eventOptions = [
-					0 => [
-						'value' => '',
-						'text' => $this->ControllerAction->Alert->getMessage('general.select.noOptions')
-					]
-				];
-			} else {
-				if ($listOnly) {
-					$eventOptions = [
-						0 => __('-- Select Event --')
-					];
-					foreach ($events as $event) {
-						$eventOptions[$event['value']] = $event['text'];
-					}
-				} else {
-					$eventOptions = [
-						0 => [
-							'value' => '',
-							'text' => __('-- Select Event --')
-						]
-					];
-					foreach ($events as $event) {
-						$eventOptions[] = $event;
-					}
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
+					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
 				}
 			}
 		}
-
-		return $eventOptions;
 	}
 
-	public function _getSelectOptions() {
-		//Return all required options and their key
+	private function setupFields(Entity $entity) {
+		$this->ControllerAction->field('workflow_model_id');
+		$this->ControllerAction->field('workflow_id', [
+			'attr' => ['entity' => $entity]
+		]);
+		$this->ControllerAction->field('name', [
+			'attr' => ['entity' => $entity]
+		]);
+		$this->ControllerAction->field('category', [
+			'attr' => ['entity' => $entity]
+		]);
+		$this->ControllerAction->field('is_editable');
+		$this->ControllerAction->field('is_removable');
+		$this->ControllerAction->field('is_system_defined', ['type' => 'hidden']);
+
+		$this->ControllerAction->setFieldOrder(['workflow_model_id', 'workflow_id', 'name', 'security_roles', 'category', 'is_editable', 'is_removable']);
+	}
+
+	private function checkIfCanEditOrDelete($entity) {
+		$isEditable = true;
+    	$isDeletable = true;
+
+    	// not allow to edit name and delete for To Do, In Progress & Done
+    	if ($entity->has('is_system_defined') && !empty($entity->is_system_defined)) {
+			$isEditable = false;
+    		$isDeletable = false;
+		}
+
+    	return compact('isEditable', 'isDeletable');
+	}
+
+	public function getModelOptions() {
 		$modelOptions = $this->Workflows->WorkflowModels
 			->find('list')
 			->toArray();
-		$selectedModel = !is_null($this->request->query('model')) ? $this->request->query('model') : key($modelOptions);
+		$selectedModel = $this->queryString('model', $modelOptions);
 
+		return compact('modelOptions', 'selectedModel');
+	}
+
+	public function getWorkflowOptions($selectedModel=null) {
 		$workflowOptions = $this->Workflows
 			->find('list', ['keyField' => 'id', 'valueField' => 'code_name'])
 			->where([
@@ -357,14 +381,40 @@ class WorkflowStepsTable extends AppTable {
 				$this->Workflows->aliasField('code')
 			])
 			->toArray();
-		$selectedWorkflow = !is_null($this->request->query('workflow')) ? $this->request->query('workflow') : key($workflowOptions);
+		$selectedWorkflow = $this->queryString('workflow', $workflowOptions);
 
-		$SecurityRoles = TableRegistry::get('Security.SecurityRoles');
-        $securityRoleOptions = $SecurityRoles
-        	->find('list')
-        	->toArray();
-        $selectedSecurityRole = key($securityRoleOptions);
+		return compact('workflowOptions', 'selectedWorkflow');
+	}
 
-		return compact('modelOptions', 'selectedModel', 'workflowOptions', 'selectedWorkflow', 'securityRoleOptions', 'selectedSecurityRole');
+	public function getExcludedModels(Entity $entity) {
+		// defaultList should be updated when there are new workflow models added
+		$defaultList = [
+			$this->StaffLeave->registryAlias() => $this->StaffLeave->alias(),
+			$this->InstitutionSurveys->registryAlias() => $this->InstitutionSurveys->alias(),
+			$this->TrainingCourses->registryAlias() => $this->TrainingCourses->alias(),
+			$this->TrainingSessions->registryAlias() => $this->TrainingSessions->alias(),
+			$this->TrainingSessionResults->registryAlias() => $this->TrainingSessionResults->alias(),
+			$this->TrainingNeeds->registryAlias() => $this->TrainingNeeds->alias(),
+			$this->InstitutionPositions->registryAlias() => $this->InstitutionPositions->alias(),
+			$this->StaffPositionProfiles->registryAlias() => $this->StaffPositionProfiles->alias(),
+		];
+
+		$statusId = $entity->id;
+		$workflowStepEntity = $this
+			->find()
+			->matching('Workflows.WorkflowModels')
+			->where([$this->aliasField('id') => $statusId])
+			->first();
+
+		$workflowModelEntity = $workflowStepEntity->_matchingData['WorkflowModels'];
+		$model = TableRegistry::get($workflowModelEntity->model);
+
+		if (array_key_exists($model->registryAlias(), $defaultList)) {
+			unset($defaultList[$model->registryAlias()]);
+		}
+
+		$list = array_values($defaultList);
+
+		return $list;
 	}
 }

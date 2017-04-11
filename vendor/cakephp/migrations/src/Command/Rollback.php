@@ -11,11 +11,11 @@
  */
 namespace Migrations\Command;
 
-use Cake\Event\EventManagerTrait;
+use Cake\Event\EventDispatcherTrait;
 use Migrations\ConfigurationTrait;
 use Phinx\Console\Command\Rollback as RollbackCommand;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Rollback extends RollbackCommand
@@ -24,7 +24,7 @@ class Rollback extends RollbackCommand
     use ConfigurationTrait {
         execute as parentExecute;
     }
-    use EventManagerTrait;
+    use EventDispatcherTrait;
 
     /**
      * {@inheritDoc}
@@ -33,20 +33,21 @@ class Rollback extends RollbackCommand
     {
         $this->setName('rollback')
             ->setDescription('Rollback the last or to a specific migration')
-            ->addOption('--target', '-t', InputArgument::OPTIONAL, 'The version number to rollback to')
             ->setHelp('reverts the last migration, or optionally up to a specific version')
-            ->addOption('--plugin', '-p', InputArgument::OPTIONAL, 'The plugin containing the migrations')
-            ->addOption('--connection', '-c', InputArgument::OPTIONAL, 'The datasource connection to use')
-            ->addOption('--source', '-s', InputArgument::OPTIONAL, 'The folder where migrations are in');
+            ->addOption('--target', '-t', InputOption::VALUE_REQUIRED, 'The version number to rollback to')
+            ->addOption('--date', '-d', InputOption::VALUE_REQUIRED, 'The date to migrate to')
+            ->addOption('--plugin', '-p', InputOption::VALUE_REQUIRED, 'The plugin containing the migrations')
+            ->addOption('--connection', '-c', InputOption::VALUE_REQUIRED, 'The datasource connection to use')
+            ->addOption('--source', '-s', InputOption::VALUE_REQUIRED, 'The folder where migrations are in');
     }
 
     /**
      * Overrides the action execute method in order to vanish the idea of environments
-     * from phinx. CakePHP does not beleive in the idea of having in-app environments
+     * from phinx. CakePHP does not believe in the idea of having in-app environments
      *
-     * @param Symfony\Component\Console\Input\Inputnterface $input the input object
-     * @param Symfony\Component\Console\Input\OutputInterface $output the output object
-     * @return void
+     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
+     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
+     * @return mixed
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {

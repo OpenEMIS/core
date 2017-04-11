@@ -15,6 +15,7 @@ namespace DebugKit\Panel;
 use Cake\Controller\Controller;
 use Cake\Core\Plugin;
 use Cake\Event\Event;
+use Cake\Utility\Hash;
 use DebugKit\DebugPanel;
 
 /**
@@ -37,9 +38,10 @@ class IncludePanel extends DebugPanel
      * @var array
      */
     protected $_fileTypes = [
-        'Cache', 'Config', 'Configure', 'Console', 'Component', 'Controller',
-        'Behavior', 'Datasource', 'Model', 'Plugin', 'Test', 'View', 'Utility',
-        'Network', 'Routing', 'I18n', 'Log', 'Error'
+        'Auth', 'Cache', 'Collection', 'Config', 'Configure', 'Console', 'Component', 'Controller',
+        'Behavior', 'Database', 'Datasource', 'Model', 'Template', 'View', 'Utility',
+        'Network', 'Routing', 'I18n', 'Log', 'Error', 'Event', 'Form', 'Filesystem',
+        'ORM', 'Filter', 'Validation'
     ];
 
     /**
@@ -55,10 +57,9 @@ class IncludePanel extends DebugPanel
     /**
      * Get a list of files that were included and split them out into the various parts of the app
      *
-     * @param Controller $controller The controller.
      * @return array
      */
-    protected function _prepare(Controller $controller)
+    protected function _prepare()
     {
         $return = ['core' => [], 'app' => [], 'plugins' => []];
 
@@ -182,6 +183,20 @@ class IncludePanel extends DebugPanel
      */
     public function shutdown(Event $event)
     {
-        $this->_data = $this->_prepare($event->subject());
+        $this->_data = $this->_prepare();
+    }
+
+    /**
+     * Get the number of files included in this request.
+     *
+     * @return string
+     */
+    public function summary()
+    {
+        $data = $this->_data;
+        if (empty($data)) {
+            $data = $this->_prepare();
+        }
+        return count(Hash::flatten($data));
     }
 }

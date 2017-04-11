@@ -20,14 +20,14 @@ $pluginPath = Configure::read('App.paths.plugins.0');
 $pluginDot = empty($plugin) ? null : $plugin . '.';
 
 if (empty($plugin)) {
-    $filePath = APP_DIR . DS;
+    $filePath = APP_DIR . DIRECTORY_SEPARATOR;
     $namespace = str_replace('/', '\\', $plugin);
 }
 if (!empty($plugin) && Plugin::loaded($plugin)) {
     $filePath = Plugin::classPath($plugin);
 }
 if (!empty($plugin) && !Plugin::loaded($plugin)) {
-    $filePath = $pluginPath . h($plugin) . DS . 'src' . DS;
+    $filePath = $pluginPath . h($plugin) . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR;
 }
 
 $this->layout = 'dev_error';
@@ -42,13 +42,13 @@ $this->start('subheading');
     Make sure your plugin <em><?= h($plugin) ?></em> is in the <?= h($pluginPath) ?> directory and was loaded.
     <?php endif ?>
     <?= $this->element('plugin_class_error', ['pluginPath' => $pluginPath]) ?>
-</p>
+
 <?php $this->end() ?>
 
 <?php $this->start('file') ?>
 <p class="error">
     <strong>Error: </strong>
-    <?= sprintf('Create the class <em>%s</em> below in file: %s', h($class), $filePath . 'View' . DS . h($class) . '.php'); ?>
+    <?= sprintf('Create the class <em>%s</em> below in file: %s', h($class), $filePath . 'View' . DIRECTORY_SEPARATOR . h($class) . '.php'); ?>
 </p>
 <?php
 $code = <<<PHP

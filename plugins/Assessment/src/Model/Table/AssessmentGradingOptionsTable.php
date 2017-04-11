@@ -1,60 +1,82 @@
 <?php
 namespace Assessment\Model\Table;
 
-use ArrayObject;
-use Cake\ORM\Query;
-use Cake\ORM\Entity;
-use Cake\ORM\TableRegistry;
-use Cake\Event\Event;
-use Cake\Network\Request;
-use App\Model\Table\AppTable;
-use App\Model\Traits\MessagesTrait;
+use Cake\Validation\Validator;
 
-class AssessmentGradingOptionsTable extends AppTable {
-	use MessagesTrait;
+class AssessmentGradingOptionsTable extends AssessmentsAppTable {
 
 	public function initialize(array $config) {
 		parent::initialize($config);
 
 		$this->belongsTo('AssessmentGradingTypes', ['className' => 'Assessment.AssessmentGradingTypes']);
-		$this->addBehavior('Reorder', ['filter' => 'assessment_grading_type_id']);
+		$this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->fields['assessment_grading_type_id']['type'] = 'hidden';
+		$this->fields['id']['type'] = 'hidden';
+		$this->fields['name']['required'] = true;
+		$this->fields['max']['attr']['min'] = 0;
+		$this->fields['max']['required'] = true;
+		$this->fields['max']['length'] = 7;
+		$this->fields['min']['attr']['min'] = 0;
+		$this->fields['min']['required'] = true;
+		$this->fields['min']['length'] = 7;
+
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['index']
+        ]);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		list($gradingTypeOptions, $selectedGradingType) = array_values($this->_getSelectOptions());
-
-		if (!empty($gradingTypeOptions)) {
-			$toolbarElements = [
-				['name' => 'Assessment.GradingOptions/controls', 'data' => [], 'options' => []]
-			];
-			$this->controller->set('toolbarElements', $toolbarElements);
-			$this->controller->set('gradingTypeOptions', $gradingTypeOptions);
+	public function getFormFields($action = 'edit') {
+		if ($action=='edit') {
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>'', 'assessment_grading_type_id'=>'', 'id'=>''];
 		} else {
-			$this->Alert->warning('Assessments.noGradingTypes');
+			return ['code'=>'', 'name'=>'', 'description'=>'', 'min'=>'', 'max'=>''];
 		}
-
-		$this->ControllerAction->field('assessment_grading_type_id', ['visible' => false]);
-		$query->where([$this->aliasField('assessment_grading_type_id') => $selectedGradingType]);
 	}
 
-	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->field('assessment_grading_type_id');
-		$this->ControllerAction->setFieldOrder(['assessment_grading_type_id', 'code', 'name']);
+	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
+		$validator
+			->allowEmpty('code')
+			->add('code', 'ruleUniqueCode', [
+			    'rule' => ['checkUniqueCode', 'assessment_grading_type_id'],
+			    'last' => true
+			])
+			->add('code', 'ruleUniqueCodeWithinForm', [
+			    'rule' => ['checkUniqueCodeWithinForm', $this->AssessmentGradingTypes],
+			   
+			])
+			->requirePresence('name')
+			->add('min', [
+				'ruleNotMoreThanMax' => [
+			    	'rule' => ['checkMinNotMoreThanMax'],
+				],
+				'ruleIsDecimal' => [
+				    'rule' => ['decimal', null],
+				],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
+			])
+			->add('max', [
+				'ruleNotMoreThanGradingTypeMax' => [
+				    'rule' => ['checkNotMoreThanGradingTypeMax', $this->AssessmentGradingTypes],
+				    'provider' => 'table'
+				],
+				'ruleIsDecimal' => [
+				    'rule' => ['decimal', null],
+				],
+                'ruleRange' => [
+                    'rule' => ['range', 0, 9999.99]
+                ]
+			])
+			;
+		return $validator;
 	}
 
-	public function onUpdateFieldAssessmentGradingTypeId(Event $event, array $attr, $action, Request $request) {
-		list($gradingTypeOptions) = array_values($this->_getSelectOptions());
-		$attr['options'] = $gradingTypeOptions;
-
-		return $attr;
-	}
-
-	public function _getSelectOptions() {
-		//Return all required options and their key
-		$gradingTypeOptions = $this->AssessmentGradingTypes->getList()->toArray();
-		$selectedGradingType = $this->queryString('grading_type_id', $gradingTypeOptions);
-		$this->advancedSelectOptions($gradingTypeOptions, $selectedGradingType);
-
-		return compact('gradingTypeOptions', 'selectedGradingType');
-	}
+	public static function checkNotMoreThanGradingTypeMax($maxValue, $AssessmentGradingTypes, array $globalData) {
+		$formData = $AssessmentGradingTypes->request->data[$AssessmentGradingTypes->alias()];
+        return intVal($maxValue) <= intVal($formData['max']);
+    }
 }

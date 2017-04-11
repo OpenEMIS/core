@@ -1,0 +1,88 @@
+/* PAGE HEADER v.1.0.5 */
+
+.page-header {
+    display: block;
+    width: 100%;
+    padding: 0;
+    clear: both;
+    margin: 0;
+    border-bottom: 1px solid #DDD;
+    background-color: #FFF;
+    z-index: 10;
+    height: 39px;
+    position: relative;
+}
+
+.page-header h2 {
+    display: inline-block;
+    position: relative;
+    padding: 8px 24px 8px 0;
+    margin: 0;
+    max-width: 350px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/*==========  Non-Mobile First Method  ==========*/
+
+/* Bigger Screen */
+@media only screen and (max-width : 1024px) {
+    .page-header {
+        height: auto;
+    }
+    .page-header h2 {
+        float: none;
+        width: 100%;
+        border-bottom: 1px solid #DDD;
+        max-width: 100% !important;
+        white-space: normal !important;
+        text-overflow: unset !important;
+        display: block;
+    }
+
+    .page-header h2:hover + .toolbar {
+        display: inline-block !important;
+    }
+}
+
+/* Small Devices, Tablets */
+@media only screen and (max-width : 800px) {
+   .page-header {
+        border-bottom: 0;
+        height: auto !important;
+        border-bottom: 1px solid #DDD;
+    }
+    .page-header h2,
+    .page-header h2:hover {
+        width: 100%;
+        float: none !important;
+        margin-bottom: -1px;
+        border-bottom: 1px solid #DDD;
+        display: block !important;
+    }
+    .page-header h2:hover + .toolbar {
+        display: inline-block !important;
+    }
+}
+
+/* Extra Small Devices, Phones */ 
+@media only screen and (max-width : 480px) {
+    .page-header h2 {
+        width: 100%;
+        float: none;
+        border-bottom: 1px solid #DDD !important;
+    }
+}
+
+/* RTL PAGE HEADER */
+
+.rtl .page-header,
+.rtl .toolbar {
+    text-align: right;
+}
+
+.rtl .page-header h2 {
+    padding: 8px 0 6px 24px;
+}

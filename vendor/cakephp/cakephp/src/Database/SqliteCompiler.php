@@ -14,8 +14,6 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\QueryCompiler;
-
 /**
  * Responsible for compiling a Query object into its SQL representation
  * for SQLite
@@ -24,6 +22,7 @@ use Cake\Database\QueryCompiler;
  */
 class SqliteCompiler extends QueryCompiler
 {
+
     /**
      * SQLite does not support ORDER BY in UNION queries.
      *

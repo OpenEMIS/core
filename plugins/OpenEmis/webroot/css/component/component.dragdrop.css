@@ -1,0 +1,82 @@
+/* DRAG DROP CANVAS v.1.0.0 */
+
+.dragdrop-wrapper {
+    border: 1px #ccc solid;
+    background: transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.dragdrop-wrapper:hover {
+    border: 1px solid rgba(0, 0, 0, 0.7);
+    cursor: move;
+}
+
+.dragdrop-wrapper > i {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer;
+    z-index: 99;
+    color: #999;
+    opacity: 0.6;
+}
+
+.dragdrop-element {
+    width: 100%;
+    height: 100%;
+}
+
+.dragdrop-element i:hover {
+    opacity: 1;
+}
+
+.dragdrop-chart {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #CCC;
+}
+
+.gridster-element-scroll {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    overflow: scroll;
+}
+
+.elements-toolbar {
+    position: absolute !important;
+    top: auto !important;
+    bottom: 0;
+    right: 0;
+    z-index: 99;
+    background-color: transparent;
+    color: #FFF;
+    text-align: right;
+    padding: 5px;
+    width: 100%;
+    z-index: 2;
+}
+
+.dragdrop-wrapper:hover > .elements-toolbar {
+    display: block;
+}
+
+.element-text {
+    padding: 10px;
+}
+
+.chart-lists .no-charts {
+    font-weight: normal;
+    margin: 5px 15px;
+    color: #777;
+}
+
+
+/* RTL */
+.rtl .elements-toolbar {
+    text-align: left;
+    z-index: 10000;
+}
