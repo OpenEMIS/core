@@ -452,7 +452,7 @@ class InstitutionsController extends AppController
                 } else {
                     $header = $name .' - '.__(Inflector::humanize($action));
                 }
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $id])], $this->ControllerAction->paramsEncode(['id' => $id])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $id]), $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
             }

@@ -69,7 +69,6 @@ class InstitutionRoomsTable extends AppTable
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
-        $this->roomLevel = $this->Levels->getFieldByCode('ROOM', 'id');
     }
 
     public function validationDefault(Validator $validator)
@@ -212,17 +211,25 @@ class InstitutionRoomsTable extends AppTable
         // End
     }
 
+    public function onUpdateFieldInstitutionFloorId(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['type'] = 'hidden';
+        if ($action == 'add') {
+            $attr['value'] = $this->getQueryString('institution_floor_id');
+        }
+        return $attr;
+    }
+
     public function indexBeforeAction(Event $event)
     {
+        $this->roomLevel = $this->Levels->getFieldByCode('ROOM', 'id');
         $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
-
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
         $this->ControllerAction->field('start_date', ['visible' => false]);
         $this->ControllerAction->field('start_year', ['visible' => false]);
         $this->ControllerAction->field('end_date', ['visible' => false]);
         $this->ControllerAction->field('end_year', ['visible' => false]);
-        $this->ControllerAction->field('institution_infrastructure_id', ['visible' => false]);
         $this->ControllerAction->field('academic_period_id', ['visible' => false]);
         $this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
         $this->ControllerAction->field('previous_room_id', ['visible' => false]);
@@ -244,11 +251,11 @@ class InstitutionRoomsTable extends AppTable
             $query->where($conditions, [], true);
         }
 
-        $parentId = $this->request->query('parent');
+        $parentId = $this->getQueryString('institution_floor_id');
         if (!is_null($parentId)) {
-            $query->where([$this->aliasField('institution_infrastructure_id') => $parentId]);
+            $query->where([$this->aliasField('institution_floor_id') => $parentId]);
         } else {
-            $query->where([$this->aliasField('institution_infrastructure_id IS NULL')]);
+            $query->where([$this->aliasField('institution_floor_id IS NULL')]);
         }
 
         // Academic Period
@@ -391,6 +398,8 @@ class InstitutionRoomsTable extends AppTable
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->setupFields($entity);
+        $toolbarElements = $this->addBreadcrumbElement();
+        $this->controller->set('toolbarElements', $toolbarElements);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity)
@@ -445,45 +454,45 @@ class InstitutionRoomsTable extends AppTable
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionInfrastructureId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'view') {
-            $entity = $attr['entity'];
+    // public function onUpdateFieldInstitutionInfrastructureId(Event $event, array $attr, $action, Request $request)
+    // {
+    //     if ($action == 'view') {
+    //         $entity = $attr['entity'];
 
-            $attr['type'] = 'hidden';
-            $parentId = $entity->institution_infrastructure_id;
-            if (!empty($parentId)) {
-                $list = $this->Parents->findPath(['for' => $parentId, 'withLevels' => true]);
-            } else {
-                $list = [];
-            }
+    //         $attr['type'] = 'hidden';
+    //         $parentId = $entity->institution_infrastructure_id;
+    //         if (!empty($parentId)) {
+    //             $list = $this->Parents->findPath(['for' => $parentId, 'withLevels' => true]);
+    //         } else {
+    //             $list = [];
+    //         }
 
-            $field = 'institution_infrastructure_id';
-            $after = $field;
-            foreach ($list as $key => $infrastructure) {
-                $this->ControllerAction->field($field.$key, [
-                    'type' => 'readonly',
-                    'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
-                    'value' => $infrastructure->code_name,
-                    'after' => $after
-                ]);
-                $after = $field.$key;
-            }
-        } elseif ($action == 'add' || $action == 'edit') {
-            $parentId = $this->request->query('parent');
+    //         $field = 'institution_infrastructure_id';
+    //         $after = $field;
+    //         foreach ($list as $key => $infrastructure) {
+    //             $this->ControllerAction->field($field.$key, [
+    //                 'type' => 'readonly',
+    //                 'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
+    //                 'value' => $infrastructure->code_name,
+    //                 'after' => $after
+    //             ]);
+    //             $after = $field.$key;
+    //         }
+    //     } elseif ($action == 'add' || $action == 'edit') {
+    //         $parentId = $this->request->query('parent');
 
-            if (is_null($parentId)) {
-                $attr['type'] = 'hidden';
-                $attr['value'] = null;
-            } else {
-                $attr['type'] = 'readonly';
-                $attr['value'] = $parentId;
-                $attr['attr']['value'] = $this->Parents->getParentPath($parentId);
-            }
-        }
+    //         if (is_null($parentId)) {
+    //             $attr['type'] = 'hidden';
+    //             $attr['value'] = null;
+    //         } else {
+    //             $attr['type'] = 'readonly';
+    //             $attr['value'] = $parentId;
+    //             $attr['attr']['value'] = $this->Parents->getParentPath($parentId);
+    //         }
+    //     }
 
-        return $attr;
-    }
+    //     return $attr;
+    // }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
@@ -520,7 +529,7 @@ class InstitutionRoomsTable extends AppTable
     public function onUpdateFieldCode(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $parentId = $request->query('parent');
+            $parentId = $this->getQueryString('institution_floor_id');
             $autoGenerateCode = $this->getAutoGenerateCode($parentId);
 
             $attr['attr']['default'] = $autoGenerateCode;
@@ -778,14 +787,14 @@ class InstitutionRoomsTable extends AppTable
     private function setupFields(Entity $entity)
     {
         $this->ControllerAction->setFieldOrder([
-            'change_type', 'institution_infrastructure_id', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_id', 'new_room_type', 'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_id', 'new_room_type', 'new_start_date'
         ]);
 
         $this->ControllerAction->field('change_type');
         $this->ControllerAction->field('room_status_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_infrastructure_id', ['entity' => $entity]);
         $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
         $this->ControllerAction->field('institution_id');
+        $this->ControllerAction->field('institution_floor_id');
         $this->ControllerAction->field('code');
         $this->ControllerAction->field('name');
         $this->ControllerAction->field('room_type_id', ['type' => 'select', 'entity' => $entity]);
@@ -822,7 +831,7 @@ class InstitutionRoomsTable extends AppTable
         // $conditions[] = $this->aliasField('code')." LIKE '" . $codePrefix . "%'";
         $lastRecord = $this->find()
             ->where([
-                $this->aliasField('institution_infrastructure_id') => $parentId,
+                $this->aliasField('institution_floor_id') => $parentId,
                 $this->aliasField('code')." LIKE '" . $codePrefix . "%'"
             ])
             ->order($this->aliasField('code DESC'))
@@ -843,8 +852,32 @@ class InstitutionRoomsTable extends AppTable
 
     private function addBreadcrumbElement($toolbarElements = [])
     {
-        $parentId = $this->request->query('parent');
-        $crumbs = $this->Parents->findPath(['for' => $parentId]);
+        $entity = $this->InstitutionFloors->get($this->getQueryString('institution_floor_id'), ['contain' => ['InstitutionBuildings.InstitutionLands']]);
+        $buildingUrl = $this->ControllerAction->url('index');
+        $buildingUrl['action'] = 'Buildings';
+        $buildingUrl = $this->setQueryString($buildingUrl, [
+            'institution_land_id' => $entity->institution_building->institution_land->id,
+            'institution_land_name' => $entity->institution_building->institution_land->name
+        ]);
+
+        $floorUrl = $this->ControllerAction->url('index');
+        $floorUrl['action'] = 'Buildings';
+        $floorUrl = $this->setQueryString($floorUrl, [
+            'institution_land_id' => $entity->institution_building->id,
+            'institution_land_name' => $entity->institution_building->name
+        ]);
+
+        $crumbs[] = [
+            'name' => $entity->institution_building->institution_land->name,
+            'url' => $buildingUrl
+        ];
+        $crumbs[] = [
+            'name' => $entity->institution_building->name,
+            'url' => $floorUrl
+        ];
+        $crumbs[] = [
+            'name' => $this->getQueryString('institution_floor_name')
+        ];
         $toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
 
         return $toolbarElements;
