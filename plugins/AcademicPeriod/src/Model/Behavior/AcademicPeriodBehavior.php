@@ -22,6 +22,10 @@ class AcademicPeriodBehavior extends Behavior {
 			'Model.custom.onUpdateActionButtons' => ['callable' => 'onUpdateActionButtons', 'priority' => 100]
 		];
 
+		if ($this->isCAv4()) {
+			$newEvent['ControllerAction.Model.afterAction'] = 'afterAction';
+		}
+
 		$tableAlias = $this->_table->alias();
 
 		switch ($tableAlias) {
@@ -31,11 +35,15 @@ class AcademicPeriodBehavior extends Behavior {
 
 			case 'StaffAttendances':
 			case 'StudentAttendances':
-				$newEvent = ['ControllerAction.Model.index.beforeAction' => 'indexBeforeAction',] + $newEvent;
+				$newEvent = ['ControllerAction.Model.index.beforeAction' => 'indexBeforeAction'] + $newEvent;
 				break;
 		}
 		$events = array_merge($events, $newEvent);
 		return $events;
+	}
+
+	private function isCAv4() {
+		return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
 	}
 
 	public function indexBeforeAction(Event $event) {
@@ -43,7 +51,11 @@ class AcademicPeriodBehavior extends Behavior {
 			$academicPeriodId = $this->_table->request->query['academic_period_id'];
 			$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 			if (!$editable) {
-				$urlParams = $this->_table->ControllerAction->url('index');
+				if ($this->isCAv4()) {
+					$urlParams = $this->_table->url('index');
+				} else {
+					$urlParams = $this->_table->ControllerAction->url('index');
+				}
 				if (isset($urlParams['mode'])) {
 					unset($urlParams['mode']);
 				}
@@ -58,7 +70,11 @@ class AcademicPeriodBehavior extends Behavior {
 			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
 			if (! $isEditable) {
-				$urlParams = $this->_table->ControllerAction->url('view');
+				if ($this->isCAv4()) {
+					$urlParams = $this->_table->url('view');
+				} else {
+					$urlParams = $this->_table->ControllerAction->url('view');
+				}
 				$event->stopPropagation();
 				return $this->_table->controller->redirect($urlParams);
 			}
@@ -72,6 +88,13 @@ class AcademicPeriodBehavior extends Behavior {
 		}
 	}
 
+	public function afterAction(Event $event, $extra)
+	{	
+		$action = $this->_table->action;
+		$toolbarButtons = new ArrayObject($extra['toolbarButtons']);
+		$this->onUpdateToolbarButtons($event, new ArrayObject(), $toolbarButtons, [], $action, null);
+	}
+
 	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
 		switch ($action) {
 			case 'view':
@@ -80,6 +103,9 @@ class AcademicPeriodBehavior extends Behavior {
 					if (!$isEditable) {
 						if(isset($toolbarButtons['edit'])) {
 							unset($toolbarButtons['edit']);
+						}
+						if(isset($toolbarButtons['remove'])) {
+							unset($toolbarButtons['remove']);
 						}
 					}
 				}
@@ -94,15 +120,24 @@ class AcademicPeriodBehavior extends Behavior {
 							if ($academicPeriodId != 0 || !empty($academicPeriodId)) {
 								$editable = TableRegistry::get('AcademicPeriod.AcademicPeriods')->getEditable($academicPeriodId);
 							}
-							if ($editable) {
-								if( !isset($this->_table->request->query['mode'])) {
-									$toolbarButtons['edit'] = $buttons['index'];
-							    	$toolbarButtons['edit']['url'][0] = 'index';
-									$toolbarButtons['edit']['url']['mode'] = 'edit';
-									$toolbarButtons['edit']['type'] = 'button';
-									$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-									$toolbarButtons['edit']['attr'] = $attr;
-									$toolbarButtons['edit']['attr']['title'] = __('Edit');
+							if (!isset($this->_table->request->query['mode'])) {
+								if ($editable) {
+									if ($tableAlias == 'StudentAttendances') {
+										$toolbarButtons['edit'] = $buttons['index'];
+								    	$toolbarButtons['edit']['url'][0] = 'index';
+										$toolbarButtons['edit']['url']['mode'] = 'edit';
+										$toolbarButtons['edit']['type'] = 'button';
+										$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
+										$toolbarButtons['edit']['attr'] = $attr;
+										$toolbarButtons['edit']['attr']['title'] = __('Edit');
+									}
+								} else {
+									if ($tableAlias == 'StaffAttendances') {
+										// used for CAv4 logic in StaffAttendance
+										if ($toolbarButtons->offsetExists('indexEdit')) {
+											$toolbarButtons->offsetUnset('indexEdit');
+										}
+									}
 								}
 							}
 						}
@@ -140,10 +175,14 @@ class AcademicPeriodBehavior extends Behavior {
 		$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$isEditable = 1;
 		if ($entity->has('academic_period_id')) {
-			$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			if (!empty($entity->academic_period_id)) {
+				$isEditable = $AcademicPeriodTable->getEditable($entity->academic_period_id);
+			}
 		} else if (isset($data[$this->_table->alias()]['academic_period_id']) && !empty($data[$this->_table->alias()]['academic_period_id'])) {
 			$academicPeriodId = $data[$this->_table->alias()]['academic_period_id'];
-			$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+			if (!empty($academicPeriodId)) {
+				$isEditable = $AcademicPeriodTable->get($academicPeriodId)->editable;
+			}
 		}
 		if (! $isEditable) {
 			$urlParams = $this->_table->ControllerAction->url('add');

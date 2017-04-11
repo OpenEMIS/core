@@ -2,13 +2,11 @@ $(document).ready(function() {
     ReportList.init();
 });
 
+var ids = [];
 var ReportList = {
-	init: function(id, data) {
+	init: function() {
 		var selector = '.progress .progress-bar';
 
-		if (id != undefined) {
-			selector = '[row-id="' + id + '"] ' + selector;
-		}
 		$(selector).progressbar({
 			display_text: 'center',
 			done: function(e) {
@@ -16,43 +14,55 @@ var ReportList = {
 				var rowId = $(e).closest('tr').attr('row-id');
 
 				if (current < 100 || $(e).closest('tr').find('.modified').html() == '') {
-					if (data == undefined || (data != undefined && data['status'] != -1)) {
-						ReportList.getProgress(rowId);
+					if ($.inArray(rowId, ids) == -1) {
+						ids.push(rowId);
 					}
 				} else {
 					$(e).closest('.progress').fadeOut(1000, function() {
 						$(e).closest('td').find('a.download').removeClass('none');
 						$(e).closest('.progress').remove();
+						ids.splice( $.inArray(rowId, ids), 1 );
 					});
 				}
 			}
 		});
+
+		ReportList.getProgress(ids);
 	},
 
-	getProgress: function(id) {
+	getProgress: function(ids) {
 		var url = $('#ReportList').attr('url');
-		var selector = '[row-id="' + id + '"]';
+
 		$.ajax({
 			type: 'GET',
 			dataType: 'json',
-			data: {'id': id},
+			data: {'ids': ids},
 			url: url,
-			success: function(data, textStatus) {
-				console.log(data);
-				if (data['percent'] != undefined) {
-					var progressbar = $('[row-id="' + id + '"] [role="progressbar"]');
-					progressbar.attr('data-transitiongoal', data['percent']);
-					ReportList.init(id, data);
+			success: function(response, textStatus) {
+				console.log(response);
+				$.each(response, function(id, data) {
+					var selector = '[row-id="' + id + '"]';
 
-					if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
-						$(selector).find('.modified').html(data['modified']);
-					} else if (data['status'] == -1) {
-						progressbar.closest('.progress').fadeOut(1000, function() {
-							$('[data-toggle="tooltip"]').removeClass('none').tooltip();
-							progressbar.closest('.progress').remove();
-						});
+					if (data['percent'] != undefined) {
+						var progressbar = $('[row-id="' + id + '"] [role="progressbar"]');
+						progressbar.attr('data-transitiongoal', data['percent']);
+
+						if (data['status'] != -1 && data['percent'] == 100 && data['modified'] != null) {
+							$(selector).find('.modified').html(data['modified']);
+							$(selector).find('.expiryDate').html(data['expiry_date']);
+						} else if (data['status'] == -1) {
+							progressbar.closest('.progress').fadeOut(1000, function() {
+								$('[data-toggle="tooltip"]').removeClass('none').tooltip();
+								progressbar.closest('.progress').remove();
+							});
+						}
 					}
-				}
+				});
+
+				// delay 1s before send another ajax request again
+				setTimeout(function() {
+					ReportList.init();
+				}, 1000);
 			}
 		});
 	}

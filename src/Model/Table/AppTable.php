@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\I18n\Time;
+use Cake\I18n\Date;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Log\LogTrait;
@@ -21,7 +22,8 @@ class AppTable extends Table {
 
 	public function initialize(array $config) {
 		Time::$defaultLocale = 'en_US';
-		
+		Date::$defaultLocale = 'en_US';
+
 		$_config = [
 			'Modified' => true,
 			'Created' => true
@@ -33,7 +35,14 @@ class AppTable extends Table {
 		$columns = $schema->columns();
 
 		if (in_array('modified', $columns) || in_array('created', $columns)) {
-			$this->addBehavior('Timestamp');
+			$this->addBehavior('Timestamp', [
+				'events' => [
+            		'Model.beforeSave' => [
+                		'created' => 'new',
+               			'modified' => 'existing'
+           			]
+        		]
+			]);
 		}
 
 		if (in_array('modified_user_id', $columns) && $_config['Modified']) {
@@ -76,16 +85,39 @@ class AppTable extends Table {
 			$this->addBehavior('ControllerAction.TimePicker', $timeFields);
 		}
 		$this->addBehavior('Validation');
-		$this->attachWorkflow();
+		$this->addBehavior('Modification');
+
+        $this->addBehavior('TrackDelete');
+        $this->addBehavior('ControllerAction.Security');
 	}
 
-	public function attachWorkflow($config=[]) {
-		// check for session and attach workflow behavior
-		if (isset($_SESSION['Workflow']['Workflows']['models'])) {
-			if (in_array($this->registryAlias(), $_SESSION['Workflow']['Workflows']['models'])) {
-				$config = array_merge($config, ['model' => $this->registryAlias()]);
-				$this->addBehavior('Workflow.Workflow', $config);
+	public function validationDefault(Validator $validator) {
+		$schema = $this->schema();
+		$columns = $schema->columns();
+
+		foreach ($columns as $column) {
+			if ($schema->columnType($column) == 'date') {
+				$attr = $schema->column($column);
+				// check if is nullable
+				if (array_key_exists('null', $attr) && $attr['null'] === true) {
+					$validator->allowEmpty($column);
+				}
 			}
+		}
+
+		return $validator;
+	}
+
+	// Function to get the entity property from the entity. If data validation occur,
+	// the invalid value has to be extracted from invalid array
+	// For use in Cake 3.2 and above
+	public function getEntityProperty($entity, $propertyName) {
+		if ($entity->has($propertyName)) {
+			return $entity->get($propertyName);
+		} else if (array_key_exists($propertyName, $entity->invalid())) {
+			return $entity->invalid($propertyName);
+		} else {
+			return null;
 		}
 	}
 
@@ -97,10 +129,19 @@ class AppTable extends Table {
 	public function getList($query = null) {
 		$schema = $this->schema();
 		$columns = $schema->columns();
+		$table = $schema->name();
 
 		if (is_null($query)) {
-			$query = $this->find('list');
-		}
+            if ($table == 'area_levels') {
+                $query = $this
+                    ->find('list', [
+                        'keyField' => 'level',
+                        'valueField' => 'name'
+                    ]);
+            } else {
+                $query = $this->find('list');
+            }
+        }
 
 		if ($this->hasBehavior('FieldOption') && $this->table() == 'field_option_values') {
 			$query->innerJoin(
@@ -125,7 +166,16 @@ class AppTable extends Table {
 	// Event: 'Model.excel.onFormatDate' ExcelBehavior
 	public function onExcelRenderDate(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDate($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				if ($entity->$attr['field'] != '0000-00-00') {
+					$date = new Date($entity->$attr['field']);
+					return $this->formatDate($date);
+				} else {
+					return '';
+				}
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
@@ -133,14 +183,19 @@ class AppTable extends Table {
 
 	public function onExcelRenderDateTime(Event $event, Entity $entity, $attr) {
 		if (!empty($entity->$attr['field'])) {
-			return $this->formatDateTime($entity->$attr['field']);
+			if ($entity->$attr['field'] instanceof Time || $entity->$attr['field'] instanceof Date) {
+				return $this->formatDate($entity->$attr['field']);
+			} else {
+				$date = new Time($entity->$attr['field']);
+				return $this->formatDate($date);
+			}
 		} else {
 			return $entity->$attr['field'];
 		}
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDate'
-	public function onFormatDate(Event $event, Time $dateObject) {
+	public function onFormatDate(Event $event, $dateObject) {
 		return $this->formatDate($dateObject);
 	}
 
@@ -149,8 +204,8 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDate(Time $dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+	public function formatDate($dateObject) {
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format');
         $value = '';
         if (is_object($dateObject)) {
@@ -160,8 +215,8 @@ class AppTable extends Table {
 	}
 
 	// Event: 'ControllerAction.Model.onFormatTime'
-	public function onFormatTime(Event $event, Time $dateObject) {
-		return $this->formatTime($dateObject);
+	public function onFormatTime(Event $event, $timeObject) {
+		return $this->formatTime($timeObject);
 	}
 
 	/**
@@ -169,19 +224,19 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatTime(Time $dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+	public function formatTime($timeObject) {
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('time_format');
 		$value = '';
-        if (is_object($dateObject)) {
-            $value = $dateObject->format($format);
+        if (is_object($timeObject)) {
+            $value = $timeObject->format($format);
         }
 		return $value;
 	}
 
 	// Event: 'ControllerAction.Model.onFormatDateTime'
-	public function onFormatDateTime(Event $event, Time $dateObject) {
-		return $this->formatDateTime($dateObject);
+	public function onFormatDateTime(Event $event, $timeObject) {
+		return $this->formatDateTime($timeObject);
 	}
 
 	/**
@@ -189,8 +244,8 @@ class AppTable extends Table {
 	 * @param  Time   $dateObject [description]
 	 * @return [type]             [description]
 	 */
-	public function formatDateTime(Time $dateObject) {
-		$ConfigItem = TableRegistry::get('ConfigItems');
+	public function formatDateTime($dateObject) {
+		$ConfigItem = TableRegistry::get('Configuration.ConfigItems');
 		$format = $ConfigItem->value('date_format') . ' - ' . $ConfigItem->value('time_format');
 		$value = '';
         if (is_object($dateObject)) {
@@ -212,17 +267,30 @@ class AppTable extends Table {
 			if ($this->endsWith($field, '_id') && $this->endsWith($label, ' Id')) {
 				$label = str_replace(' Id', '', $label);
 			}
+			$label = __($label);
+		}
+		if (substr($label, -1) == ')') {
+			$label = $label.' ';
 		}
 		return $label;
 	}
 
 	// Event: 'Model.excel.onExcelGetLabel'
 	public function onExcelGetLabel(Event $event, $module, $col, $language) {
-		return $this->getFieldLabel($module, $col, $language);
+		return __($this->getFieldLabel($module, $col, $language));
 	}
 
+    public function getButtonAttr() {
+        return [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+    }
+
 	// Event: 'ControllerAction.Model.onInitializeButtons'
-	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {
+	public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel, ArrayObject $extra) {
 		// needs clean up
 		$controller = $event->subject()->_registry->getController();
 		$access = $controller->AccessControl;
@@ -230,22 +298,22 @@ class AppTable extends Table {
 		$toolbarButtons = new ArrayObject([]);
 		$indexButtons = new ArrayObject([]);
 
-		$toolbarAttr = [
-			'class' => 'btn btn-xs btn-default',
-			'data-toggle' => 'tooltip',
-			'data-placement' => 'bottom',
-			'escape' => false
-		];
+		$toolbarAttr = $this->getButtonAttr();
 		$indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
 
+		// Set for roles belonging to the controller
+		$roles = [];
+		$event = $controller->dispatchEvent('Controller.Buttons.onUpdateRoles', null, $this);
+    	if ($event->result) {
+    		$roles = $event->result;
+    	}
 		if ($action != 'index') {
 			$toolbarButtons['back'] = $buttons['back'];
 			$toolbarButtons['back']['type'] = 'button';
 			$toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
 			$toolbarButtons['back']['attr'] = $toolbarAttr;
 			$toolbarButtons['back']['attr']['title'] = __('Back');
-
-			if ($action == 'remove' && $buttons['remove']['strategy'] == 'transfer') {
+			if ($action == 'remove' && ($buttons['remove']['strategy'] == 'transfer' || $buttons['remove']['strategy'] == 'restrict')) {
 				$toolbarButtons['list'] = $buttons['index'];
 				$toolbarButtons['list']['type'] = 'button';
 				$toolbarButtons['list']['label'] = '<i class="fa kd-lists"></i>';
@@ -254,7 +322,7 @@ class AppTable extends Table {
 			}
 		}
 		if ($action == 'index') {
-			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'])) {
+			if ($buttons->offsetExists('add') && $access->check($buttons['add']['url'], $roles)) {
 				$toolbarButtons['add'] = $buttons['add'];
 				$toolbarButtons['add']['type'] = 'button';
 				$toolbarButtons['add']['label'] = '<i class="fa kd-add"></i>';
@@ -263,7 +331,7 @@ class AppTable extends Table {
 			}
 			if ($buttons->offsetExists('search')) {
 				$toolbarButtons['search'] = [
-					'type' => 'element', 
+					'type' => 'element',
 					'element' => 'OpenEmis.search',
 					'data' => ['url' => $buttons['index']['url']],
 					'options' => []
@@ -279,7 +347,7 @@ class AppTable extends Table {
 			}
 		} else if ($action == 'view') {
 			// edit button
-			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+			if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 				$toolbarButtons['edit'] = $buttons['edit'];
 				$toolbarButtons['edit']['type'] = 'button';
 				$toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
@@ -289,42 +357,44 @@ class AppTable extends Table {
 
 			// delete button
 			// disabled for now until better solution
-			// if ($buttons->offsetExists('remove')) {
-			// 	$toolbarButtons['remove'] = $buttons['remove'];
-			// 	$toolbarButtons['remove']['type'] = 'button';
-			// 	$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
-			// 	$toolbarButtons['remove']['attr'] = $toolbarAttr;
-			// 	$toolbarButtons['remove']['attr']['title'] = __('Delete');
+			if ($buttons->offsetExists('remove') && $buttons['remove']['strategy'] != 'transfer' && $access->check($buttons['remove']['url'], $roles)) {
+				$toolbarButtons['remove'] = $buttons['remove'];
+				$toolbarButtons['remove']['type'] = 'button';
+				$toolbarButtons['remove']['label'] = '<i class="fa fa-trash"></i>';
+				$toolbarButtons['remove']['attr'] = $toolbarAttr;
+				$toolbarButtons['remove']['attr']['title'] = __('Delete');
 
-			// 	if (array_key_exists('removeStraightAway', $buttons['remove']) && $buttons['remove']['removeStraightAway']) {
-			// 		$toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
-			// 		$toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
-			// 		$toolbarButtons['remove']['attr']['field-target'] = '#recordId';
-			// 		// $toolbarButtons['remove']['attr']['field-value'] = $id;
-			// 		$toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
-			// 	}
-			// }
+				if ($buttons['remove']['strategy'] != 'restrict') {
+                    $toolbarButtons['remove']['attr']['data-toggle'] = 'modal';
+                    $toolbarButtons['remove']['attr']['data-target'] = '#delete-modal';
+                    $toolbarButtons['remove']['attr']['field-target'] = '#recordId';
+                    $toolbarButtons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+                    if ($extra->offsetExists('primaryKeyValue')) {
+                    	$toolbarButtons['remove']['attr']['field-value'] = $extra['primaryKeyValue'];
+                    }
+                }
+			}
 		}
 
-		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'])) {
+		if ($buttons->offsetExists('view') && $access->check($buttons['view']['url'], $roles)) {
 			$indexButtons['view'] = $buttons['view'];
 			$indexButtons['view']['label'] = '<i class="fa fa-eye"></i>' . __('View');
 			$indexButtons['view']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 			$indexButtons['edit'] = $buttons['edit'];
 			$indexButtons['edit']['label'] = '<i class="fa fa-pencil"></i>' . __('Edit');
 			$indexButtons['edit']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'])) {
+		if ($buttons->offsetExists('remove') && $access->check($buttons['remove']['url'], $roles)) {
 			$indexButtons['remove'] = $buttons['remove'];
 			$indexButtons['remove']['label'] = '<i class="fa fa-trash"></i>' . __('Delete');
 			$indexButtons['remove']['attr'] = $indexAttr;
 		}
 
-		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'])) {
+		if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
 		// if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
 			$controller->set('reorder', true);
 		}
@@ -338,29 +408,28 @@ class AppTable extends Table {
 		$controller->set(compact('toolbarButtons', 'indexButtons'));
 	}
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$primaryKey = $this->primaryKey();
-		$id = $entity->$primaryKey;
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+		$id = $this->getEncodedKeys($entity);
 
-		if (array_key_exists('view', $buttons)) {
-			$buttons['view']['url'][1] = $id;
-		}
-		if (array_key_exists('edit', $buttons)) {
-			$buttons['edit']['url'][1] = $id;
-		}
-		if (array_key_exists('remove', $buttons)) {
-			if ($buttons['remove']['strategy'] == 'cascade') {
-				$buttons['remove']['attr']['data-toggle'] = 'modal';
-				$buttons['remove']['attr']['data-target'] = '#delete-modal';
-				$buttons['remove']['attr']['field-target'] = '#recordId';
-				$buttons['remove']['attr']['field-value'] = $id;
-				$buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
-			} else {
-				$buttons['remove']['url'][1] = $id;
-			}
-		}
-		return $buttons;
-	}
+        if (array_key_exists('view', $buttons)) {
+            $buttons['view']['url'][1] = $id;
+        }
+        if (array_key_exists('edit', $buttons)) {
+            $buttons['edit']['url'][1] = $id;
+        }
+        if (array_key_exists('remove', $buttons)) {
+            if (in_array($buttons['remove']['strategy'], ['cascade'])) {
+                $buttons['remove']['attr']['data-toggle'] = 'modal';
+                $buttons['remove']['attr']['data-target'] = '#delete-modal';
+                $buttons['remove']['attr']['field-target'] = '#recordId';
+                $buttons['remove']['attr']['field-value'] = $id;
+                $buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
+            } else {
+                $buttons['remove']['url'][1] = $id;
+            }
+        }
+        return $buttons;
+    }
 
 	public function findVisible(Query $query, array $options) {
 		return $query->where([$this->aliasField('visible') => 1]);
@@ -372,38 +441,6 @@ class AppTable extends Table {
 
 	public function findOrder(Query $query, array $options) {
 		return $query->order([$this->aliasField('order') => 'ASC']);
-	}
-	
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$schema = $this->schema();
-		$columns = $schema->columns();
-		
-		$userId = null;
-		if (isset($_SESSION['Auth']) && isset($_SESSION['Auth']['User'])) {
-			$userId = $_SESSION['Auth']['User']['id'];
-		}
-		if (!is_null($userId)) {
-			if (in_array('modified_user_id', $columns)) {
-				$entity->modified_user_id = $userId;
-			}
-			if (in_array('created_user_id', $columns)) {
-				$entity->created_user_id = $userId;
-			}
-		}
-	}
-
-	public function checkIdInOptions($key, $options) {
-		pr('checkIdInOptions is deprecated, please use queryString instead');
-		if (!empty($options)) {
-			if ($key != 0) {
-				if (!array_key_exists($key, $options)) {
-					$key = key($options);
-				}
-			} else {
-				$key = key($options);
-			}
-		}
-		return $key;
 	}
 
 	public function postString($key) {
@@ -457,4 +494,34 @@ class AppTable extends Table {
 		}
 		return $key;
 	}
+
+	public function getEncodedKeys(Entity $entity)
+    {
+    	$primaryKey = $this->primaryKey();
+    	$primaryKeyValue = [];
+    	if (is_array($primaryKey)) {
+    		foreach ($primaryKey as $key) {
+				$primaryKeyValue[$key] = $entity->getOriginal($key);
+			}
+    	} else {
+    		$primaryKeyValue[$primaryKey] = $entity->getOriginal($primaryKey);
+    	}
+
+		$encodedKeys = $this->paramsEncode($primaryKeyValue);
+
+		return $encodedKeys;
+    }
+
+	public function startsWith($haystack, $needle)
+    {
+        // search backwards starting from haystack length characters from the end
+        return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
+    }
+
+    public function dispatchEventToModels($eventKey, $params, $subject, $listeners)
+    {
+    	foreach ($listeners as $listener) {
+    		$listener->dispatchEvent($eventKey, $params, $subject);
+    	}
+    }
 }

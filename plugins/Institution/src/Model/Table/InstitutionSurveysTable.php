@@ -2,11 +2,15 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+use Cake\I18n\Time;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Log\Log;
+use Cake\Datasource\ResultSetInterface;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
@@ -18,6 +22,11 @@ class InstitutionSurveysTable extends AppTable {
 	// Default Status
 	const EXPIRED = -1;
 
+	// Workflow Steps - category
+	const TO_DO = 1;
+	const IN_PROGRESS = 2;
+	const DONE = 3;
+
 	public $module = 'Institution.Institutions';
 	public $attachWorkflow = true;	// indicate whether the model require workflow
 	public $hasWorkflow = false;	// indicate whether workflow is setup
@@ -25,15 +34,14 @@ class InstitutionSurveysTable extends AppTable {
 	public $openStatusId = null;
 	public $closedStatusId = null;
 
-	private $workflowEvents = [];
-
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
 		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
 		$this->belongsTo('SurveyForms', ['className' => 'Survey.SurveyForms']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('Assignees', ['className' => 'User.Users']);
 		$this->addBehavior('Survey.Survey', [
 			'module' => $this->module
 		]);
@@ -43,8 +51,10 @@ class InstitutionSurveysTable extends AppTable {
 			'fieldKey' => 'survey_question_id',
 			'tableColumnKey' => 'survey_table_column_id',
 			'tableRowKey' => 'survey_table_row_id',
+			'fieldClass' => ['className' => 'Survey.SurveyQuestions', 'foreignKey' => 'survey_question_id'],
 			'formKey' => 'survey_form_id',
 			// 'filterKey' => 'custom_filter_id',
+			'formClass' => ['className' => 'Survey.SurveyForms', 'foreignKey' => 'survey_form_id'],
 			'formFieldClass' => ['className' => 'Survey.SurveyFormsQuestions'],
 			// 'formFilterClass' => ['className' => 'CustomField.CustomFormsFilters'],
 			'recordKey' => 'institution_survey_id',
@@ -54,16 +64,18 @@ class InstitutionSurveysTable extends AppTable {
 		$this->addBehavior('Excel', ['pages' => ['view']]);
 		$this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Import.ImportLink');
+        $this->addBehavior('Institution.InstitutionWorkflowAccessControl');
+        $this->addBehavior('Workflow.Workflow');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+        	'Dashboard' => ['index']
+        ]);
 	}
 
 	public function implementedEvents() {
     	$events = parent::implementedEvents();
     	$events['Model.custom.onUpdateActionButtons'] = 'onUpdateActionButtons';
     	$events['Workflow.getFilterOptions'] = 'getWorkflowFilterOptions';
-    	$events['Workflow.getEvents'] = 'getWorkflowEvents';
-    	foreach ($this->workflowEvents as $event) {
-    		$events[$event['value']] = $event['method'];
-    	}
+    	// $events['Restful.Model.index.workbench'] = 'indexAfterFindWorkbench';
 
     	return $events;
     }
@@ -78,7 +90,7 @@ class InstitutionSurveysTable extends AppTable {
 
 		// To update to this code when upgrade server to PHP 5.5 and above
 		// unset($fields[array_search('institution_id', array_column($fields, 'field'))]);
-		
+
 		foreach ($fields as $key => $field) {
 			if ($field['field'] == 'institution_id') {
 				unset($fields[$key]);
@@ -140,12 +152,12 @@ class InstitutionSurveysTable extends AppTable {
 		return $list;
 	}
 
-    public function getWorkflowEvents(Event $event) {
-    	foreach ($this->workflowEvents as $key => $attr) {
-    		$this->workflowEvents[$key]['text'] = __($attr['text']);
-    	}
-
-    	return $this->workflowEvents;
+    public function triggerBuildSurveyRecordsShell($params) {
+    	$cmd = ROOT . DS . 'bin' . DS . 'cake Survey ' . implode(',', $params);
+		$logs = ROOT . DS . 'logs' . DS . 'survey.log & echo $!';
+		$shellCmd = $cmd . ' >> ' . $logs;
+		$pid = exec($shellCmd);
+		Log::write('debug', $shellCmd);
     }
 
 	public function onGetDescription(Event $event, Entity $entity) {
@@ -154,7 +166,11 @@ class InstitutionSurveysTable extends AppTable {
 	}
 
 	public function onGetLastModified(Event $event, Entity $entity) {
-		return $this->formatDateTime($entity->modified);
+		if (is_null($entity->modified)) {
+			return $this->formatDateTime($entity->created);
+		} else {
+			return $this->formatDateTime($entity->modified);
+		}
 	}
 
 	public function onGetToBeCompletedBy(Event $event, Entity $entity) {
@@ -207,9 +223,9 @@ class InstitutionSurveysTable extends AppTable {
 					$workflow = $this->getWorkflow($this->registryAlias(), null, $selectedFilter);
 					if (!empty($workflow)) {
 						foreach ($workflow->workflow_steps as $workflowStep) {
-							if ($workflowStep->stage == 0) {	// Open
+							if ($workflowStep->category == 1) {	// To Do
 								$this->openStatusId = $workflowStep->id;
-							} else if ($workflowStep->stage == 2) {	// Closed
+							} else if ($workflowStep->category == 3) {	// Done
 								$this->closedStatusId = $workflowStep->id;
 							}
 						}
@@ -266,6 +282,8 @@ class InstitutionSurveysTable extends AppTable {
 		$this->ControllerAction->field('survey_form_id', [
 			'attr' => ['value' => $entity->survey_form_id]
 		]);
+		// this extra field is use by repeater type to know user click add on which repeater question
+		$this->ControllerAction->field('repeater_question_id');
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -321,6 +339,18 @@ class InstitutionSurveysTable extends AppTable {
 		return $attr;
 	}
 
+	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
+		$includes['ruleCtrl'] = ['include' => true, 'js' => 'CustomField.angular/rules/relevancy.rules.ctrl'];
+	}
+
+	public function onUpdateFieldRepeaterQuestionId(Event $event, array $attr, $action, $request) {
+		$attr['type'] = 'hidden';
+		$attr['value'] = 0;
+		$attr['attr']['class'] = 'repeater-question-id';
+
+		return $attr;
+	}
+
 	public function buildSurveyRecords($institutionId=null) {
 		if (is_null($institutionId)) {
 			$session = $this->controller->request->session();
@@ -339,11 +369,13 @@ class InstitutionSurveysTable extends AppTable {
 			$workflow = $this->getWorkflow($this->registryAlias(), null, $surveyFormId);
 			if (!empty($workflow)) {
 				foreach ($workflow->workflow_steps as $workflowStep) {
-					if ($workflowStep->stage == 0) {
+					if ($workflowStep->category == 1) {
 						$openStatusId = $workflowStep->id;
 						break;
 					}
 				}
+
+
 
 				// Update all New Survey to Expired by Institution Id
 				$this->updateAll(['status_id' => self::EXPIRED],
@@ -386,7 +418,9 @@ class InstitutionSurveysTable extends AppTable {
 								'status_id' => $openStatusId,
 								'academic_period_id' => $periodId,
 								'survey_form_id' => $surveyFormId,
-								'institution_id' => $institutionId
+								'institution_id' => $institutionId,
+								'created_user_id' => 1,
+								'created' => new Time('NOW')
 							];
 
 							$surveyEntity = $this->newEntity($surveyData, ['validate' => false]);
@@ -409,5 +443,69 @@ class InstitutionSurveysTable extends AppTable {
 				}
 			}
 		}
+	}
+
+	public function findWorkbench(Query $query, array $options) {
+		$controller = $options['_controller'];
+		$session = $controller->request->session();
+
+		$userId = $session->read('Auth.User.id');
+		$Statuses = $this->Statuses;
+		$doneStatus = self::DONE;
+
+		$query
+			->select([
+				$this->aliasField('id'),
+				$this->aliasField('status_id'),
+				$this->aliasField('institution_id'),
+				$this->aliasField('modified'),
+				$this->aliasField('created'),
+				$this->Statuses->aliasField('name'),
+				$this->AcademicPeriods->aliasField('name'),
+				$this->SurveyForms->aliasField('name'),
+				$this->Institutions->aliasField('code'),
+				$this->Institutions->aliasField('name'),
+				$this->CreatedUser->aliasField('openemis_no'),
+				$this->CreatedUser->aliasField('first_name'),
+				$this->CreatedUser->aliasField('middle_name'),
+				$this->CreatedUser->aliasField('third_name'),
+				$this->CreatedUser->aliasField('last_name'),
+				$this->CreatedUser->aliasField('preferred_name')
+			])
+			->contain([$this->AcademicPeriods->alias(), $this->SurveyForms->alias(), $this->Institutions->alias(), $this->CreatedUser->alias()])
+			->matching($this->Statuses->alias(), function ($q) use ($Statuses, $doneStatus) {
+				return $q->where([$Statuses->aliasField('category <> ') => $doneStatus]);
+			})
+			->where([$this->aliasField('assignee_id') => $userId])
+			->order([$this->aliasField('created') => 'DESC'])
+			->formatResults(function (ResultSetInterface $results) {
+				return $results->map(function ($row) {
+					$url = [
+						'plugin' => 'Institution',
+						'controller' => 'Institutions',
+						'action' => 'Surveys',
+						'view',
+						$this->paramsEncode(['id' => $row->id]),
+						'institution_id' => $row->institution_id
+					];
+
+					if (is_null($row->modified)) {
+						$receivedDate = $this->formatDate($row->created);
+					} else {
+						$receivedDate = $this->formatDate($row->modified);
+					}
+
+					$row['url'] = $url;
+	    			$row['status'] = $row->_matchingData['Statuses']->name;
+	    			$row['request_title'] = $row->survey_form->name.' '.__('in').' '.$row->academic_period->name;
+	    			$row['institution'] = $row->institution->code_name;
+	    			$row['received_date'] = $receivedDate;
+	    			$row['requester'] = $row->created_user->name_with_id;
+
+					return $row;
+				});
+			});
+
+		return $query;
 	}
 }

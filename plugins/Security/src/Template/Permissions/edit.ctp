@@ -35,9 +35,9 @@ $this->start('panelBody');
 
 	foreach ($data as $section => $list) {
 		// add the sections
-		echo '<h6 class="section-header">';
+		echo '<div class="section-header">';
 		echo '<input type="checkbox" class="icheck-input" checkbox-toggle-target="' . $section . '" />' . $section;
-		echo '</h6>';
+		echo '</div>';
 
 		// add the table under each section
 		echo '<div class="table-wrapper"><div class="table-responsive" checkbox-toggle="' . $section . '">

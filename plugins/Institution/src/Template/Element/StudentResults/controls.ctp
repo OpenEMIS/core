@@ -17,12 +17,12 @@
 				'data-named-key' => 'academic_period_id'
 			));
 
-			echo $this->Form->input('sections', array(
+			echo $this->Form->input('classes', array(
 				'class' => 'form-control',
 				'label' => false,
 				'options' => $sectionOptions,
 				'url' => $baseUrl,
-				'data-named-key' => 'section_id',
+				'data-named-key' => 'class_id',
 				'data-named-group' => 'academic_period_id'
 			));
 
@@ -32,7 +32,7 @@
 				'options' => $classOptions,
 				'url' => $baseUrl,
 				'data-named-key' => 'class_id',
-				'data-named-group' => 'academic_period_id,section_id'
+				'data-named-group' => 'academic_period_id,class_id'
 			));
 		?>
 	</div>

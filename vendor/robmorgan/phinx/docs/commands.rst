@@ -110,10 +110,48 @@ status. You can use this command to determine which migrations have been run.
 
         $ phinx status -e development
 
+This command exits with code 0 if the database is up-to-date (ie. all migrations are up) or one of the following codes otherwise:
+
+* 1: There is at least one down migration.
+* 2: There is at least one missing migration.
+
+The Seed Create Command
+-----------------------
+
+The Seed Create command can be used to create new database seed classes. It
+requires one argument and that is the name of the class. The class name should
+be specified in CamelCase format.
+
+.. code-block:: bash
+
+        $ phinx seed:create MyNewSeeder
+
+Open the new seed file in your text editor to add your database seed commands.
+Phinx creates seed files using the path specified in your ``phinx.yml`` file.
+Please see the :doc:`Configuration <configuration>` chapter for more information.
+
+The Seed Run Command
+-----------------------
+
+The Seed Run command runs all of the available seed classes or optionally just
+one.
+
+.. code-block:: bash
+
+        $ phinx seed:run -e development
+
+To run only one seed class use the ``--seed`` parameter or ``-s`` for short.
+
+.. code-block:: bash
+
+        $ phinx seed:run -e development -s MyNewSeeder
+
 Configuration File Parameter
 ----------------------------
 
-When running Phinx from the command line, you may specify a configuration file using the ``--configuration`` or ``-c`` parameter. In addition to YAML, the configuration file may be the computed output of a PHP file as a PHP array:
+When running Phinx from the command line, you may specify a configuration file
+using the ``--configuration`` or ``-c`` parameter. In addition to YAML, the
+configuration file may be the computed output of a PHP file as a PHP array:
 
 .. code-block:: php
 
@@ -136,9 +174,11 @@ When running Phinx from the command line, you may specify a configuration file u
                 )
             );
 
-Phinx auto-detects which language parser to use for files with ``*.yml`` and ``*.php`` extensions. The appropriate parser may also be specified via the ``--parser`` and ``-p`` parameters. Anything other than ``"php"`` is treated as YAML.
+Phinx auto-detects which language parser to use for files with ``*.yml`` and ``*.php`` extensions. The appropriate
+parser may also be specified via the ``--parser`` and ``-p`` parameters. Anything other than ``"php"`` is treated as YAML.
 
-In case with PHP array you can provide ``connection`` key with existing PDO instance to use omitting other parameters:
+When using a PHP array can you provide a ``connection`` key with an existing PDO instance. It is also important to pass
+the database name too as Phinx requires this for certain methods such as ``hasTable()``:
 
 .. code-block:: php
 
@@ -151,6 +191,7 @@ In case with PHP array you can provide ``connection`` key with existing PDO inst
                     "default_migration_table" => "phinxlog",
                     "default_database" => "dev",
                     "dev" => array(
+                        "name" => "dev_db",
                         "connection" => $pdo_instance
                     )
                 )
@@ -178,4 +219,3 @@ and to rollback use `<http://localhost:8000/rollback>`__.
         To modify configuration variables at runtime and overrid ``%%PHINX_DBNAME%%``
         or other another dynamic option, set ``$_SERVER['PHINX_DBNAME']`` before
         running commands. Available options are documented in the Configuration page.
-

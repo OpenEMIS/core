@@ -14,20 +14,23 @@ $this->start('panelBody');
 	$formOptions = $this->ControllerAction->getFormOptions();
 	$formOptions['type'] = 'delete';
 	$this->Form->templates($template);
-	
 	echo $this->Form->create($data, $formOptions);
-	echo $this->Form->hidden('id');
-	echo $this->Form->input('name', ['label' => __('Convert From'), 'readonly']);
-	echo $this->Form->input('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
+	foreach ($primaryKey as $key) {
+		echo $this->Form->hidden($key);
+	}
+	echo $this->Form->input('name', ['label' => __($label['nameLabel']), 'readonly']);
+	if ($deleteStrategy == 'transfer') {
+		echo $this->HtmlField->secureSelect('transfer_to', ['label' => __('Convert To'), 'options' => $convertOptions, 'required' => 'required']);
+	}
 
 	$tableData = [];
 	foreach ($associations as $row) {
-		$tableData[] = [$row['model'], $row['count']];
+		$tableData[] = [__($row['model']), $row['count']];
 	}
 ?>
 
 <div class="input clearfix">
-	<label><?= __('Apply To') ?></label>
+	<label><?= __($label['tableLabel']) ?></label>
 	<div class="table-wrapper">
 		<div class="table-in-view">
 			<table class="table">
@@ -39,7 +42,9 @@ $this->start('panelBody');
 </div>
 
 <?php
-	echo $this->ControllerAction->getFormButtons();
+	if ($showFormButton) {
+		echo $this->ControllerAction->getFormButtons();
+	}
 	echo $this->Form->end();
 $this->end();
 ?>

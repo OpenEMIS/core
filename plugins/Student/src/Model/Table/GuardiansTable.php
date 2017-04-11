@@ -10,188 +10,266 @@ use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 
-class GuardiansTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('student_guardians');
-		parent::initialize($config);
+class GuardiansTable extends ControllerActionTable {
+    private $editButtonAction = 'GuardianUser';
 
-		$this->belongsTo('Students',			['className' => 'Student.Students', 'foreignKey' => 'student_id']);
-		$this->belongsTo('Users',				['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
-		$this->belongsTo('GuardianRelations',	['className' => 'FieldOption.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
+    public function initialize(array $config) {
+        $this->table('student_guardians');
+        parent::initialize($config);
 
-		// to handle field type (autocomplete)
-		$this->addBehavior('OpenEmis.Autocomplete');
-		$this->addBehavior('User.User');
-		$this->addBehavior('User.AdvancedNameSearch');
-	}
+        $this->belongsTo('StudentUser',            ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
+        $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
-	public function validationDefault(Validator $validator) {
-		return $validator
-			->add('guardian_id', 'ruleStudentGuardianId', [
-				'rule' => ['studentGuardianId'],
-				'on' => 'create'
-			])
-		;
-	}
+        // to handle field type (autocomplete)
+        $this->addBehavior('OpenEmis.Autocomplete');
+        $this->addBehavior('User.User');
+        $this->addBehavior('User.AdvancedNameSearch');
+        $this->addBehavior('Indexes.Indexes');
+        $this->addBehavior('ControllerAction.Image');
+    }
 
-	private function setupTabElements($entity=null) {
-		if ($this->action != 'view') {
-			if ($this->controller->name == 'Directories') {
-				$options['type'] = 'student';
-				$tabElements = $this->controller->getStudentGuardianTabElements($options);
-			} else {
-				$tabElements = $this->controller->getUserTabElements();
-			}
-			$this->controller->set('tabElements', $tabElements);
-			$this->controller->set('selectedAction', $this->alias());
-		} elseif ($this->action == 'view') {
-			$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+    public function validationDefault(Validator $validator) {
+	$validator = parent::validationDefault($validator);
 
-			$tabElements = [
-				'Guardians' => ['text' => __('Relation')],
-				'GuardianUser' => ['text' => __('General')]
-			];
-			$action = $this->alias();
-			$actionUser = 'GuardianUser';
-			if ($this->controller->name == 'Directories') {
-				$action = 'StudentGuardians';
-				$actionUser = 'StudentGuardianUser';
-			}
-			$tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $entity->id]);
-			$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $entity->guardian_id, 'id' => $entity->id]);
+        return $validator
+            ->add('guardian_id', 'ruleStudentGuardianId', [
+                'rule' => ['studentGuardianId'],
+                'on' => 'create'
+            ])
+        ;
+    }
 
-			$this->controller->set('tabElements', $tabElements);
-			$this->controller->set('selectedAction', $this->alias());
-		}
-	}
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.ajaxUserAutocomplete'] = 'ajaxUserAutocomplete';
+        return $events;
+    }
 
-	public function afterAction(Event $event, $data) {
-		if ($this->action != 'view') {
-			$this->setupTabElements();
-		}
-	}
+    private function setupTabElements($entity=null) {
+        if ($this->action != 'view') {
+            if ($this->controller->name == 'Directories') {
+                $options['type'] = 'student';
+                $tabElements = $this->controller->getStudentGuardianTabElements($options);
+            } else {
+                $tabElements = $this->controller->getUserTabElements();
+            }
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', $this->alias());
+        } elseif ($this->action == 'view') {
+            $url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
 
-	public function onGetGuardianId(Event $event, Entity $entity) {
-		if ($entity->has('_matchingData')) {
-			return $entity->_matchingData['Users']->name;
-		}
-	}
+            $tabElements = [
+                'Guardians' => ['text' => __('Relation')],
+                'GuardianUser' => ['text' => __('General')]
+            ];
+            $action = $this->alias();
+            $actionUser = 'GuardianUser';
+            if ($this->controller->name == 'Directories') {
+                $action = 'StudentGuardians';
+                $actionUser = 'StudentGuardianUser';
+            }
+            $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $entity->id])]);
+            $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->guardian_id, 'StudentGuardians.id' => $entity->id])]);
 
-	public function beforeAction(Event $event) {
-		if ($this->controller->name == 'Directories') {
-			$studentId = $this->Session->read('Directory.Directories.id');
-		} else {
-			$studentId = $this->Session->read('Student.Students.id');
-		}
-		$this->ControllerAction->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
-		$this->ControllerAction->field('guardian_id');
-		$this->ControllerAction->field('guardian_relation_id', ['type' => 'select']);
-	}
+            $this->controller->set('tabElements', $tabElements);
+            $this->controller->set('selectedAction', $this->alias());
+        }
+    }
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$search = $this->ControllerAction->getSearchKey();
-		if (!empty($search)) {
-			// function from AdvancedNameSearchBehavior
-			$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
-		}
-	}
+    public function afterAction(Event $event, $data) {
+        if ($this->action != 'view') {
+            $this->setupTabElements();
+        }
 
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$errors = $entity->errors();
-		if (!empty($errors)) {
-			$entity->unsetProperty('guardian_id');
-			unset($data[$this->alias()]['guardian_id']);
-		}
-	}
+        $this->setFieldOrder([
+            'photo_content', 'openemis_no', 'guardian_id', 'guardian_relation_id'
+        ]);
+    }
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('id', ['value' => Text::uuid()]);
-	}
+    public function onGetGuardianId(Event $event, Entity $entity) {
+        if ($entity->has('_matchingData')) {
+            return $entity->_matchingData['Users']->name;
+        }
+    }
 
-	public function viewBeforeAction(Event $event) {
-		$this->ControllerAction->field('photo_content', ['type' => 'image', 'order' => 0]);
-		$this->ControllerAction->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
-		$this->fields['guardian_id']['order'] = 10;
-	}
+    public function beforeAction(Event $event) {
+        if ($this->controller->name == 'Directories') {
+            $studentId = $this->Session->read('Directory.Directories.id');
+        } else {
+            $studentId = $this->Session->read('Student.Students.id');
+        }
+        $this->field('student_id', ['type' => 'hidden', 'value' => $studentId]);
+        $this->field('guardian_id');
+        $this->field('guardian_relation_id', ['type' => 'select']);
+    }
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            // function from AdvancedNameSearchBehavior
+            $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+        }
+    }
 
-	public function editBeforeQuery(Event $event, Query $query) {
-		$query->contain(['Students', 'Users']);
-	}
+    public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+        $errors = $entity->errors();
+        if (!empty($errors)) {
+            $entity->unsetProperty('guardian_id');
+            unset($data[$this->alias()]['guardian_id']);
+        }
+    }
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('guardian_id', [
-			'type' => 'readonly', 
-			'order' => 10, 
-			'attr' => ['value' => $entity->user->name_with_id]
-		]);
-	}
+    public function addAfterAction(Event $event, Entity $entity) {
+        $this->field('id', ['value' => Text::uuid()]);
+    }
 
-	public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
-			$attr['type'] = 'autocomplete';
-			$attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
-			$attr['noResults'] = __('No Guardian found.');
-			$attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
-			$action = 'Guardians';
-			if ($this->controller->name == 'Directories') {
-				$action = 'StudentGuardians';
-			}
-			$attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
+    public function viewBeforeAction(Event $event) {
+        $this->field('photo_content', ['type' => 'image', 'order' => 0]);
+        $this->field('openemis_no', ['type' => 'readonly', 'order' => 1]);
+    }
 
-			$iconSave = '<i class="fa fa-check"></i> ' . __('Save');
-			$iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
-			$attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
-			$attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
-		} else if ($action == 'index') {
-			$attr['sort'] = ['field' => 'Guardians.first_name'];
-		}
-		return $attr;
-	}
+    public function viewAfterAction(Event $event, Entity $entity) {
+        $this->setupTabElements($entity);
+    }
 
-	public function addOnInitialize(Event $event, Entity $entity) {
-		$this->Session->delete('Student.Guardians.new');
-	}
+    public function editBeforeQuery(Event $event, Query $query) {
+        $query->contain(['StudentUser', 'Users']);
+    }
 
-	public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$this->Session->write('Student.Guardians.new', $data[$this->alias()]);
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
-		if ($this->controller->name == 'Directories') {
-			$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
-		}
-		return $this->controller->redirect($action);
-	}
+    public function editAfterAction(Event $event, Entity $entity) {
+        $this->field('guardian_id', [
+            'type' => 'readonly',
+            'order' => 10,
+            'attr' => ['value' => $entity->user->name_with_id]
+        ]);
+    }
 
-	public function ajaxUserAutocomplete() {
-		$this->controller->autoRender = false;
-		$this->ControllerAction->autoRender = false;
+    public function onUpdateFieldGuardianId(Event $event, array $attr, $action, Request $request) {
+        if ($action == 'add') {
+            $attr['type'] = 'autocomplete';
+            $attr['target'] = ['key' => 'guardian_id', 'name' => $this->aliasField('guardian_id')];
+            $attr['noResults'] = __('No Guardian found.');
+            $attr['attr'] = ['placeholder' => __('OpenEMIS ID or Name')];
+            $action = 'Guardians';
+            if ($this->controller->name == 'Directories') {
+                $action = 'StudentGuardians';
+            }
+            $attr['url'] = ['controller' => $this->controller->name, 'action' => $action, 'ajaxUserAutocomplete'];
 
-		if ($this->request->is(['ajax'])) {
-			$term = $this->request->query['term'];
-			// only search for guardian
-			$query = $this->Users->find()->where([$this->Users->aliasField('is_guardian') => 1]);
+            $iconSave = '<i class="fa fa-check"></i> ' . __('Save');
+            $iconAdd = '<i class="fa kd-add"></i> ' . __('Create New');
+            $attr['onNoResults'] = "$('.btn-save').html('" . $iconAdd . "').val('new')";
+            $attr['onBeforeSearch'] = "$('.btn-save').html('" . $iconSave . "').val('save')";
+        } else if ($action == 'index') {
+            $attr['sort'] = ['field' => 'Guardians.first_name'];
+        }
+        return $attr;
+    }
 
-			$term = trim($term);
-			if (!empty($term)) {
-				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
-			}
-			
-			$list = $query->all();
+    public function addOnInitialize(Event $event, Entity $entity) {
+        $this->Session->delete('Student.Guardians.new');
+    }
 
-			$data = [];
-			foreach($list as $obj) {
-				$label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
-				$data[] = ['label' => $label, 'value' => $obj->id];
-			}
-			
-			echo json_encode($data);
-			die;
-		}
-	}
+    public function addOnNew(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+        $options['validate']=true;
+        $patch = $this->patchEntity($entity, $data->getArrayCopy(), $options->getArrayCopy());
+        $errorCount = count($patch->errors());
+
+        if ($errorCount == 0 || ($errorCount == 1 && array_key_exists('guardian_id', $patch->errors()))) {
+            $this->Session->write('Student.Guardians.new', $data[$this->alias()]);
+            $event->stopPropagation();
+
+            $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'GuardianUser', 'add'];
+            if ($this->controller->name == 'Directories') {
+                $action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'StudentGuardianUser', 'add'];
+            }
+            return $this->controller->redirect($action);
+        } else {
+            $this->Alert->error('general.add.failed', ['reset' => true]);
+        }
+    }
+
+    public function ajaxUserAutocomplete() {
+        $this->controller->autoRender = false;
+        $this->ControllerAction->autoRender = false;
+
+        if ($this->request->is(['ajax'])) {
+            $term = $this->request->query['term'];
+            // only search for guardian
+            $query = $this->Users->find()
+                ->select([
+                    $this->Users->aliasField('openemis_no'),
+                    $this->Users->aliasField('first_name'),
+                    $this->Users->aliasField('middle_name'),
+                    $this->Users->aliasField('third_name'),
+                    $this->Users->aliasField('last_name'),
+                    $this->Users->aliasField('preferred_name'),
+                    $this->Users->aliasField('id')
+                ])
+                ->where([$this->Users->aliasField('is_guardian') => 1])->limit(100);
+
+            $term = trim($term);
+            if (!empty($term)) {
+                $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $term]);
+            }
+
+            $list = $query->all();
+
+            $data = [];
+            foreach($list as $obj) {
+                $label = sprintf('%s - %s', $obj->openemis_no, $obj->name);
+                $data[] = ['label' => $label, 'value' => $obj->id];
+            }
+
+            echo json_encode($data);
+            die;
+        }
+    }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        $newButtons = [];
+        if (array_key_exists('view', $buttons)) {
+            $newButtons['view'] = $buttons['view'];
+        }
+
+        if (array_key_exists('edit', $buttons)) {
+            $editProfile = $buttons['edit'];
+            $editRelation = $buttons['edit'];
+
+            $editProfile['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Profile');
+            $editRelation['label'] = '<i class="fa fa-pencil"></i>' . __('Edit Relation');
+
+            $newButtons['editProfile'] = $editProfile;
+            $newButtons['editRelation'] = $editRelation;
+            $newButtons['editProfile']['url'] = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => $this->editButtonAction(),
+                'edit',
+                $this->paramsEncode(['id' =>  $entity->_matchingData['Users']->id, 'StudentGuardians.id' => $entity->id])
+            ];
+        }
+
+        if (array_key_exists('remove', $buttons)) {
+            $newButtons['remove'] = $buttons['remove'];
+        }
+
+        return $newButtons;
+    }
+
+    public function editButtonAction($action = null)
+    {
+        if (is_null($action)) {
+            return $this->editButtonAction;
+        }
+        $this->editButtonAction = $action;
+    }
 }

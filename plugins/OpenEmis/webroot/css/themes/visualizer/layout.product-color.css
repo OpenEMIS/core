@@ -1,0 +1,272 @@
+/* 
+Visualizer Theme: v.1.0.7
+Product Color: #CC9933
+Darker Shade Color: #8F6B24
+*/
+
+
+/* PRODUCT COLOR */
+
+.login-box .btn-login,
+.navbar,
+.login-box .title,
+.progress-bar,
+.input-slider .slider-selection,
+.rtl .input-slider .slider-track-high,
+.seriesDrag li:hover,
+.seriesDrag li:active,
+#selector li:hover,
+#xDrag li:hover,
+#seriesDrag li:hover,
+#selector li:active,
+#xDrag li:active,
+#seriesDrag li:active {
+    background-color: #CC9933;
+}
+
+a,
+a:active,
+a:focus,
+.panel-breadcrumb li a,
+.panel-breadcrumb i,
+.loader-text i,
+.btn-outline,
+.btn-circle {
+    color: #CC9933;
+}
+
+.seriesSort li:hover,
+.seriesSort li:active,
+#xSort li:hover,
+#drag3a li:hover,
+#seriesSort li:hover,
+#xSort li:active,
+#drag3a li:active,
+#seriesSort li:active {
+    background: #CC9933;
+    color: #fff;
+}
+
+.selected,
+.switch-candy a {
+    background-color: #CC9933 !important;
+}
+
+.toggle-btn i,
+.input-group-addon,
+.selected {
+    background-color: #CC9933;
+    color: #FFF;
+    border: 1px solid #CC9933;
+}
+
+.btn-default,
+.pagination > .active > a:focus,
+.pagination > li > a:hover,
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.pagination>li>a:focus,
+.scroll_tabs_container .scroll_tab_left_button,
+.scroll_tabs_container .scroll_tab_right_button,
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button,
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button,
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle {
+    background-color: #CC9933 !important;
+    color: #FFF !important;
+    border: 1px solid #CC9933;
+}
+
+.fileinput .btn-file-cancel,
+.input-left-btn button,
+.tabs-action-btn,
+.customize-tab .tab-icon a,
+.sg-theme .ag-filter-header-container label {
+    color: #CC9933 !important;
+}
+
+.spinner,
+.loader {
+    border-top-color: #CC9933;
+}
+
+.fuelux .wizard > ul.steps li.active .chevron::before,
+.fuelux .wizard > .steps-container > ul.steps li.active .chevron::before {
+    border-left-color: #CC9933;
+}
+
+.fuelux .wizard > ul.steps li.active,
+.fuelux .wizard > .steps-container > ul.steps li.active {
+    background-color: #CC9933;
+}
+
+.rtl .fuelux .wizard > ul.steps li.active .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.active .chevron:before {
+    border-right-color: #CC9933;
+}
+
+.switch-sec-control .active {
+    background-color: #CC9933 !important;
+    border: 1px solid #8F6B24 !important;
+}
+
+
+/* Extra Small Devices, Phones */
+
+@media only screen and (max-width: 480px) {
+    .login-box .title i {
+        background-color: #CC9933;
+    }
+}
+
+
+/* DARK SHADES */
+
+a:hover,
+.pagination > li > a,
+.panel-breadcrumb .active,
+.panel-breadcrumb a:hover,
+.panel-breadcrumb i:hover,
+.ellipsis,
+.btn-outline,
+.sg-theme .ag-filter-header-container label:hover,
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:checked + label:after,
+[type="checkbox"]:not(:checked) + .ag-cell-value:after,
+[type="checkbox"]:checked + .ag-cell-value:after,
+[type="checkbox"]:not(:checked) + .ag-filter-value:after,
+[type="checkbox"]:checked + .ag-filter-value:after,
+[type="radio"]:not(:checked) + label:after,
+[type="radio"]:checked + label:after,
+[type="radio"]:not(:checked) + .ag-cell-value:after,
+[type="radio"]:checked + .ag-cell-value:after,
+[type="radio"]:not(:checked) + .ag-filter-value:after,
+[type="radio"]:checked + .ag-filter-value:after {
+    color: #8F6B24;
+}
+
+.ui-menu-item:hover {
+    color: #FFF !important;
+}
+
+.btn-default,
+.pagination > .active > a,
+.pagination > .active > a:hover,
+.pagination > li > a:hover,
+.login-box .btn-login,
+.btn-bold:hover,
+.btn-italic:hover,
+.input-group-addon,
+.selected,
+.btn-single-action:hover,
+.ui-menu-item:hover,
+.btn-outline:hover,
+.pagination>li>a:focus,
+.horizontal-tabs span a:hover,
+.switch-sec-control button:hover,
+.scroll_tabs_container .scroll_tab_left_button,
+.scroll_tabs_container .scroll_tab_right_button,
+.input-left-btn button:hover,
+.input-left-btn button:focus,
+.scrolltabs .ui-tabs-scrollable > .nav-button.left-nav-button,
+.scrolltabs .ui-tabs-scrollable > .nav-button.right-nav-button,
+.scrolltabs .ui-tabs-scrollable > .btn-group > .btn.dropdown-toggle,
+.sg-theme .ag-paging-button:hover,
+[type="checkbox"]:checked + label:before,
+[type="checkbox"]:checked + .ag-cell-value:before,
+[type="checkbox"]:checked + .ag-filter-value:before,
+[type="radio"]:checked + label:before,
+[type="radio"]:checked + .ag-cell-value:before,
+[type="radio"]:checked + .ag-filter-value:before {
+    border: 1px solid #8F6B24 !important;
+}
+
+.fileinput .btn-file-cancel:hover,
+.tabs-action-btn i:hover {
+    color: #8F6B24 !important;
+}
+
+.header-navigation .btn-group .btn:hover,
+.input-slider .slider-handle {
+    background-color: #8F6B24;
+}
+
+.btn-default:hover,
+.btn-outline:hover,
+.btn-outline:active,
+.btn-outline:focus,
+.more-menu-item a:hover,
+#action-menu:hover,
+.horizontal-tabs span a:hover,
+.left-menu .nav > li > a:hover,
+.scrolltabs .nav > li > a:hover,
+.horizontal-tabs .nav > li > a:hover,
+.btn-default:active,
+.btn-active,
+.action-dropdown > li > a:hover,
+.login-box .btn-login:hover,
+#menu-toggle .fa:hover,
+.btn-bold:hover,
+.btn-italic:hover,
+.input-group-addon:hover,
+.datepicker table tr td.active,
+.datepicker table tr td.active:hover,
+.datepicker table tr td.active.disabled,
+.datepicker table tr td.active.disabled:hover,
+.mce-menu-item:hover,
+.mce-menu-item.mce-selected,
+.mce-menu-item:focus,
+.selected-size,
+.btn-single-action:hover,
+.ui-menu-item:hover,
+.ui-state-focus:hover,
+.ui-state-focus:focus,
+.ui-state-focus:visited,
+.ui-state-focus:active,
+.chosen-container .chosen-results li.highlighted,
+.chosen-container .chosen-results li.active-result:hover,
+.ui-state-focus,
+.ui-widget-content .ui-state-focus,
+.ui-widget-header .ui-state-focus,
+.pagination > li > a:hover,
+.btn-dropdown:hover,
+.input-left-btn button:hover,
+.input-left-btn button:focus,
+.scrolltabs .dropdown-menu>li>a:focus, 
+.scrolltabs .dropdown-menu>li>a:hover,
+.customize-tab .tab-icon .nav-pills > li.active > a:hover,
+.btn-toggled,
+.sg-theme .ag-menu-option-active,
+.sg-theme .ag-paging-button:hover {
+    background-color: #8F6B24 !important;
+    color: #FFF !important;
+    background-image: none !important;
+}
+
+.horizontal-tabs span a:hover,
+.btn-dropdown:hover,
+.customize-tab .tab-icon .nav-pills > li.active > a:hover,
+.switch-candy a {
+    border-color: #8F6B24;
+}
+
+.fuelux .wizard > ul.steps li.complete,
+.fuelux .wizard > .steps-container > ul.steps li.complete {
+    border-color: #8F6B24 !important;
+    color: #8F6B24;
+}
+
+.rtl .fuelux .wizard > ul.steps li.complete:hover .chevron:before,
+.rtl .fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before,
+.rtl a.btn-file-cancel {
+    border-right-color: #8F6B24 !important;
+}
+
+.fuelux .wizard > ul.steps li.complete:hover,
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover {
+    background-color: #8F6B24 !important;
+}
+
+.fuelux .wizard > ul.steps li.complete:hover .chevron:before,
+.fuelux .wizard > .steps-container > ul.steps li.complete:hover .chevron:before {
+    border-left-color: #8F6B24 !important;
+}

@@ -1,83 +1,52 @@
-<?= $this->Html->script('Training.training', ['block' => true]); ?>
 <?php
-	$model = $ControllerAction['table'];
-	$trainerOptions = isset($attr['options']) ? $attr['options'] : [];
+	$tableClass = 'table-in-view';
+	$tableHeaders = isset($attr['tableHeaders']) ? $attr['tableHeaders'] : [];
+	$tableCells = isset($attr['tableCells']) ? $attr['tableCells'] : [];
+	$this->Form->unlockField('trainer_id');
 ?>
-<?php if ($ControllerAction['action'] == 'view') : ?>
-	<div class="table-wrapper">
-		<div class="table-in-view">
-			<table class="table">
-				<thead>
-					<tr>
-						<th><?= $this->Label->get($model->aliasField('trainer_type')); ?></th>
-						<th><?= $this->Label->get($model->aliasField('internal_trainer')); ?></th>
-						<th><?= $this->Label->get($model->aliasField('external_trainer')); ?></th>
-					</tr>
-				</thead>
-				<?php if (!empty($data->trainers)) : ?>
-					<tbody>
-						<?php foreach ($data->trainers as $key => $obj) : ?>
-						<tr>
-							<td><?= $trainerTypeOptions[$obj->type]; ?></td>
-							<td><?= isset($obj->user->name_with_id) ? $obj->user->name_with_id : ''; ?></td>
-							<td><?= $obj->name; ?></td>
-						</tr>
-						<?php endforeach ?>
-					</tbody>
-				<?php endif ?>
-			</table>
-		</div>
-	</div>
-<?php elseif ($ControllerAction['action'] == 'add' || $ControllerAction['action'] == 'edit') : ?>
-	<div class="input">
-		<label for="<?= $attr['id'] ?>"><?= isset($attr['label']) ? $attr['label'] : $attr['field'] ?></label>
-		<div class="input-form-wrapper">
-			<div class="table-toolbar">
-				<button onclick="$('#reload').val('addTrainer').click();return false;" class="btn btn-default btn-xs">
-					<i class="fa fa-plus"></i>
-					<span><?= __('Add');?></span>
-				</button>
-			</div>
-			<div class="table-wrapper">
-				<div class="table-in-view">
-					<table class="table">
-						<thead>
-							<tr>
-								<th><?= $this->Label->get($model->aliasField('trainer_type')); ?></th>
-								<th><?= $this->Label->get($model->aliasField('internal_trainer')); ?></th>
-								<th><?= $this->Label->get($model->aliasField('external_trainer')); ?></th>
-								<th></th>
-							</tr>
-							<?php if (!empty($data->trainers)) : ?>
-								<tbody>
-									<?php foreach ($data->trainers as $key => $obj) : ?>
-										<?php
-											$prefix = $model->alias().'.trainers.'.$key;
-										?>
-										<tr>
-											<td>
-												<?php
-													if(isset($obj['id'])) {	// edit
-														echo $this->Form->hidden("$prefix.id");
-													}
-													echo $this->Form->input("$prefix.type", ['label' => false, 'options' => $trainerTypeOptions]);
-												?>
-											</td>
-											<td><?= $this->Form->input("$prefix.trainer_id", ['label' => false, 'options' => $trainerOptions]); ?></td>
-											<td><?= $this->Form->input("$prefix.name", ['label' => false]); ?></td>
-											<td>
-												<button class="btn btn-dropdown action-toggle btn-single-action" style="cursor: pointer;" title="<?= $this->Label->get('general.delete.label'); ?>" onclick="jsTable.doRemove(this);">
-													<i class="fa fa-trash"></i>&nbsp;<span><?= __('Delete')?></span>
-												</button>
-											</td>
-										</tr>
-									<?php endforeach ?>
-								</tbody>
-							<?php endif ?>
-						</thead>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
+
+<?php if ($ControllerAction['action'] == 'edit' || $ControllerAction['action'] == 'add') : ?>
+	<?php $tableClass = 'table-responsive'; ?>
+	<div class="clearfix"></div>
+	<hr>
+	<h3><?= __('Trainers') ?></h3>
+	<?php
+		$url = $this->Url->build([
+			'plugin' => $this->request->params['plugin'],
+		    'controller' => $this->request->params['controller'],
+		    'action' => $this->request->params['action'],
+		    'ajaxTrainerAutocomplete'
+		]);
+		$alias = $ControllerAction['table']->alias();
+
+		echo $this->Form->input("$alias.trainer_search", [
+			'label' => __('Add Internal Trainer'),
+			'type' => 'text',
+			'class' => 'autocomplete',
+			'value' => '',
+			'autocomplete-url' => $url,
+			'autocomplete-no-results' => __('No Trainer found.'),
+			'autocomplete-class' => 'error-message',
+			'autocomplete-target' => 'trainer_id',
+			'autocomplete-submit' => "$('#reload').val('addTrainer').click();"
+		]);
+		echo $this->Form->hidden("$alias.trainer_id", ['autocomplete-value' => 'trainer_id']);
+
+		echo $this->Form->input('<i class="fa fa-plus"></i> <span>'.__('Add New Trainer').'</span>', [
+			'label' => __('Add External Trainer'),
+			'type' => 'button',
+			'class' => 'btn btn-default',
+			'aria-expanded' => 'true',
+			'onclick' => "$('#reload').val('addTrainer').click();"
+		]);
+	?>
+	<div class="clearfix"></div>
+	<hr>
 <?php endif ?>
+
+<div class="<?= $tableClass; ?>" autocomplete-ref="trainer_id">
+	<table class="table">
+		<thead><?= $this->Html->tableHeaders($tableHeaders) ?></thead>
+		<tbody><?= $this->Html->tableCells($tableCells) ?></tbody>
+	</table>
+</div>

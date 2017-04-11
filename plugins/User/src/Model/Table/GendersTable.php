@@ -18,11 +18,28 @@ class GendersTable extends AppTable {
 		// $this->hasMany('CensusTeacherFtes', ['className' => 'User.CensusTeacherFtes']);
 		// $this->hasMany('CensusStaffs', ['className' => 'User.CensusStaffs']);
 		// $this->hasMany('CensusSanitations', ['className' => 'User.CensusSanitations']);
-		// $this->hasMany('CensusGraduates', ['className' => 'User.CensusGraduates']);	
+		// $this->hasMany('CensusGraduates', ['className' => 'User.CensusGraduates']);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+        	'Students' => ['index', 'add'],
+        	'Staff' => ['index', 'add'],
+        	'OpenEMIS_Classroom' => ['index']
+        ]);
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
+	public function getThresholdOptions()
+    {
+        // options only female
+        $options = ['F'];
+
+        return $this
+            ->find('list')
+            ->where([$this->aliasField('code') . ' IN ' => $options])
+            ->toArray()
+        ;
+    }
 }

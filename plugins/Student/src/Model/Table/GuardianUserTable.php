@@ -13,40 +13,90 @@ use App\Model\Table\AppTable;
 use Directory\Model\Table\DirectoriesTable as UserTable;
 
 class GuardianUserTable extends UserTable {
-	public function addAfterSave(Event $event, Entity $entity, ArrayObject $data) {
-		$sessionKey = 'Student.Guardians.new';
-		if ($this->Session->check($sessionKey)) {
-			$guardianData = $this->Session->read($sessionKey);
-			$guardianData['guardian_id'] = $entity->id;
 
-			$Guardians = TableRegistry::get('Student.Guardians');
-			$Guardians->save($Guardians->newEntity($guardianData));
-			$this->Session->delete($sessionKey);
-		}
-		$event->stopPropagation();
-		$action = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name, 'action' => 'Guardians', 'index'];
-		return $this->controller->redirect($action);
+	public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (!$entity->errors()) {
+            $sessionKey = 'Student.Guardians.new';
+            if ($this->Session->check($sessionKey)) {
+                $guardianData = $this->Session->read($sessionKey);
+                $guardianData['guardian_id'] = $entity->id;
+
+                $Guardians = TableRegistry::get('Student.Guardians');
+                $Guardians->save($Guardians->newEntity($guardianData));
+                $this->Session->delete($sessionKey);
+            }
+            $event->stopPropagation();
+
+            $controller = $this->controller->name;
+            $action = 'Guardians';
+
+            if ($controller == 'Directories') { //this is for Directories/StudentGuardians/ (adding guardian for student through directories)
+                $action = 'StudentGuardians';
+            }
+
+            $redirect = ['plugin' => $this->controller->plugin, 'controller' => $controller, 'action' => $action, 'index'];
+
+            return $this->controller->redirect($redirect);
+        }
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity) {
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
 		$this->setupTabElements($entity);
+
+		unset($extra['toolbarButtons']['back']);
+
+        if ($extra['toolbarButtons']->offsetExists('export')) {
+            unset($extra['toolbarButtons']['export']);
+        }
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		$this->setupTabElements($entity);
-	}
-
-	public function addAfterAction(Event $event) {
-		if ($this->controller->name == 'Directories') {
-			$options['type'] = 'student';
-			$tabElements = $this->controller->getStudentGuardianTabElements($options);
-			$this->controller->set('tabElements', $tabElements);
-		}
-	}
-
-	private function setupTabElements($entity) {
-		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+	public function beforeAction(Event $event, ArrayObject $extra)
+	{
+        $this->request->query['user_type'] = UserTable::GUARDIAN;
 		
+		//parent::hideOtherInformationSection($this->controller->name, $this->action);
+	}
+
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+    {
+		$this->setupTabElements($entity);
+
+		$this->fields['nationality_id']['type'] = 'readonly';
+        if (!empty($entity->main_nationality)) {
+            $this->fields['nationality_id']['attr']['value'] = $entity->main_nationality->name;
+        }
+
+        $this->fields['identity_type_id']['type'] = 'readonly';
+        if (!empty($entity->main_identity_type)) {
+            $this->fields['identity_type_id']['attr']['value'] = $entity->main_identity_type->name;
+        }
+
+		$this->fields['identity_number']['type'] = 'readonly'; //cant edit identity_number field value as its value is auto updated.
+	}
+
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+		$options['type'] = 'student';
+		$tabElements = $this->controller->getStudentGuardianTabElements($options);
+		$this->controller->set('tabElements', $tabElements);
+		
+        // pr($this->fields);
+        $this->field('user_type', ['type' => 'hidden', 'value' => UserTable::GUARDIAN]);
+		$this->field('nationality_id', ['visible' => 'false']);
+        $this->field('identity_type_id', ['visible' => 'false']);
+        $this->field('identity_number', ['visible' => 'false']);
+
+		$backUrl = $this->controller->getStudentGuardianTabElements();
+		$extra['toolbarButtons']['back']['url']['action'] = $backUrl['Guardians']['url']['action'];
+		$extra['toolbarButtons']['back']['url'][0] = 'add';
+	}
+
+	private function setupTabElements($entity) 
+    {
+		$url = ['plugin' => $this->controller->plugin, 'controller' => $this->controller->name];
+
 		$tabElements = [
 			'Guardians' => ['text' => __('Relation')],
 			'GuardianUser' => ['text' => __('General')]
@@ -57,29 +107,17 @@ class GuardianUserTable extends UserTable {
 			$action = 'StudentGuardians';
 			$actionUser = 'StudentGuardianUser';
 		}
-		$id = $this->request->query['id'];
-		$tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $id]);
-		$tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $entity->id, 'id' => $id]);
+		
+        $encodedParam = $this->request->params['pass'][1];
+        $ids = $this->paramsDecode($encodedParam);
+
+        $guardianId = $ids['id'];
+        $studentGuardiansId = $ids['StudentGuardians.id'];
+
+        $tabElements['Guardians']['url'] = array_merge($url, ['action' => $action, 'view', $this->paramsEncode(['id' => $studentGuardiansId])]);
+        $tabElements['GuardianUser']['url'] = array_merge($url, ['action' => $actionUser, 'view', $this->paramsEncode(['id' => $entity->id, 'StudentGuardians.id' => $studentGuardiansId])]);
 
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
-	}
-
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
-    	return $events;
-    }
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			unset($toolbarButtons['back']);
-			if ($toolbarButtons->offsetExists('export')) {
-				unset($toolbarButtons['export']);
-			}
-		} else if ($action == 'add') {
-			$toolbarButtons['back']['url']['action'] = 'Guardians';
-			$toolbarButtons['back']['url'][0] = 'add';
-		}
 	}
 }

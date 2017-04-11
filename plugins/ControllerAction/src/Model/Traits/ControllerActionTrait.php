@@ -4,7 +4,7 @@ namespace ControllerAction\Model\Traits;
 trait ControllerActionTrait {
 	protected $_controllerActionEvents = [
 		'ControllerAction.Controller.onInitialize'			=> 'onInitialize',
-		// public function onInitialize(Event $event, Table $model) {}
+		// public function onInitialize(Event $event, Table $model, ArrayObject $extra) {}
 
 		'ControllerAction.Controller.beforePaginate'		=> 'beforePaginate',
 		// public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {}
@@ -20,6 +20,9 @@ trait ControllerActionTrait {
 
 		'ControllerAction.Model.onGetFormButtons'			=> 'onGetFormButtons', // called to add/remove form buttons
 		// public function onGetFormButtons(Event $event, ArrayObject $buttons) {}
+
+		'ControllerAction.Model.onUpdateDefaultActions'		=> 'onUpdateDefaultActions', // called to update default actions
+		// public function onUpdateDefaultActions(Event $event) {}
 
 		'ControllerAction.Model.beforeAction'				=> 'beforeAction', // called before start of any actions
 		// public function beforeAction(Event $event) {}
@@ -40,7 +43,8 @@ trait ControllerActionTrait {
 		// public function onInitializeButtons(Event $event, ArrayObject $buttons, $action, $isFromModel) {}
 
 		'ControllerAction.Model.index.beforeAction'			=> 'indexBeforeAction',
-		// public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {}
+		// public function indexBeforeAction(Event $event, ArrayObject $settings) {}
+        // if u need query look for it in $settings['query']
 
 		'ControllerAction.Model.index.beforePaginate'		=> 'indexBeforePaginate',
 		// public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {}
@@ -49,7 +53,8 @@ trait ControllerActionTrait {
 		// public function indexAfterPaginate(Event $event, $data) {}
 
 		'ControllerAction.Model.index.afterAction'			=> 'indexAfterAction',
-		// public function indexAfterAction(Event $event, $data) {}
+		// v4 - public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra) {}
+        // v3 - public function indexAfterAction(Event $event, $data) {}
 
 		'ControllerAction.Model.view.beforeAction'			=> 'viewBeforeAction',
 		// public function viewBeforeAction(Event $event) {}
@@ -93,11 +98,17 @@ trait ControllerActionTrait {
 		'ControllerAction.Model.edit.beforeQuery'			=> 'editBeforeQuery',
 		// public function editBeforeQuery(Event $event, Query $query) {}
 
+		'ControllerAction.Model.edit.afterQuery'			=> 'editAfterQuery',
+		// public function editAfterQuery(Event $event, Entity $entity) {}
+
 		'ControllerAction.Model.edit.onInitialize'			=> 'editOnInitialize',
 		// public function editOnInitialize(Event $event, Entity $entity) {}
 
 		'ControllerAction.Model.edit.beforePatch'			=> 'editBeforePatch',
 		// public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
+
+		'ControllerAction.Model.edit.afterPatch'			=> 'editAfterPatch',
+		// public function editAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {}
 
 		'ControllerAction.Model.edit.beforeSave'			=> 'editBeforeSave', // you can overwrite this function to implement your own saving logic
 		// public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) { return function() {}; }
@@ -127,13 +138,36 @@ trait ControllerActionTrait {
 		// public function deleteBeforeAction(Event $event, ArrayObject $settings) {}
 
 		'ControllerAction.Model.delete.onInitialize'		=> 'deleteOnInitialize',
-		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {}
+		// public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {}
 
-		'ControllerAction.Model.onBeforeDelete'				=> 'onBeforeDelete',
-		// public function onBeforeDelete(Event $event, ArrayObject $options, $id) {}
+		'ControllerAction.Model.delete.afterAction'			=> 'deleteAfterAction',
+		// public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {}
+
+		'ControllerAction.Model.onGetConvertOptions'=> 'onGetConvertOptions',
+		// public function onGetConvertOptions(Event $event, Entity $entity, Query $query) {}
+
+		'ControllerAction.Model.onBeforeDelete'               => 'onBeforeDelete',
+        // public function onBeforeDelete(Event $event, ArrayObject $options, $id, ArrayObject $extra) {}
 
 		'ControllerAction.Model.onDeleteTransfer'			=> 'onDeleteTransfer',
 		// public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {}
+
+		// CAv4
+		'ControllerAction.Controller.beforeQuery'		=> 'beforeQuery',
+		// public function beforeQuery(Event $event, Table $model, Query $query, ArrayObject $extra) {}
+
+		'ControllerAction.Model.index.beforeQuery'		=> 'indexBeforeQuery',
+		// public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {}
+
+		'ControllerAction.Model.transfer.beforeAction'		=> 'transferBeforeAction',
+		// public function transferBeforeAction(Event $event, ArrayObject $extra) {}
+
+		'ControllerAction.Model.transfer.onInitialize'		=> 'transferOnInitialize',
+		// public function transferOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {}
+
+		'ControllerAction.Model.transfer.afterAction'		=> 'transferAfterAction',
+		// public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {}
+		// End CAv4
 	];
 
 	public function getControllerActionEvents() {
@@ -142,9 +176,9 @@ trait ControllerActionTrait {
 
 	public function implementedEvents() {
         $events = parent::implementedEvents();
-        
+
         $controllerActionEvents = $this->getControllerActionEvents();
-        
+
         foreach ($controllerActionEvents as $event => $method) {
             if (!method_exists($this, $method)) {
                 continue;
