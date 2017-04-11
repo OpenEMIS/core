@@ -24,7 +24,6 @@ class StaffController extends AppController {
 			'Absences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
 			'Behaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
-			'Trainings'			=> ['className' => 'Staff.StaffTrainings'],
 			'Salaries'			=> ['className' => 'Staff.Salaries'],
 			'History'			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
@@ -67,6 +66,7 @@ class StaffController extends AppController {
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
     public function Attachments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+    public function Trainings() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
     // End
 
 	public function beforeFilter(Event $event) {
@@ -269,6 +269,30 @@ class StaffController extends AppController {
 		}
 		return $tabElements;
 	}
+
+	public function getInstitutionTrainingTabElements($options = []) {
+        $tabElements = [];
+        $trainingUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
+        $trainingTabElements = [
+            'StaffTrainingNeeds' => ['text' => __('Needs')],
+            'StaffTrainingApplications' => ['text' => __('Applications')],
+            'StaffTrainingResults' => ['text' => __('Results')],
+            'Trainings' => ['text' => __('Courses')]
+        ];
+
+        $tabElements = array_merge($tabElements, $trainingTabElements);
+
+        foreach ($trainingTabElements as $key => $tab) {
+            $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+
+            if ($key == 'Trainings') {
+                $trainingUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+                $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+            }
+        }
+
+        return $tabElements;
+    }
 
 	public function getImage($id) {
 		$this->autoRender = false;
