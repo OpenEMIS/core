@@ -678,4 +678,36 @@ class ExaminationCentresTable extends ControllerActionTable {
             $this->ExaminationCentreSpecialNeeds->alias()
         ];
     }
+
+    public function findNotLinkedExamCentres(Query $query, array $options)
+    {
+        if (isset($options['examination_id'])) {
+            $examinationId = $options['examination_id'];
+
+            $query
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ])
+                ->notMatching('Examinations', function ($q) use ($examinationId) {
+                    return $q->where(['Examinations.id' => $examinationId]);
+                });
+
+            if (isset($options['examination_centre_type']) && !empty($options['examination_centre_type'])) {
+                $type = $options['examination_centre_type'];
+
+                if ($type == -1) {
+                    // non-institution exam centres
+                    $query->where(['ExaminationCentres.institution_id' => 0]);
+
+                } else {
+                    $query
+                        ->matching('Institutions')
+                        ->where(['Institutions.institution_type_id' => $type]);
+                }
+            }
+
+            return $query;
+        }
+    }
 }
