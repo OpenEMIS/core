@@ -620,7 +620,7 @@ trait MessagesTrait {
         'ExaminationCentresExaminations' => [
             'savingProcessStarted' => 'Examination centres are currently being linked in the background'
         ],
-        'ExaminationCentreStudents' => [
+        'ExaminationCentresExaminationsStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'This student is not assigned to a room as there are no available rooms.',
@@ -1603,7 +1603,7 @@ trait MessagesTrait {
                     'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ],
-            'ExaminationCentreStudents' => [
+            'ExaminationCentresExaminationsStudents' => [
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
                 ],

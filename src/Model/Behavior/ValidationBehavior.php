@@ -106,21 +106,16 @@ class ValidationBehavior extends Behavior {
 	public static function checkNotInvigilator($check, array $globalData) {
 		$data = $globalData['data'];
 
-        $Table = TableRegistry::get('Examination.ExaminationCentresInvigilators');
+        $Table = TableRegistry::get('Examination.ExaminationCentresExaminationsInvigilators');
         $record = $Table
         	->find()
         	->where([
         		$Table->aliasField('examination_id') => $data['examination_id'],
-        		$Table->aliasField('invigilator_id') => $check,
-        		$Table->aliasField('academic_period_id') => $data['academic_period_id']
+        		$Table->aliasField('invigilator_id') => $check
         	])
         	->first();
 
-        if (!empty($record)) {
-        	return false;
-        } else {
-        	return true;
-        }
+        return empty($record);
     }
 
     public static function checkAuthorisedArea($check, array $globalData)

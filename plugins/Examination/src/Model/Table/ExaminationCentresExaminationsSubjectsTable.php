@@ -30,7 +30,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             'className' => 'Examination.ExaminationCentresExaminationsStudents',
             'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => ['examination_centre_id', 'examination_item_id'],
-            'targetForeignKey' => ['examination_centre_id', 'student_id', 'examination_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -217,14 +217,17 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         return $value;
     }
 
-    public function getExaminationCentreSubjects($examinationCentreId)
+    public function getExaminationCentreSubjects($examinationCentreId, $examinationId)
     {
         $subjectList = $this
             ->find('list', [
                 'keyField' => 'examination_item_id',
                 'valueField' => 'education_subject_id'
             ])
-            ->where([$this->aliasField('examination_centre_id') => $examinationCentreId])
+            ->where([
+                $this->aliasField('examination_centre_id') => $examinationCentreId,
+                $this->aliasField('examination_id') => $examinationId
+            ])
             ->toArray();
         return $subjectList;
     }

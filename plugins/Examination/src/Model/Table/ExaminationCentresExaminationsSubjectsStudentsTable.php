@@ -18,7 +18,7 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentresExaminationsStudents', [
             'className' => 'Examination.ExaminationCentresExaminationsStudents',
-            'foreignKey' => ['examination_centre_id', 'student_id', 'examination_id']
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id']
         ]);
         $this->belongsTo('ExaminationCentresExaminationsSubjects', [
             'className' => 'Examination.ExaminationCentresExaminationsSubjects',
