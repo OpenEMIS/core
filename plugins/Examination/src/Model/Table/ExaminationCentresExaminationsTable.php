@@ -136,7 +136,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
 
         // Examination filter
-        $examinationOptions = $this->getExaminationOptions($selectedAcademicPeriod);
+        $examinationOptions = $this->Examinations->getExaminationOptions($selectedAcademicPeriod);
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
         $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
@@ -191,7 +191,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         if ($action == 'add') {
             if (isset($request->data[$this->alias()]['academic_period_id'])) {
                 $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
-                $examOptions = $this->getExaminationOptions($academicPeriodId);
+                $examOptions = $this->Examinations->getExaminationOptions($academicPeriodId);
                 $attr['options'] = $examOptions;
             }
 
@@ -382,15 +382,5 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         } catch(\Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when link all exam centres : '. $ex);
         }
-    }
-
-    private function getExaminationOptions($selectedAcademicPeriod)
-    {
-        $examinationOptions = $this->Examinations
-            ->find('list')
-            ->where([$this->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod])
-            ->toArray();
-
-        return $examinationOptions;
     }
 }
