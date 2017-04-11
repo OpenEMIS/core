@@ -587,6 +587,12 @@ class NavigationComponent extends Component
 				'title' => 'Visits',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution']
+			],
+
+			'Institutions.Cases' => [
+				'title' => 'Cases',
+				'parent' => 'Institutions.index',
+				'params' => ['plugin' => 'Institution']
 			]
 		];
 
@@ -1091,7 +1097,7 @@ class NavigationComponent extends Component
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
-				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Statuses']
+				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Rules', 'Workflows.Statuses']
 			],
 			'Systems.Updates' => [
 				'title' => 'Updates',

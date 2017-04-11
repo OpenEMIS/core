@@ -50,8 +50,16 @@ class ExaminationsTable extends ControllerActionTable {
                     'provider' => 'table'
                 ]
             ])
-            ->add('registration_start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'registration_end_date', false]
+            ->add('registration_start_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ],
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'registration_end_date', false]
+                ]
+            ])
+            ->add('registration_end_date', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
             ->requirePresence('examination_items');
     }
@@ -111,6 +119,17 @@ class ExaminationsTable extends ControllerActionTable {
     {
         if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
             $this->Alert->warning($this->aliasField('noExaminationItems'));
+        }
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        // used to do validation for examination item date
+        if (array_key_exists('examination_items', $data)) {
+            $registrationEndDate = $data['registration_end_date'];
+            foreach ($data['examination_items'] as $key => $value) {
+                $data['examination_items'][$key]['registration_end_date'] = $registrationEndDate;
+            }
         }
     }
 
