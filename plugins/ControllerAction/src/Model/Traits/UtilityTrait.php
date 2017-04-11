@@ -28,6 +28,16 @@ trait UtilityTrait {
 		return __($header);
 	}
 
+	// PHP 5.5 array_column alternative
+	public function array_column($array, $column_name) {
+        return array_map(
+        	function($element) use($column_name) {
+        		if (isset($element[$column_name])) {
+        			return $element[$column_name];
+        		}
+       		}, $array);
+    }
+
 	// to get the value from querystring, if exists. otherwise get a default value from the first option in the list
 	public function queryString($key, $options=[], $request=null) {
 		$value = null;
@@ -84,7 +94,8 @@ trait UtilityTrait {
 	public function advancedSelectOptions(&$options, &$selected, $params=[]) {
 		$callable = array_key_exists('callable', $params) ? $params['callable'] : null;
 		$message = array_key_exists('message', $params) ? $params['message'] : '';
-		$defaultValue = null;
+		$defaultValue = array_key_exists('defaultValue', $params) ? $params['defaultValue'] : null;
+		$selectOption = array_key_exists('selectOption', $params)? $params['selectOption'] : true;
 
 		// Check if the selected key is empty. If it is not empty then change the selected to null and get
 		// the first available from the list
@@ -94,7 +105,6 @@ trait UtilityTrait {
 				$selected = null;
 			}
 		}
-		
 		foreach ($options as $id => $val) {
 			if (is_array($val)) {
 				if (array_key_exists('value', $val) && array_key_exists('text', $val)) { // cake format ['value', 'text']
@@ -171,16 +181,31 @@ trait UtilityTrait {
 				}
 			}
 		}
-		if (!is_null($defaultValue)) {
+		if (!is_null($defaultValue) && (!is_bool($defaultValue) || !(is_bool($defaultValue) && !$defaultValue))) {
 			$selected = $defaultValue['selected'];
 			$group = $defaultValue['group'];
 			if ($group !== false) {
-				$options[$group][$selected][] = 'selected';
+				if ($selectOption) {
+					$options[$group][$selected][] = 'selected';
+				}
 			} else if (strlen($selected) > 0) {
-				$options[$selected][] = 'selected';
+				if ($selectOption) {
+					$options[$selected][] = 'selected';
+				}	
 			}
 		}
 		
 		return $selected;
 	}
+
+	// greatest common denominator function
+	function gCD($a, $b) {
+		while ( $b != 0)
+		{
+			$remainder = $a % $b;
+			$a = $b;
+			$b = $remainder;
+		}
+		return abs ($a);
+	} 
 }

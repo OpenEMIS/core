@@ -41,6 +41,11 @@ class Index
     const INDEX = 'index';
 
     /**
+     * @var string
+     */
+    const FULLTEXT = 'fulltext';
+
+    /**
      * @var array
      */
     protected $columns;
@@ -54,6 +59,11 @@ class Index
      * @var string
      */
     protected $name = null;
+
+    /**
+     * @var integer
+     */
+    protected $limit = null;
 
     /**
      * Sets the index columns.
@@ -99,15 +109,48 @@ class Index
         return $this->type;
     }
 
+    /**
+     * Sets the index name.
+     *
+     * @param string $name
+     * @return Index
+     */
     public function setName($name)
     {
         $this->name = $name;
         return $this;
     }
 
+    /**
+     * Gets the index name.
+     *
+     * @return string
+     */
     public function getName()
     {
         return $this->name;
+    }
+
+    /**
+     * Sets the index limit.
+     *
+     * @param integer $limit
+     * @return Index
+     */
+    public function setLimit($limit)
+    {
+        $this->limit = $limit;
+        return $this;
+    }
+
+    /**
+     * Gets the index limit.
+     *
+     * @return integer
+     */
+    public function getLimit()
+    {
+        return $this->limit;
     }
 
     /**
@@ -120,7 +163,7 @@ class Index
     public function setOptions($options)
     {
         // Valid Options
-        $validOptions = array('type', 'unique', 'name');
+        $validOptions = array('type', 'unique', 'name', 'limit');
         foreach ($options as $option => $value) {
             if (!in_array($option, $validOptions)) {
                 throw new \RuntimeException('\'' . $option . '\' is not a valid index option.');

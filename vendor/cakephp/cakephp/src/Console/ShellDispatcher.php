@@ -14,8 +14,8 @@
  */
 namespace Cake\Console;
 
-use Cake\Console\ConsoleIo;
 use Cake\Console\Exception\MissingShellException;
+use Cake\Console\Exception\StopException;
 use Cake\Core\App;
 use Cake\Core\Configure;
 use Cake\Core\Exception\Exception;
@@ -177,7 +177,11 @@ class ShellDispatcher
      */
     public function dispatch($extra = [])
     {
-        $result = $this->_dispatch($extra);
+        try {
+            $result = $this->_dispatch($extra);
+        } catch (StopException $e) {
+            return $e->getCode();
+        }
         if ($result === null || $result === true) {
             return 0;
         }
@@ -204,6 +208,10 @@ class ShellDispatcher
         }
         if (in_array($shell, ['help', '--help', '-h'])) {
             $this->help();
+            return true;
+        }
+        if (in_array($shell, ['version', '--version'])) {
+            $this->version();
             return true;
         }
 
@@ -361,6 +369,17 @@ class ShellDispatcher
     public function help()
     {
         $this->args = array_merge(['command_list'], $this->args);
+        $this->dispatch();
+    }
+
+    /**
+     * Prints the currently installed version of CakePHP. Performs an internal dispatch to the CommandList Shell
+     *
+     * @return void
+     */
+    public function version()
+    {
+        $this->args = array_merge(['command_list', '--version'], $this->args);
         $this->dispatch();
     }
 }

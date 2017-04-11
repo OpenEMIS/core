@@ -69,13 +69,16 @@ class MethodNodeSpec extends ObjectBehavior
         $argument1->getName()->willReturn('objectName');
         $argument2->getName()->willReturn('default');
 
+        $argument1->isVariadic()->willReturn(false);
+        $argument2->isVariadic()->willReturn(true);
+
         $this->addArgument($argument1);
         $this->addArgument($argument2);
 
         $this->useParentCode();
 
         $this->getCode()->shouldReturn(
-            'return parent::getTitle($objectName, $default);'
+            'return parent::getTitle($objectName, ...$default);'
         );
     }
 
@@ -119,5 +122,20 @@ class MethodNodeSpec extends ObjectBehavior
         $this->addArgument($argument2);
 
         $this->getArguments()->shouldReturn(array($argument1, $argument2));
+    }
+
+    function it_does_not_have_return_type_by_default()
+    {
+        $this->hasReturnType()->shouldReturn(false);
+    }
+
+    function it_setReturnType_sets_return_type()
+    {
+        $returnType = 'string';
+
+        $this->setReturnType($returnType);
+
+        $this->hasReturnType()->shouldReturn(true);
+        $this->getReturnType()->shouldReturn($returnType);
     }
 }

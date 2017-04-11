@@ -7,226 +7,422 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
-use App\Model\Table\AppTable;
+use Cake\Collection\Collection;
+use Cake\Validation\Validator;
+use Cake\View\Helper\UrlHelper;
+
 use App\Model\Traits\OptionsTrait;
+use App\Model\Traits\HtmlTrait;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
 
-class AssessmentsTable extends AppTable {
-	use OptionsTrait;
-	use MessagesTrait;
+class AssessmentsTable extends ControllerActionTable {
+    use MessagesTrait;
+    use HtmlTrait;
+    use OptionsTrait;
 
-	public function initialize(array $config) {
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
 
-		$this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-		$this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('AssessmentStatuses', ['className' => 'Assessment.AssessmentStatuses', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('InstitutionAssessments', ['className' => 'Institution.InstitutionAssessments', 'dependent' => true]);
-	}
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
-	public function beforeAction(Event $event) {
-		$gradingTypeOptions = $this->AssessmentItems->GradingTypes->getList()->toArray();
-		if (empty($gradingTypeOptions)) {
-			$this->Alert->warning('Assessments.noGradingTypes');
-		}
-		$markTypeOptions = $this->getSelectOptions($this->aliasField('mark_types'));
+        $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		$this->controller->set('gradingTypeOptions', $gradingTypeOptions);
-		$this->controller->set('markTypeOptions', $markTypeOptions);
+        $this->belongsToMany('GradingTypes', [
+            'className' => 'Assessment.AssessmentGradingTypes',
+            'joinTable' => 'assessment_items_grading_types',
+            'foreignKey' => 'assessment_id',
+            'targetForeignKey' => 'assessment_grading_type_id',
+            'through' => 'Assessment.AssessmentItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
-		$this->ControllerAction->field('type', ['visible' => false]);
-	}
+        $this->belongsToMany('AssessmentPeriods', [
+            'className' => 'Assessment.AssessmentPeriods',
+            'joinTable' => 'assessment_items_grading_types',
+            'foreignKey' => 'assessment_id',
+            'targetForeignKey' => 'assessment_period_id',
+            'through' => 'Assessment.AssessmentItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain('AssessmentItems.EducationSubjects');
-	}
+        $this->addBehavior('ControllerAction.FileUpload', [
+            'name' => 'excel_template_name',
+            'content' => 'excel_template',
+            'size' => '10MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'document',
+            'useDefaultName' => true
+        ]);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Results' => ['index', 'view'],
+            'OpenEMIS_Classroom' => ['index']
+        ]);
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            true
+        );
+        $this->behaviors()->get('Download')->config(
+            'name',
+            'excel_template_name'
+        );
+        $this->behaviors()->get('Download')->config(
+            'content',
+            'excel_template'
+        );
+        $this->setDeleteStrategy('restrict');
+    }
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->ControllerAction->field('assessment_items');
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
 
-		$this->ControllerAction->setFieldOrder([
-			'code', 'name', 'description', 'visible',
-			'education_grade_id', 'assessment_items'
-		]);
-	}
+        return $validator
+            ->add('code', [
+                'ruleUniqueCode' => [
+                    'rule' => ['validateUnique', ['scope' => 'academic_period_id']],
+                    'provider' => 'table'
+                ]
+            ])
+            ->requirePresence('assessment_items')
+            ->add('education_grade_id', [
+                'ruleAssessmentExistByGradeAcademicPeriod' => [ //validate so only 1 assessment for each grade per academic period
+                    'rule' => ['assessmentExistByGradeAcademicPeriod'],
+                    'on' => function ($context) {
+                        return $this->action == 'add';
+                    }
+                ]
+            ])
+            ->allowEmpty('excel_template');
+    }
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		$selectedProgramme = $this->EducationGrades->get($entity->education_grade_id)->education_programme_id;
-		$entity->education_programmes = $selectedProgramme;
-		$this->request->query['programme'] = $selectedProgramme;
-		$this->request->query['grade'] = $entity->education_grade_id;
-	}
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('excel_template_name', ['visible' => false]);
+        $this->field('excel_template', ['visible' => true]);
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		if (array_key_exists($this->alias(), $data)) {
-			if (array_key_exists('assessment_items', $data[$this->alias()])) {
-				foreach ($data[$this->alias()]['assessment_items'] as $i => $item) {
-					if (strlen($item['pass_mark']) == 0) {
-						$data[$this->alias()]['assessment_items'][$i]['pass_mark'] = 50;
-					}
-					if (strlen($item['max']) == 0) {
-						$data[$this->alias()]['assessment_items'][$i]['max'] = 100;
-					}
-				}
-			}
-		}
-	}
+        $this->setFieldOrder(['code', 'name', 'description', 'excel_template_name', 'excel_template', 'academic_period_id', 'education_grade_id']);
+    }
 
-	public function addEditAfterAction(Event $event, Entity $entity) {
-		list($programmeOptions, $selectedProgramme, $gradeOptions, $selectedGrade) = array_values($this->_getSelectOptions());
-		$entity->education_programmes = $selectedProgramme;
-		$entity->education_grade_id = $selectedGrade;
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
-		$this->ControllerAction->field('education_programmes', [
-			'options' => $programmeOptions
-		]);
-		$this->ControllerAction->field('education_grade_id', [
-			'options' => $gradeOptions
-		]);
-		$this->ControllerAction->field('assessment_items');
+        $extra['selectedPeriod'] = $selectedPeriod;
+        $extra['elements']['control'] = [
+            'name' => 'Assessment.controls',
+            'data' => [
+                'periodOptions'=> $periodOptions,
+                'selectedPeriod'=> $selectedPeriod
+            ],
+            'order' => 3
+        ];
 
-		$this->ControllerAction->setFieldOrder([
-			'code', 'name', 'description', 'visible',
-			'education_programmes', 'education_grade_id', 'assessment_items'
-		]);
-	}
+        $this->field('type', [
+            'visible' => false
+        ]);
+    }
 
-	public function addAfterAction(Event $event, Entity $entity) {
-		$selectedGrade = $entity->education_grade_id;
-		$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
-		$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
-	}
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('academic_period_id') => $extra['selectedPeriod']]);
+    }
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		if ($this->request->is(['post', 'put'])) {
-			$selectedGrade = $entity->education_grade_id;
-			if ($selectedGrade != $entity->getOriginal('education_grade_id')) {
-				$gradingTypeOptions = $this->ControllerAction->getVar('gradingTypeOptions');
-				$entity->assessment_items = $this->populateAssessmentItems($entity, $selectedGrade, ['gradingTypeOptions' => $gradingTypeOptions]);
-			}
-		}
-	}
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['AssessmentItems.EducationSubjects']);
+    }
 
-	public function onUpdateFieldEducationProgrammes(Event $event, array $attr, $action, Request $request) {
-		$attr['onChangeReload'] = 'changeProgramme';
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $assessmentItems = $entity->assessment_items;
 
-		return $attr;
-	}
+        //this is to sort array based on certain value on subarray, in this case based on education order value
+        usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
-	public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request) {
-		$attr['onChangeReload'] = 'changeGrade';
+        $entity->assessment_items = $assessmentItems;
 
-		return $attr;
-	}
+        // determine if download button is shown
+        $showFunc = function() use ($entity) {
+            $filename = $entity->excel_template;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
 
-	public function onUpdateFieldAssessmentItems(Event $event, array $attr, $action, Request $request) {
-		$attr['type'] = 'element';
-		$attr['element'] = 'Assessment.Assessments/subjects';
-		$attr['valueClass'] = 'table-full-width';
+        $this->setupFields($entity);
+    }
 
-		return $attr;
-	}
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        if ($this->action == 'edit')
+        {
+            $assessmentItems = $entity->assessment_items;
 
-	public function addEditOnChangeProgramme(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$request = $this->request;
-		unset($request->query['programme']);
-		unset($request->query['grade']);
+            //this is to sort array based on certain value on subarray, in this case based on education order value
+            usort($assessmentItems, function($a,$b){ return $a['education_subject']['order']-$b['education_subject']['order'];} );
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('education_programmes', $request->data[$this->alias()])) {
-					$request->query['programme'] = $request->data[$this->alias()]['education_programmes'];
-				}
-			}
-		}
-	}
+            $entity->assessment_items = $assessmentItems;
+        }
 
-	public function addEditOnChangeGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$request = $this->request;
-		unset($request->query['programme']);
-		unset($request->query['grade']);
+        $this->setupFields($entity);
+    }
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('education_programmes', $request->data[$this->alias()])) {
-					$request->query['programme'] = $request->data[$this->alias()]['education_programmes'];
-				}
-				if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
-					$request->query['grade'] = $request->data[$this->alias()]['education_grade_id'];
-				}
-			}
-		}
-	}
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
+    {
+        //patch data to handle fail save because of validation error.
+        if (array_key_exists($this->alias(), $requestData)) {
+            if (array_key_exists('assessment_items', $requestData[$this->alias()])) {
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                foreach ($requestData[$this->alias()]['assessment_items'] as $key => $item) {
+                    $subjectId = $item['education_subject_id'];
+                    $requestData[$this->alias()]['assessment_items'][$key]['education_subject'] = $EducationSubjects->get($subjectId);
+                }
+            } else { //logic to capture error if no subject inside the grade.
+                $errorMessage = $this->aliasField('noSubjects');
+                $requestData['errorMessage'] = $errorMessage;
+            }
+        }
 
-	public function populateAssessmentItems($entity, $gradeId, $options=[]) {
-		$gradingTypeOptions = $options['gradingTypeOptions'];
+    }
 
-		$obj = $this->EducationGrades
-			->findById($gradeId)
-			->contain(['EducationSubjects'])
-			// ->contain([
-			// 	'EducationGradesSubjects.EducationSubjects',
-			// 	'EducationGradesSubjects' => function ($q) {
-			// 		return $q->find('visible');
-			// 	}
-			// ])
-			->first();
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        $errors = $entity->errors();
+        if (!empty($errors)) {
+            if (isset($requestData['errorMessage']) && !empty($requestData['errorMessage'])) {
+                $this->Alert->error($requestData['errorMessage'], ['reset'=>true]);
+            }
+        }
+    }
 
-		$assessmentItems = [];
-		foreach ($obj->education_subjects as $subject) {
-			if ($subject->_joinData->visible == 1) {
-				$item = [
-					'id' => '',
-					'visible' => 1,
-					'education_subject_id' => $subject->id,
-					'result_type' => key($this->getSelectOptions($this->aliasField('mark_types'))),
-					'pass_mark' => 50,
-					'max' => 100,
-					'assessment_grading_type_id' => key($gradingTypeOptions),
-					'education_subject' => $subject
-				];
-				$assessmentItems[] = $item;
-			}
-		}
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [ //this will exclude checking during remove restrict
+            $this->AssessmentItems->alias(),
+            $this->GradingTypes->alias()
+        ];
+    }
 
-		return $assessmentItems;
-	}
+    public function onGetExcelTemplate(Event $event, Entity $entity)
+    {
+        if ($entity->has('excel_template_name')) {
+            return $entity->excel_template_name;
+        }
+    }
 
-	public function _getSelectOptions() {
-		$EducationProgrammes = $this->EducationGrades->EducationProgrammes;
-		$EducationGrades = $this->EducationGrades;
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'index' || $action == 'view') {
+            $attr['type'] = 'string';
+        }
 
-		// Education Programmes
-		$programmeOptions = $EducationProgrammes
-			->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
-			->find('visible')
-			->contain(['EducationCycles'])
-			->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
-			->toArray();
+        return $attr;
+    }
 
-		$selectedProgramme = $this->queryString('programme', $programmeOptions);
-		$this->advancedSelectOptions($programmeOptions, $selectedProgramme, [
-			'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-			'callable' => function($id) use ($EducationGrades) {
-				return $EducationGrades->findAllByEducationProgrammeId($id)->find('visible')->count();
-			}
-		]);
-		// End
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
 
-		// Education Grades
-		$gradeOptions = $EducationGrades
-			// ->find('list', ['keyField' => 'id', 'valueField' => 'programme_grade_name'])
-			->find('list')
-			->find('visible')
-			->contain(['EducationProgrammes'])
-			->where([$EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
-			->order(['EducationProgrammes.order' => 'ASC', $EducationGrades->aliasField('order') => 'ASC'])
-			->toArray();
+                list($periodOptions, $selectedPeriod) = array_values($this->getAcademicPeriodOptions($this->request->query('period')));
 
-		$selectedGrade = $this->queryString('grade', $gradeOptions);
-		$this->advancedSelectOptions($gradeOptions, $selectedGrade);
-		// End
+                $attr['options'] = $periodOptions;
+                $attr['default'] = $selectedPeriod;
 
-		return compact('programmeOptions', 'selectedProgramme', 'gradeOptions', 'selectedGrade');
-	}
+            } else {
+
+                $attr['type'] = 'readonly';
+                $attr['value'] = $attr['entity']->academic_period_id;
+                $attr['attr']['value'] = $this->AcademicPeriods->get($attr['entity']->academic_period_id)->name;
+
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'view') {
+            $attr['visible'] = false;
+        } else if ($action == 'add' || $action == 'edit') {
+
+            $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
+            if ($action == 'add') {
+                $programmeOptions = $EducationProgrammes
+                    ->find('list', ['keyField' => 'id', 'valueField' => 'cycle_programme_name'])
+                    ->find('visible')
+                    ->contain(['EducationCycles'])
+                    ->order(['EducationCycles.order' => 'ASC', $EducationProgrammes->aliasField('order') => 'ASC'])
+                    ->toArray();
+
+                $attr['options'] = $programmeOptions;
+                $attr['onChangeReload'] = 'changeEducationProgrammeId';
+
+            } else {
+                //since programme_id is not stored, then during edit need to get from grade
+                $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
+                $attr['type'] = 'readonly';
+                $attr['value'] = $programmeId;
+                $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
+            }
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        unset($request->query['programme']);
+        unset($data['Assessments']['assessment_items']);
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('education_programme_id', $request->data[$this->alias()])) {
+                    $request->query['programme'] = $request->data[$this->alias()]['education_programme_id'];
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldEducationGradeId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+
+            if ($action == 'add') {
+
+                $selectedProgramme = $request->query('programme');
+                $gradeOptions = [];
+                if (!is_null($selectedProgramme)) {
+                    $gradeOptions = $this->EducationGrades
+                        ->find('list')
+                        ->find('visible')
+                        ->contain(['EducationProgrammes'])
+                        ->where([$this->EducationGrades->aliasField('education_programme_id') => $selectedProgramme])
+                        ->order(['EducationProgrammes.order' => 'ASC', $this->EducationGrades->aliasField('order') => 'ASC'])
+                        ->toArray();
+                }
+
+                $attr['options'] = $gradeOptions;
+                $attr['onChangeReload'] = 'changeEducationGrade';
+
+            } else {
+
+                $attr['type'] = 'readonly';
+                $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
+            }
+        }
+
+        return $attr;
+    }
+
+    public function addEditOnChangeEducationGrade(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        unset($request->query['grade']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
+                    $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
+                    $request->query['grade'] = $selectedGrade;
+
+                    $assessmentItems = $this->AssessmentItems->populateAssessmentItemsArray($selectedGrade);
+                    $data[$this->alias()]['assessment_items'] = $assessmentItems;
+                }
+            }
+        }
+    }
+
+    public function setupFields(Entity $entity)
+    {
+        $this->field('type', [
+            'type' => 'hidden',
+            'value' => 2,
+            'attr' => ['value' => 2]
+        ]);
+        $this->field('academic_period_id', [
+            'type' => 'select',
+            'select' => false,
+            'entity' => $entity
+        ]);
+        $this->field('education_programme_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+        $this->field('education_grade_id', [
+            'type' => 'select',
+            'entity' => $entity
+        ]);
+        $this->field('assessment_items', [
+            'type' => 'element',
+            'element' => 'Assessment.assessment_items'
+        ]);
+
+        $this->setFieldOrder([
+            'code', 'name', 'description', 'academic_period_id', 'education_programme_id', 'education_grade_id', 'assessment_items'
+        ]);
+    }
+
+    public function getAcademicPeriodOptions($querystringPeriod)
+    {
+        $periodOptions = $this->AcademicPeriods->getYearList();
+
+        if ($querystringPeriod) {
+            $selectedPeriod = $querystringPeriod;
+        } else {
+            $selectedPeriod = $this->AcademicPeriods->getCurrent();
+        }
+
+        return compact('periodOptions', 'selectedPeriod');
+    }
+
+    public function checkIfHasTemplate($assessmentId=0)
+    {
+        $hasTemplate = false;
+
+        if (!empty($assessmentId)) {
+            $entity = $this->get($assessmentId);
+            $hasTemplate = !empty($entity->excel_template) ? true : false;
+        }
+
+        return $hasTemplate;
+    }
+
+    public function findByClass(Query $query, array $options)
+    {
+        if (array_key_exists('institution_class_id', $options) && !empty($options['institution_class_id'])) {
+            $classId = $options['institution_class_id'];
+            $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+            $classResults = $InstitutionClasses
+                ->find()
+                ->contain(['ClassGrades'])
+                ->where([$InstitutionClasses->aliasField('id') => $classId])
+                ->all();
+
+            if (!$classResults->isEmpty()) {
+                $where = [];
+                $classEntity = $classResults->first();
+                $where[$this->aliasField('academic_period_id')] = $classEntity->academic_period_id;
+
+                $gradeIds = [];
+                foreach ($classEntity->class_grades as $key => $obj) {
+                    $gradeIds[$obj->education_grade_id] = $obj->education_grade_id;
+                }
+                if (!empty($gradeIds)) {
+                    $where[$this->aliasField('education_grade_id IN ')] = $gradeIds;
+                }
+
+                if (!empty($where)) {
+                    $query->where([$where]);
+                }
+            }
+        }
+    }
 }

@@ -10,19 +10,21 @@ use App\Model\Table\AppTable;
 class StaffBehavioursTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('StaffBehaviourCategories', ['className' => 'FieldOption.StaffBehaviourCategories']);
+		$this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
 	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('staff_id', ['visible' => false]);
 		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select']);
+		$this->ControllerAction->field('behaviour_classification_id', ['type' => 'select']);
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 
-		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'staff_behaviour_category_id']);
+		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
@@ -30,10 +32,11 @@ class StaffBehavioursTable extends AppTable {
 
 		if (array_key_exists('view', $buttons)) {
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'StaffBehaviours',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $entity->institution->id,
 			];
 			$buttons['view']['url'] = $url;

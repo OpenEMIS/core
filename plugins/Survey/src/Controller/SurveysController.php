@@ -6,6 +6,7 @@ use App\Controller\AppController;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
 class SurveysController extends AppController
 {
@@ -18,6 +19,7 @@ class SurveysController extends AppController
 			'Status' => ['className' => 'Survey.SurveyStatuses']
 		];
 		$this->loadComponent('Paginator');
+		$this->attachAngularModules();
     }
 
     public function beforeFilter(Event $event) {
@@ -32,25 +34,60 @@ class SurveysController extends AppController
 				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Forms'],
 				'text' => __('Forms')
 			],
+			'Rules' => [
+				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Rules'],
+				'text' => __('Rules')
+			],
 			'Status' => [
 				'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Status'],
 				'text' => __('Status')
 			]
 		];
-
+		$name = $this->name;
+		$action = $this->request->action;
+		$actionName = __(Inflector::humanize($action));
+		$header = $name .' - '.$actionName;
+		$this->Navigation->addCrumb(__($name), ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $action]);
+		$this->Navigation->addCrumb($actionName);
+		$this->set('contentHeader', $header);
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
 
-	public function onInitialize(Event $event, Table $model) {
-		$header = __('Survey');
+	public function Rules($pass = 'index') {
+		if ($pass != 'edit') {
+			$this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Survey.SurveyRules']);
+		} else {
+			if ($this->checkSurveyRuleEditPermission()) {
+				$this->set('ngController', 'SurveyRulesCtrl as SurveyRulesController');
+			} else {
+				return $this->redirect(['plugin' => 'Survey', 'controller' => 'Surveys', 'action' => 'Rules']);
+			}
+			
+		}
+		
+	}
 
-		$header .= ' - ' . $model->getHeader($model->alias);
-		$this->Navigation->addCrumb('Survey', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-		$this->Navigation->addCrumb($model->getHeader($model->alias));
+	private function checkSurveyRuleEditPermission() {
+		return $this->Auth->user('super_admin') == 1 || $this->AccessControl->check(['Surveys', 'Rules', 'edit']);
+	}
 
-		$this->set('contentHeader', $header);
-    }
+	private function attachAngularModules() {
+		$action = $this->request->action;
+		$pass = isset($this->request->pass[0]) ? $this->request->pass[0] : 'index';
+		// pr($action);
+		switch ($action) {
+			case 'Rules':
+				if ($pass == 'edit' && $this->checkSurveyRuleEditPermission()) {
+					$this->Angular->addModules([
+						'alert.svc',
+						'survey.rules.ctrl',
+						'survey.rules.svc'
+					]);
+				}
+				break;
+		}
+	}
 
 	public function beforePaginate(Event $event, Table $model, Query $query, ArrayObject $options) {
     	if ($model->alias == 'Status') {

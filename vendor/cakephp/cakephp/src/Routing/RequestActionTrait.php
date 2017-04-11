@@ -17,8 +17,6 @@ use Cake\Core\Configure;
 use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Network\Session;
-use Cake\Routing\DispatcherFactory;
-use Cake\Routing\Router;
 
 /**
  * Provides the requestAction() method for doing sub-requests
@@ -140,6 +138,9 @@ trait RequestActionTrait
         }
         if (isset($extra['query'])) {
             $params['query'] = $extra['query'];
+        }
+        if (isset($extra['cookies'])) {
+            $params['cookies'] = $extra['cookies'];
         }
         if (isset($extra['environment'])) {
             $params['environment'] = $extra['environment'] + $_SERVER + $_ENV;

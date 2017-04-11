@@ -21,7 +21,7 @@ $this->start('panelBody');
 	];
 
 	foreach ($data as $section => $list) {
-		echo '<h6 class="section-header">' . $section . '</h6>';
+		echo '<div class="section-header">' . $section . '</div>';
 		echo '<div class="table-wrapper">
 			<div class="table-responsive">
 			<table class="table table-curved">

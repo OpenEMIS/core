@@ -13,7 +13,7 @@ class SalariesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('staff_salaries');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->hasMany('SalaryAdditions', ['className' => 'Staff.SalaryAdditions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SalaryDeductions', ['className' => 'Staff.SalaryDeductions', 'dependent' => true, 'cascadeCallbacks' => true]);
@@ -25,7 +25,6 @@ class SalariesTable extends AppTable {
 	}
 
 	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
 
 		$totalAddition = 0;
 		$totalDeduction = 0;
@@ -49,7 +48,7 @@ class SalariesTable extends AppTable {
 			$deleteOptions[$SalaryAdditions->primaryKey().' NOT IN'] = $present;
 		}
 		$SalaryAdditions->deleteAll($deleteOptions);
-		
+
 		$SalaryDeductions = TableRegistry::get('Staff.SalaryDeductions');
 		$present = [];
 		if ($entity->has('salary_deductions')) {
@@ -118,8 +117,8 @@ class SalariesTable extends AppTable {
 		//$this->fields['net_salary']['attr']['min'] = 0.00;
 		$this->fields['net_salary']['attr']['onkeyup'] = 'jsForm.compute(this)';
 
-		$SalaryAdditionType = TableRegistry::get('FieldOption.SalaryAdditionTypes')->getList();
-		$SalaryDeductionType = TableRegistry::get('FieldOption.SalaryDeductionTypes')->getList();
+		$SalaryAdditionType = TableRegistry::get('Staff.SalaryAdditionTypes')->getList();
+		$SalaryDeductionType = TableRegistry::get('Staff.SalaryDeductionTypes')->getList();
 
 		$this->ControllerAction->addField('addition_set', [
 			'type' => 'element',

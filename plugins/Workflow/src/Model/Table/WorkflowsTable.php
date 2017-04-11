@@ -14,731 +14,918 @@ use Cake\Datasource\ConnectionManager;
 use App\Model\Traits\OptionsTrait;
 
 class WorkflowsTable extends AppTable {
-	use OptionsTrait;
+    use OptionsTrait;
 
-	// Workflow Steps - stage
-	const OPEN = 0;
-	const PENDING = 1;
-	const CLOSED = 2;
+    // Workflow Steps - category
+    const TO_DO = 1;
+    const IN_PROGRESS = 2;
+    const DONE = 3;
 
-	// Workflow Actions - action
-	const APPROVE = 0;
-	const REJECT = 1;
+    // Workflow Actions - action
+    const APPROVE = 0;
+    const REJECT = 1;
 
-	private $_fieldOrder = ['workflow_model_id', 'code', 'name'];
-	private $_contain = ['Filters'];
-	private $filter = null;
+    // Apply To All
+    const YES = 1;
+    const NO = 0;
 
-	public function initialize(array $config) {
-		parent::initialize($config);
-		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
-		$this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
-	}
+    private $WorkflowsFilters = null;
+    private $filterClass = [
+        'className' => null,
+        'joinTable' => 'workflows_filters',
+        'foreignKey' => 'workflow_id',
+        'targetForeignKey' => 'filter_id',
+        'through' => 'Workflow.WorkflowsFilters',
+        'dependent' => true
+    ];
+    private $excludedModels = ['Institution.InstitutionCases'];
 
-	public function validationDefault(Validator $validator) {
-		$validator->add('code', [
-			'ruleUnique' => [
-				'rule' => ['validateUnique', ['scope' => 'workflow_model_id']],
-				'provider' => 'table'
-			]
-		]);
+    public function initialize(array $config) {
+        parent::initialize($config);
+        $this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
+        $this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('WorkflowRules', ['className' => 'Workflow.WorkflowRules', 'dependent' => true, 'cascadeCallbacks' => true]);
 
-		return $validator;
-	}
-
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		parent::beforeSave($event, $entity, $options);
-		// Auto insert default workflow_steps when add
-		if ($entity->isNew()) {
-			$data = [
-				'workflow_steps' => [
-					['name' => __('Open'), 'stage' => self::OPEN, 'is_editable' => 1, 'is_removable' => 1],
-					['name' => __('Pending For Approval'), 'stage' => self::PENDING],
-					['name' => __('Closed'), 'stage' => self::CLOSED]
-				]
-			];
-
-			$entity = $this->patchEntity($entity, $data);
-		}
-	}
-
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		if ($entity->isNew()) {
-			$stepOpen = null;
-			$stepPending = null;
-			$stepClosed = null;
-			foreach ($entity->workflow_steps as $key => $step) {
-				switch ($step->stage) {
-					case self::OPEN:
-						$stepOpen = $step;
-						break;
-					case self::PENDING:
-						$stepPending = $step;
-						break;
-					case self::CLOSED:
-						$stepClosed = $step;
-						break;
-					default:
-						break;
-				}
-			}
-
-			// Step - Open
-			$dataOpen = [
-				'id' => $stepOpen->id,
-				'workflow_actions' => [
-					[
-						'name' => __('Submit For Approval'),
-						'action' => self::APPROVE,
-						'visible' => 1,
-						'next_workflow_step_id' => $stepPending->id,
-						'comment_required' => 0
-					],
-					[
-						'name' => __('Cancel'),
-						'action' => self::REJECT,
-						'visible' => 1,
-						'next_workflow_step_id' => $stepClosed->id,
-						'comment_required' => 0
-					]
-				]
-			];
-			$entityOpen = $this->WorkflowSteps->newEntity($dataOpen);
-			if ($this->WorkflowSteps->save($entityOpen)) {
-			} else {
-				$this->WorkflowSteps->log($entityOpen->errors(), 'debug');
-			}
-			// End
-
-			// Step - Pending
-			$dataPending = [
-				'id' => $stepPending->id,
-				'workflow_actions' => [
-					[
-						'name' => __('Approve'),
-						'action' => self::APPROVE,
-						'visible' => 1,
-						'next_workflow_step_id' => $stepClosed->id,
-						'comment_required' => 0
-					],
-					[
-						'name' => __('Reject'),
-						'action' => self::REJECT,
-						'visible' => 1,
-						'next_workflow_step_id' => $stepOpen->id,
-						'comment_required' => 0
-					]
-				]
-			];
-			$entityPending = $this->WorkflowSteps->newEntity($dataPending);
-			if ($this->WorkflowSteps->save($entityPending)) {
-			} else {
-				$this->WorkflowSteps->log($entityPending->errors(), 'debug');
-			}
-			// End
-
-			// Step - Closed
-			$dataClosed = [
-				'id' => $stepClosed->id,
-				'workflow_actions' => [
-					[
-						'name' => __('Approve'),
-						'action' => self::APPROVE,
-						'visible' => 0,
-						'next_workflow_step_id' => 0,
-						'comment_required' => 0
-					],
-					[
-						'name' => __('Reject'),
-						'action' => self::REJECT,
-						'visible' => 0,
-						'next_workflow_step_id' => 0,
-						'comment_required' => 0
-					],
-					[
-						'name' => __('Reopen'),
-						'action' => null,
-						'visible' => 1,
-						'next_workflow_step_id' => $stepOpen->id,
-						'comment_required' => 0
-					]
-				]
-			];
-			$entityClosed = $this->WorkflowSteps->newEntity($dataClosed);
-			if ($this->WorkflowSteps->save($entityClosed)) {
-			} else {
-				$this->WorkflowSteps->log($entityClosed->errors(), 'debug');
-			}
-			// End
-		}
-
-		if (isset($entity->apply_to_all) && $entity->apply_to_all == 1) {
-			$workflowIds = $this
-				->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-				->where([
-					$this->aliasField('workflow_model_id') => $entity->workflow_model_id
-				])
-				->toArray();
-
-			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-			$WorkflowsFilters->deleteAll([
-				'OR' => [
-					[
-						$WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds,
-						$WorkflowsFilters->aliasField('filter_id') => 0
-					],
-					$WorkflowsFilters->aliasField('workflow_id') => $entity->id
-				]
-			]);
-
-			$filterData = [
-				'workflow_id' => $entity->id,
-				'filter_id' => 0
-			];
-			$filterEntity = $WorkflowsFilters->newEntity($filterData);
-
-			if ($WorkflowsFilters->save($filterEntity)) {
-			} else {
-				$WorkflowsFilters->log($filterEntity->errors(), 'debug');
-			}
-		}
-	}
-
-	public function beforeAction(Event $event) {
-		list($modelOptions, $selectedModel) = array_values($this->_getSelectOptions());
-		$this->controller->set(compact('modelOptions', 'selectedModel'));
-
-		$filterClass = [
-			'className' => 'FieldOption.FieldOptionValues',
-			'joinTable' => 'workflows_filters',
-			'foreignKey' => 'workflow_id',
-			'targetForeignKey' => 'filter_id',
-			'through' => 'Workflow.WorkflowsFilters',
-			'dependent' => true
-		];
-		if (!is_null($selectedModel)) {
-			$this->filter = $this->WorkflowModels->get($selectedModel)->filter;
-			if (!is_null($this->filter)) {
-				$filterClass['className'] = $this->filter;
-			}
-		}
-		
-		$this->belongsToMany('Filters', $filterClass);
-	}
-
-	public function afterAction(Event $event) {
-		$this->ControllerAction->setFieldOrder($this->_fieldOrder);
-	}
-
-	public function onGetApplyToAll(Event $event, Entity $entity) {
-		if (sizeof($entity->filters) > 0) {
-			$value = __('No');
-		} else {
-			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-			$results = $WorkflowsFilters
-				->find()
-				->where([
-					$WorkflowsFilters->aliasField('workflow_id') => $entity->id,
-					$WorkflowsFilters->aliasField('filter_id') => 0
-				])
-				->all();
-
-			if ($results->isEmpty()) {
-				$value = __('No');
-			} else {
-				$value = __('Yes');
-			}
-		}
-
-		return $value;
+        $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
     }
 
-	public function indexBeforeAction(Event $event) {
-		//Add controls filter to index page
-		$toolbarElements = [
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+
+        $validator->add('code', [
+            'ruleUnique' => [
+                'rule' => ['validateUnique', ['scope' => 'workflow_model_id']],
+                'provider' => 'table'
+            ]
+        ]);
+
+        return $validator;
+    }
+
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+        // Auto insert default workflow_steps when add
+        if ($entity->isNew()) {
+            $data = [
+                'workflow_steps' => [
+                    ['name' => __('Open'), 'category' => self::TO_DO, 'is_editable' => 1, 'is_removable' => 1, 'is_system_defined' => 1],
+                    ['name' => __('Pending For Approval'), 'category' => self::IN_PROGRESS, 'is_editable' => 0, 'is_removable' => 0, 'is_system_defined' => 1],
+                    ['name' => __('Closed'), 'category' => self::DONE, 'is_editable' => 0, 'is_removable' => 0, 'is_system_defined' => 1]
+                ]
+            ];
+
+            $entity = $this->patchEntity($entity, $data);
+        }
+    }
+
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
+        if ($entity->isNew()) {
+            // When add: preinsert default workflow actions
+            $this->setWorkflowActions($entity);
+        }
+
+        // Only allow one workflow to set as Apply To All
+        $this->setApplyToAll($entity);
+
+        // Remap Workflow Steps
+        $this->resetWorkflowStepId($entity);
+    }
+
+    public function indexBeforeAction(Event $event) {
+        //Add controls filter to index page
+        $toolbarElements = [
             ['name' => 'Workflow.Workflows/controls', 'data' => [], 'options' => []]
         ];
-		$this->controller->set('toolbarElements', $toolbarElements);
-		// End
+        $this->controller->set('toolbarElements', $toolbarElements);
+        // End
 
-		if (!is_null($this->filter)) {
-			$this->ControllerAction->field('apply_to_all');
-			$this->ControllerAction->field('filters', [
-				'type' => 'chosenSelect'
-			]);
+        $this->ControllerAction->field('message',['visible' => false]);
+        $this->ControllerAction->field('apply_to_all');
+        $this->ControllerAction->field('filters');
+        $this->ControllerAction->setFieldOrder(['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name']);
+    }
 
-			$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
-		} else {
-			$this->_fieldOrder = ['workflow_model_id', 'code', 'name'];
-		}
-	}
+    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+        $modelOptions = $this->getWorkflowModel();
+        $modelOptions = ['-1' => __('All Workflows')] + $modelOptions;
+        $selectedModel = $this->queryString('model', $modelOptions);
+        $this->controller->set(compact('modelOptions', 'selectedModel'));
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
-		$selectedModel = $this->ControllerAction->getVar('selectedModel');
+        $query->matching('WorkflowModels');
+        $options['order'] = [
+            $this->aliasField('workflow_model_id') => 'asc',
+            $this->aliasField('code') => 'asc',
+            $this->aliasField('name') => 'asc'
+        ];
 
-		$query
-			->contain($this->_contain)
-			->where([$this->aliasField('workflow_model_id') => $selectedModel]);
-	}
+        if ($selectedModel != -1) {
+            $query->where([$this->aliasField('workflow_model_id') => $selectedModel]);
+        }
+    }
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
-		$query->contain($this->_contain);
-	}
+    public function indexAfterAction(Event $event, $data) {
+        $session = $this->request->session();
 
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->setRequestQuery($entity);
+        $sessionKey = $this->registryAlias() . '.warning';
+        if ($session->check($sessionKey)) {
+            $warningKey = $session->read($sessionKey);
+            $this->Alert->warning($warningKey);
+            $session->delete($sessionKey);
+        }
+    }
 
-		$this->ControllerAction->field('apply_to_all');
-		$this->ControllerAction->field('filters', [
-			'type' => 'chosenSelect'
-		]);
-	}
+    public function onGetApplyToAll(Event $event, Entity $entity) {
+        if ($this->action == 'index') {
+            $entity->filters = [];
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		//Required by patchEntity for associated data
-		$newOptions = [];
-		$newOptions['associated'] = $this->_contain;
+            if (!is_null($entity->_matchingData['WorkflowModels']->filter)) {
+                $filter = $entity->_matchingData['WorkflowModels']->filter;
 
-		$arrayOptions = $options->getArrayCopy();
-		$arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
-		$options->exchangeArray($arrayOptions);
-	}
+                $filterIds = $this->WorkflowsFilters
+                    ->find('list', ['keyField' => 'filter_id', 'valueField' => 'filter_id'])
+                    ->where([
+                        $this->WorkflowsFilters->aliasField('workflow_id') => $entity->id
+                    ])
+                    ->toArray();
+
+                if (array_key_exists(0, $filterIds)) {
+                    $value = __('Yes');
+                } else {
+                    $value = __('No');
+
+                    $filters = [];
+                    $filterModel = TableRegistry::get($filter);
+                    if (!empty($filterIds)) {
+                        $filters = $filterModel
+                            ->getList()
+                            ->where([$filterModel->aliasField('id IN ') => $filterIds])
+                            ->toArray();
+                    }
+
+                    $entity->filters = $filters;
+                }
+
+                return $value;
+            }
+
+            return '<i class="fa fa-minus"></i>';
+        }
+    }
+
+    public function onGetFilters(Event $event, Entity $entity) {
+        if ($this->action == 'index') {
+            if (!is_null($entity->_matchingData['WorkflowModels']->filter)) {
+                if (sizeof($entity->filters) > 0) {
+                    $chosenSelectList = [];
+                    foreach ($entity->filters as $key => $value) {
+                        $chosenSelectList[] = $value;
+                    }
+                    return implode(', ', $chosenSelectList);
+                }
+            }
+
+            return '<i class="fa fa-minus"></i>';
+        }
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query) {
+        $paramsPass = $this->ControllerAction->paramsPass();
+        $workflowId = $this->paramsDecode(current($paramsPass));
+        $selectedModel = $this->get($workflowId)->workflow_model_id;
+        $this->addAssociation($selectedModel);
+
+        $query->matching('WorkflowModels');
+
+        if (!is_null($selectedModel)) {
+            $filter = $this->WorkflowModels->get($selectedModel)->filter;
+            if (!is_null($filter)) {
+                $query->contain(['Filters']);
+            }
+        }
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity) {
+        $this->setupFields($entity);
+    }
+
+    public function addOnInitialize(Event $event, Entity $entity) {
+        // always reset
+        unset($this->request->query['model']);
+    }
+
+    public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+        if (array_key_exists($this->alias(), $data)) {
+            if (array_key_exists('workflow_model_id', $data[$this->alias()])) {
+                $selectedModel = $data[$this->alias()]['workflow_model_id'];
+                $this->addAssociation($selectedModel);
+            }
+        }
+    }
 
     public function addEditAfterAction(Event $event, Entity $entity) {
-		$modelOptions = $this->ControllerAction->getVar('modelOptions');
-		$selectedModel = $this->ControllerAction->getVar('selectedModel');
-		$applyToAllOptions = $this->getSelectOptions('general.yesno');
+        $this->setupFields($entity);
+    }
 
-    	$this->ControllerAction->field('workflow_model_id', [
-    		'options' => $modelOptions
-    	]);
-		$this->ControllerAction->field('apply_to_all', [
-    		'options' => $applyToAllOptions
-    	]);
-		$this->ControllerAction->field('filters', [
-			'type' => 'chosenSelect'
-		]);
-	}
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+        list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-	public function editOnInitialize(Event $event, Entity $entity) {
-		$this->setRequestQuery($entity);
-	}
+        if (!$isDeletable) {
+            $session = $this->request->session();
+            $sessionKey = $this->registryAlias() . '.warning';
+            $session->write($sessionKey, $this->aliasField('restrictDelete'));
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
-		$query->where([
-			$this->aliasField('workflow_model_id') => $entity->workflow_model_id
-		]);
+            $event->stopPropagation();
+            return $this->controller->redirect($this->ControllerAction->url('index'));
+        }
 
-		if ($query->count() == 1) {
-			$this->Alert->warning('general.notTransferrable');
-			$event->stopPropagation();
-			return $this->controller->redirect($this->ControllerAction->url('index'));
-		}
+        $query->where([
+            $this->aliasField('workflow_model_id') => $entity->workflow_model_id
+        ]);
 
-		$options['keyField'] = 'id';
-		$options['valueField'] = 'code_name';
+        if ($query->count() == 1) {
+            $this->Alert->warning('general.notTransferrable');
+            $event->stopPropagation();
+            return $this->controller->redirect($this->ControllerAction->url('index'));
+        }
 
-		// Convert Step Options
-		$convertOptions = $this
-			->find('list')
-			->where([
-				$this->aliasField('workflow_model_id') => $entity->workflow_model_id,
-				$this->aliasField('id <>') => $entity->id
-			])
-			->toArray();
-		$entity->transfer_to = $this->queryString('workflow', $convertOptions);
+        $options['keyField'] = 'id';
+        $options['valueField'] = 'code_name';
 
-		$convertStepOptions = $this->WorkflowSteps
-			->find('list')
-			->where([
-				$this->WorkflowSteps->aliasField('workflow_id') => $entity->transfer_to
-			])
-			->toArray();
-		// End
+        // Convert Step Options
+        $convertOptions = $this
+            ->find('list')
+            ->where([
+                $this->aliasField('workflow_model_id') => $entity->workflow_model_id,
+                $this->aliasField('id <>') => $entity->id
+            ])
+            ->toArray();
+        $entity->transfer_to = $this->queryString('workflow', $convertOptions);
 
-		// Steps
-		$where = [
-			$this->WorkflowSteps->aliasField('workflow_id') => $entity->id
-		];
+        $convertStepOptions = $this->WorkflowSteps
+            ->find('list')
+            ->where([
+                $this->WorkflowSteps->aliasField('workflow_id') => $entity->transfer_to
+            ])
+            ->toArray();
+        // End
 
-		$steps = $this->WorkflowSteps
-			->find()
-			->where($where)
-			->all();
+        // Steps
+        $where = [
+            $this->WorkflowSteps->aliasField('workflow_id') => $entity->id
+        ];
 
-		$stepIds = $this->WorkflowSteps
-			->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-			->where($where)
-			->toArray();
-		// End
+        $steps = $this->WorkflowSteps
+            ->find()
+            ->where($where)
+            ->all();
 
-		// Apply To
-		$tableHeaders = [__('Feature'), __('No of records')];
-		$tableCells = [];
+        $stepIds = $this->WorkflowSteps
+            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+            ->where($where)
+            ->toArray();
+        // End
 
-		$rowData = [];
-		$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-		$rowData[] = $WorkflowsFilters->alias();
-		$rowData[] = $WorkflowsFilters->find()->where([$WorkflowsFilters->aliasField('workflow_id') => $entity->id])->count();
-		$tableCells[] = $rowData;
+        // Apply To
+        $tableHeaders = [__('Feature'), __('No of records')];
+        $tableCells = [];
 
-		$rowData = [];
-		$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
-		$rowData[] = $WorkflowRecords->alias();
-		$rowData[] = $WorkflowRecords
-			->find()
-			->where([
-				$WorkflowRecords->aliasField('workflow_model_id') => $entity->workflow_model_id,
-				$WorkflowRecords->aliasField('workflow_step_id IN') => $stepIds
-			])
-			->count();
-		$tableCells[] = $rowData;
+        // WorkflowsFilters
+        $rowData = [];
+        $rowData[] = $this->WorkflowsFilters->alias();
+        $rowData[] = $this->WorkflowsFilters->find()->where([$this->WorkflowsFilters->aliasField('workflow_id') => $entity->id])->count();
+        $tableCells[] = $rowData;
 
-		$rowData = [];
-		$registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
-		$targetModel = TableRegistry::get($registryAlias);
-		$rowData[] = $targetModel->alias();
-		$rowData[] = $targetModel
-			->find()
-			->where([
-				$targetModel->aliasField('status_id IN') => $stepIds
-			])
-			->count();
-		$tableCells[] = $rowData;
-		// End
+        // Staff Leaves / Institution Surveys & Institution Student Surveys
+        $registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
 
-		$this->controller->set(compact('steps', 'convertStepOptions', 'tableHeaders', 'tableCells'));
-	}
+        $featureList = [];
+        $featureList[] = $registryAlias;
+        if ($registryAlias == 'Institution.InstitutionSurveys') {
+            $featureList[] = 'Student.StudentSurveys';
+        }
 
-	public function onBeforeDelete(Event $event, ArrayObject $options, $id) {
-		$requestData = $this->request->data;
-		$submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
+        foreach ($featureList as $key => $feature) {
+            $rowData = [];
+            $targetModel = TableRegistry::get($feature);
+            $rowData[] = $targetModel->alias();
+            $rowData[] = $targetModel
+                ->find()
+                ->where([
+                    $targetModel->aliasField('status_id IN') => $stepIds
+                ])
+                ->count();
+            $tableCells[] = $rowData;
+        }
+        // End
 
-		if ($submit == 'save') {
-			$process = function($model, $id, $options) {
-				$entity = $model->get($id);
-				// Overwrite $process and skip delete, delete is done in onDeleteTransfer
-				return true;
-			};
+        $this->controller->set(compact('steps', 'convertStepOptions', 'tableHeaders', 'tableCells'));
+    }
 
-			return $process;
-		} else {
-			$url = $this->ControllerAction->url('remove');
-			$url['workflow'] = $requestData['transfer_to'];
-			$event->stopPropagation();
-			return $this->controller->redirect($url);
-		}
-	}
+    public function onBeforeDelete(Event $event, ArrayObject $options, $ids) {
+        $requestData = $this->request->data;
+        $submit = isset($requestData['submit']) ? $requestData['submit'] : 'save';
 
-	public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {
-		$transferProcess = function($associations, $transferFrom, $transferTo, $model) {
-			$conn = ConnectionManager::get('default');
-			$conn->begin();
+        if ($submit == 'save') {
+            $process = function($model, $ids, $options) {
+                $entity = $model->get($ids);
+                // Overwrite $process and skip delete, delete is done in onDeleteTransfer
+                return true;
+            };
 
-			$requestData = $this->request->data;
-			$entity = $model->get($transferFrom);
+            return $process;
+        } else {
+            $url = $this->ControllerAction->url('remove');
+            $url['workflow'] = $requestData['transfer_to'];
+            $event->stopPropagation();
+            return $this->controller->redirect($url);
+        }
+    }
 
-			// Update workflow_id in workflows_filters
-			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-			$filterResults = $WorkflowsFilters
-				->find()
-				->where([
-					$WorkflowsFilters->aliasField('workflow_id') => $transferTo,
-					$WorkflowsFilters->aliasField('filter_id') => 0
-				])
-				->all();
+    public function onDeleteTransfer(Event $event, ArrayObject $options, $id) {
+        $transferProcess = function($associations, $transferFrom, $transferTo, $model) {
+            $conn = ConnectionManager::get('default');
+            $conn->begin();
 
-			if ($filterResults->isEmpty()) {
-				$WorkflowsFilters->updateAll(
-					['workflow_id' => $transferTo],
-					['workflow_id' => $transferFrom]
-				);
-			} else {
-				$WorkflowsFilters->deleteAll([
-					'workflow_id' => $transferFrom
-				]);
-			}
-			// End
+            $requestData = $this->request->data;
+            $entity = $model->get($transferFrom);
 
-			// Update workflow_step_id in workflow_records and model table
-			$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
-			$WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
-			$registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
-			$targetModel = TableRegistry::get($registryAlias);
-			foreach ($requestData[$this->alias()]['steps'] as $key => $stepObj) {
-				$stepFrom = $stepObj['workflow_step_id'];
-				$stepTo = $stepObj['convert_workflow_step_id'];
-				$step = $this->WorkflowSteps->get($stepTo);
+            // Update workflow_id in workflows_filters
+            $filterResults = $this->WorkflowsFilters
+                ->find()
+                ->where([
+                    $this->WorkflowsFilters->aliasField('workflow_id') => $transferTo,
+                    $this->WorkflowsFilters->aliasField('filter_id') => 0
+                ])
+                ->all();
 
-				$records = $WorkflowRecords
-					->find()
-					->matching('WorkflowSteps')
-					->where([
-						$WorkflowRecords->aliasField('workflow_step_id') => $stepFrom
-					])
-					->all();
+            if ($filterResults->isEmpty()) {
+                $this->WorkflowsFilters->updateAll(
+                    ['workflow_id' => $transferTo],
+                    ['workflow_id' => $transferFrom]
+                );
+            } else {
+                $this->WorkflowsFilters->deleteAll([
+                    'workflow_id' => $transferFrom
+                ]);
+            }
+            // End
 
-				foreach ($records as $recordObj) {
-					// workflow_step_id is needed for afterSave logic in WorkflowTransitions
-					$transitionData = [
-						'comment' => '',
-						'prev_workflow_step_id' => $recordObj->_matchingData['WorkflowSteps']->id,
-						'prev_workflow_step_name' => $recordObj->_matchingData['WorkflowSteps']->name,
-						'workflow_step_id' => $step->id,
-						'workflow_step_name' => $step->name,
-						'workflow_action_id' => NULL,
-						'workflow_action_name' => __('Administration - Delete and Transfer Workflow.'),
-						'workflow_record_id' => $recordObj->id
-					];
+            // Update workflow_step_id in workflow_records and model table
+            $WorkflowTransitions = TableRegistry::get('Workflow.WorkflowTransitions');
+            $registryAlias = $this->WorkflowModels->get($entity->workflow_model_id)->model;
+            $targetModel = TableRegistry::get($registryAlias);
+            foreach ($requestData[$this->alias()]['steps'] as $key => $stepObj) {
+                $stepFrom = $stepObj['workflow_step_id'];
+                $stepTo = $stepObj['convert_workflow_step_id'];
+                $step = $this->WorkflowSteps->get($stepTo);
 
-					$transitionEntity = $WorkflowTransitions->newEntity($transitionData, ['validate' => false]);
-					if( $WorkflowTransitions->save($transitionEntity) ){
-					} else {
-						$WorkflowTransitions->log($transitionEntity->errors(), 'debug');
-					}
-				}
+                $targetModel->updateAll(
+                    ['status_id' => $stepTo],
+                    ['status_id' => $stepFrom]
+                );
+            }
+            // End
 
-				$WorkflowRecords->updateAll(
-					['workflow_step_id' => $stepTo],
-					['workflow_step_id' => $stepFrom]
-				);
+            // delete workflow
+            if ($model->delete($entity)) {
+                $conn->commit();
+            } else {
+                $conn->rollback();
+            }
+            // End
+        };
 
-				$targetModel->updateAll(
-					['status_id' => $stepTo],
-					['status_id' => $stepFrom]
-				);
-			}
-			// End
+        return $transferProcess;
+    }
 
-			// delete workflow
-			if ($model->delete($entity)) {
-				$conn->commit();
-			} else {
-				$conn->rollback();
-			}
-			// End
-		};
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+        if (array_key_exists('remove', $buttons)) {
+            // Check by model if filter applied, disabled delete button if the workflow is apply to all.
+            $filter = $entity->_matchingData['WorkflowModels']->filter;
+            if (!is_null($filter)) {
+                $results = $this->WorkflowsFilters
+                    ->find()
+                    ->where([
+                        $this->WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+                        $this->WorkflowsFilters->aliasField('filter_id') => 0
+                    ])
+                    ->all();
 
-		return $transferProcess;
-	}
+                if (!$results->isEmpty()) {
+                    // unset($buttons['remove']);
+                }
+            }
+        }
 
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		if (array_key_exists('remove', $buttons)) {
-			// Check by model if filter applied, disabled delete button if the workflow is apply to all.
-			$filter = $this->WorkflowModels->get($entity->workflow_model_id)->filter;
-			if (!is_null($filter)) {
-				$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-				$results = $WorkflowsFilters
-					->find()
-					->where([
-						$WorkflowsFilters->aliasField('workflow_id') => $entity->id,
-						$WorkflowsFilters->aliasField('filter_id') => 0
-					])
-					->all();
+        return $buttons;
+    }
 
-				if (!$results->isEmpty()) {
-					unset($buttons['remove']);
-				}
-			}
-		}
+    public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
+        if ($action == 'add') {
+            $modelOptions = $this->getWorkflowModel();
 
-		return $buttons;
-	}
+            // Loop through modelOptions and unset it if the model do not have filter and already created workflow.
+            foreach ($modelOptions as $key => $value) {
+                $workflowModelEntity = $this->WorkflowModels->get($key);
+                $filter = $workflowModelEntity->filter;
+                $registryAlias = $workflowModelEntity->model;
+                if (empty($filter)) {
+                    if (!in_array($registryAlias, $this->excludedModels)) {
+                        $workflowResults = $this
+                            ->find()
+                            ->where([
+                                $this->aliasField('workflow_model_id') => $key
+                            ])
+                            ->all();
 
-	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
-		if ($action == 'add') {
-			$Workflows = TableRegistry::get('Workflow.Workflows');
-			$modelOptions = $attr['options'];
+                        if (!$workflowResults->isEmpty()) {
+                            unset($modelOptions[$key]);
+                        }
+                    }
+                }
+            }
+            // End
 
-			// Loop through modelOptions and unset it if the model do not have filter and already created workflow.
-			foreach ($modelOptions as $key => $value) {
-				$filter = $this->WorkflowModels->get($key)->filter;
-				if (empty($filter)) {
-					$workflowResults = $Workflows
-						->find()
-						->where([
-							$Workflows->aliasField('workflow_model_id') => $key
-						])
-						->all();
-					if (!$workflowResults->isEmpty()) {
-						unset($modelOptions[$key]);
-					}
-				}
-			}
-			// End
+            $modelOptions = ['' => __('-- Select Workflow --')] + $modelOptions;
+            $selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
+            $this->advancedSelectOptions($modelOptions, $selectedModel);
 
-			$selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
-			$this->advancedSelectOptions($modelOptions, $selectedModel);
+            $attr['options'] = $modelOptions;
+            $attr['onChangeReload'] = 'changeModel';
+        } else if ($action == 'edit') {
+            $workflowModel = $attr['attr']['workflowModel'];
 
-			$attr['options'] = $modelOptions;
-			$attr['onChangeReload'] = 'changeModel';
-		} else if ($action == 'edit') {
-			$attr['type'] = 'readonly';
-		}
+            $attr['type'] = 'readonly';
+            $attr['value'] = $workflowModel->id;
+            $attr['attr']['value'] = $workflowModel->name;
+        }
 
-		return $attr;
-	}
+        return $attr;
+    }
 
-	public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, $request) {
-		if ($action == 'add' || $action == 'edit') {
-			$applyToAllOptions = $attr['options'];
-			$selectedApplyToAll = !is_null($request->query('apply_all')) ? $request->query('apply_all') : key($applyToAllOptions);
-			$this->advancedSelectOptions($applyToAllOptions, $selectedApplyToAll);
+    public function onUpdateFieldApplyToAll(Event $event, array $attr, $action, $request) {
+        if ($action == 'view') {
+            $applyToAllOptions = $attr['options'];
+            $attr['value'] = $applyToAllOptions[$attr['value']];
+        }
 
-			$attr['options'] = $applyToAllOptions;
-			$attr['onChangeReload'] = 'changeApplyToAll';
-		}
+        return $attr;
+    }
 
-		return $attr;
-	}
+    public function onUpdateFieldFilters(Event $event, array $attr, $action, $request) {
+        if ($action == 'view') {
+            $workflowModel = $attr['attr']['workflowModel'];
+            $filter = $workflowModel->filter;
+            list($plugin, $modelAlias) = explode('.', $filter, 2);
+            $labelText = Inflector::underscore(Inflector::singularize($modelAlias));
 
-	public function onUpdateFieldFilters(Event $event, array $attr, $action, $request) {
-		if ($action == 'view') {
-			$selectedModel = $request->query('model');
-			$selectedApplyToAll = $request->query('apply_all');
-		} else if ($action == 'add' || $action == 'edit') {
-			$modelOptions = $this->fields['workflow_model_id']['options'];
-			$selectedModel = !is_null($request->query('model')) ? $request->query('model') : key($modelOptions);
+            $attr['attr']['label'] = __(Inflector::humanize($labelText));
+        } else if ($action == 'add' || $action == 'edit') {
+            $workflowModel = $attr['attr']['workflowModel'];
+            $selectedModel = $workflowModel->id;
+            $filter = $workflowModel->filter;
+            $model = $workflowModel->model;
 
-			$applyToAllOptions = $this->fields['apply_to_all']['options'];
-			$selectedApplyToAll = !is_null($request->query('apply_all')) ? $request->query('apply_all') : key($applyToAllOptions);
-		}
+            list($plugin, $modelAlias) = explode('.', $filter, 2);
+            $labelText = Inflector::underscore(Inflector::singularize($modelAlias));
+            $filterOptions = TableRegistry::get($filter)->getList()->toArray();
 
-		if (isset($selectedModel) && !is_null($selectedModel)) {
-			$workflowModel = $this->WorkflowModels->get($selectedModel);
-			$filter = $workflowModel->filter;
-			$model = $workflowModel->model;
-			if (empty($filter)) {
-				$this->fields['apply_to_all']['visible'] = false;
-				$attr['visible'] = false;
-			} else {
-				$this->fields['apply_to_all']['visible'] = true;
+            // Trigger event to get the correct wofkflow filter options
+            $subject = TableRegistry::get($model);
+            $newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
+            if ($newEvent->isStopped()) { return $newEvent->result; }
+            if (!empty($newEvent->result)) {
+                $filterOptions = $newEvent->result;
+            }
+            // End
 
-				if ($selectedApplyToAll == 1) {
-					$attr['visible'] = false;
-					$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'code', 'name'];
-				} else {
-					$modelAlias = $this->ControllerAction->getModel($filter)['model'];
-					$labelText = Inflector::underscore(Inflector::singularize($modelAlias));
-					$filterOptions = TableRegistry::get($filter)->getList()->toArray();
+            // Logic to remove filter from the list if already in used
+            $Workflows = TableRegistry::get('Workflow.Workflows');
 
-					// Trigger event to get the correct wofkflow filter options
-					$subject = TableRegistry::get($model);
-					$newEvent = $subject->dispatchEvent('Workflow.getFilterOptions', null, $subject);
-					if ($newEvent->isStopped()) { return $newEvent->result; }
-					if (!empty($newEvent->result)) {
-						$filterOptions = $newEvent->result;
-					}
-					// End
+            $filterQuery = $this->WorkflowsFilters
+                ->find('list', ['keyField' => 'filter_id', 'valueField' => 'filter_id'])
+                ->matching('Workflows', function ($q) use ($Workflows, $selectedModel) {
+                    return $q->where([
+                            $Workflows->aliasField('workflow_model_id') => $selectedModel
+                        ]);
+                })
+                ->where([
+                    $this->WorkflowsFilters->aliasField('filter_id <> ') => 0
+                ]);
 
-					// Logic to remove filter from the list if already in used
-					$Workflows = TableRegistry::get('Workflow.Workflows');
-					$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
+            if ($action == 'edit') {
+                $paramsPass = $this->ControllerAction->paramsPass();
+                $workflowId = $this->paramsDecode(current($paramsPass))['id'];
+                $filterQuery->where([
+                    $this->WorkflowsFilters->aliasField('workflow_id <> ') => $workflowId
+                ]);
+            }
+            $filterIds = $filterQuery->toArray();
 
-					$filterQuery = $WorkflowsFilters
-						->find('list', ['keyField' => 'filter_id', 'valueField' => 'filter_id'])
-						->matching('Workflows', function ($q) use ($Workflows, $selectedModel) {
-							return $q->where([
-									$Workflows->aliasField('workflow_model_id') => $selectedModel
-								]);
-						})
-						->where([
-							$WorkflowsFilters->aliasField('filter_id <> ') => 0
-						]);
+            foreach ($filterOptions as $key => $value) {
+                if (array_key_exists($key, $filterIds)) {
+                    unset($filterOptions[$key]);
+                }
+            }
+            // End
 
-					if ($action == 'edit') {
-						$paramsPass = $this->ControllerAction->paramsPass();
-						$workflowId = current($paramsPass);
-						$filterQuery->where([
-							$WorkflowsFilters->aliasField('workflow_id <> ') => $workflowId
-						]);
-					}
-					$filterIds = $filterQuery->toArray();
+            $attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
+            $attr['options'] = $filterOptions;
+            $attr['attr']['label'] = __(Inflector::humanize($labelText));
+        }
 
-					foreach ($filterOptions as $key => $value) {
-						if (array_key_exists($key, $filterIds)) {
-							unset($filterOptions[$key]);
-						}
-					}
-					// End
+        return $attr;
+    }
 
-					$attr['placeholder'] = __('Select ') . __(Inflector::humanize($labelText));
-					$attr['options'] = $filterOptions;
-					$attr['attr']['label'] = __(Inflector::humanize($labelText));
-					$attr['visible'] = true;
+    private function getWorkflowModel() {
+        return $this->WorkflowModels->find('list')->toArray();
+    }
 
-					$this->_fieldOrder = ['workflow_model_id', 'apply_to_all', 'filters', 'code', 'name'];
-				}
-			}
-		}
+    private function setupFields(Entity $entity)
+    {
+        $this->ControllerAction->field('message', ['visible' => false]);
 
-		return $attr;
-	}
+        $selectedModel = $entity->workflow_model_id;
 
-	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$request = $this->request;
-		unset($request->query['model']);
-		unset($request->query['apply_all']);
+        // for workflow that has filter:
+        // If no workflow is added before, show apply_to_all = Yes
+        // else show apply_to_all = No and Filters
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
-					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
-				}
-			}
-		}
-	}
+        if (empty($selectedModel)) {
+            $this->ControllerAction->field('workflow_model_id');
+            $fieldOrder = ['workflow_model_id'];
+        } else {
+            $workflowModel = $this->WorkflowModels->get($selectedModel);
+            $this->ControllerAction->field('workflow_model_id', [
+                'attr' => ['workflowModel' => $workflowModel]
+            ]);
+            $fieldOrder = ['workflow_model_id'];
 
-	public function addEditOnChangeApplyToAll(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$request = $this->request;
-		unset($request->query['model']);
-		unset($request->query['apply_all']);
+            $filter = $workflowModel->filter;
+            if (!empty($filter)) {
+                $showFilters = true;
 
-		if ($request->is(['post', 'put'])) {
-			if (array_key_exists($this->alias(), $request->data)) {
-				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
-					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
-				}
-				if (array_key_exists('apply_to_all', $request->data[$this->alias()])) {
-					$request->query['apply_all'] = $request->data[$this->alias()]['apply_to_all'];
-				}
-			}
-		}
-	}
+                if (isset($entity->id)) {
+                    // edit
+                    $filterResults = $this->WorkflowsFilters
+                        ->find()
+                        ->where([
+                            $this->WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+                            $this->WorkflowsFilters->aliasField('filter_id') => 0
+                        ])
+                        ->all();
 
-	public function setRequestQuery(Entity $entity) {
-		// Set model and apply_all
-		$this->request->query['model'] = $entity->workflow_model_id;
+                    if (!$filterResults->isEmpty()) {
+                        $showFilters = false;
+                    }
+                } else {
+                    // when add, check whether any workflow added before, if is not then hide Filters
+                    $workflowResults = $this->find()
+                        ->matching('WorkflowModels', function ($q) use ($selectedModel) {
+                            return $q->where(['workflow_model_id' => $selectedModel]);
+                        })
+                        ->all();
 
-		if (sizeof($entity->filters) > 0) {
-			$this->request->query['apply_all'] = 0;
-		} else {
-			$WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
-			$results = $WorkflowsFilters
-				->find()
-				->where([
-					$WorkflowsFilters->aliasField('workflow_id') => $entity->id,
-					$WorkflowsFilters->aliasField('filter_id') => 0
-				])
-				->all();
+                    if ($workflowResults->isEmpty()) {
+                        $showFilters = false;
+                    }
+                }
 
-			if ($results->isEmpty()) {
-				$this->request->query['apply_all'] = 0;
-			} else {
-				$this->request->query['apply_all'] = 1;
-			}
-		}
-		// End
-	}
+                $applyToAllOptions = $this->getSelectOptions('general.yesno');
+                $inputOptions = [
+                    'type' => 'readonly',
+                    'options' => $applyToAllOptions
+                ];
 
-	public function _getSelectOptions() {
-		//Return all required options and their key
-		$modelOptions = $this->WorkflowModels
-			->find('list')
-			->toArray();
-		$selectedModel = $this->queryString('model', $modelOptions);
+                if ($showFilters) {
+                    $inputOptions['value'] = self::NO;
+                    $inputOptions['attr']['value'] = $applyToAllOptions[self::NO];
 
-		return compact('modelOptions', 'selectedModel');
-	}
+                    $this->ControllerAction->field('apply_to_all', $inputOptions);
+                    $this->ControllerAction->field('filters', [
+                        'type' => 'chosenSelect',
+                        'attr' => ['workflowModel' => $workflowModel]
+                    ]);
+                    $fieldOrder[] = 'apply_to_all';
+                    $fieldOrder[] = 'filters';
+                } else {
+                    $inputOptions['value'] = self::YES;
+                    $inputOptions['attr']['value'] = $applyToAllOptions[self::YES];
+
+                    $this->ControllerAction->field('apply_to_all', $inputOptions);
+                    $fieldOrder[] = 'apply_to_all';
+                }
+            }
+        }
+
+        $fieldOrder[] = 'code';
+        $fieldOrder[] = 'name';
+        $this->ControllerAction->setFieldOrder($fieldOrder);
+    }
+
+    private function addAssociation($selectedModel=null) {
+        if (!is_null($selectedModel) && !empty($selectedModel)) {
+            $filter = $this->WorkflowModels->get($selectedModel)->filter;
+            if (!is_null($filter)) {
+                $this->filterClass['className'] = $filter;
+                $this->belongsToMany('Filters', $this->filterClass);
+            }
+        }
+    }
+
+    private function setWorkflowActions($entity) {
+        $stepOpen = null;
+        $stepPending = null;
+        $stepClosed = null;
+
+        foreach ($entity->workflow_steps as $key => $step) {
+            switch ($step->category) {
+                case self::TO_DO:
+                    $stepOpen = $step;
+                    break;
+                case self::IN_PROGRESS:
+                    $stepPending = $step;
+                    break;
+                case self::DONE:
+                    $stepClosed = $step;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        // Step - Open
+        $dataOpen = [
+            'id' => $stepOpen->id,
+            'category' => $stepOpen->category,
+            'is_editable' => $stepOpen->is_editable,
+            'is_removable' => $stepOpen->is_removable,
+            'is_system_defined' => $stepOpen->is_system_defined,
+            'workflow_actions' => [
+                [
+                    'name' => __('Submit For Approval'),
+                    'action' => self::APPROVE,
+                    'visible' => 1,
+                    'next_workflow_step_id' => $stepPending->id,
+                    'comment_required' => 0,
+                    'allow_by_assignee' => 1
+                ],
+                [
+                    'name' => __('Cancel'),
+                    'action' => self::REJECT,
+                    'visible' => 1,
+                    'next_workflow_step_id' => $stepClosed->id,
+                    'comment_required' => 0,
+                    'allow_by_assignee' => 1
+                ]
+            ]
+        ];
+        $entityOpen = $this->WorkflowSteps->newEntity($dataOpen);
+        if ($this->WorkflowSteps->save($entityOpen)) {
+        } else {
+            $this->WorkflowSteps->log($entityOpen->errors(), 'debug');
+        }
+        // End
+
+        // Step - Pending
+        $dataPending = [
+            'id' => $stepPending->id,
+            'category' => $stepPending->category,
+            'is_editable' => $stepPending->is_editable,
+            'is_removable' => $stepPending->is_removable,
+            'is_system_defined' => $stepPending->is_system_defined,
+            'workflow_actions' => [
+                [
+                    'name' => __('Approve'),
+                    'action' => self::APPROVE,
+                    'visible' => 1,
+                    'next_workflow_step_id' => $stepClosed->id,
+                    'comment_required' => 0,
+                    'allow_by_assignee' => 0
+                ],
+                [
+                    'name' => __('Reject'),
+                    'action' => self::REJECT,
+                    'visible' => 1,
+                    'next_workflow_step_id' => $stepOpen->id,
+                    'comment_required' => 0,
+                    'allow_by_assignee' => 0
+                ]
+            ]
+        ];
+        $entityPending = $this->WorkflowSteps->newEntity($dataPending);
+        if ($this->WorkflowSteps->save($entityPending)) {
+        } else {
+            $this->WorkflowSteps->log($entityPending->errors(), 'debug');
+        }
+        // End
+
+        // Step - Closed
+        $dataClosed = [
+            'id' => $stepClosed->id,
+            'category' => $stepClosed->category,
+            'is_editable' => $stepClosed->is_editable,
+            'is_removable' => $stepClosed->is_removable,
+            'is_system_defined' => $stepClosed->is_system_defined,
+            'workflow_actions' => [
+                [
+                    'name' => __('Approve'),
+                    'action' => self::APPROVE,
+                    'visible' => 0,
+                    'next_workflow_step_id' => 0,
+                    'comment_required' => 0,
+                    'allow_by_assignee' => 0
+                ],
+                [
+                    'name' => __('Reject'),
+                    'action' => self::REJECT,
+                    'visible' => 0,
+                    'next_workflow_step_id' => 0,
+                    'comment_required' => 0,
+                    'allow_by_assignee' => 0
+                ],
+                [
+                    'name' => __('Reopen'),
+                    'action' => null,
+                    'visible' => 1,
+                    'next_workflow_step_id' => $stepOpen->id,
+                    'comment_required' => 0,
+                    'allow_by_assignee' => 0
+                ]
+            ]
+        ];
+        $entityClosed = $this->WorkflowSteps->newEntity($dataClosed);
+        if ($this->WorkflowSteps->save($entityClosed)) {
+        } else {
+            $this->WorkflowSteps->log($entityClosed->errors(), 'debug');
+        }
+        // End
+    }
+
+    private function setApplyToAll($entity) {
+        if (isset($entity->apply_to_all) && $entity->apply_to_all == self::YES) {
+            $workflowIds = $this
+                ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                ->where([
+                    $this->aliasField('workflow_model_id') => $entity->workflow_model_id
+                ])
+                ->toArray();
+
+            $this->WorkflowsFilters->deleteAll([
+                'OR' => [
+                    [
+                        $this->WorkflowsFilters->aliasField('workflow_id IN') => $workflowIds,
+                        $this->WorkflowsFilters->aliasField('filter_id') => 0
+                    ],
+                    $this->WorkflowsFilters->aliasField('workflow_id') => $entity->id
+                ]
+            ]);
+
+            $filterData = [
+                'workflow_id' => $entity->id,
+                'filter_id' => 0
+            ];
+            $filterEntity = $this->WorkflowsFilters->newEntity($filterData);
+
+            if ($this->WorkflowsFilters->save($filterEntity)) {
+            } else {
+                $this->WorkflowsFilters->log($filterEntity->errors(), 'debug');
+            }
+        }
+    }
+
+    private function resetWorkflowStepId($entity) {
+        $selectedModel = $entity->workflow_model_id;
+        $workflowModel = $this->WorkflowModels->get($selectedModel);
+
+        $model = $workflowModel->model;
+        $filter = $workflowModel->filter;
+
+        if (!is_null($filter)) {
+            $statusKey = 'status_id';
+            list($filterPlugin, $filterAlias) = explode(".", $filter, 2);
+            // e.g. staff_leave_type_id, survey_form_id
+            $filterKey = Inflector::underscore(Inflector::singularize($filterAlias)) . '_id';
+
+            // List of affected filter Ids (e.g. Staff Leave Type IDs, Survey Form IDs)
+            $filterIds = [];
+            // List of all Workflow Steps of the Workflows
+            $stepIds = [];
+            // First step of the Workflows or the Default Workflows (Apply To All)
+            $openStepId = null;
+            // IDs of affected records to patch
+            $recordIds = [];
+
+            $steps = $this->WorkflowSteps
+                ->find()
+                ->where([
+                    $this->WorkflowSteps->aliasField('workflow_id') => $entity->id
+                ])
+                ->toArray();
+
+            foreach ($steps as $key => $step) {
+                $stepIds[$step->id] = $step->id;
+                if ($step->category == self::TO_DO) {
+                    $openStepId = $step->id;
+                }
+            }
+
+            $subject = TableRegistry::get($model);
+
+            if ($entity->has($statusKey) && $entity->has('filters')) {
+                // When edit: If filterIds is clear, fall back to the first step of Default Workflows (Apply To All)
+                if (empty($entity->filters) && !$entity->isNew()) {
+                    $originalFilters = $entity->extractOriginal(['filters']);
+                    foreach ($originalFilters['filters'] as $key => $obj) {
+                        $filterIds[$obj->id] = $obj->id;
+                    }
+
+                    if (!empty($filterIds) && !empty($stepIds)) {
+                        $recordIds = $subject
+                        ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                        ->where([
+                            $subject->aliasField($filterKey . ' IN ') => $filterIds,
+                            $subject->aliasField($statusKey . ' IN ') => $stepIds
+                        ])
+                        ->toArray();
+                    }
+
+                    $Workflows = TableRegistry::get('Workflow.Workflows');
+                    $defaultWorkflowId = $this->WorkflowsFilters
+                        ->find('list', ['keyField' => 'workflow_id', 'valueField' => 'workflow_id'])
+                        ->matching('Workflows', function ($q) use ($Workflows, $selectedModel) {
+                            return $q->where([
+                                    $Workflows->aliasField('workflow_model_id') => $selectedModel
+                                ]);
+                        })
+                        ->where([
+                            $this->WorkflowsFilters->aliasField('filter_id') => 0
+                        ])
+                        ->toArray();
+
+                    if (!empty($defaultWorkflowId)) {
+                        $openStepId = $this->WorkflowSteps
+                            ->find()
+                            ->where([
+                                $this->WorkflowSteps->aliasField('workflow_id IN ') => $defaultWorkflowId,
+                                $this->WorkflowSteps->aliasField('category') => self::TO_DO
+                            ])
+                            ->first()
+                            ->id;
+                    }
+                } else {
+                    foreach ($entity->filters as $key => $obj) {
+                        $filterIds[$obj->id] = $obj->id;
+                    }
+
+                    if (!empty($filterIds) && !empty($stepIds)) {
+                        $recordIds = $subject
+                            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+                            ->where([
+                                $subject->aliasField($filterKey . ' IN ') => $filterIds,
+                                $subject->aliasField($statusKey . ' NOT IN ') => $stepIds
+                            ])
+                            ->toArray();
+                    }
+                }
+            }
+
+            if (!is_null($openStepId) && !empty($recordIds)) {
+                $subject->updateAll(
+                    [$statusKey => $openStepId],
+                    ['id IN ' => $recordIds]
+                );
+            }
+        }
+    }
+
+    private function checkIfCanEditOrDelete($entity) {
+        $isEditable = true;
+        $isDeletable = true;
+
+        // Check by model if filter applied, not allow to delete if the workflow is apply to all.
+        if ($entity->has('workflow_model_id')) {
+            $filter = $this->WorkflowModels->get($entity->workflow_model_id)->filter;
+            if (!is_null($filter)) {
+                $results = $this->WorkflowsFilters
+                    ->find()
+                    ->where([
+                        $this->WorkflowsFilters->aliasField('workflow_id') => $entity->id,
+                        $this->WorkflowsFilters->aliasField('filter_id') => 0
+                    ])
+                    ->all();
+
+                if (!$results->isEmpty()) {
+                    $isDeletable = false;
+                }
+            }
+
+        }
+
+        return compact('isEditable', 'isDeletable');
+    }
+
+    public function getExcludedModels() {
+        return $this->excludedModels;
+    }
 }

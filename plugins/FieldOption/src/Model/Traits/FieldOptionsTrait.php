@@ -1,12 +1,7 @@
 <?php
 namespace FieldOption\Model\Traits;
 
+use FieldOption\Model\Traits\FieldOptionsTrait;
+
 trait FieldOptionsTrait {
-	private $parentFieldOptionList = [
-		'FieldOption.BankBranches' => 	['parentModel' => 'FieldOption.Banks', 'foreignKey' => 'bank_id', 'behavior' => 'Filter'], 
-		'User.ContactTypes' => 			['parentModel' => 'User.ContactOptions', 'foreignKey' => 'contact_option_id', 'behavior' => 'Filter'], 
-		'FieldOption.Banks' => 		['behavior' => 'Display'],
-		'FieldOption.Countries' => 	['behavior' => 'Countries'],
-		'Institution.NetworkConnectivities' => 		['behavior' => 'Display'],
-	];
 }

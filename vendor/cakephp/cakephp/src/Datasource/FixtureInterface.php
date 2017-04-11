@@ -14,8 +14,6 @@
  */
 namespace Cake\Datasource;
 
-use Cake\Datasource\ConnectionInterface;
-
 /**
  * Defines the interface that testing fixtures use.
  */
@@ -24,7 +22,7 @@ interface FixtureInterface
     /**
      * Create the fixture schema/mapping/definition
      *
-     * @param Connection $db An instance of the connection the fixture should be created on.
+     * @param \Cake\Datasource\ConnectionInterface $db An instance of the connection the fixture should be created on.
      * @return bool True on success, false on failure.
      */
     public function create(ConnectionInterface $db);
@@ -32,7 +30,7 @@ interface FixtureInterface
     /**
      * Run after all tests executed, should remove the table/collection from the connection.
      *
-     * @param Connection $db An instance of the connection the fixture should be removed from.
+     * @param \Cake\Datasource\ConnectionInterface $db An instance of the connection the fixture should be removed from.
      * @return bool True on success, false on failure.
      */
     public function drop(ConnectionInterface $db);
@@ -42,15 +40,33 @@ interface FixtureInterface
      *
      * Should insert all the records into the test database.
      *
-     * @param Connection $db An instance of the connection into which the records will be inserted.
+     * @param \Cake\Datasource\ConnectionInterface $db An instance of the connection into which the records will be inserted.
      * @return bool on success or if there are no records to insert, or false on failure.
      */
     public function insert(ConnectionInterface $db);
 
     /**
+     * Build and execute SQL queries necessary to create the constraints for the
+     * fixture
+     *
+     * @param \Cake\Datasource\ConnectionInterface $db An instance of the database into which the constraints will be created
+     * @return bool on success or if there are no constraints to create, or false on failure
+     */
+    public function createConstraints(ConnectionInterface $db);
+
+    /**
+     * Build and execute SQL queries necessary to drop the constraints for the
+     * fixture
+     *
+     * @param \Cake\Datasource\ConnectionInterface $db An instance of the database into which the constraints will be dropped
+     * @return bool on success or if there are no constraints to drop, or false on failure
+     */
+    public function dropConstraints(ConnectionInterface $db);
+
+    /**
      * Truncates the current fixture.
      *
-     * @param Connection $db A reference to a db instance
+     * @param \Cake\Datasource\ConnectionInterface $db A reference to a db instance
      * @return bool
      */
     public function truncate(ConnectionInterface $db);

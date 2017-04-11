@@ -33,9 +33,19 @@ require ROOT . DS . 'vendor' . DS . 'autoload.php';
  */
 require CORE_PATH . 'config' . DS . 'bootstrap.php';
 
+// You can remove this if you are confident that your PHP version is sufficient.
+if (version_compare(PHP_VERSION, '5.5.9') < 0) {
+    trigger_error('You PHP version must be equal or higher than 5.5.9 to use CakePHP.', E_USER_ERROR);
+}
+
 // You can remove this if you are confident you have intl installed.
 if (!extension_loaded('intl')) {
     trigger_error('You must enable the intl extension to use CakePHP.', E_USER_ERROR);
+}
+
+// You can remove this if you are confident you have mbstring installed.
+if (!extension_loaded('mbstring')) {
+    trigger_error('You must enable the mbstring extension to use CakePHP.', E_USER_ERROR);
 }
 
 use Cake\Cache\Cache;
@@ -48,12 +58,14 @@ use Cake\Database\Type;
 use Cake\Datasource\ConnectionManager;
 use Cake\Error\ErrorHandler;
 use Cake\Log\Log;
-use Cake\Network\Email\Email;
+use Cake\Mailer\Email;
 use Cake\Network\Request;
 use Cake\Routing\DispatcherFactory;
 use Cake\Utility\Inflector;
 use Cake\Utility\Security;
 use App\Error\AppError;
+use Cake\Core\Exception\Exception;
+
 /**
  * Read configuration file and inject configuration into various
  * CakePHP classes.
@@ -65,9 +77,23 @@ use App\Error\AppError;
 try {
     Configure::config('default', new PhpConfig());
     Configure::load('app', 'default', false);
-    Configure::load('datasource', 'default', false);
+    Configure::load('app_extra', 'default');
+    Configure::load('datasource', 'default');
+
+    if (!Configure::read('Application.private.key') || !Configure::read('Application.public.key')) {
+        throw new Exception('Could not load application key, please contact administrator to have the key set up for your application.');
+    }
 } catch (\Exception $e) {
-    die($e->getMessage() . "\n");
+    exit($e->getMessage() . "\n");
+}
+
+
+
+// For unit testing
+try {
+    Configure::load('test_datasource', 'default');
+} catch (\Exception $e) {
+    // do nothing if test_datasource.php is not found
 }
 
 // Load an environment local configuration file.
@@ -89,7 +115,7 @@ if (!Configure::read('debug')) {
  * Set server timezone to UTC. You can change it to another timezone of your
  * choice but using UTC makes time calculations / conversions easier.
  */
-date_default_timezone_set('UTC');
+// date_default_timezone_set('UTC');
 
 /**
  * Configure the mbstring extension to use the correct encoding.
@@ -100,12 +126,12 @@ mb_internal_encoding(Configure::read('App.encoding'));
  * Set the default locale. This controls how dates, number and currency is
  * formatted and sets the default language to use for translations.
  */
-ini_set('intl.default_locale', 'en_US');
+ini_set('intl.default_locale', Configure::read('App.defaultLocale'));
 
 /**
  * Register application error and exception handlers.
  */
-$isCli = php_sapi_name() === 'cli';
+$isCli = PHP_SAPI === 'cli';
 if ($isCli) {
     (new ConsoleErrorHandler(Configure::read('Error')))->register();
 } else {
@@ -148,7 +174,7 @@ Security::salt(Configure::consume('Security.salt'));
  * If you are migrating from 2.x uncomment this code to
  * use a more compatible Mcrypt based implementation
  */
-// Security::engine(new \Cake\Utility\Crypto\Mcrypt());
+//Security::engine(new \Cake\Utility\Crypto\Mcrypt());
 
 /**
  * Setup detectors for mobile and tablet.
@@ -191,6 +217,7 @@ Plugin::load('Migrations');
 // Essential Plugins
 Plugin::load('OpenEmis', ['autoload' => true]);
 Plugin::load('ControllerAction', ['autoload' => true]);
+Plugin::load('Angular', ['routes' => true, 'autoload' => true]);
 
 // Localizations
 Plugin::load('Localization', ['routes' => true, 'autoload' => true]);
@@ -206,28 +233,43 @@ Plugin::load('User', ['routes' => true, 'autoload' => true]);
 Plugin::load('Student', ['routes' => true, 'autoload' => true]);
 Plugin::load('Staff', ['routes' => true, 'autoload' => true]);
 Plugin::load('Education', ['routes' => true, 'autoload' => true]);
-Plugin::load('Infrastructure', ['routes' => true, 'autoload' => true]);
 Plugin::load('Assessment', ['routes' => true, 'autoload' => true]);
+Plugin::load('Textbook', ['routes' => true, 'autoload' => true]);
 Plugin::load('Security', ['routes' => true, 'autoload' => true]);
 Plugin::load('Survey', ['routes' => true, 'autoload' => true]);
-Plugin::load('Restful', ['routes' => true, 'autoload' => true]);
+Plugin::load('Rest', ['routes' => true, 'autoload' => true]);
 Plugin::load('Report', ['routes' => true, 'autoload' => true]);
 Plugin::load('Rubric', ['routes' => true, 'autoload' => true]);
 Plugin::load('Workflow', ['routes' => true, 'autoload' => true]);
 Plugin::load('CustomField', ['routes' => true, 'autoload' => true]);
+Plugin::load('Indexes', ['routes' => true, 'autoload' => true]);
 Plugin::load('InstitutionCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StudentCustomField', ['routes' => true, 'autoload' => true]);
 Plugin::load('StaffCustomField', ['routes' => true, 'autoload' => true]);
+Plugin::load('Infrastructure', ['routes' => true, 'autoload' => true]);
 Plugin::load('Error', ['routes' => true, 'autoload' => true]);
 Plugin::load('Import', ['routes' => true, 'autoload' => true]);
 Plugin::load('API', ['routes' => true, 'autoload' => true]);
 Plugin::load('Log', ['routes' => true, 'autoload' => true]);
 Plugin::load('Training', ['routes' => true, 'autoload' => true]);
+Plugin::load('Map', ['routes' => true, 'autoload' => true]);
+Plugin::load('Health', ['routes' => true, 'autoload' => true]);
+Plugin::load('Cache', ['routes' => true, 'autoload' => true]);
+Plugin::load('Restful');
+Plugin::load('ADmad/JwtAuth');
+Plugin::load('SSO');
+Plugin::load('Webhook', ['routes' => true, 'autoload' => true]);
+Plugin::load('System', ['routes' => true, 'autoload' => true]);
+Plugin::load('InstitutionRepeater', ['routes' => true, 'autoload' => true]);
+Plugin::load('Examination', ['routes' => true, 'autoload' => true]);
+Plugin::load('Configuration', ['routes' => true, 'autoload' => true]);
+Plugin::load('CustomExcel', ['routes' => true, 'autoload' => true]);
+Plugin::load('Competency', ['routes' => true, 'autoload' => true]);
 
 // Only try to load DebugKit in development mode
 // Debug Kit should not be installed on a production system
 if (Configure::read('debug')) {
-    //Plugin::load('DebugKit', ['bootstrap' => true]);
+    // Plugin::load('DebugKit', ['bootstrap' => true]);
 }
 
 /**
@@ -240,5 +282,15 @@ DispatcherFactory::add('ControllerFactory');
 /**
  * Enable default locale format parsing.
  * This is needed for matching the auto-localized string output of Time() class when parsing dates.
+ *
+ * Also enable immutable time objects in the ORM.
  */
-Type::build('datetime')->useLocaleParser();
+// Type::build('time')
+//     ->useImmutable()
+//     ->useLocaleParser();
+// Type::build('date')
+//     ->useImmutable()
+//     ->useLocaleParser();
+// Type::build('datetime')
+//     ->useImmutable()
+//     ->useLocaleParser();

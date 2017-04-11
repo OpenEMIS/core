@@ -15,7 +15,6 @@
 namespace Cake\View\Widget;
 
 use Cake\View\Form\ContextInterface;
-use Cake\View\Widget\WidgetInterface;
 
 /**
  * Input widget class for generating a file upload control.
@@ -66,7 +65,7 @@ class FileWidget implements WidgetInterface
             'templateVars' => $data['templateVars'],
             'attrs' => $this->_templates->formatAttributes(
                 $data,
-                ['name', 'val']
+                ['name']
             )
         ]);
     }

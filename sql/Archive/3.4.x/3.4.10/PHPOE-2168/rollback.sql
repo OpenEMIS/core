@@ -1,0 +1,1 @@
+DELETE FROM `db_patches` WHERE `issue` = 'PHPOE-2168';

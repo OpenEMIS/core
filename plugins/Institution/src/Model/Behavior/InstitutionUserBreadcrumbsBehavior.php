@@ -12,7 +12,7 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
 	public function initialize(array $config) {
 
 	}
-	
+
 
 /******************************************************************************************************************
 **
@@ -32,14 +32,15 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
 **
 ******************************************************************************************************************/
 	public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, Entity $persona) {
-		$crumbTitle = $this->_table->getHeader($this->_table->alias());
+		$crumbTitle = Inflector::humanize(Inflector::underscore($this->_table->alias()));
 		$splitTitle = explode(' ', $crumbTitle);
 		$newCrumbTitle = Inflector::pluralize($splitTitle[0]);
-		$Navigation->substituteCrumb($crumbTitle, $newCrumbTitle, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $newCrumbTitle]);
+		$Navigation->substituteCrumb($crumbTitle, __($newCrumbTitle), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $newCrumbTitle]);
+		$model = $this->_table;
 		if ($this->_table->alias() == $splitTitle[0].'User') {
 			$Navigation->addCrumb($persona->name);
 		} else {
-			$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $splitTitle[0].'User', 'view', $persona->id];
+			$url = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $splitTitle[0].'User', 'view', $model->paramsEncode(['id' => $persona->id])];
 			$Navigation->addCrumb($persona->name, $url);
 			$Navigation->addCrumb($crumbTitle);
 		}
