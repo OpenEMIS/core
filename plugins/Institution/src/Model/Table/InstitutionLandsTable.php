@@ -58,7 +58,6 @@ class InstitutionLandsTable extends AppTable
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
-        $this->landLevel = $this->Levels->getFieldByCode('LAND', 'id');
     }
 
     public function validationDefault(Validator $validator)
@@ -193,6 +192,7 @@ class InstitutionLandsTable extends AppTable
 
     public function indexBeforeAction(Event $event)
     {
+        $this->landLevel = $this->Levels->getFieldByCode('LAND', 'id');
         $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'land_type_id', 'land_status_id']);
         $this->fields['area']['visible'] = false;
         $this->fields['comment']['visible'] = false;
@@ -357,14 +357,13 @@ class InstitutionLandsTable extends AppTable
     public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->setupFields($entity);
+        $toolbarElements = $this->addBreadcrumbElement();
+        $this->controller->set('toolbarElements', $toolbarElements);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity)
     {
         $this->setupFields($entity);
-        if ($this->action == 'add') {
-            $this->fields['year_disposed']['visible'] = false;
-        }
     }
 
     public function editAfterAction(Event $event, Entity $entity)
