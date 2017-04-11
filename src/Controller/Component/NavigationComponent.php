@@ -657,7 +657,7 @@ class NavigationComponent extends Component
 				'title' => 'Professional Development',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
-				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Trainings', 'Institutions.StaffAppraisals'],
+				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Institutions.StaffAppraisals'],
 			],
 			'Staff.BankAccounts' => [
 				'title' => 'Finance',
@@ -665,11 +665,11 @@ class NavigationComponent extends Component
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.BankAccounts', 'Staff.Salaries'],
 			],
-			'Institutions.StaffTrainingResults' => [
+			'Institutions.StaffTrainingNeeds' => [
 				'title' => 'Training',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.StaffTrainingResults', 'Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications'],
+				'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Staff.Trainings',],
 			],
 			'Staff.Healths' => [
 				'title' => 'Health',
