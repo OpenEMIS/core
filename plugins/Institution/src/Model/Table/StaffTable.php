@@ -1100,6 +1100,8 @@ class StaffTable extends ControllerActionTable {
 		foreach ($genderOptions as $key => $value) {
 			$dataSet[$value] = array('name' => __($value), 'data' => []);
 		}
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
 		foreach ($dataSet as $key => $obj) {
 			foreach ($positionTypes as $id => $name) {
 				$dataSet[$key]['data'][$id] = 0;
@@ -1116,7 +1118,9 @@ class StaffTable extends ControllerActionTable {
 						$dataSet[$dkey]['data'][$positionType] = 0;
 					}
 				}
+
 				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+                $dataSet['Total']['data'][$positionType] += $StaffTotal;
 			}
 		}
 
@@ -1181,6 +1185,8 @@ class StaffTable extends ControllerActionTable {
 		foreach ($genderOptions as $key => $value) {
 			$dataSet[$value] = array('name' => __($value), 'data' => []);
 		}
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
 		foreach ($dataSet as $key => $obj) {
 			foreach ($positionTypes as $id => $name) {
 				$dataSet[$key]['data'][$id] = 0;
@@ -1198,6 +1204,7 @@ class StaffTable extends ControllerActionTable {
 					}
 				}
 				$dataSet[$staffGender]['data'][$positionType] = $StaffTotal;
+                $dataSet['Total']['data'][$positionType] += $StaffTotal;
 			}
 		}
 
@@ -1401,4 +1408,53 @@ class StaffTable extends ControllerActionTable {
 			$this->updateStaffStatus($entity, $this->endOfAssignment);
 		}
 	}
+
+    public function getModelAlertData($threshold)
+    {
+        $thresholdArray = json_decode($threshold, true);
+
+        $conditions = [
+            1 => ('DATEDIFF(' . $this->aliasField('end_date') . ', NOW())' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // before
+            2 => ('DATEDIFF(NOW(), ' . $this->aliasField('end_date') . ')' . ' BETWEEN 0 AND ' . $thresholdArray['value']), // after
+        ];
+
+        // will do the comparison with threshold when retrieving the absence data
+        $licenseData = $this->find()
+            ->select([
+                'StaffTypes.name',
+                'start_date',
+                'end_date',
+                'Institutions.id',
+                'Institutions.name',
+                'Institutions.code',
+                'Institutions.address',
+                'Institutions.postal_code',
+                'Institutions.contact_person',
+                'Institutions.telephone',
+                'Institutions.fax',
+                'Institutions.email',
+                'Institutions.website',
+                'Users.id',
+                'Users.openemis_no',
+                'Users.first_name',
+                'Users.middle_name',
+                'Users.third_name',
+                'Users.last_name',
+                'Users.preferred_name',
+                'Users.email',
+                'Users.address',
+                'Users.postal_code',
+                'Users.date_of_birth'
+            ])
+            ->contain(['Users', 'Institutions', 'StaffTypes'])
+            ->where([
+                $this->aliasField('staff_type_id') => $thresholdArray['staff_type'],
+                $this->aliasField('end_date') . ' IS NOT NULL',
+                $conditions[$thresholdArray['condition']]
+            ])
+            ->hydrate(false)
+            ;
+
+        return $licenseData->toArray();
+    }
 }
