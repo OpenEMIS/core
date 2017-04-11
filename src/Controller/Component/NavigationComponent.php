@@ -26,7 +26,7 @@ class NavigationComponent extends Component
         return $events;
     }
 
-    public function addCrumb($title, $options=array())
+    public function addCrumb($title, $options = [])
     {
         $item = array(
             'title' => __($title),
@@ -37,9 +37,9 @@ class NavigationComponent extends Component
         $this->controller->set('_breadcrumbs', $this->breadcrumbs);
     }
 
-    public function substituteCrumb($oldTitle, $title, $options=array())
+    public function substituteCrumb($oldTitle, $title, $options = [])
     {
-        foreach ($this->breadcrumbs as $key=>$value) {
+        foreach ($this->breadcrumbs as $key => $value) {
             if ($value['title'] == __($oldTitle)) {
                 $this->breadcrumbs[$key] = $item = array(
                     'title' => __($title),
@@ -604,8 +604,9 @@ class NavigationComponent extends Component
         $session = $this->request->session();
         $id = !empty($this->controller->ControllerAction->getQueryString('institution_student_id')) ? $this->controller->ControllerAction->getQueryString('institution_student_id') :$session->read('Institution.Students.id');
         $studentId = $session->read('Student.Students.id');
-        $institutionId = $session->read('Institution.Institutions.id');
-        $queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $institutionId, 'institution_student_id' => $id]);
+        $institutionIdSession = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
+        $queryString = $this->controller->ControllerAction->paramsEncode(['institution_id' => $this->controller->ControllerAction->paramsDecode($institutionId)['id'], 'institution_student_id' => $id]);
         $navigation = [
             'Institutions.StudentUser.view' => [
                 'title' => 'General',
@@ -631,12 +632,19 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Student'],
                 'selected' => ['Students.Healths', 'Students.HealthAllergies', 'Students.HealthConsultations', 'Students.HealthFamilies', 'Students.HealthHistories', 'Students.HealthImmunizations', 'Students.HealthMedications', 'Students.HealthTests']],
         ];
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params']['institutionId'] = $institutionId;
+            }
+        }
         return $navigation;
     }
 
     public function getInstitutionStaffNavigation()
     {
         $session = $this->request->session();
+        $institutionIdSession = $this->controller->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $institutionId = isset($this->request->params['institutionId']) ? $this->request->params['institutionId'] : $institutionIdSession;
         $id = $session->read('Staff.Staff.id');
         $navigation = [
             'Institutions.StaffUser.view' => [
@@ -678,6 +686,11 @@ class NavigationComponent extends Component
                 'selected' => ['Staff.Healths', 'Staff.HealthAllergies', 'Staff.HealthConsultations', 'Staff.HealthFamilies', 'Staff.HealthHistories', 'Staff.HealthImmunizations', 'Staff.HealthMedications', 'Staff.HealthTests']
             ],
         ];
+        foreach ($navigation as &$n) {
+            if (isset($n['params'])) {
+                $n['params']['institutionId'] = $institutionId;
+            }
+        }
         return $navigation;
     }
 
