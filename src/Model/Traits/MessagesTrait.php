@@ -722,7 +722,8 @@ trait MessagesTrait {
             ],
             'InstitutionGrades' => [
                 'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleCheckStudentInEducationProgrammes' => 'Cannot set the specified End Date because there are students that are enrolled after it.'
                 ],
                 'start_date' => [
                     'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
@@ -845,6 +846,14 @@ trait MessagesTrait {
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+            ],
+            'StudentUser' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDate' => 'Student Start Date is later than the Education Grade End Date.'
+                ],
+                'education_grade_id' => [
+                    'ruleCheckProgrammeEndDate' => 'Education Grade has ended.'
                 ],
             ],
             'Staff' => [
