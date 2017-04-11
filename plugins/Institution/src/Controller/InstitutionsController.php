@@ -394,6 +394,8 @@ class InstitutionsController extends AppController
     {
         parent::beforeFilter($event);
         $session = $this->request->session();
+        $instId = !is_null($this->request->param('institutionId')) ? $this->request->param('institutionId') : $this->ControllerAction->paramsEncode(['id' => $session->read('Institution.Institutions.id')]);
+        $this->request->params['pass']['institutionId'] = $instId;
         $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
         $action = $this->request->params['action'];
         $header = __('Institutions');
@@ -587,7 +589,7 @@ class InstitutionsController extends AppController
                     $model->fields['institution_id']['value'] = $institutionId;
                 }
 
-                if (count($this->request->pass) > 1) {
+                if (count($this->request->pass) > 1 && isset($this->request->pass[1])) {
                     $modelIds = $this->request->pass[1]; // id of the sub model
                     $primaryKey = $model->primaryKey();
                     $modelIds = $this->ControllerAction->paramsDecode($modelIds);
