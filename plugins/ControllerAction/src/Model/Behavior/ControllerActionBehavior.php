@@ -260,14 +260,6 @@ class ControllerActionBehavior extends Behavior
             'action' => $this->_table->alias,
             0 => $action
         ];
-        $requestParams = $this->_table->request->params;
-        $cakephpReservedKeys = ['pass', '_matchedRoute', '_Token', '_csrfToken'];
-        foreach ($requestParams as $key => $value) {
-            if (is_numeric($key) || in_array($key, $cakephpReservedKeys)) {
-                unset($requestParams[$key]);
-            }
-        }
-        $url = array_merge($url, $requestParams);
 
         if ($params === true) {
             $url = array_merge($url, $this->params());
