@@ -358,7 +358,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         userData = response.data[0];
                         modifiedUser = userData;
                         delete modifiedUser['openemis_no'];
-                        console.log(modifiedUser);
+                        delete modifiedUser['created'];
+                        delete modifiedUser['modified'];
                         modifiedUser['is_staff'] = 1;
                         modifiedUser['start_date'] = userRecord['start_date'];
                         StaffUser.edit(modifiedUser)
