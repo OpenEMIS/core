@@ -3,24 +3,28 @@ namespace Alert\Model\Table;
 
 use ArrayObject;
 
+use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
+use Cake\Utility\Inflector;
 use Cake\Log\Log;
 
+use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
 class AlertsTable extends ControllerActionTable
 {
-    private $statusTypes = [
-        '0' => 'Stop',
-        '1' => 'Running'
-    ];
+    use OptionsTrait;
+
+    private $statusTypes = [];
 
     public function initialize(array $config)
     {
         parent::initialize($config);
+
+        $this->statusTypes = $this->getSelectOptions('Alert.status_types');
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
@@ -36,13 +40,22 @@ class AlertsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('name', ['sort' => false]);
         $this->field('process_name', ['visible' => false]);
         $this->field('process_id', ['visible' => false]);
         $this->field('status', ['after' => 'name']);
     }
 
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->order('name');
+    }
+
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // for shell process the modified_user_id unable to get the auth user id.
+        $this->field('modified_user_id',['visible' => false]);
+
         $shellName = $entity->process_name;
         if ($this->isShellStopExist($shellName)) {
             $icon = '<i class="fa fa-play"></i>';
@@ -123,6 +136,11 @@ class AlertsTable extends ControllerActionTable
         $url = $this->url($params['action']);
         $event->stopPropagation();
         return $this->controller->redirect($url);
+    }
+
+    public function onGetName(Event $event, Entity $entity)
+    {
+        return Inflector::humanize(Inflector::underscore($entity->name));
     }
 
     public function onGetStatus(Event $event, Entity $entity)
