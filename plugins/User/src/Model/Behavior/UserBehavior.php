@@ -278,7 +278,14 @@ class UserBehavior extends Behavior {
 
         if ($this->isCAv4()) {
             $this->_table->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
-            $this->_table->field('openemis_no', ['type' => 'readonly', 'order' => 1, 'sort' => true]);
+
+            // check if the openemis_no isset, if its set, the field got the sort field no need to sort = true
+            $openemisNoAttr = ['type' => 'readonly', 'order' => 1];
+            if (!isset($this->_table->fields['openemis_no']['sort'])) {
+                $openemisNoAttr['sort'] = true;
+            }
+
+            $this->_table->field('openemis_no', $openemisNoAttr);
         } else {
             $this->_table->ControllerAction->field('photo_content', ['type' => 'image', 'ajaxLoad' => true, 'imageUrl' => $imageUrl, 'imageDefault' => '"'.$imageDefault.'"', 'order' => 0]);
             $this->_table->ControllerAction->field('openemis_no', [
@@ -310,10 +317,10 @@ class UserBehavior extends Behavior {
 
             $this->_table->fields['openemis_no']['sort'] = ['field' => 'Users.openemis_no'];
             $sortList = ['Users.openemis_no', 'Users.first_name'];
-            if (array_key_exists('sortWhitelist', $extra)) {
-                $sortList = array_merge($extra['sortWhitelist'], $sortList);
+            if (array_key_exists('sortWhitelist', $extra['options'])) {
+                $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
             }
-            $extra['sortWhitelist'] = $sortList;
+            $extra['options']['sortWhitelist'] = $sortList;
         }
     }
 
