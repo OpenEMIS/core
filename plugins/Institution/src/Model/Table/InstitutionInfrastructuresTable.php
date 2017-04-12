@@ -543,17 +543,4 @@ class InstitutionInfrastructuresTable extends AppTable
 
         return compact('typeOptions', 'selectedType');
     }
-
-    public function getYearOptionsByConfig()
-    {
-        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
-        $lowestYear = $ConfigItems->value('lowest_year');
-        $currentYear = date("Y");
-
-        for ($i=$currentYear; $i >= $lowestYear; $i--) {
-            $yearOptions[$i] = $i;
-        }
-
-        return $yearOptions;
-    }
 }

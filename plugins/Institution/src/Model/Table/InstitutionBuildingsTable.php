@@ -369,7 +369,7 @@ class InstitutionBuildingsTable extends AppTable
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
-            $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types')
+            $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
             $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
