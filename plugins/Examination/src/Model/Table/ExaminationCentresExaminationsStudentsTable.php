@@ -80,10 +80,9 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         return $events;
     }
 
-    public function examinationsAfterUnregister(Event $event, $students, $academicPeriodId, $examinationId, $examinationCentres)
+    public function examinationsAfterUnregister(Event $event, $students, $examinationId, $examinationCentres)
     {
         $conditions = [
-            'academic_period_id' => $academicPeriodId,
             'examination_id' => $examinationId
         ];
 
@@ -94,7 +93,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         }
 
         // delete student(s) from exam centre room
-        $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+        $ExaminationCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
         $ExaminationCentreRoomStudents->deleteAll($conditions);
 
         // delete results for student(s)
@@ -108,12 +107,11 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             $studentCount = $this->find()
                 ->where([
                     $this->aliasField('examination_centre_id') => $centreId,
-                    $this->aliasField('academic_period_id') => $academicPeriodId,
                     $this->aliasField('examination_id') => $examinationId
                 ])
                 ->group([$this->aliasField('student_id')])
                 ->count();
-            $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $centreId]);
+            $this->ExaminationCentresExaminations->updateAll(['total_registered' => $studentCount], ['examination_centre_id' => $centreId, 'examination_id' => $examinationId]);
         }
     }
 
