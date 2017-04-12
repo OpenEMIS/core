@@ -41,19 +41,27 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
                 'after' => 'condition',
                 'lookupModel' => 'FieldOption.LicenseTypes'
             ],
-            // 'hour' => [
-            //     'type' => 'integer',
-            //     'after' => 'license_type',
-            //     'attr' => [
-            //         'min' => 1,
-            //         'max' => 30,
-            //         'required' => true
-            //     ],
-            //     'tooltip' => [
-            //         'label' => 'Value',
-            //         'sprintf' => [1, 30]
-            //     ]
-            // ],
+            'hour' => [
+                'type' => 'integer',
+                'after' => 'license_type',
+                'attr' => [
+                    'min' => 1,
+                    'max' => 99,
+                    'required' => true
+                ],
+                'tooltip' => [
+                    'label' => 'Hours',
+                    'sprintf' => [1, 99]
+                ]
+            ],
+            'field_of_studies' => [
+                'type' => 'chosenSelect',
+                'after' => 'hour',
+                'attr' => [
+                    'required' => true
+                ],
+                'lookupModel' => 'Training.TrainingFieldStudies'
+            ],
         ],
         'placeholder' => [
             '${threshold.value}' => 'Threshold value.',
@@ -96,12 +104,26 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
         if (isset($data['feature']) && !empty($data['feature']) && $data['feature'] == $this->alertRule) {
             if (isset($data['submit']) && $data['submit'] == 'save') {
                 $validator = $model->validator();
-                $validator->add('value', [
-                    'ruleRange' => [
-                        'rule' => ['range', 1, 30],
-                        'message' => __('Value must be within 1 to 30')
-                    ]
-                ]);
+                $validator
+                    ->add('field_of_studies', 'custom', [
+                        'rule' => function($value, $context) {
+                            return (!empty($value['_ids']) && is_array($value['_ids']));
+                        },
+                        'message' => __('This field cannot be left empty')
+                    ])
+                    ->add('value', [
+                        'ruleRange' => [
+                            'rule' => ['range', 1, 30],
+                            'message' => __('Value must be within 1 to 30')
+                        ]
+                    ])
+                    ->add('hour', [
+                        'ruleRange' => [
+                            'rule' => ['range', 1, 99],
+                            'message' => __('Value must be within 1 to 99')
+                        ]
+                    ])
+                ;
             }
         }
     }
@@ -110,6 +132,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
     {
         $this->onAlertRuleSetupFields($event, $entity);
         $this->_table->field('license_setup', ['type' => 'section', 'before' => 'value']);
+        $this->_table->field('training_setup', ['type' => 'section', 'before' => 'hour']);
     }
 
     public function onGetLicenseRenewalThreshold(Event $event, Entity $entity)

@@ -31,8 +31,10 @@ class AlertLicenseRenewalShell extends AlertShell
 
         do {
             pr('AlertLicenseRenewalShell - main');
-            // $rules = $this->getAlertRules($feature);
-
+            $rules = $this->getAlertRules($feature);
+pr($feature);
+pr($rules);
+die;
             // foreach ($rules as $rule) {
             //     $threshold = $rule->threshold;
             //     $thresholdArray = json_decode($threshold, true);
@@ -81,7 +83,7 @@ class AlertLicenseRenewalShell extends AlertShell
             //             }
             //         }
             //     }
-            }
+            // }
             sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');
