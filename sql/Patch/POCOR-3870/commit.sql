@@ -2,9 +2,7 @@
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3870', NOW());
 
 -- institution_subject_students
-RENAME TABLE `institution_subject_students` TO `z_3870_institution_subject_students`;
-
-CREATE TABLE IF NOT EXISTS `institution_subject_students` (
+CREATE TABLE IF NOT EXISTS `institution_subject_students_temp` (
   `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
   `total_mark` decimal(6,2) DEFAULT NULL,
   `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
@@ -21,7 +19,7 @@ CREATE TABLE IF NOT EXISTS `institution_subject_students` (
   `created` datetime NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of students attending the subjects';
 
-ALTER TABLE `institution_subject_students`
+ALTER TABLE `institution_subject_students_temp`
   ADD PRIMARY KEY (`student_id`,`institution_class_id`,`institution_id`,`academic_period_id`,`education_subject_id`,`education_grade_id`),
   ADD KEY `student_id` (`student_id`),
   ADD KEY `institution_subject_id` (`institution_subject_id`),
@@ -35,8 +33,12 @@ ALTER TABLE `institution_subject_students`
   ADD KEY `created_user_id` (`created_user_id`),
   ADD KEY `id` (`id`);
 
-INSERT INTO `institution_subject_students`
+INSERT INTO `institution_subject_students_temp`
 SELECT SHA2(CONCAT(`student_id`,',',`institution_subject_id`,',',`institution_class_id`,',',`institution_id`,',',`academic_period_id`,',',`education_subject_id`,',',`education_grade_id`), 256),
 `total_mark`, `student_id`, `institution_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`, `education_subject_id`, `education_grade_id`, `student_status_id`, 
 `modified_user_id`, `modified`, `created_user_id`, `created`
-FROM `z_3870_institution_subject_students`;
+FROM `institution_subject_students`;
+
+RENAME TABLE `institution_subject_students` TO `z_3870_institution_subject_students`;
+
+RENAME TABLE `institution_subject_students_temp` TO `institution_subject_students`;
