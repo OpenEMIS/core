@@ -39,6 +39,6 @@ SELECT SHA2(CONCAT(`student_id`,',',`institution_subject_id`,',',`institution_cl
 `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `institution_subject_students`;
 
-RENAME TABLE `institution_subject_students` TO `z_3870_institution_subject_students`;
+RENAME TABLE `institution_subject_students` TO `z_3870_institution_subject_students_1`;
 
 RENAME TABLE `institution_subject_students_temp` TO `institution_subject_students`;
