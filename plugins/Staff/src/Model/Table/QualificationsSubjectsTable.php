@@ -14,13 +14,7 @@ class QualificationsSubjectsTable extends AppTable {
 		parent::initialize($config);
 		$this->belongsTo('StaffQualifications', ['className' => 'Staff.Qualifications']);
 		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        if ($entity->isNew()) {
-            $hashString = $entity->staff_qualification_id . ',' . $entity->education_subject_id;
-            $entity->id = Security::hash($hashString, 'sha256');
-        }
-    }
+		$this->addBehavior('CompositeKey');
+	}
 }
