@@ -3,41 +3,112 @@ namespace Staff\Model\Table;
 
 use ArrayObject;
 
-use Cake\Validation\Validator;
 use Cake\Event\Event;
-use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 
 use App\Model\Table\ControllerActionTable;
 
 class StaffTrainingsTable extends ControllerActionTable
 {
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
 
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('StaffTrainingCategories', ['className' => 'Staff.StaffTrainingCategories']);
-	}
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('TrainingFieldStudies', ['className' => 'Training.TrainingFieldStudies', 'foreignKey' => 'training_field_of_study_id']);
+        // $this->belongsTo('StaffTrainingCategories', ['className' => 'Staff.StaffTrainingCategories']);
 
-	public function beforeAction(Event $event, ArrayObject $extra)
-	{
-		$userId = $this->Session->read('Staff.Staff.id');
-		$this->field('staff_id', ['type' => 'hidden', 'value' => $userId]);
-		$this->field('staff_training_category_id', ['type' => 'select']);
-		$this->field('completed_date', ['default_date' => true]);
-	}
+        // for file upload
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
 
-	private function setupTabElements()
-	{
-		$tabElements = $this->controller->getInstitutionTrainingTabElements();
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', 'Trainings');
-	}
+        // setting this up to be overridden in viewAfterAction(), this code is required for file download
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            true
+        );
+    }
 
-	public function afterAction(Event $event)
-	{
-		$this->setupTabElements();
-	}
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+            ->add('credit_hours', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 99]
+                ]
+            ])
+            ->allowEmpty('file_content')
+        ;
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('description', ['visible' => false]);
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        // determine if download button is shown
+        $showFunc = function() use ($entity) {
+            $filename = $entity->file_content;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
+
+        $this->setupFields($entity);
+    }
+
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+    }
+
+    private function setupTabElements()
+    {
+        $tabElements = $this->controller->getInstitutionTrainingTabElements();
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', 'Trainings');
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        $this->setupTabElements();
+    }
+
+    public function setupFields(Entity $entity)
+    {
+        $this->field('code');
+        $this->field('name');
+        $this->field('description');
+        $this->field('training_field_of_study_id', ['type' => 'select', 'attr' => ['label' => __('Field of Study')]]);
+        $this->field('credit_hours', ['attr' => ['min' => 0, 'max' => 99]]);
+        $this->field('date_completed');
+
+        // Attachment field
+        $this->field('file_name', [
+            'type' => 'hidden',
+            'visible' => ['view' => false, 'edit' => true]
+        ]);
+        $this->field('file_content', [
+            'visible' => ['view' => false, 'edit' => true],
+            'attr' => ['label' => __('Attachment')]
+        ]);
+    }
 }
