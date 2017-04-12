@@ -110,9 +110,8 @@ class QualificationsTable extends ControllerActionTable {
 
     public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, Request $request)
     {
-        // pr($attr);
+        unset($request->query['title']);
         $attr['onChangeReload'] = 'changeQualificationTitleId';
-
         return $attr;
     }
 
@@ -142,7 +141,7 @@ class QualificationsTable extends ControllerActionTable {
                 }
             }
 
-            if ($qualificationTitle) {
+            if (!empty($qualificationTitle)) {
                 $query = $this->QualificationTitles->find()
                         ->contain('QualificationLevels')
                         ->where([
@@ -151,10 +150,13 @@ class QualificationsTable extends ControllerActionTable {
                         ->first();
                 
                 $attr['attr']['value'] = $query->qualification_level->name;
-                $attr['value'] = $query->qualification_level_id;
-
-                return $attr;
+                $attr['value'] = $query->qualification_level_id;                
+            } else {
+                $attr['attr']['value'] = '';
+                $attr['value'] = '';
             }
+
+            return $attr;
         }
     }
 

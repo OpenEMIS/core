@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS `qualification_titles` (
 
 ALTER TABLE `qualification_titles`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `qualification_level_id` (`qualification_level_id`),
+  ADD KEY `qualification_level_id` (`qualification_level_id`);
   -- ADD KEY `qualification_temp_code` (`qualification_temp_code`);
 
 ALTER TABLE `qualification_titles`
@@ -81,15 +81,15 @@ ALTER TABLE `qualification_titles`
 -- FROM `z_3699_qualification_specialisations`;
 
 #re-insert the data from `staff_qualifications` table
-INSERT INTO `qualification_titles` (`name`, `order`, `qualification_level_id`, `qualification_temp_code`, `created_user_id`, `created`)
-SELECT DISTINCT CONCAT(trim(`SQ`.`qualification_title`), ' ', trim(`QS`.`name`), ' ', trim(`QL`.`name`)) AS `qualification_title_name`, 
-1, `SQ`.`qualification_level_id`,
-CONCAT(trim(`SQ`.`qualification_title`), '.', trim(`SQ`.`qualification_specialisation_id`), '.', trim(`SQ`.`qualification_level_id`)) AS `qualification_title_code`,
-1, '1970-01-01'
-FROM `z_3699_staff_qualifications` `SQ`
-INNER JOIN `z_3699_qualification_specialisations` `QS` ON `QS`.`id` = `SQ`.`qualification_specialisation_id`
-INNER JOIN `z_3699_qualification_levels` `QL` ON `QL`.id = `SQ`.`qualification_level_id`
-ORDER BY `qualification_title_code`;
+-- INSERT INTO `qualification_titles` (`name`, `order`, `qualification_level_id`, `qualification_temp_code`, `created_user_id`, `created`)
+-- SELECT DISTINCT CONCAT(trim(`SQ`.`qualification_title`), ' ', trim(`QS`.`name`), ' ', trim(`QL`.`name`)) AS `qualification_title_name`, 
+-- 1, `SQ`.`qualification_level_id`,
+-- CONCAT(trim(`SQ`.`qualification_title`), '.', trim(`SQ`.`qualification_specialisation_id`), '.', trim(`SQ`.`qualification_level_id`)) AS `qualification_title_code`,
+-- 1, '1970-01-01'
+-- FROM `z_3699_staff_qualifications` `SQ`
+-- INNER JOIN `z_3699_qualification_specialisations` `QS` ON `QS`.`id` = `SQ`.`qualification_specialisation_id`
+-- INNER JOIN `z_3699_qualification_levels` `QL` ON `QL`.id = `SQ`.`qualification_level_id`
+-- ORDER BY `qualification_title_code`;
 
 -- `staff_qualifications`
 
@@ -150,11 +150,12 @@ CREATE TABLE IF NOT EXISTS `staff_qualifications_subjects` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the subjects that can be taught by teachers with the specialisations';
 
 ALTER TABLE `staff_qualifications_subjects`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `staff_qualification_id` (`staff_qualification_id`),
-  ADD KEY `education_subject_id` (`education_subject_id`);
+  ADD PRIMARY KEY (`staff_qualification_id`, `education_subject_id`);
 
 
---`labels`
+-- `labels`
 INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
-VALUES ('5c3ddc98-0aec-11e7-b9c5-525400b263eb', 'Qualifications', 'file_content', 'Staff > Qualifications', 'Attachment', NULL, NULL, '1', NULL, NULL, '1', '2017-03-17 00:00:00');
+VALUES ('5c3ddc98-0aec-11e7-b9c5-525400b263eb', 'Qualifications', 'file_content', 'Qualifications', 'Attachment', NULL, NULL, '1', NULL, NULL, '1', '2017-03-17 00:00:00');
+
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `code`, `name`, `visible`, `modified_user_id`, `modified`, `created_user_id`, `created`) 
+VALUES ('a72ed550-1449-11e7-9f11-525400b263eb', 'Qualifications', 'education_subjects', 'Qualifications', 'Qualification Specialisation', NULL, NULL, '1', NULL, NULL, '1', '2017-03-29 00:00:00');
