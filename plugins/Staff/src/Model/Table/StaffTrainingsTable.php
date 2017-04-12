@@ -52,6 +52,15 @@ class StaffTrainingsTable extends ControllerActionTable
         ;
     }
 
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
+    {
+        if ($field == 'training_field_of_study_id') {
+            return __('Field of Study');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('description', ['visible' => false]);
@@ -97,7 +106,7 @@ class StaffTrainingsTable extends ControllerActionTable
         $this->field('code');
         $this->field('name');
         $this->field('description');
-        $this->field('training_field_of_study_id', ['type' => 'select', 'attr' => ['label' => __('Field of Study')]]);
+        $this->field('training_field_of_study_id', ['type' => 'select']);
         $this->field('credit_hours', ['attr' => ['min' => 0, 'max' => 99]]);
         $this->field('date_completed');
 
