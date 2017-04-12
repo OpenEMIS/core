@@ -264,7 +264,7 @@ class ControllerActionBehavior extends Behavior
 
     private function mergeRequestParams(array &$url)
     {
-        $requestParams = $this->request->params;
+        $requestParams = $this->_table->request->params;
         foreach ($requestParams as $key => $value) {
             if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
                 unset($requestParams[$key]);

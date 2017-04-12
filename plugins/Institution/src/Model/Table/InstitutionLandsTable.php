@@ -551,11 +551,64 @@ class InstitutionLandsTable extends AppTable
                 $attr['value'] = $entity->end_date->format('Y-m-d');
             }
         }
-
         return $attr;
     }
 
     public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldYearAcquired(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+        } elseif ($action == 'edit') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldYearDisposed(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+        } elseif ($action == 'edit') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+        return $attr;
+    }
+
+    public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -656,7 +709,7 @@ class InstitutionLandsTable extends AppTable
     private function setupFields(Entity $entity)
     {
         $this->ControllerAction->setFieldOrder([
-            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'area', 'year_acquired', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'land_type_id', 'land_status_id', 'area', 'year_acquired', 'year_disposed', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_ownership_id', 'infrastructure_condition_id', 'previous_institution_land_id', 'new_land_type', 'new_start_date'
         ]);
 
         $this->ControllerAction->field('change_type');
@@ -665,6 +718,9 @@ class InstitutionLandsTable extends AppTable
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('code');
         $this->ControllerAction->field('name');
+        $this->ControllerAction->field('area');
+        $this->ControllerAction->field('year_acquired');
+        $this->ControllerAction->field('year_disposed');
         $this->ControllerAction->field('land_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->ControllerAction->field('start_date', ['entity' => $entity]);
         $this->ControllerAction->field('end_date', ['entity' => $entity]);
@@ -838,6 +894,7 @@ class InstitutionLandsTable extends AppTable
                     $buildingEndOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
                     foreach ($buildingEntities as $buildingEntity) {
                         $buildingEntity->building_status_id = $buildingEndOfUsageId;
+                        // $buildingEntity->
                     }
                 }
             }
