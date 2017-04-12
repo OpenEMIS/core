@@ -328,7 +328,6 @@ class StudentUserTable extends ControllerActionTable
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
-            $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
@@ -376,7 +375,6 @@ class StudentUserTable extends ControllerActionTable
     private function addPromoteButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
-            $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
@@ -603,15 +601,13 @@ class StudentUserTable extends ControllerActionTable
         }
 
         $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
-        $default_identity_type = $this->Identities->IdentityTypes->getDefaultValue();
         $query->join([
             [
                 'type' => $identityJoinType,
                 'table' => 'user_identities',
                 'alias' => 'Identities',
                 'conditions' => array_merge([
-                        'Identities.security_user_id = ' . $this->aliasField('id'),
-                        'Identities.identity_type_id' => $default_identity_type
+                        'Identities.security_user_id = ' . $this->aliasField('id')
                     ], $identityConditions)
             ]
         ]);
