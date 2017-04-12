@@ -1,4 +1,3 @@
--- POCOR-3870
 -- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3870', NOW());
 
@@ -36,23 +35,10 @@ ALTER TABLE `institution_subject_students_temp`
 
 INSERT INTO `institution_subject_students_temp`
 SELECT SHA2(CONCAT(`student_id`,',',`institution_subject_id`,',',`institution_class_id`,',',`institution_id`,',',`academic_period_id`,',',`education_subject_id`,',',`education_grade_id`), 256),
-`total_mark`, `student_id`, `institution_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`, `education_subject_id`, `education_grade_id`, `student_status_id`,
+`total_mark`, `student_id`, `institution_subject_id`, `institution_class_id`, `institution_id`, `academic_period_id`, `education_subject_id`, `education_grade_id`, `student_status_id`, 
 `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `institution_subject_students`;
 
 RENAME TABLE `institution_subject_students` TO `z_3870_institution_subject_students_1`;
 
 RENAME TABLE `institution_subject_students_temp` TO `institution_subject_students`;
-
-
--- 3.9.10
-UPDATE config_items SET value = '3.9.10' WHERE code = 'db_version';
-UPDATE system_patches SET version = (SELECT value FROM config_items WHERE code = 'db_version') WHERE version IS NULL;
-SET @maxId := 0;
-SELECT max(id) + 1 INTO @maxId FROM system_updates;
-INSERT IGNORE INTO system_updates (id, version, date_released, date_approved, approved_by, status, created) VALUES
-(
-  @maxId,
-  (SELECT value FROM config_items WHERE code = 'db_version'),
-  NOW(), NOW(), 1, 2, NOW()
-);
