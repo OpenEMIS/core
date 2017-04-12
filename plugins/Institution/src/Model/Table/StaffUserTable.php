@@ -282,15 +282,13 @@ class StaffUserTable extends ControllerActionTable
         }
 
         $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
-        $default_identity_type = $this->Identities->IdentityTypes->getDefaultValue();
         $query->join([
             [
                 'type' => $identityJoinType,
                 'table' => 'user_identities',
                 'alias' => 'Identities',
                 'conditions' => array_merge([
-                        'Identities.security_user_id = ' . $this->aliasField('id'),
-                        'Identities.identity_type_id' => $default_identity_type
+                        'Identities.security_user_id = ' . $this->aliasField('id')
                     ], $identityConditions)
             ]
         ]);
