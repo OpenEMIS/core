@@ -731,6 +731,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $this->request->data[$this->alias()]['subject_students'][$key] = $this->paramsDecode($subjectStudentsData[$key]['hiddenField']);
                     }
                 }
+                $entity->subject_students = $this->request->data[$this->alias()]['subject_students']; //re-patch entity from decoding the hiddenField
+                
                 foreach ($this->request->data[$this->alias()]['subject_students'] as $row) {
                     if (array_key_exists($row['student_id'], $studentOptions)) {
 
@@ -971,8 +973,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $relationKey = 'subject_'.strtolower($persona);
         foreach ($entity->$relationKey as $data) {
             if (strtolower($persona)=='students') {
-                if ($data->student_id == $id) {
-                    $recordId = $data->id;
+                if (is_object($data)) {
+                   if ($data->student_id == $id) {
+                        $recordId = $data->id;
+                    } 
+                } else if (array_key_exists('student_id', $data)) {
+                    if ($data['student_id'] == $id) {
+                        $recordId = $data['id'];
+                    } 
                 }
             } else {
                 if ($data->staff_id == $id) {
