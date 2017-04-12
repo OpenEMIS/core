@@ -354,6 +354,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         userData = response.data[0];
                         modifiedUser = userData;
                         delete modifiedUser['openemis_no'];
+                        delete modifiedUser['created'];
+                        delete modifiedUser['modified'];
                         modifiedUser['is_student'] = 1;
                         modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
                         modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
