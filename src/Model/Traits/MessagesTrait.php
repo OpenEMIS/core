@@ -1337,6 +1337,11 @@ trait MessagesTrait {
                     'ruleRange' => 'Value must be within 0 to 100'
                 ]
             ],
+            'StaffTrainings' => [
+                'credit_hours' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ],
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
