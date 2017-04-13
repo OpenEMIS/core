@@ -15,13 +15,12 @@ class AlertLicenseRenewalShell extends AlertShell
     {
         parent::initialize();
 
-        $this->loadModel('Staff.Licenses');
         $this->loadModel('Staff.StaffTrainings');
     }
 
     public function main()
     {
-        $model = $this->Licenses;
+        $model = $this->StaffTrainings;
         $processName = $this->processName;
         $feature = $this->featureName;
 
@@ -30,60 +29,57 @@ class AlertLicenseRenewalShell extends AlertShell
         $dir = new Folder(ROOT . DS . 'tmp'); // path to tmp folder
 
         do {
-            pr('AlertLicenseRenewalShell - main');
             $rules = $this->getAlertRules($feature);
-pr($feature);
-pr($rules);
-die;
-            // foreach ($rules as $rule) {
-            //     $threshold = $rule->threshold;
-            //     $thresholdArray = json_decode($threshold, true);
 
-            //     $data = $this->getAlertData($threshold, $model);
+            foreach ($rules as $rule) {
+                $threshold = $rule->threshold;
+                $thresholdArray = json_decode($threshold, true);
 
-            //     foreach ($data as $key => $vars) {
-            //         $vars['threshold'] = $thresholdArray;
+                $data = $this->getAlertData($threshold, $model);
 
-            //         // license don't have institution_id, check in institution staff if staff is assigned
-            //         $institutionStaffRecords = $this->Staff
-            //             ->find()
-            //             ->contain(['StaffStatuses', 'Institutions'])
-            //             ->where([
-            //                 $this->Staff->aliasField('staff_id') => $vars['user']['id'],
-            //                 $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
-            //             ])
-            //             ->hydrate(false)
-            //             ->all();
+                foreach ($data as $key => $vars) {
+                    $vars['threshold'] = $thresholdArray;
 
-            //         if (!empty($institutionStaffRecords)) {
-            //             foreach ($institutionStaffRecords as $institutionStaffObj) {
-            //                 $vars['institution'] = $institutionStaffObj['institution'];
-            //                 $institutionId = $vars['institution']['id'];
+                    // license don't have institution_id, check in institution staff if staff is assigned
+                    $institutionStaffRecords = $this->Staff
+                        ->find()
+                        ->contain(['StaffStatuses', 'Institutions'])
+                        ->where([
+                            $this->Staff->aliasField('staff_id') => $vars['user']['id'],
+                            $this->Staff->StaffStatuses->aliasField('code') => 'ASSIGNED'
+                        ])
+                        ->hydrate(false)
+                        ->all();
 
-            //                 // add the date difference to $vars.
-            //                 $expiryDate = $vars['expiry_date'];
-            //                 $diff = date_diff($expiryDate, new Date());
-            //                 $diffDays = $diff->days;
+                    if (!empty($institutionStaffRecords)) {
+                        foreach ($institutionStaffRecords as $institutionStaffObj) {
+                            $vars['institution'] = $institutionStaffObj['institution'];
+                            $institutionId = $vars['institution']['id'];
 
-            //                 $vars['day_difference'] = $diffDays;
-            //                 // end
+                            // add the date difference to $vars.
+                            $expiryDate = $vars['expiry_date'];
+                            $diff = date_diff($expiryDate, new Date());
+                            $diffDays = $diff->days;
 
-            //                 if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
-            //                     $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
+                            $vars['day_difference'] = $diffDays;
+                            // end
 
-            //                     $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
+                            if (!empty($rule['security_roles']) && !empty($institutionId)) { //check if the alertRule have security role and institution id
+                                $emailList = $this->getEmailList($rule['security_roles'], $institutionId);
 
-            //                     // subject and message for alert email
-            //                     $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
-            //                     $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
+                                $email = !empty($emailList) ? implode(', ', $emailList) : ' ';
 
-            //                     // insert record to  the alertLog if email available
-            //                     $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
+                                // subject and message for alert email
+                                $subject = $this->AlertLogs->replaceMessage($feature, $rule->subject, $vars);
+                                $message = $this->AlertLogs->replaceMessage($feature, $rule->message, $vars);
+
+                                // insert record to  the alertLog if email available
+                                $this->AlertLogs->insertAlertLog($rule->method, $rule->feature, $email, $subject, $message);
+                            }
+                        }
+                    }
+                }
+            }
             sleep(10);
 
             $filesArray = $dir->find($processName . '.stop');

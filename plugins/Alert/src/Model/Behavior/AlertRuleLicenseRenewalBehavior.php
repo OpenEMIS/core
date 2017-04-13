@@ -54,13 +54,21 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
                     'sprintf' => [1, 99]
                 ]
             ],
-            'field_of_studies' => [
+            // 'field_of_studies' => [
+            //     'type' => 'chosenSelect',
+            //     'after' => 'hour',
+            //     'attr' => [
+            //         'required' => true
+            //     ],
+            //     'lookupModel' => 'Training.TrainingFieldStudies'
+            // ],
+            'training_categories' => [
                 'type' => 'chosenSelect',
                 'after' => 'hour',
                 'attr' => [
                     'required' => true
                 ],
-                'lookupModel' => 'Training.TrainingFieldStudies'
+                'lookupModel' => 'Staff.StaffTrainingCategories'
             ],
         ],
         'placeholder' => [
@@ -105,7 +113,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
             if (isset($data['submit']) && $data['submit'] == 'save') {
                 $validator = $model->validator();
                 $validator
-                    ->add('field_of_studies', 'custom', [
+                    ->add('training_categories', 'custom', [
                         'rule' => function($value, $context) {
                             return (!empty($value['_ids']) && is_array($value['_ids']));
                         },
