@@ -58,7 +58,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
     {
         $this->queryString = $request->query['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
-        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Exam Centre Subjects', 'Examination Centre', $overviewUrl);
@@ -110,8 +110,7 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
             ->toArray();
 
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedRecordExamId = $this->ControllerAction->getQueryString('examination_id');
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $selectedRecordExamId;
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
            $where[$this->aliasField('examination_id')] = $selectedExamination;

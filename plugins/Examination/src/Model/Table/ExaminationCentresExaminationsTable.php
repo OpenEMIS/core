@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use Cake\Controller\Component;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
@@ -98,6 +99,25 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         return $buttons;
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        if ($this->action != 'add') {
+            $queryString = $request->query['queryString'];
+            $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
+            $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
+
+            $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+            $Navigation->substituteCrumb('Exam Centre Exams', 'Exam Centres', $overviewUrl);
+            $Navigation->addCrumb('Examinations');
+        }
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         if ($this->action != 'add') {
@@ -110,6 +130,14 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         }
 
         $this->field('examination_id', ['type' => 'select', 'sort' => ['field' => 'Examinations.name']]);
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if ($this->action != 'add' && is_null($this->examCentreId)) {
+            $event->stopPropagation();
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

@@ -118,6 +118,14 @@ class ExaminationsController extends AppController
             ]
         ];
 
+        // pass query string for selected exam across tabs
+        if (!is_null($this->request->query('examination_id'))) {
+            $examinationId = $this->request->query('examination_id');
+            foreach ($tabElements as $key => $obj) {
+                $tabElements[$key]['url']['examination_id'] = $examinationId;
+            }
+        }
+
         $this->set('tabElements', $tabElements);
         $action = !is_null($action) ? $action : $this->request->action;
         $this->set('selectedAction', $action);
