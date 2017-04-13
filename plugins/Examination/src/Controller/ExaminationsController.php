@@ -21,14 +21,12 @@ class ExaminationsController extends AppController
     // CAv4
     public function Exams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.Examinations']); }
     public function GradingTypes() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationGradingTypes']); }
-    public function Centres($pass = 'index') { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);}
-    public function ExamCentres() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminations']);}
+    public function ExamCentres($pass = 'index') { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentres']);}
+    public function ExamCentreExams() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminations']);}
     public function RegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsStudents']); }
     public function BulkStudentRegistration() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.BulkStudentRegistration']); }
     public function NotRegisteredStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreNotRegisteredStudents']); }
     public function RegistrationDirectory() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.RegistrationDirectory']); }
-    public function ExamCentreRooms() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentreRoomsExaminations']); }
-    public function LinkedInstitutionAddStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.LinkedInstitutionAddStudents']); }
     public function ExamResults() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationResults']); }
     public function ExamCentreStudents() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExamCentreStudents']); }
     public function ExamCentreSubjects() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Examination.ExaminationCentresExaminationsSubjects']); }
@@ -94,9 +92,13 @@ class ExaminationsController extends AppController
     {
         $queryString = $this->request->query('queryString');
         $tabElements = [
-            'Centres' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Centres', 'view', 'queryString' => $queryString],
+            'ExamCentres' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentres', 'view', 'queryString' => $queryString],
                 'text' => __('Overview')
+            ],
+            'ExamCentreExams' => [
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreExams', 'queryString' => $queryString],
+                'text' => __('Examinations')
             ],
             'ExamCentreSubjects' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreSubjects', 'queryString' => $queryString],
@@ -113,12 +115,7 @@ class ExaminationsController extends AppController
             'ExamCentreLinkedInstitutions' => [
                 'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreLinkedInstitutions', 'queryString' => $queryString],
                 'text' => __('Linked Institutions')
-            ],
-            'ExamCentreRooms' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'ExamCentreRooms', 'queryString' => $queryString],
-                'text' => __('Rooms')
-            ],
-
+            ]
         ];
 
         $this->set('tabElements', $tabElements);
