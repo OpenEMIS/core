@@ -9,7 +9,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class RegisteredStudentsExaminationCentreTable extends AppTable  {
+class RegisteredStudentsExaminationCentreTable extends AppTable
+{
     public function initialize(array $config)
     {
         $this->table('examination_centres_examinations_students');
@@ -48,7 +49,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -57,7 +59,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $requestData = json_decode($settings['process']['params']);
         $selectedExam = $requestData->examination_id;
         $selectedExamCentre = $requestData->examination_centre_id;
@@ -231,7 +234,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetExaminationId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetExaminationId(Event $event, Entity $entity)
     {
         if ($entity->examination_id) {
             return $entity->examination->code_name;
@@ -240,7 +243,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetExaminationCentreId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetExaminationCentreId(Event $event, Entity $entity)
     {
         if ($entity->examination_centre_id) {
             return $entity->examination_centre->code_name;
@@ -249,7 +252,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetStudentType(Event $event, Entity $entity) {
+    public function onExcelGetStudentType(Event $event, Entity $entity)
+    {
         $normal = 'Normal Candidate';
         $private = 'Private Candidate';
 
@@ -260,7 +264,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetSpecialNeeds(Event $event, Entity $entity) {
+    public function onExcelGetSpecialNeeds(Event $event, Entity $entity)
+    {
         if ($entity->has('user') && $entity->user->has('special_needs') && !empty($entity->user->special_needs)) {
             $specialNeeds = $entity->user->special_needs;
             $allSpecialNeeds = [];
@@ -275,7 +280,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetInstitutionId(Event $event, Entity $entity)
     {
         if ($entity->institution_id) {
             return $entity->institution->code_name;
