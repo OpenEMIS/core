@@ -123,9 +123,6 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
             if (array_key_exists('examination_centre_id', $data[$this->alias()])) {
                 unset($data[$this->alias()]['examination_centre_id']);
             }
-            if (array_key_exists('institution_class_id', $data[$this->alias()])) {
-                unset($data[$this->alias()]['institution_class_id']);
-            }
         }
     }
 
@@ -221,7 +218,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 $query = $this->ExaminationCentres
                     ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
                     ->matching('Examinations')
-                    ->where([$this->ExaminationCentresExaminations->aliasField('examination_id') => $selectedExamination])
+                    ->where([$this->Examinations->aliasField('id') => $selectedExamination])
                     ->order([$this->ExaminationCentres->aliasField('code')]);
 
                 if (!empty($selectedSpecialNeeds)) {
