@@ -946,7 +946,7 @@ class InstitutionRoomsTable extends AppTable
         return $this->controller->redirect($url);
     }
 
-    private function processChangeInRoomType($entity)
+    private function processChangeInType($entity)
     {
         $newStartDateObj = new Date($entity->new_start_date);
         $endDateObj = $newStartDateObj->copy();
