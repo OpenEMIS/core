@@ -128,6 +128,7 @@ class InstitutionLandsTable extends AppTable
             $functionName = "process$functionKey";
 
             if (method_exists($this, $functionName)) {
+                pr('here');die;
                 $event->stopPropagation();
                 $this->$functionName($entity);
             }
@@ -899,6 +900,62 @@ class InstitutionLandsTable extends AppTable
                 }
             }
         }
+    }
+
+    private function processEndOfUsage($entity)
+    {
+        $where = ['id' => $entity->id];
+        $this->updateStatus('END_OF_USAGE', $where);
+
+        $url = $this->ControllerAction->url('index');
+        return $this->controller->redirect($url);
+    }
+
+    private function processChangeInType($entity)
+    {
+        $newStartDateObj = new Date($entity->new_start_date);
+        $endDateObj = $newStartDateObj->copy();
+        $endDateObj->addDay(-1);
+        $newLandTypeId = $entity->new_land_type;
+
+        $oldEntity = $this->find()->where(['id' => $entity->id])->first();
+        $newRequestData = $oldEntity->toArray();
+
+        // Update old entity
+        $oldEntity->end_date = $endDateObj;
+
+        $where = ['id' => $oldEntity->id];
+        $this->updateStatus('CHANGE_IN_TYPE', $where);
+        $this->save($oldEntity);
+        // End
+
+        // Update new entity
+        $ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+        foreach ($ignoreFields as $key => $field) {
+            unset($newRequestData[$field]);
+        }
+        $newRequestData['start_date'] = $newStartDateObj;
+        $newRequestData['land_type_id'] = $newLandTypeId;
+        $newRequestData['previous_institution_land_id'] = $oldEntity->id;
+        $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
+        $newEntity = $this->save($newEntity);
+        // End
+
+        $url = $this->ControllerAction->url('edit');
+        unset($url['type']);
+        unset($url['edit_type']);
+        $url[1] = $this->paramsEncode(['id' => $newEntity->id]);
+        return $this->controller->redirect($url);
+    }
+
+    private function updateStatus($code, $primaryKey)
+    {
+        $statuses = $this->LandStatuses->findCodeList();
+        $status = $statuses[$code];
+
+        $entity = $this->get($primaryKey);
+        $entity->land_status_id = $status;
+        $this->save($entity);
     }
 
     public function findInUse(Query $query, array $options)
