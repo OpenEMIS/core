@@ -11,11 +11,12 @@ use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use ArrayObject;
 
-class ConfigProductListsTable extends ControllerActionTable {
-
-	public function initialize(array $config) {
-		$this->table('config_product_lists');
-		parent::initialize($config);
+class ConfigProductListsTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
+        $this->table('config_product_lists');
+        parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->addBehavior('ControllerAction.FileUpload', [
                 'name' => 'file_name',
@@ -24,7 +25,7 @@ class ConfigProductListsTable extends ControllerActionTable {
                 'contentEditable' => true,
                 'allowable_file_types' => 'image'
             ]);
-	}
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -44,15 +45,18 @@ class ConfigProductListsTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function getDefaultImgView() {
+    public function getDefaultImgView()
+    {
         return "<div class='profile-image'><i class='fa fa-image'></i></div>";
     }
 
-    public function getDefaultImgViewClass() {
+    public function getDefaultImgViewClass()
+    {
         return "profile-image";
     }
 
-    public function getDefaultImgMsg() {
+    public function getDefaultImgMsg()
+    {
         $formatSupported = __('Format Supported') . ': ';
         $photoMessage = __('Advisable photo dimension 35px by 35px');
         $defaultImgMsg = '<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>';
