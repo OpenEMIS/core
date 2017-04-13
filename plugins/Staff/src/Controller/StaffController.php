@@ -56,9 +56,7 @@ class StaffController extends AppController {
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
     public function Attachments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
-<<<<<<< HEAD
     public function Trainings() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
-=======
 
     // health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -70,7 +68,6 @@ class StaffController extends AppController {
 	public function HealthMedications()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
 	public function HealthTests()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
 	// End Health
->>>>>>> 2d01ef4e20991060fdf920d5db7f3a4e64246804
     // End
 
 	public function beforeFilter(Event $event) {
