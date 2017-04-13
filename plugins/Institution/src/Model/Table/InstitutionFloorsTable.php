@@ -365,7 +365,7 @@ class InstitutionFloorsTable extends AppTable
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
-            $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types')
+            $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
             $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
@@ -838,13 +838,87 @@ class InstitutionFloorsTable extends AppTable
 
                 $previousEntity = $this->get($copyFrom);
                 $changeInTypeId = $this->FloorStatuses->getIdByCode('CHANGE_IN_TYPE');
+                $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
                 if ($previousEntity->floor_status_id == $changeInTypeId) {
                     // third parameters set to true means copy general only
                     $this->copyCustomFields($copyFrom, $copyTo, true);
+                    $this->InstitutionFloors->updateAll([
+                        'institution_floor_id' => $copyTo
+                    ], [
+                        'institution_floor_id' => $copyFrom
+                    ]);
+                } elseif ($previousEntity->floor_status_id == $endOfUsageId) {
+                    $roomEntities = $this->InstitutionRooms
+                        ->find()
+                        ->where([$this->InstitutionRooms->aliasField('institution_floor_id') => $copyFrom])
+                        ->toArray();
+                    foreach ($roomEntities as $roomEntity) {
+                        $roomEntity->change_type = SELF::END_OF_USAGE;
+                        $roomEntity->end_date = $entity->end_date;
+                        $this->InstitutionRooms->save($roomEntity);
+                    }
                 }
             }
         }
+    }
+
+    private function processEndOfUsage($entity)
+    {
+        $where = ['id' => $entity->id];
+        $this->updateStatus('END_OF_USAGE', $where);
+
+        $url = $this->ControllerAction->url('index');
+
+        return $this->controller->redirect($url);
+    }
+
+    private function processChangeInType($entity)
+    {
+        $newStartDateObj = new Date($entity->new_start_date);
+        $endDateObj = $newStartDateObj->copy();
+        $endDateObj->addDay(-1);
+        $newFloorTypeId = $entity->new_floor_type;
+
+        $oldEntity = $this->find()->where(['id' => $entity->id])->first();
+        $newRequestData = $oldEntity->toArray();
+
+        // Update old entity
+        $oldEntity->end_date = $endDateObj;
+
+        $where = ['id' => $oldEntity->id];
+        $this->updateStatus('CHANGE_IN_TYPE', $where);
+        $this->save($oldEntity);
+        // End
+
+        // Update new entity
+        $ignoreFields = ['id', 'modified_user_id', 'modified', 'created_user_id', 'created'];
+        foreach ($ignoreFields as $key => $field) {
+            unset($newRequestData[$field]);
+        }
+        $newRequestData['start_date'] = $newStartDateObj;
+        $newRequestData['floor_type_id'] = $newFloorTypeId;
+        $newRequestData['previous_institution_floor_id'] = $oldEntity->id;
+        $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
+        $newEntity = $this->save($newEntity);
+        // End
+
+        $url = $this->ControllerAction->url('edit');
+        unset($url['type']);
+        unset($url['edit_type']);
+        $url[1] = $this->paramsEncode(['id' => $newEntity->id]);
+
+        return $this->controller->redirect($url);
+    }
+
+    private function updateStatus($code, $primaryKey)
+    {
+        $statuses = $this->FloorStatuses->findCodeList();
+        $status = $statuses[$code];
+
+        $entity = $this->get($primaryKey);
+        $entity->floor_status_id = $status;
+        $this->save($entity);
     }
 
     public function findInUse(Query $query, array $options)
