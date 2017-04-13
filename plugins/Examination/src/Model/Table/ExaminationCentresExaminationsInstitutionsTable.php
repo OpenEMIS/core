@@ -31,6 +31,13 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $this->addBehavior('CompositeKey');
         $this->toggle('edit', false);
         $this->toggle('view', false);
+        $this->toggle('search', false);
+    }
+
+    public function validationDefault(Validator $validator) {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->requirePresence('institutions');
     }
 
     public function implementedEvents()
@@ -44,7 +51,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
     {
         $this->queryString = $request->query['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
-        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'Centres', 'view', 'queryString' => $this->queryString];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Exam Centre Linked Institutions', 'Examination Centre', $overviewUrl);
@@ -61,6 +68,8 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
             $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
             $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Linked Institutions'));
         }
+
+        $this->field('examination_id', ['type' => 'select']);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -74,8 +83,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_id', ['type' => 'select']);
-        $this->fields['examination_id']['type'] = 'string';
+        $this->field('institution_id', ['type' => 'string', 'sort' => ['field' => 'Institutions.name']]);
         $this->setFieldOrder(['institution_id', 'examination_id']);
     }
 
@@ -96,8 +104,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
             ->toArray();
 
         $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedRecordExamId = $this->ControllerAction->getQueryString('examination_id');
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : $selectedRecordExamId;
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
         $this->controller->set(compact('examinationOptions', 'selectedExamination'));
         if ($selectedExamination != -1) {
            $where[$this->aliasField('examination_id')] = $selectedExamination;
@@ -107,12 +114,15 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
 
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
-        $extra['auto_contain_fields'] = [
-            'ExaminationItems' => ['code', 'examination_date'],
-            'Institutions' => ['code']
-        ];
-
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
         $query->where([$where]);
+
+        // sort
+        $sortList = ['Institutions.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
     }
 
     public function onGetInstitutionId(Event $event, Entity $entity)
@@ -128,9 +138,9 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('academic_period_id');
-        $this->field('examination_id');
         $this->field('institutions');
-        $this->setFieldOrder(['academic_period_id', 'examination_id', 'institutions']);
+        $this->field('examination_centre_id');
+        $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'examination_id', 'institutions']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -143,39 +153,52 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         return $attr;
     }
 
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, Request $request)
+    {
+        $examCentre = $this->ExaminationCentres->get($this->examCentreId)->code_name;
+        $attr['type'] = 'readonly';
+        $attr['attr']['value'] = $examCentre;
+        return $attr;
+    }
+
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
     {
-        $ExaminationCentresExaminations = TableRegistry::get('Examination.ExaminationCentresExaminations');
-        $examinationOptions = $ExaminationCentresExaminations
-            ->find('list', [
-                'keyField' => 'examination_id',
-                'valueField' => 'examination.code_name'
-            ])
-            ->contain('Examinations')
-            ->where([$ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
-            ->toArray();
+        if ($action == 'add') {
+            $ExaminationCentresExaminations = TableRegistry::get('Examination.ExaminationCentresExaminations');
+            $examinationOptions = $ExaminationCentresExaminations
+                ->find('list', [
+                    'keyField' => 'examination_id',
+                    'valueField' => 'examination.code_name'
+                ])
+                ->contain('Examinations')
+                ->where([$ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
+                ->toArray();
 
-        $attr['options'] = $examinationOptions;
-        $attr['onChangeReload'] = true;
-        $attr['type'] = 'select';
-        return $attr;
+            $attr['options'] = $examinationOptions;
+            $attr['onChangeReload'] = true;
+            $attr['type'] = 'select';
+            return $attr;
+        }
     }
 
     public function onUpdateFieldInstitutions(Event $event, array $attr, $action, Request $request)
     {
-        $institutionOptions = $this->Institutions->find('list', [
+        $institutionOptions = $this->Institutions
+            ->find('list', [
                 'keyField' => 'id',
                 'valueField' => 'code_name'
             ]);
 
         if (!empty($request->data[$this->alias()]['examination_id'])) {
             $examinationId = $request->data[$this->alias()]['examination_id'];
-            $institutionOptions->notMatching('ExaminationCentresExaminations', function ($q) use ($examinationId) {
-                return $q->where([
-                    'ExaminationCentresExaminations.examination_id' => $examinationId,
-                    'ExaminationCentresExaminations.examination_centre_id' => $this->examCentreId
-                ]);
-            });
+            $institutionOptions
+                ->notMatching('ExaminationCentresExaminations', function ($q) use ($examinationId) {
+                    return $q->where([
+                        'ExaminationCentresExaminations.examination_id' => $examinationId,
+                        'ExaminationCentresExaminations.examination_centre_id' => $this->examCentreId
+                    ]);
+                }
+            );
         }
 
         $attr['options'] = $institutionOptions->toArray();
