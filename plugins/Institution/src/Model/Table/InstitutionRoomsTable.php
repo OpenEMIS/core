@@ -138,7 +138,6 @@ class InstitutionRoomsTable extends AppTable
             $functionName = "process$functionKey";
 
             if (method_exists($this, $functionName)) {
-                $event->stopPropagation();
                 $this->$functionName($entity);
             }
         }
@@ -226,6 +225,7 @@ class InstitutionRoomsTable extends AppTable
         $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
+        $this->fields['institution_floor_id']['visible'] = false;
         $this->ControllerAction->field('start_date', ['visible' => false]);
         $this->ControllerAction->field('start_year', ['visible' => false]);
         $this->ControllerAction->field('end_date', ['visible' => false]);
@@ -424,7 +424,7 @@ class InstitutionRoomsTable extends AppTable
         if ($action == 'view' || $action == 'add') {
             $attr['visible'] = false;
         } elseif ($action == 'edit') {
-            $editTypeOptions = $this->getSelectOptions($this->aliasField('change_types'));
+            $editTypeOptions = $this->getSelectOptions('InstitutionInfrastructure.change_types');
             $selectedEditType = $this->queryString('edit_type', $editTypeOptions);
             $this->advancedSelectOptions($editTypeOptions, $selectedEditType);
             $this->controller->set(compact('editTypeOptions'));
@@ -941,9 +941,6 @@ class InstitutionRoomsTable extends AppTable
     {
         $where = ['id' => $entity->id];
         $this->updateRoomStatus('END_OF_USAGE', $where);
-
-        $url = $this->ControllerAction->url('index');
-        return $this->controller->redirect($url);
     }
 
     private function processChangeInType($entity)
