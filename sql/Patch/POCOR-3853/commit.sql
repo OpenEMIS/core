@@ -768,10 +768,6 @@ WHERE `CM`.`code` = 'Infrastructure';
 
 -- Patch infrastructure_custom_forms_fields
 
-ALTER TABLE `infrastructure_custom_forms`
-DROP COLUMN `original_id`,
-DROP COLUMN `original_module_id`;
-
 CREATE TABLE `z_3853_infrastructure_custom_forms_fields` LIKE `infrastructure_custom_forms_fields`;
 
 INSERT INTO `z_3853_infrastructure_custom_forms_fields`
@@ -895,3 +891,7 @@ DROP COLUMN `original_id`;
 
 ALTER TABLE `institution_infrastructures`
 RENAME TO `z_3853_institution_infrastructures`;
+
+ALTER TABLE `infrastructure_custom_forms`
+DROP COLUMN `original_id`,
+DROP COLUMN `original_module_id`;
