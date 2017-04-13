@@ -10,9 +10,7 @@ use Cake\I18n\Time;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
 use Cake\I18n\I18n;
-
-// 3rd party xlsx writer library
-require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.php');
+use XLSXWriter;
 
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
@@ -112,7 +110,7 @@ class ExcelBehavior extends Behavior {
 
         $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeGenerate'), 'onExcelBeforeGenerate', [$_settings]);
 
-        $writer = new \XLSXWriter();
+        $writer = new XLSXWriter();
         $excel = $this;
 
         $generate = function($settings) {
