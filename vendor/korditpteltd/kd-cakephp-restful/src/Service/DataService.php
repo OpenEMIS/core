@@ -25,6 +25,7 @@ class DataService
     private $_page = 0;
     private $_wildcard = '_';
     private $_db = 'default';
+    private $_showBlobContent = null;
     private $schema = false;
     private $header = [];
 
@@ -280,6 +281,10 @@ class DataService
 
         if ($this->_db != 'default') {
             $params[] = '_db=' . $this->_db;
+        }
+
+        if (is_null($this->_showBlobContent)) {
+            $params[] = '_showBlobContent='.$this->_showBlobContent;
         }
 
         if ($this->schema) {

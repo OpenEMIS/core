@@ -117,7 +117,13 @@ class StudentsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
         return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'student_id';
+        $searchableFields[] = 'openemis_no';
     }
 
     public function validationDefault(Validator $validator)
@@ -587,11 +593,11 @@ class StudentsTable extends ControllerActionTable
 
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
 
-        $sortList = ['openemis_no', 'first_name', 'InstitutionClasses.name'];
-        if (array_key_exists('sortWhitelist', $extra)) {
-            $sortList = array_merge($extra['sortWhitelist'], $sortList);
+        $sortList = ['InstitutionClasses.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
-        $extra['sortWhitelist'] = $sortList;
+        $extra['options']['sortWhitelist'] = $sortList;
         // End
 
         $search = $this->getSearchKey();
