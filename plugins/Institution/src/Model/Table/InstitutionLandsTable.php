@@ -1,23 +1,23 @@
 <?php
 namespace Institution\Model\Table;
 
-use ArrayObject;
-use DateTime;
-use Cake\ORM\TableRegistry;
-use Cake\ORM\Entity;
-use Cake\ORM\Query;
-use Cake\Network\Request;
-use Cake\Event\Event;
-use Cake\Validation\Validator;
-use Cake\Utility\Inflector;
-use Cake\I18n\Date;
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
+use ArrayObject;
+use Cake\Event\Event;
+use Cake\I18n\Date;
+use Cake\Network\Request;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\Utility\Inflector;
+use Cake\Validation\Validator;
+use DateTime;
 
 class InstitutionLandsTable extends AppTable
 {
     use OptionsTrait;
-    const UPDATE_DETAILS = 1;    // In Use
+    const UPDATE_DETAILS = 1;// In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
 
@@ -64,6 +64,7 @@ class InstitutionLandsTable extends AppTable
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
+
         return $validator
             ->add('code', [
                 'ruleUnique' => [
@@ -108,14 +109,14 @@ class InstitutionLandsTable extends AppTable
                 }
 
                 return false;
-            })
-        ;
+            });
     }
 
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['Model.AcademicPeriods.afterSave'] = 'academicPeriodAfterSave';
+
         return $events;
     }
 
@@ -128,7 +129,8 @@ class InstitutionLandsTable extends AppTable
             $functionName = "process$functionKey";
 
             if (method_exists($this, $functionName)) {
-                pr('here');die;
+                pr('here');
+                die;
                 $event->stopPropagation();
                 $this->$functionName($entity);
             }
@@ -152,6 +154,7 @@ class InstitutionLandsTable extends AppTable
             'index'
         ];
         $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->name]);
+
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
 
@@ -306,6 +309,7 @@ class InstitutionLandsTable extends AppTable
 
             $url = $this->ControllerAction->url('index');
             $event->stopPropagation();
+
             return $this->controller->redirect($url);
         } else {
             $selectedEditType = $this->request->query('edit_type');
@@ -320,6 +324,7 @@ class InstitutionLandsTable extends AppTable
                     $url = $this->ControllerAction->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
                     $event->stopPropagation();
+
                     return $this->controller->redirect($url);
                 }
             }
@@ -344,6 +349,7 @@ class InstitutionLandsTable extends AppTable
 
             $url = $this->ControllerAction->url('index');
             $event->stopPropagation();
+
             return $this->controller->redirect($url);
         }
 
@@ -552,6 +558,7 @@ class InstitutionLandsTable extends AppTable
                 $attr['value'] = $entity->end_date->format('Y-m-d');
             }
         }
+
         return $attr;
     }
 
@@ -563,6 +570,7 @@ class InstitutionLandsTable extends AppTable
                 $attr['type'] = 'hidden';
             }
         }
+
         return $attr;
     }
 
@@ -574,6 +582,7 @@ class InstitutionLandsTable extends AppTable
                 $attr['type'] = 'hidden';
             }
         }
+
         return $attr;
     }
 
@@ -590,6 +599,7 @@ class InstitutionLandsTable extends AppTable
                 $attr['type'] = 'hidden';
             }
         }
+
         return $attr;
     }
 
@@ -606,6 +616,7 @@ class InstitutionLandsTable extends AppTable
                 $attr['type'] = 'hidden';
             }
         }
+
         return $attr;
     }
 
@@ -678,7 +689,7 @@ class InstitutionLandsTable extends AppTable
                 $today = new DateTime();
 
                 $attr['visible'] = true;
-                $attr['null'] = false;    // for asterisk to appear
+                $attr['null'] = false;// for asterisk to appear
                 $attr['type'] = 'readonly';
                 $attr['value'] = $today->format('Y-m-d');
                 $attr['attr']['value'] = $this->formatDate($today);
@@ -774,12 +785,14 @@ class InstitutionLandsTable extends AppTable
     {
         $crumbs = [];
         $toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
+
         return $toolbarElements;
     }
 
     private function addControlFilterElement($toolbarElements = [])
     {
         $toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
+
         return $toolbarElements;
     }
 
@@ -792,7 +805,7 @@ class InstitutionLandsTable extends AppTable
         $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
 
         if ($entity->land_status_id == $inUseId) {
-        // If is in use, not allow to delete if the lands is appear in other academic period
+            // If is in use, not allow to delete if the lands is appear in other academic period
             $count = $this
                 ->find()
                 ->where([
@@ -812,7 +825,7 @@ class InstitutionLandsTable extends AppTable
             if ($count > 1) {
                 $isDeletable = false;
             }
-        } elseif ($entity->land_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
+        } elseif ($entity->land_status_id == $endOfUsageId) {// If already end of usage, not allow to edit or delete
             $isEditable = false;
             $isDeletable = false;
         }
@@ -894,8 +907,9 @@ class InstitutionLandsTable extends AppTable
                         ->toArray();
                     $buildingEndOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
                     foreach ($buildingEntities as $buildingEntity) {
-                        $buildingEntity->building_status_id = $buildingEndOfUsageId;
-                        // $buildingEntity->
+                        $buildingEntity->change_type = SELF::END_OF_USAGE;
+                        $buildingEntity->end_date = $entity->end_date;
+                        $this->InstitutionBuildings->save($buildingEntity);
                     }
                 }
             }
@@ -908,6 +922,7 @@ class InstitutionLandsTable extends AppTable
         $this->updateStatus('END_OF_USAGE', $where);
 
         $url = $this->ControllerAction->url('index');
+
         return $this->controller->redirect($url);
     }
 
@@ -945,6 +960,7 @@ class InstitutionLandsTable extends AppTable
         unset($url['type']);
         unset($url['edit_type']);
         $url[1] = $this->paramsEncode(['id' => $newEntity->id]);
+
         return $this->controller->redirect($url);
     }
 
