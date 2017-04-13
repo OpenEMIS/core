@@ -78,6 +78,7 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
             '${issue_date}' => 'Issue date.',
             '${expiry_date}' => 'Expiry date.',
             '${day_difference}' => 'Days difference between today and expiry date.',
+            '${total_credit_hours}' => 'Total credit hours.',
             '${issuer}' => 'Issuer.',
             '${user.openemis_no}' => 'OpenEMIS ID.',
             '${user.first_name}' => 'First name.',
