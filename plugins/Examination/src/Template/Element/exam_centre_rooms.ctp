@@ -26,7 +26,7 @@
             </table>
         </div>
     <?php else : ?>
-        <?= __('No record') ?>
+        <?= __('No rooms') ?>
     <?php endif ?>
 
 <?php elseif ($ControllerAction['action'] == 'edit') : ?>

@@ -13,6 +13,9 @@ use App\Model\Table\ControllerActionTable;
 
 class ExaminationCentresExaminationsTable extends ControllerActionTable
 {
+    private $queryString;
+    private $examCentreId;
+
     public function initialize(array $config)
     {
         parent::initialize($config);
@@ -55,12 +58,13 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             'cascadeCallbacks' => true
         ]);
 
-        $this->addBehavior('Import.ImportLink', ['import_model' => 'ImportExaminationCentreRooms']);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['index']
         ]);
         $this->addBehavior('CompositeKey');
         $this->setDeleteStrategy('restrict');
+        $this->toggle('edit', false);
+        $this->toggle('search', false);
     }
 
     public function validationDefault(Validator $validator)
@@ -85,19 +89,10 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-        $params = [
-            'examination_centre_id' => $entity->examination_centre->id,
-            'examination_id' => $entity->examination_id
-        ];
 
         if (isset($buttons['view']['url'])) {
-            $buttons['view']['url']['action'] = 'Centres';
-            $buttons['view']['url'] = $this->ControllerAction->setQueryString($buttons['view']['url'], $params);
-        }
-
-        if (isset($buttons['edit']['url'])) {
-            $buttons['edit']['url']['action'] = 'Centres';
-            $buttons['edit']['url'] = $this->ControllerAction->setQueryString($buttons['edit']['url'], $params);
+            $buttons['view']['url']['action'] = 'Exams';
+            $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->examination_id]);
         }
 
         return $buttons;
@@ -105,68 +100,47 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('examination_id', ['type' => 'select']);
+        if ($this->action != 'add') {
+            $this->controller->getExamCentresTab();
+            $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+
+            // Set the header of the page
+            $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+            $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Examinations'));
+        }
+
+        $this->field('examination_id', ['type' => 'select', 'sort' => ['field' => 'Examinations.name']]);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        // link examinations button
-        $linkExamButton = $extra['toolbarButtons']['add'];
-        $linkExamButton['attr']['title'] = __('Link Examination');
-        $linkExamButton['label'] = '<i class="fa fa-link"></i>';
-        $extra['toolbarButtons']['linkExam'] = $linkExamButton;
-
-        // add examination centre button
         if (isset($extra['toolbarButtons']['add'])) {
-            $extra['toolbarButtons']['add']['url']['action'] = 'Centres';
-            $extra['toolbarButtons']['add']['attr']['title'] = __('Add Examination Centre');
+            unset($extra['toolbarButtons']['add']);
         }
 
-        $this->fields['examination_centre_id']['type'] = 'string';
-        $this->fields['examination_centre_id']['sort'] = ['field' => 'ExaminationCentres.name'];
-        $this->setFieldOrder(['examination_centre_id', 'academic_period_id', 'examination_id', 'total_registered']);
+        $this->setFieldOrder(['academic_period_id', 'examination_id', 'total_registered']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        // Academic period filter
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-        $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
-        $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
-        $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
-
-        // Examination filter
-        $examinationOptions = $this->Examinations->getExaminationOptions($selectedAcademicPeriod);
-        $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
-        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
-        $this->controller->set(compact('examinationOptions', 'selectedExamination'));
-        if ($selectedExamination != -1) {
-           $where[$this->aliasField('examination_id')] = $selectedExamination;
-        }
-
-        $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
-        $extra['auto_contain_fields'] = ['ExaminationCentres' => ['code']];
-        $query->where($where);
-
         // sort
-        $sortList = ['ExaminationCentres.name'];
+        $sortList = ['Examinations.name'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
         $extra['options']['sortWhitelist'] = $sortList;
 
-        // search
-        $search = $this->getSearchKey();
-        if (!empty($search)) {
-            $extra['OR'] = [
-                [$this->ExaminationCentres->aliasField('name').' LIKE' => '%' . $search . '%'],
-                [$this->ExaminationCentres->aliasField('code').' LIKE' => '%' . $search . '%']
-            ];
-        }
+        $query->where([$this->aliasField('examination_centre_id') => $this->examCentreId]);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
+        $extra['redirect']['action'] = 'ExamCentres';
+
+        if (isset($extra['toolbarButtons']['back'])) {
+            $extra['toolbarButtons']['back']['url']['action'] = 'ExamCentres';
+        }
+
         $this->field('academic_period_id');
         $this->field('examination_centre_type');
         $this->field('link_all_examination_centres');
@@ -275,11 +249,6 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
             return $attr;
         }
-    }
-
-    public function onGetExaminationCentreId(Event $event, Entity $entity)
-    {
-        return $entity->examination_centre->code_name;
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
