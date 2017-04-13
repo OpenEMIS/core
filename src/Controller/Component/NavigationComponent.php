@@ -669,7 +669,7 @@ class NavigationComponent extends Component
 				'title' => 'Training',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Staff.Trainings',],
+				'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Staff.StaffTrainings',],
 			],
 			'Staff.Healths' => [
 				'title' => 'Health',
@@ -722,7 +722,7 @@ class NavigationComponent extends Component
 					'title' => 'Professional Development',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffTrainings', 'Directories.StaffAppraisals']
+					'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAppraisals']
 				],
 				'Directories.StaffBankAccounts' => [
 					'title' => 'Finance',
@@ -730,11 +730,11 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Directory', 'type' => 'staff'],
 					'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries']
 				],
-				'Directories.TrainingResults' => [
+				'Directories.TrainingNeeds' => [
 					'title' => 'Training',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.TrainingResults', 'Directories.TrainingNeeds']
+					'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.StaffTrainings']
 				],
 		];
 		return $navigation;
