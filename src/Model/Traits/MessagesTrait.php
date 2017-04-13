@@ -1,10 +1,12 @@
 <?php
 namespace App\Model\Traits;
+
 use Cake\Cache\Cache;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 
-trait MessagesTrait {
+trait MessagesTrait
+{
     public $messages = [
         'Areas' => [
             'noAccessToAreas' => 'You do not have access to any areas',
@@ -132,6 +134,48 @@ trait MessagesTrait {
         'InfrastructureTypes' => [
             'noLevels' => 'No Available Levels',
             'infrastructure_level_id' => 'Level Name'
+        ],
+        'InstitutionLands' => [
+            'noLand' => 'No Land found',
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_land_type' => [
+                'restrictEdit' => 'Not allowed to change land type in the same day.'
+            ]
+        ],
+        'InstitutionBuildings' => [
+            'noLand' => 'No Building found',
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_building_type' => [
+                'restrictEdit' => 'Not allowed to change building type in the same day.'
+            ]
+        ],
+        'InstitutionFloors' => [
+            'noFloors' => 'No Floor found',
+            'in_use' => [
+                'restrictEdit' => 'Edit operation is not allowed as there are other information linked to this record.',
+                'restrictDelete' => 'Delete operation is not allowed as there are other information linked to this record.'
+            ],
+            'end_of_usage' => [
+                'restrictEdit' => 'Edit operation is not allowed as the record already End of Usage.',
+                'restrictDelete' => 'Delete operation is not allowed as the record already End of Usage.'
+            ],
+            'change_in_floor_type' => [
+                'restrictEdit' => 'Not allowed to change floor type in the same day.'
+            ]
         ],
         'InstitutionRooms' => [
             'noRooms' => 'No Room found',
@@ -994,7 +1038,7 @@ trait MessagesTrait {
                 ],
                  'photo_content' => [
                     'ruleCheckSelectedFileAsImage' => 'Please upload image format files. Eg. jpg, png, gif.',
-                ],
+                 ],
             ],
             'Accounts' => [
                 'username' => [
@@ -1686,7 +1730,8 @@ trait MessagesTrait {
     ];
 
 
-    public function getMessage($code, $options = []) {
+    public function getMessage($code, $options = [])
+    {
         $sprintf = (array_key_exists('sprintf', $options))? $options['sprintf']: [];
         $defaultMessage = (array_key_exists('defaultMessage', $options))? $options['defaultMessage']: true;
 
@@ -1700,7 +1745,9 @@ trait MessagesTrait {
                 if (isset($message[$i])) {
                     $message = $message[$i];
                 } else {
-                    if (!$defaultMessage) return false;
+                    if (!$defaultMessage) {
+                        return false;
+                    }
                     $message = '[Message Not Found]';
                     break;
                 }

@@ -39,6 +39,7 @@ class InstitutionFloorsTable extends AppTable
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'foreignKey' => 'institution_building_id']);
         $this->belongsTo('PreviousFloors', ['className' => 'Institution.InstitutionFloors', 'foreignKey' => 'previous_institution_floor_id']);
+        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms']);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -127,7 +128,6 @@ class InstitutionFloorsTable extends AppTable
             $functionName = "process$functionKey";
 
             if (method_exists($this, $functionName)) {
-                $event->stopPropagation();
                 $this->$functionName($entity);
             }
         }
@@ -136,7 +136,19 @@ class InstitutionFloorsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // logic to copy custom fields (general only) where new floor is created when change in floor type
-        $this->processCopy($entity);
+        if ($entity->isNew()) {
+            $this->processCopy($entity);
+        } elseif ($entity->floor_status_id == $this->FloorStatuses->getIdByCode('END_OF_USAGE')) {
+            $roomEntities = $this->InstitutionRooms
+                ->find()
+                ->where([$this->InstitutionRooms->aliasField('institution_floor_id') => $entity->id])
+                ->toArray();
+            foreach ($roomEntities as $roomEntity) {
+                $roomEntity->change_type = SELF::END_OF_USAGE;
+                $roomEntity->end_date = $entity->end_date;
+                $this->InstitutionRooms->save($roomEntity);
+            }
+        }
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)
@@ -844,34 +856,21 @@ class InstitutionFloorsTable extends AppTable
     public function processCopy(Entity $entity)
     {
         // if is new and floor status of previous floor usage is change in floor type then copy all general custom fields
-        if ($entity->isNew()) {
-            if ($entity->has('previous_institution_floor_id') && $entity->previous_institution_floor_id != 0) {
-                $copyFrom = $entity->previous_institution_floor_id;
-                $copyTo = $entity->id;
+        if ($entity->has('previous_institution_floor_id') && $entity->previous_institution_floor_id != 0) {
+            $copyFrom = $entity->previous_institution_floor_id;
+            $copyTo = $entity->id;
 
-                $previousEntity = $this->get($copyFrom);
-                $changeInTypeId = $this->FloorStatuses->getIdByCode('CHANGE_IN_TYPE');
-                $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
+            $previousEntity = $this->get($copyFrom);
+            $changeInTypeId = $this->FloorStatuses->getIdByCode('CHANGE_IN_TYPE');
 
-                if ($previousEntity->floor_status_id == $changeInTypeId) {
-                    // third parameters set to true means copy general only
-                    $this->copyCustomFields($copyFrom, $copyTo, true);
-                    $this->InstitutionFloors->updateAll([
-                        'institution_floor_id' => $copyTo
-                    ], [
-                        'institution_floor_id' => $copyFrom
-                    ]);
-                } elseif ($previousEntity->floor_status_id == $endOfUsageId) {
-                    $roomEntities = $this->InstitutionRooms
-                        ->find()
-                        ->where([$this->InstitutionRooms->aliasField('institution_floor_id') => $copyFrom])
-                        ->toArray();
-                    foreach ($roomEntities as $roomEntity) {
-                        $roomEntity->change_type = SELF::END_OF_USAGE;
-                        $roomEntity->end_date = $entity->end_date;
-                        $this->InstitutionRooms->save($roomEntity);
-                    }
-                }
+            if ($previousEntity->floor_status_id == $changeInTypeId) {
+                // third parameters set to true means copy general only
+                $this->copyCustomFields($copyFrom, $copyTo, true);
+                $this->InstitutionFloors->updateAll([
+                    'institution_floor_id' => $copyTo
+                ], [
+                    'institution_floor_id' => $copyFrom
+                ]);
             }
         }
     }
@@ -880,10 +879,6 @@ class InstitutionFloorsTable extends AppTable
     {
         $where = ['id' => $entity->id];
         $this->updateStatus('END_OF_USAGE', $where);
-
-        $url = $this->ControllerAction->url('index');
-
-        return $this->controller->redirect($url);
     }
 
     private function processChangeInType($entity)

@@ -129,9 +129,6 @@ class InstitutionLandsTable extends AppTable
             $functionName = "process$functionKey";
 
             if (method_exists($this, $functionName)) {
-                pr('here');
-                die;
-                $event->stopPropagation();
                 $this->$functionName($entity);
             }
         }
@@ -140,7 +137,19 @@ class InstitutionLandsTable extends AppTable
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         // logic to copy custom fields (general only) where new land is created when change in land type
-        $this->processCopy($entity);
+        if ($entity->isNew()) {
+            $this->processCopy($entity);
+        } elseif ($entity->land_status_id == $this->LandStatuses->getIdByCode('END_OF_USAGE')) {
+            $buildingEntities = $this->InstitutionBuildings
+                ->find()
+                ->where([$this->InstitutionBuildings->aliasField('institution_land_id') => $entity->id])
+                ->toArray();
+            foreach ($buildingEntities as $buildingEntity) {
+                $buildingEntity->change_type = SELF::END_OF_USAGE;
+                $buildingEntity->end_date = $entity->end_date;
+                $this->InstitutionBuildings->save($buildingEntity);
+            }
+        }
     }
 
     public function onGetCode(Event $event, Entity $entity)
@@ -883,35 +892,21 @@ class InstitutionLandsTable extends AppTable
     public function processCopy(Entity $entity)
     {
         // if is new and land status of previous land usage is change in land type then copy all general custom fields
-        if ($entity->isNew()) {
-            if ($entity->has('previous_institution_land_id') && is_null($entity->previous_institution_land_id)) {
-                $copyFrom = $entity->previous_institution_land_id;
-                $copyTo = $entity->id;
+        if ($entity->has('previous_institution_land_id') && is_null($entity->previous_institution_land_id)) {
+            $copyFrom = $entity->previous_institution_land_id;
+            $copyTo = $entity->id;
 
-                $previousEntity = $this->get($copyFrom);
-                $changeInTypeId = $this->LandStatuses->getIdByCode('CHANGE_IN_TYPE');
-                $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
+            $previousEntity = $this->get($copyFrom);
+            $changeInTypeId = $this->LandStatuses->getIdByCode('CHANGE_IN_TYPE');
 
-                if ($previousEntity->land_status_id == $changeInTypeId) {
-                    // third parameters set to true means copy general only
-                    $this->copyCustomFields($copyFrom, $copyTo, true);
-                    $this->InstitutionBuildings->updateAll([
-                        'institution_land_id' => $copyTo
-                    ], [
-                        'institution_land_id' => $copyFrom
-                    ]);
-                } elseif ($previousEntity->land_status_id == $endOfUsageId) {
-                    $buildingEntities = $this->InstitutionBuildings
-                        ->find()
-                        ->where([$this->InstitutionBuildings->aliasField('institution_land_id') => $copyFrom])
-                        ->toArray();
-                    $buildingEndOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
-                    foreach ($buildingEntities as $buildingEntity) {
-                        $buildingEntity->change_type = SELF::END_OF_USAGE;
-                        $buildingEntity->end_date = $entity->end_date;
-                        $this->InstitutionBuildings->save($buildingEntity);
-                    }
-                }
+            if ($previousEntity->land_status_id == $changeInTypeId) {
+                // third parameters set to true means copy general only
+                $this->copyCustomFields($copyFrom, $copyTo, true);
+                $this->InstitutionBuildings->updateAll([
+                    'institution_land_id' => $copyTo
+                ], [
+                    'institution_land_id' => $copyFrom
+                ]);
             }
         }
     }
@@ -920,10 +915,6 @@ class InstitutionLandsTable extends AppTable
     {
         $where = ['id' => $entity->id];
         $this->updateStatus('END_OF_USAGE', $where);
-
-        $url = $this->ControllerAction->url('index');
-
-        return $this->controller->redirect($url);
     }
 
     private function processChangeInType($entity)
