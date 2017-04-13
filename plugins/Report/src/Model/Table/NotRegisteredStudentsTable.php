@@ -9,7 +9,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class NotRegisteredStudentsTable extends AppTable  {
+class NotRegisteredStudentsTable extends AppTable
+{
     public function initialize(array $config)
     {
         $this->table('institution_students');
@@ -30,7 +31,8 @@ class NotRegisteredStudentsTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -39,26 +41,19 @@ class NotRegisteredStudentsTable extends AppTable  {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $requestData = json_decode($settings['process']['params']);
         $selectedPeriod = $requestData->academic_period_id;
         $selectedExam = !empty($requestData->examination_id) ? $requestData->examination_id : -1;
         $selectedInstitution = !empty($requestData->institution_id) ? $requestData->institution_id : -1;
 
-        $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
+        $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
         $Examinations = TableRegistry::get('Examination.Examinations');
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $Class = TableRegistry::get('Institution.InstitutionClasses');
 
-        $examination = $Examinations->find()
-            ->where([$Examinations->aliasField('id') => $selectedExam])
-            ->first();
-
-        $selectedGrade = -1;
-        if (!empty($examination) && $examination->has('education_grade_id')) {
-            $selectedGrade = $examination->education_grade_id;
-        }
-
+        $selectedGrade = $Examinations->get($selectedExam)->education_grade_id;
         $currentStatus = $this->StudentStatuses->getIdByCode('CURRENT');
 
         $query
@@ -66,7 +61,6 @@ class NotRegisteredStudentsTable extends AppTable  {
             ->leftJoin([$ExamCentreStudents->alias() => $ExamCentreStudents->table()], [
                 $ExamCentreStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ExamCentreStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                $ExamCentreStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $ExamCentreStudents->aliasField('examination_id = ') . $selectedExam
             ])
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
@@ -190,7 +184,7 @@ class NotRegisteredStudentsTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetInstitutionId(Event $event, Entity $entity)
     {
         if ($entity->institution_id) {
             return $entity->institution->code_name;
@@ -199,7 +193,8 @@ class NotRegisteredStudentsTable extends AppTable  {
         }
     }
 
-    public function onExcelGetSpecialNeeds(Event $event, Entity $entity) {
+    public function onExcelGetSpecialNeeds(Event $event, Entity $entity)
+    {
         if ($entity->has('user') && $entity->user->has('special_needs') && !empty($entity->user->special_needs)) {
             $specialNeeds = $entity->user->special_needs;
             $allSpecialNeeds = [];
