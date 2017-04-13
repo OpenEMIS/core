@@ -399,6 +399,18 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
+    public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+
+        return $attr;
+    }
+
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
@@ -541,7 +553,53 @@ class InstitutionBuildingsTable extends AppTable
         return $attr;
     }
 
+    public function onUpdateFieldYearAcquired(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+        } elseif ($action == 'edit') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldYearDisposed(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+        } elseif ($action == 'edit') {
+            $attr['options'] = $this->getYearOptionsByConfig();
+            $attr['type'] = 'select';
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+
+        return $attr;
+    }
+
     public function onUpdateFieldInfrastructureConditionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldInfrastructureOwnershipId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
             $selectedEditType = $request->query('edit_type');
@@ -652,6 +710,9 @@ class InstitutionBuildingsTable extends AppTable
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('code');
         $this->ControllerAction->field('name');
+        $this->ControllerAction->field('area');
+        $this->ControllerAction->field('year_acquired');
+        $this->ControllerAction->field('year_disposed');
         $this->ControllerAction->field('building_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->ControllerAction->field('start_date', ['entity' => $entity]);
         $this->ControllerAction->field('end_date', ['entity' => $entity]);

@@ -648,6 +648,7 @@ class InstitutionFloorsTable extends AppTable
         $this->ControllerAction->field('institution_id');
         $this->ControllerAction->field('code');
         $this->ControllerAction->field('name');
+        $this->ControllerAction->field('area');
         $this->ControllerAction->field('floor_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->ControllerAction->field('start_date', ['entity' => $entity]);
         $this->ControllerAction->field('end_date', ['entity' => $entity]);
@@ -826,6 +827,18 @@ class InstitutionFloorsTable extends AppTable
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
 
         return compact('statusOptions', 'selectedStatus');
+    }
+
+    public function onUpdateFieldArea(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $selectedEditType = $request->query('edit_type');
+            if (!$this->canUpdateDetails) {
+                $attr['type'] = 'hidden';
+            }
+        }
+
+        return $attr;
     }
 
     public function processCopy(Entity $entity)
