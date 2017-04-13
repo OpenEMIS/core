@@ -92,9 +92,14 @@ class StaffTrainingsTable extends ControllerActionTable
 
     private function setupTabElements()
     {
-        $tabElements = $this->controller->getInstitutionTrainingTabElements();
+        if ($this->controller->name == 'Staff') {
+            $tabElements = $this->controller->getInstitutionTrainingTabElements(); // Staff controller
+        } else {
+            $tabElements = $this->controller->getTrainingTabElements(); // Directories controller
+        }
+
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', 'Trainings');
+        $this->controller->set('selectedAction', $this->alias());
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
