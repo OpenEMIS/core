@@ -75,6 +75,9 @@ class TransferRequestsTable extends ControllerActionTable
                 ]],
                 'on' => 'create'
             ])
+            ->add('student_id', 'rulecompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
         ;
         $this->setValidationCode('student_name.ruleStudentNotCompletedGrade', 'Institution.Students');
         return $validator;

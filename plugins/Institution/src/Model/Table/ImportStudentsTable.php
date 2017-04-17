@@ -217,7 +217,8 @@ class ImportStudentsTable extends AppTable {
         return $modelData;
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) 
+    {
         if (empty($tempRow['student_id'])) {
             return false;
         }
@@ -232,7 +233,7 @@ class ImportStudentsTable extends AppTable {
         }
         if (empty($student->date_of_birth)) {
             $rowInvalidCodeCols['date_of_birth'] = __('Student\'s date of birth is empty. Please correct it at Directory page');
-            return false;
+            
         }
         $tempRow['student_name'] = $tempRow['student_id'];
 
@@ -359,6 +360,19 @@ class ImportStudentsTable extends AppTable {
                 return false;
             }
         }
+
+        //check student gender against institution gender (use existing function from validation behavior)
+        $globalData['field'] = 'student_id';
+        $globalData['data']['institution_id'] = $this->institutionId;
+        $globalData['data']['student_id'] = $tempRow['student_id'];
+        
+        $result = $this->compareStudentGenderWithInstitution($tempRow['student_id'], $globalData);
+            
+        if (!$result) {
+            $rowInvalidCodeCols['student_id'] = __('Student\'s Gender does not match the Institution\'s Gender.');
+            return false;
+        }
+        //end of checking student gender
 
         return true;
     }
