@@ -23,6 +23,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
         $events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
@@ -132,6 +133,12 @@ class NotRegisteredStudentsBehavior extends Behavior {
                 $model->aliasField('academic_period_id'),
             ])
             ->order([$model->Institutions->aliasField('name') => 'asc']);
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'student_id';
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
