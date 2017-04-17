@@ -384,28 +384,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $process;
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $examCentreId = $entity->examination_centre_id;
-        $studentId = $entity->student_id;
-        $this->deleteAll([
-            'examination_centre_id' => $examCentreId,
-            'student_id' => $studentId
-        ]);
-
-        TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents')->deleteAll([
-            'examination_centre_id' => $examCentreId,
-            'student_id' => $studentId
-        ]);
-
-        $studentCount = $this->find()
-            ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
-            ->group([$this->aliasField('student_id')])
-            ->count();
-
-        $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
-    }
-
     public function findResults(Query $query, array $options) {
         $examinationId = $options['examination_id'];
         $examinationCentreId = $options['examination_centre_id'];
