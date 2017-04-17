@@ -94,9 +94,9 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
             ])
             ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name', 'education_grade' => 'EducationGrades.name'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
-            ->order([$this->aliasField('institution_id'), $this->aliasField('examination_centre_id'), 'ExaminationCentreRooms.id']);
+            ->order([$this->aliasField('examination_centre_id'), 'ExaminationCentreRooms.id', $this->aliasField('institution_id')]);
 
-        if ($selectedExamCentre != -1) {
+        if (!empty($selectedExamCentre)) {
             $query->where([$this->aliasField('examination_centre_id') => $selectedExamCentre]);
         }
     }
