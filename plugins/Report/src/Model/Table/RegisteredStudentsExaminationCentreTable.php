@@ -38,7 +38,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'dependent' => true,
-            'cascadeCallBack' => true
+            'cascadeCallbacks' => true
         ]);
 
         $this->addBehavior('Excel', [
