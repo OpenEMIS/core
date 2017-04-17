@@ -939,6 +939,12 @@ class ImportBehavior extends Behavior {
                     $label = '';
                 }
 
+                // POCOR-3916 directories > import user showed 2 area administrative code, due to showing the lookup model.
+                if ($value->lookup_model == 'AreaAdministratives') {
+                    $label = $this->getExcelLabel($value->model, $column);
+                }
+                // end POCOR-3916
+
                 if (!empty($value->description)) {
                     $label .= ' ' . __($value->description);
                 }
