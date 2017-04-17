@@ -162,6 +162,9 @@ class StudentsTable extends ControllerActionTable
                 'rule' => ['checkInstitutionClassMaxLimit'],
                 'on' => 'create'
             ])
+            ->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
             ;
         return $validator;
     }

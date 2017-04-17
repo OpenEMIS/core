@@ -12,6 +12,6 @@ class GendersTable extends ControllerActionTable
 
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_gender_id']);
 
-        $this->addBehavior('FieldOption.FieldOption');
+        // $this->addBehavior('FieldOption.FieldOption');
     }
 }
