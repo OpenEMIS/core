@@ -15,10 +15,12 @@ use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
 use Cake\Utility\Security;
 
-class BulkStudentRegistrationTable extends ControllerActionTable {
+class BulkStudentRegistrationTable extends ControllerActionTable
+{
     use OptionsTrait;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->table('examination_centres_examinations_students');
         parent::initialize($config);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
@@ -52,7 +54,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         $this->toggle('index', false);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         return $events;
@@ -88,7 +91,7 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         $this->field('examination_id', ['type' => 'select', 'onChangeReload' => true]);
         $this->field('examination_education_grade', ['type' => 'readonly']);
         $this->field('special_needs_required', ['type' => 'chosenSelect', 'onChangeReload' => true]);
-        $this->field('examination_centre_id', ['type' => 'chosenSelect', 'onChangeReload' => true]);
+        $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true]);
         $this->field('special_needs', ['type' => 'readonly']);
         $this->field('institution_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('auto_assign_to_rooms', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
@@ -126,7 +129,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, $request)
+    {
         $examinationOptions = [];
 
         if ($action == 'add') {
@@ -177,7 +181,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         }
     }
 
-    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationEducationGrade(Event $event, array $attr, $action, $request)
+    {
         $educationGrade = '';
 
         if (!empty($request->data[$this->alias()]['examination_id'])) {
@@ -196,7 +201,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeedsRequired(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldSpecialNeedsRequired(Event $event, array $attr, $action, $request)
+    {
         $specialNeedOptions = [];
 
         if ($action == 'add') {
@@ -208,7 +214,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, $request)
+    {
         $attr['options'] = [];
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['examination_id'])) {
@@ -226,14 +233,13 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
                 }
 
                 $attr['options'] = $query->toArray();
-                $attr['attr']['multiple'] = false;
-                $attr['select'] = true;
             }
         }
         return $attr;
     }
 
-    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldSpecialNeeds(Event $event, array $attr, $action, $request)
+    {
         $specialNeeds = [];
 
         if (!empty($request->data[$this->alias()]['examination_centre_id'])) {
@@ -258,7 +264,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, $request)
+    {
         $institutions = [];
 
         if ($action == 'add') {
@@ -289,7 +296,8 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request) {
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, $request)
+    {
         $students = [];
 
         if ($action == 'add') {
@@ -406,7 +414,10 @@ class BulkStudentRegistrationTable extends ControllerActionTable {
 
                 if ($success) {
                     $studentCount = $this->find()
-                        ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
+                        ->where([
+                            $this->aliasField('examination_centre_id') => $entity->examination_centre_id,
+                            $this->aliasField('examination_id') => $entity->examination_id
+                        ])
                         ->group([$this->aliasField('student_id')])
                         ->count();
                     $this->ExaminationCentresExaminations->updateAll(['total_registered' => $studentCount],['examination_centre_id' => $entity->examination_centre_id, 'examination_id' => $entity->examination_id]);
