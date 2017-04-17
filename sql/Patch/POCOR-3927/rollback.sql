@@ -1,3 +1,7 @@
+-- security_functions
+DROP TABLE IF EXISTS `security_functions`;
+RENAME TABLE `z_3927_security_functions` TO `security_functions`;
+
 -- staff_trainings
 DROP TABLE IF EXISTS `staff_trainings`;
 RENAME TABLE `z_3927_staff_trainings` TO `staff_trainings`;

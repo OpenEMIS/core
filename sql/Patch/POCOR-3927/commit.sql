@@ -41,3 +41,31 @@ VALUES  ('LicenseRenewal', 'AlertLicenseRenewal', NULL, NULL, NULL, '1', NOW());
 
 -- alerts rule Table
 ALTER TABLE `alert_rules` CHANGE `threshold` `threshold` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL;
+
+-- security_functions
+CREATE TABLE `z_3927_security_functions`  LIKE `security_functions`;
+INSERT INTO `z_3927_security_functions` SELECT * FROM `security_functions`;
+
+-- staff controller
+UPDATE `security_functions`
+SET `_view` = 'StaffTrainings.index|StaffTrainings.view',
+    `_edit` = 'StaffTrainings.edit',
+    `_add` = 'StaffTrainings.add',
+    `_delete` = 'StaffTrainings.remove',
+    `name` = 'Courses',
+    `category` = 'Staff - Training',
+    `order` = '3100'
+WHERE `id` = 3011;
+
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN 3012 AND 3038;
+UPDATE `security_functions` SET `order` = '3038' WHERE `id` = 3011;
+
+-- directories controller
+UPDATE `security_functions`
+SET `name` = 'Courses',
+    `category` = 'Staff - Training',
+    `order` = '7100'
+WHERE `id` = 7032;
+
+UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN 7035 AND 7050;
+UPDATE `security_functions` SET `order` = '7050' WHERE `id` = 7032;
