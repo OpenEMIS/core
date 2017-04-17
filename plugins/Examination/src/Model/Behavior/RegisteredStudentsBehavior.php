@@ -91,20 +91,22 @@ class RegisteredStudentsBehavior extends Behavior {
                 $requestData = $request->data;
 
                 $studentId = $entity->student_id;
-                $academicPeriodId = $entity->academic_period_id;
                 $examinationId = $entity->examination_id;
                 $examinationCentreId = $entity->examination_centre_id;
 
-                $result = $model->deleteAll([
-                    'student_id' => $studentId,
-                    'examination_id' => $examinationId,
-                    'examination_centre_id' => $examinationCentreId
-                ]);
+                $examStudentEntity = $model->find()
+                    ->where([
+                        $model->aliasField('student_id') => $studentId,
+                        $model->aliasField('examination_id') => $examinationId,
+                        $model->aliasField('examination_centre_id') => $examinationCentreId,
+                    ])
+                    ->first();
+                $result = $model->delete($examStudentEntity);
 
                 if ($result) {
                     // event to delete all associated records for student
-                    $listeners[] = TableRegistry::get('Examination.ExaminationCentreStudents');
-                    $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $academicPeriodId, $examinationId, $examinationCentreId], $this, $listeners);
+                    $listeners[] = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
+                    $model->dispatchEventToModels('Model.Examinations.afterUnregister', [$studentId, $examinationId, $examinationCentreId], $this, $listeners);
 
                     $model->Alert->success('general.delete.success', ['reset' => 'override']);
                 } else {
@@ -141,6 +143,9 @@ class RegisteredStudentsBehavior extends Behavior {
     public function indexBeforeAction(Event $event, ArrayObject $extra) {
         $model = $this->_table;
         // sort attr is required by sortWhitelist
+        $model->field('registration_number', [
+            'sort' => ['field' => 'registration_number']
+        ]);
         $model->field('openemis_no', [
             'sort' => ['field' => 'Users.openemis_no']
         ]);
@@ -180,7 +185,7 @@ class RegisteredStudentsBehavior extends Behavior {
 
         $extra['elements']['controls'] = ['name' => 'Examination.controls', 'data' => [], 'options' => [], 'order' => 1];
 
-        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        $sortList = ['Users.openemis_no', 'Users.first_name', 'registration_number'];
         if (array_key_exists('sortWhitelist', $extra['options'])) {
             $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
