@@ -28,7 +28,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
             'foreignKey' => ['examination_centre_id', 'examination_id', 'invigilator_id'],
             'bindingKey' => ['examination_centre_id', 'examination_id', 'invigilator_id'],
             'dependent' => true,
-            'cascadeCallBack' => true
+            'cascadeCallbacks' => true
         ]);
 
         $this->addBehavior('CompositeKey');
