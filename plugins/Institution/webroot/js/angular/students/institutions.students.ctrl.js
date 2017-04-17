@@ -20,6 +20,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
     StudentController.rowsThisPage = [];
     StudentController.createNewStudent = false;
     StudentController.genderOptions = {};
+    StudentController.translatedTexts = {};
     StudentController.academicPeriodOptions = {};
     StudentController.educationGradeOptions = {};
     StudentController.classOptions = {};
@@ -138,25 +139,35 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 StudentController[code] = addNewStudentConfig[i].value;
             }
             if (StudentController.StudentContacts != 2) {
-                promises[1] = InstitutionsStudentsSvc.getUserContactTypes();
+                promises[2] = InstitutionsStudentsSvc.getUserContactTypes();
             }
             if (StudentController.StudentNationalities != 2) {
                 if (StudentController.StudentNationalities == 1) {
                     StudentController.Student.nationality_class = StudentController.Student.nationality_class + ' required';
                 }
-                promises[2] = InstitutionsStudentsSvc.getNationalities();
+                promises[3] = InstitutionsStudentsSvc.getNationalities();
             }
             if (StudentController.StudentIdentities != 2) {
                 if (StudentController.StudentIdentities == 1) {
                     StudentController.Student.identity_class = StudentController.Student.identity_class + ' required';
                     StudentController.Student.identity_type_class = StudentController.Student.identity_type_class + ' required';
                 }
-                promises[3] = InstitutionsStudentsSvc.getIdentityTypes();
+                promises[4] = InstitutionsStudentsSvc.getIdentityTypes();
             }
             if (StudentController.StudentSpecialNeeds != 2) {
-                promises[4] = InstitutionsStudentsSvc.getSpecialNeedTypes();
+                promises[5] = InstitutionsStudentsSvc.getSpecialNeedTypes();
             }
             promises[0] = InstitutionsStudentsSvc.getGenders();
+            var translateFields = {
+                'openemis_no': 'OpenEMIS ID',
+                'name': 'Name',
+                'gender_name': 'Gender',
+                'date_of_birth': 'Date Of Birth',
+                'nationality_name': 'Nationality',
+                'identity_type_name': 'Identity Type',
+                'identity_number': 'Identity Number'
+            };
+            promises[1] = InstitutionsStudentsSvc.translate(translateFields);
 
             return $q.all(promises);
         }, function(error){
@@ -166,21 +177,22 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         })
         .then(function(promisesObj) {
             StudentController.genderOptions = promisesObj[0];
+            StudentController.translatedTexts = promisesObj[1];
             // User Contacts
-            if (promisesObj[1] != undefined && promisesObj[1].hasOwnProperty('data')) {
-                StudentController.StudentContactsOptions = promisesObj[1]['data'];
+            if (promisesObj[2] != undefined && promisesObj[2].hasOwnProperty('data')) {
+                StudentController.StudentContactsOptions = promisesObj[2]['data'];
             }
             // User Nationalities
-            if (promisesObj[2] != undefined && promisesObj[2].hasOwnProperty('data')) {
-                StudentController.StudentNationalitiesOptions = promisesObj[2]['data'];
+            if (promisesObj[3] != undefined && promisesObj[3].hasOwnProperty('data')) {
+                StudentController.StudentNationalitiesOptions = promisesObj[3]['data'];
             }
             // User Identities
-            if (promisesObj[3] != undefined && promisesObj[3].hasOwnProperty('data')) {
-                StudentController.StudentIdentitiesOptions = promisesObj[3]['data'];
+            if (promisesObj[4] != undefined && promisesObj[4].hasOwnProperty('data')) {
+                StudentController.StudentIdentitiesOptions = promisesObj[4]['data'];
             }
             // User Special Needs
-            if (promisesObj[4] != undefined && promisesObj[4].hasOwnProperty('data')) {
-                StudentController.StudentSpecialNeedsOptions = promisesObj[4]['data'];
+            if (promisesObj[5] != undefined && promisesObj[5].hasOwnProperty('data')) {
+                StudentController.StudentSpecialNeedsOptions = promisesObj[5]['data'];
             }
         }, function(error) {
             console.log(error);
@@ -264,13 +276,13 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: 'OpenEMIS ID', field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
-                {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
-                {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
+                {headerName: StudentController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,
@@ -298,12 +310,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                         return '<div><input  name="ngSelectionCell" ng-click="InstitutionStudentController.selectStudent('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStudent="'+params.value+'"/></div>';
                     }
                 },
-                {headerName: 'Name', field: "name", suppressMenu: true, suppressSorting: true},
-                {headerName: 'Gender', field: "gender_name", suppressMenu: true, suppressSorting: true},
-                {headerName: 'Date of Birth', field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: 'Nationality', field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                {headerName: "Identity Type", field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                {headerName: "Identity Number", field: "identity_number", suppressMenu: true, suppressSorting: true}
+                {headerName: StudentController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                {headerName: StudentController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
             ],
             enableColResize: false,
             enableFilter: true,
@@ -686,6 +698,9 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
 
         var academicPeriodId = (StudentController.academicPeriodOptions.hasOwnProperty('selectedOption'))? StudentController.academicPeriodOptions.selectedOption.id: '';
         var educationGradeId = (StudentController.educationGradeOptions.hasOwnProperty('selectedOption'))? StudentController.educationGradeOptions.selectedOption.education_grade_id: '';
+        if (educationGradeId == undefined) {
+            educationGradeId = '';
+        }
         var classId = null;
         if (StudentController.classOptions.hasOwnProperty('selectedOption')) {
             classId = StudentController.classOptions.selectedOption.id;

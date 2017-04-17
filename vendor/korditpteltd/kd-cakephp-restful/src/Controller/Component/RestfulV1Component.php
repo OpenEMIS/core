@@ -133,9 +133,11 @@ class RestfulV1Component extends Component implements RestfulInterface
             $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
             $this->formatData($entity);
+            $errors = $entity->errors();
+            $this->translate($errors);
             $this->controller->set([
                 'data' => $entity,
-                'error' => $entity->errors(),
+                'error' => $errors,
                 '_serialize' => ['data', 'error']
             ]);
         }
@@ -196,9 +198,11 @@ class RestfulV1Component extends Component implements RestfulInterface
                 $entity = $target->patchEntity($entity, $requestData);
                 $entity = $this->convertBase64ToBinary($entity);
                 $target->save($entity);
+                $errors = $entity->errors();
+                $this->translate($errors);
                 $this->controller->set([
                     'data' => $entity,
-                    'error' => $entity->errors(),
+                    'error' => $errors,
                     '_serialize' => ['data', 'error']
                 ]);
             } else {
@@ -241,5 +245,13 @@ class RestfulV1Component extends Component implements RestfulInterface
                 $this->_outputError('Record does not exists');
             }
         }
+    }
+
+    public function translate(&$array)
+    {
+        $translateItem = function (&$item, $key) {
+            $item = __($item);
+        };
+        array_walk_recursive($array, $translateItem);
     }
 }

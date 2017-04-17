@@ -89,6 +89,9 @@ class RestfulController extends AppController
         $action = $this->request->params['action'];
         $request = $this->request;
         $extra = new ArrayObject(['request' => $request]);
+        if ($action == 'translate') {
+            return true;
+        }
         $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
         if ($event->result) {
             return $event->result;
@@ -158,6 +161,18 @@ class RestfulController extends AppController
     public function delete()
     {
         $this->restfulComponent->delete();
+    }
+
+    public function translate()
+    {
+        $original = $this->request->data;
+        $translated = $this->request->data;
+        $this->restfulComponent->translate($translated);
+        $this->set([
+            'translated' => $translated,
+            'original' => $original,
+            '_serialize' => ['translated', 'original']
+        ]);
     }
 
     private function initTable(Table $table, $connectionName = 'default')

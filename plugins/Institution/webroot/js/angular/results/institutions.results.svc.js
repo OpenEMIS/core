@@ -10,7 +10,8 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
         SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
-        StudentStatusesTable: 'Student.StudentStatuses'
+        StudentStatusesTable: 'Student.StudentStatuses',
+        translation: 'translate'
     };
 
     return {
@@ -22,6 +23,14 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 window[key] = KdOrmSvc.init(model);
             });
         },
+
+        function translate(data) {
+            var success = function(response, deferred) {
+                var translated = response.data.translated;
+                deferred.resolve(translated);
+            };
+            return translation.translate(data, {success:success, defer: true});
+        }
 
         getAssessment: function(assessmentId) {
             return AssessmentsTable.get(assessmentId).ajax({defer: true});

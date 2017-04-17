@@ -1,28 +1,34 @@
 angular.module('alert.svc', [])
-.service('AlertSvc', function() {
+.service('AlertSvc', function($http) {
     return {
-        getMessage: function(message) {
-            return message;
+        getMessage: function(scope, message) {
+            var url = angular.baseUrl + '/Translations/translate/' + message;
+            $http.get(url)
+            .then(function(response){
+                scope.message = response.data.translated_text;
+            }, function(error) {
+                scope.message = message;
+            });
         },
 
         success: function(scope, message) {
             scope.class = 'alert-success';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message);
         },
 
         error: function(scope, message) {
             scope.class = 'alert-danger';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message);
         },
 
         warning: function(scope, message) {
             scope.class = 'alert-warning';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message);
         },
 
         info: function(scope, message) {
             scope.class = 'alert-info';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message);
         },
 
         reset: function(scope) {
