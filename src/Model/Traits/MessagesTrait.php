@@ -851,6 +851,7 @@ trait MessagesTrait {
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
                     ],
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                    'rulecompareStudentGenderWithInstitution' => 'Student\'s Gender does not match the \'Transfer To\' Institution\'s Gender.'
                 ]
             ],
             'IndividualPromotion' => [
@@ -877,6 +878,11 @@ trait MessagesTrait {
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+            ],
+            'StudentUser' => [
+                'gender_id' => [
+                    'rulecompareStudentGenderWithInstitution' => 'Student\'s Gender does not match the Institution\'s Gender.'
                 ],
             ],
             'Staff' => [
