@@ -494,7 +494,7 @@ class RegisteredStudentsBehavior extends Behavior {
             ->where([$model->Examinations->aliasField('academic_period_id') => $selectedAcademicPeriod]);
 
         // in institutions, only show examinations for grades available in the institution
-        if ($model->alias() == 'InstitutionExaminationStudents' && !is_null($institutionId)) {
+        if (in_array($model->alias(), ['InstitutionExaminationStudents', 'ExaminationResults']) && !is_null($institutionId)) {
             $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
             $availableGrades = $InstitutionGrades
                 ->find('list', ['keyField' => 'education_grade_id', 'valueField' => 'education_grade_id'])
