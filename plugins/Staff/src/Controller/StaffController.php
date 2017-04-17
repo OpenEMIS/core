@@ -255,7 +255,8 @@ class StaffController extends AppController {
 		return $tabElements;
 	}
 
-	public function getTrainingTabElements($options = []) {
+	public function getTrainingTabElements($options = [])
+	{
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
 		$studentTabElements = [
@@ -271,7 +272,8 @@ class StaffController extends AppController {
 		return $tabElements;
 	}
 
-	public function getInstitutionTrainingTabElements($options = []) {
+	public function getInstitutionTrainingTabElements($options = [])
+	{
         $tabElements = [];
         $trainingUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $trainingTabElements = [
@@ -286,7 +288,7 @@ class StaffController extends AppController {
         foreach ($trainingTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
 
-            if ($key == 'Trainings') {
+            if ($key == 'StaffTrainings') {
                 $trainingUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
                 $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
             }
