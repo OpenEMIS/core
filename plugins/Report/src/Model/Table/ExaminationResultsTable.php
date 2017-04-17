@@ -43,7 +43,7 @@ class ExaminationResultsTable extends AppTable
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'dependent' => true,
-            'cascadeCallBack' => true
+            'cascadeCallbacks' => true
         ]);
 
         $this->addBehavior('Excel', [
@@ -203,7 +203,7 @@ class ExaminationResultsTable extends AppTable
 
     public function onExcelGetExaminationId(Event $event, Entity $entity)
     {
-        if ($entity->examination_id) {
+        if ($entity->has('examination')) {
             return $entity->examination->code_name;
         } else {
             return '';
@@ -212,7 +212,7 @@ class ExaminationResultsTable extends AppTable
 
     public function onExcelGetExaminationCentreId(Event $event, Entity $entity)
     {
-        if ($entity->examination_centre_id) {
+        if ($entity->has('examination_centre')) {
             return $entity->examination_centre->code_name;
         } else {
             return '';
@@ -221,7 +221,7 @@ class ExaminationResultsTable extends AppTable
 
     public function onExcelGetInstitutionId(Event $event, Entity $entity)
     {
-        if ($entity->institution_id) {
+        if ($entity->has('institution')) {
             return $entity->institution->code_name;
         } else {
             return __('Private Candidate');
