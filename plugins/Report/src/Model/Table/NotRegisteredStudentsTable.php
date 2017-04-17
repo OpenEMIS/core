@@ -45,8 +45,8 @@ class NotRegisteredStudentsTable extends AppTable
     {
         $requestData = json_decode($settings['process']['params']);
         $selectedPeriod = $requestData->academic_period_id;
-        $selectedExam = !empty($requestData->examination_id) ? $requestData->examination_id : -1;
-        $selectedInstitution = !empty($requestData->institution_id) ? $requestData->institution_id : -1;
+        $selectedExam = $requestData->examination_id;
+        $selectedInstitution = $requestData->institution_id;
 
         $ExamCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
         $Examinations = TableRegistry::get('Examination.Examinations');
@@ -81,7 +81,7 @@ class NotRegisteredStudentsTable extends AppTable
             ])
             ->order([$this->aliasField('institution_id'), $ClassStudents->aliasField('institution_class_id')]);
 
-        if ($selectedInstitution != -1) {
+        if (!empty($selectedInstitution)) {
             $query->where([$this->aliasField('institution_id') => $selectedInstitution]);
         }
     }
