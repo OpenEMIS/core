@@ -130,18 +130,27 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'institut
 
         if (angular.isDefined(response.error)) {
             // No Grading Options
-            console.log(response.error);
             AlertSvc.warning($scope, response.error);
-
             return false;
         } else {
             if ($scope.gridOptions != null) {
-                $scope.gridOptions.api.setColumnDefs(response.data);
-                if (Object.keys(response.data).length < 15) {
-                    $scope.gridOptions.api.sizeColumnsToFit();
-                }
+                var textToTranslate = [];
+                angular.forEach(response.data, function(value, key) {
+                    textToTranslate.push(value.headerName);
+                });
+                InstitutionsResultsSvc.translate(textToTranslate)
+                .then(function(res){
+                    angular.forEach(res, function(value, key) {
+                        response.data[key]['headerName'] = value;
+                    });
+                    $scope.gridOptions.api.setColumnDefs(response.data);
+                    if (Object.keys(response.data).length < 15) {
+                        $scope.gridOptions.api.sizeColumnsToFit();
+                    }
+                }, function(error){
+                    console.log(error);
+                });
             }
-
             return true;
         }
     };
