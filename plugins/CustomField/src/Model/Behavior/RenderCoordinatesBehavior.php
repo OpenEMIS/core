@@ -46,15 +46,12 @@ class RenderCoordinatesBehavior extends RenderBehavior {
 
         $errors = [];
         if ($action == 'view') {
-
             if (!is_null($savedValue)) {
                 $values = json_decode($savedValue);
             } else {
                 $values = null;
-            }        
-            
+            }
         } else if ($action == 'edit') {
-
             $form = $event->subject()->Form;
             $html = '';
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
@@ -71,10 +68,8 @@ class RenderCoordinatesBehavior extends RenderBehavior {
             $postData = null;
             if ($entity->has('custom_field_values')) {
                 foreach ($entity->custom_field_values as $key => $obj) {
-                    if ($obj->has('custom_field')) {
-                        if ($obj->custom_field->id == $fieldId) {
-                           $postData = $obj;
-                        }
+                    if ($obj->field_type == 'COORDINATES' && $obj->survey_question_id == $fieldId) {
+                        $postData = $obj;
                     }
                 }
             }
