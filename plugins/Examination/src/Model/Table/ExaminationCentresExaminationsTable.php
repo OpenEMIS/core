@@ -54,7 +54,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             'joinTable' => 'examination_centre_examinations_students',
             'foreignKey' => ['examination_centre_id', 'examination_id'],
             'targetForeignKey' => 'student_id',
-            'through' => 'Examination.ExaminationCentreStudents',
+            'through' => 'Examination.ExaminationCentresExaminationsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -365,6 +365,17 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     {
         $listeners = [TableRegistry::get('Examination.ExaminationCentreRoomsExaminations')];
         $this->dispatchEventToModels('Model.ExaminationCentreExaminations.afterSave', [$entity], $this, $listeners);
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        // populate 'to be deleted' field
+        $exam = $this->Examinations->get($entity->examination_id);
+        $entity->showDeletedValueAs = $exam->code_name;
+
+        $extra['excludedModels'] = [
+            $this->LinkedInstitutions->alias(), $this->ExaminationItems->alias()
+        ];
     }
 
     private function triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $academicPeriodId, $examCentreTypeId = null)
