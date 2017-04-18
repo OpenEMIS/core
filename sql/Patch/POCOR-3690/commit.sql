@@ -311,3 +311,12 @@ CREATE TABLE IF NOT EXISTS `examination_item_results` (
 INSERT INTO `examination_item_results` (`id`, `marks`, `examination_item_id`, `student_id`, `academic_period_id`, `examination_id`, `examination_centre_id`, `education_subject_id`, `examination_grading_option_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT sha2(CONCAT(`examination_item_id`, ',', `student_id`), '256'), `marks`, `examination_item_id`, `student_id`, `academic_period_id`, `examination_id`, `examination_centre_id`, `education_subject_id`, `examination_grading_option_id`, `institution_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3690_examination_item_results`;
+
+-- import_mapping
+CREATE TABLE `z_3690_import_mapping` LIKE `import_mapping`;
+INSERT INTO `z_3690_import_mapping` SELECT * FROM `import_mapping`
+WHERE `model` = 'Examination.ExaminationCentreRooms';
+
+DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationCentreRooms' AND `column_name` = 'examination_id';
+UPDATE `import_mapping` SET `order` = `order` - 1
+WHERE `model` = 'Examination.ExaminationCentreRooms';

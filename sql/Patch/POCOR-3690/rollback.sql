@@ -47,5 +47,10 @@ RENAME TABLE `z_3690_examination_centre_room_students` TO `examination_centre_ro
 DROP TABLE IF EXISTS `examination_item_results`;
 RENAME TABLE `z_3690_examination_item_results` TO `examination_item_results`;
 
+-- import_mapping
+DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationCentreRooms';
+INSERT INTO `import_mapping` SELECT * FROM `z_3690_import_mapping`;
+DROP TABLE `z_3690_import_mapping`;
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3690';
