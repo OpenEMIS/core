@@ -361,6 +361,12 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         return $process;
     }
 
+    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $listeners = [TableRegistry::get('Examination.ExaminationCentreRoomsExaminations')];
+        $this->dispatchEventToModels('Model.ExaminationCentreExaminations.afterSave', [$entity], $this, $listeners);
+    }
+
     private function triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $academicPeriodId, $examCentreTypeId = null)
     {
         $args = '';
