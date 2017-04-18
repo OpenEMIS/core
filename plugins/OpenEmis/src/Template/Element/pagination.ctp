@@ -30,7 +30,7 @@ $totalRecords = array_key_exists('count', $params) ? $params['count'] : 0;
 
 			$paginateCountArray = explode(' ', $paginateCountString);
 			$this->ControllerAction->locale($defaultLocale);
-			echo sprintf(__('Showing %s to %s of %s records'), $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
+			echo sprintf(__('Showing').' %s '.__('to').' %s '.__('of').' %s '.__('records'), $paginateCountArray[0], $paginateCountArray[1], $paginateCountArray[2])
 		?>
 	</div>
 	<div class="display-limit">
