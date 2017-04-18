@@ -575,7 +575,7 @@ trait MessagesTrait {
             'survey_not_found' => 'No identifiable survey found',
             'no_answers' => 'No record were found in the file imported',
             'institution_network_connectivity_id' => 'code',
-            'exam_centre_dont_match' => 'Examination and centre combination cannot be found.'
+            'exam_centre_dont_match' => 'Examination centre cannot be found in the selected academic period.'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
