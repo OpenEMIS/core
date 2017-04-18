@@ -302,7 +302,12 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
     {
-        $institution = $attr['entity']->institution->code_name;
+        if ($attr['entity']->has('institution') && !empty($attr['entity']->institution)) {
+            $institution = $attr['entity']->institution->code_name;
+        } else {
+            $institution = '';
+        }
+
         $attr['attr']['value'] = $institution;
         return $attr;
     }
