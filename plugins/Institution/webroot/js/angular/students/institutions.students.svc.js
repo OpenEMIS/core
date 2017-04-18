@@ -48,8 +48,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality,
-        getExternalSourceMapping: getExternalSourceMapping,
-        translate: translate
+        getExternalSourceMapping: getExternalSourceMapping
     };
 
     var models = {
@@ -86,6 +85,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
     };
 
     function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
         var success = function(response, deferred) {
             var translated = response.data.translated;
             deferred.resolve(translated);
