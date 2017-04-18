@@ -82,11 +82,36 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
             if (hasWorkbenchData == false) {
                 vm.workbenchItems = false;
             }
+            return vm.workbenchItems;
         }, function(error) {
             // No Workbench Data
             console.log(error);
             vm.workbenchItems = false;
             AlertSvc.warning($scope, error);
+        })
+        .then(function(items){
+            var textToTranslate = [];
+            angular.forEach(items, function(item, key) {
+                textToTranslate.push(item.name);
+            });
+            var defer = $q.defer();
+            DashboardSvc.translate(textToTranslate)
+            .then(function(res){
+                angular.forEach(res, function(value, key) {
+                    items[key]['name'] = value;
+                });
+                defer.resolve(items);
+            }, function(error){
+                defer.resolve(items);
+            });
+            return defer.promise;
+        }, function(error){
+            console.log(error);
+        })
+        .then(function (workbenchItemsTranslated){
+            vm.workbenchItems = workbenchItemsTranslated;
+        }, function(error){
+            console.log(error);
         })
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'dashboard-workbench-item-table');
@@ -125,7 +150,19 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.gridOptions[vm.target].api.setRowData([]);
 
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
-        vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
+        var textToTranslate = [];
+        angular.forEach(columnDefs, function(value, key) {
+            textToTranslate.push(value.headerName);
+        });
+        DashboardSvc.translate(textToTranslate)
+        .then(function(res){
+            angular.forEach(res, function(value, key) {
+                columnDefs[key]['headerName'] = value;
+            });
+            vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
+        }, function(error){
+            console.log(error);
+        });
 
         var limit = 10;
         var dataSource = {

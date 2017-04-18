@@ -10,8 +10,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         AssessmentItemResultsTable: 'Assessment.AssessmentItemResults',
         InstitutionSubjectStudentsTable: 'Institution.InstitutionSubjectStudents',
         SecurityGroupUsersTable: 'Security.SecurityGroupUsers',
-        StudentStatusesTable: 'Student.StudentStatuses',
-        translation: 'translate'
+        StudentStatusesTable: 'Student.StudentStatuses'
     };
 
     return {
@@ -25,6 +24,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         },
 
         translate: function(data) {
+            KdOrmSvc.init({translation: 'translate'});
             var success = function(response, deferred) {
                 var translated = response.data.translated;
                 deferred.resolve(translated);

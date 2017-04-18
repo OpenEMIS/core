@@ -71,8 +71,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
-        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes',
-        translation: 'translate'
+        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
     };
 
     return service;
@@ -90,6 +89,7 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
     };
 
     function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
         var success = function(response, deferred) {
             var translated = response.data.translated;
             deferred.resolve(translated);
