@@ -66,7 +66,7 @@ $roles = '[' . implode(",", $_roles) . ']';
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="{{subject.name}}" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
+                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>
