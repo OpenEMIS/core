@@ -418,6 +418,18 @@ trait MessagesTrait {
             'add_event' => 'Add Event',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
+        'WorkflowRules' => [
+            'process' => [
+                'start' => [
+                    'success' => 'The process has been started successfully.',
+                    'failed' => 'The process is not started due to errors encountered.'
+                ],
+                'abort' => [
+                    'success' => 'The process has been aborted successfully.',
+                    'failed' => 'The process is not aborted due to errors encountered.'
+                ]
+            ]
+        ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
         ],
@@ -652,6 +664,29 @@ trait MessagesTrait {
         ],
         'UserContacts' => [
             'noEmailRemain' => 'There should be at least one Email record'
+        ],
+        'Reports' => [
+            'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
+        ],
+        'AlertRules' => [
+            'Attendance' => [
+                'threshold' => 'Days within 1 to 30'
+            ],
+            'LicenseValidity' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'RetirementWarning' => [
+                'value' => 'Ages within %d to %d'
+            ],
+            'StaffEmployment' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffLeave' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffType' => [
+                'value' => 'Days within %d to %d'
+            ]
         ],
 
         // Validation Messages
@@ -1029,6 +1064,7 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleContactValuePattern' => 'Please enter value with a valid format',
                     'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
@@ -1492,6 +1528,12 @@ trait MessagesTrait {
             'Examinations' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
+                'registration_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'registration_end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
             'ExaminationCentres' => [
@@ -1524,6 +1566,9 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
                 ],
+                'examination_date' => [
+                    'ruleCompareDateReverse' => 'Date should not be earlier than Registration End Date'
+                ]
             ],
             'ExaminationGradingTypes' => [
                 'code' => [
@@ -1660,12 +1705,23 @@ trait MessagesTrait {
                     'invalidUrl' => 'You have entered an invalid URL.',
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
+            ],
+            'ConfigWebhooks' => [
+                'triggered_event' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL'
+                ],
+                'name' => [
+                    'ruleUnique' => 'This webhook name already exists in the system',
+                ],
             ]
         ],
         'Alert' => [
             'AlertRules' => [
                 'name' => [
-                    'ruleUnique' => 'This field has to be unique',
+                    'ruleUnique' => 'This field has to be unique'
                 ]
             ],
         ],

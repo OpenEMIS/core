@@ -14,7 +14,8 @@ use App\Model\Table\AppTable;
 use Cake\Network\Session;
 use App\Model\Table\ControllerActionTable;
 
-class StaffUserTable extends ControllerActionTable {
+class StaffUserTable extends ControllerActionTable
+{
     public function initialize(array $config)
     {
         $this->table('security_users');
@@ -58,29 +59,30 @@ class StaffUserTable extends ControllerActionTable {
         $this->addBehavior('Configuration.Pull');
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Staff' => ['index', 'add']
+            'Staff' => ['index', 'add', 'edit']
         ]);
         $this->toggle('index', false);
         $this->toggle('add', false);
         $this->toggle('remove', false);
     }
 
-    public static function handleAssociations($model) {
-        $model->belongsTo('Genders',                ['className' => 'User.Genders']);
-        $model->belongsTo('AddressAreas',           ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
-        $model->belongsTo('BirthplaceAreas',        ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-        $model->belongsTo('MainNationalities',      ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
-        $model->belongsTo('MainIdentityTypes',      ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
+    public static function handleAssociations($model)
+    {
+        $model->belongsTo('Genders', ['className' => 'User.Genders']);
+        $model->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
+        $model->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
+        $model->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+        $model->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
-        $model->hasMany('Identities',               ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Nationalities',            ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('SpecialNeeds',             ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Contacts',                 ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Attachments',              ['className' => 'User.Attachments',     'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('BankAccounts',             ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Comments',                 ['className' => 'User.Comments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Languages',                ['className' => 'User.UserLanguages',   'foreignKey' => 'security_user_id', 'dependent' => true]);
-        $model->hasMany('Awards',                   ['className' => 'User.Awards',          'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Identities', ['className' => 'User.Identities',      'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Nationalities', ['className' => 'User.UserNationalities',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('SpecialNeeds', ['className' => 'User.SpecialNeeds',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Contacts', ['className' => 'User.Contacts',        'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Attachments', ['className' => 'User.Attachments',     'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('BankAccounts', ['className' => 'User.BankAccounts',    'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Comments', ['className' => 'User.Comments',        'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Languages', ['className' => 'User.UserLanguages',   'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $model->hasMany('Awards', ['className' => 'User.Awards',          'foreignKey' => 'security_user_id', 'dependent' => true]);
 
         $model->belongsToMany('SecurityRoles', [
             'className' => 'Security.SecurityRoles',
@@ -100,7 +102,7 @@ class StaffUserTable extends ControllerActionTable {
         ]);
 
         // class should never cascade delete
-        $model->hasMany('InstitutionClasses',       ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
+        $model->hasMany('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'foreignKey' => 'staff_id']);
         $model->hasMany('InstitutionStudents', ['className' => 'Institution.Students',    'foreignKey' => 'student_id', 'dependent' => true]);
         $model->hasMany('InstitutionStaff', ['className' => 'Institution.Staff',    'foreignKey' => 'staff_id', 'dependent' => true]);
 
@@ -113,11 +115,12 @@ class StaffUserTable extends ControllerActionTable {
             'dependent' => true
         ]);
 
-        $model->hasMany('StaffActivities',          ['className' => 'Staff.StaffActivities', 'foreignKey' => 'staff_id', 'dependent' => true]);
-        $model->hasMany('InstitutionRubrics',       ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $model->hasMany('StaffActivities', ['className' => 'Staff.StaffActivities', 'foreignKey' => 'staff_id', 'dependent' => true]);
+        $model->hasMany('InstitutionRubrics', ['className' => 'Institution.InstitutionRubrics', 'foreignKey' => 'staff_id', 'dependent' => true]);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.Staff.afterSave'] = 'staffAfterSave';
         return $events;
@@ -133,7 +136,8 @@ class StaffUserTable extends ControllerActionTable {
         ];
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
         $this->field('username', ['visible' => false]);
         $toolbarButtons = $extra['toolbarButtons'];
         if ($this->action == 'view') {
@@ -172,7 +176,8 @@ class StaffUserTable extends ControllerActionTable {
         ]);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
         if (!$this->AccessControl->isAdmin()) {
             $institutionIds = $this->AccessControl->getInstitutionsByUser();
             $this->Session->write('AccessControl.Institutions.ids', $institutionIds);
@@ -182,7 +187,8 @@ class StaffUserTable extends ControllerActionTable {
         $this->setupTabElements($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity) {
+    public function editAfterAction(Event $event, Entity $entity)
+    {
         $this->Session->write('Staff.Staff.id', $entity->id);
         $this->Session->write('Staff.Staff.name', $entity->name);
         $this->setupTabElements($entity);
@@ -196,7 +202,8 @@ class StaffUserTable extends ControllerActionTable {
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
     }
 
-    private function setupTabElements($entity) {
+    private function setupTabElements($entity)
+    {
         $id = !is_null($this->request->query('id')) ? $this->request->query('id') : 0;
         $options = [
             'userRole' => 'Staff',
@@ -237,7 +244,8 @@ class StaffUserTable extends ControllerActionTable {
         }
     }
 
-    public function findStaff(Query $query, array $options = []) {
+    public function findStaff(Query $query, array $options = [])
+    {
         $query->where([$this->aliasField('super_admin').' <> ' => 1]);
 
         $limit = (array_key_exists('limit', $options))? $options['limit']: null;
@@ -255,43 +263,58 @@ class StaffUserTable extends ControllerActionTable {
         }
 
         $conditions = [];
-        if (!empty($firstName)) $conditions['first_name LIKE'] = $firstName . '%';
-        if (!empty($lastName)) $conditions['last_name LIKE'] = $lastName . '%';
-        if (!empty($openemisNo)) $conditions['openemis_no LIKE'] = $openemisNo . '%';
-        if (!empty($dateOfBirth)) $conditions['date_of_birth'] = $dateOfBirth;
+        if (!empty($firstName)) {
+            $conditions['first_name LIKE'] = $firstName . '%';
+        }
+        if (!empty($lastName)) {
+            $conditions['last_name LIKE'] = $lastName . '%';
+        }
+        if (!empty($openemisNo)) {
+            $conditions['openemis_no LIKE'] = $openemisNo . '%';
+        }
+        if (!empty($dateOfBirth)) {
+            $conditions['date_of_birth'] = $dateOfBirth;
+        }
 
         $identityConditions = [];
-        if (!empty($identityNumber)) $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
+        if (!empty($identityNumber)) {
+            $identityConditions['Identities.number LIKE'] = $identityNumber . '%';
+        }
 
         $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
-        $default_identity_type = $this->Identities->IdentityTypes->getDefaultValue();
         $query->join([
             [
                 'type' => $identityJoinType,
                 'table' => 'user_identities',
                 'alias' => 'Identities',
                 'conditions' => array_merge([
-                        'Identities.security_user_id = ' . $this->aliasField('id'),
-                        'Identities.identity_type_id' => $default_identity_type
+                        'Identities.security_user_id = ' . $this->aliasField('id')
                     ], $identityConditions)
             ]
         ]);
 
         $query->group([$this->aliasField('id')]);
 
-        if (!empty($conditions)) $query->where($conditions);
-        if (!is_null($limit)) $query->limit($limit);
-        if (!is_null($page)) $query->page($page);
+        if (!empty($conditions)) {
+            $query->where($conditions);
+        }
+        if (!is_null($limit)) {
+            $query->limit($limit);
+        }
+        if (!is_null($page)) {
+            $query->page($page);
+        }
 
         return $query;
     }
 
-    public function findAssignedInstitutionStaff(Query $query, array $options = []) {
+    public function findAssignedInstitutionStaff(Query $query, array $options = [])
+    {
         $institutionId = $options['institution_id'];
         $startDate = $options['start_date'];
 
         $query->contain([
-            'InstitutionStaff' => function($q) use ($institutionId, $startDate) {
+            'InstitutionStaff' => function ($q) use ($institutionId, $startDate) {
                 return $q->where([
                     'InstitutionStaff.staff_status_id' => 1,
                     'InstitutionStaff.institution_id <>' => $institutionId,

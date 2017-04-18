@@ -180,6 +180,11 @@ class ContactsTable extends ControllerActionTable {
 		$validator->remove('value', 'notBlank');
 		$validator
 			->requirePresence('contact_option_id')
+			->add('value', 'ruleContactValuePattern', [
+                'rule' => ['validateContactValuePattern'],
+                'provider' => 'table',
+                'last' => true
+            ])
 			->add('value', 'ruleValidateNumeric',  [
 				'rule' => ['numericPositive'],
 				'provider' => 'table',

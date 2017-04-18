@@ -17,7 +17,6 @@ class StaffController extends AppController {
 		$this->ControllerAction->models = [
 			'Accounts'			=> ['className' => 'Staff.Accounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Attachments'		=> ['className' => 'User.Attachments'],
 			'Positions'			=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'Sections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'Classes'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
@@ -31,16 +30,6 @@ class StaffController extends AppController {
 			'ImportStaff' 		=> ['className' => 'Staff.ImportStaff', 'actions' => ['index', 'add']],
 			'TrainingResults'	=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 			'Achievements'		=> ['className' => 'Staff.Achievements'],
-
-			// Healths
-			'Healths' 				=> ['className' => 'Health.Healths'],
-			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
-			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
-			'HealthFamilies' 		=> ['className' => 'Health.Families'],
-			'HealthHistories' 		=> ['className' => 'Health.Histories'],
-			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
-			'HealthMedications' 	=> ['className' => 'Health.Medications'],
-			'HealthTests' 			=> ['className' => 'Health.Tests']
 		];
 
 		$this->loadComponent('Training.Training');
@@ -67,7 +56,19 @@ class StaffController extends AppController {
     public function Identities() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Identities']); }
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
-	// End
+    public function Attachments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+
+    // health
+	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
+	public function HealthAllergies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']); }
+	public function HealthConsultations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']); }
+	public function HealthFamilies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']); }
+	public function HealthHistories()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']); }
+	public function HealthImmunizations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']); }
+	public function HealthMedications()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
+	public function HealthTests()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
+	// End Health
+    // End
 
 	public function beforeFilter(Event $event) {
 		parent::beforeFilter($event);

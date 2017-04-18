@@ -20,6 +20,7 @@ class BehaviourClassificationsTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->hasMany('StudentBehaviourCategories', ['className' => 'Student.StudentBehaviourCategories', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
@@ -38,6 +39,22 @@ class BehaviourClassificationsTable extends ControllerActionTable
         $this->field('editable', ['visible' => false]);
         $this->field('international_code', ['visible' => false]);
         $this->field('national_code', ['visible' => false]);
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+
+        $search = sprintf('%%"%s":"%s"%%', 'behaviour_classification_id', $entity->id);
+        $WorkflowRuleResults = $WorkflowRules
+            ->find()
+            ->where([
+                $WorkflowRules->aliasField('rule LIKE ') => $search
+            ])
+            ->all();
+        $workflowRuleCount = $WorkflowRuleResults->count();
+
+        $extra['associatedRecords'][] = ['model' => $WorkflowRules->alias(), 'count' => $workflowRuleCount];
     }
 
     public function getThresholdOptions()

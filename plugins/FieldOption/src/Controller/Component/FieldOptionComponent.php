@@ -36,9 +36,9 @@ class FieldOptionComponent extends Component
         'Types' => ['className' => 'Institution.Types', 'parent' => 'Institution'],
         'ShiftOptions' => ['className' => 'Institution.ShiftOptions', 'parent' => 'Institution'],
         'TextbookConditions' => ['className' => 'Textbook.TextbookConditions', 'parent' => 'Institution'],
+
     // Student
         'StudentAbsenceReasons' => ['className' => 'Institution.StudentAbsenceReasons', 'parent' => 'Student'],
-        'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Student'],
         'StudentBehaviourCategories' => ['className' => 'Student.StudentBehaviourCategories', 'parent' => 'Student'],
         'StudentTransferReasons' => ['className' => 'Student.StudentTransferReasons', 'parent' => 'Student'],
         'StudentWithdrawReasons' => ['className' => 'Student.StudentWithdrawReasons', 'parent' => 'Student'],
@@ -101,6 +101,7 @@ class FieldOptionComponent extends Component
         'Countries' => ['className' => 'FieldOption.Countries', 'parent' => 'Others'],
         'Nationalities' => ['className' => 'FieldOption.Nationalities', 'parent' => 'Others'],
         'CommentTypes' => ['className' => 'User.CommentTypes', 'parent' => 'Others'],
+        'BehaviourClassifications' => ['className' => 'Student.BehaviourClassifications', 'parent' => 'Others'],
 
     // Infrastructure
         'InfrastructureOwnerships' => ['className' => 'FieldOption.InfrastructureOwnerships', 'parent' => 'Infrastructure'],
