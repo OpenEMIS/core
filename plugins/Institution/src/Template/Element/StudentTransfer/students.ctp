@@ -35,7 +35,8 @@
                                         if (isset($nextInstitutionGender) && $nextInstitutionGender != 'X' && $nextInstitutionGender != $studentGender) {
                                             $checkboxOptions['disabled'] = true;
                                             $tdClass = '';
-                                            $tooltip = '<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="Student\'s Gender does not match the Destination Institution\'s Gender"</i>';
+                                            $tooltipMessage = __('Student\'s Gender does not match the Destination Institution\'s Gender');
+                                            $tooltip = '<i class="fa fa-exclamation-circle fa-lg table-tooltip icon-red" data-placement="right" data-toggle="tooltip" data-animation="false" data-container="body" title="" data-html="true" data-original-title="' . $tooltipMessage . '"</i>';
                                         } else {
                                             $tdClass = 'checkbox-column';
                                             $tooltip = '';
