@@ -267,6 +267,7 @@ angular.module('kd.orm.svc', [])
 
         translate: function(data, options = undefined) {
             this._method = 'POST';
+            this._className = 'translate';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
                 data: data

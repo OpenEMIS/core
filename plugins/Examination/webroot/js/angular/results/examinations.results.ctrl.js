@@ -172,6 +172,25 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         var deferred = $q.defer();
 
         ExaminationsResultsSvc.getColumnDefs(action, subject, vm.results)
+        .then(function(res){
+            var textToTranslate = [];
+            var defer = $q.defer();
+            angular.forEach(res, function(value, key) {
+                textToTranslate.push(value.headerName);
+            });
+            ExaminationsResultsSvc.translate(textToTranslate)
+            .then(function(respond){
+                angular.forEach(respond, function(value, key) {
+                    res[key]['headerName'] = value;
+                });
+                defer.resolve(res);
+            }, function(error){
+                defer.resolve(res);
+            });
+            return defer.promise;
+        }, function(error){
+            console.log(error);
+        })
         .then(function(cols)
         {
             if (vm.gridOptions != null) {
