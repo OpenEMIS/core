@@ -34,4 +34,36 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
         ]);
         $this->addBehavior('CompositeKey');
     }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.ExaminationResults.afterSave'] = 'examinationResultsAfterSave';
+        return $events;
+    }
+
+    public function examinationResultsAfterSave(Event $event, $results)
+    {
+        // used to update total mark whenever an examination mark is added or updated
+        $studentId = $results->student_id;
+        $examinationCentreId = $results->examination_centre_id;
+        $examinationItemId = $results->examination_item_id;
+        $examinationId = $results->examination_id;
+
+        $examItem = $this->ExaminationItems->get($examinationItemId, ['contain' => ['ExaminationGradingTypes']]);
+        if (!empty($examItem)) {
+            $resultType = $examItem->examination_grading_type->result_type;
+
+            if ($resultType == 'MARKS') {
+                $marks = $results->marks;
+                $totalMark = !is_null($marks) ? ($marks * $examItem->weight) : null;
+                $this->updateAll(['total_mark' => $totalMark], [
+                    'examination_centre_id' => $examinationCentreId,
+                    'student_id' => $studentId,
+                    'examination_item_id' => $examinationItemId,
+                    'examination_id' => $examinationId
+                ]);
+            }
+        }
+    }
 }

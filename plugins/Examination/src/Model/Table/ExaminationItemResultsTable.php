@@ -35,14 +35,16 @@ class ExaminationItemResultsTable extends AppTable
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
-        $this->setTotalMark($entity);
-
         // delete record if user removes the mark or grade
         $marks = $entity->marks;
         $grade = $entity->examination_grading_option_id;
         if (is_null($marks) && is_null($grade)) {
             $this->delete($entity);
         }
+
+        // save total marks
+        $listeners = [TableRegistry::get('Examination.ExaminationCentresExaminationsSubjectsStudents')];
+        $this->dispatchEventToModels('Model.ExaminationResults.afterSave', [$entity], $this, $listeners);
     }
 
     public function findResults(Query $query, array $options) {
@@ -121,22 +123,6 @@ class ExaminationItemResultsTable extends AppTable
             } else if ($resultType == 'GRADES') {
                 $entity->total_mark = NULL;
             }
-        }
-    }
-
-    private function setTotalMark(Entity $entity)
-    {
-        if ($entity->has('total_mark')) {
-            $ExamCentreStudents = TableRegistry::get('Examination.ExamCentreStudents');
-            $ExamCentreStudents->updateAll(['total_mark' => $entity->total_mark], [
-                'examination_centre_id' => $entity->examination_centre_id,
-                'student_id' => $entity->student_id,
-                'education_subject_id' => $entity->education_subject_id,
-                'examination_item_id' => $entity->examination_item_id,
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id,
-                'examination_id' => $entity->examination_id
-            ]);
         }
     }
 
