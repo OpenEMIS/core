@@ -1,10 +1,10 @@
 angular
-    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'institutions.staff.svc'])
+    .module('institutions.staff.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.staff.svc'])
     .controller('InstitutionsStaffCtrl', InstitutionStaffController);
 
-InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'InstitutionsStaffSvc'];
+InstitutionStaffController.$inject = ['$location', '$q', '$scope', '$window', '$filter', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionsStaffSvc'];
 
-function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, InstitutionsStaffSvc) {
+function InstitutionStaffController($location, $q, $scope, $window, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsStaffSvc) {
     // ag-grid vars
 
 
@@ -310,73 +310,144 @@ function InstitutionStaffController($location, $q, $scope, $window, $filter, Uti
     }
 
     $scope.initGrid = function() {
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            StaffController.internalGridOptions = {
+                columnDefs: [
+                    {
+                        field:'id',
+                        headerName:'',
+                        suppressMenu: true,
+                        suppressSorting: true,
+                        width: 40,
+                        maxWidth: 40,
+                        cellRenderer: function(params) {
+                            var data = JSON.stringify(params.data);
+                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
+                        }
+                    },
+                    {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: false,
+                enableFilter: true,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: true,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'pagination',
+                angularCompileRows: true
+            };
 
-        StaffController.internalGridOptions = {
-            columnDefs: [
-                {
-                    field:'id',
-                    headerName:'',
-                    suppressMenu: true,
-                    suppressSorting: true,
-                    width: 40,
-                    maxWidth: 40,
-                    cellRenderer: function(params) {
-                        var data = JSON.stringify(params.data);
-                        return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                    }
-                },
-                {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-            ],
-            enableColResize: false,
-            enableFilter: true,
-            enableServerSideFilter: true,
-            enableServerSideSorting: true,
-            enableSorting: true,
-            headerHeight: 38,
-            rowData: [],
-            rowHeight: 38,
-            rowModelType: 'pagination',
-            angularCompileRows: true
-        };
+            StaffController.externalGridOptions = {
+                columnDefs: [
+                    {
+                        field:'id',
+                        headerName:'',
+                        suppressMenu: true,
+                        suppressSorting: true,
+                        width: 40,
+                        maxWidth: 40,
+                        cellRenderer: function(params) {
+                            var data = JSON.stringify(params.data);
+                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
+                        }
+                    },
+                    {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                localeText: localeText,
+                enableColResize: false,
+                enableFilter: true,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: true,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'pagination',
+                angularCompileRows: true
+            };
+        }, function(error){
+            StaffController.internalGridOptions = {
+                columnDefs: [
+                    {
+                        field:'id',
+                        headerName:'',
+                        suppressMenu: true,
+                        suppressSorting: true,
+                        width: 40,
+                        maxWidth: 40,
+                        cellRenderer: function(params) {
+                            var data = JSON.stringify(params.data);
+                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
+                        }
+                    },
+                    {headerName: StaffController.translatedTexts.openemis_no, field: "openemis_no", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                enableColResize: false,
+                enableFilter: true,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: true,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'pagination',
+                angularCompileRows: true
+            };
 
-        StaffController.externalGridOptions = {
-            columnDefs: [
-                {
-                    field:'id',
-                    headerName:'',
-                    suppressMenu: true,
-                    suppressSorting: true,
-                    width: 40,
-                    maxWidth: 40,
-                    cellRenderer: function(params) {
-                        var data = JSON.stringify(params.data);
-                        return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
-                    }
-                },
-                {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
-                {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
-            ],
-            enableColResize: false,
-            enableFilter: true,
-            enableServerSideFilter: true,
-            enableServerSideSorting: true,
-            enableSorting: true,
-            headerHeight: 38,
-            rowData: [],
-            rowHeight: 38,
-            rowModelType: 'pagination',
-            angularCompileRows: true
-        };
+            StaffController.externalGridOptions = {
+                columnDefs: [
+                    {
+                        field:'id',
+                        headerName:'',
+                        suppressMenu: true,
+                        suppressSorting: true,
+                        width: 40,
+                        maxWidth: 40,
+                        cellRenderer: function(params) {
+                            var data = JSON.stringify(params.data);
+                            return '<div><input  name="ngSelectionCell" ng-click="InstitutionStaffController.selectStaff('+params.value+')" tabindex="-1" class="no-selection-label" kd-checkbox-radio type="radio" selectedStaff="'+params.value+'"/></div>';
+                        }
+                    },
+                    {headerName: StaffController.translatedTexts.name, field: "name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.gender_name, field: "gender_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.date_of_birth, field: "date_of_birth", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.nationality_name, field: "nationality_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_type_name, field: "identity_type_name", suppressMenu: true, suppressSorting: true},
+                    {headerName: StaffController.translatedTexts.identity_number, field: "identity_number", suppressMenu: true, suppressSorting: true}
+                ],
+                enableColResize: false,
+                enableFilter: true,
+                enableServerSideFilter: true,
+                enableServerSideSorting: true,
+                enableSorting: true,
+                headerHeight: 38,
+                rowData: [],
+                rowHeight: 38,
+                rowModelType: 'pagination',
+                angularCompileRows: true
+            };
+        });
     };
 
     function reloadInternalDatasource(withData) {
