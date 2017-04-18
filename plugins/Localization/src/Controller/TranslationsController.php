@@ -5,24 +5,37 @@ use Cake\Event\Event;
 use Cake\Core\App;
 use Cake\Cache\Cache;
 
-class TranslationsController extends AppController {
-	private $defaultLocale = 'en';
+class TranslationsController extends AppController
+{
+    private $defaultLocale = 'en';
 
-	public function initialize() {
-		parent::initialize();
-		$this->ControllerAction->model('Localization.Translations');
-		$this->Localization->autoCompile(false);
-	}
+    public function initialize()
+    {
+        parent::initialize();
+        $this->ControllerAction->model('Localization.Translations');
+        $this->loadComponent('RequestHandler');
+        $this->Localization->autoCompile(false);
+    }
 
-	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
 
-		$header = "Translations";
+        $header = "Translations";
 
-		// Setting a bread crumb
-		$this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
+        // Setting a bread crumb
+        $this->Navigation->addCrumb($header, ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'index']);
 
-		// Setting a header
-		$this->set('contentHeader', __($header));
-	}
+        // Setting a header
+        $this->set('contentHeader', __($header));
+    }
+
+    public function translate($text)
+    {
+        $this->RequestHandler->renderAs($this, 'json');
+        $translated = __($text);
+        $this->set('original_text', $text);
+        $this->set('translated_text', $translated);
+        $this->set('_serialize', ['original_text', 'translated_text']);
+    }
 }
