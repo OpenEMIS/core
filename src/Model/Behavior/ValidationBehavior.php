@@ -670,8 +670,10 @@ class ValidationBehavior extends Behavior {
 
     public static function compareStudentGenderWithInstitution($field, array $globalData)
     {
-        $fieldType = $globalData['field']; //enable many models field use this same function
-        $institutionId = $globalData['data']['institution_id'];
+        if (!empty($globalData)) {
+        	$fieldType = $globalData['field']; //enable many models field use this same function
+        	$institutionId = $globalData['data']['institution_id'];
+        }
 
         if (!empty($institutionId)) {
             //get institution gender

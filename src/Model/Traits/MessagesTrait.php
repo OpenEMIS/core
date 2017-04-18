@@ -882,7 +882,7 @@ trait MessagesTrait {
             ],
             'StudentUser' => [
                 'gender_id' => [
-                    'rulecompareStudentGenderWithInstitution' => 'Student\'s Gender does not match the Institution\'s Gender.'
+                    'ruleCompareStudentGenderWithInstitution' => 'Student\'s Gender does not match the Institution\'s Gender.'
                 ],
             ],
             'Staff' => [
@@ -917,6 +917,9 @@ trait MessagesTrait {
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+                'gender_id' => [
+                    'ruleCompareStudentGenderWithInstitution' => 'Student\'s Gender does not match the Institution\'s Gender.'
                 ],
             ],
             'InstitutionFeeTypes' => [

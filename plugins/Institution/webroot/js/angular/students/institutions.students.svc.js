@@ -316,7 +316,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
                 newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
                 newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
-
+                newUserRecord['institution_id'] = vm.getInstitutionId();
 
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
                 newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];

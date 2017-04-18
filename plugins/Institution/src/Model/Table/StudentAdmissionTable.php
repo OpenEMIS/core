@@ -75,6 +75,10 @@ class StudentAdmissionTable extends AppTable {
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+			->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution'],
+				'on' => 'create'
+            ])
 			->allowEmpty('class')
 			->add('class', 'ruleClassMaxLimit', [
 				'rule' => ['checkInstitutionClassMaxLimit'],
