@@ -361,17 +361,10 @@ class StaffTransferApprovalsTable extends StaffTransfer {
 		return $this->controller->redirect(['plugin' => $plugin, 'controller' => $controller, 'action' => $action]);
 	}
 
-	public function viewAfterAction(Event $event, Entity $entity, $extra) {
-		$toolbarButtons = $extra['toolbarButtons'];
-		if ($entity->status == self::APPROVED) {
-			if (isset($toolbarButtons['edit'])) {
-				unset($toolbarButtons['edit']);
-			}
-			if (isset($toolbarButtons['remove'])) {
-				unset($toolbarButtons['remove']);
-			}
-		}
-	}
+    public function viewAfterAction(Event $event, Entity $entity, $extra) 
+    {
+        parent::viewAfterAction($event, $entity, $extra);
+    }
 
 	public function onGetStaffId(Event $event, Entity $entity) {
 		if ($this->action == 'view') {

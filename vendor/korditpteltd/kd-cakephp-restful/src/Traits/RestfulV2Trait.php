@@ -358,9 +358,7 @@ trait RestfulV2Trait {
 
     private function _showBlobContent(Query $query = null, $value, ArrayObject $extra)
     {
-        if ($value == true) {
-            $extra['blobContent'] = true;
-        }
+        $extra['blobContent'] = $value;
     }
 
     private function formatData(Entity $entity)
@@ -387,11 +385,11 @@ trait RestfulV2Trait {
                 $source = $entity->$property->source();
                 $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
                 if (!TableRegistry::exists($source)) {
-                    $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);  
+                    $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);
                 } else {
                     $entityTable = TableRegistry::get($source);
                 }
-                
+
                 $this->convertBinaryToBase64($entityTable, $entity->$property, $extra);
             } else {
                 if ($property == 'password') {

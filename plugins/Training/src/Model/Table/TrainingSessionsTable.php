@@ -54,6 +54,7 @@ class TrainingSessionsTable extends ControllerActionTable
 			'dependent' => false
 		]);
 		$this->addBehavior('Workflow.Workflow');
+		$this->addBehavior('User.AdvancedNameSearch');
 		$this->setDeleteStrategy('restrict');
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Dashboard' => ['index']
@@ -303,41 +304,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 		if ($this->request->is(['ajax'])) {
 			$term = $this->request->query['term'];
-			$search = sprintf('%s%%', $term);
-
-			$data = [];
-			$Users = $this->Trainers->Users;
-			$list = $Users
-				->find()
-				->select([
-					$Users->aliasField('id'),
-					$Users->aliasField('openemis_no'),
-					$Users->aliasField('first_name'),
-					$Users->aliasField('middle_name'),
-					$Users->aliasField('third_name'),
-					$Users->aliasField('last_name'),
-					$Users->aliasField('preferred_name')
-				])
-				->where([
-					$Users->aliasField('is_student') => 0,
-					'OR' => [
-						$Users->aliasField('openemis_no LIKE ') => $search,
-						$Users->aliasField('first_name LIKE ') => $search,
-						$Users->aliasField('middle_name LIKE ') => $search,
-						$Users->aliasField('third_name LIKE ') => $search,
-						$Users->aliasField('last_name LIKE ') => $search
-					]
-				])
-				->order([$Users->aliasField('first_name')])
-				->all();
-
-			foreach($list as $obj) {
-				$data[] = [
-					'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
-					'value' => $obj->id
-				];
-			}
-
+			$data = $this->Trainers->Users->autocomplete($term);
 			echo json_encode($data);
 			die;
 		}
@@ -354,7 +321,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
 			// autocomplete
 			$session = $this->request->session();
-			$sessionKey = $this->registryAlias() . '.id';
+			$sessionKey = $this->registryAlias() . '.primaryKey.id';
 
 			$data = [];
 			if ($session->check($sessionKey)) {
@@ -372,21 +339,9 @@ class TrainingSessionsTable extends ControllerActionTable
 					->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
 					->toArray();
 
-				$list = $Staff
+				$query = $Staff
 					->find()
-					->matching('Users', function($q) use ($Users, $search) {
-						return $q
-							->find('all')
-							->where([
-								'OR' => [
-									$Users->aliasField('openemis_no') . ' LIKE' => $search,
-									$Users->aliasField('first_name') . ' LIKE' => $search,
-									$Users->aliasField('middle_name') . ' LIKE' => $search,
-									$Users->aliasField('third_name') . ' LIKE' => $search,
-									$Users->aliasField('last_name') . ' LIKE' => $search
-								]
-							]);
-					})
+					->matching('Users')
 					->matching('Positions', function($q) use ($Positions, $targetPopulationIds) {
 						return $q
 							->find('all')
@@ -394,11 +349,12 @@ class TrainingSessionsTable extends ControllerActionTable
 								'Positions.staff_position_title_id IN' => $targetPopulationIds
 							]);
 					})
-					->group([
-						$Staff->aliasField('staff_id')
-					])
-					->order([$Users->aliasField('first_name')])
-					->all();
+					->group([$Staff->aliasField('staff_id')])
+					->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')]);
+
+				// function from AdvancedNameSearchBehavior
+				$query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
+				$list = $query->toArray();
 
 				foreach($list as $obj) {
 					$_matchingData = $obj->_matchingData['Users'];

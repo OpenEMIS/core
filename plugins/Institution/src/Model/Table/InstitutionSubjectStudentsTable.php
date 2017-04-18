@@ -36,6 +36,8 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			]
 		]);
 
+		$this->addBehavior('CompositeKey');
+
 		$this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'add'],
             'OpenEMIS_Classroom' => ['index']
@@ -50,11 +52,11 @@ class InstitutionSubjectStudentsTable extends AppTable {
         return $events;
     }
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		if ($entity->isNew()) {
-			$entity->id = Text::uuid();
-		}
-	}
+	// public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	// 	if ($entity->isNew()) {
+	// 		$entity->id = Text::uuid();
+	// 	}
+	// }
 
     public function studentsAfterSave(Event $event, $student)
     {

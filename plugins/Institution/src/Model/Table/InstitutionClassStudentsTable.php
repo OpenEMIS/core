@@ -569,9 +569,13 @@ class InstitutionClassStudentsTable extends AppTable {
     public function findAbsencesByDate(Query $query, array $options) {
         $classId = $options['institution_class_id'];
         $absenceDate = $options['absence_date'];
+
+        $Students = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $StudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
         $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
         $StudentAbsenceReasons = TableRegistry::get('Institution.StudentAbsenceReasons');
+        $currentStatus = $StudentStatuses->getIdByCode('CURRENT');
 
         $query
             ->select([
@@ -590,6 +594,17 @@ class InstitutionClassStudentsTable extends AppTable {
                 $StudentAbsenceReasons->aliasField('international_code'),
                 $StudentAbsenceReasons->aliasField('national_code')
             ])
+            ->innerJoin(
+                [$Students->alias() => $Students->table()],
+                [
+                    $Students->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $Students->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $Students->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $Students->aliasField('student_status_id') => $currentStatus,
+                    $Students->aliasField('start_date <=') => $absenceDate,
+                    $Students->aliasField('end_date >=') => $absenceDate
+                ]
+            )
             ->leftJoin(
                 [$StudentAbsences->alias() => $StudentAbsences->table()],
                 [
