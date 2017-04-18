@@ -19,26 +19,24 @@ class ExaminationItemsTable extends AppTable {
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('ExaminationGradingTypes', ['className' => 'Examination.ExaminationGradingTypes']);
-        $this->belongsToMany('ExaminationCentres', [
-            'className' => 'Examination.ExaminationCentres',
-            'joinTable' => 'examination_centre_subjects',
+        $this->belongsToMany('ExaminationCentresExaminations', [
+            'className' => 'Examination.ExaminationCentresExaminations',
+            'joinTable' => 'examination_centres_examinations_subjects',
             'foreignKey' => 'examination_item_id',
-            'targetForeignKey' => 'examination_centre_id',
-            'through' => 'Examination.ExaminationCentreSubjects',
+            'targetForeignKey' => ['examination_centre_id', 'examination_id'],
+            'through' => 'Examination.ExaminationCentresExaminationsSubjects',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
         $this->belongsToMany('Students', [
             'className' => 'User.Users',
-            'joinTable' => 'examination_centre_students',
+            'joinTable' => 'examination_centres_examinations_subjects_students',
             'foreignKey' => 'examination_item_id',
             'targetForeignKey' => 'student_id',
-            'through' => 'Examination.ExaminationCentreStudents',
+            'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
-
         $this->belongsToMany('StudentResults', [
             'className' => 'User.Users',
             'joinTable' => 'examination_item_results',
