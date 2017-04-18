@@ -1,10 +1,10 @@
 angular
-    .module('dashboard.ctrl', ['utils.svc', 'alert.svc', 'dashboard.svc'])
+    .module('dashboard.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'dashboard.svc'])
     .controller('DashboardCtrl', DashboardController);
 
-DashboardController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'DashboardSvc'];
+DashboardController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DashboardSvc'];
 
-function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, DashboardSvc) {
+function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, DashboardSvc) {
 	var vm = this;
 
     // Variables
@@ -122,23 +122,46 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     }
 
     function initGrid(target) {
-        vm.gridOptions[target] = {
-            columnDefs: [],
-            rowData: [],
-            headerHeight: 38,
-            rowHeight: 38,
-            enableColResize: true,
-            enableSorting: true,
-            unSortIcon: true,
-            enableFilter: true,
-            suppressMenuHide: true,
-            suppressCellSelection: true,
-            suppressMovableColumns: true,
-            rowModelType: 'pagination',
-            onGridSizeChanged: function(e) {
-                this.api.sizeColumnsToFit();
-            }
-        };
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            vm.gridOptions[target] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                enableColResize: true,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                rowModelType: 'pagination',
+                localeText: localeText,
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                }
+            };
+        }, function(error){
+            vm.gridOptions[target] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                enableColResize: true,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                rowModelType: 'pagination',
+                localeText: localeText,
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                }
+            };
+        });
     }
 
     function onChangeModel(model) {
