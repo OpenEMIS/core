@@ -48,7 +48,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality,
-        getExternalSourceMapping: getExternalSourceMapping
+        getExternalSourceMapping: getExternalSourceMapping,
+        translate: translate
     };
 
     var models = {
@@ -66,8 +67,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         ConfigItems: 'Configuration.ConfigItems',
         Nationalities: 'FieldOption.Nationalities',
         ContactTypes: 'User.ContactTypes',
-        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes',
-        translation: 'translate'
+        SpecialNeedTypes: 'FieldOption.SpecialNeedTypes'
     };
 
     return service;
