@@ -85,12 +85,7 @@
                                 </td>
                                 <td>
                                     <?php
-                                        if (empty($item->examinations)) {
-                                            echo "<button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button>";
-                                        } else {
-                                            $message = __('This room is being used for an examination');
-                                            echo '<i class="fa fa-info-circle fa-lg icon-blue" data-toggle="tooltip" data-container="body" data-placement="top" data-animation="false" title="" data-html="true" data-original-title="' . $message . '"></i>';
-                                        }
+                                        echo "<button onclick='jsTable.doRemove(this);' aria-expanded='true' type='button' class='btn btn-dropdown action-toggle btn-single-action'><i class='fa fa-trash'></i>&nbsp;<span>Delete</span></button>";
                                     ?>
                                 </td>
                             </tr>

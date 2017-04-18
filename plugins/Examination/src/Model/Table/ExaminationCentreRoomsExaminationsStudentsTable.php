@@ -25,8 +25,7 @@ class ExaminationCentreRoomsExaminationsStudentsTable extends ControllerActionTa
         ]);
         $this->belongsTo('ExaminationCentresExaminationsStudents', [
             'className' => 'Examination.ExaminationCentresExaminationsStudents',
-            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id']
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id']
         ]);
 
         $this->addBehavior('Area.Areapicker');
