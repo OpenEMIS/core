@@ -11,11 +11,12 @@ use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use ArrayObject;
 
-class ConfigProductListsTable extends ControllerActionTable {
-
-	public function initialize(array $config) {
-		$this->table('config_product_lists');
-		parent::initialize($config);
+class ConfigProductListsTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
+        $this->table('config_product_lists');
+        parent::initialize($config);
         $this->addBehavior('Configuration.ConfigItems');
         $this->addBehavior('ControllerAction.FileUpload', [
                 'name' => 'file_name',
@@ -24,7 +25,7 @@ class ConfigProductListsTable extends ControllerActionTable {
                 'contentEditable' => true,
                 'allowable_file_types' => 'image'
             ]);
-	}
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -44,15 +45,18 @@ class ConfigProductListsTable extends ControllerActionTable {
         return $validator;
     }
 
-    public function getDefaultImgView() {
+    public function getDefaultImgView()
+    {
         return "<div class='profile-image'><i class='fa fa-image'></i></div>";
     }
 
-    public function getDefaultImgViewClass() {
+    public function getDefaultImgViewClass()
+    {
         return "profile-image";
     }
 
-    public function getDefaultImgMsg() {
+    public function getDefaultImgMsg()
+    {
         $formatSupported = __('Format Supported') . ': ';
         $photoMessage = __('Advisable photo dimension 35px by 35px');
         $defaultImgMsg = '<p>* %s <br>* %s.jpg, .jpeg, .png, .gif </p>';
@@ -69,14 +73,10 @@ class ConfigProductListsTable extends ControllerActionTable {
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['file_content']['visible'] = false;
-        $this->fields['auto_login_url']['visible'] = false;
-        $this->fields['auto_logout_url']['visible'] = false;
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('auto_login_url', ['type' => 'string']);
-        $this->field('auto_logout_url', ['type' => 'string']);
         $this->field('file_content', ['type' => 'image', 'defaultWidth' => 95]);
     }
 
@@ -88,14 +88,6 @@ class ConfigProductListsTable extends ControllerActionTable {
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('file_content', ['type' => 'image']);
-        $this->field('auto_login_url', ['type' => 'string']);
-        $this->field('auto_logout_url', ['type' => 'string']);
-    }
-
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
-    {
-        $entity->auto_login_url = rtrim($entity->url, '/')."/Login/";
-        $entity->auto_logout_url = rtrim($entity->url, '/'). '/';
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)

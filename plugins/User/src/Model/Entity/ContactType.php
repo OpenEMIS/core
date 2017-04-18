@@ -13,11 +13,11 @@ class ContactType extends Entity
     	$name = $this->name;
 
     	if ($this->has('contact_option') && $this->contact_option->has('name')) {
-    		$name = $this->contact_option->name . ' - ' . $name;
+    		$name = __($this->contact_option->name) . ' - ' . __($name);
     	} else {
     		$table = TableRegistry::get('User.ContactOptions');
     		$contactOptionId = $this->contact_option_id;
-    		$name = $table->get($contactOptionId)->name . ' - ' . $name;
+    		$name = __($table->get($contactOptionId)->name) . ' - ' . __($name);
     	}
     	return $name;
 	}

@@ -1319,15 +1319,18 @@ class ControllerActionComponent extends Component {
                         $notIdKeys[$key.' <>'] = $value;
                         unset($notIdKeys[$key]);
                     }
-                    $query->find()->where($notIdKeys);
+                    $query->find('all')->where($notIdKeys);
 
                     // Event: deleteUpdateCovertOptions
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
                     $event = $this->dispatchEvent($this->model, 'ControllerAction.Model.onGetConvertOptions', null, [$entity, $query]);
                     if ($event->isStopped()) { return $event->result; }
 
-                    foreach ($convertOptions as $value) {
-                        $keysToEncode = $model->getIdKeys($model, $value, false);
+                    $convertOptionResults = $query->toArray();
+
+                    $convertOptions = [];
+                    foreach ($convertOptionResults as $key => $value) {
+                        $keysToEncode = $model->getIdKeys($model, $key, false);
                         $encodedKey = $model->paramsEncode($keysToEncode);
                         $convertOptions[$encodedKey] = $value->$extra['valueField'];
                     }
