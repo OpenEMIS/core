@@ -26,8 +26,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         getGrading: getGrading,
         calculateTotal: calculateTotal,
         saveRowData: saveRowData,
-        saveTotal: saveTotal,
-        translate: translate
+        saveTotal: saveTotal
     };
 
     return service;
@@ -39,6 +38,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
     };
 
     function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
         var success = function(response, deferred) {
             var translated = response.data.translated;
             deferred.resolve(translated);
