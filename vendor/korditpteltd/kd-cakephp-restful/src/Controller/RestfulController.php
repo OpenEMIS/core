@@ -78,7 +78,6 @@ class RestfulController extends AppController
         $componentName = 'Restful'. ucfirst($version);
         $this->loadComponent('Restful.'.$componentName, ['model' => $this->model]);
         $this->restfulComponent = $this->{$componentName};
-
     }
 
     public function isAuthorized($user = null)
