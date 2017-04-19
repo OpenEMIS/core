@@ -672,6 +672,13 @@ trait MessagesTrait {
             'Attendance' => [
                 'threshold' => 'Days within 1 to 30'
             ],
+            'LicenseRenewal' => [
+                'value' => 'Days within %d to %d',
+                'hour' => 'Hours within %d to %d '
+                    .'<br> Total accumulated hours based on'
+                    .'<br> selected field of study within the'
+                    .'<br> validity of license'
+            ],
             'LicenseValidity' => [
                 'value' => 'Days within %d to %d'
             ],
@@ -1336,6 +1343,11 @@ trait MessagesTrait {
                     'ruleCompare' => 'Max value must be greater than min value',
                     'ruleRange' => 'Value must be within 0 to 100'
                 ]
+            ],
+            'StaffTrainings' => [
+                'credit_hours' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ],
             ],
         ],
         'AcademicPeriod' => [
