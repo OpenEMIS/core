@@ -45,6 +45,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.ajaxInvigilatorAutocomplete'] = 'ajaxInvigilatorAutocomplete';
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         return $events;
     }
 
@@ -83,7 +84,8 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('openemis_no');
+        $this->fields['invigilator_id']['sort'] = ['field' => 'Invigilators.first_name'];
+        $this->field('openemis_no', ['sort' => ['field' => 'Invigilators.openemis_no']]);
         $this->field('rooms');
         $this->setFieldOrder(['openemis_no', 'invigilator_id', 'examination_id', 'rooms']);
     }
@@ -123,10 +125,10 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         if ($selectedRoom > 0) {
             $query->matching('ExaminationCentreRoomsExaminationsInvigilators');
             $where['ExaminationCentreRoomsExaminationsInvigilators.examination_centre_room_id'] = $selectedRoom;
+
         } else if ($selectedRoom == -1) {
-            $query
-                ->leftJoinWith('ExaminationCentreRoomsExaminationsInvigilators')
-                ->where(['ExaminationCentreRoomsExaminationsInvigilators.examination_centre_room_id IS NULL']);
+            $query->leftJoinWith('ExaminationCentreRoomsExaminationsInvigilators');
+            $where[] = 'ExaminationCentreRoomsExaminationsInvigilators.examination_centre_room_id IS NULL';
         }
 
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
@@ -136,6 +138,26 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
             ->where([$where]);
 
         $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Invigilators', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
+        }
+
+        // sort
+        $sortList = ['Invigilators.openemis_no', 'Invigilators.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'invigilator_id';
+        $searchableFields['Invigilators'] = 'openemis_no';
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -145,9 +167,9 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->setFieldOrder(['openemis_no', 'invigilator_id', 'examination_id', 'rooms']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain('ExaminationCentreRoomsExaminationsInvigilators.ExaminationCentreRooms');
+        $query->contain(['Invigilators', 'Examinations', 'ExaminationCentreRoomsExaminationsInvigilators.ExaminationCentreRooms']);
     }
 
     public function onGetRooms(Event $event, Entity $entity)
@@ -180,9 +202,19 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $this->field('academic_period_id', ['type' => 'readonly']);
         $this->field('examination_centre_id', ['type' => 'readonly']);
         $this->field('examination_id', ['type' => 'select']);
-        $this->field('examination_centre_room_id', ['type' => 'select']);
+        $this->field('rooms', ['type' => 'select']);
         $this->field('invigilators', ['type' => 'custom_invigilators']);
-        $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'examination_id', 'examination_centre_room_id', 'invigilators']);
+        $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'examination_id', 'rooms', 'invigilators']);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['type' => 'readonly']);
+        $this->field('examination_centre_id', ['type' => 'readonly']);
+        $this->field('invigilator_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('examination_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('rooms', ['type' => 'chosenSelect', 'entity' => $entity]);
+        $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'invigilator_id', 'examination_id', 'rooms']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -201,18 +233,34 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         return $attr;
     }
 
+    public function onUpdateFieldInvigilatorId(Event $event, array $attr, $action, Request $request)
+    {
+        $entity = $attr['entity'];
+        $attr['value'] = $entity->invigilator_id;
+        $attr['attr']['value'] = $entity->invigilator->name_with_id;
+        return $attr;
+    }
+
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
     {
-        $linkedExams = $this->ExaminationCentresExaminations->find('list', [
-                'keyField' => 'examination.id',
-                'valueField' => 'examination.code_name'
-            ])
-            ->contain('Examinations')
-            ->where([$this->ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
-            ->toArray();
+        if ($action == 'add') {
+            $linkedExams = $this->ExaminationCentresExaminations->find('list', [
+                    'keyField' => 'examination.id',
+                    'valueField' => 'examination.code_name'
+                ])
+                ->contain('Examinations')
+                ->where([$this->ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
+                ->toArray();
 
-        $attr['options'] = $linkedExams;
-        $attr['onChangeReload'] = 'changeExaminationId';
+            $attr['options'] = $linkedExams;
+            $attr['onChangeReload'] = 'changeExaminationId';
+
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+            $attr['value'] = $entity->examination_id;
+            $attr['attr']['value'] = $entity->examination->code_name;
+        }
+
         return $attr;
     }
 
@@ -225,12 +273,26 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         }
     }
 
-    public function onUpdateFieldExaminationCentreRoomId(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldRooms(Event $event, array $attr, $action, Request $request)
     {
         $ExaminationCentreRooms = $this->ExaminationCentres->ExaminationCentreRooms;
         $roomOptions = $ExaminationCentreRooms->find('list')
             ->where([$ExaminationCentreRooms->aliasField('examination_centre_id') => $this->examCentreId])
             ->toArray();
+
+        if ($action == 'edit') {
+            if ($attr['entity']->has('examination_centre_rooms_examinations_invigilators')) {
+                $roomInvigilators = $attr['entity']->examination_centre_rooms_examinations_invigilators;
+
+                $obj = [];
+                foreach ($roomInvigilators as $room) {
+                    $obj[] = $room->examination_centre_room_id;
+                }
+                $request->data[$this->alias()]['rooms'] = $obj;
+            }
+
+            $attr['fieldName'] = $this->alias().'.rooms';
+        }
 
         $attr['options'] = $roomOptions;
         return $attr;
@@ -305,7 +367,6 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
             $Users = $this->Invigilators;
             $query = $Users
                 ->find()
-                //kiv how to do this
                 ->leftJoin(['ExaminationCentresExaminationsInvigilators' => 'examination_centres_examinations_invigilators'], [
                     'ExaminationCentresExaminationsInvigilators.invigilator_id = '.$Users->aliasField('id'),
                     'ExaminationCentresExaminationsInvigilators.examination_id' => $examinationId
@@ -394,9 +455,9 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
                     foreach ($invigilators as $invigilator) {
                         $requestData['invigilator_id'] = $invigilator['id'];
 
-                        if (!empty($requestData[$model->alias()]['examination_centre_room_id'])) {
+                        if (!empty($requestData[$model->alias()]['rooms'])) {
                             $requestData[$model->alias()]['examination_centre_rooms_examinations_invigilators'][] = [
-                                'examination_centre_room_id' => $requestData[$model->alias()]['examination_centre_room_id'],
+                                'examination_centre_room_id' => $requestData[$model->alias()]['rooms'],
                                 'examination_id' => $requestData[$model->alias()]['examination_id'],
                                 'invigilator_id' => $invigilator['id'],
                                 'examination_centre_id' => $requestData[$model->alias()]['examination_centre_id']
@@ -423,4 +484,42 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
 
         return $process;
     }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        if (isset($data[$this->alias()]['rooms']) && !empty($data[$this->alias()]['rooms'])) {
+            $roomInvigilators = [];
+
+            foreach ($data[$this->alias()]['rooms'] as $key => $value) {
+                $roomInvigilators[] = [
+                    'examination_centre_id' => $data[$this->alias()]['examination_centre_id'],
+                    'invigilator_id' => $data[$this->alias()]['invigilator_id'],
+                    'examination_id' => $data[$this->alias()]['examination_id'],
+                    'examination_centre_room_id' => $value
+                ];
+            }
+
+            $data[$this->alias()]['examination_centre_rooms_examinations_invigilators'] = $roomInvigilators;
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        // manually delete hasMany roomInvigilators data
+        $fieldKey = 'examination_centre_rooms_examinations_invigilators';
+        if (!array_key_exists($fieldKey, $data[$this->alias()])) {
+            $data[$this->alias()][$fieldKey] = [];
+        }
+
+        $currentRoomIds = array_column($data[$this->alias()][$fieldKey], 'examination_centre_room_id');
+        $originalRooms = $entity->extractOriginal([$fieldKey])[$fieldKey];
+
+        foreach ($originalRooms as $key => $room) {
+            if (!in_array($room['examination_centre_room_id'], $currentRoomIds)) {
+                $this->ExaminationCentreRoomsExaminationsInvigilators->delete($room);
+                unset($entity->examination_centre_rooms_examinations_invigilators[$key]);
+            }
+        }
+    }
+
 }
