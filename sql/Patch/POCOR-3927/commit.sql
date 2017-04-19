@@ -47,22 +47,18 @@ CREATE TABLE `z_3927_security_functions`  LIKE `security_functions`;
 INSERT INTO `z_3927_security_functions` SELECT * FROM `security_functions`;
 
 -- staff controller
-UPDATE `security_functions`
-SET `_view` = 'StaffTrainings.index|StaffTrainings.view',
-    `_edit` = 'StaffTrainings.edit',
-    `_add` = 'StaffTrainings.add',
-    `_delete` = 'StaffTrainings.remove',
-    `name` = 'Courses',
-    `category` = 'Staff - Training',
-    `order` = '3100'
-WHERE `id` = 3011;
+DELETE FROM `security_functions` WHERE `security_functions`.`id` = 3011;
 
 UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN 3012 AND 3038;
-UPDATE `security_functions` SET `order` = '3038' WHERE `id` = 3011;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+VALUES  ('3011', 'Courses', 'Staff', 'Institutions', 'Staff - Training', 3000, 'StaffTrainings.index|StaffTrainings.view', 'StaffTrainings.edit', 'StaffTrainings.add', 'StaffTrainings.remove', 'StaffTrainings.download', 3038, '1', NULL, NULL, NULL, 1, NOW());
+
 
 -- directories controller
 UPDATE `security_functions`
 SET `name` = 'Courses',
+    `_execute` = 'StaffTrainings.download',
     `category` = 'Staff - Training',
     `order` = '7100'
 WHERE `id` = 7032;
