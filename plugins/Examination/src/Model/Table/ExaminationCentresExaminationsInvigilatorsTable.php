@@ -56,7 +56,7 @@ class ExaminationCentresExaminationsInvigilatorsTable extends ControllerActionTa
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
-        $Navigation->substituteCrumb('Exam Centre Invigilators', 'Examination Centre', $overviewUrl);
+        $Navigation->substituteCrumb('Exam Centre Invigilators', 'Exam Centres', $overviewUrl);
         $Navigation->addCrumb('Invigilators');
     }
 

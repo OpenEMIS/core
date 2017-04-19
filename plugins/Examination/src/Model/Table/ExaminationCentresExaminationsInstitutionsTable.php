@@ -30,7 +30,6 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 
         $this->addBehavior('CompositeKey');
         $this->toggle('edit', false);
-        $this->toggle('view', false);
         $this->toggle('search', false);
     }
 
@@ -54,7 +53,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
-        $Navigation->substituteCrumb('Exam Centre Linked Institutions', 'Examination Centre', $overviewUrl);
+        $Navigation->substituteCrumb('Exam Centre Linked Institutions', 'Exam Centres', $overviewUrl);
         $Navigation->addCrumb('Linked Institutions');
     }
 
