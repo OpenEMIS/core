@@ -9,6 +9,7 @@ use Cake\Controller\Component;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\I18n\Time;
 use Cake\Log\Log;
 use App\Model\Table\ControllerActionTable;
 
@@ -192,8 +193,28 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             if (isset($request->data[$this->alias()]['academic_period_id'])) {
+                $todayDate = Time::now();
                 $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
-                $examOptions = $this->Examinations->getExaminationOptions($academicPeriodId);
+
+                $Examinations = $this->Examinations;
+                $examOptions = $Examinations->getExaminationOptions($academicPeriodId);
+
+                $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : null;
+                $this->advancedSelectOptions($examOptions, $examinationId, [
+                    'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
+                    'selectOption' => false,
+                    'callable' => function($id) use ($Examinations, $todayDate) {
+                        return $Examinations
+                            ->find()
+                            ->where([
+                                $Examinations->aliasField('id') => $id,
+                                $Examinations->aliasField('registration_start_date <=') => $todayDate,
+                                $Examinations->aliasField('registration_end_date >=') => $todayDate
+                            ])
+                            ->count();
+                    }
+                ]);
+
                 $attr['options'] = $examOptions;
             }
 
@@ -304,6 +325,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         }
 
         $requestData[$this->alias()]['examination_items'] = $examinationCentreSubjects;
+        $patchOptions['associated'] = ['ExaminationItems._joinData' => ['validate' => false]];
     }
 
     public function addBeforeSave(Event $event, $entity, $requestData, $extra)
@@ -319,7 +341,6 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
                     foreach ($examCentreIds as $centreId) {
                         $requestData[$model->alias()]['examination_centre_id'] = $centreId;
                         $newEntities[] = $model->newEntity($requestData->getArrayCopy(), $patchOptions);
-
                     }
                 }
 
@@ -356,6 +377,8 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
                     return true;
                 }
             }
+
+            return false;
         };
 
         return $process;
