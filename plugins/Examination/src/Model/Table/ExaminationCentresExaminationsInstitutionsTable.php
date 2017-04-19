@@ -64,10 +64,8 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
 
         // Set the header of the page
-        if (isset($this->examCentreId)) {
-            $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
-            $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Linked Institutions'));
-        }
+        $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+        $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Linked Institutions'));
 
         $this->field('examination_id', ['type' => 'select']);
     }
@@ -164,14 +162,13 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            $ExaminationCentresExaminations = TableRegistry::get('Examination.ExaminationCentresExaminations');
-            $examinationOptions = $ExaminationCentresExaminations
+            $examinationOptions = $this->ExaminationCentresExaminations
                 ->find('list', [
                     'keyField' => 'examination_id',
                     'valueField' => 'examination.code_name'
                 ])
                 ->contain('Examinations')
-                ->where([$ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
+                ->where([$this->ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
                 ->toArray();
 
             $attr['options'] = $examinationOptions;
@@ -183,28 +180,36 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 
     public function onUpdateFieldInstitutions(Event $event, array $attr, $action, Request $request)
     {
-        $institutionOptions = $this->Institutions
-            ->find('list', [
-                'keyField' => 'id',
-                'valueField' => 'code_name'
-            ]);
+        if ($action == 'add') {
+            $institutionOptions = $this->Institutions
+                ->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code_name'
+                ]);
 
-        if (!empty($request->data[$this->alias()]['examination_id'])) {
-            $examinationId = $request->data[$this->alias()]['examination_id'];
-            $institutionOptions
-                ->notMatching('ExaminationCentresExaminations', function ($q) use ($examinationId) {
-                    return $q->where([
-                        'ExaminationCentresExaminations.examination_id' => $examinationId,
-                        'ExaminationCentresExaminations.examination_centre_id' => $this->examCentreId
-                    ]);
-                }
-            );
+            if (!empty($request->data[$this->alias()]['examination_id'])) {
+                $Institutions = TableRegistry::get('Institution.Institutions');
+                $examinationId = $request->data[$this->alias()]['examination_id'];
+                $educationGradeId = $this->Examinations->get($examinationId)->education_grade_id;
+
+                $institutionOptions
+                    ->innerJoinWith('InstitutionGrades', function ($q) use ($educationGradeId) {
+                        return $q->where(['InstitutionGrades.education_grade_id' => $educationGradeId]);
+                    })
+                    ->notMatching('ExaminationCentresExaminations', function ($q) use ($examinationId) {
+                        return $q->where([
+                            'ExaminationCentresExaminations.examination_id' => $examinationId,
+                            'ExaminationCentresExaminations.examination_centre_id' => $this->examCentreId
+                        ]);
+                    })
+                    ->where([$this->Institutions->aliasField('classification') => $Institutions::ACADEMIC]);
+            }
+
+            $attr['options'] = $institutionOptions->toArray();
+            $attr['type'] = 'chosenSelect';
+            $attr['fieldName'] = $this->alias().'.institutions';
+            return $attr;
         }
-
-        $attr['options'] = $institutionOptions->toArray();
-        $attr['type'] = 'chosenSelect';
-        $attr['fieldName'] = $this->alias().'.institutions';
-        return $attr;
     }
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
