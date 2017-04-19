@@ -45,7 +45,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->hasMany('ExaminationCentreRoomsExaminationsStudents', [
             'className' => 'Examination.ExaminationCentreRoomsExaminationsStudents',
             'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
-            'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id'],
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
@@ -67,12 +66,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
         $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         return $events;
-    }
-
-    public function validationDefault(Validator $validator) {
-        $validator = parent::validationDefault($validator);
-        return $validator
-            ->requirePresence('examination_centre_room_id');
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
@@ -195,7 +188,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
     {
         $searchableFields[] = 'registration_number';
         $searchableFields[] = 'student_id';
-        $searchableFields['student_id'] = 'openemis_no';
+        $searchableFields['Users'] = 'openemis_no';
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
@@ -258,7 +251,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
-        $query->contain(['Examinations', 'Users', 'AcademicPeriods', 'ExaminationCentres', 'Institutions']);
+        $query->contain(['Examinations', 'Users', 'AcademicPeriods', 'ExaminationCentres', 'Institutions', 'ExaminationCentreRoomsExaminationsStudents']);
     }
 
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -353,40 +346,35 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         return $attr;
     }
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $process = function ($model, $entity) use ($requestData) {
-            $ExamCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
-            $conditions = [
-                'examination_centre_id' => $requestData[$model->alias()]['examination_centre_id'],
-                'examination_id' => $requestData[$model->alias()]['examination_id'],
-                'student_id' => $requestData[$model->alias()]['student_id']
+        if (isset($data[$this->alias()]['examination_centre_room_id']) && !empty($data[$this->alias()]['examination_centre_room_id'])) {
+            $data[$this->alias()]['examination_centre_rooms_examinations_students'][] = [
+                'examination_centre_id' => $data[$this->alias()]['examination_centre_id'],
+                'student_id' => $data[$this->alias()]['student_id'],
+                'examination_id' => $data[$this->alias()]['examination_id'],
+                'examination_centre_room_id' => $data[$this->alias()]['examination_centre_room_id']
             ];
+        }
+    }
 
-            $existingRecord = $ExamCentreRoomStudents->find()->where($conditions)->first();
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        // manually delete hasMany roomStudents data
+        $fieldKey = 'examination_centre_rooms_examinations_students';
+        if (!array_key_exists($fieldKey, $data[$this->alias()])) {
+            $data[$this->alias()][$fieldKey] = [];
+        }
 
-            if (isset($requestData[$model->alias()]['examination_centre_room_id']) && !empty($requestData[$model->alias()]['examination_centre_room_id'])) {
-                if (!empty($existingRecord)) {
-                    // update room
-                    $ExamCentreRoomStudents->updateAll(['examination_centre_room_id' => $requestData[$model->alias()]['examination_centre_room_id']], [$conditions]);
+        $currentRoomIds = array_column($data[$this->alias()][$fieldKey], 'examination_centre_room_id');
+        $originalRooms = $entity->extractOriginal([$fieldKey])[$fieldKey];
 
-                } else {
-                    // add new student in room
-                    $conditions['examination_centre_room_id'] = $requestData[$model->alias()]['examination_centre_room_id'];
-                    $newEntity = $ExamCentreRoomStudents->newEntity($conditions);
-                    $ExamCentreRoomStudents->save($newEntity);
-                }
-
-            } else {
-                // delete student from room if user does not select room option
-                if (!empty($existingRecord)) {
-                    $ExamCentreRoomStudents->deleteAll([$conditions]);
-                }
+        foreach ($originalRooms as $key => $room) {
+            if (!in_array($room['examination_centre_room_id'], $currentRoomIds)) {
+                $this->ExaminationCentreRoomsExaminationsStudents->delete($room);
+                unset($entity->examination_centre_rooms_examinations_students[$key]);
             }
-            return true;
-        };
-
-        return $process;
+        }
     }
 
     public function findResults(Query $query, array $options) {
