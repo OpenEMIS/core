@@ -219,13 +219,22 @@ class BulkStudentRegistrationTable extends ControllerActionTable
         $attr['options'] = [];
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['examination_id'])) {
+                if(!empty($request->data[$this->alias()]['academic_period_id'])) {
+                    $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
+                } else {
+                    $selectedAcademicPeriod = $this->AcademicPeriods->getCurrent();
+                }
+
                 $selectedExamination = $request->data[$this->alias()]['examination_id'];
                 $selectedSpecialNeeds = $request->data[$this->alias()]['special_needs_required']['_ids'];
 
                 $query = $this->ExaminationCentres
                     ->find('list' ,['keyField' => 'id', 'valueField' => 'code_name'])
                     ->matching('Examinations')
-                    ->where([$this->Examinations->aliasField('id') => $selectedExamination])
+                    ->where([
+                        $this->Examinations->aliasField('id') => $selectedExamination,
+                        $this->ExaminationCentres->aliasField('academic_period_id') => $selectedAcademicPeriod
+                    ])
                     ->order([$this->ExaminationCentres->aliasField('code')]);
 
                 if (!empty($selectedSpecialNeeds)) {
