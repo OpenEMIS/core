@@ -32,7 +32,6 @@ class DirectoriesController extends AppController {
 			'StaffAbsences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
 			'StaffBehaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
-			'StaffTrainings'		=> ['className' => 'Staff.StaffTrainings'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
 			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
@@ -76,6 +75,7 @@ class DirectoriesController extends AppController {
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
 	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+    public function StaffTrainings() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
 
 	// health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -463,7 +463,6 @@ class DirectoriesController extends AppController {
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
-			'Trainings' => ['text' => __('Trainings')],
 			'Appraisals' => ['text' => __('Appraisals')],
 		];
 
@@ -496,8 +495,9 @@ class DirectoriesController extends AppController {
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Directory', 'controller' => 'Directories'];
 		$studentTabElements = [
-			'TrainingResults' => ['text' => __('Training Results')],
 			'TrainingNeeds' => ['text' => __('Training Needs')],
+			'TrainingResults' => ['text' => __('Training Results')],
+			'StaffTrainings' => ['text' => __('Courses')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);
