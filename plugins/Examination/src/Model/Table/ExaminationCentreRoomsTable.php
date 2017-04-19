@@ -34,22 +34,37 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         ]);
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
+        return $events;
+    }
+
+    public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
+    {
+        $queryString = $request->query['queryString'];
+        $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
+
+        $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
+        $Navigation->substituteCrumb('Exam Centre Rooms', 'Exam Centre', $overviewUrl);
+        $Navigation->addCrumb('Rooms');
+    }
+
     public function validationDefault(Validator $validator)
     {
         $validator = parent::validationDefault($validator);
         return $validator
             ->add('name', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_centre_id']]],
+                'rule' => ['validateUnique', ['scope' => 'examination_centre_id']],
                 'provider' => 'table'
             ])
-            ->allowEmpty('size')
             ->add('size', 'ruleValidateNumeric',  [
                 'rule' => ['numericPositive']
             ])
             ->add('size', 'ruleRoomSize',  [
                 'rule'  => ['range', 0, 2147483647]
             ])
-            ->allowEmpty('number_of_seats')
             ->add('number_of_seats', 'ruleValidateNumeric',  [
                 'rule' => ['numericPositive']
             ])
@@ -59,6 +74,61 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
             ->add('number_of_seats', 'ruleExceedRoomCapacity', [
                 'rule' => 'validateRoomCapacity'
             ]);
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->controller->getExamCentresTab();
+        $this->examCentreId = $this->ControllerAction->getQueryString('examination_centre_id');
+
+        // Set the header of the page
+        $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
+        $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Rooms'));
+    }
+
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
+        if (is_null($this->examCentreId)) {
+            $event->stopPropagation();
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
+        }
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('examination_centre_id', ['visible' => false]);
+    }
+
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('name');
+        $this->field('size');
+        $this->field('number_of_seats');
+        $examinationCentre = $this->ExaminationCentres->get($this->examCentreId, ['contain' => ['AcademicPeriods']]);
+        $this->field('academic_period_id', ['type' => 'readonly', 'value' => $examinationCentre->academic_period_id, 'attr' => ['value' => $examinationCentre->academic_period->name]]);
+        $this->field('examination_centre_id', ['type' => 'readonly', 'value' => $examinationCentre->id, 'attr' => ['value' => $examinationCentre->code_name]]);
+        $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'name', 'size', 'number_of_seats']);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->fields['examination_centre_id']['visible'] = false;
+        $this->setFieldOrder(['name', 'size', 'number_of_seats']);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('name');
+        $this->field('size');
+        $this->field('number_of_seats');
+        $this->field('academic_period_id', ['type' => 'readonly', 'value' => $entity->examination_centre->academic_period_id, 'attr' => ['value' => $entity->examination_centre->academic_period->name]]);
+        $this->field('examination_centre_id', ['type' => 'readonly', 'value' => $entity->examination_centre_id, 'attr' => ['value' => $entity->examination_centre->code_name]]);
+        $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'name', 'size', 'number_of_seats']);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['ExaminationCentres.AcademicPeriods']);
     }
 
     public function afterSave(Event $event, Entity $entity, ArrayObject $options)
