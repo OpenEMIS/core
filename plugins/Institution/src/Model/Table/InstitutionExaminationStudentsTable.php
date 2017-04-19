@@ -426,6 +426,10 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                     ])
                     ->order([$this->ExaminationCentres->aliasField('code')])
                     ->toArray();
+
+                if (empty($examCentreOptions)) {
+                    $this->Alert->warning($this->aliasField('noLinkedExamCentres'));
+                }
             }
 
             $attr['options'] = $examCentreOptions;

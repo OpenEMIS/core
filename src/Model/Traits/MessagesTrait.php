@@ -610,6 +610,7 @@ trait MessagesTrait {
         'InstitutionExaminationStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
+            'noLinkedExamCentres' => 'Please contact your administrator to set up available Examination Centres for the selected Examination'
         ],
         'Examinations' => [
             'noExaminationItems' => 'There are no examination items for this examination'
