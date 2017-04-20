@@ -38,6 +38,7 @@ class NationalitiesTable extends ControllerActionTable
 
     public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
     {
+        //get indentity type that already used / tied to nationality
         $usedIdentityType = $this
                             ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
                             ->select([
@@ -50,8 +51,18 @@ class NationalitiesTable extends ControllerActionTable
 
         if ($action == 'edit') {
             $entity = $attr['entity'];
-            if ($entity->has('identity_type_id') && !empty($entity->identity_type_id) && !empty($usedIdentityType)) {
-                unset($usedIdentityType[$entity->identity_type_id]);
+
+            if ($entity->has('identity_type_id') && !empty($entity->identity_type_id)) {
+                //check for multiple usage of identity type
+                $countNationality = $this->find()
+                                    ->where([
+                                        $this->aliasfield('identity_type_id') => $entity->identity_type_id
+                                    ])
+                                    ->count();
+                //if identity only use for one nationality or has not been used at all.
+                if ($countNationality <= 1 && !empty($usedIdentityType)) { 
+                    unset($usedIdentityType[$entity->identity_type_id]);
+                }
             }
         }
         
