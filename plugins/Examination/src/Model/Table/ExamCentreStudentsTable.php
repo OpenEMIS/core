@@ -59,6 +59,16 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->toggle('remove', false);
     }
 
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->allowEmpty('examination_centre_room_id')
+            ->add('examination_centre_room_id', 'ruleExceedRoomCapacity', [
+                'rule' => 'validateRoomCapacity'
+            ]);
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();

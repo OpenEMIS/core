@@ -32,6 +32,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
+        $this->setDeleteStrategy('restrict');
     }
 
     public function implementedEvents() {
@@ -71,8 +73,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
             ->add('number_of_seats', 'ruleSeatsNumber',  [
                 'rule'  => ['range', 0, 2147483647]
             ])
-            ->add('number_of_seats', 'ruleExceedRoomCapacity', [
-                'rule' => 'validateRoomCapacity'
+            ->add('number_of_seats', 'ruleCheckRoomCapacityMoreThanStudents', [
+                'rule' => 'checkRoomCapacityMoreThanStudents'
             ]);
     }
 
@@ -136,5 +138,24 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
         $examCentreId = $entity->examination_centre_id;
         $listeners = [TableRegistry::get('Examination.ExaminationCentreRoomsExaminations')];
         $this->dispatchEventToModels('Model.ExaminationCentreRooms.afterSave', [$entity], $this, $listeners);
+    }
+
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        $extra['excludedModels'] = [
+            $this->Examinations->alias()
+        ];
+
+        $ExamRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
+        $associatedStudentCount = $ExamRoomStudents->find()
+            ->where([$ExamRoomStudents->aliasField('examination_centre_room_id') => $entity->id])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'Students', 'count' => $associatedStudentCount];
+
+        $ExamRoomInvigilators = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsInvigilators');
+        $associatedInvigilatorsCount = $ExamRoomInvigilators->find()
+            ->where([$ExamRoomInvigilators->aliasField('examination_centre_room_id') => $entity->id])
+            ->count();
+        $extra['associatedRecords'][] = ['model' => 'Invigilators', 'count' => $associatedInvigilatorsCount];
     }
 }

@@ -1561,7 +1561,7 @@ trait MessagesTrait {
                 ],
                 'number_of_seats' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
-                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available',
+                    'ruleCheckRoomCapacityMoreThanStudents' => 'Number of Seats must be more than the number of students in this room',
                     'ruleSeatsNumber' => 'Number of seats is out of range'
                 ]
             ],
@@ -1614,6 +1614,11 @@ trait MessagesTrait {
                 'student_id' => [
                     'ruleUnique' => 'This student is already registered to the selected exam',
                     'ruleNotInvigilator' => 'This student is an invigilator in this examination'
+                ]
+            ],
+            'ExamCentreStudents' => [
+                'examination_centre_room_id' => [
+                    'ruleExceedRoomCapacity' => 'There are no available seats in this room'
                 ]
             ],
             'BulkStudentRegistration' => [
