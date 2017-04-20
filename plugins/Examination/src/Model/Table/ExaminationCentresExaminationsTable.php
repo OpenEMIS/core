@@ -66,6 +66,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         $this->addBehavior('CompositeKey');
         $this->setDeleteStrategy('restrict');
         $this->toggle('edit', false);
+        $this->toggle('view', false);
         $this->toggle('search', false);
     }
 
@@ -86,18 +87,6 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             ->requirePresence('examination_centres', false)
             ->remove('examination_centres');
         return $validator;
-    }
-
-    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
-    {
-        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-
-        if (isset($buttons['view']['url'])) {
-            $buttons['view']['url']['action'] = 'Exams';
-            $buttons['view']['url'][1] = $this->paramsEncode(['id' => $entity->examination_id]);
-        }
-
-        return $buttons;
     }
 
     public function implementedEvents() {
@@ -129,8 +118,6 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
             $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Examinations'));
         }
-
-        $this->field('examination_id', ['type' => 'select', 'sort' => ['field' => 'Examinations.name']]);
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -147,7 +134,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             unset($extra['toolbarButtons']['add']);
         }
 
-        $this->setFieldOrder(['academic_period_id', 'examination_id', 'total_registered']);
+        $this->field('examination_id', ['type' => 'integer', 'sort' => ['field' => 'Examinations.name']]);
+        $this->field('education_grade_id');
+        $this->field('registration_start_date', ['type' => 'date']);
+        $this->field('registration_end_date', ['type' => 'date']);
+        $this->setFieldOrder(['academic_period_id', 'examination_id', 'education_grade_id', 'registration_start_date', 'registration_end_date', 'total_registered']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -159,7 +150,41 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         }
         $extra['options']['sortWhitelist'] = $sortList;
 
-        $query->where([$this->aliasField('examination_centre_id') => $this->examCentreId]);
+        $query
+            ->contain(['Examinations.EducationGrades'])
+            ->where([$this->aliasField('examination_centre_id') => $this->examCentreId]);
+
+        $extra['auto_contain_fields'] = ['Examinations' => ['registration_start_date', 'registration_end_date']];
+    }
+
+    public function onGetEducationGradeId(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination') && $entity->examination->has('education_grade')) {
+            $value = $entity->examination->education_grade->name;
+        }
+
+        return $value;
+    }
+
+    public function onGetRegistrationStartDate(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination')) {
+            $value = $entity->examination->registration_start_date;
+        }
+
+        return $value;
+    }
+
+    public function onGetRegistrationEndDate(Event $event, Entity $entity)
+    {
+        $value = '';
+        if ($entity->has('examination')) {
+            $value = $entity->examination->registration_end_date;
+        }
+
+        return $value;
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
@@ -171,6 +196,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
         }
 
         $this->field('academic_period_id');
+        $this->field('examination_id');
         $this->field('examination_centre_type');
         $this->field('link_all_examination_centres');
         $this->field('examination_centres');
@@ -213,6 +239,7 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
                 }
             ]);
 
+            $attr['type'] = 'select';
             $attr['options'] = $examOptions;
             $attr['onChangeReload'] = true;
             return $attr;
