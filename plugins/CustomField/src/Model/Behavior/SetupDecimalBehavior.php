@@ -12,7 +12,8 @@ class SetupDecimalBehavior extends SetupBehavior {
 
 	public function initialize(array $config) {
         parent::initialize($config);
-
+// pr('SetupDecimalBehavior');
+// die
   //       $this->ruleOptions = [
   //       	'length' => __('Length Validation'),
   //       	'input_mask' => __('Custom Validation')
@@ -37,7 +38,7 @@ class SetupDecimalBehavior extends SetupBehavior {
 
     private function buildDecimalValidator() {
     	$min = $this->inputLimits['decimal_value']['min'];
-
+// pr('min '. $min);
 	// 	$validator = $this->_table->validator();
 	// 	$validator
 	//     	->allowEmpty('minimum_length', function ($context) {
