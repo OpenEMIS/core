@@ -10,8 +10,10 @@ class QualificationLevelsTable extends ControllerActionTable
     {
         $this->table('qualification_levels');
         parent::initialize($config);
-        $this->hasMany('Qualifications', ['className' => 'Staff.Qualifications', 'foreignKey' => 'qualification_level_id']);
+        $this->hasMany('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
 
         $this->addBehavior('FieldOption.FieldOption');
+
+        $this->setDeleteStrategy('restrict');
     }
 }
