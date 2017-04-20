@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS `qualification_titles` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='This table contains the titles of the qualifications';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the titles of the qualifications';
 
 ALTER TABLE `qualification_titles`
   ADD PRIMARY KEY (`id`),
@@ -26,7 +26,7 @@ ALTER TABLE `qualification_titles`
 ALTER TABLE `qualification_titles`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
-#populate `qualification_titles` base on staff_qualifications table
+# populate `qualification_titles` base on staff_qualifications table
 INSERT INTO `qualification_titles` (`name`, `qualification_level_id`, `order`, `created_user_id`, `created`)
 SELECT DISTINCT qualification_title, qualification_level_id, 1, 1, now()
 FROM `staff_qualifications`;
@@ -44,10 +44,12 @@ CREATE TABLE IF NOT EXISTS `staff_qualifications_subjects` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the subjects that can be taught by teachers';
 
 ALTER TABLE `staff_qualifications_subjects`
-  ADD PRIMARY KEY (`staff_qualification_id`, `education_subject_id`);
+  ADD PRIMARY KEY (`staff_qualification_id`, `education_subject_id`),
+  ADD KEY `staff_qualification_id` (`staff_qualification_id`),
+  ADD KEY `education_subject_id` (`education_subject_id`);
 
 
--- populate base on `staff_qualifications` table
+# populate base on `staff_qualifications` table
 INSERT INTO `staff_qualifications_subjects`
 SELECT sha2(CONCAT(`A`.`id`, ',', `B`.`education_subject_id`), '256'), `A`.`id`, `B`.`education_subject_id`
 FROM `staff_qualifications` `A`
@@ -72,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `staff_qualifications_temp` (
   `modified` datetime DEFAULT NULL,
   `created_user_id` int(11) NOT NULL,
   `created` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 ALTER TABLE `staff_qualifications_temp`
   ADD PRIMARY KEY (`id`),
@@ -83,7 +85,7 @@ ALTER TABLE `staff_qualifications_temp`
 ALTER TABLE `staff_qualifications_temp`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
-#re-insert data
+# re-insert data
 INSERT INTO `staff_qualifications_temp`
 SELECT `A`.`id`, `A`.`document_no`, `A`.`graduate_year`, `B`.`name`, `A`.`gpa`, `A`.`file_name`, `A`.`file_content`, 
 `A`.`staff_id`, `D`.`id`, `C`.`id`, `A`.`modified_user_id`, `A`.`modified`, `A`.`created_user_id`, `A`.`created`
