@@ -669,7 +669,7 @@ class NavigationComponent extends Component
 				'title' => 'Training',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Staff.StaffTrainings',],
+				'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Institutions.CourseCatalogue', 'Staff.Courses',],
 			],
 			'Staff.Healths' => [
 				'title' => 'Health',
@@ -734,7 +734,7 @@ class NavigationComponent extends Component
 					'title' => 'Training',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.StaffTrainings']
+					'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.Courses']
 				],
 		];
 		return $navigation;

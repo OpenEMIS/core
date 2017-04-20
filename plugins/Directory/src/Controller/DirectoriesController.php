@@ -75,7 +75,7 @@ class DirectoriesController extends AppController {
 	public function StudentGuardians()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
 	public function StudentGuardianUser()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
 	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
-    public function StaffTrainings() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
+    public function Courses() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
 
 	// health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -497,7 +497,7 @@ class DirectoriesController extends AppController {
 		$studentTabElements = [
 			'TrainingNeeds' => ['text' => __('Training Needs')],
 			'TrainingResults' => ['text' => __('Training Results')],
-			'StaffTrainings' => ['text' => __('Courses')],
+			'Courses' => ['text' => __('Courses')],
 		];
 
 		$tabElements = array_merge($tabElements, $studentTabElements);

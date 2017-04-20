@@ -72,7 +72,8 @@ class AlertRuleLicenseRenewalBehavior extends AlertRuleBehavior
             ],
         ],
         'placeholder' => [
-            '${threshold.value}' => 'Threshold value.',
+            '${threshold.value}' => 'Threshold day value.',
+            '${threshold.hour}' => 'Threshold hour value.',
             '${license_type.name}' => 'License type.',
             '${license_number}' => 'License number.',
             '${issue_date}' => 'Issue date.',
