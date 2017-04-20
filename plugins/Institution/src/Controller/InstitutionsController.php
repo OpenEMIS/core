@@ -81,7 +81,6 @@ class InstitutionsController extends AppController
     public function StaffTransferRequests()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferRequests']); }
     public function StaffTransferApprovals()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffTransferApprovals']); }
     public function StaffPositionProfiles()         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffPositionProfiles']); }
-    public function Classes()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']); }
     public function Subjects()                      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSubjects']); }
     public function Assessments()                   { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionAssessments']); }
     public function AssessmentResults()             { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.AssessmentResults']); }
@@ -161,7 +160,44 @@ class InstitutionsController extends AppController
     }
     // End
 
-    public function Students($pass = 'index') {
+    public function Classes($subaction = 'index', $classId = null)
+    {
+        if ($subaction == 'editStudents') {
+            $session = $this->request->session();
+            $roles = [];
+            $classId = $this->ControllerAction->paramsDecode($classId);
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
+                    if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
+                        $ClassTable = TableRegistry::get('Institution.InstitutionClasses');
+                        $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id']]);
+                        if ($classRecord->staff_id != $userId) {
+                            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
+                            $event->stopPropagation();
+                            return $this->redirect($url);
+                        }
+                    } else {
+                        $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
+                        $event->stopPropagation();
+                        return $this->redirect($url);
+                    }
+                }
+            }
+
+            $this->set('classId', $classId['id']);
+            $this->set('institutionId', $institutionId);
+            $this->render('institution_class_students_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
+        }
+    }
+
+    public function Students($pass = 'index')
+    {
         if ($pass == 'add') {
             $session = $this->request->session();
             $roles = [];
@@ -186,7 +222,8 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function Staff($pass = 'index') {
+    public function Staff($pass = 'index')
+    {
         if ($pass == 'add') {
             $session = $this->request->session();
             $roles = [];
@@ -375,6 +412,18 @@ class InstitutionsController extends AppController
                             'alert.svc',
                             'institutions.staff.ctrl',
                             'institutions.staff.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'Classes':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'editStudents') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'kd-angular-multi-select',
+                            'institution.class.students.ctrl',
+                            'institution.class.students.svc'
                         ]);
                     }
                 }
