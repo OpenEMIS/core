@@ -214,10 +214,6 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 console.log(error);
             })
             .finally(function() {
-                vm.gridOptions.api.forEachNode(function(row) {
-                    ExaminationsResultsSvc.saveTotal(row.data, row.data.student_id, examinationId, examinationCentreId, educationSubjectId, examinationItemId);
-                });
-
                 $scope.action = 'view';
                 // reset results object
                 vm.results = {};
