@@ -51,7 +51,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE', 'DECIMAL'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
@@ -104,6 +104,7 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderCoordinates');
 		$this->_table->addBehavior('CustomField.RenderFile');
 		$this->_table->addBehavior('CustomField.RenderRepeater');
+		$this->_table->addBehavior('CustomField.RenderDecimal');
 		// End
 
 		// If tabSection is not set, added to handle Section Header
@@ -665,7 +666,7 @@ class RecordBehavior extends Behavior {
 			$fieldOrder = [];
 			// temporary fix: to make custom fields appear before map in Institutions > General > Overview
 			$ignoreFields = ['id', 'map_section', 'map', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-			
+
 			// re-order array sequence based on 'order' attribute value.
 			$modelFields = $model->fields;
 			uasort($modelFields, function($a,$b){ return $a['order']-$b['order'];});
@@ -700,6 +701,7 @@ class RecordBehavior extends Behavior {
 								$fieldData['textarea_value'] = $obj->textarea_value;
 								$fieldData['date_value'] = $obj->date_value;
 								$fieldData['time_value'] = $obj->time_value;
+								$fieldData['decimal_value'] = $obj->decimal_value;
 
 								// logic for Initialize
 								$fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));

@@ -126,6 +126,16 @@ class CustomFieldValuesTable extends AppTable {
 				'rule' => ['lngIsValid'],
 				'provider' => 'table'
 			])
+
+			// DECIMAL validation
+			->allowEmpty('decimal_value', function ($context) {
+				if (array_key_exists('mandatory', $context['data'])) {
+					return !$context['data']['mandatory'];
+				}
+
+				return true;
+			})
+			->decimal('decimal_value', 2, [true])
 			;
 
 		return $validator;
