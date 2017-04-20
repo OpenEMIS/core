@@ -1,10 +1,10 @@
 angular
-    .module('dashboard.ctrl', ['utils.svc', 'alert.svc', 'dashboard.svc'])
+    .module('dashboard.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'dashboard.svc'])
     .controller('DashboardCtrl', DashboardController);
 
-DashboardController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'DashboardSvc'];
+DashboardController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'DashboardSvc'];
 
-function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, DashboardSvc) {
+function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, DashboardSvc) {
 	var vm = this;
 
     // Variables
@@ -82,11 +82,36 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
             if (hasWorkbenchData == false) {
                 vm.workbenchItems = false;
             }
+            return vm.workbenchItems;
         }, function(error) {
             // No Workbench Data
             console.log(error);
             vm.workbenchItems = false;
             AlertSvc.warning($scope, error);
+        })
+        .then(function(items){
+            var textToTranslate = [];
+            angular.forEach(items, function(item, key) {
+                textToTranslate.push(item.name);
+            });
+            var defer = $q.defer();
+            DashboardSvc.translate(textToTranslate)
+            .then(function(res){
+                angular.forEach(res, function(value, key) {
+                    items[key]['name'] = value;
+                });
+                defer.resolve(items);
+            }, function(error){
+                defer.resolve(items);
+            });
+            return defer.promise;
+        }, function(error){
+            console.log(error);
+        })
+        .then(function (workbenchItemsTranslated){
+            vm.workbenchItems = workbenchItemsTranslated;
+        }, function(error){
+            console.log(error);
         })
         .finally(function() {
             UtilsSvc.isAppendSpinner(false, 'dashboard-workbench-item-table');
@@ -97,23 +122,46 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
     }
 
     function initGrid(target) {
-        vm.gridOptions[target] = {
-            columnDefs: [],
-            rowData: [],
-            headerHeight: 38,
-            rowHeight: 38,
-            enableColResize: true,
-            enableSorting: true,
-            unSortIcon: true,
-            enableFilter: true,
-            suppressMenuHide: true,
-            suppressCellSelection: true,
-            suppressMovableColumns: true,
-            rowModelType: 'pagination',
-            onGridSizeChanged: function(e) {
-                this.api.sizeColumnsToFit();
-            }
-        };
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            vm.gridOptions[target] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                enableColResize: true,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                rowModelType: 'pagination',
+                localeText: localeText,
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                }
+            };
+        }, function(error){
+            vm.gridOptions[target] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                enableColResize: true,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                rowModelType: 'pagination',
+                localeText: localeText,
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                }
+            };
+        });
     }
 
     function onChangeModel(model) {
@@ -125,7 +173,19 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         vm.gridOptions[vm.target].api.setRowData([]);
 
         var columnDefs = DashboardSvc.getWorkbenchColumnDefs(model.cols);
-        vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
+        var textToTranslate = [];
+        angular.forEach(columnDefs, function(value, key) {
+            textToTranslate.push(value.headerName);
+        });
+        DashboardSvc.translate(textToTranslate)
+        .then(function(res){
+            angular.forEach(res, function(value, key) {
+                columnDefs[key]['headerName'] = value;
+            });
+            vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
+        }, function(error){
+            console.log(error);
+        });
 
         var limit = 10;
         var dataSource = {
