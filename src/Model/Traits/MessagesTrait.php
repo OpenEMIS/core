@@ -882,7 +882,7 @@ trait MessagesTrait {
             ],
             'StudentUser' => [
                 'start_date' => [
-                    'ruleCheckProgrammeEndDate' => 'Student Start Date is later than the Education Grade End Date.'
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'Student Start Date is later than the Education Grade End Date.'
                 ],
                 'education_grade_id' => [
                     'ruleCheckProgrammeEndDate' => 'Education Grade has ended.'

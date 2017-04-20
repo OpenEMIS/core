@@ -1911,6 +1911,7 @@ class ValidationBehavior extends Behavior {
         }
         return true;
     }
+
     public static function checkStudentInEducationProgrammes($field, array $globalData)
     {
         $endDate = new DateTime($field);
@@ -1959,27 +1960,97 @@ class ValidationBehavior extends Behavior {
 
             if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
-                $studentStartDate = new DateTime($data['start_date']);
                 $today = new DateTime('now');
                 $validationErrorMsg = '';
 
                 if ($programmeEndDate < $today) {
                     $validationErrorMsg = 'Institution.StudentUser.education_grade_id.ruleCheckProgrammeEndDate';
-                    if ($caller == 'education_grade_id') {
+                    // if ($caller == 'education_grade_id') {
                         return $model->getMessage($validationErrorMsg);
-                    } else if ($caller == 'model') {
-                        return $validationErrorMsg;
-                    }
-                } else if ($programmeEndDate < $studentStartDate) {
-                    $validationErrorMsg = 'Institution.StudentUser.start_date.ruleCheckProgrammeEndDate';
-                    if ($caller == 'start_date') {
-                        return $model->getMessage($validationErrorMsg);
-                    } else if ($caller == 'model') {
-                        return $validationErrorMsg;
-                    }
+                    // } else if ($caller == 'model') {
+                    //     return $validationErrorMsg;
+                    // }
                 }
             }
         }
         return true;
     }
+
+    public static function checkProgrammeEndDateAgainstStudentStartDate($field, $caller, array $globalData)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $model = $globalData['providers']['table'];
+        $data = $globalData['data'];
+
+        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+            $query = $InstitutionGrades
+                    ->find()
+                    ->where([
+                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                    ])
+                    ->first();
+
+            $programmeEndDate = $query->end_date;
+
+            if (!empty($programmeEndDate)) {
+                $programmeEndDate = new DateTime($programmeEndDate);
+                $studentStartDate = new DateTime($data['start_date']);
+                $validationErrorMsg = '';
+
+                if ($programmeEndDate < $studentStartDate) {
+                    $validationErrorMsg = 'Institution.StudentUser.start_date.ruleCheckProgrammeEndDateAgainstStudentStartDate';
+                    // if ($caller == 'start_date') {
+                        return $model->getMessage($validationErrorMsg);
+                    // } else if ($caller == 'model') {
+                    //     return $validationErrorMsg;
+                    // }
+                }
+            }
+        }
+        return true;
+    }
+
+    // public static function checkProgrammeEndDate($field, $caller, array $globalData)
+    // {
+    //     $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+    //     $model = $globalData['providers']['table'];
+    //     $data = $globalData['data'];
+
+    //     if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+    //         $query = $InstitutionGrades
+    //                 ->find()
+    //                 ->where([
+    //                     $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+    //                     $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+    //                 ])
+    //                 ->first();
+
+    //         $programmeEndDate = $query->end_date;
+
+    //         if (!empty($programmeEndDate)) {
+    //             $programmeEndDate = new DateTime($programmeEndDate);
+    //             $studentStartDate = new DateTime($data['start_date']);
+    //             $today = new DateTime('now');
+    //             $validationErrorMsg = '';
+
+    //             if ($programmeEndDate < $today) {
+    //                 $validationErrorMsg = 'Institution.StudentUser.education_grade_id.ruleCheckProgrammeEndDate';
+    //                 if ($caller == 'education_grade_id') {
+    //                     return $model->getMessage($validationErrorMsg);
+    //                 } else if ($caller == 'model') {
+    //                     return $validationErrorMsg;
+    //                 }
+    //             } else if ($programmeEndDate < $studentStartDate) {
+    //                 $validationErrorMsg = 'Institution.StudentUser.start_date.ruleCheckProgrammeEndDate';
+    //                 if ($caller == 'start_date') {
+    //                     return $model->getMessage($validationErrorMsg);
+    //                 } else if ($caller == 'model') {
+    //                     return $validationErrorMsg;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return true;
+    // }
 }
