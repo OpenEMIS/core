@@ -25,8 +25,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         getRowData: getRowData,
         getGrading: getGrading,
         calculateTotal: calculateTotal,
-        saveRowData: saveRowData,
-        saveTotal: saveTotal
+        saveRowData: saveRowData
     };
 
     return service;
@@ -488,21 +487,5 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         }, this);
 
         return $q.all(promises);
-    };
-
-    function saveTotal(row, studentId, examinationId, examinationCentreId, educationSubjectId, examinationItemId) {
-        var totalMark = this.calculateTotal(row);
-        totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
-
-        var data = {
-            "total_mark" : totalMark,
-            "student_id" : studentId,
-            "examination_id" : examinationId,
-            "examination_centre_id" : examinationCentreId,
-            "education_subject_id" : educationSubjectId,
-            "examination_item_id" : examinationItemId
-        };
-
-        ExaminationCentresExaminationsSubjectsStudentsTable.save(data);
     };
 }
