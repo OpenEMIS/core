@@ -11,7 +11,7 @@ class ExaminationCentresExaminationsSubjectsStudentsTable extends ControllerActi
     public function initialize(array $config)
     {
         parent::initialize($config);
-        $this->belongsTo('Students', ['className' => 'Institution.StudentUser']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);

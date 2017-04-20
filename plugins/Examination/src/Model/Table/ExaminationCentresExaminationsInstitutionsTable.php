@@ -66,7 +66,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Linked Institutions'));
 
-        $this->field('examination_id', ['type' => 'select']);
+        $this->fields['examination_id']['type'] = 'integer';
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -80,8 +80,8 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->field('institution_id', ['type' => 'string', 'sort' => ['field' => 'Institutions.name']]);
-        $this->setFieldOrder(['institution_id', 'examination_id']);
+        $this->field('linked_institution', ['sort' => ['field' => 'Institutions.name']]);
+        $this->setFieldOrder(['linked_institution', 'examination_id']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -122,7 +122,13 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $extra['options']['sortWhitelist'] = $sortList;
     }
 
-    public function onGetInstitutionId(Event $event, Entity $entity)
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('linked_institution', ['type' => 'integer']);
+        $this->setFieldOrder(['linked_institution', 'examination_id']);
+    }
+
+    public function onGetLinkedInstitution(Event $event, Entity $entity)
     {
         $value = '';
         if ($entity->has('institution')) {
@@ -137,6 +143,7 @@ class ExaminationCentresExaminationsInstitutionsTable extends ControllerActionTa
         $this->field('academic_period_id');
         $this->field('institutions');
         $this->field('examination_centre_id');
+        $this->field('examination_id');
         $this->setFieldOrder(['academic_period_id', 'examination_centre_id', 'examination_id', 'institutions']);
     }
 

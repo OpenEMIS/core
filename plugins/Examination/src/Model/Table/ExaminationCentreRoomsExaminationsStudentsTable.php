@@ -17,7 +17,7 @@ class ExaminationCentreRoomsExaminationsStudentsTable extends ControllerActionTa
         parent::initialize($config);
         $this->belongsTo('ExaminationCentreRooms', ['className' => 'Examination.ExaminationCentreRooms']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
-        $this->belongsTo('Students', ['className' => 'Institution.StudentUser']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
         $this->belongsTo('ExaminationCentreRoomsExaminations', [
             'className' => 'Examination.ExaminationCentreRoomsExaminations',

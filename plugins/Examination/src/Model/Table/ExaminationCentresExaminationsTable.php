@@ -192,32 +192,28 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['academic_period_id'])) {
-                $todayDate = Time::now();
-                $academicPeriodId = $request->data[$this->alias()]['academic_period_id'];
+            $todayDate = Time::now();
+            $academicPeriodId = isset($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id'] : $this->AcademicPeriods->getCurrent();
 
-                $Examinations = $this->Examinations;
-                $examOptions = $Examinations->getExaminationOptions($academicPeriodId);
+            $Examinations = $this->Examinations;
+            $examOptions = $Examinations->getExaminationOptions($academicPeriodId);
 
-                $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : null;
-                $this->advancedSelectOptions($examOptions, $examinationId, [
-                    'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
-                    'selectOption' => false,
-                    'callable' => function($id) use ($Examinations, $todayDate) {
-                        return $Examinations
-                            ->find()
-                            ->where([
-                                $Examinations->aliasField('id') => $id,
-                                $Examinations->aliasField('registration_start_date <=') => $todayDate,
-                                $Examinations->aliasField('registration_end_date >=') => $todayDate
-                            ])
-                            ->count();
-                    }
-                ]);
+            $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : null;
+            $this->advancedSelectOptions($examOptions, $examinationId, [
+                'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
+                'selectOption' => false,
+                'callable' => function($id) use ($Examinations, $todayDate) {
+                    return $Examinations
+                        ->find()
+                        ->where([
+                            $Examinations->aliasField('id') => $id,
+                            $Examinations->aliasField('registration_end_date >=') => $todayDate
+                        ])
+                        ->count();
+                }
+            ]);
 
-                $attr['options'] = $examOptions;
-            }
-
+            $attr['options'] = $examOptions;
             $attr['onChangeReload'] = true;
             return $attr;
         }

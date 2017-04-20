@@ -86,12 +86,12 @@ class ExaminationItemsTable extends AppTable {
     {
         $subjectList = $this
             ->find()
-            ->matching('EducationSubjects')
+            ->contain('EducationSubjects')
             ->select([
                 'item_id' => $this->aliasField('id'),
                 'item_name' => $this->aliasField('name'),
                 'education_subject_id' => $this->aliasField('education_subject_id'),
-                'education_subject_name' => 'EducationSubjects.name'
+                'education_subject_name' => $this->EducationSubjects->aliasField('name')
             ])
             ->where([$this->aliasField('examination_id') => $examinationId])
             ->toArray();
