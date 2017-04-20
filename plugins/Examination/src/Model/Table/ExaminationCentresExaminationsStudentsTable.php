@@ -427,7 +427,25 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         if ($action == 'add') {
             if (!empty($request->data[$this->alias()]['academic_period_id'])) {
                 $selectedAcademicPeriod = $request->data[$this->alias()]['academic_period_id'];
-                $examinationOptions = $this->Examinations->getExaminationOptions($selectedAcademicPeriod);
+                $Examinations = $this->Examinations;
+                $examinationOptions = $Examinations->getExaminationOptions($selectedAcademicPeriod);
+
+                $todayDate = Time::now();
+                $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : null;
+                $this->advancedSelectOptions($examinationOptions, $examinationId, [
+                    'message' => '{{label}} - ' . $this->getMessage('InstitutionExaminationStudents.notAvailableForRegistration'),
+                    'selectOption' => false,
+                    'callable' => function($id) use ($Examinations, $todayDate) {
+                        return $Examinations
+                            ->find()
+                            ->where([
+                                $Examinations->aliasField('id') => $id,
+                                $Examinations->aliasField('registration_start_date <=') => $todayDate,
+                                $Examinations->aliasField('registration_end_date >=') => $todayDate
+                            ])
+                            ->count();
+                    }
+                ]);
             }
 
             $attr['options'] = !empty($examinationOptions)? $examinationOptions: [];

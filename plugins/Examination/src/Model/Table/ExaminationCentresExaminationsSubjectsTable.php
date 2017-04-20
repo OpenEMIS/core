@@ -122,7 +122,9 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
         $extra['auto_contain_fields'] = ['ExaminationItems' => ['code', 'examination_date']];
 
-        $query->where([$where]);
+        $query
+            ->contain('EducationSubjects')
+            ->where([$where]);
 
         // sorting columns
         $sortList = ['ExaminationItems.code', 'ExaminationItems.name', 'ExaminationItems.examination_date', 'EducationSubjects.name'];
@@ -211,6 +213,16 @@ class ExaminationCentresExaminationsSubjectsTable extends ControllerActionTable
         $value = '';
         if ($entity->has('examination_item') && $entity->examination_item->has('examination_grading_type')) {
             $value = $entity->examination_item->examination_grading_type->code_name;
+        }
+
+        return $value;
+    }
+
+    public function onGetEducationSubjectId(Event $event, Entity $entity)
+    {
+        $value = ' ';
+        if ($entity->has('education_subject')) {
+            $value = $entity->education_subject->name;
         }
 
         return $value;
