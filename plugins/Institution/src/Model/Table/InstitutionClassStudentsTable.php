@@ -11,7 +11,8 @@ use Cake\I18n\Time;
 use Cake\Utility\Text;
 use App\Model\Table\AppTable;
 
-class InstitutionClassStudentsTable extends AppTable {
+class InstitutionClassStudentsTable extends AppTable
+{
 
     // For reports
     private $assessmentItemResults = [];
@@ -26,15 +27,16 @@ class InstitutionClassStudentsTable extends AppTable {
     private $mySubjectsPermission = true;
     private $staffId = 0;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         parent::initialize($config);
 
-        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
-        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
-        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id', 'joinType' => 'INNER']);
+        $this->belongsTo('InstitutionClasses', ['className' => 'Institution.InstitutionClasses', 'joinType' => 'INNER']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades', 'joinType' => 'INNER']);
+        $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses', 'joinType' => 'INNER']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'joinType' => 'INNER']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'joinType' => 'INNER']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
         $this->hasMany('SubjectStudents', [
@@ -102,7 +104,8 @@ class InstitutionClassStudentsTable extends AppTable {
         }
     }
 
-    public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {
+    public function onExcelBeforeGenerate(Event $event, ArrayObject $settings)
+    {
         $classId = $this->ControllerAction->getQueryString('class_id');
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $institutionCode = $this->Institutions->get($institutionId)->code;
@@ -110,7 +113,8 @@ class InstitutionClassStudentsTable extends AppTable {
         $settings['file'] = str_replace($this->alias(), str_replace(' ', '_', $institutionCode).'-'.str_replace(' ', '_', $className).'_Results', $settings['file']);
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $classId = $this->ControllerAction->getQueryString('class_id');
         $assessmentId = $this->ControllerAction->getQueryString('assessment_id');
         $AccessControl = $this->AccessControl;
@@ -119,9 +123,8 @@ class InstitutionClassStudentsTable extends AppTable {
         $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
         $allSubjectsPermission = true;
         $mySubjectsPermission = true;
-        if (!$AccessControl->isAdmin())
-        {
-            if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles) ) {
+        if (!$AccessControl->isAdmin()) {
+            if (!$AccessControl->check(['Institutions', 'AllSubjects', 'index'], $roles)) {
                 $allSubjectsPermission = false;
                 $mySubjectsPermission = $AccessControl->check(['Institutions', 'Subjects', 'index'], $roles);
             }
@@ -156,7 +159,8 @@ class InstitutionClassStudentsTable extends AppTable {
         ];
     }
 
-    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $originalField) {
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $originalField)
+    {
         $assessmentId = $settings['sheet']['assessmentId'];
         $assessmentEntity = TableRegistry::get('Assessment.Assessments')->get($assessmentId);
         $AssessmentPeriodsTable = TableRegistry::get('Assessment.AssessmentPeriods');
@@ -221,7 +225,7 @@ class InstitutionClassStudentsTable extends AppTable {
 
         $assessmentGradeTypes = $AssessmentItemsGradingTypesTable->getAssessmentGradeTypes($assessmentId);
         $assessmentSubjects = TableRegistry::get('Assessment.AssessmentItems')->getSubjects($assessmentId);
-        foreach($assessmentSubjects as $subject) {
+        foreach ($assessmentSubjects as $subject) {
             foreach ($assessmentPeriods as $period) {
                 $subjectId = $subject['subject_id'];
                 $assessmentPeriodId = $period->id;
@@ -273,7 +277,8 @@ class InstitutionClassStudentsTable extends AppTable {
         $originalField->exchangeArray($fields);
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, $query)
+    {
         $sheet = $settings['sheet'];
         $institutionId = $sheet['institutionId'];
         $allClassesPermission = $sheet['allClassesPermission'];
@@ -292,7 +297,7 @@ class InstitutionClassStudentsTable extends AppTable {
             ->innerJoin(['InstitutionClassGrades' => 'institution_class_grades'], [
                 'InstitutionClassGrades.institution_class_id = '.$this->aliasField('institution_class_id')
             ])
-            ->innerJoin(['Assessments' => 'assessments'],[
+            ->innerJoin(['Assessments' => 'assessments'], [
                 'Assessments.education_grade_id = InstitutionClassGrades.education_grade_id',
                 'Assessments.id' => $assessmentId
             ])
@@ -332,8 +337,7 @@ class InstitutionClassStudentsTable extends AppTable {
                                 ['InstitutionSubjectStaff.staff_id' => $staffId]
                             ]
                         ]);
-                    }
-                    // If only subject permission is available
+                    } // If only subject permission is available
                     else {
                         $query->where(['InstitutionSubjectStaff.staff_id' => $staffId]);
                     }
@@ -342,13 +346,15 @@ class InstitutionClassStudentsTable extends AppTable {
         }
     }
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+    public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
+    {
         if ($entity->isNew()) {
             $entity->id = Text::uuid();
         }
     }
 
-    public function onExcelRenderSubject(Event $event, Entity $entity, array $attr) {
+    public function onExcelRenderSubject(Event $event, Entity $entity, array $attr)
+    {
         $studentId = $entity->student_id;
         $subjectId = $attr['subjectId'];
         $assessmentId = $attr['assessmentId'];
@@ -398,7 +404,7 @@ class InstitutionClassStudentsTable extends AppTable {
         if ($renderResult) {
             if (isset($assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId])) {
                 $result = $assessmentItemResults[$studentId][$subjectId][$assessmentPeriodId];
-                switch($resultType) {
+                switch ($resultType) {
                     case 'MARKS':
                         // Add logic to add weighted mark to subjectWeightedMark
                         $this->assessmentPeriodWeightedMark += ($result['marks'] * $attr['assessmentPeriodWeight']);
@@ -421,11 +427,12 @@ class InstitutionClassStudentsTable extends AppTable {
         return $printedResult;
     }
 
-    public function onExcelRenderNationality(Event $event, Entity $entity, array $attr) {
+    public function onExcelRenderNationality(Event $event, Entity $entity, array $attr)
+    {
         if ($entity->user->nationalities) {
             $nationalities = $entity->user->nationalities;
             $allNationalities = '';
-            foreach($nationalities as $nationality) {
+            foreach ($nationalities as $nationality) {
                 $allNationalities .= $nationality->nationalities_look_up->name . ', ';
             }
             return rtrim($allNationalities, ', ');
@@ -434,7 +441,8 @@ class InstitutionClassStudentsTable extends AppTable {
         }
     }
 
-    public function onExcelRenderAssessmentPeriodWeightedMark(Event $event, Entity $entity, array $attr) {
+    public function onExcelRenderAssessmentPeriodWeightedMark(Event $event, Entity $entity, array $attr)
+    {
         $assessmentPeriodWeightedMark = $this->assessmentPeriodWeightedMark;
         $this->totalMark += $assessmentPeriodWeightedMark;
         $this->totalWeightedMark += ($assessmentPeriodWeightedMark * $attr['subjectWeight']);
@@ -445,19 +453,22 @@ class InstitutionClassStudentsTable extends AppTable {
         return ' '.$assessmentPeriodWeightedMark;
     }
 
-    public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr) {
+    public function onExcelRenderTotalWeightedMark(Event $event, Entity $entity, array $attr)
+    {
         $totalWeightedMark = $this->totalWeightedMark;
         $this->totalWeightedMark = 0;
         return ' '.$totalWeightedMark;
     }
 
-    public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr) {
+    public function onExcelRenderTotalMark(Event $event, Entity $entity, array $attr)
+    {
         $totalMark = $this->totalMark;
         $this->totalMark = 0;
         return ' '.$totalMark;
     }
 
-    public function getMaleCountByClass($classId) {
+    public function getMaleCountByClass($classId)
+    {
         $gender_id = 1; // male
         $count = $this
             ->find()
@@ -469,7 +480,8 @@ class InstitutionClassStudentsTable extends AppTable {
         return $count;
     }
 
-    public function getFemaleCountByClass($classId) {
+    public function getFemaleCountByClass($classId)
+    {
         $gender_id = 2; // female
         $count = $this
             ->find()
@@ -481,7 +493,8 @@ class InstitutionClassStudentsTable extends AppTable {
         return $count;
     }
 
-    public function autoInsertClassStudent($data) {
+    public function autoInsertClassStudent($data)
+    {
         $studentId = $data['student_id'];
         $gradeId = $data['education_grade_id'];
         $classId = $data['institution_class_id'];
@@ -507,7 +520,8 @@ class InstitutionClassStudentsTable extends AppTable {
         $this->save($entity);
     }
 
-    private function _setSubjectStudentData($data) {
+    private function _setSubjectStudentData($data)
+    {
 
         $ClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
 
@@ -525,7 +539,6 @@ class InstitutionClassStudentsTable extends AppTable {
 
         $subjectStudents = [];
         foreach ($classSubjectsData as $classSubjects) {
-
             $subjectStudents[] = [
                 'student_status_id' => $data['student_status_id'],
                 'student_id' => $data['student_id'],
@@ -541,7 +554,8 @@ class InstitutionClassStudentsTable extends AppTable {
         return $subjectStudents;
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
         // PHPOE-2338 - implement afterDelete in InstitutionClassStudentsTable.php to delete from InstitutionSubjectStudentsTable
         $this->_autoDeleteSubjectStudent($entity);
 
@@ -551,7 +565,8 @@ class InstitutionClassStudentsTable extends AppTable {
         $this->dispatchEventToModels('Model.InstitutionClassStudents.afterDelete', [$entity], $this, $listeners);
     }
 
-    private function _autoDeleteSubjectStudent(Entity $entity) {
+    private function _autoDeleteSubjectStudent(Entity $entity)
+    {
         $InstitutionSubjectStudentsTable = TableRegistry::get('Institution.InstitutionSubjectStudents');
         $deleteSubjectStudent = $InstitutionSubjectStudentsTable->find()
             ->where([
@@ -566,7 +581,8 @@ class InstitutionClassStudentsTable extends AppTable {
         }
     }
 
-    public function findAbsencesByDate(Query $query, array $options) {
+    public function findAbsencesByDate(Query $query, array $options)
+    {
         $classId = $options['institution_class_id'];
         $absenceDate = $options['absence_date'];
 
