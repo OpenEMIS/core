@@ -48,20 +48,14 @@ INSERT INTO `z_3927_security_functions` SELECT * FROM `security_functions`;
 
 -- staff controller
 DELETE FROM `security_functions` WHERE `security_functions`.`id` = 3011;
-
 UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN 3012 AND 3038;
 
 INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-VALUES  ('3011', 'Courses', 'Staff', 'Institutions', 'Staff - Training', 3000, 'StaffTrainings.index|StaffTrainings.view', 'StaffTrainings.edit', 'StaffTrainings.add', 'StaffTrainings.remove', 'StaffTrainings.download', 3038, '1', NULL, NULL, NULL, 1, NOW());
-
+VALUES  ('3011', 'Courses', 'Staff', 'Institutions', 'Staff - Training', 3000, 'Courses.index|Courses.view|Courses.download', 'Courses.edit', 'Courses.add', 'Courses.remove', NULL, 3038, '1', NULL, NULL, NULL, 1, NOW());
 
 -- directories controller
-UPDATE `security_functions`
-SET `name` = 'Courses',
-    `_execute` = 'StaffTrainings.download',
-    `category` = 'Staff - Training',
-    `order` = '7100'
-WHERE `id` = 7032;
-
+DELETE FROM `security_functions` WHERE `security_functions`.`id` = 7032;
 UPDATE `security_functions` SET `order` = `order` - 1 WHERE `order` BETWEEN 7035 AND 7050;
-UPDATE `security_functions` SET `order` = '7050' WHERE `id` = 7032;
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+VALUES ('7032', 'Courses', 'Directories', 'Directory', 'Staff - Training', '7000', 'Courses.index|Courses.view|Courses.download', 'Courses.edit', 'Courses.add', 'Courses.remove', NULL, '7050', '1', NULL, NULL, NULL, '1', '2015-12-24 10:29:36')

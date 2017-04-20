@@ -56,7 +56,7 @@ class StaffController extends AppController {
     public function Awards() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function TrainingNeeds() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.TrainingNeeds']); }
     public function Attachments() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
-    public function StaffTrainings() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
+    public function Courses() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
 
     // health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -280,7 +280,7 @@ class StaffController extends AppController {
             'StaffTrainingNeeds' => ['text' => __('Needs')],
             'StaffTrainingApplications' => ['text' => __('Applications')],
             'StaffTrainingResults' => ['text' => __('Results')],
-            'StaffTrainings' => ['text' => __('Courses')]
+            'Courses' => ['text' => __('Courses')]
         ];
 
         $tabElements = array_merge($tabElements, $trainingTabElements);
@@ -288,7 +288,7 @@ class StaffController extends AppController {
         foreach ($trainingTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
 
-            if ($key == 'StaffTrainings') {
+            if ($key == 'Courses') {
                 $trainingUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
                 $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
             }

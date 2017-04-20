@@ -30,12 +30,6 @@ class StaffTrainingsTable extends ControllerActionTable
             'allowable_file_types' => 'all',
             'useDefaultName' => true
         ]);
-
-        // setting this up to be overridden in viewAfterAction(), this code is required for file download
-        $this->behaviors()->get('ControllerAction')->config(
-            'actions.download.show',
-            true
-        );
     }
 
     public function validationDefault(Validator $validator)
@@ -71,17 +65,6 @@ class StaffTrainingsTable extends ControllerActionTable
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        // determine if download button is shown
-        $showFunc = function() use ($entity) {
-            $filename = $entity->file_content;
-            return !empty($filename);
-        };
-        $this->behaviors()->get('ControllerAction')->config(
-            'actions.download.show',
-            $showFunc
-        );
-        // End
-
         $this->setupFields($entity);
     }
 
@@ -99,7 +82,7 @@ class StaffTrainingsTable extends ControllerActionTable
         }
 
         $this->controller->set('tabElements', $tabElements);
-        $this->controller->set('selectedAction', $this->alias());
+        $this->controller->set('selectedAction', 'Courses');
     }
 
     public function afterAction(Event $event, ArrayObject $extra)
@@ -130,7 +113,7 @@ class StaffTrainingsTable extends ControllerActionTable
             'visible' => ['view' => false, 'edit' => true]
         ]);
         $this->field('file_content', [
-            'visible' => ['view' => false, 'edit' => true],
+            'visible' => ['view' => true, 'edit' => true],
             'attr' => ['label' => __('Attachment')]
         ]);
     }
