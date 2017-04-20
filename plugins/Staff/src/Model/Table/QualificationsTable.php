@@ -178,26 +178,26 @@ class QualificationsTable extends ControllerActionTable {
 
     public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, Request $request) {
         switch ($action) {
-          case 'edit': case 'add':
-             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-             $subjectData = $EducationSubjects
-                 ->find()
-                 ->select([$EducationSubjects->aliasField($EducationSubjects->primaryKey()), $EducationSubjects->aliasField('name'), $EducationSubjects->aliasField('code')])
-                 ->find('visible')
-                 ->find('order')
-                 ->toArray();
+            case 'edit': case 'add':
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectData = $EducationSubjects
+                    ->find()
+                    ->select([$EducationSubjects->aliasField($EducationSubjects->primaryKey()), $EducationSubjects->aliasField('name'), $EducationSubjects->aliasField('code')])
+                    ->find('visible')
+                    ->find('order')
+                    ->toArray();
+                
+                $subjectOptions = [];
+                foreach ($subjectData as $key => $value) {
+                    $subjectOptions[$value->id] = $value->code_name;
+                }
 
-             $subjectOptions = [];
-             foreach ($subjectData as $key => $value) {
-                 $subjectOptions[$value->id] = $value->code . ' - ' . $value->name;
-             }
+                $attr['options'] = $subjectOptions;
+                break;
 
-             $attr['options'] = $subjectOptions;
-             break;
-
-         default:
-             # code...
-             break;
+        default:
+            # code...
+            break;
         }
         return $attr;
     }
