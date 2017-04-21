@@ -5,7 +5,7 @@ INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3699', NOW());
 DROP TABLE IF EXISTS `qualification_titles`;
 CREATE TABLE IF NOT EXISTS `qualification_titles` (
   `id` int(11) NOT NULL,
-  `name` varchar(250) NOT NULL,
+  `name` varchar(250) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `order` int(3) NOT NULL,
   `visible` int(1) NOT NULL DEFAULT '1',
   `editable` int(1) NOT NULL DEFAULT '1',
@@ -28,7 +28,7 @@ ALTER TABLE `qualification_titles`
 
 # populate `qualification_titles` base on staff_qualifications table
 INSERT INTO `qualification_titles` (`name`, `qualification_level_id`, `order`, `created_user_id`, `created`)
-SELECT DISTINCT qualification_title, qualification_level_id, 1, 1, now()
+SELECT DISTINCT TRIM(qualification_title), qualification_level_id, 1, 1, now()
 FROM `staff_qualifications`;
 
 UPDATE `qualification_titles`
@@ -96,7 +96,7 @@ LEFT JOIN `countries` `C`
   ON `C`.`name` = `A`.`qualification_institution_country`
 LEFT JOIN `qualification_titles` `D`
   ON (`D`.`qualification_level_id` = `A`.`qualification_level_id`
-        AND `D`.`name` = `A`.`qualification_title`);
+        AND TRIM(`D`.`name`) = TRIM(`A`.`qualification_title`));
 
 -- backup old tables and rename new table.
 RENAME TABLE `qualification_specialisations` TO `z_3699_qualification_specialisations`;
