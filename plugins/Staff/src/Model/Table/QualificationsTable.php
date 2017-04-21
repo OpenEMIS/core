@@ -52,14 +52,14 @@ class QualificationsTable extends ControllerActionTable {
 
 		return $validator
             ->requirePresence('qualification_level')
-			->allowEmpty('graduate_year')
+            ->requirePresence('qualification_country_id')
+            ->allowEmpty('graduate_year')
 			->add('graduate_year', 'ruleNumeric', [
                     'rule' => ['numeric'],
                     'on' => function ($context) { //validate when only graduate_year is not empty
                         return !empty($context['data']['graduate_year']);
                     }
 			])
-			->notEmpty('qualification_institution', __('Please enter the institution'))
 			->allowEmpty('file_content');
 	}
 
@@ -227,7 +227,11 @@ class QualificationsTable extends ControllerActionTable {
 
         $this->field('qualification_level', ['type' => 'readonly', 'entity' => $entity]);
 
-        $this->field('education_subjects', ['type' => 'chosenSelect', 'entity' => $entity]);
+        $this->field('education_subjects', [
+            'type' => 'chosenSelect',
+            'placeholder' => __('Select some subjects'), 
+            'entity' => $entity
+        ]);
 
         $this->field('qualification_country_id', ['type' => 'select', 'entity' => $entity]);
 
@@ -246,7 +250,7 @@ class QualificationsTable extends ControllerActionTable {
         ]);
 
         $this->setFieldOrder([
-            'qualification_title_id', 'qualification_level', 'education_subject_id', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
+            'qualification_title_id', 'qualification_level', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
         ]);
     }
 }
