@@ -166,15 +166,6 @@ class AppTable extends Table
                 $query->find('visible');
             }
         }
-        $query = $query->formatResults(function ($results) {
-            $results = $results->toArray();
-            foreach ($results as &$result) {
-            	if (!is_array($result) && !is_object($result) && !empty($result)) {
-            		$result = __($result);
-            	}
-            }
-            return $results;
-        });
         return $query;
     }
 
