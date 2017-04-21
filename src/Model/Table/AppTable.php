@@ -169,7 +169,9 @@ class AppTable extends Table
         $query = $query->formatResults(function ($results) {
             $results = $results->toArray();
             foreach ($results as &$result) {
-                $result = __($result);
+            	if (!is_array($results)) {
+            		$result = __($result);
+            	}
             }
             return $results;
         });
