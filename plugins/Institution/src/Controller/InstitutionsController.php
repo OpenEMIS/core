@@ -162,7 +162,12 @@ class InstitutionsController extends AppController
 
     public function Classes($subaction = 'index', $classId = null)
     {
-        if ($subaction == 'editStudents') {
+        if ($this->request->query('message') && $this->request->query('alertType')) {
+            $alertType = $this->request->query('alertType');
+            $alertMessage = $this->request->query('message');
+            $this->Alert->$alertType($alertMessage);
+        }
+        if ($subaction == 'edit') {
             $session = $this->request->session();
             $roles = [];
             $classId = $this->ControllerAction->paramsDecode($classId);
@@ -187,7 +192,10 @@ class InstitutionsController extends AppController
                     }
                 }
             }
-
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'Classes';
+            $viewUrl[0] = 'view';
+            $this->set('viewUrl', $viewUrl);
             $this->set('classId', $classId['id']);
             $this->set('institutionId', $institutionId);
             $this->render('institution_class_students_edit');
@@ -418,7 +426,7 @@ class InstitutionsController extends AppController
                 break;
             case 'Classes':
                 if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'editStudents') {
+                    if ($this->request->param('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'kd-angular-multi-select',

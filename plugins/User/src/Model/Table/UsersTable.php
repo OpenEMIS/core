@@ -250,17 +250,16 @@ class UsersTable extends AppTable
             }
         }
         return $query
-            ->innerJoinWith('InstitutionStudents', function ($q) use ($institutionId) {
-                return $q->where([
-                    'InstitutionStudents.institution_id' => $institutionId
-                ]);
+            ->innerJoinWith('InstitutionStudents')
+            ->leftJoinWith('InstitutionClassStudents', function ($q) use ($academicPeriodId) {
+                return $q->where(['InstitutionClassStudents.academic_period_id' => $academicPeriodId]);
             })
-            ->leftJoinWith('InstitutionClassStudents')
             ->innerJoinWith('InstitutionStudents.StudentStatuses')
             ->innerJoinWith('InstitutionStudents.AcademicPeriods')
             ->innerJoinWith('InstitutionStudents.EducationGrades')
             ->innerJoinWith('Genders')
             ->where([
+                'InstitutionStudents.institution_id' => $institutionId,
                 'InstitutionStudents.education_grade_id IN ' => $educationGradeIds,
                 'InstitutionStudents.student_status_id' => $enrolledStatus,
                 'InstitutionStudents.academic_period_id' => $academicPeriodId,
@@ -280,7 +279,8 @@ class UsersTable extends AppTable
                 $arrReturn = [];
                 foreach ($results as $result) {
                     $arrReturn[] = [
-                        'name_with_id' => $result->name_with_id,
+                        'name' => $result->name,
+                        'openemis_no' => $result->openemis_no,
                         'id' => $result->id,
                         'education_grade_id' => $result->education_grade_id,
                         'education_grade_name' => __($result->education_grade_name),

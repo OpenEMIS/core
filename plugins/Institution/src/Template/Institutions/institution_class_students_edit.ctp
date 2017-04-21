@@ -5,13 +5,66 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('panelBody');
 ?>
-<div class="alert {{class}}" ng-hide="message == null">
-	<a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
-</div>
-<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="">
-	<div class="input-form-wrapper" ng-controller="InstitutionClassStudentsCtrl as InstitutionClassStudentsController" ng-init="InstitutionClassStudentsController.classId=<?= $classId ?>">
-		<!-- <kd-multi-select grid-options-top="InstitutionClassStudentsController.gridOptionsTop" grid-options-bottom="InstitutionClassStudentsController.gridOptionsBottom"></kd-multi-select> -->
-	</div>
+<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionClassStudentsCtrl as InstitutionClassStudentsController">
+    <div class="alert {{InstitutionClassStudentsController.class}}" ng-hide="InstitutionClassStudentsController.message == null">
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionClassStudentsController.message}}
+    </div>
+    <div class="input string required">
+        <label><?= __('Academic Period') ?></label>
+        <input ng-model="InstitutionClassStudentsController.academicPeriodName" type="text" disabled="disabled">
+    </div>
+    <div class="input string required">
+        <label><?= __('Class Name') ?></label>
+        <input ng-model="InstitutionClassStudentsController.className" type="string" ng-init="InstitutionClassStudentsController.className='';">
+        <div ng-if="InstitutionClassStudentsController.postError.name" class="error-message">
+            <p ng-repeat="error in InstitutionClassStudentsController.postError.name">{{ error }}</p>
+        </div>
+    </div>
+    <div class="input select required error">
+        <label><?= __('Shift') ?></label>
+        <div class="input-select-wrapper">
+            <select name="InstitutionClasses[institution_shift_id]" id="institutionclasses-institution-shift-id"
+                ng-options="option.id as option.name for option in InstitutionClassStudentsController.shiftOptions"
+                ng-model="InstitutionClassStudentsController.selectedShift"
+                ng-init="InstitutionClassStudentsController.selectedShift=null;"
+                >
+                <option value="" >-- <?= __('Select') ?> --</option>
+            </select>
+        </div>
+        <div ng-if="InstitutionClassStudentsController.postError.institution_shift_id" class="error-message">
+            <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_shift_id">{{ error }}</p>
+        </div>
+    </div>
+    <div class="input select required error">
+        <label><?= __('Home Room Teacher') ?></label>
+        <div class="input-select-wrapper">
+            <select name="InstitutionClasses[staff_id]" id="institutionclasses-staff-id"
+                ng-options="option.id as option.name for option in InstitutionClassStudentsController.teacherOptions"
+                ng-model="InstitutionClassStudentsController.selectedTeacher"
+                ng-init="InstitutionClassStudentsController.selectedTeacher=null;"
+                >
+                <option value="" >-- <?= __('Select Teacher or Leave Blank') ?> --</option>
+            </select>
+        </div>
+        <div ng-if="InstitutionClassStudentsController.postError.staff_id" class="error-message">
+            <p ng-repeat="error in InstitutionClassStudentsController.postError.staff_id">{{ error }}</p>
+        </div>
+    </div>
+	<div class="input select">
+        <label><?= __('Add Student') ?></label>
+        <div class="input-form-wrapper" ng-init="InstitutionClassStudentsController.classId='<?= $classId ?>'; InstitutionClassStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>';">
+    		<kd-multi-select ng-if="InstitutionClassStudentsController.dataReady" grid-options-top="InstitutionClassStudentsController.gridOptionsTop" grid-options-bottom="InstitutionClassStudentsController.gridOptionsBottom"></kd-multi-select>
+    	</div>
+
+        <div class="form-buttons">
+            <div class="button-label"></div>
+            <button class="btn btn-default btn-save" type="button" ng-click="InstitutionClassStudentsController.postForm();">
+                <i class="fa fa-check"></i> Save
+            </button>
+            <?= $this->Html->link('<i class="fa fa-close"></i> Cancel</a>', $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
+            <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
+        </div>
+    </div>
 </form>
 <?php
 $this->end();
