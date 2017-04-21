@@ -4,15 +4,16 @@ agGrid.initialiseAgGridWithAngular1(angular);
 angular.module('institution.class.students.ctrl', ['agGrid', 'kd-angular-multi-select', 'utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.class.students.svc'])
     .controller('InstitutionClassStudentsCtrl', InstitutionClassStudentsController);
 
-SgMultiSelectCtrl.$inject = ['$scope', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionClassStudentsSvc'];
+InstitutionClassStudentsController.$inject = ['$scope', '$q', '$window', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionClassStudentsSvc'];
 
-function InstitutionClassStudentsController($scope, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionClassStudentsSvc) {
+function InstitutionClassStudentsController($scope, $q, $window, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionClassStudentsSvc) {
 
     var Controller = this;
 
     // Constants
     var suppressMenu = true;
     var suppressSorting = true;
+    Controller.dataReady = false;
 
     // Variables
     Controller.bodyDir = getComputedStyle(document.body).direction;
@@ -37,11 +38,30 @@ function InstitutionClassStudentsController($scope, UtilsSvc, AlertSvc, AggridLo
         primaryKey: []
     };
     Controller.classId = null;
+    Controller.colDef = [
+        {headerName: 'OpenEMIS ID', field: 'openemis_no'},
+        {headerName: 'Name', field: 'name'},
+        {headerName: 'Gender', field: 'gender_name'},
+        {headerName: 'Education Grade', field: 'education_grade_name'},
+        {headerName: 'Student Status', field: 'student_status_name'}
+    ];
     Controller.assignedStudents = {};
+    Controller.unassignedStudents = {};
+    Controller.shiftOptions = [];
+    Controller.teacherOptions = [];
+    Controller.redirectUrl = '';
+    Controller.selectedShift = null;
+    Controller.selectedTeacher = null;
+    Controller.className = '';
+    Controller.academicPeriodName = '';
+    Controller.institutionSubjects = [];
+    Controller.postError = [];
 
     // Function mapping
     Controller.setTop = setTop;
     Controller.setBottom = setBottom;
+    Controller.postForm = postForm;
+    Controller.updateQueryStringParameter = updateQueryStringParameter;
 
     angular.element(document).ready(function () {
         InstitutionClassStudentsSvc.init(angular.baseUrl);
@@ -49,23 +69,22 @@ function InstitutionClassStudentsController($scope, UtilsSvc, AlertSvc, AggridLo
         if (Controller.classId != null) {
             InstitutionClassStudentsSvc.getClassDetails(Controller.classId)
             .then(function(response) {
+                Controller.selectedTeacher = response.staff_id;
+                Controller.selectedShift = response.institution_shift_id;
+                Controller.className = response.name;
+                Controller.academicPeriodId = response.academic_period_id;
+                Controller.institutionId = response.institution_id;
+                Controller.academicPeriodName = response.academic_period.name;
+                Controller.institutionSubjects = response.institution_subjects;
                 var assignedStudents = [];
                 angular.forEach(response.class_students, function(value, key) {
-                    // 'name_with_id' => $result->name_with_id,
-                    // 'id' => $result->id,
-                    // 'education_grade_id' => $result->education_grade_id,
-                    // 'education_grade_name' => __($result->education_grade_name),
-                    // 'student_status_id' => $result->student_status_id,
-                    // 'student_status_name' => __($result->student_status_name),
-                    // 'academic_period_id' => $result->academic_period_id,
-                    // 'gender_name' => __($result->gender_name),
-                    // 'institution_id' => $institutionId,
-                    // 'institution_class_id' => $institutionClassId
                     var toPush = {
-                        name_with_id: value.user.name_with_id,
+                        openemis_no: value.user.openemis_no,
+                        name: value.user.name,
                         education_grade_name: value.education_grade.name,
                         student_status_name: value.student_status.name,
                         gender_name: value.user.gender.name,
+                        student_id: value.student_id,
                         encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
                             {
                                 student_id: value.student_id,
@@ -81,22 +100,68 @@ function InstitutionClassStudentsController($scope, UtilsSvc, AlertSvc, AggridLo
                 }, assignedStudents);
                 Controller.assignedStudents = assignedStudents;
 
-                return InstitutionClassStudentsSvc.getUnassignedStudent(Controller.classId);
+                var promises = [];
+                promises[0] = InstitutionClassStudentsSvc.getUnassignedStudent(Controller.classId);
+                promises[1] = InstitutionClassStudentsSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
+                promises[2] = InstitutionClassStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
+                return $q.all(promises);
             }, function(error) {
                 console.log(error);
             })
-            .then(function (unassignedStudents) {
-                console.log(unassignedStudents);
-            }, function (error) {
+            .then(function (promises) {
+                var unassignedStudentsArr = [];
+                angular.forEach(promises[0], function(value, key) {
+                    var toPush = {
+                        openemis_no: value.openemis_no,
+                        name: value.name,
+                        education_grade_name: value.education_grade_name,
+                        student_status_name: value.student_status_name,
+                        gender_name: value.gender_name,
+                        student_id: value.id,
+                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
+                            {
+                                student_id: value.id,
+                                institution_class_id: value.institution_class_id,
+                                education_grade_id: value.education_grade_id,
+                                academic_period_id: value.academic_period_id,
+                                institution_id: value.institution_id,
+                                student_status_id: value.student_status_id
+                            }
+                        ))
+                    };
+                    this.push(toPush);
+                }, unassignedStudentsArr);
+                Controller.unassignedStudents = unassignedStudentsArr;
+                Controller.shiftOptions = promises[1];
+                Controller.teacherOptions = promises[2];
 
+
+                var toTranslate = [];
+                angular.forEach(Controller.colDef, function(value, key) {
+                    this.push(value.headerName);
+                }, toTranslate);
+                return InstitutionClassStudentsSvc.translate(toTranslate);
+            }, function (error) {
+                console.log(error);
+            })
+            .then(function (translatedText) {
+                angular.forEach(translatedText, function(value, key) {
+                    Controller.colDef[key]['headerName'] = value;
+                });
+                Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+                Controller.setBottom(Controller.colDef, Controller.assignedStudents);
+            }, function (error) {
+                console.log(error);
+            })
+            .finally(function(){
+                Controller.dataReady = true;
+                UtilsSvc.isAppendLoader(false);
             });
         }
 
-
-        UtilsSvc.isAppendLoader(false);
     });
 
-    function setTop(header, content, key = 'id') {
+    function setTop(header, content, key = 'name') {
         for(var i = 0; i < header.length; i++) {
             header[i].suppressMenu = suppressMenu;
             header[i].filter = 'text';
@@ -114,13 +179,12 @@ function InstitutionClassStudentsController($scope, UtilsSvc, AlertSvc, AggridLo
         }
         Controller.rowTopData = content;
         Controller.topKey = key;
-
         Controller.gridOptionsTop.columnDefs = Controller.columnTopData;
         Controller.gridOptionsTop.rowData = Controller.rowTopData;
         Controller.gridOptionsTop.primaryKey = Controller.topKey;
     }
 
-    function setBottom(header, content, key = 'id') {
+    function setBottom(header, content, key = 'name') {
         for(var i = 0; i < header.length; i++) {
             header[i].suppressMenu = suppressMenu;
             header[i].filter = 'text';
@@ -139,9 +203,53 @@ function InstitutionClassStudentsController($scope, UtilsSvc, AlertSvc, AggridLo
         }
         Controller.rowBottomData = content;
         Controller.bottomKey = key;
+        Controller.gridOptionsBottom.columnDefs = Controller.columnBottomData;
+        Controller.gridOptionsBottom.rowData = Controller.rowBottomData;
+        Controller.gridOptionsBottom.primaryKey = Controller.bottomKey;
+    }
 
-        Controller.gridOptionsTop.columnDefs = Controller.columnBottomData;
-        Controller.gridOptionsTop.rowData = Controller.rowBottomData;
-        Controller.gridOptionsTop.primaryKey = Controller.bottomKey;
+    function postForm() {
+        Controller.postError = [];
+        var classStudents = [];
+        angular.forEach(Controller.gridOptionsBottom.rowData, function (value, key) {
+            this.push(value.encodedVar);
+        }, classStudents);
+        var postData = {};
+        postData.id = Controller.classId;
+        postData.name = Controller.className;
+        postData.staff_id = Controller.selectedTeacher;
+        postData.institution_shift_id = Controller.selectedShift;
+        postData.classStudents = classStudents;
+        postData.institution_id = Controller.institutionId;
+        postData.academic_period_id = Controller.academicPeriodId;
+        postData.subjects = UtilsSvc.urlsafeBase64Encode(JSON.stringify(Controller.institutionSubjects));
+        InstitutionClassStudentsSvc.saveClass(postData)
+        .then(function(response) {
+            var error = response.data.error;
+            if (error instanceof Array && error.length == 0) {
+                Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'alertType', 'success');
+                Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'message', 'general.edit.success');
+                $window.location.href = Controller.redirectUrl;
+            } else {
+                AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
+                angular.forEach(error, function(value, key) {
+                    Controller.postError[key] = value;
+                })
+            }
+        }, function(error){
+            console.log(error);
+        });
+
+    }
+
+    function updateQueryStringParameter(uri, key, value) {
+        var re = new RegExp("([?&])" + key + "=.*?(&|$)", "i");
+        var separator = uri.indexOf('?') !== -1 ? "&" : "?";
+        if (uri.match(re)) {
+            return uri.replace(re, '$1' + key + "=" + value + '$2');
+        }
+        else {
+            return uri + separator + key + "=" + value;
+        }
     }
 }
