@@ -320,3 +320,27 @@ WHERE `model` = 'Examination.ExaminationCentreRooms';
 DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationCentreRooms' AND `column_name` = 'examination_id';
 UPDATE `import_mapping` SET `order` = `order` - 1
 WHERE `model` = 'Examination.ExaminationCentreRooms';
+
+-- security_functions
+UPDATE `security_functions`
+SET `order` = `order` + 4
+WHERE `order` >= 5052 AND `order` <= 5067;
+
+UPDATE `security_functions`
+SET `_edit` = 'ExamCentres.edit|ExamCentreExams.add'
+WHERE `controller` = 'Examinations' AND `name` = 'Exam Centres';
+
+UPDATE `security_functions`
+SET `_add` = NULL, `_delete` = NULL, `_edit` = 'ExamCentreStudents.edit', `order` = 5053
+WHERE `controller` = 'Examinations' AND `name` = 'Exam Centre Students';
+
+UPDATE `security_functions`
+SET `order` = 5050
+WHERE `controller` = 'Examinations' AND `name` = 'Exam Centre Rooms';
+
+INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `category`, `parent_id`, `_view`, `_edit`, `_add`, `_delete`, `_execute`, `order`, `visible`, `description`, `modified_user_id`, `modified`, `created_user_id`, `created`) VALUES
+(5068, 'Exam Centre Exams', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreExams.index', NULL, NULL, 'ExamCentreExams.remove', NULL, 5051, 1, NULL, NULL, NULL, 1, NOW()),
+(5069, 'Exam Centre Subjects', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreSubjects.index|ExamCentreSubjects.view', NULL, NULL, NULL, NULL, 5052, 1, NULL, NULL, NULL, 1, NOW()),
+(5070, 'Exam Centre Invigilators', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreInvigilators.index|ExamCentreInvigilators.view', 'ExamCentreInvigilators.edit', 'ExamCentreInvigilators.add', 'ExamCentreInvigilators.remove', NULL, 5054, 1, NULL, NULL, NULL, 1, NOW()),
+(5071, 'Exam Centre Linked Institutions', 'Examinations', 'Administration', 'Examinations', 5000, 'ExamCentreLinkedInstitutions.index|ExamCentreLinkedInstitutions.view', NULL, 'ExamCentreLinkedInstitutions.add', 'ExamCentreLinkedInstitutions.remove', NULL, 5055, 1, NULL, NULL, NULL, 1, NOW());
+

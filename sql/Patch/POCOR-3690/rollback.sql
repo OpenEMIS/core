@@ -52,5 +52,25 @@ DELETE FROM `import_mapping` WHERE `model` = 'Examination.ExaminationCentreRooms
 INSERT INTO `import_mapping` SELECT * FROM `z_3690_import_mapping`;
 DROP TABLE `z_3690_import_mapping`;
 
+-- security_functions
+DELETE FROM `security_functions`
+WHERE `controller` = 'Examinations' AND `name` IN ('Exam Centre Exams', 'Exam Centre Subjects', 'Exam Centre Invigilators', 'Exam Centre Linked Institutions');
+
+UPDATE `security_functions`
+SET `_edit` = 'ExamCentres.edit'
+WHERE `controller` = 'Examinations' AND `name` = 'Exam Centres';
+
+UPDATE `security_functions`
+SET `_add` = 'LinkedInstitutionAddStudents.add', `_delete` = 'ExamCentreStudents.remove', `_edit` = NULL, `order` = 5050
+WHERE `controller` = 'Examinations' AND `name` = 'Exam Centre Students';
+
+UPDATE `security_functions`
+SET `order` = 5051
+WHERE `controller` = 'Examinations' AND `name` = 'Exam Centre Rooms';
+
+UPDATE `security_functions`
+SET `order` = `order` - 4
+WHERE `order` >= 5056 AND `order` <= 5071;
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3690';
