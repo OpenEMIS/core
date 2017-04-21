@@ -108,7 +108,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStaffController.internalFilterIdentityNumber" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null" type="text" id="" maxlength="150">
                 </div>
                 <div class="date">
-                    <label for="Staffs_date_of_birth"><?= __('Date of Birth') ?></label>
+                    <label for="Staffs_date_of_birth"><?= __('Date Of Birth') ?></label>
                     <div class="input-group date " id="Staffs_date_of_birth" style="">
                         <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.internalFilterDateOfBirth" ng-keyup="$event.keyCode == 13 ? InstitutionStaffController.reloadInternalDatasource(true) : null">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
@@ -150,7 +150,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     <input ng-model="InstitutionStaffController.internalFilterIdentityNumber" ng-disabled="true" type="text" id="" maxlength="150">
                 </div>
                 <div class="text">
-                    <label for="Staffs_date_of_birth"><?= __('Date of Birth') ?></label>
+                    <label for="Staffs_date_of_birth"><?= __('Date Of Birth') ?></label>
                         <input type="text" class="form-control " name="Staffs[date_of_birth]" ng-model="InstitutionStaffController.internalFilterDateOfBirth" ng-disabled="true">
                 </div>
             </div>
@@ -217,7 +217,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
                 <div class="input date required">
-                    <label for="Staff_date_of_birth"><?= __('Date of Birth') ?></label>
+                    <label for="Staff_date_of_birth"><?= __('Date Of Birth') ?></label>
                     <div class="input-group date " id="Staff_date_of_birth" style="">
                         <input type="text" class="form-control " name="Staff[date_of_birth]" ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" ng-init="InstitutionStaffController.selectedStaffData.date_of_birth='';">
                         <span class="input-group-addon"><i class="glyphicon glyphicon-calendar"></i></span>
@@ -316,7 +316,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                     </div>
                 </div>
                 <div class="input string">
-                    <label><?= __('Date of Birth') ?></label>
+                    <label><?= __('Date Of Birth') ?></label>
                     <input ng-model="InstitutionStaffController.selectedStaffData.date_of_birth" type="string" disabled="disabled">
                     <div ng-if="InstitutionStaffController.postResponse.error.staff_name" class="error-message">
                         <p ng-repeat="error in InstitutionStaffController.postResponse.error.staff_name">{{ error }}</p>
