@@ -12,6 +12,9 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Network\Request;
 use Cake\Datasource\Exception\RecordNotFoundException;
+use Cake\Utility\Inflector;
+
+use App\Model\Traits\MessagesTrait;
 
 class StudentAdmissionTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -21,6 +24,8 @@ class StudentAdmissionTable extends AppTable {
 	// Type status for admission
 	const TRANSFER = 2;
 	const ADMISSION = 1;
+
+    use MessagesTrait;
 
 	public function initialize(array $config) {
 		$this->table('institution_student_admission');
@@ -54,8 +59,6 @@ class StudentAdmissionTable extends AppTable {
 			])
 			->add('academic_period_id', [
 			])
-			->add('education_grade_id', [
-			])
 			->allowEmpty('student_name')
 			->add('student_name', 'ruleCheckPendingAdmissionExist', [
 				'rule' => ['checkPendingAdmissionExist'],
@@ -80,6 +83,14 @@ class StudentAdmissionTable extends AppTable {
 				'rule' => ['checkInstitutionClassMaxLimit'],
 				'on' => 'create'
 			])
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date'],
+                'on' => 'create'
+            ])
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
+                'on' => 'create'
+            ])
 			;
 		return $validator;
 	}
@@ -386,12 +397,15 @@ class StudentAdmissionTable extends AppTable {
 
 	public function onUpdateFieldStartDate(Event $event, array $attr, $action, $request) {
 		if ($action == 'edit') {
-			if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
+            if ($request->data[$this->alias()]['status'] != self::NEW_REQUEST || !($this->AccessControl->check(['Institutions', 'StudentAdmission', 'edit']))) {
 				$startDate = $request->data[$this->alias()]['start_date'];
 				$attr['type'] = 'readonly';
 				$attr['attr']['value'] = $startDate->format('d-m-Y');
-			}
-			return $attr;
+			} else if (array_key_exists('startDate', $request->query)) {
+                $attr['value'] = $request->query['startDate'];
+                $attr['attr']['value'] = $request->query['startDate'];
+            }
+            return $attr;
 		}
 	}
 
@@ -472,6 +486,7 @@ class StudentAdmissionTable extends AppTable {
 	}
 
 	public function editOnApprove(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+        
 		$selectedClassId = $entity->institution_class_id;
 		$entity->comment = $data['StudentAdmission']['comment'];
 		$Students = TableRegistry::get('Institution.Students');
@@ -517,6 +532,7 @@ class StudentAdmissionTable extends AppTable {
 			$entityData['start_date'] = $startDate;
 			$entityData['end_date'] = $entity->end_date->format('Y-m-d');
 			$newEntity = $Students->newEntity($entityData);
+            // pr($newEntity);die;
 			if ($Students->save($newEntity)) {
 				$this->Alert->success('StudentAdmission.approve');
 
@@ -545,8 +561,19 @@ class StudentAdmissionTable extends AppTable {
 					$this->log($entity->errors(), 'debug');
 				}
 			} else {
-				$this->Alert->error('general.edit.failed');
-				$this->log($newEntity->errors(), 'debug');
+				// $this->Alert->error('general.edit.failed');
+				// $this->log($newEntity->errors(), 'debug');
+                foreach ($newEntity->errors() as $key => $value) {
+                    $errorMessage = Inflector::humanize(str_replace('_id', '', $key));
+                    $errorMessage = Inflector::humanize(Inflector::underscore($errorMessage));
+                    $errorMessage .= " -> " . array_values($value)[0];
+                    $this->Alert->error(__($errorMessage), ['type' => 'message']);
+                }
+                $modelTable = $this->alias();
+                $urlParams = $this->ControllerAction->url('edit');
+                $urlParams['startDate'] = $data[$modelTable]['start_date'];
+                $event->stopPropagation();
+                return $this->controller->redirect($urlParams);
 			}
 		}
 
