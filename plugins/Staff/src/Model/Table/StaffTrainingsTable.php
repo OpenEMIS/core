@@ -166,27 +166,37 @@ class StaffTrainingsTable extends ControllerActionTable
                 $licenseExpiryDate = $record['expiry_date'];
                 $staffId = $record['user']['id'];
 
-                // get the total credit hours of all the staff training within license validity
-                $trainingRecords = $this->find()
-                    ->select([
-                        'total_credit_hours' => $this->find()
-                            ->func()->sum($this->aliasField('credit_hours')),
-                    ])
-                    ->contain(['StaffTrainingCategories', 'TrainingFieldStudies'])
-                    ->where([
-                        $this->aliasField('staff_id') => $staffId,
-                        $this->aliasField('completed_date') . ' >= ' => $licenseIssueDate,
-                        $this->aliasField('completed_date') . ' <= ' => $licenseExpiryDate,
-                        $this->aliasField('staff_training_category_id') . ' IN ' => $thresholdArray['training_categories'],
-                    ])
-                    ->having(['total_credit_hours' . ' < ' => $thresholdArray['hour']])
-                    ->first()
+                $query = $this->find()->where([$this->aliasField('staff_id') => $staffId]);
+
+                if ($query->all()->isEmpty()) {
+                    // if no training records on the staff id, still add the license to the data list
+                    $data[$licenseId] = $record;
+                    $data[$licenseId]['total_credit_hours'] = 0;
+                } else {
+                    // get the total credit hours of all the staff training within license validity
+                    $trainingRecords = $this->find()
+                        ->select([
+                            'total_credit_hours' => $this->find()
+                                ->func()->sum($this->aliasField('credit_hours')),
+                        ])
+                        ->contain(['StaffTrainingCategories', 'TrainingFieldStudies'])
+                        ->where([
+                            $this->aliasField('staff_id') => $staffId,
+                            $this->aliasField('completed_date') . ' >= ' => $licenseIssueDate,
+                            $this->aliasField('completed_date') . ' <= ' => $licenseExpiryDate,
+                            $this->aliasField('staff_training_category_id') . ' IN ' => $thresholdArray['training_categories'],
+                        ])
+                        ->first()
                     ;
 
-                // any license not fullfilled the condition above will trigger the alert.
-                if (!empty($trainingRecords)) {
-                    $data[$licenseId] = $record;
-                    $data[$licenseId]['total_credit_hours'] = $trainingRecords['total_credit_hours'];
+                    // have training records but not fall into the category in the alert rule, will be add to the data list
+                    $totalCreditHours = !empty($trainingRecords['total_credit_hours']) ? $trainingRecords['total_credit_hours'] : 0;
+
+                    // if the credit hour is less than the hour threshold will add to the data list
+                    if ($totalCreditHours < $thresholdArray['hour']) {
+                        $data[$licenseId] = $record;
+                        $data[$licenseId]['total_credit_hours'] = $totalCreditHours;
+                    }
                 }
             }
 
