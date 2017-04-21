@@ -74,7 +74,8 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
                 'rule'  => ['range', 0, 2147483647]
             ])
             ->add('number_of_seats', 'ruleCheckRoomCapacityMoreThanStudents', [
-                'rule' => 'checkRoomCapacityMoreThanStudents'
+                'rule' => 'checkRoomCapacityMoreThanStudents',
+                'on' => 'update'
             ]);
     }
 
@@ -99,6 +100,11 @@ class ExaminationCentreRoomsTable extends ControllerActionTable {
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('examination_centre_id', ['visible' => false]);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->where([$this->aliasField('examination_centre_id') => $this->examCentreId]);
     }
 
     public function addBeforeAction(Event $event, ArrayObject $extra)
