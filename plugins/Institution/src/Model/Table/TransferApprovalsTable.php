@@ -11,6 +11,9 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use Cake\Utility\Inflector;
+
+use App\Model\Traits\MessagesTrait;
 
 class TransferApprovalsTable extends AppTable {
 	const NEW_REQUEST = 0;
@@ -20,6 +23,8 @@ class TransferApprovalsTable extends AppTable {
 	// Type status for admission
 	const TRANSFER = 2;
 	const ADMISSION = 1;
+
+    use MessagesTrait;
 
 	public function initialize(array $config) {
 		$this->table('institution_student_admission');
@@ -80,8 +85,9 @@ class TransferApprovalsTable extends AppTable {
         $Students->save($entity);
     }
 
-	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) {
-		$errors = $entity->errors();
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data) 
+    {
+        $errors = $entity->errors();
 
 		if (empty($errors)) {
 			$Students = TableRegistry::get('Institution.Students');
@@ -185,8 +191,19 @@ class TransferApprovalsTable extends AppTable {
                     if (!empty($existingStudentEntity)) {
                         $this->updateStudentStatus($existingStudentEntity, 'TRANSFERRED', 'CURRENT', $prevEndDate);
                     }
-					$this->Alert->error('general.edit.failed');
-					$this->log($newEntity->errors(), 'debug');
+					// $this->Alert->error('general.edit.failed');
+					// $this->log($newEntity->errors(), 'debug');
+                    foreach ($newEntity->errors() as $key => $value) {
+                        $errorMessage = Inflector::humanize(str_replace('_id', '', $key));
+                        $errorMessage = Inflector::humanize(Inflector::underscore($errorMessage));
+                        $errorMessage .= " -> " . array_values($value)[0];
+                        $this->Alert->error(__($errorMessage), ['type' => 'message']);
+                    }
+                    $modelTable = $this->alias();
+                    $urlParams = $this->ControllerAction->url('edit');
+                    $urlParams['startDate'] = $data[$modelTable]['start_date'];
+                    $event->stopPropagation();
+                    return $this->controller->redirect($urlParams);
 				}
 			}
 
@@ -387,41 +404,46 @@ class TransferApprovalsTable extends AppTable {
 				$attr['type'] = 'readonly';
 				$attr['attr']['value'] = $startDate->format('d-m-Y');
 				return $attr;
-			}
+			} else {
+    			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
 
-			$selectedPeriod = $request->data[$this->alias()]['academic_period_id'];
+    			$academicPeriod = $this->AcademicPeriods->get($selectedPeriod);
+    			$periodStartDate = $academicPeriod->start_date;
+    			$periodEndDate = $academicPeriod->end_date;
 
-			$academicPeriod = $this->AcademicPeriods->get($selectedPeriod);
-			$periodStartDate = $academicPeriod->start_date;
-			$periodEndDate = $academicPeriod->end_date;
+    			$requestedOn = $attr['entity']->created; //this 'entity' attribute sent from the "editAfterAction".
+    			$endDate = $request->data[$this->alias()]['end_date'];
 
-			$requestedOn = $attr['entity']->created; //this 'entity' attribute sent from the "editAfterAction".
-			$endDate = $request->data[$this->alias()]['end_date'];
+    			if ($requestedOn >= $periodStartDate) { //if requested date more than the start date of academic period.
+    				$startDate = $requestedOn; //start date at least must be equal to request date.
+    				$periodStartDate = $requestedOn; //minimize the datepicker to show only from date requested to end of academic period.
+    			} else { //if requested date before the start of academic period.
+    				$startDate = $periodStartDate; //then use the start of academic period as minimum.
+    			}
 
-			if ($requestedOn >= $periodStartDate) { //if requested date more than the start date of academic period.
-				$startDate = $requestedOn; //start date at least must be equal to request date.
-				$periodStartDate = $requestedOn; //minimize the datepicker to show only from date requested to end of academic period.
-			} else { //if requested date before the start of academic period.
-				$startDate = $periodStartDate; //then use the start of academic period as minimum.
-			}
+    			if (!empty($startDate)) {
+    				$startDate = new Date(date('Y-m-d', strtotime($startDate)));
+    				$request->data[$this->alias()]['start_date'] = $startDate;
+    			}
 
-			if (!empty($startDate)) {
-				$startDate = new Date(date('Y-m-d', strtotime($startDate)));
-				$request->data[$this->alias()]['start_date'] = $startDate;
-			}
+    			if (!empty($endDate)) {
+    				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
+    				$request->data[$this->alias()]['end_date'] = $endDate;
+    			}
 
-			if (!empty($endDate)) {
-				$endDate = new Date(date('Y-m-d', strtotime($endDate)));
-				$request->data[$this->alias()]['end_date'] = $endDate;
-			}
+    			if (!is_null($endDate)) {
+    				$periodEndDate = $endDate->copy()->subDay();
+    			}
 
-			if (!is_null($endDate)) {
-				$periodEndDate = $endDate->copy()->subDay();
-			}
-
-			$attr['value'] =  date('d-m-Y', strtotime($startDate));
-			$attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
-			$attr['date_options']['todayBtn'] = false; //since we limit the start date, should as well hide the 'today' button so no extra checking function needed
+                if (array_key_exists('startDate', $request->query)) {
+                    $attr['value'] = $request->query['startDate'];
+                    $attr['attr']['value'] = $request->query['startDate'];
+                } else {
+                    $attr['value'] =  date('d-m-Y', strtotime($startDate));
+                    $attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
+                    $attr['date_options']['todayBtn'] = false; //since we limit the start date, should as well hide the 'today' button so no extra checking function needed
+                }
+            }
 		}
 
 		return $attr;
