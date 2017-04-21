@@ -33,7 +33,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions',         'foreignKey' => 'institution_id']);
 
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-        $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents']);
+        $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace']);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents']);
 
         $this->belongsToMany('EducationGrades', [
@@ -215,10 +215,41 @@ class InstitutionClassesTable extends ControllerActionTable
                 if ($action == 'index') {
                     $action = 'view';
                 }
-                $staffOptions = $this->getStaffOptions($action, $selectedAcademicPeriodId, $institutionId);
+                $staffOptions = $this->getStaffOptions($institutionId, $action, $selectedAcademicPeriodId);
             }
             $this->fields['staff_id']['options'] = $staffOptions;
             $this->fields['staff_id']['select'] = false;
+        }
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data->offsetExists('classStudents')) {
+            foreach ($data['classStudents'] as &$student) {
+                $student = json_decode($this->urlsafeB64Decode($student), true);
+            }
+            $data['class_students'] = $data['classStudents'];
+            $data->offsetUnset('classStudents');
+        }
+        if ($data->offsetExists('subjects')) {
+            $subjects = json_decode($this->urlsafeB64Decode($data['subjects']), true);
+            $subjectStudents = [];
+            foreach ($subjects as $subject) {
+                foreach ($data['class_students'] as $classStudent) {
+                    $subjectStudents[] = [
+                        'student_status_id' => $classStudent['student_status_id'],
+                        'student_id' => $classStudent['student_id'],
+                        'institution_subject_id' => $subject['id'],
+                        'institution_class_id' => $classStudent['institution_class_id'],
+                        'institution_id' => $subject['institution_id'],
+                        'academic_period_id' => $subject['academic_period_id'],
+                        'education_subject_id' => $subject['education_subject_id'],
+                        'education_grade_id' => $classStudent['education_grade_id']
+                    ];
+                }
+            }
+            $data['subject_students'] = $subjectStudents;
+            $data->offsetUnset('subjects');
         }
     }
 
@@ -535,45 +566,6 @@ class InstitutionClassesTable extends ControllerActionTable
         ]);
     }
 
-    /**
-     * editBeforePatch is a ControllerAction events to implements additional logics before the request data is patch to an entity
-     *
-     * In InstitutionClasses editBeforePatch, subject_students array is being built using class_students and institution_classes data.
-     * The built subject_students array will be added to request data so that students will be added to subjects through associative save.
-     *
-     * @param  Event       $event        Event object
-     * @param  Entity      $entity       Entity object
-     * @param  ArrayObject $requestData  HTTP request data as an ArrayObject
-     * @param  ArrayObject $patchOptions Options for patching entity as an ArrayObject
-     * @param  ArrayObject $extra        Extra parameters to be passed to other ControllerAction events as an ArrayObject
-     */
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        $data = $requestData[$this->alias()];
-        $subjectStudents = [];
-        if (array_key_exists('class_students', $data)) {
-            foreach ($entity->institution_subjects as $key => $subjectEntity) {
-                foreach ($data['class_students'] as $classStudent) {
-                    $subjectStudents[] = [
-                        'student_status_id' => $classStudent['student_status_id'],
-                        'student_id' => $classStudent['student_id'],
-                        'institution_subject_id' => $subjectEntity->id,
-                        'institution_class_id' => $classStudent['institution_class_id'],
-                        'institution_id' => $subjectEntity->institution_id,
-                        'academic_period_id' => $subjectEntity->academic_period_id,
-                        'education_subject_id' => $subjectEntity->education_subject_id,
-                        'education_grade_id' => $classStudent['education_grade_id']
-                    ];
-                }
-            }
-        } else {
-            $data['class_students'] = [];
-        }
-        $data['subject_students'] = $subjectStudents;
-
-        $requestData[$this->alias()] = $data;
-    }
-
     public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         /**
@@ -842,6 +834,8 @@ class InstitutionClassesTable extends ControllerActionTable
         return $options;
     }
 
+
+
     /**
      * [getStudentsOptions description]
      * @param  [type] $classEntity [description]
@@ -896,7 +890,7 @@ class InstitutionClassesTable extends ControllerActionTable
         if (!empty($query)) {
             $studentOptions[-1] = $this->getMessage('Users.add_all_student');
         }
-        foreach ($query as $skey => $obj) {
+        foreach ($query as $obj) {
             /**
              * Modified this filter in PHPOE-1799.
              * Use institution_students table through $this->Institutions->Students where Students being the table alias.
@@ -945,7 +939,7 @@ class InstitutionClassesTable extends ControllerActionTable
         return $studentOptions;
     }
 
-    public function getStaffOptions($action='edit', $academicPeriodId=0, $institutionId)
+    public function getStaffOptions($institutionId, $action = 'edit', $academicPeriodId = 0)
     {
         if (in_array($action, ['edit', 'add'])) {
             $options = [0 => '-- ' . $this->getMessage($this->aliasField('selectTeacherOrLeaveBlank')) . ' --'];
