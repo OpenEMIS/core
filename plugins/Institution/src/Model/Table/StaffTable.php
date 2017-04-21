@@ -67,7 +67,8 @@ class StaffTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'StaffRoom' => ['index', 'add'],
             'Staff' => ['index', 'add'],
-            'ClassStudents' => ['index']
+            'ClassStudents' => ['index'],
+            'SubjectStudents' => ['index']
         ]);
 
         $this->addBehavior('HighChart', [
@@ -1396,6 +1397,34 @@ class StaffTable extends ControllerActionTable
                 })
                 ->find('byInstitution', ['Institutions.id' => $institutionId])
                 ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+                ->formatResults(function ($results) {
+                    $returnArr = [];
+                    foreach ($results as $result) {
+                        if ($result->has('user')) {
+                            $returnArr[] = ['id' => $result->user->id, 'name' => $result->user->name_with_id];
+                        }
+                    }
+                    return $returnArr;
+                });
+    }
+
+    public function findSubjectStaffOptions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+
+        return $query
+                ->find('withBelongsTo')
+                ->find('byInstitution', ['Institutions.id' => $institutionId])
+                ->find('byPositions', ['Institutions.id' => $institutionId, 'type' => 1])
+                ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+                ->where([
+                    $this->aliasField('institution_position_id'),
+                    'OR' => [ //check teacher end date
+                        [$this->aliasField('end_date').' > ' => Time::now()],
+                        [$this->aliasField('end_date').' IS NULL']
+                    ]
+                ])
                 ->formatResults(function ($results) {
                     $returnArr = [];
                     foreach ($results as $result) {
