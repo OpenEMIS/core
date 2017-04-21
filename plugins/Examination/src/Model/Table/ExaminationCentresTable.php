@@ -147,17 +147,24 @@ class ExaminationCentresTable extends ControllerActionTable {
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
+        // add examination centre button
         if (isset($extra['toolbarButtons']['add'])) {
-            // link examinations button
-            $linkExamButton = $extra['toolbarButtons']['add'];
-            $linkExamButton['attr']['title'] = __('Link Examination');
-            $linkExamButton['url']['action'] = 'ExamCentreExams';
-            $linkExamButton['label'] = '<i class="fa fa-link"></i>';
-            $extra['toolbarButtons']['linkExam'] = $linkExamButton;
-
-            // add examination centre button
             $extra['toolbarButtons']['add']['attr']['title'] = __('Add Examination Centre');
         }
+
+        // link examinations button
+        $toolbarAttr = [
+            'class' => 'btn btn-xs btn-default',
+            'data-toggle' => 'tooltip',
+            'data-placement' => 'bottom',
+            'escape' => false
+        ];
+        $linkExamButton['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreExams', 'add'];
+        $linkExamButton['type'] = 'button';
+        $linkExamButton['label'] = '<i class="fa fa-link"></i>';
+        $linkExamButton['attr'] = $toolbarAttr;
+        $linkExamButton['attr']['title'] = __('Link Examination');
+        $extra['toolbarButtons']['linkExam'] = $linkExamButton;
 
         $this->setFieldOrder(['code', 'name', 'academic_period_id']);
     }
