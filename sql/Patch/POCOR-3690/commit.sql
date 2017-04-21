@@ -8,14 +8,17 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations` (
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_id`, `examination_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
  KEY `examination_id` (`examination_id`),
- KEY `academic_period_id` (`academic_period_id`)
+ KEY `academic_period_id` (`academic_period_id`),
+ KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination';
 
-INSERT INTO `examination_centres_examinations` (`id`, `total_registered`, `examination_centre_id`, `examination_id`, `academic_period_id`)
-SELECT sha2(CONCAT(`id`, ',', `examination_id`), '256'), `total_registered`, `id`, `examination_id`, `academic_period_id`
+INSERT INTO `examination_centres_examinations` (`id`, `total_registered`, `examination_centre_id`, `examination_id`, `academic_period_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`id`, ',', `examination_id`), '256'), `total_registered`, `id`, `examination_id`, `academic_period_id`, `created_user_id`, `created`
 FROM `examination_centres`;
 
 -- examination_centres
@@ -60,19 +63,16 @@ CREATE TABLE IF NOT EXISTS `examination_centre_special_needs` (
  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
  `special_need_type_id` int(11) NOT NULL COMMENT 'links to special_need_types.id',
- `modified_user_id` int(11) DEFAULT NULL,
- `modified` datetime DEFAULT NULL,
  `created_user_id` int(11) NOT NULL,
  `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_id`,`special_need_type_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
  KEY `special_need_type_id` (`special_need_type_id`),
- KEY `modified_user_id` (`modified_user_id`),
  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the special needs for a particular examination centre';
 
-INSERT INTO `examination_centre_special_needs` (`id`, `examination_centre_id`, `special_need_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT sha2(CONCAT(`examination_centre_id`, ',', `special_need_type_id`), '256'), `examination_centre_id`, `special_need_type_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+INSERT INTO `examination_centre_special_needs` (`id`, `examination_centre_id`, `special_need_type_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `special_need_type_id`), '256'), `examination_centre_id`, `special_need_type_id`, `created_user_id`, `created`
 FROM `z_3690_examination_centre_special_needs`;
 
 -- examination_centres_examinations_institutions
@@ -84,14 +84,17 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations_institutions` (
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_id`, `examination_id`, `institution_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
  KEY `examination_id` (`examination_id`),
- KEY `institution_id` (`institution_id`)
+ KEY `institution_id` (`institution_id`),
+ KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the list of institutions linked to a particular examination centre';
 
-INSERT INTO `examination_centres_examinations_institutions` (`id`, `examination_centre_id`, `examination_id`, `institution_id`)
-SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_id`, ',', `institution_id`), '256'), `examination_centre_id`, `examination_id`, `institution_id`
+INSERT INTO `examination_centres_examinations_institutions` (`id`, `examination_centre_id`, `examination_id`, `institution_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_id`, ',', `institution_id`), '256'), `examination_centre_id`, `examination_id`, `institution_id`, 1, NOW()
 FROM `z_3690_examination_centres_institutions`;
 
 -- examination_centres_examinations_invigilators
@@ -103,14 +106,17 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations_invigilators` (
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
  `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_id`, `examination_id`, `invigilator_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
  KEY `examination_id` (`examination_id`),
- KEY `invigilator_id` (`invigilator_id`)
+ KEY `invigilator_id` (`invigilator_id`),
+ KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the invigilators for a particular examination centre';
 
-INSERT INTO `examination_centres_examinations_invigilators` (`id`, `examination_centre_id`, `examination_id`, `invigilator_id`)
-SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_id`, ',', `invigilator_id`), '256'), `examination_centre_id`, `examination_id`, `invigilator_id`
+INSERT INTO `examination_centres_examinations_invigilators` (`id`, `examination_centre_id`, `examination_id`, `invigilator_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_id`, ',', `invigilator_id`), '256'), `examination_centre_id`, `examination_id`, `invigilator_id`, 1, NOW()
 FROM `z_3690_examination_centres_invigilators`;
 
 -- examination_centres_examinations_subjects
@@ -123,15 +129,18 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations_subjects` (
  `examination_item_id` int(11) NOT NULL COMMENT 'links to `examination_items.id',
  `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_id`, `examination_item_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
  KEY `examination_item_id` (`examination_item_id`),
  KEY `education_subject_id` (`education_subject_id`),
- KEY `examination_id` (`examination_id`)
+ KEY `examination_id` (`examination_id`),
+ KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination subject';
 
-INSERT INTO `examination_centres_examinations_subjects` (`id`, `examination_centre_id`, `examination_item_id`, `education_subject_id`, `examination_id`)
-SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_item_id`), '256'), `examination_centre_id`, `examination_item_id`, `education_subject_id`, `examination_id`
+INSERT INTO `examination_centres_examinations_subjects` (`id`, `examination_centre_id`, `examination_item_id`, `education_subject_id`, `examination_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_item_id`), '256'), `examination_centre_id`, `examination_item_id`, `education_subject_id`, `examination_id`, `created_user_id`, `created`
 FROM `z_3690_examination_centre_subjects`;
 
 -- examination_centres_examinations_subjects_students
@@ -144,16 +153,19 @@ CREATE TABLE IF NOT EXISTS `examination_centres_examinations_subjects_students` 
  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
  `education_subject_id` int(11) NOT NULL COMMENT 'links to `education_subjects.id',
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_id`, `examination_item_id`, `student_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
  KEY `examination_item_id` (`examination_item_id`),
  KEY `student_id` (`student_id`),
  KEY `examination_id` (`examination_id`),
- KEY `education_subject_id` (`education_subject_id`)
+ KEY `education_subject_id` (`education_subject_id`),
+ KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students registered to an examination center for a particular examination subject';
 
-INSERT INTO `examination_centres_examinations_subjects_students` (`id`, `total_mark`, `examination_centre_id`, `examination_item_id`, `student_id`, `examination_id`, `education_subject_id`)
-SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_item_id`, ',', `student_id`), '256'), `total_mark`, `examination_centre_id`, `examination_item_id`, `student_id`, `examination_id`, `education_subject_id`
+INSERT INTO `examination_centres_examinations_subjects_students` (`id`, `total_mark`, `examination_centre_id`, `examination_item_id`, `student_id`, `examination_id`, `education_subject_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_id`, ',', `examination_item_id`, ',', `student_id`), '256'), `total_mark`, `examination_centre_id`, `examination_item_id`, `student_id`, `examination_id`, `education_subject_id`, `created_user_id`, `created`
 FROM `examination_centre_students`;
 
 -- examination_centres_examinations_students
@@ -194,14 +206,17 @@ CREATE TABLE IF NOT EXISTS `examination_centre_rooms_examinations` (
  `examination_centre_room_id` int(11) NOT NULL COMMENT 'links to examination_centre_rooms.id',
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_room_id`, `examination_id`),
  KEY `examination_centre_room_id` (`examination_centre_room_id`),
  KEY `examination_id` (`examination_id`),
- KEY `examination_centre_id` (`examination_centre_id`)
+ KEY `examination_centre_id` (`examination_centre_id`),
+ KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the examination centres for a particular examination';
 
-INSERT INTO `examination_centre_rooms_examinations` (`id`, `examination_centre_room_id`, `examination_id`, `examination_centre_id`)
-SELECT sha2(CONCAT(`id`, ',', `examination_id`), '256'), `id`, `examination_id`, `examination_centre_id`
+INSERT INTO `examination_centre_rooms_examinations` (`id`, `examination_centre_room_id`, `examination_id`, `examination_centre_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`id`, ',', `examination_id`), '256'), `id`, `examination_id`, `examination_centre_id`, `created_user_id`, `created`
 FROM `examination_centre_rooms`;
 
 -- examination_centre_rooms
@@ -238,15 +253,18 @@ CREATE TABLE IF NOT EXISTS `examination_centre_rooms_examinations_invigilators` 
  `examination_id` int(11) NOT NULL COMMENT 'links to examinations.id',
  `invigilator_id` int(11) NOT NULL COMMENT 'links to security_users.id',
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_room_id`, `examination_id`, `invigilator_id`),
  KEY `examination_centre_room_id` (`examination_centre_room_id`),
  KEY `examination_id` (`examination_id`),
  KEY `invigilator_id` (`invigilator_id`),
- KEY `examination_centre_id` (`examination_centre_id`)
+ KEY `examination_centre_id` (`examination_centre_id`),
+ KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the invigilators assigned to a room for a particular examination centre';
 
-INSERT INTO `examination_centre_rooms_examinations_invigilators` (`id`, `examination_centre_room_id`, `examination_id`, `invigilator_id`, `examination_centre_id`)
-SELECT sha2(CONCAT(`examination_centre_room_id`, ',', `examination_id`, ',', `invigilator_id`), '256'), `examination_centre_room_id`, `examination_id`,  `invigilator_id`, `examination_centre_id`
+INSERT INTO `examination_centre_rooms_examinations_invigilators` (`id`, `examination_centre_room_id`, `examination_id`, `invigilator_id`, `examination_centre_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_room_id`, ',', `examination_id`, ',', `invigilator_id`), '256'), `examination_centre_room_id`, `examination_id`,  `invigilator_id`, `examination_centre_id`, 1, NOW()
 FROM `z_3690_examination_centre_rooms_invigilators`;
 
 -- examination_centre_rooms_examinations_students
@@ -259,8 +277,6 @@ CREATE TABLE IF NOT EXISTS `examination_centre_rooms_examinations_students` (
  `examination_id` int(11) NOT NULL COMMENT 'links to examination.id',
  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
  `examination_centre_id` int(11) NOT NULL COMMENT 'links to examination_centres.id',
- `modified_user_id` int(11) DEFAULT NULL,
- `modified` datetime DEFAULT NULL,
  `created_user_id` int(11) NOT NULL,
  `created` datetime NOT NULL,
  PRIMARY KEY (`examination_centre_room_id`, `examination_id`, `student_id`),
@@ -268,12 +284,11 @@ CREATE TABLE IF NOT EXISTS `examination_centre_rooms_examinations_students` (
  KEY `examination_id` (`examination_id`),
  KEY `student_id` (`student_id`),
  KEY `examination_centre_id` (`examination_centre_id`),
- KEY `modified_user_id` (`modified_user_id`),
  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the students allocated to a room for a particular examination center';
 
-INSERT INTO `examination_centre_rooms_examinations_students` (`id`, `examination_centre_room_id`, `examination_id`, `student_id`, `examination_centre_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
-SELECT sha2(CONCAT(`examination_centre_room_id`, ',', `examination_id`, ',', `student_id`), '256'), `examination_centre_room_id`, `examination_id`, `student_id`, `examination_centre_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+INSERT INTO `examination_centre_rooms_examinations_students` (`id`, `examination_centre_room_id`, `examination_id`, `student_id`, `examination_centre_id`, `created_user_id`, `created`)
+SELECT sha2(CONCAT(`examination_centre_room_id`, ',', `examination_id`, ',', `student_id`), '256'), `examination_centre_room_id`, `examination_id`, `student_id`, `examination_centre_id`, `created_user_id`, `created`
 FROM `z_3690_examination_centre_room_students`;
 
 -- examination_item_results
