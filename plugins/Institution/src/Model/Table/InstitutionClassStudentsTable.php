@@ -581,6 +581,11 @@ class InstitutionClassStudentsTable extends AppTable
         }
     }
 
+    public function findUnassignedSubjectStudents(Query $query, array $options)
+    {
+
+    }
+
     public function findAbsencesByDate(Query $query, array $options)
     {
         $classId = $options['institution_class_id'];

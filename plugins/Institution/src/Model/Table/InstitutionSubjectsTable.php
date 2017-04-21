@@ -26,15 +26,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->belongsTo('AcademicPeriods',             ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Institutions',                ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-        $this->belongsTo('EducationSubjects',           ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
 
-        $this->hasMany('ClassSubjects',     ['className' => 'Institution.InstitutionClassSubjects']);
-        $this->hasMany('SubjectStudents',   ['className' => 'Institution.InstitutionSubjectStudents']);
-        $this->hasMany('SubjectStaff',      ['className' => 'Institution.InstitutionSubjectStaff']);
-        $this->hasMany('QualityRubrics',    ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('QualityVisits',     ['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ClassSubjects', ['className' => 'Institution.InstitutionClassSubjects']);
+        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents']);
+        $this->hasMany('SubjectStaff', ['className' => 'Institution.InstitutionSubjectStaff']);
+        $this->hasMany('QualityRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('QualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('Classes', [
             'className' => 'Institution.InstitutionClasses',
@@ -79,6 +79,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->InstitutionStudents = TableRegistry::get('Institution.InstitutionStudents');
         $this->InstitutionClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'SubjectStudents' => ['view']
+        ]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -204,7 +208,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-            'callable' => function($id) use ($Classes, $institutionId) {
+            'callable' => function ($id) use ($Classes, $institutionId) {
                 return $Classes->find()->where([
                     $Classes->aliasField('institution_id') => $institutionId,
                     $Classes->aliasField('academic_period_id') =>  $id
@@ -246,7 +250,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noSubjects')),
-            'callable' => function($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId, $AccessControl, $userId, $controller) {
+            'callable' => function ($id) use ($Subjects, $institutionId, $selectedAcademicPeriodId, $AccessControl, $userId, $controller) {
                 $query = $Subjects->find()
                     ->join([
                         [
@@ -315,7 +319,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
             $this->Alert->warning($extra[$this->aliasField('notice')], ['reset'=>true]);
             unset($extra[$this->aliasField('notice')]);
         }
-
     }
 
 
@@ -402,7 +405,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
         $this->advancedSelectOptions($academicPeriodOptions, $selectedAcademicPeriodId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noClasses')),
-            'callable' => function($id) use ($Classes, $institutionId) {
+            'callable' => function ($id) use ($Classes, $institutionId) {
                 return $Classes->find()->where([
                     $Classes->aliasField('institution_id') => $institutionId,
                     $Classes->aliasField('academic_period_id') =>  $id
@@ -420,7 +423,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $selectedClassId = $this->postString('class_name', $classOptions);
         $this->advancedSelectOptions($classOptions, $selectedClassId, [
             'message' => '{{label}} - ' . $this->getMessage($this->aliasField('noGrades')),
-            'callable' => function($id) use ($ClassGrades) {
+            'callable' => function ($id) use ($ClassGrades) {
                 return $ClassGrades->find()->where([
                     $ClassGrades->aliasField('institution_class_id') => $id
                 ])->count();
@@ -442,7 +445,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
             foreach ($subjectStaffData as $key => $value) {
                 if ($value['status'] == 1) {
                     $this->SubjectStaff->addStaffToSubject($value['staff_id'], $subjectId, $entity->institution_id);
-                }  else {
+                } else {
                     $this->SubjectStaff->removeStaffFromSubject($value['staff_id'], $subjectId);
                 }
             }
@@ -472,7 +475,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
         foreach ($data as $key => $value) { //loop each subject then unset education_subject_id if not selected (so no validation is done).
-            if ($key == 'MultiSubjects'){
+            if ($key == 'MultiSubjects') {
                 foreach ($data[$key] as $key1 => $value1) {
                     if (array_key_exists('education_subject_id', $value1)) {
                         if (!$value1['education_subject_id']) {
@@ -632,14 +635,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
         // note that this has been converted from saving of 'association data' to saving using editAfterSave
 
         $todayDate = new Date();
-        foreach($entity->subject_staff as $key => $record) {
+        foreach ($entity->subject_staff as $key => $record) {
             $k = $record->staff_id;
-            if (    array_key_exists('teachers', $data[$this->alias()])
+            if (array_key_exists('teachers', $data[$this->alias()])
                 &&  array_key_exists('_ids', $data[$this->alias()]['teachers'])
                 &&  !empty($data[$this->alias()]['teachers']['_ids'])
             ) {
                 if (!in_array($k, $data[$this->alias()]['teachers']['_ids'])) {
-
                     //check for end_date, if not yet end, it can be removed, else it will stay as past teacher
                     $staffEndDate = $entity->subject_staff[$key]->end_date;
                     if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
@@ -649,7 +651,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             'status' => 0
                         ];
                     }
-
                 } else {
                     $checkedStaff[] = $k;
                     $data[$this->alias()]['_subject_staff_data'][$k] = [
@@ -659,7 +660,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ];
                 }
             } else {
-
                 //check for end_date, if not yet end, it can be removed, else it will stay as past teacher
                 $staffEndDate = $entity->subject_staff[$key]->end_date;
                 if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
@@ -671,7 +671,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
         }
-        if (    array_key_exists('teachers', $data[$this->alias()])
+        if (array_key_exists('teachers', $data[$this->alias()])
                 &&  array_key_exists('_ids', $data[$this->alias()]['teachers'])
                 &&  !empty($data[$this->alias()]['teachers']['_ids'])
             ) {
@@ -732,10 +732,9 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     }
                 }
                 $entity->subject_students = $this->request->data[$this->alias()]['subject_students']; //re-patch entity from decoding the hiddenField
-                
+
                 foreach ($this->request->data[$this->alias()]['subject_students'] as $row) {
                     if (array_key_exists($row['student_id'], $studentOptions)) {
-
                         $id = $row['student_id'];
                         /**
                          * Changed in PHPOE-1997 to remove duplicate records on the UI.
@@ -744,7 +743,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                          */
                         if (!in_array($id, $recordedStudentIds)) {
                             $student = $this->createVirtualEntity($id, $entity, 'students');
-                            if ( !empty( $student->user ) ) {
+                            if (!empty( $student->user )) {
                                 $students[] = $student;
                             }
                         }
@@ -762,10 +761,10 @@ class InstitutionSubjectsTable extends ControllerActionTable
                  * Changed in PHPOE-1780. Includes option to add all student available in the dropdown list
                  */
                 if ($id==0) {
-                    foreach ($studentOptions as $key=>$value) {
+                    foreach ($studentOptions as $key => $value) {
                         if ($key>0) {
                             $student = $this->createVirtualEntity($key, $entity, 'students');
-                            if ( !empty( $student->user ) ) {
+                            if (!empty( $student->user )) {
                                 $students[] = $student;
                             }
                             unset($studentOptions[$key]);
@@ -778,13 +777,12 @@ class InstitutionSubjectsTable extends ControllerActionTable
                      * Try to change the status attribute to true instead?
                      */
                     $student = $this->createVirtualEntity($id, $entity, 'students');
-                    if ( !empty( $student->user ) ) {
+                    if (!empty( $student->user )) {
                         $students[] = $student;
                     }
                     unset($studentOptions[$id]);
                 }
             }
-
         } else {
             $studentOptions = $this->getStudentsOptions($entity, $recordedStudentIds);
         }
@@ -802,7 +800,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (!empty($roomOptions)) {
             $this->fields['rooms']['options'] = $roomOptions;
         }
-        
+
         //cleanup hiddenField so it wont be listed.
         $cleanStudents = [];
         foreach ($students as $key => $value) {
@@ -864,7 +862,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (count($subjectOptions) == count($existedSubjects)) {
             $error = $this->aliasField('allSubjectsAlreadyAdded');
         } else if (isset($data['MultiSubjects']) && count($data['MultiSubjects'])>0) {
-            foreach ($data['MultiSubjects'] as $key=>$row) {
+            foreach ($data['MultiSubjects'] as $key => $row) {
                 if (isset($row['education_subject_id']) && isset($row['subject_staff'])) {
                     $subjectSelected = true;
                     $subjects[$key] = [
@@ -974,13 +972,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
         foreach ($entity->$relationKey as $data) {
             if (strtolower($persona)=='students') {
                 if (is_object($data)) {
-                   if ($data->student_id == $id) {
+                    if ($data->student_id == $id) {
                         $recordId = $data->id;
-                    } 
+                    }
                 } else if (array_key_exists('student_id', $data)) {
                     if ($data['student_id'] == $id) {
                         $recordId = $data['id'];
-                    } 
+                    }
                 }
             } else {
                 if ($data->staff_id == $id) {
@@ -999,7 +997,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $InstitutionGrades->getAcademicPeriodOptions($this->Alert, $conditions);
     }
 
-    public function getSubjectOptions($selectedClassId, $listOnly=false)
+    public function getSubjectOptions($selectedClassId, $listOnly = false)
     {
         $Grade = $this->InstitutionClassGrades;
         $gradeOptions = $Grade->find('list', [
@@ -1012,7 +1010,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                             ])
                             ->toArray();
         $data = [];
-        if (!empty($gradeOptions))  {
+        if (!empty($gradeOptions)) {
             $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
             /**
              * Do not check for the visible attribute in sql query,
@@ -1046,14 +1044,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
         return $data;
     }
 
-    private function getExistedSubjects($selectedClassId, $listOnly=false)
+    private function getExistedSubjects($selectedClassId, $listOnly = false)
     {
         $classSubjects = $this->ClassSubjects
             ->find()
             ->contain([
                 'InstitutionSubjects' => [
                     'EducationSubjects',
-                    'Teachers' => function($q) {
+                    'Teachers' => function ($q) {
                         return $q
                             ->where([
                                 'OR' => [
@@ -1223,7 +1221,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
              */
             $educationGradeSubjects = $EducationGrades
                     ->find()
-                    ->contain(['EducationSubjects' => function($query) use ($grades) {
+                    ->contain(['EducationSubjects' => function ($query) use ($grades) {
                         return $query
                             ->join([
                                 [
@@ -1292,7 +1290,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
                 $newSchoolSubjects = [];
 
-                foreach ($educationSubjects as $key=>$educationSubject) {
+                foreach ($educationSubjects as $key => $educationSubject) {
                     $existingSchoolSubjects = false;
                     if (array_key_exists($key, $institutionSubjectsIds)) {
                         $existingSchoolSubjects = $InstitutionClassSubjects->find()
@@ -1345,7 +1343,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 if ($staffEndDate >= $todayDate || $staffEndDate == null || empty($staffEndDate)) {
                     switch ($this->action) {
                         case 'view':
-                            $resultArray[] = $event->subject()->Html->link($value->name_with_id , [
+                            $resultArray[] = $event->subject()->Html->link($value->name_with_id, [
                                 'plugin' => 'Institution',
                                 'controller' => 'Institutions',
                                 'action' => 'StaffUser',
@@ -1456,11 +1454,13 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 if ($value->has('_joinData')) {
                     if (!empty($value->_joinData->end_date)) {
                         $endDate = $value->_joinData->end_date;
-                        if ($endDate < $todayDate){ //for end of assignment teachers
+                        if ($endDate < $todayDate) { //for end of assignment teachers
                             $data[$key]['id'] = $value->id;
                             $data[$key]['name'] = $value->name_with_id;
-                            $data[$key]['start_date'] = $value->_joinData->start_date->format('d-m-Y');;
-                            $data[$key]['end_date'] = $value->_joinData->end_date->format('d-m-Y');;
+                            $data[$key]['start_date'] = $value->_joinData->start_date->format('d-m-Y');
+                            ;
+                            $data[$key]['end_date'] = $value->_joinData->end_date->format('d-m-Y');
+                            ;
                         }
                     }
                 }
