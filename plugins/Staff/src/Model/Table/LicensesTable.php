@@ -65,7 +65,7 @@ class LicensesTable extends ControllerActionTable
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $this->field('comments', ['visible' => false]);
-        $this->setFieldOrder(['license_type_id', 'license_number', 'issue_date', 'expiry_date', 'issuer']);
+        $this->field('license_type_id', ['after' => 'assignee_id']);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query)
@@ -104,10 +104,6 @@ class LicensesTable extends ControllerActionTable
 
     public function onUpdateFieldClassifications(Event $event, array $attr, $action, Request $request)
     {
-<<<<<<< HEAD
-    	$this->field('comments', ['visible' => false]);
-    	$this->field('license_type_id', ['after' => 'assignee_id']);
-=======
         if ($action == 'add' || $action == 'edit') {
             $classificationOptions = [];
 
@@ -133,7 +129,6 @@ class LicensesTable extends ControllerActionTable
         }
 
         return $attr;
->>>>>>> 8b87f6aca6a5283325bd9f6944f3a871d32fa772
     }
 
     // Use for Mini dashboard (Institution Staff)
