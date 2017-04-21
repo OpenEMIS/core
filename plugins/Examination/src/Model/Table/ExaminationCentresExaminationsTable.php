@@ -105,6 +105,9 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
             $Navigation->substituteCrumb('Exam Centre Exams', 'Exam Centres', $overviewUrl);
             $Navigation->addCrumb('Examinations');
+
+        } else {
+            $Navigation->substituteCrumb('Exam Centre Exams', 'Link Examination');
         }
     }
 
@@ -117,6 +120,9 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
             // Set the header of the page
             $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
             $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Examinations'));
+
+        } else {
+            $this->controller->set('contentHeader', __('Examination'). ' - ' .__('Link Examination'));
         }
     }
 
