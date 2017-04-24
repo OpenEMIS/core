@@ -58,7 +58,8 @@ class InstitutionClassStudentsTable extends AppTable
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'OpenEMIS_Classroom' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'SubjectStudents' => ['index']
         ]);
     }
 
@@ -583,7 +584,49 @@ class InstitutionClassStudentsTable extends AppTable
 
     public function findUnassignedSubjectStudents(Query $query, array $options)
     {
+        $institutionSubjectId = $options['institution_subject_id'];
+        $educationGradeId = $options['education_grade_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        $institutionClassIds = $options['institution_class_ids'];
 
+        return $query
+            ->matching('Users.Genders')
+            ->matching('StudentStatuses')
+            ->leftJoinWith('SubjectStudents', function ($q) use ($institutionSubjectId, $academicPeriodId) {
+                return $q
+                    ->innerJoin(['EducationGradesSubjects' => 'education_grades_subjects'], [
+                        'EducationGradesSubjects.education_grade_id = SubjectStudents.education_grade_id',
+                        'EducationGradesSubjects.education_subject_id = SubjectStudents.education_subject_id'
+                    ])
+                    ->where([
+                        'SubjectStudents.institution_subject_id' => $institutionSubjectId,
+                        'SubjectStudents.academic_period_id' => $academicPeriodId
+                    ]);
+            })
+            ->where([
+                $this->aliasField('institution_class_id').' IN ' => $institutionClassIds,
+                $this->aliasField('education_grade_id') => $educationGradeId,
+                $this->aliasField('academic_period_id') => $academicPeriodId,
+                'SubjectStudents.student_id IS NULL'
+            ])
+            ->formatResults(function ($results) {
+                $resultArr = [];
+                foreach ($results as $result) {
+                    $resultArr[] = [
+                        'openemis_no' => $result->_matchingData['Users']->openemis_no,
+                        'name' => $result->_matchingData['Users']->name,
+                        'gender' => __($result->_matchingData['Genders']->name),
+                        'student_status' => __($result->_matchingData['StudentStatuses']->name),
+                        'student_id' => $result->student_id,
+                        'institution_class_id' => $result->institution_class_id,
+                        'education_grade_id' => $result->education_grade_id,
+                        'academic_period_id' => $result->academic_period_id,
+                        'institution_id' => $result->institution_id,
+                        'student_status_id' => $result->student_status_id,
+                    ];
+                }
+                return $resultArr;
+            });
     }
 
     public function findAbsencesByDate(Query $query, array $options)

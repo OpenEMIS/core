@@ -13,16 +13,17 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdOrmSvc) {
         translate: translate,
         getInstitutionShifts: getInstitutionShifts,
         getTeacherOptions: getTeacherOptions,
+        getRoomsOptions: getRoomsOptions,
         saveClass: saveClass
     };
 
     var models = {
         InstitutionStaff: 'Institution.Staff',
-        InstitutionClasses: 'Institution.InstitutionClasses',
         InstitutionShifts: 'Institution.InstitutionShifts',
         Users: 'User.Users',
-
-        InstitutionSubjects: 'Institution.InstitutionSubjects'
+        Rooms: 'Institution.InstitutionRooms',
+        InstitutionSubjects: 'Institution.InstitutionSubjects',
+        InstitutionClassStudents: 'Institution.InstitutionClassStudents'
     };
 
     return service;
@@ -52,11 +53,16 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdOrmSvc) {
             .ajax({success: success, defer:true});
     }
 
-    function getUnassignedStudent(classId) {
+    function getUnassignedStudent(institutionSubjectId, academicPeriodId, educationGradeId, institutionClassIds) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return Users.find('InstitutionStudentsNotInClass', {institution_class_id: classId}).ajax({success: success, defer: true});
+        return InstitutionClassStudents.find('unassignedSubjectStudents', {
+                institution_subject_id: institutionSubjectId,
+                academic_period_id: academicPeriodId,
+                education_grade_id: educationGradeId,
+                institution_class_ids: institutionClassIds
+            }).ajax({success: success, defer: true});
     }
 
     function getInstitutionShifts(institutionId, academicPeriodId) {
@@ -70,11 +76,17 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return InstitutionStaff.find('classStaffOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
+        return InstitutionStaff.find('subjectStaffOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
+    }
+
+    function getRoomsOptions(institutionId, academicPeriodId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return Rooms.find('subjectRoomOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
     }
 
     function saveClass(data) {
-        InstitutionClasses.reset();
-        return InstitutionClasses.edit(data);
+        return [];
     }
 };

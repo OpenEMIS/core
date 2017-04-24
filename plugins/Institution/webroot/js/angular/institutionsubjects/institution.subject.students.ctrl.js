@@ -42,13 +42,13 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
         {headerName: 'OpenEMIS ID', field: 'openemis_no'},
         {headerName: 'Name', field: 'name'},
         {headerName: 'Gender', field: 'gender_name'},
-        {headerName: 'Education Grade', field: 'education_grade_name'},
         {headerName: 'Student Status', field: 'student_status_name'}
     ];
     Controller.assignedStudents = {};
     Controller.unassignedStudents = {};
     Controller.educationSubjectName = '';
     Controller.teacherOptions = [];
+    Controller.roomOptions = [];
     Controller.redirectUrl = '';
     Controller.selectedShift = null;
     Controller.selectedTeacher = null;
@@ -57,6 +57,14 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
     Controller.institutionSubjects = [];
     Controller.postError = [];
     Controller.pastTeachers = [];
+    Controller.institutionSubjectName = null;
+    Controller.academicPeriodId = null;
+    Controller.institutionId = null;
+    Controller.educationSubjectId = null;
+    Controller.educationGradeId = null;
+    Controller.institutionClassIds = [];
+    Controller.teachers = [];
+    Controller.rooms = [];
 
     // Function mapping
     Controller.setTop = setTop;
@@ -70,23 +78,29 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
         if (Controller.institutionSubjectId != null) {
             InstitutionSubjectStudentsSvc.getInstitutionSubjectDetails(Controller.institutionSubjectId)
             .then(function(response) {
-                console.log(response);
                 Controller.institutionSubjectName = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
                 Controller.educationSubjectName = response.education_subject.name;
                 Controller.educationSubjectId = response.education_subject_id;
-                Controller.institutionClassId = response.class_subjects[0].institution_class_id;
+                Controller.educationGradeId = response.education_grade_id;
+
+                var classIds = [];
+                angular.forEach(response.class_subjects, function(value, key) {
+                    this.push(value.institution_class_id);
+                }, classIds);
+                Controller.institutionClassIds = classIds;
+
                 var teachers = [];
                 angular.forEach(response.teachers, function(value, key) {
-                    this.push(value.id.toString());
+                    this.push(value.id);
                 }, teachers);
                 Controller.teachers = teachers;
 
                 var rooms = [];
                 angular.forEach(response.rooms, function(value, key) {
-                    this.push(value.id.toString());
+                    this.push(value.id);
                 }, rooms);
                 Controller.rooms = rooms;
 
@@ -116,37 +130,40 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
                 Controller.assignedStudents = assignedStudents;
 
                 var promises = [];
-                // promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(Controller.institutionSubjectId);
+                promises[0] = InstitutionSubjectStudentsSvc.getUnassignedStudent(response.id, Controller.academicPeriodId, Controller.educationGradeId, Controller.institutionClassIds);
                 promises[1] = InstitutionSubjectStudentsSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
+                promises[2] = InstitutionSubjectStudentsSvc.getRoomsOptions(response.institution_id, response.academic_period_id);
                 return $q.all(promises);
             }, function(error) {
                 console.log(error);
             })
             .then(function (promises) {
                 var unassignedStudentsArr = [];
-                // angular.forEach(promises[0], function(value, key) {
-                //     var toPush = {
-                //         openemis_no: value.openemis_no,
-                //         name: value.name,
-                //         education_grade_name: value.education_grade_name,
-                //         student_status_name: value.student_status_name,
-                //         gender_name: value.gender_name,
-                //         student_id: value.id,
-                //         encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
-                //             {
-                //                 student_id: value.id,
-                //                 institution_class_id: value.institution_class_id,
-                //                 education_grade_id: value.education_grade_id,
-                //                 academic_period_id: value.academic_period_id,
-                //                 institution_id: value.institution_id,
-                //                 student_status_id: value.student_status_id
-                //             }
-                //         ))
-                //     };
-                //     this.push(toPush);
-                // }, unassignedStudentsArr);
-                // Controller.unassignedStudents = unassignedStudentsArr;
+                angular.forEach(promises[0], function(value, key) {
+                    var toPush = {
+                        openemis_no: value.openemis_no,
+                        name: value.name,
+                        student_status_name: value.student_status,
+                        gender_name: value.gender,
+                        student_id: value.student_id,
+                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
+                            {
+                                student_id: value.student_id,
+                                institution_class_id: value.institution_class_id,
+                                institution_subject_id: Controller.institutionSubjectId,
+                                education_grade_id: value.education_grade_id,
+                                education_subject_id: Controller.educationSubjectId,
+                                academic_period_id: value.academic_period_id,
+                                institution_id: value.institution_id,
+                                student_status_id: value.student_status_id
+                            }
+                        ))
+                    };
+                    this.push(toPush);
+                }, unassignedStudentsArr);
+                Controller.unassignedStudents = unassignedStudentsArr;
                 Controller.teacherOptions = promises[1];
+                Controller.roomOptions = promises[2];
 
                 var toTranslate = [];
                 angular.forEach(Controller.colDef, function(value, key) {
@@ -228,7 +245,7 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
         }, classStudents);
         var postData = {};
         postData.id = Controller.institutionSubjectId;
-        postData.name = Controller.className;
+        postData.name = Controller.institutionSubjectName;
         postData.staff_id = Controller.selectedTeacher;
         postData.institution_shift_id = Controller.selectedShift;
         postData.classStudents = classStudents;
@@ -241,7 +258,7 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
             if (error instanceof Array && error.length == 0) {
                 Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'alertType', 'success');
                 Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'message', 'general.edit.success');
-                $window.location.href = Controller.redirectUrl;
+                // $window.location.href = Controller.redirectUrl;
             } else {
                 AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
                 angular.forEach(error, function(value, key) {

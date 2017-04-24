@@ -92,13 +92,13 @@ $this->start('panelBody');
             class="chosen-select"
             options="InstitutionSubjectStudentsController.roomOptions"
             ng-model="InstitutionSubjectStudentsController.rooms"
-            ng-options="item.id as item.name for item in InstitutionSubjectStudentsController.teacherOptions"
+            ng-options="item.id as item.name group by item.group for item in InstitutionSubjectStudentsController.roomOptions"
             ng-init="InstitutionSubjectStudentsController.rooms = []">
         </select>
     </div>
 	<div class="input select">
         <label><?= __('Add Student') ?></label>
-        <div class="input-form-wrapper" ng-init="InstitutionSubjectStudentsController.institutionSubjectId='<?= $institutionSubjectId ?>'; InstitutionSubjectStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>';">
+        <div class="input-form-wrapper" ng-init="InstitutionSubjectStudentsController.institutionSubjectId=<?= $institutionSubjectId ?>; InstitutionSubjectStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>';">
     		<kd-multi-select ng-if="InstitutionSubjectStudentsController.dataReady" grid-options-top="InstitutionSubjectStudentsController.gridOptionsTop" grid-options-bottom="InstitutionSubjectStudentsController.gridOptionsBottom"></kd-multi-select>
     	</div>
 
