@@ -6,6 +6,25 @@
 <?= $this->Html->script('ControllerAction.../plugins/chosen/js/angular-chosen.min', ['block' => true]); ?>
 <?php
 $this->extend('OpenEmis./Layout/Panel');
+$this->start('toolbar');
+?>
+<style type='text/css'>
+    .ag-grid-duration {
+        width: 50%;
+        border: none;
+        background-color: inherit;
+        text-align: center;
+    }
+
+    .ag-grid-dir-ltr {
+        direction: ltr !important;
+    }
+</style>
+<?= $this->Html->link('<i class="fa kd-back"></i>', $viewUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escapeTitle' => false]) ?>
+
+<?= $this->Html->link('<i class="fa kd-lists"></i>', $indexUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('List'), 'escapeTitle' => false]) ?>
+<?php
+$this->end();
 $this->start('panelBody');
 ?>
 <form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionSubjectStudentsCtrl as InstitutionSubjectStudentsController">

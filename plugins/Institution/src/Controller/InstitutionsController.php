@@ -245,9 +245,16 @@ class InstitutionsController extends AppController
                 }
             }
             $viewUrl = $this->ControllerAction->url('view');
-            $viewUrl['action'] = 'Classes';
+            $viewUrl['action'] = 'Subjects';
             $viewUrl[0] = 'view';
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'Subjects',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
             $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
             $this->set('institutionSubjectId', $institutionSubjectId['id']);
             $this->set('institutionId', $institutionId);
             $this->render('institution_subjects_edit');
