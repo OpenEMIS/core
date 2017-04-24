@@ -165,6 +165,8 @@ class InstitutionsController extends AppController
             $alertType = $this->request->query('alertType');
             $alertMessage = $this->request->query('message');
             $this->Alert->$alertType($alertMessage);
+            unset($this->request->query['message']);
+            unset($this->request->query['alertType']);
         }
         if ($subaction == 'edit') {
             $session = $this->request->session();
