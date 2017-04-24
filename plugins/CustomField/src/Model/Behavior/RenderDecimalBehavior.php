@@ -44,17 +44,29 @@ class RenderDecimalBehavior extends RenderBehavior
             $unlockFields = [];
             $fieldPrefix = $attr['model'] . '.custom_field_values.' . $attr['attr']['seq'];
 
-            $options['type'] = 'text';
+            $options['type'] = 'number';
             if (!is_null($savedValue)) {
                 $options['value'] = $savedValue;
             }
 
-            // set the maxlength to length set
+            // set the options
             if (array_key_exists('customField', $attr) && isset($attr['customField']['params'])) {
                 $params = json_decode($attr['customField']['params'], true);
 
-                if (array_key_exists('length', $params)) {
-                    $options['maxlength'] = $params['length'];
+                // for set the field step precission 6 will be 0.000001 step (6 digit after decimal point
+                if (array_key_exists('precision', $params) && ($params['precision'] > 0)) {
+                    $precision = '0.';
+
+                    for ($i=1; $i < $params['precision']; $i++) {
+                        $precision = $precision . '0';
+
+                        // last precision will be 1
+                        if ($i == ($params['precision']-1)) {
+                            $precision = $precision . '1';
+                        }
+                    }
+
+                    $options['step'] = $precision;
                 }
             }
 
