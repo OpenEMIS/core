@@ -50,6 +50,12 @@ class TransferApprovalsTable extends AppTable {
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', false]
             ])
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
+            ])
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id']
+            ])
         ;
     }
 
@@ -191,19 +197,8 @@ class TransferApprovalsTable extends AppTable {
                     if (!empty($existingStudentEntity)) {
                         $this->updateStudentStatus($existingStudentEntity, 'TRANSFERRED', 'CURRENT', $prevEndDate);
                     }
-					// $this->Alert->error('general.edit.failed');
-					// $this->log($newEntity->errors(), 'debug');
-                    foreach ($newEntity->errors() as $key => $value) {
-                        $errorMessage = Inflector::humanize(str_replace('_id', '', $key));
-                        $errorMessage = Inflector::humanize(Inflector::underscore($errorMessage));
-                        $errorMessage .= " -> " . array_values($value)[0];
-                        $this->Alert->error(__($errorMessage), ['type' => 'message']);
-                    }
-                    $modelTable = $this->alias();
-                    $urlParams = $this->ControllerAction->url('edit');
-                    $urlParams['startDate'] = $data[$modelTable]['start_date'];
-                    $event->stopPropagation();
-                    return $this->controller->redirect($urlParams);
+					$this->Alert->error('general.edit.failed');
+					$this->log($newEntity->errors(), 'debug');
 				}
 			}
 
