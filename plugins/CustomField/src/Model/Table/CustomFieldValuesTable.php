@@ -135,7 +135,30 @@ class CustomFieldValuesTable extends AppTable {
 
 				return true;
 			})
-			->decimal('decimal_value', 2, [true])
+			->decimal('decimal_value', 6, ['message' => true], function ($context) {
+				$contextData = $context['data'];
+				$field = $contextData['decimal_value'];
+
+				$params = json_decode($contextData['params'], true);
+				$length = $params['length'];
+				$precision = $params['precision'];
+
+				if ($params['precision'] == 0) {
+					// check the field between 1 to length set, and all number
+					if (preg_match('/^[0-9]{1,'. $length .'}$/', $field)){
+					    return false;
+					}
+				} else if ($params['precision'] > 0) {
+					$subtract = $length - $precision - 1; // digit before the dot, dot is taking 1 digit
+
+					// if precision is not 0
+					if (preg_match('/^([0-9]{1,'.$subtract.'}([.][0-9]{'.$precision.'})){1,'.$length.'}$/', $field)){
+					    return false;
+					}
+				}
+
+				return true;
+			})
 			;
 
 		return $validator;

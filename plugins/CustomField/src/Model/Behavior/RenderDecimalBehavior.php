@@ -2,16 +2,21 @@
 namespace CustomField\Model\Behavior;
 
 use ArrayObject;
+
 use Cake\ORM\Entity;
 use Cake\Event\Event;
+
 use CustomField\Model\Behavior\RenderBehavior;
 
-class RenderDecimalBehavior extends RenderBehavior {
-	public function initialize(array $config) {
+class RenderDecimalBehavior extends RenderBehavior
+{
+	public function initialize(array $config)
+    {
         parent::initialize($config);
     }
 
-	public function onGetCustomDecimalElement(Event $event, $action, $entity, $attr, $options=[]) {
+	public function onGetCustomDecimalElement(Event $event, $action, $entity, $attr, $options=[])
+    {
         $value = '';
 
         // for edit
@@ -44,6 +49,15 @@ class RenderDecimalBehavior extends RenderBehavior {
                 $options['value'] = $savedValue;
             }
 
+            // set the maxlength to length set
+            if (array_key_exists('customField', $attr) && isset($attr['customField']['params'])) {
+                $params = json_decode($attr['customField']['params'], true);
+
+                if (array_key_exists('length', $params)) {
+                    $options['maxlength'] = $params['length'];
+                }
+            }
+
             $value .= $form->input($fieldPrefix.".decimal_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);
             $unlockFields[] = $fieldPrefix.".decimal_value";
@@ -56,10 +70,12 @@ class RenderDecimalBehavior extends RenderBehavior {
         }
 
         $event->stopPropagation();
+
         return $value;
     }
 
-    public function processDecimalValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings) {
+    public function processDecimalValues(Event $event, Entity $entity, ArrayObject $data, ArrayObject $settings)
+    {
         $settings['valueKey'] = 'decimal_value';
         $this->processValues($entity, $data, $settings);
     }

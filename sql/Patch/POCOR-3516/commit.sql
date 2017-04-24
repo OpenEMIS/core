@@ -6,8 +6,10 @@ INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3516', NOW());
 CREATE TABLE `z_3516_custom_field_types`  LIKE `custom_field_types`;
 INSERT INTO `z_3516_custom_field_types` SELECT * FROM `custom_field_types`;
 
-INSERT INTO `custom_field_types` (`code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`)
-VALUES ('DECIMAL', 'Decimal', 'decimal_value', '', 'OpenEMIS', '1', '1', '1');
+UPDATE `custom_field_types` SET `id` = `id`+1 WHERE `id` >= 3 order by id desc;
+
+INSERT INTO `custom_field_types` (`id`, `code`, `name`, `value`, `description`, `format`, `is_mandatory`, `is_unique`, `visible`)
+VALUES (3, 'DECIMAL', 'Decimal', 'decimal_value', '', 'OpenEMIS', '1', '0', '1');
 
 
 -- custom_field_values
