@@ -3,6 +3,25 @@
 <?= $this->Html->script('Institution.angular/institutionclasses/institution.class.students.ctrl', ['block' => true]); ?>
 <?php
 $this->extend('OpenEmis./Layout/Panel');
+$this->start('toolbar');
+?>
+<style type='text/css'>
+    .ag-grid-duration {
+        width: 50%;
+        border: none;
+        background-color: inherit;
+        text-align: center;
+    }
+
+    .ag-grid-dir-ltr {
+        direction: ltr !important;
+    }
+</style>
+<?= $this->Html->link('<i class="fa kd-back"></i>', $viewUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('Back'), 'escapeTitle' => false]) ?>
+
+<?= $this->Html->link('<i class="fa kd-lists"></i>', $indexUrl, ['class' => 'btn btn-xs btn-default', 'data-toggle' => 'tooltip', 'data-placement' => 'bottom', 'data-container' => 'body', 'title' => __('List'), 'escapeTitle' => false]) ?>
+<?php
+$this->end();
 $this->start('panelBody');
 ?>
 <form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionClassStudentsCtrl as InstitutionClassStudentsController">
@@ -59,9 +78,9 @@ $this->start('panelBody');
         <div class="form-buttons">
             <div class="button-label"></div>
             <button class="btn btn-default btn-save" type="button" ng-click="InstitutionClassStudentsController.postForm();">
-                <i class="fa fa-check"></i> Save
+                <i class="fa fa-check"></i> <?= __('Save') ?>
             </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> Cancel</a>', $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
         </div>
     </div>
