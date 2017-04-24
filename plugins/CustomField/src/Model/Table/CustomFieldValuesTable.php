@@ -148,11 +148,11 @@ class CustomFieldValuesTable extends AppTable {
 					if (preg_match('/^[0-9]{1,'. $length .'}$/', $field)){
 					    return false;
 					}
-				} else if ($params['precision'] > 0) {
-					$subtract = $length - $precision - 1; // digit before the dot, dot is taking 1 digit
+				} else if ($params['precision'] > 0 && strlen($field) <= $length) {
+					$pattern = '/^[0-9]+(\.[0-9]{1,'.$precision.'}+)?$/';
 
 					// if precision is not 0
-					if (preg_match('/^([0-9]{1,'.$subtract.'}([.][0-9]{'.$precision.'})){1,'.$length.'}$/', $field)){
+					if (preg_match($pattern, $field)){
 					    return false;
 					}
 				}
