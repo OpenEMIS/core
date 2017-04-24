@@ -92,18 +92,18 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-		$this->belongsToMany('ExamCentres', [
-			'className' => 'Examination.ExaminationCentres',
-			'joinTable' => 'examination_centres_institutions',
-			'foreignKey' => 'institution_id',
-			'targetForeignKey' => 'examination_centre_id',
-			'through' => 'Examination.ExaminationCentresInstitutions',
-			'dependent' => true
-		]);
 		$this->hasMany('ExaminationCentres',				['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ExaminationItemResults', 			['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->belongsToMany('ExaminationCentresExaminations', [
+			'className' => 'Examination.ExaminationCentresExaminations',
+			'joinTable' => 'examination_centres_examinations_institutions',
+			'foreignKey' => 'institution_id',
+			'targetForeignKey' => ['examination_centre_id', 'examination_id'],
+			'through' => 'Examination.ExaminationCentresExaminationsInstitutions',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+		]);
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
 			'joinTable' => 'security_group_institutions',
@@ -988,11 +988,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function findNotExamCentres(Query $query, array $options)
 	{
-		if (isset($options['examination_id'])) {
+		if (isset($options['academic_period_id'])) {
 			$query
 				->leftJoinWith('ExaminationCentres', function($q) use ($options) {
 					return $q
-						->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
+						->where(['ExaminationCentres.academic_period_id' => $options['academic_period_id']]);
 				})
 				->where([
 					'ExaminationCentres.institution_id IS NULL'
