@@ -2,27 +2,32 @@
 namespace CustomField\Model\Behavior;
 
 use ArrayObject;
+
 use Cake\ORM\Entity;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
+
 use CustomField\Model\Behavior\SetupBehavior;
 
-class SetupDecimalBehavior extends SetupBehavior {
+class SetupDecimalBehavior extends SetupBehavior
+{
 	private $validationOptions = [];
 
-	public function initialize(array $config) {
+	public function initialize(array $config)
+	{
         parent::initialize($config);
-// pr('SetupDecimalBehavior');
-// die
+
   //       $this->ruleOptions = [
   //       	'length' => __('Length Validation'),
   //       	'input_mask' => __('Custom Validation')
 		// ];
     }
 
-    public function addBeforeAction(Event $event) {
+    public function addBeforeAction(Event $event)
+    {
     	$model = $this->_table;
     	$fieldTypes = $model->getFieldTypes();
+
     	$selectedFieldType = isset($model->request->data[$model->alias()]['field_type']) ? $model->request->data[$model->alias()]['field_type'] : key($fieldTypes);
 
     	if ($selectedFieldType == $this->fieldTypeCode) {
@@ -30,192 +35,94 @@ class SetupDecimalBehavior extends SetupBehavior {
     	}
     }
 
-    public function editAfterQuery(Event $event, Entity $entity) {
+    public function editAfterQuery(Event $event, Entity $entity)
+    {
     	if ($entity->field_type == $this->fieldTypeCode) {
     		$this->buildDecimalValidator();
     	}
     }
 
-    private function buildDecimalValidator() {
-    	$min = $this->inputLimits['decimal_value']['min'];
-// pr('min '. $min);
-	// 	$validator = $this->_table->validator();
-	// 	$validator
-	//     	->allowEmpty('minimum_length', function ($context) {
-	// 			if (array_key_exists('maximum_length', $context['data'])) {
-	// 				return strlen($context['data']['maximum_length']);
-	// 			}
-
-	// 			// set to true so that asterisk will not appear
-	// 			return true;
-	// 		})
-	// 		->add('minimum_length', 'naturalNumber', [
-	// 			'rule' => 'naturalNumber',
-	// 			'message' => __('This field cannot be less than or equal zero')
-	// 		])
-	// 		->add('minimum_length', 'validateLength', [
-	// 			'rule' => function ($value, $context) use ($max) {
-	// 				return intval($value) <= $max;
-	// 			},
-	// 			'message' => vsprintf(__('This field cannot be more than %d'), [$max])
-	// 		])
-	// 		->add('minimum_length', 'comparison', [
-	// 			'rule' => function ($value, $context) {
-	// 				if (array_key_exists('maximum_length', $context['data']) && strlen($context['data']['maximum_length']) > 0) {
-	// 					return intval($value) <= intval($context['data']['maximum_length']);
-	// 				}
-
-	// 				return true;
-	// 			},
-	// 			'message' => __('Minimum Length cannot be more than the Maximum Length')
-	// 		])
-	// 		->allowEmpty('maximum_length', function ($context) {
-	// 			if (array_key_exists('minimum_length', $context['data'])) {
-	// 				return strlen($context['data']['minimum_length']);
-	// 			}
-
-	// 			// set to true so that asterisk will not appear
-	// 			return true;
-	// 		})
-	// 		->add('maximum_length', 'naturalNumber', [
-	// 			'rule' => 'naturalNumber',
-	// 			'message' => __('This field cannot be less than or equal zero')
-	// 		])
-	// 		->add('maximum_length', 'validateLength', [
-	// 			'rule' => function ($value, $context) use ($max) {
-	// 				return intval($value) <= $max;
-	// 			},
-	// 			'message' => vsprintf(__('This field cannot be more than %d'), [$max])
-	// 		])
-	//     	->notEmpty('validation_format')
-	//     	->add('validation_format', 'validateLength', [
-	// 			'rule' => function ($value, $context) use ($max) {
-	// 				return strlen($value) <= $max;
-	// 			},
-	// 			'message' => vsprintf(__('This field cannot be more than %d'), [$max])
-	// 		])
-	//     	;
+    private function buildDecimalValidator()
+    {
+		$validator = $this->_table->validator();
+		$validator
+			->add('length', [
+                'ruleRange' => [
+                    'rule' => ['range', 1, 20]
+                ]
+            ])
+            ->add('precision', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 6]
+                ]
+            ])
+        ;
     }
 
-	// public function onSetTextElements(Event $event, Entity $entity) {
-	// 	$model = $this->_table;
+	public function onSetDecimalElements(Event $event, Entity $entity)
+	{
+		$model = $this->_table;
 
-	// 	if ($model->request->is(['get'])) {
-	// 		if (isset($entity->id)) {
-	// 			// view / edit
-	// 			if ($entity->has('params') && !empty($entity->params)) {
-	// 				$params = json_decode($entity->params, true);
-	// 				if (array_key_exists('min_length', $params)) {
-	// 					$model->request->query['text_rule'] = 'length';
-	// 					$entity->minimum_length = $params['min_length'];
-	// 				} else if (array_key_exists('max_length', $params)) {
-	// 					$model->request->query['text_rule'] = 'length';
-	// 					$entity->maximum_length = $params['max_length'];
-	// 				} else if (array_key_exists('range', $params)) {
-	// 					$model->request->query['text_rule'] = 'length';
-	// 					$entity->minimum_length = $params['range']['lower'];
-	// 					$entity->maximum_length = $params['range']['upper'];
-	// 				} else if (array_key_exists('input_mask', $params)) {
-	// 					$model->request->query['text_rule'] = 'input_mask';
-	// 					$entity->validation_format = $params['input_mask'];
-	// 				}
-	// 			}
-	// 		} else {
-	// 			// add
-	// 			unset($model->request->query['text_rule']);
-	// 		}
+		if ($model->request->is(['get'])) {
+			if (isset($entity->id)) {
+				// view / edit
+				if ($entity->has('params') && !empty($entity->params)) {
+					$params = json_decode($entity->params, true);
 
-	// 		if ($model->action == 'view') {
-	// 			$selectedRule = $model->request->query('text_rule');
-	// 			$entity->validation_rule = !is_null($selectedRule) ? $this->ruleOptions[$selectedRule] : __('No Validation');
-	// 		}
-	// 	}
+					if (array_key_exists('length', $params) && array_key_exists('precision', $params)) {
+						$entity->length = $params['length'];
+						$entity->precision = $params['precision'];
+					}
+				}
+			}
+		}
 
-	// 	$ruleOptions = ['' => __('No Validation')] + $this->ruleOptions;
-	// 	$selectedRule = $model->queryString('text_rule', $ruleOptions);
+		$tooltipMessage = [
+			'length' => __('Maximum digits of the field') . __(' (1 to 20)'),
+			'precision' => __('Maximum digits after decimal') . __(' (0 to 6)'),
+		];
 
-	// 	$model->ControllerAction->field('validation_rule', [
-	// 		'type' => 'select',
-	// 		'options' => $ruleOptions,
-	// 		'default' => $selectedRule,
-	// 		'value' => $selectedRule,
-	// 		'onChangeReload' => true,
-	// 		'after' => 'is_unique'
-	// 	]);
+		$model->ControllerAction->field('length', [
+			'type' => 'integer',
+			'after' => 'is_unique',
+			'attr' => [
+				'min' => 1,
+				'max' => 20,
+				'label' => [
+					'text' => __('Maximum Length') . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' . $tooltipMessage['length'] . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false, //disable the htmlentities (on LabelWidget) so can show html on label.
+                    'class' => 'tooltip-desc' //css class for label
+				]
+			]
+		]);
 
-	// 	switch ($selectedRule) {
-	// 		case 'length':
-	// 			$model->ControllerAction->field('minimum_length', [
-	// 	        	'type' => 'integer',
-	// 	        	'after' => 'validation_rule'
-	// 	        ]);
-	// 	        $model->ControllerAction->field('maximum_length', [
-	// 	        	'type' => 'integer',
-	// 	        	'after' => 'minimum_length'
-	// 	        ]);
-	// 			break;
-	// 		case 'input_mask':
-	// 			$fieldType = strtolower($this->fieldTypeCode);
-	// 			$model->ControllerAction->addField('validation_reference', [
-	// 	            'type' => 'element',
-	// 	            'element' => 'CustomField.Setup/' . $fieldType,
-	// 	            'valueClass' => 'table-full-width',
-	// 	            'after' => 'validation_rule'
-	// 	        ]);
-	// 	        $model->ControllerAction->field('validation_format', [
-	// 	        	'type' => 'string',
-	// 	        	'attr' => ['onkeypress' => 'return Config.inputMaskCheck(event);'],
-	// 	        	'after' => 'validation_reference'
-	// 	        ]);
-	// 			break;
-	// 		default:
-	// 			break;
-	// 	}
-	// }
+		$model->ControllerAction->field('precision', [
+			'type' => 'integer',
+			'after' => 'length',
+			'attr' => [
+				'min' => 0,
+				'max' => 6,
+				'label' => [
+					'text' => __('Precision') . ' <i class="fa fa-info-circle fa-lg icon-blue" tooltip-placement="bottom" uib-tooltip="' . $tooltipMessage['precision'] . '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>',
+                    'escape' => false, //disable the htmlentities (on LabelWidget) so can show html on label.
+                    'class' => 'tooltip-desc' //css class for label
+				]
+			]
+		]);
+	}
 
-	// public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options) {
-	// 	if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
-	// 		if (isset($data['validation_rule'])) {
-	// 			$model = $this->_table;
-	// 			$request = $model->request;
-	// 			unset($request->query['text_rule']);
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+	{
+		if (isset($data['field_type']) && $data['field_type'] == $this->fieldTypeCode) {
+			$length = array_key_exists('length', $data) && strlen($data['length']) > 0 ? $data['length'] : null;
+			$precision = array_key_exists('precision', $data) && strlen($data['precision']) > 0 ? $data['precision'] : null;
 
-	// 			if (!empty($data['validation_rule'])) {
-	// 				$selectedRule = $data['validation_rule'];
-	// 				$request->query['text_rule'] = $selectedRule;
-	// 				$params = [];
+			$params = [
+				'length' => $length,
+				'precision' => $precision
+			];
 
-	// 				switch ($selectedRule) {
-	//     				case 'length':
-	//     					$minLength = array_key_exists('minimum_length', $data) && strlen($data['minimum_length']) > 0? $data['minimum_length']: null;
-	// 						$maxLength = array_key_exists('maximum_length', $data) && strlen($data['maximum_length']) > 0 ? $data['maximum_length']: null;
-
-	// 						if (!is_null($minLength) && is_null($maxLength)) {
-	// 							$params['min_length'] = $minLength;
-	//     					} else if (is_null($minLength) && !is_null($maxLength)) {
-	// 							$params['max_length'] = $maxLength;
-	//     					} else if (!is_null($minLength) && !is_null($maxLength)) {
-	//     						$params['range'] = [
-	//     							'lower' => $minLength,
-	//     							'upper' => $maxLength
-	//     						];
-	//     					}
-	//     					break;
-	// 					case 'input_mask':
-	// 						if (array_key_exists('validation_format', $data) && !empty($data['validation_format'])) {
-	// 							$params['input_mask'] = $data['validation_format'];
-	// 						}
-	// 						break;
-	// 					default:
-	// 						break;
-	// 				}
-
-	// 				$data['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
-	// 			} else {
-	// 				$data['params'] = '';
-	// 			}
-	// 		}
-
-	// 	}
-	// }
+			$data['params'] = json_encode($params, JSON_UNESCAPED_UNICODE);
+		}
+	}
 }
