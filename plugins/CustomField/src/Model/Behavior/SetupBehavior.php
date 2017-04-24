@@ -22,7 +22,8 @@ class SetupBehavior extends Behavior {
 		$this->fieldType = $class;
 		$this->inputLimits = [
 			'text_value' => ['max' => 250],
-			'number_value' => ['min' => -2147483648, 'max' => 2147483647]
+            'number_value' => ['min' => -2147483648, 'max' => 2147483647],
+			'decimal_value' => ['min' => 0],
 		];
     }
 
