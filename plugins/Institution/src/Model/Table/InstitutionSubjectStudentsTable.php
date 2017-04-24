@@ -40,6 +40,7 @@ class InstitutionSubjectStudentsTable extends AppTable {
 
 		$this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index', 'add'],
+            'SubjectStudents' => ['index'],
             'OpenEMIS_Classroom' => ['index']
         ]);
 	}
