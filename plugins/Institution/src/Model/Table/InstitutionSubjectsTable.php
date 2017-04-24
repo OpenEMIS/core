@@ -29,6 +29,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         $this->hasMany('ClassSubjects', ['className' => 'Institution.InstitutionClassSubjects']);
         $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents']);
@@ -100,6 +101,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $this->enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
 
+        $this->field('education_grade_id', ['type' => 'select', 'visible' => ['view'=>false, 'edit'=>false, 'add'=>true], 'onChangeReload' => true]);
         $this->field('academic_period_id', ['type' => 'select', 'visible' => ['view'=>true, 'edit'=>true, 'add'=>true], 'onChangeReload' => true]);
         $this->field('created', ['type' => 'string', 'visible' => false]);
         $this->field('created_user_id', ['type' => 'string', 'visible' => false]);
@@ -474,6 +476,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
+        // pr($data);
         foreach ($data as $key => $value) { //loop each subject then unset education_subject_id if not selected (so no validation is done).
             if ($key == 'MultiSubjects') {
                 foreach ($data[$key] as $key1 => $value1) {
@@ -629,7 +632,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
          * In students.ctp, we set the staff_id as the array keys for easy search and compare.
          * Assign back original record's id to the new list so as to preserve id numbers.
          */
-
         $checkedStaff = [];
         // POCOR-2781 - Remove 'status' from institution_subject_staff
         // note that this has been converted from saving of 'association data' to saving using editAfterSave
@@ -697,6 +699,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
         }
+
+        pr($data);die;
     }
 
     /**
@@ -868,6 +872,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     $subjects[$key] = [
                         'key' => $key,
                         'name' => $row['name'],
+                        'education_grade_id' => $row['education_grade_id'],
                         'education_subject_id' => $row['education_subject_id'],
                         'academic_period_id' => $commonData['academic_period_id'],
                         'institution_id' => $commonData['institution_id'],
@@ -1091,10 +1096,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
      */
     protected function getTeacherOptions($entity)
     {
-        // $academicPeriodObj = $this->AcademicPeriods->get($entity->academic_period_id);
-        // $startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
-        // $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
-
         $Staff = TableRegistry::get('Institution.Staff');
         $query = $Staff->find('all')
                         ->find('withBelongsTo')
@@ -1250,6 +1251,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         if (!isset($educationSubjects[$subject->id])) {
                             $educationSubjects[$subject->id] = [
                                 'id' => $subject->id,
+                                'education_grade_id' => $gradeSubject->id,
                                 'name' => $subject->name
                             ];
                         }
@@ -1272,13 +1274,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
                     ->where([
                         $InstitutionSubjects->aliasField('academic_period_id') => $entity->academic_period_id,
                         $InstitutionSubjects->aliasField('institution_id') => $entity->institution_id,
-                        $InstitutionSubjects->aliasField('education_subject_id').' IN' => array_keys($educationSubjects)
+                        $InstitutionSubjects->aliasField('education_subject_id').' IN' => array_column($educationSubjects, 'id')
                     ])
                     ->toArray();
                 $institutionSubjectsIds = [];
                 foreach ($institutionSubjects as $key => $value) {
                     $institutionSubjectsIds[$value][] = $key;
                 }
+
                 unset($institutionSubjects);
 
                 /**
@@ -1305,6 +1308,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
                         $newSchoolSubjects[$key] = [
                             'name' => $educationSubject['name'],
                             'institution_id' => $entity->institution_id,
+                            'education_grade_id' => $educationSubject['education_grade_id'],
                             'education_subject_id' => $educationSubject['id'],
                             'academic_period_id' => $entity->academic_period_id,
                             'class_subjects' => [
