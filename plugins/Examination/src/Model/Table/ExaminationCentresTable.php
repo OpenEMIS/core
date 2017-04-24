@@ -286,6 +286,7 @@ class ExaminationCentresTable extends ControllerActionTable {
                     $this->fields['code']['visible'] = false;
                 } else {
                     $this->fields['name']['visible'] = false;
+                    $this->fields['code']['visible'] = false;
                 }
                 $this->fields['special_needs_section']['visible'] = true;
 
