@@ -37,6 +37,7 @@ class AlertRulesTable extends ControllerActionTable
 
         $this->addBehavior('OpenEmis.Section');
         $this->addBehavior('Alert.AlertRuleAttendance');
+        $this->addBehavior('Alert.AlertRuleLicenseRenewal');
         $this->addBehavior('Alert.AlertRuleLicenseValidity');
         $this->addBehavior('Alert.AlertRuleRetirementWarning');
         $this->addBehavior('Alert.AlertRuleStaffEmployment');
@@ -63,8 +64,12 @@ class AlertRulesTable extends ControllerActionTable
                 $thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
                 if (!empty($thresholdConfig)) {
                     $thresholdArray = [];
-                    foreach ($thresholdConfig as $key => $attr) {
-                        $thresholdArray[$key] = $data[$key];
+                    foreach ($thresholdConfig as $field => $attr) {
+                        if (array_key_exists('type', $attr) && $attr['type'] == 'chosenSelect') {
+                            $thresholdArray[$field] = $data[$field]['_ids'];
+                        } else {
+                            $thresholdArray[$field] = $data[$field];
+                        }
                     }
                     $data['threshold'] = !empty($thresholdArray) ? json_encode($thresholdArray, JSON_UNESCAPED_UNICODE) : '';
                 }
@@ -368,8 +373,26 @@ class AlertRulesTable extends ControllerActionTable
         $thresholdArray = json_decode($entity->threshold, true);
 
         if (is_array($thresholdArray)) {
-            foreach ($thresholdArray as $key => $value) {
-                $entity->{$key} = $value;
+            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
+            $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
+
+            foreach ($thresholdArray as $field => $value) {
+                $entity->{$field} = $value;
+
+                if (array_key_exists($field, $thresholdConfig) && array_key_exists('type', $thresholdConfig[$field])) {
+                    $fieldType = $thresholdConfig[$field]['type'];
+                    // for threshold with type chosenSelect type
+                    if ($fieldType == 'chosenSelect') {
+                        $lookupModel = $thresholdConfig[$field]['lookupModel'];
+                        $Model = TableRegistry::get($lookupModel);
+                        if (is_array($value)) {
+                            $entity->{$field} = [];
+                            foreach ($value as $modelId) {
+                                $entity->{$field}[] = $Model->get($modelId);
+                            }
+                        }
+                    }
+                }
             }
         }
     }

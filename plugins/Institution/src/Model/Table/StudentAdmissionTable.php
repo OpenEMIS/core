@@ -697,7 +697,7 @@ class StudentAdmissionTable extends AppTable {
 
 					$row['url'] = $url;
 	    			$row['status'] = __('Pending For Approval');
-	    			$row['request_title'] = __('Admission of student').' '.$row->user->name_with_id;
+                    $row['request_title'] = sprintf(__('Admission of student %s'), $row->user->name_with_id);
 	    			$row['institution'] = $row->institution->code_name;
 	    			$row['received_date'] = $receivedDate;
 	    			$row['requester'] = $row->created_user->name_with_id;
