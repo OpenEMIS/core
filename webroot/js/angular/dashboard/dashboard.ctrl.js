@@ -177,10 +177,16 @@ function DashboardController($scope, $location, $filter, $q, UtilsSvc, AlertSvc,
         angular.forEach(columnDefs, function(value, key) {
             textToTranslate.push(value.headerName);
         });
+        textToTranslate.push(vm.workbenchTitle);
         DashboardSvc.translate(textToTranslate)
         .then(function(res){
+            var maxCount = res.length -1;
             angular.forEach(res, function(value, key) {
-                columnDefs[key]['headerName'] = value;
+                if (key < maxCount) {
+                    columnDefs[key]['headerName'] = value;
+                } else {
+                    vm.workbenchTitle = value;
+                }
             });
             vm.gridOptions[vm.target].api.setColumnDefs(columnDefs);
         }, function(error){
