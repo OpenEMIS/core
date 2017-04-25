@@ -794,16 +794,23 @@ class InstitutionsController extends AppController
         $tabElements = [];
         $trainingUrl = ['plugin' => 'Institution', 'controller' => 'Institutions'];
         $trainingTabElements = [
-            'StaffTrainingResults' => ['text' => __('Results')],
+            'StaffTrainingNeeds' => ['text' => __('Needs')],
             'StaffTrainingApplications' => ['text' => __('Applications')],
-            'StaffTrainingNeeds' => ['text' => __('Needs')]
+            'StaffTrainingResults' => ['text' => __('Results')],
+            'Courses' => ['text' => __('Courses')]
         ];
 
         $tabElements = array_merge($tabElements, $trainingTabElements);
 
         foreach ($trainingTabElements as $key => $tab) {
             $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+
+            if ($key == 'Courses') {
+                $trainingUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
+                $tabElements[$key]['url'] = array_merge($trainingUrl, ['action' => $key, 'index']);
+            }
         }
+
         return $tabElements;
     }
 
