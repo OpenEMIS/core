@@ -287,7 +287,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var deferred = $q.defer();
         var vm = this;
         if (externalSource == null) {
-            userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date'])
+            userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
+            userRecord['institution_id'] = this.getInstitutionId();
             delete userRecord['gender'];
             if (userRecord['nationality_id'] != '' && userRecord['nationality_id'] != undefined) {
                 userRecord['nationalities'] = [{
@@ -325,7 +326,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
                 newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
                 newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
-
+                newUserRecord['institution_id'] = vm.getInstitutionId();
 
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
                 newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];
@@ -367,6 +368,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         delete modifiedUser['created'];
                         delete modifiedUser['modified'];
                         modifiedUser['is_student'] = 1;
+                        modifiedUser['institution_id'] = this.getInstitutionId();
                         modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
                         modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
                         modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
