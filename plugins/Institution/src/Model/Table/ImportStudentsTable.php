@@ -365,11 +365,12 @@ class ImportStudentsTable extends AppTable {
         $globalData['field'] = 'student_id';
         $globalData['data']['institution_id'] = $this->institutionId;
         $globalData['data']['student_id'] = $tempRow['student_id'];
-        
+        $globalData['providers']['table'] = $this->InstitutionStudents;
+
         $result = $this->compareStudentGenderWithInstitution($tempRow['student_id'], $globalData);
             
-        if (!$result) {
-            $rowInvalidCodeCols['student_id'] = __('Student\'s Gender does not match the Institution\'s Gender.');
+        if ($result !== true) {
+            $rowInvalidCodeCols['student_id'] = __($result);
             return false;
         }
         //end of checking student gender

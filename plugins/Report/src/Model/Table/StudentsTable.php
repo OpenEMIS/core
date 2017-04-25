@@ -44,7 +44,7 @@ class StudentsTable extends AppTable  {
 	}
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
-		$query->where([$this->aliasField('is_student') => 1]);
+		$query->where([$this->aliasField('is_student') => 2]);
 	}
 
 	public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
