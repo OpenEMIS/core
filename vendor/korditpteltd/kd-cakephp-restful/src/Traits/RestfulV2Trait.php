@@ -401,7 +401,7 @@ trait RestfulV2Trait {
                         } else {
                             $entityTable = TableRegistry::get($source);
                         }
-                        $this->convertBinaryToBase64($entityTable, $propertyEntity);
+                        $this->convertBinaryToBase64($entityTable, $propertyEntity, $extra);
                     }
                 }
             } else {

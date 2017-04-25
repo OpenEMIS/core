@@ -32,7 +32,7 @@ angular.module('kd.orm.v2.svc', [])
         setVersion: function(version) {
             this.version = version;
             return this;
-        }
+        },
 
         reset: function() {
             this._id = 0;
