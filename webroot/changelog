@@ -1,3 +1,9 @@
+v3.9.11
+- Implemented alerts for Training Credits Hours that does not fulfil required amount in Staff > Training > Courses tab
+- Added a year filter for Reports > Institution with no Students
+- Added Multi-grade column in Institution > Academic > Classes page
+- Allows user to link specialisations to subjects in Staff > Professional Development > Qualifications page
+
 v3.9.9
 - Implemented Case management feature
 - New Behaviour records will have to go through a workflow
