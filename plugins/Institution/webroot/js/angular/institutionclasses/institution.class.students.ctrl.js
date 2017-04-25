@@ -49,6 +49,7 @@ function InstitutionClassStudentsController($scope, $q, $window, UtilsSvc, Alert
     Controller.unassignedStudents = {};
     Controller.shiftOptions = [];
     Controller.teacherOptions = [];
+    Controller.alertUrl = '';
     Controller.redirectUrl = '';
     Controller.selectedShift = null;
     Controller.selectedTeacher = null;
@@ -227,9 +228,15 @@ function InstitutionClassStudentsController($scope, $q, $window, UtilsSvc, Alert
         .then(function(response) {
             var error = response.data.error;
             if (error instanceof Array && error.length == 0) {
-                Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'alertType', 'success');
-                Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'message', 'general.edit.success');
-                $window.location.href = Controller.redirectUrl;
+                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
+                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                $http.get(Controller.alertUrl)
+                .then(function(response) {
+                    console.log(response);
+                    $window.location.href = Controller.redirectUrl;
+                }, function (error) {
+                    console.log(error);
+                });
             } else {
                 AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
                 angular.forEach(error, function(value, key) {

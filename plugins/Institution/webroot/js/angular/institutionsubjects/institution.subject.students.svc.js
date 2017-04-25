@@ -11,15 +11,13 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdOrmSvc) {
         getInstitutionSubjectDetails: getInstitutionSubjectDetails,
         getUnassignedStudent: getUnassignedStudent,
         translate: translate,
-        getInstitutionShifts: getInstitutionShifts,
         getTeacherOptions: getTeacherOptions,
         getRoomsOptions: getRoomsOptions,
-        saveClass: saveClass
+        saveInstitutionSubject: saveInstitutionSubject
     };
 
     var models = {
         InstitutionStaff: 'Institution.Staff',
-        InstitutionShifts: 'Institution.InstitutionShifts',
         Users: 'User.Users',
         Rooms: 'Institution.InstitutionRooms',
         InstitutionSubjects: 'Institution.InstitutionSubjects',
@@ -49,7 +47,7 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdOrmSvc) {
         };
         return InstitutionSubjects
             .get(institutionSubjectId)
-            .contain(['Teachers', 'Rooms', 'EducationSubjects', 'AcademicPeriods', 'SubjectStudents.Users.Genders', 'SubjectStudents.StudentStatuses', 'ClassSubjects'])
+            .contain(['SubjectStaff.Users', 'Rooms', 'EducationSubjects', 'AcademicPeriods', 'SubjectStudents.Users.Genders', 'SubjectStudents.StudentStatuses', 'ClassSubjects'])
             .ajax({success: success, defer:true});
     }
 
@@ -63,13 +61,6 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 education_grade_id: educationGradeId,
                 institution_class_ids: institutionClassIds
             }).ajax({success: success, defer: true});
-    }
-
-    function getInstitutionShifts(institutionId, academicPeriodId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return InstitutionShifts.find('shiftOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
     }
 
     function getTeacherOptions(institutionId, academicPeriodId) {
@@ -86,7 +77,7 @@ function InstitutionSubjectStudentsSvc($http, $q, $filter, KdOrmSvc) {
         return Rooms.find('subjectRoomOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
     }
 
-    function saveClass(data) {
-        return [];
+    function saveInstitutionSubject(data) {
+        return InstitutionSubjects.edit(data);
     }
 };
