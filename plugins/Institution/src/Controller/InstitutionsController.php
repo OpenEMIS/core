@@ -209,7 +209,7 @@ class InstitutionsController extends AppController
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $classId['id']);
             $this->set('institutionId', $institutionId);
-            $this->render('institution_class_students_edit');
+            $this->render('institution_classes_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionClasses']);
         }
@@ -223,12 +223,11 @@ class InstitutionsController extends AppController
             $alertMessage = $this->request->query('message');
             $this->Alert->$alertType($alertMessage);
         }
-        echo 'ok';
     }
 
     public function Subjects($subaction = 'index', $institutionSubjectId = null)
     {
-        if ($subaction == 'editStudents') {
+        if ($subaction == 'edit') {
             $session = $this->request->session();
             $roles = [];
             $institutionSubjectId = $this->ControllerAction->paramsDecode($institutionSubjectId);
@@ -513,7 +512,7 @@ class InstitutionsController extends AppController
                 break;
             case 'Subjects':
                 if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'editStudents') {
+                    if ($this->request->param('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'kd-angular-multi-select',
