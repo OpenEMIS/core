@@ -50,7 +50,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getPositionList: getPositionList,
         getStaffTypes: getStaffTypes,
         getInstitution: getInstitution,
-        addStaffTransferRequest: addStaffTransferRequest
+        addStaffTransferRequest: addStaffTransferRequest,
+        translate: translate
     };
 
     var models = {
@@ -86,6 +87,15 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         KdOrmSvc.controllerAction('ExternalAPI');
         KdOrmSvc.init(externalModels);
     };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
+    }
 
     function resetExternalVariable()
     {
