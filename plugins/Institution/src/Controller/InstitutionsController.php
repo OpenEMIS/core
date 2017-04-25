@@ -161,13 +161,6 @@ class InstitutionsController extends AppController
 
     public function Classes($subaction = 'index', $classId = null)
     {
-        if ($this->request->query('message') && $this->request->query('alertType')) {
-            $alertType = $this->request->query('alertType');
-            $alertMessage = $this->request->query('message');
-            $this->Alert->$alertType($alertMessage);
-            unset($this->request->query['message']);
-            unset($this->request->query['alertType']);
-        }
         if ($subaction == 'edit') {
             $session = $this->request->session();
             $roles = [];
@@ -204,6 +197,14 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
 
+            $alertUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $classId['id']);
@@ -214,13 +215,19 @@ class InstitutionsController extends AppController
         }
     }
 
-    public function Subjects($subaction = 'index', $institutionSubjectId = null)
+    public function setAlert()
     {
+        $this->autoRender = false;
         if ($this->request->query('message') && $this->request->query('alertType')) {
             $alertType = $this->request->query('alertType');
             $alertMessage = $this->request->query('message');
             $this->Alert->$alertType($alertMessage);
         }
+        echo 'ok';
+    }
+
+    public function Subjects($subaction = 'index', $institutionSubjectId = null)
+    {
         if ($subaction == 'editStudents') {
             $session = $this->request->session();
             $roles = [];
@@ -255,6 +262,13 @@ class InstitutionsController extends AppController
                 'action' => 'Subjects',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
+            $alertUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+            $this->set('alertUrl', $alertUrl);
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('institutionSubjectId', $institutionSubjectId['id']);
