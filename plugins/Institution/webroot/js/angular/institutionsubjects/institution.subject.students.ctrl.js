@@ -4,9 +4,9 @@ agGrid.initialiseAgGridWithAngular1(angular);
 angular.module('institution.subject.students.ctrl', ['agGrid', 'kd-angular-multi-select', 'utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.subject.students.svc', 'angular.chosen'])
     .controller('InstitutionSubjectStudentsCtrl', InstitutionSubjectStudentsController);
 
-InstitutionSubjectStudentsController.$inject = ['$scope', '$q', '$window', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionSubjectStudentsSvc'];
+InstitutionSubjectStudentsController.$inject = ['$scope', '$q', '$http', '$window', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionSubjectStudentsSvc'];
 
-function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionSubjectStudentsSvc) {
+function InstitutionSubjectStudentsController($scope, $q, $http, $window, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionSubjectStudentsSvc) {
 
     var Controller = this;
 
@@ -49,6 +49,7 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
     Controller.educationSubjectName = '';
     Controller.teacherOptions = [];
     Controller.roomOptions = [];
+    Controller.alertUrl = '';
     Controller.redirectUrl = '';
     Controller.selectedShift = null;
     Controller.selectedTeacher = null;
@@ -93,8 +94,20 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
                 Controller.institutionClassIds = classIds;
 
                 var teachers = [];
-                angular.forEach(response.teachers, function(value, key) {
-                    this.push(value.id);
+                angular.forEach(response.subject_staff, function(value, key) {
+                    if (value.end_date == null) {
+                        this.push(value.staff_id);
+                    } else {
+                        Controller.pastTeachers.push({
+                            staff_id: value.staff_id,
+                            institution_subject_id: value.institution_subject_id,
+                            institution_id: value.institution_id,
+                            id: value.id,
+                            name_with_id: value.user.name_with_id,
+                            start_date: value.start_date,
+                            end_date: value.end_date
+                        });
+                    }
                 }, teachers);
                 Controller.teachers = teachers;
 
@@ -246,19 +259,47 @@ function InstitutionSubjectStudentsController($scope, $q, $window, UtilsSvc, Ale
         var postData = {};
         postData.id = Controller.institutionSubjectId;
         postData.name = Controller.institutionSubjectName;
-        postData.staff_id = Controller.selectedTeacher;
-        postData.institution_shift_id = Controller.selectedShift;
-        postData.classStudents = classStudents;
+        postData.subject_students = [];
+        angular.forEach(Controller.assignedStudents, function(value, key) {
+            this.push(value.encodedVar);
+        }, postData.subject_students)
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
-        postData.subjects = UtilsSvc.urlsafeBase64Encode(JSON.stringify(Controller.institutionSubjects));
-        InstitutionSubjectStudentsSvc.saveClass(postData)
+        postData.subject_staff = [];
+        postData.rooms = Controller.rooms;
+        postData.education_grade_id = Controller.educationGradeId;
+        postData.education_subject_id = Controller.educationSubjectId;
+        var pastTeachers = JSON.parse(JSON.stringify(Controller.pastTeachers));
+        angular.forEach(pastTeachers, function(value, key) {
+            if (Controller.teachers.indexOf(value.staff_id) < 0) {
+                delete value.name_with_id;
+                delete value.start_date;
+                delete value.end_date;
+                this.push(value);
+            }
+        }, postData.subject_staff);
+
+        angular.forEach(Controller.teachers, function(value, key) {
+            this.push({
+                staff_id: value,
+                institution_subject_id: Controller.institutionSubjectId,
+                institution_id: Controller.institutionId
+            });
+        }, postData.subject_staff);
+
+        InstitutionSubjectStudentsSvc.saveInstitutionSubject(postData)
         .then(function(response) {
             var error = response.data.error;
             if (error instanceof Array && error.length == 0) {
-                Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'alertType', 'success');
-                Controller.redirectUrl = Controller.updateQueryStringParameter(Controller.redirectUrl, 'message', 'general.edit.success');
-                // $window.location.href = Controller.redirectUrl;
+                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'alertType', 'success');
+                Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
+                $http.get(Controller.alertUrl)
+                .then(function(response) {
+                    console.log(response);
+                    $window.location.href = Controller.redirectUrl;
+                }, function (error) {
+                    console.log(error);
+                });
             } else {
                 AlertSvc.error(Controller, 'The record is not updated due to errors encountered.');
                 angular.forEach(error, function(value, key) {

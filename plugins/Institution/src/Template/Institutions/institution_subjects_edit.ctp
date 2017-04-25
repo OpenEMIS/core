@@ -98,7 +98,7 @@ $this->start('panelBody');
     </div>
 	<div class="input select">
         <label><?= __('Add Student') ?></label>
-        <div class="input-form-wrapper" ng-init="InstitutionSubjectStudentsController.institutionSubjectId=<?= $institutionSubjectId ?>; InstitutionSubjectStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>';">
+        <div class="input-form-wrapper" ng-init="InstitutionSubjectStudentsController.institutionSubjectId=<?= $institutionSubjectId ?>; InstitutionSubjectStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionSubjectStudentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
     		<kd-multi-select ng-if="InstitutionSubjectStudentsController.dataReady" grid-options-top="InstitutionSubjectStudentsController.gridOptionsTop" grid-options-bottom="InstitutionSubjectStudentsController.gridOptionsBottom"></kd-multi-select>
     	</div>
 

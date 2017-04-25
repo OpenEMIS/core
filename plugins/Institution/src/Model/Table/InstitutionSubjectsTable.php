@@ -32,8 +32,8 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         $this->hasMany('ClassSubjects', ['className' => 'Institution.InstitutionClassSubjects']);
-        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents']);
-        $this->hasMany('SubjectStaff', ['className' => 'Institution.InstitutionSubjectStaff']);
+        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
+        $this->hasMany('SubjectStaff', ['className' => 'Institution.InstitutionSubjectStaff', 'saveStrategy' => 'replace']);
         $this->hasMany('QualityRubrics', ['className' => 'Institution.InstitutionRubrics', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('QualityVisits', ['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
 
@@ -82,7 +82,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'SubjectStudents' => ['view']
+            'SubjectStudents' => ['view', 'edit']
         ]);
 
         $this->setDeleteStrategy('restrict');
@@ -476,7 +476,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function addBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        // pr($data);
         foreach ($data as $key => $value) { //loop each subject then unset education_subject_id if not selected (so no validation is done).
             if ($key == 'MultiSubjects') {
                 foreach ($data[$key] as $key1 => $value1) {
@@ -533,7 +532,6 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
     {
-        //pr($extra[$this->aliasField('notice')]);
         if (isset($extra[$this->aliasField('notice')]) && !empty($extra[$this->aliasField('notice')])) {
             $notice = $extra[$this->aliasField('notice')];
             unset($extra[$this->aliasField('notice')]);
@@ -699,8 +697,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
                 }
             }
         }
+    }
 
-        pr($data);die;
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        foreach ($data['subject_students'] as &$subjectStudent) {
+            $subjectStudent = json_decode($this->urlsafeB64Decode($subjectStudent), true);
+        }
+        $data['rooms']['_ids'] = $data['rooms'];
     }
 
     /**
