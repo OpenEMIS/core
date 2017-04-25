@@ -670,6 +670,9 @@ class ValidationBehavior extends Behavior {
 
     public static function compareStudentGenderWithInstitution($field, array $globalData)
     {
+    	$model = $globalData['providers']['table'];
+    	$registryAlias = $model->registryAlias();
+
         if (!empty($globalData)) {
         	$fieldType = $globalData['field']; //enable many models field use this same function
         	$institutionId = $globalData['data']['institution_id'];
@@ -685,12 +688,13 @@ class ValidationBehavior extends Behavior {
                         $Institutions->aliasField('id') => $institutionId
                     ])
                     ->select([
-                        'Genders.code'
+                        'Genders.code', 'Genders.name'
                     ])
                     ->first();
-            $institutionGender = $query->Genders->code;
+            $institutionGender = $query->Genders->name;
+            $institutionGenderCode = $query->Genders->code;
 
-            if ($institutionGender == 'X') { //if mixed then always true
+            if ($institutionGenderCode == 'X') { //if mixed then always true
                 return true;
             } else {
                 //get user gender
@@ -710,7 +714,10 @@ class ValidationBehavior extends Behavior {
                 } else if ($fieldType == 'gender_id') { //if validate gender, then can straight away get its code.
                     $userGender = $UserGenders->get($globalData['data'][$fieldType])->code;
                 }
-                return ($userGender == $institutionGender);
+                //return ($userGender == $institutionGender);
+                if ($userGender != $institutionGenderCode) {
+                	return $model->getMessage("$registryAlias.$fieldType.compareStudentGenderWithInstitution", ['sprintf' => [$institutionGender]]);
+                }
             }
         }
         return true;
