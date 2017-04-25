@@ -517,10 +517,12 @@ class StudentTransferTable extends AppTable {
                                     $this->Institutions->aliasField('id') => $nextInstitutionId
                                 ])
                                 ->select([
-                                    'Genders.code'
+                                    'Genders.code',
+                                    'Genders.name'
                                 ])
                                 ->first();
-            $attr['nextInstitutionGender'] = $institutionGender->Genders->code;
+            $attr['nextInstitutionGender'] = $institutionGender->Genders->name;
+            $attr['nextInstitutionGenderCode'] = $institutionGender->Genders->code;
         }
 
 		$statusOptions = $this->StudentStatuses->find('list')->toArray();
