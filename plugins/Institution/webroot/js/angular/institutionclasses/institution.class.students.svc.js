@@ -1,10 +1,10 @@
 angular
-    .module('institution.class.students.svc', ['kd.orm.svc'])
+    .module('institution.class.students.svc', ['kd.orm.v2.svc'])
     .service('InstitutionClassStudentsSvc', InstitutionClassStudentsSvc);
 
-InstitutionClassStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmSvc'];
+InstitutionClassStudentsSvc.$inject = ['$http', '$q', '$filter', 'KdOrmV2Svc'];
 
-function InstitutionClassStudentsSvc($http, $q, $filter, KdOrmSvc) {
+function InstitutionClassStudentsSvc($http, $q, $filter, KdOrmV2Svc) {
 
     var service = {
         init: init,
@@ -26,13 +26,13 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdOrmSvc) {
     return service;
 
     function init(baseUrl) {
-        KdOrmSvc.base(baseUrl);
-        KdOrmSvc.controllerAction('ClassStudents');
-        KdOrmSvc.init(models);
+        KdOrmV2Svc.base(baseUrl);
+        KdOrmV2Svc.controllerAction('ClassStudents');
+        KdOrmV2Svc.init(models);
     };
 
     function translate(data) {
-        KdOrmSvc.init({translation: 'translate'});
+        KdOrmV2Svc.init({translation: 'translate'});
         var success = function(response, deferred) {
             var translated = response.data.translated;
             deferred.resolve(translated);
