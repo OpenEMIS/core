@@ -1993,11 +1993,8 @@ class ValidationBehavior extends Behavior {
             if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $studentStartDate = new DateTime($data['start_date']);
-                // $validationErrorMsg = '';
-
+                
                 if ($programmeEndDate < $studentStartDate) {
-                    // $validationErrorMsg = 'Institution.StudentUser.start_date.ruleCheckProgrammeEndDateAgainstStudentStartDate';
-                    // return $model->getMessage($validationErrorMsg);
                     return false;
                 }
             }
