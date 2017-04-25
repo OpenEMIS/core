@@ -761,7 +761,8 @@ trait MessagesTrait {
             ],
             'InstitutionGrades' => [
                 'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleCheckStudentInEducationProgrammes' => 'Unable to set the end date because there are students still enrolled in this programme.'
                 ],
                 'start_date' => [
                     'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
@@ -886,6 +887,14 @@ trait MessagesTrait {
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
             ],
+            'StudentUser' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
             'Staff' => [
                 'staff_name' => [
                     'ruleInstitutionStaffId' => 'Staff has already been added.'
@@ -918,6 +927,20 @@ trait MessagesTrait {
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
+            'TransferApprovals' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
             ],
             'InstitutionFeeTypes' => [
