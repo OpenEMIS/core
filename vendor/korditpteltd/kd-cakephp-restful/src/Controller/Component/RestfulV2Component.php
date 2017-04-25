@@ -148,6 +148,7 @@ class RestfulV2Component extends Component implements RestfulInterface
             $entity = $this->convertBase64ToBinary($entity);
             $table->save($entity, $options);
             $errors = $entity->errors();
+            $this->translate($errors);
             $data = $this->formatResultSet($table, $entity, $extra);
             if ($extra->offsetExists('flatten') && $extra['flatten'] === true) {
                 $data = Hash::flatten($data->toArray());
@@ -249,6 +250,7 @@ class RestfulV2Component extends Component implements RestfulInterface
                 $entity = $this->convertBase64ToBinary($entity);
                 $target->save($entity, $options);
                 $errors = $entity->errors();
+                $this->translate($errors);
                 $data = $this->formatResultSet($target, $entity, $extra);
                 if (isset($extra['flatten']) && $extra['flatten'] === true) {
                     $data = Hash::flatten($data->toArray());
@@ -304,5 +306,13 @@ class RestfulV2Component extends Component implements RestfulInterface
                 $this->_outputError('Record does not exists');
             }
         }
+    }
+
+    public function translate(&$array)
+    {
+        $translateItem = function (&$item, $key) {
+            $item = __($item);
+        };
+        array_walk_recursive($array, $translateItem);
     }
 }

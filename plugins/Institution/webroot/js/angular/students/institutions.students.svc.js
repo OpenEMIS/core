@@ -48,7 +48,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality,
-        getExternalSourceMapping: getExternalSourceMapping
+        getExternalSourceMapping: getExternalSourceMapping,
+        translate: translate
     };
 
     var models = {
@@ -82,6 +83,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         KdOrmSvc.controllerAction('ExternalAPI');
         KdOrmSvc.init(externalModels);
     };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
+    }
 
     function resetExternalVariable()
     {
