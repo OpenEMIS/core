@@ -98,7 +98,8 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         getWorkbenchItemsCount: getWorkbenchItemsCount,
         getWorkbenchTitle: getWorkbenchTitle,
         getWorkbenchColumnDefs: getWorkbenchColumnDefs,
-        getWorkbenchRowData: getWorkbenchRowData
+        getWorkbenchRowData: getWorkbenchRowData,
+        translate: translate
     };
 
     return service;
@@ -111,6 +112,15 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
         var models = this.extractModels();
         KdOrmSvc.init(this.extractModels());
     };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
+    }
 
     function extractModels() {
         var models = {};
@@ -196,7 +206,7 @@ function DashboardSvc($q, $filter, KdOrmSvc) {
                 cellRenderer: function(params) {
                     var urlParams = params.data.url;
                     var url = [urlParams.controller, urlParams.action].join('/');
-                    
+
                     var queryParams = [];
                     angular.forEach(urlParams, function(obj, key) {
                         if (key == 'plugin' || key == 'controller' || key == 'action') {

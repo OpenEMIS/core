@@ -6,6 +6,8 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\I18n\Date;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 use App\Model\Table\ControllerActionTable;
@@ -15,14 +17,28 @@ class QualificationsTable extends ControllerActionTable {
 		$this->table('staff_qualifications');
 		parent::initialize($config);
 
-		$this->addBehavior('ControllerAction.FileUpload', ['size' => '2MB', 'contentEditable' => false, 'allowable_file_types' => 'all', 'useDefaultName' => true]);
+		$this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '2MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-		$this->belongsTo('QualificationLevels', ['className' => 'FieldOption.QualificationLevels']);
-		$this->belongsTo('QualificationInstitutions', ['className' => 'Staff.QualificationInstitutions']);
-		$this->belongsTo('QualificationSpecialisations', ['className' => 'FieldOption.QualificationSpecialisations']);
+		$this->belongsTo('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
+		$this->belongsTo('QualificationCountries', ['className' => 'FieldOption.Countries', 'foreignKey' => 'qualification_country_id']);
 
-		$this->addBehavior('OpenEmis.Autocomplete');
+        $this->belongsToMany('EducationSubjects', [
+            'className' => 'Education.EducationSubjects',
+            'joinTable' => 'staff_qualifications_subjects',
+            'foreignKey' => 'staff_qualification_id',
+            'targetForeignKey' => 'education_subject_id',
+            'through' => 'Staff.QualificationsSubjects',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
 		// setting this up to be overridden in viewAfterAction(), this code is required
 		$this->behaviors()->get('ControllerAction')->config(
@@ -35,81 +51,48 @@ class QualificationsTable extends ControllerActionTable {
 		$validator = parent::validationDefault($validator);
 
 		return $validator
-			->allowEmpty('graduate_year')
+            ->requirePresence('qualification_level')
+            ->requirePresence('qualification_country_id')
+            ->allowEmpty('graduate_year')
 			->add('graduate_year', 'ruleNumeric', [
                     'rule' => ['numeric'],
                     'on' => function ($context) { //validate when only graduate_year is not empty
                         return !empty($context['data']['graduate_year']);
                     }
 			])
-			->notEmpty('institution_name', __('Please enter the institution'))
-			->allowEmpty('file_content')
-			;
-		;
+			->allowEmpty('file_content');
 	}
 
-	public function beforeAction() {
-		$this->fields['qualification_level_id']['type'] = 'select';
-		$this->fields['qualification_specialisation_id']['type'] = 'select';
+	public function indexBeforeAction(Event $event) 
+    {
+		$this->field('file_name', ['visible' => false]);
+        $this->field('file_content', ['visible' => false]);
+        $this->field('gpa', ['visible' => false]);
+        $this->field('qualification_country_id', ['visible' => false]);
 
-		$this->field('graduate_year', ['type' => 'select']);
-		$this->field('qualification_institution_id');
+        $this->field('qualification_level', ['type' => 'string']);
+        $this->field('file_type', ['type' => 'string']);
 
-		// temporary disable
-		$this->field('file_name', 			['visible' => false]);
-		// file_content is a required field
-		$this->field('file_content', 			['type' => 'binary', 'visible' => ['edit' => true]]);
-
-		$this->field('file_type', 			['type' => 'string', 'visible' => ['index'=>true]]);
+        $this->setFieldOrder([
+            'graduate_year', 'qualification_level', 'qualification_title_id', 'document_no', 'qualification_institution', 'file_type'
+        ]);
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$this->fields['qualification_specialisation_id']['visible'] = false;
-		$this->fields['qualification_institution_country']['visible'] = false;
-		$this->fields['gpa']['visible'] = false;
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['QualificationTitles.QualificationLevels']);
+    }
 
-		$order = 0;
-		$this->setFieldOrder('graduate_year', $order++);
-		$this->setFieldOrder('qualification_level_id', $order++);
-		$this->setFieldOrder('qualification_title', $order++);
-		$this->setFieldOrder('document_no', $order++);
-		$this->setFieldOrder('qualification_institution_id', $order++);
-	}
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['EducationSubjects']);
+        $query->contain(['QualificationTitles.QualificationLevels']);
+    }
 
-	public function addEditBeforeAction(Event $event) {
-		$this->fields['graduate_year']['type'] = 'string';
-
-		$order = 0;
-		$this->setFieldOrder('qualification_level_id', $order++);
-		$this->setFieldOrder('qualification_institution_id', $order++);
-		$this->setFieldOrder('qualification_institution_country', $order++);
-		$this->setFieldOrder('qualification_title', $order++);
-		$this->setFieldOrder('qualification_specialisation_id', $order++);
-		$this->setFieldOrder('graduate_year', $order++);
-		$this->setFieldOrder('document_no', $order++);
-		$this->setFieldOrder('gpa', $order++);
-		$this->setFieldOrder('file_name', $order++);
-		$this->setFieldOrder('file_content', $order++);
-	}
-
-	public function addAfterPatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
-		$alias = $this->alias();
-		if (empty($data[$alias]['qualification_institution_id'])) {
-			if (!empty($data[$alias]['institution_name'])) {
-				$institutionName = $data[$alias]['institution_name'];
-
-				$obj = ['name' => $institutionName, 'visible' => 1];
-
-				$newEntity = $this->QualificationInstitutions->newEntity($obj);
-				$result = $this->QualificationInstitutions->save($newEntity);
-				$entity->qualification_institution_id = $result->id;
-			}
-		}
-	}
-
-	public function editBeforeAction(Event $event) {
-		$this->fields['qualification_institution_id']['type'] = 'select';
-	}
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+    	$this->setupFields($entity);
+    }
 
 	public function viewAfterAction(Event $event, Entity $entity) {
 		// determine if download button is shown
@@ -122,66 +105,111 @@ class QualificationsTable extends ControllerActionTable {
 			$showFunc
 		);
 
-		$this->fields['created_user_id']['options'] = [$entity->created_user_id => $entity->created_user->name];
-		if (!empty($entity->modified_user_id)) {
-			$this->fields['modified_user_id']['options'] = [$entity->modified_user_id => $entity->modified_user->name];
-		}
-		return $entity;
+        $this->setupFields($entity);
 	}
 
-	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, Request $request) {
-		//generate manually year 50 to now.
+    public function onUpdateFieldQualificationTitleId(Event $event, array $attr, $action, Request $request)
+    {
+        unset($request->query['title']);
+        $attr['onChangeReload'] = 'changeQualificationTitleId';
+        return $attr;
+    }
+
+    public function addEditOnChangeQualificationTitleId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+        unset($request->query['title']);
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('qualification_title_id', $request->data[$this->alias()])) {
+                    $request->query['title'] = $request->data[$this->alias()]['qualification_title_id'];
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldQualificationLevel(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+
+            if (array_key_exists('title', $this->request->query)) {
+                $qualificationTitle = $this->request->query('title');
+            } else {
+                if (!empty($attr['entity'])) {
+                    $qualificationTitle = $attr['entity']->qualification_title_id;
+                }
+            }
+
+            if (!empty($qualificationTitle)) {
+                $query = $this->QualificationTitles->find()
+                        ->contain('QualificationLevels')
+                        ->where([
+                            $this->QualificationTitles->aliasField('id') => $qualificationTitle
+                        ])
+                        ->first();
+                
+                $attr['attr']['value'] = $query->qualification_level->name;
+                $attr['value'] = $query->qualification_level_id;                
+            } else {
+                $attr['attr']['value'] = '';
+                $attr['value'] = '';
+            }
+
+            return $attr;
+        }
+    }
+
+	public function onUpdateFieldGraduateYear(Event $event, array $attr, $action, Request $request) 
+    {
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $lowestYear = $ConfigItems->value('lowest_year');
+
 		$currentYear = new Date();
 		$currentYear = $currentYear->format('Y');
+        
 		if (($action == 'add') || ($action == 'edit')) {
-			for ($i=1950;$i<=$currentYear;$i++) {
+			for ($i=$currentYear;$i>=$lowestYear;$i--) {
 				$attr['options'][$i] = $i;
 			}
 		}
 		return $attr;
 	}
 
-	public function onUpdateFieldQualificationInstitutionId(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'add') {
-			$attr['fieldName'] = $this->aliasField('institution_name');
-			$attr['type'] = 'autocomplete';
-			$attr['target'] = ['key' => 'qualification_institution_id', 'name' => $this->aliasField('qualification_institution_id')];
-			$attr['noResults'] = 'false';
-			$attr['attr'] = ['placeholder' => __('Institution')];
-			$attr['url'] = ['plugin' => 'Staff', 'controller' => 'Staff', 'action' => 'Qualifications', 'ajaxInstitutionsAutocomplete'];
+    public function onUpdateFieldEducationSubjects(Event $event, array $attr, $action, Request $request) {
+        switch ($action) {
+            case 'edit': case 'add':
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjectData = $EducationSubjects
+                    ->find()
+                    ->select([$EducationSubjects->aliasField($EducationSubjects->primaryKey()), $EducationSubjects->aliasField('name'), $EducationSubjects->aliasField('code')])
+                    ->find('visible')
+                    ->find('order')
+                    ->toArray();
+                
+                $subjectOptions = [];
+                foreach ($subjectData as $key => $value) {
+                    $subjectOptions[$value->id] = $value->code_name;
+                }
 
-		}
-		return $attr;
-	}
+                $attr['options'] = $subjectOptions;
+                break;
 
-	public function ajaxInstitutionsAutocomplete(Event $mainEvent, ArrayObject $extra) {
-		$this->ControllerAction->autoRender = false;
-		$this->controller->autoRender = false;
-
-		if ($this->request->is(['ajax'])) {
-			$term = trim($this->request->query['term']);
-			$search = $term . '%';
-
-			$query = $this->QualificationInstitutions
-			->find('list')
-			->where([$this->QualificationInstitutions->aliasField('name') . ' LIKE ' => $search]);
-
-			$list = $query->toArray();
-
-			$data = [];
-			foreach ($list as $id => $value) {
-				$label = $value;
-				$data[] = ['label' => $label, 'value' => $id];
-			}
-
-			echo json_encode($data);
-			return true;
-		}
-	}
+        default:
+            # code...
+            break;
+        }
+        return $attr;
+    }
 
 	public function onGetFileType(Event $event, Entity $entity) {
 		return (!empty($entity->file_name))? $this->getFileTypeForView($entity->file_name): '';;
 	}
+
+    public function onGetQualificationLevel(Event $event, Entity $entity) 
+    {
+        return $entity->qualification_title->qualification_level->name;
+    }
 
 	private function setupTabElements() {
 		$tabElements = $this->controller->getProfessionalDevelopmentTabElements();
@@ -193,9 +221,36 @@ class QualificationsTable extends ControllerActionTable {
 		$this->setupTabElements();
 	}
 
-	public function implementedEvents() {
-    	$events = parent::implementedEvents();
-    	$events['ControllerAction.Model.ajaxInstitutionsAutocomplete'] = 'ajaxInstitutionsAutocomplete';
-    	return $events;
+    private function setupFields(Entity $entity)
+    {
+        $this->field('qualification_title_id', ['type' => 'select', 'entity' => $entity]);
+
+        $this->field('qualification_level', ['type' => 'readonly', 'entity' => $entity]);
+
+        $this->field('education_subjects', [
+            'type' => 'chosenSelect',
+            'placeholder' => __('Select some subjects'), 
+            'entity' => $entity
+        ]);
+
+        $this->field('qualification_country_id', ['type' => 'select', 'entity' => $entity]);
+
+        $this->field('graduate_year', ['type' => 'select', 'entity' => $entity]);
+
+        $visible = ['index' => false, 'view' => false, 'add' => true, 'edit' => true];
+
+        $this->field('file_name', [
+            'type' => 'hidden', 
+            'visible' => $visible
+        ]);
+
+        $this->field('file_content', [
+            'type' => 'binary', 
+            'visible' => $visible
+        ]);
+
+        $this->setFieldOrder([
+            'qualification_title_id', 'qualification_level', 'education_subjects', 'qualification_country_id', 'qualification_institution', 'document_no', 'graduate_year', 'gpa', 'file_content'
+        ]);
     }
 }
