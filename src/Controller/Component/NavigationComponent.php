@@ -523,6 +523,18 @@ class NavigationComponent extends Component
 						'params' => ['plugin' => 'Institution']
 					],
 
+			'Institutions.ReportCards' => [
+				'title' => 'Report Cards',
+				'parent' => 'Institutions.index',
+				'link' => false,
+			],
+
+				'Institutions.Comments' => [
+					'title' => 'Comments',
+					'parent' => 'Institutions.ReportCards',
+					'params' => ['plugin' => 'Institution']
+				],
+
 			'Institutions.Positions' => [
 				'title' => 'Positions',
 				'parent' => 'Institutions.index',
