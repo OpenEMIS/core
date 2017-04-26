@@ -23,7 +23,16 @@ class SetupBehavior extends Behavior {
 		$this->inputLimits = [
 			'text_value' => ['max' => 250],
             'number_value' => ['min' => -2147483648, 'max' => 2147483647],
-			'decimal_value' => ['min' => 0],
+			'decimal_value' => [
+                'length' => [
+                    'min' => 1,
+                    'max' => 14
+                ],
+                'precision' => [
+                    'min' => 0,
+                    'max' => 6
+                ]
+            ]
 		];
     }
 

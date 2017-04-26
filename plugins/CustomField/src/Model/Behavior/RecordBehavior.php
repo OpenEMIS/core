@@ -51,7 +51,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE', 'DECIMAL'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
@@ -94,6 +94,7 @@ class RecordBehavior extends Behavior {
 		// Each field type will have one behavior attached
 		$this->_table->addBehavior('CustomField.RenderText');
 		$this->_table->addBehavior('CustomField.RenderNumber');
+		$this->_table->addBehavior('CustomField.RenderDecimal');
 		$this->_table->addBehavior('CustomField.RenderTextarea');
 		$this->_table->addBehavior('CustomField.RenderDropdown');
 		$this->_table->addBehavior('CustomField.RenderCheckbox');
@@ -104,7 +105,6 @@ class RecordBehavior extends Behavior {
 		$this->_table->addBehavior('CustomField.RenderCoordinates');
 		$this->_table->addBehavior('CustomField.RenderFile');
 		$this->_table->addBehavior('CustomField.RenderRepeater');
-		$this->_table->addBehavior('CustomField.RenderDecimal');
 		// End
 
 		// If tabSection is not set, added to handle Section Header
@@ -336,7 +336,7 @@ class RecordBehavior extends Behavior {
         		return $model->save($entity);
 			} else {
 				$indexedErrors = [];
-				$fields = ['text_value', 'number_value', 'textarea_value', 'date_value', 'time_value', 'file'];
+				$fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
 				if (array_key_exists('custom_field_values', $errors)) {
 					if ($entity->has('custom_field_values')) {
 						foreach ($entity->custom_field_values as $key => $obj) {
@@ -698,10 +698,10 @@ class RecordBehavior extends Behavior {
 								// onGet
 								$fieldData['text_value'] = $obj->text_value;
 								$fieldData['number_value'] = $obj->number_value;
+								$fieldData['decimal_value'] = $obj->decimal_value;
 								$fieldData['textarea_value'] = $obj->textarea_value;
 								$fieldData['date_value'] = $obj->date_value;
 								$fieldData['time_value'] = $obj->time_value;
-								$fieldData['decimal_value'] = $obj->decimal_value;
 
 								// logic for Initialize
 								$fieldType = Inflector::camelize(strtolower($obj->custom_field->field_type));
