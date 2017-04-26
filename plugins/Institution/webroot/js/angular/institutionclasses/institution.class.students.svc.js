@@ -46,6 +46,7 @@ function InstitutionClassStudentsSvc($http, $q, $filter, KdDataSvc) {
         };
         return InstitutionClasses
             .get(classId)
+            .find('translateItem')
             .contain(['ClassStudents.Users.Genders', 'ClassStudents.StudentStatuses', 'ClassStudents.EducationGrades', 'AcademicPeriods', 'InstitutionSubjects'])
             .ajax({success: success, defer:true});
     }

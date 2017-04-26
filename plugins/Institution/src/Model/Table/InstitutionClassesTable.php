@@ -402,6 +402,22 @@ class InstitutionClassesTable extends ControllerActionTable
         ];
     }
 
+    public function findTranslateItem(Query $query, array $options)
+    {
+        return $query
+            ->formatResults(function ($results) {
+                $arrResults = $results->toArray();
+                foreach ($arrResults as &$value) {
+                    if (isset($value['class_students']) && is_array($value['class_students'])) {
+                        foreach ($value['class_students'] as $student) {
+                            $student['student_status']['name'] = __($student['student_status']['name']);
+                        }
+                    }
+                }
+                return $arrResults;
+            });
+    }
+
     public function findByGrades(Query $query, array $options)
     {
         $gradeId = $options['education_grade_id'];
