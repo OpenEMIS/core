@@ -231,6 +231,24 @@ class RenderStudentListBehavior extends RenderBehavior {
 
                                         $cellValue = !is_null($answerValue) ? $answerValue : '';
                                         break;
+                                    case 'DECIMAL':
+                                        $answerValue = !is_null($answerObj['decimal_value']) ? $answerObj['decimal_value'] : null;
+
+                                        $cellOptions['type'] = 'number';
+                                        $cellOptions['value'] = !is_null($answerValue) ? $answerValue : '';
+
+                                        if ($question->has('custom_field') && $question->custom_field->has('params')) {
+                                            $params = json_decode($question->custom_field->params, true);
+
+                                            $cellOptions['min'] = 0;
+                                            $step = $this->getStepFromParams($params);
+                                            if (!is_null($step)) {
+                                                $cellOptions['step'] = $step;
+                                            }
+                                        }
+
+                                        $cellValue = !is_null($answerValue) ? $answerValue : '';
+                                        break;
                                     case 'DROPDOWN':
                                         $answerValue = !is_null($answerObj['number_value']) ? $answerObj['number_value'] : null;
 
@@ -339,6 +357,7 @@ class RenderStudentListBehavior extends RenderBehavior {
                                 $answersArray[$answer->{$fieldKey}] = [
                                     'text_value' => $answer->text_value,
                                     'number_value' => $answer->number_value,
+                                    'decimal_value' => $answer->decimal_value,
                                     'textarea_value' => $answer->textarea_value,
                                     'date_value' => $answer->date_value,
                                     'time_value' => $answer->time_value
@@ -423,11 +442,12 @@ class RenderStudentListBehavior extends RenderBehavior {
                             // checking to skip insert if is empty
                             $textValue = isset($answerObj['text_value']) && strlen($answerObj['text_value']) > 0 ? $answerObj['text_value'] : null;
                             $numberValue = isset($answerObj['number_value']) && strlen($answerObj['number_value']) > 0 ? $answerObj['number_value'] : null;
+                            $decimalValue = isset($answerObj['decimal_value']) && strlen($answerObj['decimal_value']) > 0 ? $answerObj['decimal_value'] : null;
                             $textareaValue = isset($answerObj['textarea_value']) && strlen($answerObj['textarea_value']) > 0 ? $answerObj['textarea_value'] : null;
                             $dateValue = isset($answerObj['date_value']) && strlen($answerObj['date_value']) > 0 ? $answerObj['date_value'] : null;
                             $timeValue = isset($answerObj['time_value']) && strlen($answerObj['time_value']) > 0 ? $answerObj['time_value'] : null;
 
-                            if (!is_null($textValue) || !is_null($numberValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
+                            if (!is_null($textValue) || !is_null($numberValue) || !is_null($decimalValue) || !is_null($textareaValue) || !is_null($dateValue) || !is_null($timeValue)) {
                                 $answerObj = array_merge($answerObj, [
                                     $fieldKey => $questionId
                                 ]);
