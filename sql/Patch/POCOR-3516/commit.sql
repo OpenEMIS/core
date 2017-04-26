@@ -237,7 +237,7 @@ FROM `z_3516_institution_survey_answers`;
 
 
 -- institution_student_survey_answers
-RENAME TABLE `institution_student_survey_answers` TO `institution_student_survey_answers`;
+RENAME TABLE `institution_student_survey_answers` TO `z_3516_institution_student_survey_answers`;
 
 DROP TABLE IF EXISTS `institution_student_survey_answers`;
 CREATE TABLE IF NOT EXISTS `institution_student_survey_answers` (
