@@ -170,18 +170,17 @@ class InstitutionsController extends AppController
                 $userId = $this->Auth->user('id');
                 $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
+                $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Classes', $action], $roles)) {
                         $ClassTable = TableRegistry::get('Institution.InstitutionClasses');
                         $classRecord = $ClassTable->get($classId, ['fields' => ['staff_id']]);
                         if ($classRecord->staff_id != $userId) {
-                            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                            $event->stopPropagation();
+                            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                             return $this->redirect($url);
                         }
                     } else {
-                        $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                        $event->stopPropagation();
+                        $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'Classes'];
                         return $this->redirect($url);
                     }
                 }
@@ -236,18 +235,17 @@ class InstitutionsController extends AppController
                 $userId = $this->Auth->user('id');
                 $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
+                $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
                     if ($AccessControl->check(['Institutions', 'Subjects', $action], $roles)) {
                         $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
                         $subjectRecord = $InstitutionSubjects->get($institutionSubjectId, ['contain' => ['Teachers']])->toArray();
                         if (in_array($userId, array_column($subjectRecord['teachers']), 'id')) {
                             $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                            $event->stopPropagation();
                             return $this->redirect($url);
                         }
                     } else {
                         $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'index'];
-                        $event->stopPropagation();
                         return $this->redirect($url);
                     }
                 }
