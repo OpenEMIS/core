@@ -34,7 +34,7 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->hasMany('ClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
         $this->hasMany('ClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'saveStrategy' => 'replace']);
-        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents']);
+        $this->hasMany('SubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'saveStrategy' => 'replace']);
 
         $this->belongsToMany('EducationGrades', [
             'className' => 'Education.EducationGrades',
