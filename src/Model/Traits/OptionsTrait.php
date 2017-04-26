@@ -114,6 +114,12 @@ trait OptionsTrait {
 	    		]
         	],
         	'AlertRules' => [
+                'LicenseRenewal' => [
+                    'before_after' => [
+                        1 => __('Days before expiry date'),
+                        // 2 => __('Days after expiry date')
+                    ]
+                ],
                 'LicenseValidity' => [
                     'before_after' => [
                         1 => __('Days before expiry date'),
