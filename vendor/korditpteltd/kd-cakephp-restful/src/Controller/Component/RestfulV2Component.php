@@ -83,9 +83,9 @@ class RestfulV2Component extends Component implements RestfulInterface
             return;
         }
         $table = $this->initTable($this->model);
-        $query = $table->find();
         $requestQueries = $this->request->query;
         $user = $this->controller->getUser();
+        $query = $table->find('all', ['user' => $user]);
         $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'index', 'user' => $user]);
 
         $this->processQueryString($requestQueries, $query, $extra);
