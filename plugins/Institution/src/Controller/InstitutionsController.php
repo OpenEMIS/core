@@ -341,6 +341,9 @@ class InstitutionsController extends AppController
         if (isset($pass[0]) && $pass[0] == 'downloadFile') {
             return true;
         }
+        if ($this->request->param('action') == 'setAlert') {
+            return true;
+        }
     }
 
     public function changeUserHeader($model, $modelAlias, $userType)

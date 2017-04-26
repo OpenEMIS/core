@@ -450,7 +450,7 @@ class InstitutionClassesTable extends ControllerActionTable
         ]);
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
             'AcademicPeriods',
@@ -529,174 +529,6 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        //$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
-        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
-        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
-        $this->fields['academic_period_id']['onChangeReload'] = true;
-        $this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
-
-        $this->controller->set('selectedAction', $extra['selectedGradeType']);
-    }
-
-
-/******************************************************************************************************************
-**
-** edit action methods
-**
-******************************************************************************************************************/
-    public function editBeforeAction(Event $event, ArrayObject $extra)
-    {
-        if ($extra['selectedAcademicPeriodId'] == -1) {
-            return $this->controller->redirect([
-                'plugin' => $this->controller->plugin,
-                'controller' => $this->controller->name,
-                'action' => 'Classes'
-            ]);
-        }
-
-        $this->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'students',
-        ]);
-    }
-
-    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $query->contain([
-            'InstitutionSubjects'
-        ]);
-    }
-
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        /**
-         * @todo  add this max limit to config
-         * This limit value is being used in ValidationBehavior->checkInstitutionClassMaxLimit() and ImportStudents as well
-         */
-        $maxNumberOfStudents = 100;
-
-        $students = $entity->class_students;
-        $studentOptions = $this->getStudentsOptions($entity);
-        /**
-         * Check if the request is a page reload
-         */
-        if (count($this->request->data)>0 && $this->request->data['submit']=='add') {
-            // clear class_students list grab from db
-            $existingStudents = $students;
-            $students = [];
-
-            /**
-             * Populate records in the UI table & unset the record from studentOptions
-             */
-            if (array_key_exists('class_students', $this->request->data[$this->alias()])) {
-                foreach ($this->request->data[$this->alias()]['class_students'] as $row) {
-                    //cant use this validation, since we dont list all institution students anymore.
-                    //if (array_key_exists($row['student_id'], $studentOptions)) {
-                        $id = $row['student_id'];
-                    if ($id != 0) {
-                        $virtualStudent = $this->createVirtualStudentEntity($id, $entity);
-                        if ($virtualStudent) {
-                            $students[] = $virtualStudent;
-                        }
-                    }
-                    unset($studentOptions[$id]);
-                    //}
-                }
-            }
-            if (count($students)<$maxNumberOfStudents) {
-                /**
-                 * Insert the newly added record into the UI table & unset the record from studentOptions
-                 */
-                if (array_key_exists('student_id', $this->request->data)) {
-                    if ($this->request->data['student_id']>0) {
-                        $id = $this->request->data['student_id'];
-                        if ($id != 0) {
-                            $virtualStudent = $this->createVirtualStudentEntity($id, $entity);
-                            if ($virtualStudent) {
-                                $students[] = $virtualStudent;
-                            }
-                        }
-                        unset($studentOptions[$id]);
-                    } elseif ($this->request->data['student_id'] == -1) {
-                        foreach ($studentOptions as $id => $name) {
-                            if (count($students)==$maxNumberOfStudents) {
-                                $this->Alert->warning($this->aliasField('maximumStudentsReached'));
-                                break;
-                            }
-                            if ($id > 0) {
-                                $virtualStudent = $this->createVirtualStudentEntity($id, $entity);
-                                if ($virtualStudent) {
-                                    $students[] = $virtualStudent;
-                                }
-                                unset($studentOptions[$id]);
-                            }
-                        }
-                    }
-                }
-            } else {
-                $this->Alert->warning($this->aliasField('maximumStudentsReached'));
-            }
-        } else {
-            /**
-             * Just unset the record from studentOptions on first page load
-             */
-            foreach ($students as $key => $student) {
-                if (array_key_exists($student->student_id, $studentOptions)) {
-                    unset($studentOptions[$student->student_id]);
-                }
-                // POCOR-1694 - when there are new students added but the form submit fails validation,
-                // the new students entity will not have security_users data and will produce notices.
-                // Attach user data if it does not exists in the student entity
-                if (!$student->has('user')) {
-                    $virtualStudent = $this->createVirtualStudentEntity($student->student_id, $entity);
-                    if ($virtualStudent) {
-                        $students[$key] = $virtualStudent;
-                    } else {
-                        unset($students[$key]);
-                    }
-                }
-            }
-        }
-        if (count($studentOptions) < 3) {
-            $studentOptions = [$this->getMessage('Users.select_student_empty')];
-        }
-        $this->fields['students']['data']['students'] = $students;
-        $this->fields['students']['data']['studentOptions'] = $studentOptions;
-
-        $this->fields['academic_period_id']['type'] = 'readonly';
-        if ($extra['selectedAcademicPeriodId'] > -1) {
-            $this->fields['academic_period_id']['attr']['value'] = $this->AcademicPeriods->get($extra['selectedAcademicPeriodId'])->name;
-        }
-    }
-
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        $currentStudentIds = (new Collection($entity->class_students))->extract('student_id')->toArray();
-        $originalStudentIds = (new Collection($entity->getOriginal('class_students')))->extract('student_id')->toArray();
-        $removedStudentIds = array_diff($originalStudentIds, $currentStudentIds);
-
-        if (!empty($removedStudentIds)) {
-            // 'deleteAll will not trigger beforeDelete/afterDelete events. If you need those first load a collection of records and delete them.'
-            $classStudentsToBeDeleted = $this->ClassStudents->find()
-                ->where([
-                    $this->ClassStudents->aliasField('institution_class_id') => $entity->id,
-                    $this->ClassStudents->aliasField('student_id').' IN ' => $removedStudentIds
-                ])
-                ->toArray()
-                ;
-            foreach ($classStudentsToBeDeleted as $key => $value) {
-                $this->ClassStudents->delete($value);
-            }
-        }
-    }
-
-
-/******************************************************************************************************************
-**
-** addEdit action methods
-**
-******************************************************************************************************************/
-    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
-    {
         $institutionId = $extra['institution_id'];
         $selectedAcademicPeriodId = $extra['selectedAcademicPeriodId'];
 
@@ -711,6 +543,14 @@ class InstitutionClassesTable extends ControllerActionTable
         if (empty($shiftOptions)) {
             $this->Alert->warning($this->aliasField('noShift'));
         }
+
+        //$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
+        $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
+        $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
+        $this->fields['academic_period_id']['onChangeReload'] = true;
+        $this->fields['academic_period_id']['default'] = $this->AcademicPeriods->getCurrent();
+
+        $this->controller->set('selectedAction', $extra['selectedGradeType']);
     }
 
 /******************************************************************************************************************

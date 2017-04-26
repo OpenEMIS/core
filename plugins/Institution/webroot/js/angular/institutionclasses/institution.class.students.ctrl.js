@@ -4,9 +4,9 @@ agGrid.initialiseAgGridWithAngular1(angular);
 angular.module('institution.class.students.ctrl', ['agGrid', 'kd-angular-multi-select', 'utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institution.class.students.svc'])
     .controller('InstitutionClassStudentsCtrl', InstitutionClassStudentsController);
 
-InstitutionClassStudentsController.$inject = ['$scope', '$q', '$window', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionClassStudentsSvc'];
+InstitutionClassStudentsController.$inject = ['$scope', '$q', '$window', '$http', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'InstitutionClassStudentsSvc'];
 
-function InstitutionClassStudentsController($scope, $q, $window, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionClassStudentsSvc) {
+function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionClassStudentsSvc) {
 
     var Controller = this;
 
@@ -232,7 +232,6 @@ function InstitutionClassStudentsController($scope, $q, $window, UtilsSvc, Alert
                 Controller.alertUrl = Controller.updateQueryStringParameter(Controller.alertUrl, 'message', 'general.edit.success');
                 $http.get(Controller.alertUrl)
                 .then(function(response) {
-                    console.log(response);
                     $window.location.href = Controller.redirectUrl;
                 }, function (error) {
                     console.log(error);
