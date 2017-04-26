@@ -3047,7 +3047,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-            "reference": "6471914bc2122eed5c1cec066825e7662537e033"
+            "reference": "ce1bf0a4457d84a4155b12dce58f5d8f66739cd1"
         },
         "require": {
             "cakephp/cakephp": ">3.0.0 <3.3.0",
@@ -3056,7 +3056,7 @@
             "onelogin/php-saml": "^2.9",
             "phpseclib/phpseclib": "^2.0"
         },
-        "time": "2017-04-26 07:12:46",
+        "time": "2017-04-26 07:23:59",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
