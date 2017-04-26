@@ -50,8 +50,9 @@ class RenderDecimalBehavior extends RenderBehavior
             }
 
             // set the options
-            if (array_key_exists('customField', $attr) && isset($attr['customField']['params'])) {
-                $params = json_decode($attr['customField']['params'], true);
+            $customField = $attr['customField'];
+            if ($customField->has('params') && !empty($customField->params)) {
+                $params = json_decode($customField->params, true);
 
                 // for set the field step precission 6 will be 0.000001 step (6 digit after decimal point
                 if (array_key_exists('precision', $params) && ($params['precision'] > 0)) {
@@ -70,6 +71,7 @@ class RenderDecimalBehavior extends RenderBehavior
                     $options['step'] = $step;
                 }
             }
+            // End
 
             $value .= $form->input($fieldPrefix.".decimal_value", $options);
             $value .= $form->hidden($fieldPrefix.".".$attr['attr']['fieldKey'], ['value' => $fieldId]);

@@ -1432,6 +1432,31 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+    public static function validateCustomDecimal($field, array $globalData)
+    {
+        if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
+            $model = $globalData['providers']['table'];
+            $params = json_decode($globalData['data']['params'], true);
+
+            $length = $params['length'];
+            $precision = $params['precision'];
+
+            if ($precision == 0) {
+                $pattern = '/^[0-9]{1,'.$length.'}$/';
+                if (!preg_match($pattern, $field)) {
+                    return $model->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
+                }
+            } else {
+                $pattern = '/^[0-9]{1,'.$length.'}+(\.[0-9]{1,'.$precision.'})?$/';
+                if (!preg_match($pattern, $field)) {
+                    return $model->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
+                }
+            }
+
+            return true;
+        }
+    }
+
 	public static function checkCriteriaThresholdRange($field, $globalData)
 	{
 		$model = $globalData['providers']['table'];
