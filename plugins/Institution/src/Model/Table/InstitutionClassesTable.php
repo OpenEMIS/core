@@ -101,7 +101,7 @@ class InstitutionClassesTable extends ControllerActionTable
             ])
             ->toArray();
         if (!empty($exists)) {
-            foreach ($exists as $key => $value) {
+            foreach ($exists as $value) {
                 if (array_key_exists('id', $data) && $value->id == $data['id']) {
                     // if editing an existing value
                     return true;
@@ -140,7 +140,7 @@ class InstitutionClassesTable extends ControllerActionTable
                 $selectedGradeType = $query['grade_type'];
             }
             $gradeBehaviors = ['Institution.SingleGrade', 'Institution.MultiGrade'];
-            foreach ($gradeBehaviors as $key => $behavior) {
+            foreach ($gradeBehaviors as $behavior) {
                 if ($this->hasBehavior($behavior)) {
                     $this->removeBehavior($behavior);
                 }
@@ -199,8 +199,10 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
 
+        $this->field('multigrade');
+
         $this->setFieldOrder([
-            'name', 'staff_id', 'male_students', 'female_students', 'total_students', 'subjects',
+            'name', 'staff_id', 'multigrade', 'male_students', 'female_students', 'total_students', 'subjects',
         ]);
     }
 
@@ -446,7 +448,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $this->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'staff_id', 'students'
+            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'staff_id', 'multigrade', 'students'
         ]);
     }
 
@@ -525,6 +527,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
         // $institutionId = $this->Session->read('Institution.Institutions.id');
         // $this->InstitutionShifts->duplicateInstitutionShifts($institutionId);
+
+        $this->field('multigrade', ['visible' => false]);
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -544,7 +548,6 @@ class InstitutionClassesTable extends ControllerActionTable
             $this->Alert->warning($this->aliasField('noShift'));
         }
 
-        //$academicPeriodOptions = $this->AcademicPeriods->getlist(['isEditable'=>true]);
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable'=>true]);
         $this->fields['academic_period_id']['options'] = $academicPeriodOptions;
         $this->fields['academic_period_id']['onChangeReload'] = true;
@@ -651,7 +654,14 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-
+    public function onGetMultigrade(Event $event, Entity $entity)
+    {
+        if (empty($entity->class_number)) {
+            return __('Yes');
+        } else {
+            return __('No');
+        }
+    }
 /******************************************************************************************************************
 **
 ** essential functions
@@ -668,7 +678,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             ])
                             ->toArray();
         $options = [];
-        foreach ($gradeOptions as $key => $value) {
+        foreach ($gradeOptions as $value) {
             $options[$value->education_grade->id] = $value->education_grade->name;
         }
         return $options;
@@ -687,7 +697,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $academicPeriodObj = $this->AcademicPeriods->get($academicPeriodId);
         $classGradeObjects = $classEntity->education_grades;
         $classGrades = [];
-        foreach ($classGradeObjects as $key=>$value) {
+        foreach ($classGradeObjects as $value) {
             $classGrades[] = $value->id;
         }
 
@@ -711,11 +721,12 @@ class InstitutionClassesTable extends ControllerActionTable
                         'ClassStudents.student_status_id = ' . $enrolled,
                         'ClassStudents.academic_period_id = ' . $academicPeriodId
                     ]
-            ])
+                ])
             ->contain([
                 'Users' => function ($q) {
                     return $q->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']);
-                }
+                },
+                'EducationGrades'
             ])
             ->where([
                 $students->aliasField('institution_id') => $classEntity->institution_id,
@@ -723,6 +734,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 $students->aliasField('education_grade_id') . ' IN' => $classGrades,
                 $students->aliasField('academic_period_id')  => $academicPeriodId,
                 'ClassStudents.id IS NULL' //dont have class assigned
+            ])
+            ->order([
+                'EducationGrades.order'
             ])
             ->toArray();
 
@@ -737,7 +751,7 @@ class InstitutionClassesTable extends ControllerActionTable
              */
             if (in_array($obj->education_grade_id, $classGrades)) {
                 if (isset($obj->user)) {
-                    $studentOptions[$obj->user->id] = $obj->user->name_with_id;
+                    $studentOptions[$obj->education_grade->name][$obj->user->id] = $obj->user->name_with_id;
                 } else {
                     $this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
                 }
@@ -802,7 +816,7 @@ class InstitutionClassesTable extends ControllerActionTable
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
                             ;
 
-            foreach ($query->toArray() as $key => $value) {
+            foreach ($query->toArray() as $value) {
                 if ($value->has('user')) {
                     $options[$value->user->id] = $value->user->name_with_id;
                 }
@@ -847,7 +861,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $enrolled = $StudentStatuses->getIdByCode('CURRENT');
 
         if ($entity->has('education_grades')) { //build grades array to cater for multi grade class
-            foreach ($entity->education_grades as $key => $value) {
+            foreach ($entity->education_grades as $value) {
                 $educationGrades[] = $value->id;
             }
         }
@@ -946,7 +960,7 @@ class InstitutionClassesTable extends ControllerActionTable
      * @param  boolean $gradeId          [description]
      * @return [type]                    [description]
      */
-    public function getClassOptions($academicPeriodId, $institutionId, $gradeId=false)
+    public function getClassOptions($academicPeriodId, $institutionId, $gradeId = false)
     {
         $multiGradeOptions = [
             'fields' => ['InstitutionClasses.id', 'InstitutionClasses.name'],
