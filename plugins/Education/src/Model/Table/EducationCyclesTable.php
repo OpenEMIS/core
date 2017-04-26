@@ -41,6 +41,11 @@ class EducationCyclesTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
+		$validator
+			->add('admission_age', 'ruleValidateNumeric',  [
+	            'rule' => ['numericPositive']
+	        ])
+	    ;
 		return $validator;
 	}
 
