@@ -68,7 +68,7 @@ class RenderCoordinatesBehavior extends RenderBehavior {
             $postData = null;
             if ($entity->has('custom_field_values')) {
                 foreach ($entity->custom_field_values as $key => $obj) {
-                    if ($obj->field_type == 'COORDINATES' && $obj->survey_question_id == $fieldId) {
+                    if ($obj->field_type == 'COORDINATES' && $obj->{$attr['attr']['fieldKey']} == $fieldId) {
                         $postData = $obj;
                     }
                 }
