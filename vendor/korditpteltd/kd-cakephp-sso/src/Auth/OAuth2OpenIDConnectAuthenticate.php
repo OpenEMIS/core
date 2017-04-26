@@ -66,7 +66,8 @@ class OAuth2OpenIDConnectAuthenticate extends BaseAuthenticate
                         'firstName' => $this->getUserInfo($userInfo, $mapping['firstName']),
                         'lastName' => $this->getUserInfo($userInfo, $mapping['lastName']),
                         'gender' => $this->getUserInfo($userInfo, $mapping['gender']),
-                        'dateOfBirth' => $this->getUserInfo($userInfo, $mapping['dob'])
+                        'dateOfBirth' => $this->getUserInfo($userInfo, $mapping['dob']),
+                        'role' => $this->getUserInfo($userInfo, $mapping['role'])
                     ];
 
                     $User = TableRegistry::get($this->_config['userModel']);

@@ -2944,50 +2944,6 @@
         ]
     },
     {
-        "name": "korditpteltd/kd-cakephp-sso",
-        "version": "v1.0.3.7",
-        "version_normalized": "1.0.3.7",
-        "source": {
-            "type": "git",
-            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-            "reference": "5ec99366e68fdea6a267976c56a7c5e539387337"
-        },
-        "require": {
-            "cakephp/cakephp": ">3.0.0 <3.3.0",
-            "firebase/php-jwt": "~3.0",
-            "google/apiclient": "1.1.7",
-            "onelogin/php-saml": "^2.9",
-            "phpseclib/phpseclib": "^2.0"
-        },
-        "time": "2017-03-20 09:46:41",
-        "type": "cakephp-plugin",
-        "installation-source": "source",
-        "autoload": {
-            "psr-4": {
-                "SSO\\": "src"
-            }
-        },
-        "license": [
-            "GPL-2.0"
-        ],
-        "authors": [
-            {
-                "name": "KORDIT PHP DEVELOPERS",
-                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
-            }
-        ],
-        "description": "KORDIT CakePHP SSO Plugin",
-        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso",
-        "keywords": [
-            "cakephp",
-            "kordit",
-            "sso"
-        ],
-        "support": {
-            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
-        }
-    },
-    {
         "name": "korditpteltd/kd-cakephp-webhooks",
         "version": "v1.0.8",
         "version_normalized": "1.0.8.0",
@@ -3082,6 +3038,50 @@
         ],
         "support": {
             "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
+        }
+    },
+    {
+        "name": "korditpteltd/kd-cakephp-sso",
+        "version": "v1.0.3.8",
+        "version_normalized": "1.0.3.8",
+        "source": {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
+            "reference": "6471914bc2122eed5c1cec066825e7662537e033"
+        },
+        "require": {
+            "cakephp/cakephp": ">3.0.0 <3.3.0",
+            "firebase/php-jwt": "~3.0",
+            "google/apiclient": "1.1.7",
+            "onelogin/php-saml": "^2.9",
+            "phpseclib/phpseclib": "^2.0"
+        },
+        "time": "2017-04-26 07:12:46",
+        "type": "cakephp-plugin",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "SSO\\": "src"
+            }
+        },
+        "license": [
+            "GPL-2.0"
+        ],
+        "authors": [
+            {
+                "name": "KORDIT PHP DEVELOPERS",
+                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
+            }
+        ],
+        "description": "KORDIT CakePHP SSO Plugin",
+        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso",
+        "keywords": [
+            "cakephp",
+            "kordit",
+            "sso"
+        ],
+        "support": {
+            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
         }
     }
 ]
