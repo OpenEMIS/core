@@ -1,30 +1,138 @@
 <?php
 namespace Restful\Controller\Component;
 
-use Exception;
 use ArrayObject;
-use Cake\Log\Log;
-use Cake\Utility\Hash;
-use Cake\ORM\Entity;
-use Restful\Controller\RestfulInterface;
+use Exception;
+
 use Cake\Controller\Component;
+use Cake\Event\Event;
+use Cake\ORM\Entity;
+use Cake\ORM\Query;
 use Cake\ORM\Table;
-use Restful\Traits\RestfulV2Trait as RestfulTrait;
+use Cake\ORM\TableRegistry;
+use Cake\Core\Configure;
+use Cake\Chronos\MutableDate;
+use Cake\Chronos\Chronos;
+use Cake\Chronos\Date;
+use Cake\Chronos\MutableDateTime;
+use Cake\Utility\Hash;
+use Cake\Log\Log;
+
+use Restful\Model\Table\RestfulAppTable;
+use Restful\Controller\RestfulInterface;
 
 class RestfulV2Component extends Component implements RestfulInterface
 {
-    use RestfulTrait;
     private $model = null;
     private $controller = null;
-    private $Auth = null;
+    private $extra = null;
+    private $serialize = null;
+
+    // public $components = ['Auth'];
 
     public function initialize(array $config)
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
-        $this->Auth = $this->controller->Auth;
-        $this->model = $this->config('model');
+        $this->extra = new ArrayObject([]);
+        $this->serialize = new ArrayObject([]);
     }
+
+/******************************************************************************************************************
+**
+** Events
+**
+******************************************************************************************************************/
+
+    // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
+    public function startup(Event $event)
+    {
+        $controller = $this->controller;
+        $request = $this->request;
+
+        if (empty($request->params['_ext'])) {
+            $request->params['_ext'] = 'json';
+        }
+
+        if (isset($request->model)) {
+            $tableAlias = $request->model;
+            $model = $this->instantiateModel($tableAlias);
+
+            if ($model != false) {
+                $this->model = $model;
+                // Event to get allowed action and allowed table to be accessible via restful
+                $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
+                if (is_array($event->result)) {
+                    // $this->Auth->allow(true);
+                }
+
+                // initial processing of request queries
+                $user = $controller->getAuthorizedUser();
+                $this->extra['user'] = $user;
+                $this->initRequestQueries($model);
+            }
+        }
+    }
+
+    // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
+    public function beforeRender(Event $event)
+    {
+        $controller = $this->controller;
+        if ($controller->isDebugMode()) {
+            $serialize = array_merge(['request_method', 'action'], $controller->viewVars['_serialize']);
+            $controller->set([
+                'request_method' => $this->request->method(),
+                'action' => $this->request->params['action'],
+                '_serialize' => $serialize
+            ]);
+        } else {
+            $serialize = $this->serialize;
+
+            if ($this->schema == true) {
+                $serialize['schema'] = $this->model->getSchema()->toArray();
+            }
+
+            if (array_key_exists('_serialize', $controller->viewVars)) {
+                $_serialize = $controller->viewVars['_serialize'];
+                foreach ($_serialize as $key) {
+                    $serialize->offsetSet($key, $controller->viewVars[$key]);
+                }
+            }
+            $serialize['_serialize'] = array_keys($serialize->getArrayCopy());
+            $controller->set($serialize->getArrayCopy());
+        }
+    }
+
+/******************************************************************************************************************
+**
+** Auth
+**
+******************************************************************************************************************/
+
+    public function isAuthorized($user = null)
+    {
+        $this->controller->setAuthorizedUser($user);
+        $model = $this->model;
+        $scope = $this->request->header('controlleraction');
+        $action = $this->request->params['action'];
+
+        if ($action == 'translate') {
+            return true;
+        }
+        $request = $this->request;
+        $extra = new ArrayObject(['request' => $request]);
+        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
+        if ($event->result) {
+            return $event->result;
+        }
+        return false;
+    }
+
+/******************************************************************************************************************
+**
+** Controller Actions
+**
+******************************************************************************************************************/
 
     public function token()
     {
@@ -36,7 +144,11 @@ class RestfulV2Component extends Component implements RestfulInterface
 
     public function nothing()
     {
-        $this->_outputData([]);
+        $data = [];
+        $this->controller->set([
+            'data' => $data,
+            '_serialize' => ['data']
+        ]);
     }
 
     // this function will be called if accessed from other domain
@@ -76,59 +188,58 @@ class RestfulV2Component extends Component implements RestfulInterface
         */
     }
 
+    public function schema()
+    {
+        $action = $this->extra['action'];
+        $this->schema = true;
+        $eventMap = [
+            'add' => 'Restful.Model.add.updateSchema',
+            'index' => 'Restful.Model.index.updateSchema',
+            'view' => 'Restful.Model.view.updateSchema',
+            'edit' => 'Restful.Model.edit.updateSchema'
+        ];
+
+        if (array_key_exists($action, $eventMap)) {
+            $event = $eventMap[$action];
+        } else {
+            $event = 'Restful.Model.' . $action . '.updateSchema';
+        }
+
+        $table = $this->initTable($this->model);
+        $table->dispatchEvent($event, [$this->model->getSchema(), $this->extra], $this->controller);
+    }
 
     public function index()
     {
         if (is_null($this->model)) {
             return;
         }
+        $controller = $this->controller;
+        $extra = $this->extra;
+        $serialize = $this->serialize;
         $table = $this->initTable($this->model);
-        $requestQueries = $this->request->query;
-        $user = $this->controller->getUser();
-        $query = $table->find('all', ['user' => $user]);
-        $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'index', 'user' => $user]);
+        if ($table instanceof RestfulAppTable) {
+            $table->dispatchEvent('Restful.Model.index.updateSchema', [$table->getSchema(), $extra], $controller);
+        }
 
-        $this->processQueryString($requestQueries, $query, $extra);
+        $query = $table->find('all', $extra->getArrayCopy());
+        $this->processRequestQueries($query, $extra);
 
         try {
-            $data = [];
-            $serialize = [];
-            $schema = $this->processSchema($table, $extra);
-            $action = $extra['action'];
-            if ($extra->offsetExists('list') && $extra['list'] == true) {
-                $data = $query->toArray();
-                $serialize = ['data' => $data];
-            } else {
-                $total = $query->count();
-                if ($extra->offsetExists('limit') && $extra->offsetExists('page')) {
-                    $query->limit($extra['limit'])->page($extra['page']);
-                }
-                $extra['query'] = $query;
-                $data = $query->toArray();
-                $event = $table->dispatchEvent('Restful.Model.onAfterQuery', [$data, $extra], $this->controller);
-                if ($event->result) {
-                    $data = $event->result;
-                } else {
-                    $data = $this->formatResultSet($table, $data, $extra);
-                    if ($extra->offsetExists('flatten')) {
-                        $data = $data->toArray();
-                        foreach ($data as $key => $content) {
-                            $data[$key] = Hash::flatten($content->toArray());
-                        }
-                    }
-                }
-                $event = $table->dispatchEvent('Restful.Model.onAfterFormatResult', [$data, $schema, $extra], $this->controller);
-                if ($event->result) {
-                    $data = $event->result;
-                }
-                if ($extra->offsetExists('showSchema') && $extra['showSchema']) {
-                    $serialize = ['data' => $data, 'schema' => $schema->getArrayCopy(), 'total' => $total];
-                } else {
-                    $serialize = ['data' => $data, 'total' => $total];
+            $total = $query->count();
+            if ($extra->offsetExists('limit') && $extra->offsetExists('page')) {
+                $query->limit($extra['limit'])->page($extra['page']);
+            }
+            $data = $query->toArray();
+            $data = $this->formatResultSet($table, $data, $extra);
+            if ($extra->offsetExists('flatten') && $extra->offsetGet('flatten') === true) {
+                foreach ($data as $key => $content) {
+                    $data[$key] = Hash::flatten($content->toArray());
                 }
             }
-            $serialize['_serialize'] = array_keys($serialize);
-            $this->controller->set($serialize);
+
+            $serialize->offsetSet('data', $data);
+            $serialize->offsetSet('total', $total);
         } catch (Exception $e) {
             $this->_outputError($e->getMessage());
         }
@@ -136,29 +247,35 @@ class RestfulV2Component extends Component implements RestfulInterface
 
     public function add()
     {
-        $table = $this->initTable($this->model);
-        if ($table) {
-            $user = $this->controller->getUser();
-            $extra = new ArrayObject(['table' => $table, 'action' => 'custom', 'functionName' => 'add', 'blobContent' => true, 'user' => $user]);
-            $requestQueries = $this->request->query;
-            $this->processQueryString($requestQueries, null, $extra);
-            $action = $extra['action'];
-            $options = ['extra' => $extra];
-            $entity = $table->newEntity($this->request->data, $options);
-            $entity = $this->convertBase64ToBinary($entity);
-            $table->save($entity, $options);
-            $errors = $entity->errors();
-            $this->translate($errors);
-            $data = $this->formatResultSet($table, $entity, $extra);
-            if ($extra->offsetExists('flatten') && $extra['flatten'] === true) {
-                $data = Hash::flatten($data->toArray());
-            }
-            $this->controller->set([
-                'data' => $data,
-                'error' => $errors,
-                '_serialize' => ['data', 'error']
-            ]);
+        if (is_null($this->model)) {
+            return;
         }
+        $controller = $this->controller;
+        $extra = $this->extra;
+        $serialize = $this->serialize;
+        $table = $this->initTable($this->model);
+        if ($table instanceof RestfulAppTable) {
+            $table->dispatchEvent('Restful.Model.add.updateSchema', [$table->getSchema(), $extra], $controller);
+        }
+
+        $options = ['extra' => $extra];
+        $entity = $table->newEntity($this->request->data, $options);
+
+        // blob data type will be sent using based64 format
+        $entity = $this->convertBase64ToBinary($entity);
+        $table->save($entity, $options);
+        $errors = $entity->errors();
+        $this->translateArray($errors);
+
+        $data = $this->formatResultSet($table, $entity, $extra);
+
+        // Jeff: will there be a case of flattening the array in Add?
+        // if ($extra->offsetExists('flatten') && $extra->offsetGet('flatten') === true) {
+        //     $data = Hash::flatten($data->toArray());
+        // }
+
+        $serialize->offsetSet('data', $data);
+        $serialize->offsetSet('error', $errors);
     }
 
     public function view($id)
@@ -166,103 +283,73 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (is_null($this->model)) {
             return;
         }
+        $controller = $this->controller;
+        $extra = $this->extra;
+        $serialize = $this->serialize;
         $table = $this->initTable($this->model);
-        $user = $this->controller->getUser();
-        $extra = new ArrayObject(['table' => $table, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'view', 'blobContent' => true, 'user' => $user]);
-        $primaryKey = [];
-        if (strtolower($id) != 'schema') {
-            $idKeys = $id;
-            if (json_decode($this->urlsafeB64Decode($id), true)) {
-                $idKeys = json_decode($this->urlsafeB64Decode($id), true);
-            }
-            $primaryKey = $this->getIdKeys($table, $idKeys, false);
-            $extra['primaryKey'] = $primaryKey;
+
+        $idKeys = $id;
+        if (json_decode($this->urlsafeB64Decode($id), true)) {
+            $idKeys = json_decode($this->urlsafeB64Decode($id), true);
         }
+        $primaryKeyValues = $this->getIdKeys($table, $idKeys, false);
 
-        $requestQueries = $this->request->query;
-        $this->processQueryString($requestQueries, null, $extra);
-        $schema = $this->processSchema($table, $extra);
-        $action = $extra['action'];
+        if ($table->exists([$primaryKeyValues])) {
+            // process the queries sent through the request url
+            $this->processRequestQueries(null, $extra, 'view');
 
-        if (strtolower($id) == 'schema') {
-            $serialize = ['schema' => $schema];
-            $serialize['_serialize'] = array_keys($serialize);
-            $this->controller->set($serialize);
-        } else {
-            if ($table->exists([$extra['primaryKey']])) {
-                $queryString = $this->request->query;
-                $flatten = false;
-                $query = null;
-                if (empty($extra['fields'])) {
-                    unset($extra['fields']);
-                }
-                if (isset($extra['flatten']) && $extra['flatten'] === true) {
-                    $flatten = true;
-                }
-                $event = $table->dispatchEvent('Restful.Model.onBeforeGetData', [$action, $extra], $this->controller);
-                if ($event->result) {
-                    $data = $event->result;
-                } else {
-                    $data = $table->get($extra['primaryKey'], $extra->getArrayCopy());
-                }
-                $event = $table->dispatchEvent('Restful.Model.onAfterQuery', [$data, $extra], $this->controller);
-                if ($event->result) {
-                    $data = $event->result;
-                } else {
-                    $data = $this->formatResultSet($table, $data, $extra);
-                    if ($flatten) {
-                        $data = Hash::flatten($data->toArray());
-                    }
-                }
-                $event = $table->dispatchEvent('Restful.Model.onAfterFormatResult', [$data, $schema, $extra], $this->controller);
-                if ($event->result) {
-                    $data = $event->result;
-                }
-                if ($extra->offsetExists('showSchema') && $extra['showSchema']) {
-                    $serialize = ['data' => $data, 'schema' => $schema->getArrayCopy()];
-                } else {
-                    $serialize = ['data' => $data];
-                }
-                $serialize['_serialize'] = array_keys($serialize);
-                $this->controller->set($serialize);
-            } else {
-               $this->_outputError('Record does not exists');
+            $entity = $table->get($primaryKeyValues, $extra->getArrayCopy());
+
+            $data = $this->formatResultSet($table, $entity, $extra);
+            if ($extra->offsetExists('flatten') && $extra->offsetGet('flatten') === true) {
+                $data = Hash::flatten($data->toArray());
             }
+            $serialize->offsetSet('data', $data);
+
+            if ($table instanceof RestfulAppTable) {
+                $action = $extra['action'];
+                if ($action == 'view') {
+                    $table->dispatchEvent('Restful.Model.view.updateSchema', [$table->getSchema(), $entity, $extra], $controller);
+                } else {
+                    $table->dispatchEvent('Restful.Model.' . $action . '.updateSchema', [$table->getSchema(), $entity, $extra], $controller);
+                }
+            }
+        } else {
+            $this->_outputError('Record does not exists');
         }
     }
 
     public function edit()
     {
-        $target = $this->initTable($this->model);
-        if ($target) {
-            $requestData = $this->request->data;
-            $user = $this->controller->getUser();
-            $extra = new ArrayObject(['table' => $target, 'action' => 'custom', 'functionName' => 'edit', 'blobContent' => true, 'user' => $user]);
-            $requestQueries = $this->request->query;
-            $this->processQueryString($requestQueries, null, $extra);
-            $action = $extra['action'];
-            $primaryKeyValues = $this->getIdKeys($target, $requestData, false);
-            if ($target->exists([$primaryKeyValues])) {
-                $entity = $target->get($primaryKeyValues);
-                $options = ['extra' => $extra];
-                $entity = $target->patchEntity($entity, $requestData, $options);
+        if (is_null($this->model)) {
+            return;
+        }
 
-                $entity = $this->convertBase64ToBinary($entity);
-                $target->save($entity, $options);
-                $errors = $entity->errors();
-                $this->translate($errors);
-                $data = $this->formatResultSet($target, $entity, $extra);
-                if (isset($extra['flatten']) && $extra['flatten'] === true) {
-                    $data = Hash::flatten($data->toArray());
-                }
-                $this->controller->set([
-                    'data' => $data,
-                    'error' => $errors,
-                    '_serialize' => ['data', 'error']
-                ]);
-            } else {
-                $this->_outputError('Record does not exists');
+        $requestData = $this->request->data;
+        $controller = $this->controller;
+        $extra = $this->extra;
+        $serialize = $this->serialize;
+        $table = $this->initTable($this->model);
+
+        $primaryKeyValues = $this->getIdKeys($table, $requestData, false);
+        if ($table->exists([$primaryKeyValues])) {
+            $entity = $table->get($primaryKeyValues, $extra->getArrayCopy());
+            $options = ['extra' => $extra];
+            $entity = $table->patchEntity($entity, $requestData, $options);
+
+            $entity = $this->convertBase64ToBinary($entity);
+            $table->save($entity, $options);
+            $errors = $entity->errors();
+            $this->translateArray($errors);
+            $data = $this->formatResultSet($table, $entity, $extra);
+            if ($extra->offsetExists('flatten') && $extra->offsetGet('flatten') === true) {
+                $data = Hash::flatten($data->toArray());
             }
+
+            $serialize->offsetSet('data', $data);
+            $serialize->offsetSet('error', $errors);
+        } else {
+            $this->_outputError('Record does not exists');
         }
     }
 
@@ -273,7 +360,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         $extra = new ArrayObject(['table' => $target, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'delete', 'user' => $user]);
         $requestQueries = $this->request->query;
         $this->processQueryString($requestQueries, null, $extra);
-        $action = $extra['action'];
+        // $action = $extra['action'];
         if ($target) {
             $requestData = $this->request->data;
             if (!is_array($target->primaryKey())) {
@@ -308,7 +395,580 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
     }
 
-    public function translate(&$array)
+/******************************************************************************************************************
+**
+** Http URL instructions for database queries
+**
+******************************************************************************************************************/
+
+    private function _search($query, $value, ArrayObject $extra)
+    {
+        $value = $this->urlsafeB64Decode($value);
+        $types = ['string', 'text'];
+        $table = $this->model;
+        $schema = $table->getSchema();
+        $columns = $table->schema()->columns();
+
+        $OR = [];
+        foreach ($schema as $field) {
+            $name = $field->name();
+            if ($name == 'id' || $field->controlType() == 'password') continue;
+
+            // if the field is of a searchable type and it is part of the table schema
+            if (in_array($field->type(), $types) && in_array($name, $columns)) {
+                $wildcard = $field->wildcard();
+                $searchValue = '%' . $value . '%';
+                if ($wildcard == 'left') {
+                    $searchValue = '%' . $value;
+                } elseif ($wildcard == 'right') {
+                    $searchValue = $value . '%';
+                }
+                $OR[$table->aliasField($name) . ' LIKE'] = $searchValue;
+            }
+        }
+
+        // may have problems with complicated conditions
+        if (!empty($OR)) {
+            $query->where(['OR' => $OR]);
+        }
+    }
+
+    private function _fields($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            if (!array_key_exists('fields', $extra)) {
+                $extra['fields'] = [];
+            }
+            $table = $this->model;
+            $columns = $table->schema()->columns();
+
+            $fields = explode(',', $value);
+            $extra['schema_fields'] = $fields;
+            foreach ($fields as $index => $field) {
+                if (strpos($field, ':')) {
+                    list($alias, $value) = explode(':', $field);
+                    $fields[$alias] = $value;
+                    unset($fields[$index]);
+                } elseif (in_array($field, $columns)) {
+                    $fields[$index] = $table->aliasField($field);
+                }
+            }
+            if (!is_null($query)) {
+                $query->select($fields);
+            }
+            $extra['fields'] = array_merge($extra['fields'], $fields);
+        }
+    }
+
+    private function _finder($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $table = $this->model;
+            $finders = $this->decode($value);
+
+            foreach ($finders as $name => $options) {
+                $finderFunction = 'find' . ucfirst($name);
+                if ($table->hasFinder($name)) {
+                    if (!is_null($query)) { // for index
+                        $options['_controller'] = $this->controller;
+                        $query->find($name, $options);
+                    } elseif (!array_key_exists('finder', $extra)) { // for view
+                        $extra['_controller'] = $this->controller;
+                        $extra['finder'] = $name;
+                    }
+                } else {
+                    Log::write('debug', 'Finder (' . $finderFunction . ') does not exists.');
+                }
+            }
+        }
+    }
+
+    private function _innerJoinWith($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $innerJoinAssoc = [];
+
+            if (strpos($value, ',')) {
+                $innerJoinAssoc[] = $value;
+            } else {
+                $innerJoinAssoc = explode(',', $value);
+            }
+
+            $extra['innerJoinWith'] = $innerJoinAssoc;
+        }
+    }
+
+    private function _contain($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $contain = [];
+            $table = $this->model;
+
+            $valueArr = explode(',', $value);
+            foreach ($valueArr as $item) {
+                if ($item === 'true') { // contains all BelongsTo associations
+                    foreach ($table->associations() as $assoc) {
+                        if ($assoc->type() == 'manyToOne') {
+                            $contain[] = $assoc->name();
+                        }
+                    }
+                } else {
+                    $contain[] = $item;
+                }
+            }
+
+            if (!empty($contain)) {
+                if (!is_null($query)) {
+                    $query->contain($contain);
+                } else {
+                    $extra['contain'] = $contain;
+                }
+            }
+        }
+    }
+
+    private function _conditions($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $conditions = [];
+            $table = $query->repository();
+            $columns = $table->schema()->columns();
+
+            foreach ($value as $field => $val) {
+                $compareLike = false;
+                if ($this->startsWith($val, '_')) {
+                    $val = '%' . substr($val, 1);
+                    $compareLike = true;
+                }
+
+                if ($this->endsWith($val, '_')) {
+                    $val = substr($val, 0, strlen($val)-1) . '%';
+                    $compareLike = true;
+                }
+
+                if ($compareLike) {
+                    $field .= ' LIKE';
+                }
+
+                if (in_array($field, $columns)) {
+                    $conditions[$table->aliasField($field)] = $val;
+                } else {
+                    $conditions[str_replace("-", ".", $field)] = $val;
+                }
+            }
+            if (!is_null($query)) {
+                $query->where($conditions);
+            }
+            $extra['conditions'] = $conditions;
+        }
+    }
+
+    private function _orWhere($query, $value, ArrayObject $extra)
+    {
+        $table = $extra['table'];
+        $fields = explode(',', $value);
+        $columns = $table->schema()->columns();
+
+        $orWhere = [];
+        foreach ($fields as $field) {
+            $values = explode(':', $field);
+            $key = $values[0];
+            $value = $values[1];
+
+            if (in_array($key, $columns)) {
+                $key = $table->aliasField($key);
+            }
+
+            $compareLike = false;
+            if ($this->startsWith($value, '_')) {
+                $value = '%' . substr($value, 1);
+                $compareLike = true;
+            }
+
+            if ($this->endsWith($value, '_')) {
+                $value = substr($value, 0, strlen($value)-1) . '%';
+                $compareLike = true;
+            }
+
+            if ($compareLike) {
+                $key .= ' LIKE';
+            }
+            $orWhere[$key] = $value;
+            if (!is_null($query)) {
+                $query->orWhere([$key => $value]);
+            }
+        }
+        if (!empty($orWhere)) {
+            $extra['orWhere'] = $orWhere;
+        }
+    }
+
+    private function _group($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $fields = explode(',', $value);
+            if (!is_null($query)) {
+                $query->group($fields);
+            }
+        }
+    }
+
+    private function _order($query, $value, ArrayObject $extra)
+    {
+        if (!empty($value)) {
+            $fields = explode(',', $value);
+            if (!is_null($query)) {
+                $query->order($fields);
+            }
+        }
+    }
+
+    private function _limit($query, $value, ArrayObject $extra)
+    {
+        if (empty($value)) {
+            $value = 30; // default to 30
+        }
+        $extra['limit'] = $value; // used in _page
+    }
+
+    private function _page($query, $value, ArrayObject $extra)
+    {
+        if (empty($value)) {
+            $value = 1;
+        }
+        if (!empty($value) && $extra->offsetExists('limit')) {
+            $extra['page'] = $value;
+        }
+    }
+
+    private function _showBlobContent(Query $query = null, $value, ArrayObject $extra)
+    {
+        $extra['blobContent'] = $value;
+    }
+
+/******************************************************************************************************************
+**
+** Helper functions
+**
+******************************************************************************************************************/
+
+    private function initRequestQueries(Table $table)
+    {
+        $requestQueries = $this->request->query;
+        if (array_key_exists('_querystring', $requestQueries)) {
+            $queryString = $this->urlsafeB64Decode($requestQueries['_querystring']);
+            unset($this->request->query['_querystring']);
+            $this->extra['querystring'] = json_decode($queryString, true);
+        }
+
+        if (array_key_exists('_schema', $requestQueries) && $requestQueries['_schema'] == 'true') {
+            unset($this->request->query['_schema']);
+            $this->schema = true;
+        }
+        // onBuildSchema will always be called to build the schema, but $this->schema will control if the schema information
+        // should be included in the json response
+        $event = $table->dispatchEvent('Restful.Model.onBuildSchema', [$this->extra], $this->controller);
+
+        if (array_key_exists('_flatten', $requestQueries) && $requestQueries['_flatten'] == 'true') {
+            unset($this->request->query['_flatten']);
+            $this->extra['flatten'] = true;
+        }
+
+        if (array_key_exists('_action', $requestQueries)) {
+            unset($this->request->query['_action']);
+            $this->extra['action'] = $requestQueries['_action'];
+        } else {
+            $this->extra['action'] = $this->request->action;
+        }
+
+        $event = $table->dispatchEvent('Restful.Model.onBeforeAction', [$this->extra], $this->controller);
+    }
+
+    private function processRequestQueries($query, ArrayObject $extra, $action = 'index')
+    {
+        $requestQueries = $this->request->query;
+
+        $conditions = [];
+        if (!empty($conditions)) {
+            $requestQueries['_conditions'] = $conditions;
+            $extra['conditions'] = $conditions;
+        }
+
+        // methods have to be executed in the correct sequence
+        $indexMethods = ['_search', '_fields', '_finder', '_contain', '_innerJoinWith', '_conditions', '_orWhere', '_group', '_order', '_limit', '_page'];
+        $viewMethods = ['_fields', '_finder', '_contain'];
+
+        if ($action == 'index') {
+            $methods = $indexMethods;
+        } else {
+            $methods = $viewMethods;
+        }
+
+        foreach ($methods as $method) {
+            if (array_key_exists($method, $requestQueries)) {
+                $this->$method($query, $requestQueries[$method], $extra);
+            }
+        }
+    }
+
+    // to convert string into json string, and decode into php array
+    private function decode($value)
+    {
+        $list = [];
+        $queryArray = explode(',', $value);
+
+        foreach ($queryArray as $json) {
+            // to convert to a proper json string for decoding into php array
+            $json = str_replace(':', '":"', $json);
+            $json = str_replace('[', '":{"', $json);
+            $json = str_replace(']', '"}}', $json);
+            $json = '{"' . str_replace(';', '","', $json);
+
+            $noAttributesFound = strripos($json, '"}') === false;
+            if ($noAttributesFound) {
+                $json .= '": {}}';
+            }
+            $array = json_decode($json, true);
+            $list = array_merge($list, $array);
+        }
+        return $list;
+    }
+
+    private function formatData(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        foreach ($entity->visibleProperties() as $property) {
+            $method = $schema->columnType($property);
+            if (method_exists($this, $method)) {
+                $entity->$property = $this->$method($entity->property);
+            }
+        }
+    }
+
+    private function binary($attribute)
+    {
+        return base64_encode($attribute);
+    }
+
+    private function convertBinaryToBase64(Table $table, Entity $entity, ArrayObject $extra)
+    {
+        foreach ($entity->visibleProperties() as $property) {
+            if ($entity->$property instanceof Entity) {
+                $source = $entity->$property->source();
+                $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+                if (!TableRegistry::exists($source)) {
+                    $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);
+                } else {
+                    $entityTable = TableRegistry::get($source);
+                }
+
+                $this->convertBinaryToBase64($entityTable, $entity->$property, $extra);
+            } elseif (is_array($entity->$property)) {
+                foreach ($entity->$property as $propertyEntity) {
+                    if ($propertyEntity instanceof Entity) {
+                        $source = $propertyEntity->source();
+                        $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+                        if (!TableRegistry::exists($source)) {
+                            $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);
+                        } else {
+                            $entityTable = TableRegistry::get($source);
+                        }
+                        $this->convertBinaryToBase64($entityTable, $propertyEntity, $extra);
+                    }
+                }
+            } else {
+                if ($property == 'password') {
+                    $entity->unsetProperty($property);
+                }
+                $columnType = $table->schema()->columnType($property);
+                $method = 'format'. ucfirst($columnType);
+                $eventKey = 'Restful.Model.onRender'.ucfirst($columnType);
+                $event = $table->dispatchEvent($eventKey, [$entity, $property, $extra], $this);
+                if ($event->result) {
+                    $entity->$property = $event->result;
+                } elseif (method_exists($this, $method)) {
+                    $entity->$property = $this->$method($entity->$property, $extra);
+                }
+            }
+        }
+    }
+
+    private function formatBinary($attribute, $extra)
+    {
+        if ($extra->offsetExists('blobContent') && $extra['blobContent'] == true) {
+            if (is_resource($attribute)) {
+                return base64_encode(stream_get_contents($attribute));
+            } else {
+                return base64_encode($attribute);
+            }
+        }
+    }
+
+    private function formatDatetime($attribute, $extra)
+    {
+        return $this->formatDate($attribute, $extra);
+    }
+
+    private function formatDate($attribute, $extra)
+    {
+        if ($attribute instanceof MutableDate || $attribute instanceof Date) {
+            $attribute = $attribute->format('Y-m-d');
+        } else if ($attribute == '0000-00-00') {
+            $attribute = '1970-01-01';
+        }
+        return $attribute;
+    }
+
+    private function formatTime($attribute, $extra)
+    {
+        if ($attribute instanceof MutableDateTime || $attribute instanceof Chronos) {
+            $attribute = $attribute->format('H:i:s');
+        }
+        return $attribute;
+    }
+
+    private function convertBase64ToBinary(Entity $entity)
+    {
+        $table = $this->model;
+        $schema = $table->schema();
+        $columns = $schema->columns();
+
+        foreach ($columns as $column) {
+            $attr = $schema->column($column);
+            if ($attr['type'] == 'binary' && $entity->has($column)) {
+                if (is_resource($entity->$column)) {
+                    $entity->$column = stream_get_contents($entity->$column);
+                } else {
+                    $value = urldecode($entity->$column);
+                    $entity->$column = base64_decode($value);
+                }
+            }
+        }
+        return $entity;
+    }
+
+    private function formatResultSet(Table $table, $data, $extra)
+    {
+        if ($data instanceof Entity) {
+            $this->convertBinaryToBase64($table, $data, $extra);
+        } else if (is_array($data)) {
+            foreach ($data as $value) {
+                if ($value instanceof Entity) {
+                    $this->convertBinaryToBase64($table, $value, $extra);
+                }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Decode a string with URL-safe Base64.
+     *
+     * @param string $input A Base64 encoded string
+     *
+     * @return string A decoded string
+     */
+    public function urlsafeB64Decode($input)
+    {
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $padlen = 4 - $remainder;
+            $input .= str_repeat('=', $padlen);
+        }
+        return base64_decode(strtr($input, '-_', '+/'));
+    }
+
+    /**
+     * Encode a string with URL-safe Base64.
+     *
+     * @param string $input The string you want encoded
+     *
+     * @return string The base64 encode of what you passed in
+     */
+    public function urlsafeB64Encode($input)
+    {
+        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+    }
+
+    private function initTable(Table $table, $connectionName = 'default')
+    {
+        $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : $connectionName;
+        if (method_exists($table, 'setConnectionName')) {
+            $table::setConnectionName($_connectionName);
+        }
+        return $table;
+    }
+
+    private function instantiateModel($model)
+    {
+        $model = str_replace('-', '.', $model);
+        if (Configure::read('debug')) {
+            $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+            $target = TableRegistry::get($model, ['connectionName' => $_connectionName]);
+        } else {
+            $target = TableRegistry::get($model);
+        }
+
+        try {
+            $target->find('all')->limit('1');
+            return $target;
+        } catch (Exception $e) {
+            $this->_outputError();
+            return false;
+        }
+    }
+
+    private function _outputError($message = 'Requested Plugin-Model does not exists')
+    {
+        $model = str_replace('-', '.', $this->request->params['model']);
+        $this->set([
+            'model' => $model,
+            'error' => $message,
+            '_serialize' => ['request_method', 'action', 'model', 'error']
+        ]);
+    }
+
+    private function startsWith($haystack, $needle)
+    {
+        // search backwards starting from haystack length characters from the end
+        return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== false;
+    }
+
+    private function endsWith($haystack, $needle)
+    {
+        // search forward starting from end minus needle length characters
+        return $needle === "" || (($temp = strlen($haystack) - strlen($needle)) >= 0 && strpos($haystack, $needle, $temp) !== false);
+    }
+
+    private function getIdKeys(Table $model, $ids, $addAlias = true)
+    {
+        $primaryKey = $model->primaryKey();
+        $idKeys = [];
+        if (!empty($ids)) {
+            if (is_array($primaryKey)) {
+                foreach ($primaryKey as $key) {
+                    if ($addAlias) {
+                        $idKeys[$model->aliasField($key)] = $ids[$key];
+                    } else {
+                        $idKeys[$key] = $ids[$key];
+                    }
+                }
+            } else {
+                if (is_array($ids)) {
+                    $ids = $ids[$primaryKey];
+                }
+                if ($addAlias) {
+                    $idKeys[$model->aliasField($primaryKey)] = $ids;
+                } else {
+                    $idKeys[$primaryKey] = $ids;
+                }
+            }
+        }
+        return $idKeys;
+    }
+
+    public function translateArray(&$array)
     {
         $translateItem = function (&$item, $key) {
             $item = __($item);

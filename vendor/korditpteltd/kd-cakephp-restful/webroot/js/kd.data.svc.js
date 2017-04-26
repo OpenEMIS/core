@@ -1,14 +1,15 @@
-angular.module('kd.orm.v2.svc', [])
-.service('KdOrmV2Svc', function($q, $http) {
+angular.module('kd.data.svc', [])
+.service('KdDataSvc', function($q, $http) {
     var query = {
         responseType: 'json',
         version: 'v2',
         _base: '',
         _controller: 'restful',
         _className: '', // model classname
+        _method: 'GET', // GET/POST/PUT/DELETE
+        _controllerAction: null,
         _id: 0, // model primary key
         _select: [],
-        _method: 'GET', // GET/POST/PUT/DELETE
         _contain: [],
         _finder: [],
         _where: {},
@@ -17,7 +18,9 @@ angular.module('kd.orm.v2.svc', [])
         _order: [],
         _limit: 0,
         _page: 0,
-        _controllerAction: null,
+        _search: '',
+        _querystring: '',
+        _schema: false,
 
         className: function(className) {
             this._className = className;
@@ -34,6 +37,11 @@ angular.module('kd.orm.v2.svc', [])
             return this;
         },
 
+        urlsafeB64Encode: function(textStr) {
+            let encoded = encodeURI(btoa(textStr)).replace(/=/gi, "");
+            return encoded;
+        },
+
         reset: function() {
             this._id = 0;
             this._select = [];
@@ -46,6 +54,20 @@ angular.module('kd.orm.v2.svc', [])
             this._order = [];
             this._page = 0;
             this._method = 'GET';
+            this._schema = false;
+            this._querystring = '';
+            this._search = '';
+        },
+
+        schema: function(bool) {
+            this._schema = bool;
+            return this;
+        },
+
+        querystring: function(params) {
+            let json = JSON.stringify(params);
+            this._querystring = this.urlsafeB64Encode(json);
+            return this;
         },
 
         select: function(fields) {
@@ -130,6 +152,15 @@ angular.module('kd.orm.v2.svc', [])
 
         page: function(page) {
             this._page = page;
+            return this;
+        },
+
+        search: function(searchText) {
+            if (searchText == '') {
+                this._search = searchText;
+            } else {
+                this._search = this.urlsafeB64Encode(searchText);
+            }
             return this;
         },
 
@@ -239,6 +270,18 @@ angular.module('kd.orm.v2.svc', [])
             params.push('_limit=' + this._limit);
             if (this._page > 0) {
                 params.push('_page=' + this._page);
+            }
+
+            if (this._schema) {
+                params.push('_schema=' + this._schema);
+            }
+
+            if (this._querystring.length > 0) {
+                params.push('_querystring=' + this._querystring);
+            }
+
+            if (this._search.length > 0) {
+                params.push('_search=' + this._search);
             }
 
             if (this._id > 0) {
