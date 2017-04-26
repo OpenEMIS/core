@@ -203,3 +203,99 @@ INSERT INTO `student_custom_field_values` (`id`, `text_value`, `number_value`, `
 SELECT `id`, `text_value`, `number_value`, NULL, `textarea_value`, `date_value`, `time_value`, `file`, `student_custom_field_id`, `student_id`, `modified`, `created_user_id`, `created`
 FROM `z_3516_student_custom_field_values`;
 
+
+-- institution_survey_answers
+RENAME TABLE `institution_survey_answers` TO `z_3516_institution_survey_answers`;
+
+DROP TABLE IF EXISTS `institution_survey_answers`;
+CREATE TABLE IF NOT EXISTS `institution_survey_answers` (
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `text_value` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `decimal_value` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `textarea_value` text COLLATE utf8mb4_unicode_ci,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `file` longblob,
+  `survey_question_id` int(11) NOT NULL COMMENT 'links to survey_questions.id',
+  `institution_survey_id` int(11) NOT NULL COMMENT 'links to institution_surveys.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `number_value` (`number_value`),
+  KEY `survey_question_id` (`survey_question_id`),
+  KEY `institution_survey_id` (`institution_survey_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the answers to each question in a form';
+
+INSERT INTO `institution_survey_answers` (`id`, `text_value`, `number_value`, `decimal_value`, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `text_value`, `number_value`, NULL, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_3516_institution_survey_answers`;
+
+
+-- institution_student_survey_answers
+RENAME TABLE `institution_student_survey_answers` TO `institution_student_survey_answers`;
+
+DROP TABLE IF EXISTS `institution_student_survey_answers`;
+CREATE TABLE IF NOT EXISTS `institution_student_survey_answers` (
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `text_value` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `decimal_value` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `textarea_value` text COLLATE utf8mb4_unicode_ci,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `file` longblob,
+  `survey_question_id` int(11) NOT NULL COMMENT 'links to survey_questions.id',
+  `institution_student_survey_id` int(11) NOT NULL COMMENT 'links to institution_student_surveys.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `number_value` (`number_value`),
+  KEY `survey_question_id` (`survey_question_id`),
+  KEY `institution_student_survey_id` (`institution_student_survey_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the student list answers of a survey';
+
+INSERT INTO `institution_student_survey_answers` (`id`, `text_value`, `number_value`, `decimal_value`, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `text_value`, `number_value`, NULL, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_student_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_3516_institution_student_survey_answers`;
+
+
+-- institution_repeater_survey_answers
+RENAME TABLE `institution_repeater_survey_answers` TO `z_3516_institution_repeater_survey_answers`;
+
+DROP TABLE IF EXISTS `institution_repeater_survey_answers`;
+CREATE TABLE IF NOT EXISTS `institution_repeater_survey_answers` (
+  `id` char(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `text_value` varchar(250) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `number_value` int(11) DEFAULT NULL,
+  `decimal_value` varchar(25) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `textarea_value` text COLLATE utf8mb4_unicode_ci,
+  `date_value` date DEFAULT NULL,
+  `time_value` time DEFAULT NULL,
+  `file` longblob,
+  `survey_question_id` int(11) NOT NULL COMMENT 'links to survey_questions.id',
+  `institution_repeater_survey_id` int(11) NOT NULL COMMENT 'links to institution_repeater_surveys.id',
+  `modified_user_id` int(11) DEFAULT NULL,
+  `modified` datetime DEFAULT NULL,
+  `created_user_id` int(11) NOT NULL,
+  `created` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `number_value` (`number_value`),
+  KEY `survey_question_id` (`survey_question_id`),
+  KEY `institution_repeater_survey_id` (`institution_repeater_survey_id`),
+  KEY `modified_user_id` (`modified_user_id`),
+  KEY `created_user_id` (`created_user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains repeater type answers of a survey';
+
+INSERT INTO `institution_repeater_survey_answers` (`id`, `text_value`, `number_value`, `decimal_value`, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_repeater_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
+SELECT `id`, `text_value`, `number_value`, NULL, `textarea_value`, `date_value`, `time_value`, `file`, `survey_question_id`, `institution_repeater_survey_id`, `modified_user_id`, `modified`, `created_user_id`, `created`
+FROM `z_3516_institution_repeater_survey_answers`;
+
