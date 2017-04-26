@@ -3,7 +3,7 @@
 <?= $this->Html->script('OpenEmis.../plugins/tableCheckable/jquery.tableCheckable', ['block' => true]) ?>
 
 <?php if ($action == 'add' || $action == 'edit') : ?>
-	
+
 <div class="input clearfix">
 	<label for="<?= $attr['id'] ?>"><?= $this->Label->get($attr['model'] .'.'. $attr['field']) ?></label>
 	<div class="table-wrapper">
@@ -21,9 +21,10 @@
 				<?php //pr($this->request->data);?>
 				<tbody>
 					<?php foreach ($attr['data']['subjects'] as $i=>$obj) : ?>
-						<?php 
+						<?php
 							$n = intval($obj->education_subject->id);
-							$selected = (array_key_exists('existedSubjects', $attr['data']) && array_key_exists($n, $attr['data']['existedSubjects'])) ? 'checked' : ''; 
+							$educationGradeId = intval($obj->education_grade_id);
+							$selected = (array_key_exists('existedSubjects', $attr['data']) && array_key_exists($n, $attr['data']['existedSubjects'])) ? 'checked' : '';
 							if ($selected) {
 								$attrValue = $attr['data']['existedSubjects'][$n]['name'];
 								$disabled = 'disabled';
@@ -38,7 +39,7 @@
 							}
 						?>
 					<tr>
-		    			<?php 
+		    			<?php
 	    				$attrErrors = [];
 	    				$selectedInForm = false;
 		    			if(!empty($this->request->data) && array_key_exists('MultiSubjects', $this->request->data) && isset($this->request->data['MultiSubjects'][$i])) {
@@ -59,7 +60,7 @@
 		    				'fieldName' => 'MultiSubjects['.$i.'][name]',
 		    				'attr' => [
 		    					'id' => 'MultiSubjects-'.$i.'-name',
-		    					'label' => false, 
+		    					'label' => false,
 		    					'name' => 'MultiSubjects['.$i.'][name]',
 		    					'value' => $attrValue
 		    				],
@@ -67,7 +68,7 @@
 		    			if ($disabled) {
 		    				$field['attr']['disabled'] = $disabled;
 		    			}
-						$tdClass = ''; 
+						$tdClass = '';
 						if (!empty($attrErrors) && isset($attrErrors['name'])) {
 							$field['attr']['class'] = 'form-error';
 							$tdClass = 'error';
@@ -84,13 +85,19 @@
 									'disabled' => $disabled
 								]);
 							?>
+							<?= $this->Form->input(sprintf('MultiSubjects[%d][education_grade_id]', $i), [
+									'type' => 'hidden',
+									'label' => false,
+									'value' => $educationGradeId
+								]);
+							?>
 						</td>
 						<td><?= $obj->education_subject->name ?></td>
 
 						<td class="<?= $tdClass ?>">
 							<?php
 								echo $this->Form->input($field['fieldName'], $field['attr']);
-							?>	
+							?>
 							<?php if (!empty($attrErrors) && isset($attrErrors['name'])) : ?>
 								<ul class="error-message" style="margin-left:20px">
 								<?php foreach ($attrErrors['name'] as $error) : ?>
@@ -101,7 +108,7 @@
 						</td>
 
 						<td>
-							<?php 
+							<?php
 							echo $this->Form->input(sprintf('MultiSubjects[%d][subject_staff][0][status]', $i), [
 										'label' => false,
 										'type' => 'hidden',
@@ -109,7 +116,7 @@
 									]);
 							if (!$selected) {
 								echo $this->Form->input(sprintf('MultiSubjects.%d.subject_staff.0.staff_id', $i), array(
-									'options' => $attr['data']['teachers'], 
+									'options' => $attr['data']['teachers'],
 									'label' => false,
 								));
 							} else {
@@ -141,7 +148,7 @@
 				    				'fieldName' => 'MultiSubjects['.$i.'][name]',
 				    				'attr' => [
 				    					'id' => 'MultiSubjects-'.$i.'-name',
-				    					'label' => false, 
+				    					'label' => false,
 				    					'name' => 'MultiSubjects['.$i.'][name]',
 				    					'value' => $obj['name'],
 				    					'disabled' => 'disabled'
@@ -164,7 +171,7 @@
 							<td class="<?= $tdClass ?>">
 								<?php
 									echo $this->Form->input($field['fieldName'], $field['attr']);
-								?>	
+								?>
 							</td>
 
 							<td>
@@ -188,7 +195,7 @@
 
 <?php else : ?>
 
-<?php 
+<?php
 	foreach ($attr['data']['grades'] as $grade) {
 		// pr($grade);die;
 		echo $grade->name.'<br/>';
