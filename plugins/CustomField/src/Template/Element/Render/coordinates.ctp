@@ -1,9 +1,9 @@
 <?php if ($action != 'edit'): ?>
 
 	<?php
-		$latitude = (is_object($values) && !empty($values->latitude)) ? $values->latitude : '&nbsp;';
+		$latitude = (is_object($values) && strlen($values->latitude) > 0) ? $values->latitude : '&nbsp;';
         $latitude = '<div class="input-value-wrapper"><span class="status past">'.__('Latitude').'</span><span class="status status-grey-border">'.$latitude.'</span></div>';
-		$longitude = (is_object($values) && !empty($values->longitude)) ? $values->longitude : '&nbsp;';
+		$longitude = (is_object($values) && strlen($values->longitude) > 0) ? $values->longitude : '&nbsp;';
         $longitude = '<div class="input-value-wrapper"><span class="status past">'.__('Longitude').'</span><span class="status status-grey-border">'.$longitude.'</span></div>';
         echo $latitude . $longitude;
     ?>
