@@ -35,6 +35,7 @@ return [
         'Migrations' => $baseDir . '/vendor/cakephp/migrations/',
         'OpenEmis' => $baseDir . '/plugins/OpenEmis/',
         'Report' => $baseDir . '/plugins/Report/',
+        'ReportCard' => $baseDir . '/plugins/ReportCard/',
         'Rest' => $baseDir . '/plugins/Rest/',
         'Restful' => $baseDir . '/vendor/korditpteltd/kd-cakephp-restful/',
         'Rubric' => $baseDir . '/plugins/Rubric/',
