@@ -83,23 +83,45 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
     });
 
     function initGrid(sectionId, academicPeriodId, assessmentId, assessmentResults) {
-        vm.gridOptions[sectionId] = {
-            columnDefs: [],
-            rowData: [],
-            headerHeight: 38,
-            rowHeight: 38,
-            minColWidth: 200,
-            enableColResize: false,
-            enableSorting: true,
-            unSortIcon: true,
-            enableFilter: true,
-            suppressMenuHide: true,
-            suppressCellSelection: true,
-            suppressMovableColumns: true,
-            onGridReady: function() {
-                vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
-            }
-        };
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            vm.gridOptions[sectionId] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                localeText: localeText,
+                onGridReady: function() {
+                    vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
+                }
+            };
+        }, function (error) {
+            vm.gridOptions[sectionId] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                onGridReady: function() {
+                    vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
+                }
+            };
+        });
     }
 
     function setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults) {
