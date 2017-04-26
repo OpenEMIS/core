@@ -1093,6 +1093,12 @@ class NavigationComponent extends Component
                 'params' => ['plugin' => 'Textbook'],
                 'selected' => ['Textbooks.Textbooks']
             ],
+            'ReportCards.Templates' => [
+                'title' => 'Report Cards',
+                'parent' => 'Administration',
+                'params' => ['plugin' => 'ReportCard'],
+                'selected' => ['ReportCards.Templates']
+            ],
 			'Workflows.Workflows' => [
 				'title' => 'Workflow',
 				'parent' => 'Administration',
