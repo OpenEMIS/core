@@ -578,7 +578,7 @@ a,
     padding: 3px 25px 4px 5px!important;
 }
 
-.chrome .dropdown-filter .text input, 
+.chrome .dropdown-filter .text input,
 .safari .dropdown-filter .text input {
     padding: 4px 25px 4px 5px!important;
 }
@@ -670,14 +670,14 @@ a,
     cursor: pointer;
 }
 
-.chrome .dropdown-filter .date input, 
+.chrome .dropdown-filter .date input,
 .safari .dropdown-filter .date input {
     padding: 4px 25px 4px 5px !important;
 }
 
-.datepicker table tr td span.active, 
-.datepicker table tr td span.active:hover, 
-.datepicker table tr td span.active.disabled, 
+.datepicker table tr td span.active,
+.datepicker table tr td span.active:hover,
+.datepicker table tr td span.active.disabled,
 .datepicker table tr td span.active.disabled:hover {
     background-image: none !important;
 }
@@ -714,11 +714,11 @@ a,
 .sg-theme .ag-paging-button#btPrevious,
 .sg-theme .ag-paging-button#btNext,
 .sg-theme .ag-paging-button#btLast {
-    position: relative; 
+    position: relative;
     font-size: 0;
     height: 30px;
-    width: 30px;  
-    vertical-align: middle; 
+    width: 30px;
+    vertical-align: middle;
     padding: 0;
 }
 
@@ -739,31 +739,31 @@ a,
 }
 
 .sg-theme .ag-paging-button#btFirst:before {
-    content: "\f100"; 
+    content: "\f100";
 }
 
 .sg-theme .ag-paging-button#btPrevious {
     margin: 0 10px 0 0;
 }
-        
+
 .sg-theme .ag-paging-button#btPrevious:before {
-    content: "\f104"; 
+    content: "\f104";
 }
 
 .sg-theme .ag-paging-button#btNext {
     margin: 0 0 0 10px;
 }
-        
+
 .sg-theme .ag-paging-button#btNext:before {
-    content: "\f105"; 
+    content: "\f105";
 }
 
 .sg-theme .ag-paging-button#btLast {
     margin: 0 0 0 5px;
 }
-        
+
 .sg-theme .ag-paging-button#btLast:before {
-    content: "\f101"; 
+    content: "\f101";
 }
 
 .sg-theme .ag-overlay-no-rows-center,
@@ -782,27 +782,27 @@ a,
     left: 0;
 }
 
-.rtl.chrome .dropdown-filter .date input, 
+.rtl.chrome .dropdown-filter .date input,
 .rtl.safari .dropdown-filter .date input,
-.rtl.chrome .dropdown-filter .text input, 
+.rtl.chrome .dropdown-filter .text input,
 .rtl.safari .dropdown-filter .text input {
     padding: 4px 5px 4px 25px !important;
 }
 
 .rtl .sg-theme .ag-paging-button#btFirst:before {
-    content: "\f101"; 
+    content: "\f101";
 }
-        
+
 .rtl .sg-theme .ag-paging-button#btPrevious:before {
-    content: "\f105"; 
+    content: "\f105";
 }
-     
+
 .rtl .sg-theme .ag-paging-button#btNext:before {
-    content: "\f104"; 
+    content: "\f104";
 }
-        
+
 .rtl .sg-theme .ag-paging-button#btLast:before {
-    content: "\f100"; 
+    content: "\f100";
 }
 
 .rtl .sg-theme .ag-paging-button#btPrevious {
@@ -882,7 +882,7 @@ a,
     border-left: 0;
     border-right: 0;
     /* temp fixtd to add in the padding [vincent] */
-    padding: 10px;
+    /*padding: 10px;*/
 }
 
 #workbench .list-group-item:first-child {
@@ -917,4 +917,4 @@ a,
     direction: ltr;
 }
 
-/* End of fix for POCOR-3658 */ 
+/* End of fix for POCOR-3658 */
