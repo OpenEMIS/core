@@ -59,21 +59,25 @@ class AlertRuleBehavior extends Behavior
                 $model->extractThresholdValuesFromEntity($entity);
             }
 
-            foreach ($thresholdConfig as $key => $attr) {
-                if (array_key_exists('type', $attr) && $attr['type'] == 'select') {
-                    $options = [];
-                    if (array_key_exists('options', $attr) && !empty($attr['options'])) {
-                        $options = $model->getSelectOptions($model->aliasField($attr['options']));
-                    } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
-                        $modelTable = TableRegistry::get($attr['lookupModel']);
-                        $options = $modelTable->getList()->toArray();
+            foreach ($thresholdConfig as $field => $attr) {
+                if (array_key_exists('type', $attr)) {
+                    $fieldType = $attr['type'];
+
+                    if (in_array($fieldType, ['select', 'chosenSelect'])) {
+                        $options = [];
+                        if (array_key_exists('options', $attr) && !empty($attr['options'])) {
+                            $options = $model->getSelectOptions($model->aliasField($attr['options']));
+                        } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
+                            $modelTable = TableRegistry::get($attr['lookupModel']);
+                            $options = $modelTable->getList()->toArray();
+                        }
+                        $attr['options'] = $options;
                     }
-                    $attr['options'] = $options;
                 }
 
                 if (array_key_exists('tooltip', $attr)) {
                     $sprintf = $attr['tooltip']['sprintf'];
-                    $message = $model->getMessage($model->aliasField($entity->feature.'.'.$key), ['sprintf' => $sprintf]);
+                    $message = $model->getMessage($model->aliasField($entity->feature.'.'.$field), ['sprintf' => $sprintf]);
 
                     $label = $attr['tooltip']['label'];
                     $attr['attr']['label']['escape'] = false;
@@ -81,7 +85,7 @@ class AlertRuleBehavior extends Behavior
                     $attr['attr']['label']['text'] = $label . $this->tooltipMessage($message);
                 }
 
-                $model->field($key, $attr);
+                $model->field($field, $attr);
             }
         }
     }

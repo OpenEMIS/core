@@ -11,6 +11,9 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\I18n\Time;
 use Cake\I18n\Date;
+use Cake\Utility\Inflector;
+
+use App\Model\Traits\MessagesTrait;
 
 class TransferApprovalsTable extends AppTable
 {
@@ -21,6 +24,8 @@ class TransferApprovalsTable extends AppTable
     // Type status for admission
     const TRANSFER = 2;
     const ADMISSION = 1;
+
+    use MessagesTrait;
 
     public function initialize(array $config)
     {
@@ -47,6 +52,12 @@ class TransferApprovalsTable extends AppTable
         return $validator
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', false]
+            ])
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date']
+            ])
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id']
             ])
         ;
     }
@@ -436,9 +447,14 @@ class TransferApprovalsTable extends AppTable
                 $periodEndDate = $endDate->copy()->subDay();
             }
 
-            $attr['value'] =  date('d-m-Y', strtotime($startDate));
-            $attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
-            $attr['date_options']['todayBtn'] = false; //since we limit the start date, should as well hide the 'today' button so no extra checking function needed
+            if (array_key_exists('startDate', $request->query)) {
+                $attr['value'] = $request->query['startDate'];
+                $attr['attr']['value'] = $request->query['startDate'];
+            } else {
+                $attr['value'] =  date('d-m-Y', strtotime($startDate));
+                $attr['date_options'] = ['startDate' => $periodStartDate->format('d-m-Y'), 'endDate' => $periodEndDate->format('d-m-Y')];
+                $attr['date_options']['todayBtn'] = false; //since we limit the start date, should as well hide the 'today' button so no extra checking function needed
+            }
         }
 
         return $attr;
