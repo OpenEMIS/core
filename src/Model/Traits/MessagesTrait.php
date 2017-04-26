@@ -1439,6 +1439,10 @@ trait MessagesTrait {
                 'maxValue' => 'Number should not be greater than %d',
                 'range' => 'Number should be between %d and %d'
             ],
+            'decimal' => [
+                'length' => 'Length should not exceed %d digits',
+                'precision' => 'Length should not exceed %d digits or decimal places should not exceed %d digits'
+            ],
             'date' => [
                 'earlier' => 'Date should be earlier than or equal to %s',
                 'later' => 'Date should be later than or equal to %s',
