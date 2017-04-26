@@ -3,8 +3,8 @@ INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3533', NOW());
 
 -- institutions
 ALTER TABLE `institutions`
- ADD `photo_name` VARCHAR(250) DEFAULT '' AFTER `security_group_id`,
- ADD `photo_content` LONGBLOB AFTER `photo_name`;
+ ADD `photo_name` varchar(250) COLLATE utf8mb4_unicode_ci AFTER `security_group_id`,
+ ADD `photo_content` longblob AFTER `photo_name`;
 
 -- report_cards
 DROP TABLE IF EXISTS `report_cards`;
@@ -18,8 +18,8 @@ CREATE TABLE IF NOT EXISTS `report_cards` (
  `principal_comments_required` int(1) NOT NULL DEFAULT '0',
  `homeroom_teacher_comments_required` int(1) NOT NULL DEFAULT '0',
  `subject_teacher_comments_required` int(1) NOT NULL DEFAULT '0',
- `file_name` varchar(250) NOT NULL,
- `file_content` longblob NOT NULL,
+ `excel_template_name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
+ `excel_template` longblob NOT NULL,
  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
  `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
  `modified_user_id` int(11) DEFAULT NULL,
@@ -40,15 +40,12 @@ CREATE TABLE IF NOT EXISTS `report_card_subjects` (
  `report_card_id` int(11) NOT NULL COMMENT 'links to report_cards.id',
  `education_subject_id` int(11) NOT NULL COMMENT 'links to education_subjects.id',
  `education_grade_id` int(11) NOT NULL COMMENT 'links to education_grades.id',
- `modified_user_id` int(11) DEFAULT NULL,
- `modified` datetime DEFAULT NULL,
  `created_user_id` int(11) NOT NULL,
  `created` datetime NOT NULL,
  PRIMARY KEY (`report_card_id`, `education_subject_id`),
  KEY `report_card_id` (`report_card_id`),
  KEY `education_subject_id` (`education_subject_id`),
  KEY `education_grade_id` (`education_grade_id`),
- KEY `modified_user_id` (`modified_user_id`),
  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains all the subjects that are included in a particular report card';
 
@@ -57,9 +54,9 @@ DROP TABLE IF EXISTS `institution_students_report_cards`;
 CREATE TABLE IF NOT EXISTS `institution_students_report_cards` (
  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
  `status` int(1) NOT NULL DEFAULT '1' COMMENT '1 -> New, 2 -> In Progress, 3 -> Generated, 4 -> Published',
- `principal_comments` text DEFAULT NULL,
- `homeroom_teacher_comments` text DEFAULT NULL,
- `file_name` varchar(250) DEFAULT NULL,
+ `principal_comments` text COLLATE utf8mb4_unicode_ci,
+ `homeroom_teacher_comments` text COLLATE utf8mb4_unicode_ci,
+ `file_name` varchar(250) COLLATE utf8mb4_unicode_ci,
  `file_content` longblob,
  `report_card_id` int(11) NOT NULL COMMENT 'links to report_cards.id',
  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
@@ -86,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `institution_students_report_cards` (
 DROP TABLE IF EXISTS `institution_students_report_cards_comments`;
 CREATE TABLE IF NOT EXISTS `institution_students_report_cards_comments` (
  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
- `comments` text NOT NULL,
+ `comments` text COLLATE utf8mb4_unicode_ci NOT NULL,
  `report_card_id` int(11) NOT NULL COMMENT 'links to report_cards.id',
  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
