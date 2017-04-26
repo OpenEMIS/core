@@ -84,8 +84,6 @@ class SetupDecimalBehavior extends SetupBehavior
             }
         }
 
-        $action = $model->ControllerAction->action();
-
         $model->ControllerAction->field('decimal_length');
         $model->ControllerAction->field('decimal_precision');
     }
