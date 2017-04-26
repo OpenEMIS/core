@@ -33,5 +33,20 @@ DROP TABLE IF EXISTS `student_custom_field_values`;
 RENAME TABLE `z_3516_student_custom_field_values` TO `student_custom_field_values`;
 
 
+-- institution_survey_answers
+DROP TABLE IF EXISTS `institution_survey_answers`;
+RENAME TABLE `z_3516_institution_survey_answers` TO `institution_survey_answers`;
+
+
+-- institution_student_survey_answers
+DROP TABLE IF EXISTS `institution_student_survey_answers`;
+RENAME TABLE `z_3516_institution_student_survey_answers` TO `institution_student_survey_answers`;
+
+
+-- institution_repeater_survey_answers
+DROP TABLE IF EXISTS `institution_repeater_survey_answers`;
+RENAME TABLE `z_3516_institution_repeater_survey_answers` TO `institution_repeater_survey_answers`;
+
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3516';

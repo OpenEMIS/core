@@ -54,20 +54,9 @@ class RenderDecimalBehavior extends RenderBehavior
             if ($customField->has('params') && !empty($customField->params)) {
                 $params = json_decode($customField->params, true);
 
-                // for set the field step precission 6 will be 0.000001 step (6 digit after decimal point
-                if (array_key_exists('precision', $params) && ($params['precision'] > 0)) {
-                    $options['min'] = 0;
-                    $step = '0.';
-
-                    for ($i=1; $i <= $params['precision']; $i++) {
-                        // last precision will be 1
-                        if ($i == ($params['precision'])) {
-                            $step = $step . '1';
-                        } else {
-                            $step = $step . '0';
-                        }
-                    }
-
+                $options['min'] = 0;
+                $step = $this->getStepFromParams($params);
+                if (!is_null($step)) {
                     $options['step'] = $step;
                 }
             }
