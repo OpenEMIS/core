@@ -92,6 +92,7 @@ class StudentsTable extends ControllerActionTable
                 'education_grade_id',
                 'academic_period_id',
                 'student_status_id',
+                'previous_institution_student_id'
             ],
             'order' => $advancedSearchFieldOrder
         ]);
