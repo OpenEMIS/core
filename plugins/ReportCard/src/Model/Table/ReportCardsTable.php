@@ -33,6 +33,9 @@ class ReportCardsTable extends ControllerActionTable
             'allowable_file_types' => 'document',
             'useDefaultName' => true
         ]);
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ReportCardComments' => ['view']
+        ]);
         $this->behaviors()->get('Download')->config(
             'name',
             'excel_template_name'

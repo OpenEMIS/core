@@ -4,6 +4,7 @@ namespace ReportCard\Model\Table;
 use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Network\Request;
@@ -19,5 +20,35 @@ class ReportCardSubjectsTable extends ControllerActionTable
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
 
         $this->addBehavior('CompositeKey');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ReportCardComments' => ['index']
+        ]);
+    }
+
+    public function findMatchingClassSubjects(Query $query, array $options)
+    {
+        $reportCardId = $options['report_card_id'];
+        $classId = $options['institution_class_id'];
+        $InstitutionClassSubjects = TableRegistry::get('Institution.InstitutionClassSubjects');
+        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+
+        return $query
+            ->select([
+                'education_subject_id' => $this->aliasField('education_subject_id'),
+                'code' => $this->EducationSubjects->aliasField('code'),
+                'name' => $this->EducationSubjects->aliasField('name'),
+                $this->EducationSubjects->aliasField('order')
+            ])
+            ->innerJoinWith('EducationSubjects')
+            ->innerJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                $InstitutionClassSubjects->aliasField('institution_class_id = ') . $classId,
+                $InstitutionClassSubjects->aliasField('status > 0 ')
+            ])
+            ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                $InstitutionSubjects->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_subject_id'),
+                $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
+            ])
+            ->where([$this->aliasField('report_card_id') => $reportCardId])
+            ->order([$this->EducationSubjects->aliasField('order')]);
     }
 }

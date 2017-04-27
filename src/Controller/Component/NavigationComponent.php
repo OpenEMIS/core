@@ -529,10 +529,11 @@ class NavigationComponent extends Component
 				'link' => false,
 			],
 
-				'Institutions.Comments' => [
+				'Institutions.ReportCardComments' => [
 					'title' => 'Comments',
 					'parent' => 'Institutions.ReportCards',
-					'params' => ['plugin' => 'Institution']
+					'params' => ['plugin' => 'Institution'],
+					'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
 				],
 
 			'Institutions.Positions' => [
