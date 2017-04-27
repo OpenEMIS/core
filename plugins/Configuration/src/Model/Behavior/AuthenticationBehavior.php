@@ -10,7 +10,7 @@ use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
 
-require_once( ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
+require_once(ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
 
 class AuthenticationBehavior extends Behavior
 {
@@ -139,7 +139,6 @@ class AuthenticationBehavior extends Behavior
 
     public function saml2AfterSave($samlAttributes)
     {
-
         $setting['sp'] = [
             'entityId' => $samlAttributes['sp_entity_id']['value'],
             'assertionConsumerService' => [
@@ -263,7 +262,7 @@ class AuthenticationBehavior extends Behavior
         $attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
         $attribute['saml_date_of_birth_mapping'] = ['label' => 'Date of birth mapping', 'type' => 'text', 'required' => false];
-        $attribute['saml_role_mapping'] = ['label' => 'Role mapping', 'type' => 'text', 'required' => false];
+        $attribute['saml_role_mapping'] = ['label' => 'Role mapping', 'type' => 'hidden', 'required' => false];
         $attribute['sp_metadata'] = ['label' => 'Service Provider - Metadata', 'type' => 'hidden', 'required' => false];
     }
 
@@ -271,13 +270,13 @@ class AuthenticationBehavior extends Behavior
     {
         if ($key == 'sp_entity_id') {
             return Router::url(['plugin' => null, 'controller' => null, 'action' => 'index'], true);
-        } else if ($key == 'sp_slo') {
+        } elseif ($key == 'sp_slo') {
             return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'], true);
-        } else if ($key == 'idp_sso_binding' && empty($attributeValue)) {
+        } elseif ($key == 'idp_sso_binding' && empty($attributeValue)) {
             return \OneLogin_Saml2_Constants::BINDING_HTTP_POST;
-        } else if ($key == 'idp_slo_binding' && empty($attributeValue)) {
+        } elseif ($key == 'idp_slo_binding' && empty($attributeValue)) {
             return \OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
-        } else if ($key == 'sp_acs') {
+        } elseif ($key == 'sp_acs') {
             return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
         }
         return false;
@@ -309,7 +308,7 @@ class AuthenticationBehavior extends Behavior
         $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['dob_mapping'] = ['label' => 'Date of Birth Mapping', 'type' => 'text', 'required' => false];
         $attribute['gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
-        $attribute['role_mapping'] = ['label' => 'Role Mapping', 'type' => 'text', 'required' => false];
+        $attribute['role_mapping'] = ['label' => 'Role Mapping', 'type' => 'hidden', 'required' => false];
     }
 
     public function googleModifyValue($key, $attributeValue)

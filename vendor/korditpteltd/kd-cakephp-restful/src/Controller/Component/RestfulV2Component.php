@@ -4,19 +4,19 @@ namespace Restful\Controller\Component;
 use ArrayObject;
 use Exception;
 
+use Cake\Core\Configure;
+use Cake\Chronos\MutableDate;
+use Cake\Chronos\Chronos;
+use Cake\Chronos\Date;
+use Cake\Chronos\MutableDateTime;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
-use Cake\Core\Configure;
-use Cake\Chronos\MutableDate;
-use Cake\Chronos\Chronos;
-use Cake\Chronos\Date;
-use Cake\Chronos\MutableDateTime;
-use Cake\Utility\Hash;
 use Cake\Log\Log;
+use Cake\Utility\Hash;
 
 use Restful\Model\Table\RestfulAppTable;
 use Restful\Controller\RestfulInterface;
@@ -34,7 +34,7 @@ class RestfulV2Component extends Component implements RestfulInterface
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
-        $this->extra = new ArrayObject([]);
+        $this->extra = new ArrayObject(['limit' => 30, 'page' => 1]);
         $this->serialize = new ArrayObject([]);
     }
 
@@ -200,6 +200,12 @@ class RestfulV2Component extends Component implements RestfulInterface
         $table->dispatchEvent($event, [$this->model->getSchema(), $this->extra], $this->controller);
     }
 
+    //curl -i -X GET http://localhost/school/api/restful/v2/Users.json
+    //curl -i -X GET http://localhost/school/api/restful/v2/Users.json?_contain=Genders
+    //curl -i -X GET http://localhost/school/api/restful/v2/Users.json?_fields=username,Genders.name&_contain=Genders
+    //curl -i -X GET http://localhost/school/api/restful/v2/Users.json?_order=-first_name,last_name
+    //curl -i -X GET http://localhost/school/api/restful/v2/Users.json?_limit=10&_page=2
+
     public function index()
     {
         if (is_null($this->model)) {
@@ -236,6 +242,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
     }
 
+    //curl -H "Content-Type: application/json" -i -X POST -d '{"openemis_no": "123456", "first_name": "restful", "last_name": "user", "gender_id": 1, "date_of_birth": "1970-01-01"}' http://localhost/school/api/restful/v2/Users.json
+
     public function add()
     {
         if (is_null($this->model)) {
@@ -268,6 +276,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         $serialize->offsetSet('data', $data);
         $serialize->offsetSet('error', $errors);
     }
+
+    //curl -i -X GET http://localhost/school/api/restful/v2/Users/1.json
 
     public function view($id)
     {
@@ -310,6 +320,8 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
     }
 
+    //curl -H "Content-Type: application/json" -i -X PATCH -d '{"id": 1, "username": "new_username"}' http://localhost/school/api/restful/v2/Users.json
+
     public function edit()
     {
         if (is_null($this->model)) {
@@ -344,45 +356,31 @@ class RestfulV2Component extends Component implements RestfulInterface
         }
     }
 
+    //curl -H "Content-Type: application/json" -i -X DELETE -d '{"id": 1}' http://localhost/school/api/restful/v2/Users.json
+
     public function delete()
     {
-        $target = $this->model;
-        $user = $this->controller->getUser();
-        $extra = new ArrayObject(['table' => $target, 'fields' => [], 'schema_fields' => [], 'action' => 'custom', 'functionName' => 'delete', 'user' => $user]);
-        $requestQueries = $this->request->query;
-        $this->processQueryString($requestQueries, null, $extra);
-        // $action = $extra['action'];
-        if ($target) {
-            $requestData = $this->request->data;
-            if (!is_array($target->primaryKey())) {
-                $primaryKey = [$target->primaryKey()];
-            } else {
-                // composite keys
-                $primaryKey = $target->primaryKey();
-            }
-            $flipKey = array_flip($primaryKey);
-            $keyCount = count($primaryKey);
-            $keyValues = array_intersect_key($requestData, $flipKey);
-            if (count($keyValues) != $keyCount) {
-                // throw exception
-            }
-            $primaryKeyValues = $this->getIdKeys($target, $keyValues);
+        if (is_null($this->model)) {
+            return;
+        }
 
-            if ($target->exists([$primaryKeyValues])) {
-                $entity = $target->get($primaryKeyValues);
-                $message = __('Successful');
-                if (!$target->delete($entity, $extra->getArrayCopy())) {
-                    $message = __('Not Successful');
-                }
-                $this->controller->set([
-                    'data' => $entity,
-                    'error' => $entity->errors(),
-                    'result'=> $message,
-                    '_serialize' => ['data', 'error', 'result']
-                ]);
-            } else {
-                $this->_outputError('Record does not exists');
+        $requestData = $this->request->data;
+        $extra = $this->extra;
+        $serialize = $this->serialize;
+        $table = $this->initTable($this->model);
+
+        $primaryKeyValues = $this->getIdKeys($table, $requestData, false);
+        if ($table->exists([$primaryKeyValues])) {
+            $entity = $table->get($primaryKeyValues);
+            $message = __('Successful');
+            if (!$table->delete($entity, $extra->getArrayCopy())) {
+                $message = __('Not Successful');
             }
+
+            $serialize->offsetSet('result', $message);
+            $serialize->offsetSet('error', $entity->errors());
+        } else {
+            $this->_outputError('Record does not exists');
         }
     }
 
@@ -436,7 +434,7 @@ class RestfulV2Component extends Component implements RestfulInterface
             $fields = explode(',', $value);
             $extra['schema_fields'] = $fields;
             foreach ($fields as $index => $field) {
-                if (strpos($field, ':')) {
+                if (strpos($field, ':')) { // to assign an alias to the field
                     list($alias, $value) = explode(':', $field);
                     $fields[$alias] = $value;
                     unset($fields[$index]);
@@ -494,15 +492,18 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (!empty($value)) {
             $contain = [];
             $table = $this->model;
+            $isDebug = Configure::read('debug');
 
             $valueArr = explode(',', $value);
             foreach ($valueArr as $item) {
-                if ($item === 'true') { // contains all BelongsTo associations
+                if ($item === 'true' && $isDebug) { // contains all BelongsTo associations
+                    $this->serialize->offsetSet('warning', 'contain=true is only available in development mode');
                     foreach ($table->associations() as $assoc) {
                         if ($assoc->type() == 'manyToOne') {
                             $contain[] = $assoc->name();
                         }
                     }
+                    break;
                 } else {
                     $contain[] = $item;
                 }
@@ -635,9 +636,7 @@ class RestfulV2Component extends Component implements RestfulInterface
         if (empty($value)) {
             $value = 1;
         }
-        if (!empty($value) && $extra->offsetExists('limit')) {
-            $extra['page'] = $value;
-        }
+        $extra['page'] = $value;
     }
 
     private function _showBlobContent(Query $query = null, $value, ArrayObject $extra)
