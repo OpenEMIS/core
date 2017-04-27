@@ -6,7 +6,6 @@ use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use App\Controller\AppController;
-use Cake\Network\Http\Client;
 use Cake\Utility\Security;
 use Firebase\JWT\JWT;
 use Cake\Core\Configure;

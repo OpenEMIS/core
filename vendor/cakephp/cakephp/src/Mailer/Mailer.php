@@ -163,9 +163,10 @@ abstract class Mailer implements EventListenerInterface
             static::$name = str_replace(
                 'Mailer',
                 '',
-                join('', array_slice(explode('\\', get_class($this)), -1))
+                implode('', array_slice(explode('\\', get_class($this)), -1))
             );
         }
+
         return static::$name;
     }
 
@@ -178,6 +179,7 @@ abstract class Mailer implements EventListenerInterface
     public function layout($layout)
     {
         $this->_email->viewBuilder()->layout($layout);
+
         return $this;
     }
 
@@ -201,6 +203,7 @@ abstract class Mailer implements EventListenerInterface
     public function __call($method, $args)
     {
         call_user_func_array([$this->_email, $method], $args);
+
         return $this;
     }
 
@@ -214,6 +217,7 @@ abstract class Mailer implements EventListenerInterface
     public function set($key, $value = null)
     {
         $this->_email->viewVars(is_string($key) ? [$key => $value] : $key);
+
         return $this;
     }
 
@@ -229,22 +233,25 @@ abstract class Mailer implements EventListenerInterface
      */
     public function send($action, $args = [], $headers = [])
     {
-        if (!method_exists($this, $action)) {
-            throw new MissingActionException([
-                'mailer' => $this->getName() . 'Mailer',
-                'action' => $action,
-            ]);
+        try {
+            if (!method_exists($this, $action)) {
+                throw new MissingActionException([
+                    'mailer' => $this->getName() . 'Mailer',
+                    'action' => $action,
+                ]);
+            }
+
+            $this->_email->setHeaders($headers);
+            if (!$this->_email->viewBuilder()->template()) {
+                $this->_email->viewBuilder()->template($action);
+            }
+
+            call_user_func_array([$this, $action], $args);
+
+            $result = $this->_email->send();
+        } finally {
+            $this->reset();
         }
-
-        $this->_email->setHeaders($headers);
-        if (!$this->_email->viewBuilder()->template()) {
-            $this->_email->viewBuilder()->template($action);
-        }
-
-        call_user_func_array([$this, $action], $args);
-
-        $result = $this->_email->send();
-        $this->reset();
 
         return $result;
     }
@@ -257,6 +264,7 @@ abstract class Mailer implements EventListenerInterface
     protected function reset()
     {
         $this->_email = clone $this->_clonedEmail;
+
         return $this;
     }
 

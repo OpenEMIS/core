@@ -68,7 +68,6 @@ use Cake\Utility\Inflector;
  *
  * By providing help text for your positional arguments and named arguments, the ConsoleOptionParser
  * can generate a help display for you. You can view the help for shells by using the `--help` or `-h` switch.
- *
  */
 class ConsoleOptionParser
 {
@@ -217,6 +216,7 @@ class ConsoleOptionParser
         if (!empty($spec['epilog'])) {
             $parser->epilog($spec['epilog']);
         }
+
         return $parser;
     }
 
@@ -235,6 +235,7 @@ class ConsoleOptionParser
             'description' => $this->_description,
             'epilog' => $this->_epilog
         ];
+
         return $result;
     }
 
@@ -264,6 +265,7 @@ class ConsoleOptionParser
         if (!empty($spec['epilog'])) {
             $this->epilog($spec['epilog']);
         }
+
         return $this;
     }
 
@@ -277,8 +279,10 @@ class ConsoleOptionParser
     {
         if ($text !== null) {
             $this->_command = Inflector::underscore($text);
+
             return $this;
         }
+
         return $this->_command;
     }
 
@@ -296,8 +300,10 @@ class ConsoleOptionParser
                 $text = implode("\n", $text);
             }
             $this->_description = $text;
+
             return $this;
         }
+
         return $this->_description;
     }
 
@@ -316,8 +322,10 @@ class ConsoleOptionParser
                 $text = implode("\n", $text);
             }
             $this->_epilog = $text;
+
             return $this;
         }
+
         return $this->_epilog;
     }
 
@@ -335,6 +343,8 @@ class ConsoleOptionParser
      * - `boolean` - The option uses no value, it's just a boolean switch. Defaults to false.
      *    If an option is defined as boolean, it will always be added to the parsed params. If no present
      *    it will be false, if present it will be true.
+     * - `multiple` - The option can be provided multiple times. The parsed option
+     *   will be an array of values when this option is enabled.
      * - `choices` A list of valid choices for this option. If left empty all values are valid..
      *   An exception will be raised when parse() encounters an invalid value.
      *
@@ -366,6 +376,7 @@ class ConsoleOptionParser
             $this->_shortOptions[$option->short()] = $name;
             asort($this->_shortOptions);
         }
+
         return $this;
     }
 
@@ -378,6 +389,7 @@ class ConsoleOptionParser
     public function removeOption($name)
     {
         unset($this->_options[$name]);
+
         return $this;
     }
 
@@ -424,6 +436,7 @@ class ConsoleOptionParser
         }
         $this->_args[$index] = $arg;
         ksort($this->_args);
+
         return $this;
     }
 
@@ -444,6 +457,7 @@ class ConsoleOptionParser
             }
             $this->addArgument($name, $params);
         }
+
         return $this;
     }
 
@@ -464,6 +478,7 @@ class ConsoleOptionParser
             }
             $this->addOption($name, $params);
         }
+
         return $this;
     }
 
@@ -498,6 +513,7 @@ class ConsoleOptionParser
         }
         $this->_subcommands[$name] = $command;
         asort($this->_subcommands);
+
         return $this;
     }
 
@@ -510,6 +526,7 @@ class ConsoleOptionParser
     public function removeSubcommand($name)
     {
         unset($this->_subcommands[$name]);
+
         return $this;
     }
 
@@ -528,6 +545,7 @@ class ConsoleOptionParser
             }
             $this->addSubcommand($name, $params);
         }
+
         return $this;
     }
 
@@ -612,6 +630,7 @@ class ConsoleOptionParser
                 $params[$name] = false;
             }
         }
+
         return [$params, $args];
     }
 
@@ -633,6 +652,7 @@ class ConsoleOptionParser
         ) {
             $subparser = $this->_subcommands[$subcommand]->parser();
             $subparser->command($this->command() . ' ' . $subparser->command());
+
             return $subparser->help(null, $format, $width);
         }
 
@@ -660,6 +680,7 @@ class ConsoleOptionParser
             list($name, $value) = explode('=', $name, 2);
             array_unshift($this->_tokens, $value);
         }
+
         return $this->_parseOption($name, $params);
     }
 
@@ -687,6 +708,7 @@ class ConsoleOptionParser
             throw new ConsoleException(sprintf('Unknown short option `%s`', $key));
         }
         $name = $this->_shortOptions[$key];
+
         return $this->_parseOption($name, $params);
     }
 
@@ -716,9 +738,15 @@ class ConsoleOptionParser
             $value = $option->defaultValue();
         }
         if ($option->validChoice($value)) {
-            $params[$name] = $value;
+            if ($option->acceptsMultiple($value)) {
+                $params[$name][] = $value;
+            } else {
+                $params[$name] = $value;
+            }
+
             return $params;
         }
+
         return [];
     }
 
@@ -736,6 +764,7 @@ class ConsoleOptionParser
         if ($name{0} === '-' && $name{1} !== '-') {
             return isset($this->_shortOptions[$name{1}]);
         }
+
         return false;
     }
 
@@ -752,6 +781,7 @@ class ConsoleOptionParser
     {
         if (empty($this->_args)) {
             $args[] = $argument;
+
             return $args;
         }
         $next = count($args);
@@ -761,6 +791,7 @@ class ConsoleOptionParser
 
         if ($this->_args[$next]->validChoice($argument)) {
             $args[] = $argument;
+
             return $args;
         }
     }

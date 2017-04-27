@@ -73,7 +73,7 @@ class Chronos extends DateTimeImmutable implements ChronosInterface
      * for more on the possibility of this constructor returning a test instance.
      *
      * @param string|null $time Fixed or relative time
-     * @param DateTimeZone|string|null $tz The timezone for the instance
+     * @param \DateTimeZone|string|null $tz The timezone for the instance
      */
     public function __construct($time = 'now', $tz = null)
     {
@@ -83,12 +83,16 @@ class Chronos extends DateTimeImmutable implements ChronosInterface
 
         static::$_lastErrors = [];
         if (static::$testNow === null) {
-            return parent::__construct($time === null ? 'now' : $time, $tz);
+            parent::__construct($time === null ? 'now' : $time, $tz);
+
+            return;
         }
 
         $relative = static::hasRelativeKeywords($time);
         if (!empty($time) && $time !== 'now' && !$relative) {
-            return parent::__construct($time, $tz);
+            parent::__construct($time, $tz);
+
+            return;
         }
 
         $testInstance = static::getTestNow();
@@ -122,5 +126,52 @@ class Chronos extends DateTimeImmutable implements ChronosInterface
     public function copy()
     {
         return $this;
+    }
+
+    /**
+     * Overloading original modify method to handling modification with DST change
+     *
+     * For example, i have the date 2014-03-30 00:00:00 in Europe/London (new Carbon('2014-03-30 00:00:00,
+     *   'Europe/London')), then if i want to increase date by 1 day, i expect 2014-03-31 00:00:00, but if want to
+     *   increase date by 24 hours, then i expect 2014-03-31 01:00:00, because in this timezone there will be that time
+     *   after 24 hours (timezone offset changes because of Daylight correction). The same for minutes and seconds.
+     *
+     * @param string $modify argument for php DateTime::modify method
+     *
+     * @return static
+     */
+    public function modify($modify)
+    {
+        if (!preg_match('/(sec|second|min|minute|hour)s?/i', $modify)) {
+            return parent::modify($modify);
+        }
+
+        $timezone = $this->getTimezone();
+
+        // I use parent modify method only if the current object timezone is UTC
+        // If it is not - i making another object in UTC wich will call to parent modify
+        if ($timezone->getName() !== 'UTC') {
+            $date = $this->setTimezone('UTC')->modify($modify)->setTimezone($timezone);
+        } else {
+            $date = parent::modify($modify);
+        }
+
+        return $date;
+    }
+
+    /**
+     * Return properties for debugging.
+     *
+     * @return array
+     */
+    public function __debugInfo()
+    {
+        $properties = [
+            'time' => $this->format('Y-m-d H:i:s.u'),
+            'timezone' => $this->getTimezone()->getName(),
+            'hasFixedNow' => isset(self::$testNow)
+        ];
+
+        return $properties;
     }
 }

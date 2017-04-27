@@ -11,11 +11,12 @@
 
 namespace Symfony\Component\Config\Tests\Definition;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\ArrayNode;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\ScalarNode;
 
-class ArrayNodeTest extends \PHPUnit_Framework_TestCase
+class ArrayNodeTest extends TestCase
 {
     /**
      * @expectedException \Symfony\Component\Config\Definition\Exception\InvalidTypeException
@@ -54,7 +55,12 @@ class ArrayNodeTest extends \PHPUnit_Framework_TestCase
     public function testIgnoreAndRemoveBehaviors($ignore, $remove, $expected, $message = '')
     {
         if ($expected instanceof \Exception) {
-            $this->setExpectedException(get_class($expected), $expected->getMessage());
+            if (method_exists($this, 'expectException')) {
+                $this->expectException(get_class($expected));
+                $this->expectExceptionMessage($expected->getMessage());
+            } else {
+                $this->setExpectedException(get_class($expected), $expected->getMessage());
+            }
         }
         $node = new ArrayNode('root');
         $node->setIgnoreExtraKeys($ignore, $remove);
@@ -172,5 +178,42 @@ class ArrayNodeTest extends \PHPUnit_Framework_TestCase
                 array('2' => 'two', '1' => 'one', '3' => 'three'),
             ),
         );
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Child nodes must be named.
+     */
+    public function testAddChildEmptyName()
+    {
+        $node = new ArrayNode('root');
+
+        $childNode = new ArrayNode('');
+        $node->addChild($childNode);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage A child node named "foo" already exists.
+     */
+    public function testAddChildNameAlreadyExists()
+    {
+        $node = new ArrayNode('root');
+
+        $childNode = new ArrayNode('foo');
+        $node->addChild($childNode);
+
+        $childNodeWithSameName = new ArrayNode('foo');
+        $node->addChild($childNodeWithSameName);
+    }
+
+    /**
+     * @expectedException \RuntimeException
+     * @expectedExceptionMessage The node at path "foo" has no default value.
+     */
+    public function testGetDefaultValueWithoutDefaultValue()
+    {
+        $node = new ArrayNode('foo');
+        $node->getDefaultValue();
     }
 }
