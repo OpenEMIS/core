@@ -26,11 +26,11 @@ class SetupBehavior extends Behavior {
 			'decimal_value' => [
                 'length' => [
                     'min' => 1,
-                    'max' => 14
+                    'max' => 10
                 ],
                 'precision' => [
                     'min' => 0,
-                    'max' => 6
+                    'max' => 5
                 ]
             ]
 		];
