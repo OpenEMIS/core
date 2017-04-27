@@ -22,7 +22,7 @@ define("NS_OE", "https://www.openemis.org");
 class RestSurveyComponent extends Component
 {
     use LogTrait;
-    
+
     public $controller;
     public $action;
 
@@ -252,7 +252,7 @@ class RestSurveyComponent extends Component
                 $this->deleteExpiredResponse();
                 $this->addResponse($xmlResponse);
                 // End
-                
+
                 $this->log('XML Response', 'debug');
                 $this->log($xmlResponse, 'debug');
                 $xmlResponse = str_replace("xf:", "", $xmlResponse);
@@ -365,7 +365,7 @@ class RestSurveyComponent extends Component
                                     $questionId = $extra['data']['survey_question_id'];
                                     $show = $this->isRelevantQuestion($rules, $questionId, $answers);
                                     if ($show) {
-                                        $this->$fieldTypeFunction($field, $entity, $extra); 
+                                        $this->$fieldTypeFunction($field, $entity, $extra);
                                     }
                                 }
                             }
@@ -493,6 +493,11 @@ class RestSurveyComponent extends Component
         $this->processUpload('number_value', $extra);
     }
 
+    private function uploadDecimal($field, $entity, $extra)
+    {
+        $this->processUpload('decimal_value', $extra);
+    }
+
     private function uploadTextarea($field, $entity, $extra)
     {
         $this->processUpload('textarea_value', $extra);
@@ -603,7 +608,7 @@ class RestSurveyComponent extends Component
         $RepeaterSurveyAnswers = TableRegistry::get('InstitutionRepeater.RepeaterSurveyAnswers');
         $RepeaterSurveyTableCells = TableRegistry::get('InstitutionRepeater.RepeaterSurveyTableCells');
         $repeaterRecordKey = 'institution_repeater_survey_id';
-        
+
         $data = $extra['data'];
         $value = $extra['value'];
         $recordKey = $extra['recordKey'];
