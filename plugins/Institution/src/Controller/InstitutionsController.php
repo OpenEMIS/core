@@ -116,7 +116,7 @@ class InstitutionsController extends AppController
     public function StudentIndexes()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentIndexes']); }
     public function InstitutionStudentIndexes()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionStudentIndexes']); }
     public function Cases()                         { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionCases']); }
-    public function Comments()                      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']); }
+    public function ReportCardComments()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.ReportCardComments']); }
     // End
 
     // AngularJS
@@ -159,6 +159,11 @@ class InstitutionsController extends AppController
 
         $this->set('excelUrl', Router::url($url));
         $this->set('ngController', 'InstitutionsResultsCtrl');
+    }
+
+    public function Comments() {
+        $this->set('_edit', $this->AccessControl->check(['Institution', 'Comments', 'edit']));
+        $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
     // End
 
@@ -379,6 +384,13 @@ class InstitutionsController extends AppController
                         ]);
                     }
                 }
+                break;
+            case 'Comments':
+                $this->Angular->addModules([
+                    'alert.svc',
+                    'institutions.comments.ctrl',
+                    'institutions.comments.svc'
+                ]);
                 break;
         }
     }
