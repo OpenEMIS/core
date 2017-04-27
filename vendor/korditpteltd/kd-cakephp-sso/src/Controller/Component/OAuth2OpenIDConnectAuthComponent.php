@@ -6,7 +6,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Security;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 
 require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
 require_once(dirname(__FILE__) . '/../../OAuth/Client.php');
@@ -41,7 +41,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component
             }
 
             foreach ($responseBody as $response) {
-                if ($response->statusCode() == 200) {
+                if ($response->getStatusCode() == 200) {
                     // Caching of openid configuration
                     if (!empty($response->body())) {
                         $body = json_decode($response->body(), true);

@@ -165,6 +165,7 @@ class PluginInstaller extends LibraryInstaller
         }
 
         ksort($plugins);
+
         return $plugins;
     }
 
@@ -213,8 +214,7 @@ PHP;
 
         // Gross hacks to work around composer smashing `__FILE__` in this
         // PHP file when it runs the code through eval()
-        $uppercase = function ($matches)
-        {
+        $uppercase = function ($matches) {
             return strtoupper($matches[0]);
         };
         $contents = preg_replace_callback('/__file__/', $uppercase, $contents);
@@ -290,6 +290,7 @@ PHP;
                 )
             );
         }
+
         return trim($primaryNs, '\\');
     }
 
@@ -384,6 +385,7 @@ PHP;
                 'ERROR - `vendor/cakephp-plugins.php` file is invalid. ' .
                 'Plugin path configuration not updated.'
             );
+
             return;
         }
         if (!isset($config['plugins'])) {
@@ -412,6 +414,7 @@ PHP;
             if ($this->io->isVerbose()) {
                 $this->io->write('vendor/cakephp-plugins.php exists.');
             }
+
             return;
         }
 
@@ -421,6 +424,7 @@ PHP;
             if ($this->io->isVerbose()) {
                 $this->io->write('config/plugins.php found and copied to vendor/cakephp-plugins.php.');
             }
+
             return;
         }
 
