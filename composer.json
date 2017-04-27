@@ -6,13 +6,13 @@
     "license": "GPL-2.0",
     "require": {
         "php": ">=5.4.16",
-        "cakephp/cakephp": "3.2.11",
+        "cakephp/cakephp": "3.3.*",
         "mobiledetect/mobiledetectlib": "2.*",
         "PHPOffice/PHPExcel": "dev-master",
         "mk-j/php_xlsxwriter": "dev-master",
         "korditpteltd/kd-cakephp-restful": "1.1.x-dev",
         "admad/cakephp-jwt-auth": "2.0.1",
-        "korditpteltd/kd-cakephp-sso": "1.0.*",
+        "korditpteltd/kd-cakephp-sso": "1.*",
         "korditpteltd/kd-cakephp-webhooks": "^1.0"
     },
     "require-dev": {
@@ -20,8 +20,8 @@
         "phpunit/phpunit": "*",
         "cakephp/plugin-installer": "*",
         "cakephp/migrations": "~1.0",
-        "cakephp/debug_kit": "~3.0",
-        "cakephp/bake": "~1.0"
+        "cakephp/debug_kit": "~3.2",
+        "cakephp/bake": "~1.1"
     },
     "suggest": {
         "phpunit/phpunit": "Allows automated tests to be run without system-wide install.",
@@ -42,7 +42,15 @@
     },
     "scripts": {
         "post-install-cmd": "App\\Console\\Installer::postInstall",
-        "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump"
+        "post-create-project-cmd": "App\\Console\\Installer::postInstall",
+        "post-autoload-dump": "Cake\\Composer\\Installer\\PluginInstaller::postAutoloadDump",
+        "check": [
+            "@test",
+            "@cs-check"
+        ],
+        "cs-check": "phpcs --colors -p --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
+        "cs-fix": "phpcbf --colors --standard=vendor/cakephp/cakephp-codesniffer/CakePHP ./src ./tests",
+        "test": "phpunit --colors=always"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

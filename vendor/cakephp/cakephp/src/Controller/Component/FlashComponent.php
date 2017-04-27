@@ -47,7 +47,8 @@ class FlashComponent extends Component
         'key' => 'flash',
         'element' => 'default',
         'params' => [],
-        'clear' => false
+        'clear' => false,
+        'duplicate' => true
     ];
 
     /**
@@ -75,6 +76,7 @@ class FlashComponent extends Component
      * - `element` The element used to render the flash message. Default to 'default'.
      * - `params` An array of variables to make available when using an element
      * - `clear` A bool stating if the current stack should be cleared to start a new one
+     * - `escape` Set to false to allow templates to print out HTML content
      *
      * @param string|\Exception $message Message to be flashed. If an instance
      *   of \Exception the exception message will be used and code will be set
@@ -87,8 +89,14 @@ class FlashComponent extends Component
         $options += $this->config();
 
         if ($message instanceof Exception) {
-            $options['params'] += ['code' => $message->getCode()];
+            if (!isset($options['params']['code'])) {
+                $options['params']['code'] = $message->getCode();
+            }
             $message = $message->getMessage();
+        }
+
+        if (isset($options['escape']) && !isset($options['params']['escape'])) {
+            $options['params']['escape'] = $options['escape'];
         }
 
         list($plugin, $element) = pluginSplit($options['element']);
@@ -100,8 +108,16 @@ class FlashComponent extends Component
         }
 
         $messages = [];
-        if ($options['clear'] === false) {
-            $messages = $this->_session->read('Flash.' . $options['key']);
+        if (!$options['clear']) {
+            $messages = (array)$this->_session->read('Flash.' . $options['key']);
+        }
+
+        if (!$options['duplicate']) {
+            foreach ($messages as $existingMessage) {
+                if ($existingMessage['message'] === $message) {
+                    return;
+                }
+            }
         }
 
         $messages[] = [
