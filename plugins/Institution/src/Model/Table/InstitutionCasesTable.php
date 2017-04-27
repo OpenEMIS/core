@@ -195,7 +195,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     $query = $linkedRecordModel
                         ->find()
                         ->where($where);
-                    
+
                     if ($query->count() > 0) {
                         $existingLinkedCaseResults = $this
                             ->find()
@@ -308,7 +308,7 @@ class InstitutionCasesTable extends ControllerActionTable
                     }
 
                     $row['url'] = $url;
-                    $row['status'] = $row->_matchingData['Statuses']->name;
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
                     $row['request_title'] = $row->title;
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
