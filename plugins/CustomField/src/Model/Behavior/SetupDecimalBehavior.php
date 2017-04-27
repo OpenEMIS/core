@@ -93,7 +93,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
 
-        $tooltipMessage = vsprintf(__('Maximum digits before decimal, from %d to %d'),[$minLength, $maxLength]);
+        $tooltipMessage = vsprintf(__('%d - %d'),[$minLength, $maxLength]);
 
         $attr['attr']['min'] = $minLength;
         $attr['attr']['max'] = $maxLength;
@@ -118,7 +118,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
 
-        $tooltipMessage = vsprintf(__('Maximum digits after decimal, from %d to %d'),[$minPrecision, $maxPrecision]);
+        $tooltipMessage = vsprintf(__('%d - %d'),[$minPrecision, $maxPrecision]);
 
         $attr['attr']['min'] = $minPrecision;
         $attr['attr']['max'] = $maxPrecision;
