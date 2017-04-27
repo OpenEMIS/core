@@ -1384,6 +1384,11 @@ trait MessagesTrait {
             ]
         ],
         'Education' => [
+            'EducationCycles' => [
+                'admission_age' => [
+                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                ]
+            ],
             'EducationGradesSubjects' => [
                 'hours_required' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value'
