@@ -56,7 +56,8 @@ class InstitutionClassStudentsTable extends AppTable {
         ]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'OpenEMIS_Classroom' => ['index', 'view']
+            'OpenEMIS_Classroom' => ['index', 'view'],
+            'ReportCardComments' => ['index']
         ]);
     }
 
