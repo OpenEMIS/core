@@ -518,6 +518,14 @@ class CustomFieldListBehavior extends Behavior {
 		}
 	}
 
+	private function decimal($data, $field, $options=[]) {
+		if (isset($data[$field['id']])) {
+			return $data[$field['id']];
+		} else {
+			return '';
+		}
+	}
+
 	private function textarea($data, $field, $options=[]) {
 		if (isset($data[$field['id']])) {
 			return $data[$field['id']];

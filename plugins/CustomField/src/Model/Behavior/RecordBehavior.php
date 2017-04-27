@@ -1085,6 +1085,14 @@ class RecordBehavior extends Behavior {
 		}
 	}
 
+	private function decimal($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			return $data[$fieldInfo['id']];
+		} else {
+			return '';
+		}
+	}
+
 	private function textarea($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			return $data[$fieldInfo['id']];
