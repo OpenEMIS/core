@@ -1570,8 +1570,9 @@ class ValidationBehavior extends Behavior {
         if (is_array($field)) {
             $latitude = $field['latitude'];
             $longitude = $field['longitude'];
-            if (!empty($latitude) || !empty($longitude)) {
-                if (empty($latitude)) {
+
+            if (strlen($latitude) > 0 || strlen($longitude) > 0) {
+                if (strlen($latitude) == 0) {
                     $error = __('Latitude cannot be empty');
                 } else {
                     $latIsValid = Validation::latitude($latitude);
@@ -1580,9 +1581,9 @@ class ValidationBehavior extends Behavior {
                     }
                 }
             } elseif ($isRequired) {
-	            $error = __('Latitude value is required');
+                $error = __('Latitude value is required');
             }
-        } elseif ($isRequired) {
+        } else if ($isRequired) {
             $error = __('Required data is not available');
         }
         return (!$error) ? true : $error;
@@ -1594,17 +1595,18 @@ class ValidationBehavior extends Behavior {
         if (is_array($field)) {
             $latitude = $field['latitude'];
             $longitude = $field['longitude'];
-            if (!empty($latitude) || !empty($longitude)) {
-                if (empty($longitude)) {
+
+            if (strlen($latitude) > 0 || strlen($longitude) > 0) {
+                if (strlen($longitude) == 0) {
                     $error = __('Longitude cannot be empty');
                 } else {
-                    $latIsValid = Validation::longitude($longitude);
-                    if (!$latIsValid) {
+                    $lngIsValid = Validation::longitude($longitude);
+                    if (!$lngIsValid) {
                         $error = __('Longitude value is invalid');
                     }
                 }
-            } elseif ($isRequired) {
-	            $error = __('Longitude value is required');
+            } else if ($isRequired) {
+                $error = __('Longitude value is required');
             }
         } elseif ($isRequired) {
             $error = __('Required data is not available');
@@ -1993,7 +1995,7 @@ class ValidationBehavior extends Behavior {
             if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $studentStartDate = new DateTime($data['start_date']);
-                
+
                 if ($programmeEndDate < $studentStartDate) {
                     return false;
                 }
