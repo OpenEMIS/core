@@ -1351,7 +1351,7 @@ trait MessagesTrait {
         'Education' => [
             'EducationCycles' => [
                 'admission_age' => [
-                    'ruleValidateNumeric' => 'Please enter a valid Numeric value'
+                    'ruleRange' => 'Admision age must be within 0 to 99'
                 ]
             ],
             'EducationGradesSubjects' => [
