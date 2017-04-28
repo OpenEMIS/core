@@ -1,10 +1,10 @@
 angular
-    .module('examinations.results.ctrl', ['utils.svc', 'alert.svc', 'examinations.results.svc'])
+    .module('examinations.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'examinations.results.svc'])
     .controller('ExaminationsResultsCtrl', ExaminationsResultsController);
 
-ExaminationsResultsController.$inject = ['$scope', '$anchorScroll', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'ExaminationsResultsSvc'];
+ExaminationsResultsController.$inject = ['$scope', '$anchorScroll', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'ExaminationsResultsSvc'];
 
-function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, UtilsSvc, AlertSvc, ExaminationsResultsSvc) {
+function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc,ExaminationsResultsSvc) {
     var vm = this;
     $scope.action = 'view';
     vm.noOptions = [{text: 'No options', value: 0}];
@@ -73,6 +73,7 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         }
     });
 
+<<<<<<< HEAD
     function initGrid(academicPeriodId, examinationId, examinationCentreId, subject) {
         vm.gridOptions = {
             context: {
@@ -104,22 +105,106 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                 if (angular.isUndefined(vm.results[params.data.student_id])) {
                     vm.results[params.data.student_id] = {};
                 }
+=======
+    function initGrid(academicPeriodId, examinationId, subject) {
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            vm.gridOptions = {
+                context: {
+                    academic_period_id: academicPeriodId,
+                    examination_id: examinationId,
+                    examination_centre_id: 0,
+                    education_subject_id: 0,
+                    examination_item_id: 0
+                },
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                singleClickEdit: true,
+                rowModelType: 'pagination',
+                localeText: localeText,
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
+                onCellValueChanged: function(params) {
+                    var institutionId = params.data.institution_id;
 
-                if (angular.isUndefined(vm.results[params.data.student_id][institutionId])) {
-                    vm.results[params.data.student_id][institutionId] = {marks: ''};
+                    if (angular.isUndefined(vm.results[params.data.student_id])) {
+                        vm.results[params.data.student_id] = {};
+                    }
+
+                    if (angular.isUndefined(vm.results[params.data.student_id][institutionId])) {
+                        vm.results[params.data.student_id][institutionId] = {marks: ''};
+                    }
+>>>>>>> 7443a5617b8b27e263311b3a57916fc8a9fc920a
+
+                    vm.results[params.data.student_id][institutionId]['marks'] = params.newValue;
+
+                    params.data.total_mark = ExaminationsResultsSvc.calculateTotal(params.data);
+                    // Important: to refresh the grid after data is modified
+                    vm.gridOptions.api.refreshView();
+                },
+                onGridReady: function() {
+                    vm.onChangeSubject(academicPeriodId, examinationId, subject);
+                    this.api.sizeColumnsToFit();
                 }
+            };
+        }, function(error){
+            vm.gridOptions = {
+                context: {
+                    academic_period_id: academicPeriodId,
+                    examination_id: examinationId,
+                    examination_centre_id: 0,
+                    education_subject_id: 0,
+                    examination_item_id: 0
+                },
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                singleClickEdit: true,
+                rowModelType: 'pagination',
+                onGridSizeChanged: function(e) {
+                    this.api.sizeColumnsToFit();
+                },
+                onCellValueChanged: function(params) {
+                    var institutionId = params.data.institution_id;
 
-                vm.results[params.data.student_id][institutionId]['marks'] = params.newValue;
+                    if (angular.isUndefined(vm.results[params.data.student_id])) {
+                        vm.results[params.data.student_id] = {};
+                    }
 
-                params.data.total_mark = ExaminationsResultsSvc.calculateTotal(params.data);
-                // Important: to refresh the grid after data is modified
-                vm.gridOptions.api.refreshView();
-            },
-            onGridReady: function() {
-                vm.onChangeSubject(academicPeriodId, examinationId, subject);
-                this.api.sizeColumnsToFit();
-            }
-        };
+                    if (angular.isUndefined(vm.results[params.data.student_id][institutionId])) {
+                        vm.results[params.data.student_id][institutionId] = {marks: ''};
+                    }
+
+                    vm.results[params.data.student_id][institutionId]['marks'] = params.newValue;
+
+                    params.data.total_mark = ExaminationsResultsSvc.calculateTotal(params.data);
+                    // Important: to refresh the grid after data is modified
+                    vm.gridOptions.api.refreshView();
+                },
+                onGridReady: function() {
+                    vm.onChangeSubject(academicPeriodId, examinationId, subject);
+                    this.api.sizeColumnsToFit();
+                }
+            };
+        });
     }
 
     function onChangeSubject(academicPeriodId, examinationId, subject) {
@@ -172,6 +257,25 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         var deferred = $q.defer();
 
         ExaminationsResultsSvc.getColumnDefs(action, subject, vm.results)
+        .then(function(res){
+            var textToTranslate = [];
+            var defer = $q.defer();
+            angular.forEach(res, function(value, key) {
+                textToTranslate.push(value.headerName);
+            });
+            ExaminationsResultsSvc.translate(textToTranslate)
+            .then(function(respond){
+                angular.forEach(respond, function(value, key) {
+                    res[key]['headerName'] = value;
+                });
+                defer.resolve(res);
+            }, function(error){
+                defer.resolve(res);
+            });
+            return defer.promise;
+        }, function(error){
+            console.log(error);
+        })
         .then(function(cols)
         {
             if (vm.gridOptions != null) {
