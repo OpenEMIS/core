@@ -8,12 +8,16 @@
     "authors": [{
         "name": "Rob Morgan",
         "email": "robbym@gmail.com",
-        "homepage": "http://robmorgan.id.au",
+        "homepage": "https://robmorgan.id.au",
         "role": "Lead Developer"
     }, {
         "name": "Woody Gilk",
         "email": "woody.gilk@gmail.com",
         "homepage": "http://shadowhand.me",
+        "role": "Developer"
+    }, {
+        "name": "Richard Quadling",
+        "email": "rquadling@gmail.com",
         "role": "Developer"
     }],
     "require": {
@@ -23,7 +27,7 @@
         "symfony/yaml": "~2.8|~3.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^3.7|^4.0|^5.0"
+        "phpunit/phpunit": "^4.8.26|^5.0"
     },
     "autoload": {
         "psr-4": {
