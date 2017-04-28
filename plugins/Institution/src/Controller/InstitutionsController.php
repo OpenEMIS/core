@@ -307,8 +307,6 @@ class InstitutionsController extends AppController
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $queryString['class_id']);
-            $this->set('institutionId', $queryString['institution_id']);
-            $this->set('academicPeriodId', $queryString['academic_period_id']);
             $this->set('competencyTemplateId', $queryString['competency_template_id']);
             $this->set('queryString', $queryString);
             $this->render('student_competency_edit');

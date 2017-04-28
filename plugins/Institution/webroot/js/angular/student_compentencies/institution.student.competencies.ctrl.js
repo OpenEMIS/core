@@ -27,6 +27,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     Controller.academicPeriodId = null;
     Controller.academicPeriodName = '';
     Controller.postError = [];
+    // format of competency result will be competencyperiodId.competencyItemId.studentId.criteriaId
+    Controller.competencyItemResults = {};
 
     // Function mapping
     Controller.postForm = postForm;
@@ -38,47 +40,17 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         if (Controller.classId != null) {
             InstitutionStudentCompetenciesSvc.getClassDetails(Controller.classId)
             .then(function(response) {
-                Controller.selectedTeacher = response.staff_id;
-                Controller.selectedShift = response.institution_shift_id;
                 Controller.className = response.name;
                 Controller.academicPeriodId = response.academic_period_id;
                 Controller.institutionId = response.institution_id;
                 Controller.academicPeriodName = response.academic_period.name;
-                Controller.institutionSubjects = response.institution_subjects;
-                var assignedStudents = [];
-                angular.forEach(response.class_students, function(value, key) {
-                    var toPush = {
-                        openemis_no: value.user.openemis_no,
-                        name: value.user.name,
-                        education_grade_name: value.education_grade.name,
-                        student_status_name: value.student_status.name,
-                        gender_name: value.user.gender.name,
-                        student_id: value.student_id,
-                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
-                            {
-                                student_id: value.student_id,
-                                institution_class_id: value.institution_class_id,
-                                education_grade_id: value.education_grade_id,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id
-                            }
-                        ))
-                    };
-                    this.push(toPush);
-                }, assignedStudents);
-                Controller.assignedStudents = assignedStudents;
-
                 var promises = [];
-                promises[0] = InstitutionStudentCompetenciesSvc.getUnassignedStudent(Controller.classId);
-                promises[1] = InstitutionStudentCompetenciesSvc.getInstitutionShifts(response.institution_id, response.academic_period_id);
-                promises[2] = InstitutionStudentCompetenciesSvc.getTeacherOptions(response.institution_id, response.academic_period_id);
-                return $q.all(promises);
+                promises[0] = InstitutionStudentCompetenciesSvc.getCompetencyTemplate(Controller.academicPeriodId, Controller.competencyTemplateId);
             }, function(error) {
                 console.log(error);
             })
             .then(function (promises) {
-                var unassignedStudentsArr = [];
+                var studentCompetencyResult = {};
                 angular.forEach(promises[0], function(value, key) {
                     var toPush = {
                         openemis_no: value.openemis_no,
@@ -113,15 +85,15 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             }, function (error) {
                 console.log(error);
             })
-            .then(function (translatedText) {
-                angular.forEach(translatedText, function(value, key) {
-                    Controller.colDef[key]['headerName'] = value;
-                });
-                Controller.setTop(Controller.colDef, Controller.unassignedStudents);
-                Controller.setBottom(Controller.colDef, Controller.assignedStudents);
-            }, function (error) {
-                console.log(error);
-            })
+            // .then(function (translatedText) {
+            //     angular.forEach(translatedText, function(value, key) {
+            //         Controller.colDef[key]['headerName'] = value;
+            //     });
+            //     Controller.setTop(Controller.colDef, Controller.unassignedStudents);
+            //     Controller.setBottom(Controller.colDef, Controller.assignedStudents);
+            // }, function (error) {
+            //     console.log(error);
+            // })
             .finally(function(){
                 Controller.dataReady = true;
                 // UtilsSvc.isAppendLoader(false);

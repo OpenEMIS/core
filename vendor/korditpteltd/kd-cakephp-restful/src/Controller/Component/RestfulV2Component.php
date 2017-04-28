@@ -17,6 +17,7 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
+use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 
 use Restful\Model\Table\RestfulAppTable;
 use Restful\Controller\RestfulInterface;
@@ -947,6 +948,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         $idKeys = [];
         if (!empty($ids)) {
             if (is_array($primaryKey)) {
+                $count = count($primaryKey);
+                $keysPresent = array_intersect($primaryKey, array_keys($ids));
+                if (count($keysPresent) != $count) {
+                    throw new InvalidPrimaryKeyException('The following primary keys ['.implode(', ', array_diff($primaryKey, array_keys($ids))). '] are not found in the request.');
+                }
                 foreach ($primaryKey as $key) {
                     if ($addAlias) {
                         $idKeys[$model->aliasField($key)] = $ids[$key];
