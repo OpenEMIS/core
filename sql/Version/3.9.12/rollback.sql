@@ -1,3 +1,10 @@
+-- POCOR-2879
+INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-2879', NOW());
+
+ALTER TABLE `institution_subjects`
+DROP COLUMN `education_grade_id`;
+
+
 -- POCOR-3516
 -- custom_field_types
 DROP TABLE IF EXISTS `custom_field_types`;
