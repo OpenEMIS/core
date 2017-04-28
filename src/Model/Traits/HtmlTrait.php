@@ -6,6 +6,7 @@ trait HtmlTrait {
 		$_attr = [
             'onclick' => 'jsTable.doRemove(this)',
             'aria-expanded' => 'true',
+            'type' => 'button',
             'class' => 'btn btn-dropdown action-toggle btn-single-action'
         ];
 
