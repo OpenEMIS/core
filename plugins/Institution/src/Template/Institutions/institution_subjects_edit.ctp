@@ -107,7 +107,7 @@ $this->start('panelBody');
             <button class="btn btn-default btn-save" type="button" ng-click="InstitutionSubjectStudentsController.postForm();">
                 <i class="fa fa-check"></i> <?= __('Save') ?>
             </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> <?= __('Cancel') ?></a>', $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-close"></i>'. __('Cancel') .'</a>', $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
         </div>
     </div>
