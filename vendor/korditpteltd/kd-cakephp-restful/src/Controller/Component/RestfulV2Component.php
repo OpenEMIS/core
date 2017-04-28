@@ -9,7 +9,6 @@ use Cake\Chronos\MutableDate;
 use Cake\Chronos\Chronos;
 use Cake\Chronos\Date;
 use Cake\Chronos\MutableDateTime;
-
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
@@ -355,25 +354,6 @@ class RestfulV2Component extends Component implements RestfulInterface
         } else {
             $this->_outputError('Record does not exists');
         }
-
-        $options = ['extra' => $extra];
-        $entity = $table->newEntity($this->request->data, $options);
-
-        // blob data type will be sent using based64 format
-        $entity = $this->convertBase64ToBinary($entity);
-        $table->save($entity, $options);
-        $errors = $entity->errors();
-        $this->translateArray($errors);
-
-        $data = $this->formatResultSet($table, $entity, $extra);
-
-        // Jeff: will there be a case of flattening the array in Add?
-        // if ($extra->offsetExists('flatten') && $extra->offsetGet('flatten') === true) {
-        //     $data = Hash::flatten($data->toArray());
-        // }
-
-        $serialize->offsetSet('data', $data);
-        $serialize->offsetSet('error', $errors);
     }
 
     //curl -H "Content-Type: application/json" -i -X DELETE -d '{"id": 1}' http://localhost/school/api/restful/v2/Users.json
@@ -640,11 +620,6 @@ class RestfulV2Component extends Component implements RestfulInterface
                 }
                 $query->order($order);
             }
-
-            $serialize->offsetSet('data', $data);
-            $serialize->offsetSet('error', $errors);
-        } else {
-            $this->_outputError('Record does not exists');
         }
     }
 
