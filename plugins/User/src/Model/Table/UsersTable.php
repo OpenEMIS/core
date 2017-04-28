@@ -191,7 +191,8 @@ class UsersTable extends AppTable
             'through' => 'Security.SecurityGroupUsers',
             'dependent' => true
         ]);
-        $model->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'foreignKey' => 'student_id']);
+        $model->hasMany('InstitutionClassStudents', ['className' => 'Institution.InstitutionClassStudents', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $model->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'foreignKey' => 'student_id', 'dependent' => true, 'cascadeCallbacks' => true]);
     }
 
     public function beforeAction(Event $event)
