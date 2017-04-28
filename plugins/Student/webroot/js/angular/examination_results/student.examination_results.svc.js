@@ -31,7 +31,8 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getStudentExaminationResults: getStudentExaminationResults,
         getColumnDefs: getColumnDefs,
         getRowData: getRowData,
-        calculateTotal: calculateTotal
+        calculateTotal: calculateTotal,
+        translate: translate
     };
 
     return service;
@@ -41,6 +42,15 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.controllerAction('StudentExaminationResults');
         KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(models);
+    };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
     };
 
     function getExamination(id) {
@@ -265,7 +275,7 @@ function StudentExaminationResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
             var examinationGradingOption = properties.examinationGradingOptions[resultObj.examination_grading_option_id];
             var gradingType = properties.examinationGradingTypes[examinationGradingOption.examination_grading_type_id];
             var resultType = gradingType.result_type;
-            
+
             var result = '';
             switch (resultType) {
                 case 'MARKS':
