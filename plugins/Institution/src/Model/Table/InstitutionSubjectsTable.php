@@ -557,10 +557,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
 
     public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        foreach ($data['subject_students'] as &$subjectStudent) {
-            $subjectStudent = json_decode($this->urlsafeB64Decode($subjectStudent), true);
+        if ($data->offsetExists('subject_students')) {
+            foreach ($data['subject_students'] as &$subjectStudent) {
+                $subjectStudent = json_decode($this->urlsafeB64Decode($subjectStudent), true);
+            }
         }
-        $data['rooms']['_ids'] = $data['rooms'];
+
+        if ($data->offsetExists('rooms')) {
+            $data['rooms']['_ids'] = $data['rooms'];
+        }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
