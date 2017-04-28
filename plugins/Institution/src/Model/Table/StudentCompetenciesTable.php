@@ -56,7 +56,7 @@ class StudentCompetenciesTable extends ControllerActionTable
             'foreignKey' => 'institution_class_id',
             'targetForeignKey' => 'institution_subject_id'
         ]);
-        
+
         $this->toggle('add', false);
         $this->toggle('remove', false);
         $this->toggle('search', false);
@@ -143,7 +143,7 @@ class StudentCompetenciesTable extends ControllerActionTable
         }
 
         $selectedPeriod = $this->queryString('period', $periodOptions);
-        
+
         $this->controller->set(compact('periodOptions', 'selectedPeriod'));
         // End
 
@@ -558,7 +558,7 @@ class StudentCompetenciesTable extends ControllerActionTable
                     }
 
                     $rowPrefix = "$fieldPrefix.$currentStudentId";
-                    
+
                     $rowData = [];
                     $rowInput = "";
 
