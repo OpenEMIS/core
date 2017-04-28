@@ -12,7 +12,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         ExaminationCentresTable: 'Examination.ExaminationCentres',
         ExaminationCentreStudentsTable: 'Examination.ExamCentreStudents',
         ExaminationItemResultsTable: 'Examination.ExaminationItemResults',
-    };    
+    };
 
     var service = {
         init: init,
@@ -25,7 +25,8 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         getGrading: getGrading,
         calculateTotal: calculateTotal,
         saveRowData: saveRowData,
-        saveTotal: saveTotal
+        saveTotal: saveTotal,
+        translate: translate
     };
 
     return service;
@@ -34,6 +35,15 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         KdOrmSvc.base(baseUrl);
         KdOrmSvc.controllerAction('ExamResults');
         KdOrmSvc.init(models);
+    };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
     };
 
     function getExaminationCentre(examinationCentreId) {
@@ -49,7 +59,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
 
             if (angular.isObject(examinationSubjects) && examinationSubjects.length > 0) {
                 var subjects = [];
-                angular.forEach(examinationSubjects, function(examinationSubject, key) 
+                angular.forEach(examinationSubjects, function(examinationSubject, key)
                 {
                     if (examinationSubject.weight > 0) {
                         this.push(examinationSubject);

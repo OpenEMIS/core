@@ -8,7 +8,7 @@
  *
  * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
- * @since         DebugKit 1.0
+ * @since         1.0.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace DebugKit\View\Helper;
@@ -54,6 +54,9 @@ class SimpleGraphHelper extends Helper
     public function bar($value, $offset, $options = [])
     {
         $settings = array_merge($this->_defaultSettings, $options);
+        /* @var int $max */
+        /* @var int $width */
+        /* @var string $valueType */
         extract($settings);
 
         $graphValue = ($value / $max) * $width;
@@ -65,6 +68,7 @@ class SimpleGraphHelper extends Helper
             $graphOffset = ($offset / $max) * $width;
             $graphOffset = round($graphOffset);
         }
+
         return sprintf(
             '<div class="graph-bar" style="%s"><div class="graph-bar-value" style="%s" title="%s"> </div></div>',
             "width: {$width}px",

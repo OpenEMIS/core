@@ -16,14 +16,14 @@ class ColumnParser
      *
      * @var string
      */
-    protected $regexpParseColumn = '/^(\w*)(?::(\w*\[?\d*\]?))?(?::(\w*))?(?::(\w*))?/';
+    protected $regexpParseColumn = '/^(\w*)(?::(\w*\??\[?\d*\]?))?(?::(\w*))?(?::(\w*))?/';
 
     /**
      * Regex used to parse the field type and length
      *
      * @var string
      */
-    protected $regexpParseField = '/(\w+)\[(\d+)\]/';
+    protected $regexpParseField = '/(\w+\??)\[(\d+)\]/';
 
     /**
      * Parses a list of arguments into an array of fields
@@ -51,11 +51,14 @@ class ColumnParser
                 }
             }
 
+            $nullable = (bool)preg_match('/\w+\?(\[\d+\])?/', $type);
+            $type = $nullable ? str_replace('?', '', $type) : $type;
+
             list($type, $length) = $this->getTypeAndLength($field, $type);
             $fields[$field] = [
                 'columnType' => $type,
                 'options' => [
-                    'null' => false,
+                    'null' => $nullable,
                     'default' => null,
                 ]
             ];
@@ -199,7 +202,7 @@ class ColumnParser
                 $fieldType = 'integer';
             } elseif ($field === 'id') {
                 $fieldType = 'integer';
-            } elseif (in_array($field, ['created', 'modified', 'updated'])) {
+            } elseif (in_array($field, ['created', 'modified', 'updated']) || substr($field, -3) === '_at') {
                 $fieldType = 'datetime';
             } else {
                 $fieldType = 'string';
