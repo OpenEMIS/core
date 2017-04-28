@@ -24,50 +24,29 @@ $this->start('toolbar');
 $this->end();
 $this->start('panelBody');
 ?>
-<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController">
+<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
     <div class="alert {{InstitutionStudentCompetenciesController.class}}" ng-hide="InstitutionStudentCompetenciesController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionStudentCompetenciesController.message}}
+    </div>
+    <div class="input string required">
+        <label><?= __('Class Name') ?></label>
+        <input ng-model="InstitutionStudentCompetenciesController.className" type="text" ng-init="InstitutionStudentCompetenciesController.className='';" disabled="disabled">
     </div>
     <div class="input string required">
         <label><?= __('Academic Period') ?></label>
         <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
     </div>
     <div class="input string required">
-        <label><?= __('Class Name') ?></label>
-        <input ng-model="InstitutionStudentCompetenciesController.className" type="string" ng-init="InstitutionStudentCompetenciesController.className='';">
-        <div ng-if="InstitutionStudentCompetenciesController.postError.name" class="error-message">
-            <p ng-repeat="error in InstitutionStudentCompetenciesController.postError.name">{{ error }}</p>
-        </div>
+        <label><?= __('Competency Template') ?></label>
+        <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
     </div>
-    <div class="input select required error">
-        <label><?= __('Shift') ?></label>
-        <div class="input-select-wrapper">
-            <select name="InstitutionClasses[institution_shift_id]" id="institutionclasses-institution-shift-id"
-                ng-options="option.id as option.name for option in InstitutionStudentCompetenciesController.shiftOptions"
-                ng-model="InstitutionStudentCompetenciesController.selectedShift"
-                ng-init="InstitutionStudentCompetenciesController.selectedShift=null;"
-                >
-                <option value="" >-- <?= __('Select') ?> --</option>
-            </select>
-        </div>
-        <div ng-if="InstitutionStudentCompetenciesController.postError.institution_shift_id" class="error-message">
-            <p ng-repeat="error in InstitutionStudentCompetenciesController.postError.institution_shift_id">{{ error }}</p>
-        </div>
+    <div class="input string required">
+        <label><?= __('Competency Period') ?></label>
+        <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
     </div>
-    <div class="input select required error">
-        <label><?= __('Home Room Teacher') ?></label>
-        <div class="input-select-wrapper">
-            <select name="InstitutionClasses[staff_id]" id="institutionclasses-staff-id"
-                ng-options="option.id as option.name for option in InstitutionStudentCompetenciesController.teacherOptions"
-                ng-model="InstitutionStudentCompetenciesController.selectedTeacher"
-                ng-init="InstitutionStudentCompetenciesController.selectedTeacher=null;"
-                >
-                <option value="" >-- <?= __('Select Teacher or Leave Blank') ?> --</option>
-            </select>
-        </div>
-        <div ng-if="InstitutionStudentCompetenciesController.postError.staff_id" class="error-message">
-            <p ng-repeat="error in InstitutionStudentCompetenciesController.postError.staff_id">{{ error }}</p>
-        </div>
+    <div class="input string required">
+        <label><?= __('Competency Item') ?></label>
+        <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
     </div>
     <div class="form-buttons">
             <div class="button-label"></div>

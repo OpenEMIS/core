@@ -9,25 +9,21 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
     var service = {
         init: init,
         getClassDetails: getClassDetails,
-        getUnassignedStudent: getUnassignedStudent,
+        getCompetencyTemplate: getCompetencyTemplate,
         translate: translate,
-        getInstitutionShifts: getInstitutionShifts,
-        getTeacherOptions: getTeacherOptions,
-        saveClass: saveClass
+        saveCompetencyResults: saveCompetencyResults
     };
 
     var models = {
-        InstitutionStaff: 'Institution.Staff',
         InstitutionClasses: 'Institution.InstitutionClasses',
-        InstitutionShifts: 'Institution.InstitutionShifts',
-        Users: 'User.Users'
+        CompetencyTemplates: 'Competency.CompetencyTemplates'
     };
 
     return service;
 
     function init(baseUrl) {
         KdDataSvc.base(baseUrl);
-        KdDataSvc.controllerAction('ClassStudents');
+        KdDataSvc.controllerAction('StudentCompetencies');
         KdDataSvc.init(models);
     };
 
@@ -46,33 +42,22 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         };
         return InstitutionClasses
             .get(classId)
-            .find('translateItem')
-            .contain(['ClassStudents.Users.Genders', 'ClassStudents.StudentStatuses', 'ClassStudents.EducationGrades', 'AcademicPeriods', 'InstitutionSubjects'])
+            .contain(['AcademicPeriods'])
             .ajax({success: success, defer:true});
     }
 
-    function getUnassignedStudent(classId) {
+    function getCompetencyTemplate(academicPeriodId, competencyTemplateId) {
+        var primaryKey = KdDataSvc.urlsafeB64Encode(JSON.stringify({academic_period_id: academicPeriodId, id: competencyTemplateId}));
         var success = function(response, deferred) {
             deferred.resolve(response.data.data);
         };
-        return Users.find('InstitutionStudentsNotInClass', {institution_class_id: classId}).ajax({success: success, defer: true});
+        return CompetencyTemplates
+            .get(primaryKey)
+            .contain(['Periods', 'Criterias', 'StudentCompetencyResults'])
+            .ajax({success: success, defer:true});
     }
 
-    function getInstitutionShifts(institutionId, academicPeriodId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return InstitutionShifts.find('shiftOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
-    }
-
-    function getTeacherOptions(institutionId, academicPeriodId) {
-        var success = function(response, deferred) {
-            deferred.resolve(response.data.data);
-        };
-        return InstitutionStaff.find('classStaffOptions', {institution_id: institutionId, academic_period_id: academicPeriodId}).ajax({success: success, defer: true});
-    }
-
-    function saveClass(data) {
+    function saveCompetencyResults(data) {
         InstitutionClasses.reset();
         return InstitutionClasses.edit(data);
     }
