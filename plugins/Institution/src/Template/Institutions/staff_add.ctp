@@ -116,7 +116,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="InstitutionStaffController.reloadInternalDatasource(true)">Filter</button>
+                    <button class="btn btn-default btn-xs" ng-click="InstitutionStaffController.reloadInternalDatasource(true)"><?= __('Filter') ?></button>
                     <button class="btn btn-outline btn-xs" ng-click="InstitutionStaffController.clearInternalSearchFilters()" type="reset" value="Clear"><?= __('Clear') ?></button>
                 </div>
             </div>
