@@ -1,10 +1,10 @@
 angular
-    .module('student.results.ctrl', ['utils.svc', 'alert.svc', 'student.results.svc'])
+    .module('student.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'student.results.svc'])
     .controller('StudentResultsCtrl', StudentResultsController);
 
-StudentResultsController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'StudentResultsSvc'];
+StudentResultsController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'StudentResultsSvc'];
 
-function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, StudentResultsSvc) {
+function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, StudentResultsSvc) {
 	var vm = this;
 
     // Variables
@@ -83,23 +83,45 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
     });
 
     function initGrid(sectionId, academicPeriodId, assessmentId, assessmentResults) {
-        vm.gridOptions[sectionId] = {
-            columnDefs: [],
-            rowData: [],
-            headerHeight: 38,
-            rowHeight: 38,
-            minColWidth: 200,
-            enableColResize: false,
-            enableSorting: true,
-            unSortIcon: true,
-            enableFilter: true,
-            suppressMenuHide: true,
-            suppressCellSelection: true,
-            suppressMovableColumns: true,
-            onGridReady: function() {
-                vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
-            }
-        };
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            vm.gridOptions[sectionId] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                localeText: localeText,
+                onGridReady: function() {
+                    vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
+                }
+            };
+        }, function (error) {
+            vm.gridOptions[sectionId] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                onGridReady: function() {
+                    vm.setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults);
+                }
+            };
+        });
     }
 
     function setGrid(sectionId, academicPeriodId, assessmentId, assessmentResults) {
@@ -130,16 +152,26 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
 
     function resetColumnDefs(sectionId, assessmentPeriods) {
         var response = StudentResultsSvc.getColumnDefs(assessmentPeriods);
-
         if (angular.isDefined(response.error)) {
             console.log(response.error);
             return false;
         } else {
             var columnDefs = response.data;
-            if (vm.gridOptions[sectionId] != null) {
+            var textToTranslate = [];
+            angular.forEach(columnDefs, function(value, key) {
+                textToTranslate.push(value.headerName);
+            });
+            StudentResultsSvc.translate(textToTranslate)
+            .then(function(res){
+                angular.forEach(res, function(value, key) {
+                    columnDefs[key]['headerName'] = value;
+                });
+                if (vm.gridOptions[sectionId] != null) {
                 vm.gridOptions[sectionId].api.setColumnDefs(columnDefs);
             }
-
+            }, function(error){
+                console.log(error);
+            });
             return true;
         }
     }
