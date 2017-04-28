@@ -23,6 +23,15 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             });
         },
 
+        translate: function(data) {
+            KdOrmSvc.init({translation: 'translate'});
+            var success = function(response, deferred) {
+                var translated = response.data.translated;
+                deferred.resolve(translated);
+            };
+            return translation.translate(data, {success:success, defer: true});
+        },
+
         getAssessment: function(assessmentId) {
             return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },

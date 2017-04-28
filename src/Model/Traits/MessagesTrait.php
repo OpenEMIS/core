@@ -679,6 +679,13 @@ trait MessagesTrait {
             'Attendance' => [
                 'threshold' => 'Days within 1 to 30'
             ],
+            'LicenseRenewal' => [
+                'value' => 'Days within %d to %d',
+                'hour' => 'Hours within %d to %d '
+                    .'<br> Total accumulated hours based on'
+                    .'<br> selected field of study within the'
+                    .'<br> validity of license'
+            ],
             'LicenseValidity' => [
                 'value' => 'Days within %d to %d'
             ],
@@ -761,7 +768,8 @@ trait MessagesTrait {
             ],
             'InstitutionGrades' => [
                 'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleCheckStudentInEducationProgrammes' => 'Unable to set the end date because there are students still enrolled in this programme.'
                 ],
                 'start_date' => [
                     'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
@@ -886,6 +894,14 @@ trait MessagesTrait {
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
             ],
+            'StudentUser' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
             'Staff' => [
                 'staff_name' => [
                     'ruleInstitutionStaffId' => 'Staff has already been added.'
@@ -918,6 +934,20 @@ trait MessagesTrait {
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
+            'TransferApprovals' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
             ],
             'InstitutionFeeTypes' => [
@@ -1343,6 +1373,11 @@ trait MessagesTrait {
                     'ruleCompare' => 'Max value must be greater than min value',
                     'ruleRange' => 'Value must be within 0 to 100'
                 ]
+            ],
+            'StaffTrainings' => [
+                'credit_hours' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ],
             ],
         ],
         'AcademicPeriod' => [
