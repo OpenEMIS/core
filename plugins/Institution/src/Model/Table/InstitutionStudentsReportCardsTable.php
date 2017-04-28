@@ -89,11 +89,14 @@ class InstitutionStudentsReportCardsTable extends ControllerActionTable
         } else if ($type == 'HOMEROOM_TEACHER') {
             $query->select(['comments' => $this->aliasfield('homeroom_teacher_comments')]);
 
-        } else if ($type == 'SUBJECT_TEACHER') {
+        } else if ($type == 'TEACHER') {
             $ReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
 
             $query
-                ->select(['comments' => $ReportCardsComments->aliasField('comments')])
+                ->select([
+                    'comments' => $ReportCardsComments->aliasField('comments'),
+                    'comment_code' => $ReportCardsComments->aliasField('report_card_comment_code_id'),
+                ])
                 ->leftJoin([$ReportCardsComments->alias() => $ReportCardsComments->table()], [
                     $ReportCardsComments->aliasField('report_card_id = ') . $this->aliasField('report_card_id'),
                     $ReportCardsComments->aliasField('student_id = ') . $this->aliasField('student_id'),
