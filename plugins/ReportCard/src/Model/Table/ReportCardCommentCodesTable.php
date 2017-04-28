@@ -12,14 +12,17 @@ class ReportCardCommentCodesTable extends ControllerActionTable
         $this->hasMany('StudentsReportCardsComments', ['className' => 'Institution.InstitutionStudentsReportCardsCommentsTable', 'foreignKey' => 'report_card_comment_code_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ReportCardComments' => ['index']
+        ]);
     }
 
     public function getReportCardCommentCodesOptions()
     {
         return  $this
-                ->find('list')
-                ->find('visible')
-                ->find('order')
-                ->toArray();
+            ->find('list')
+            ->find('visible')
+            ->find('order')
+            ->toArray();
     }
 }

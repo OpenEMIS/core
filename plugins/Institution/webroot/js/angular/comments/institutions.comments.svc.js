@@ -1,24 +1,29 @@
 angular
-    .module('institutions.comments.svc', ['kd.orm.svc'])
+    .module('institutions.comments.svc', ['kd.data.svc', 'kd.session.svc'])
     .service('InstitutionsCommentsSvc', InstitutionsCommentsSvc);
 
-InstitutionsCommentsSvc.$inject = ['$filter', '$q', 'KdOrmSvc'];
+InstitutionsCommentsSvc.$inject = ['$filter', '$q', 'KdDataSvc', 'KdSessionSvc'];
 
-function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
+function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
+    const roles = {PRINCIPAL: 'PRINCIPAL', HOMEROOM_TEACHER: 'HOMEROOM_TEACHER', TEACHER: 'TEACHER'};
+
     var models = {
         ReportCardTable: 'ReportCard.ReportCards',
         ReportCardSubjectsTable: 'ReportCard.ReportCardSubjects',
+        ReportCardCommentCodesTable: 'ReportCard.ReportCardCommentCodes',
         InstitutionStudentsReportCardsTable: 'Institution.InstitutionStudentsReportCards',
-        ClassStudentsTable: 'Institution.InstitutionClassStudents'
+        InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments'
     };
 
     var service = {
         init: init,
         getReportCard: getReportCard,
+        getTabs: getTabs,
         getSubjects: getSubjects,
+        getCommentCodeOptions: getCommentCodeOptions,
         getColumnDefs: getColumnDefs,
         renderText: renderText,
-        // renderGrades: renderGrades,
+        renderSelect: renderSelect,
         getRowData: getRowData,
         saveRowData: saveRowData
     };
@@ -26,15 +31,65 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
     return service;
 
     function init(baseUrl) {
-        KdOrmSvc.base(baseUrl);
-        KdOrmSvc.controllerAction('ReportCardComments');
-        KdOrmSvc.init(models);
+        KdDataSvc.base(baseUrl);
+        KdDataSvc.controllerAction('ReportCardComments');
+        KdDataSvc.init(models);
+        KdSessionSvc.base(baseUrl);
     };
 
     function getReportCard(reportCardId) {
         return ReportCardTable
             .get(reportCardId)
             .ajax({defer: true});
+    };
+
+    function getTabs(reportCardId, classId, principalCommentsRequired, homeroomTeacherCommentsRequired, subjectTeacherCommentsRequired) {
+        var deferred = $q.defer();
+        var tabs = [];
+
+        if (principalCommentsRequired) {
+            tabs.push({
+                tabName: "Principal",
+                type: roles.PRINCIPAL,
+                education_subject_id: 0
+            });
+        }
+        if (homeroomTeacherCommentsRequired) {
+            tabs.push({
+                tabName: "Homeroom Teacher",
+                type: roles.HOMEROOM_TEACHER,
+                education_subject_id: 0
+            });
+        }
+        if (subjectTeacherCommentsRequired) {
+            this.getSubjects(reportCardId, classId)
+            .then(function(subjects)
+            {
+                if (angular.isObject(subjects) && subjects.length > 0) {
+                    angular.forEach(subjects, function(subjects, key)
+                    {
+                        this.push({
+                            tabName: subjects.name + " Teacher",
+                            type: roles.TEACHER,
+                            education_subject_id: subjects.education_subject_id,
+                        });
+                    }, tabs);
+                }
+            }, function(error)
+            {
+                // No Subjects
+                console.log(error);
+                deferred.reject(error);
+            });
+        }
+
+        if (tabs.length > 0) {
+            deferred.resolve(tabs);
+        } else {
+            deferred.reject('You have to configure the comments required first');
+        }
+
+        return deferred.promise;
     };
 
     function getSubjects(reportCardId, classId) {
@@ -57,7 +112,15 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
             .ajax({success: success, defer: true});
     };
 
-    function getColumnDefs(action, tab, _comments) {
+    function getCommentCodeOptions() {
+        return ReportCardCommentCodesTable
+            .select(['id', 'name'])
+            .where({visible: 1})
+            .order(['order'])
+            .ajax({defer: true});
+    };
+
+    function getColumnDefs(action, tab, _comments, commentCodeOptions) {
         var deferred = $q.defer();
 
         var filterParams = {
@@ -103,21 +166,34 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
 
         var allowEdit = action == 'edit';
         var headerIcons = allowEdit ? " <span class='divider'></span>  <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : '';
-        var isSubjectTab = (tab.type == 'SUBJECT_TEACHER') ? true : false;
+        var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
+
 
         if (isSubjectTab) {
-            columnDefs.push({
+            var selectOptions = {
+                0 : {
+                    id: 0,
+                    name: '-- Select --'
+                }
+            };
+            angular.forEach(commentCodeOptions, function(obj, key) {
+                selectOptions[obj.id] = {
+                    id: obj.id,
+                    name: obj.name
+                }
+            });
+
+            extra = {
+                selectOptions: selectOptions
+            };
+            var columnDef = {
                 headerName: "Comment Code" + headerIcons,
                 field: "comment_code",
                 filterParams: filterParams
-            });
+            };
+            columnDef = this.renderSelect(allowEdit, columnDef, extra, _comments);
+            columnDefs.push(columnDef);
         }
-
-        // columnDefs.push({
-        //     headerName: "Comments" + headerIcons,
-        //     field: "comments",
-        //     filterParams: filterParams
-        // });
 
         var extra = {};
         var columnDef = {
@@ -127,64 +203,6 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
-
-        // if (isMarksType) {
-        //     if (subject.examination_grading_type != null) {
-        //         extra = {
-        //             minMark: 0,
-        //             passMark: subject.examination_grading_type.pass_mark,
-        //             maxMark: subject.examination_grading_type.max
-        //         };
-        //     }
-
-        //     columnDef = this.renderMarks(allowEdit, columnDef, extra, _results);
-        // } else {
-        //     if (subject.examination_grading_type != null) {
-        //         var gradingOptions = {
-        //             0 : {
-        //                 id: 0,
-        //                 code: '',
-        //                 name: '-- Select --'
-        //             }
-        //         };
-
-        //         angular.forEach(subject.examination_grading_type.grading_options, function(obj, key) {
-        //             gradingOptions[obj.id] = obj;
-        //         });
-
-        //         extra = {
-        //             gradingOptions: gradingOptions
-        //         };
-        //     }
-
-        //     columnDef = this.renderGrades(allowEdit, columnDef, extra, _results);
-        // }
-
-
-
-        // columnDefs.push({
-        //     headerName: "weight",
-        //     field: 'weight',
-        //     hide: true
-        // });
-
-        // var visibility = isMarksType ? false : true;
-        // columnDefs.push({
-        //     headerName: "Total Mark",
-        //     field: "total_mark",
-        //     filter: "number",
-        //     hide: visibility,
-        //     valueGetter: function(params) {
-        //         var value = params.data[params.colDef.field];
-
-        //         if (!isNaN(parseFloat(value))) {
-        //             return $filter('number')(value, 2);
-        //         } else {
-        //             return '';
-        //         }
-        //     },
-        //     filterParams: filterParams
-        // });
 
         var bodyDir = getComputedStyle(document.body).direction;
         if (bodyDir == 'rtl') {
@@ -210,101 +228,94 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
         return cols;
     };
 
-    // function renderGrades(allowEdit, cols, extra, _results) {
-    //     var gradingOptions = extra.gradingOptions;
+    function renderSelect(allowEdit, cols, extra, _comments) {
+        var options = extra.selectOptions;
 
-    //     if (allowEdit) {
-    //         cols = angular.merge(cols, {
-    //             cellClass: 'oe-cell-highlight',
-    //             cellRenderer: function(params) {
-    //                 if (params.value.length == 0) {
-    //                     params.value = 0;
-    //                 }
+        if (allowEdit) {
+            cols = angular.merge(cols, {
+                cellClass: 'oe-cell-highlight',
+                cellRenderer: function(params) {
+                    if (params.value.length == 0) {
+                        params.value = 0;
+                    }
 
-    //                 var oldValue = params.value;
-    //                 var studentId = params.data.student_id;
-    //                 var institutionId = params.data.institution_id;
+                    var oldValue = params.value;
+                    var studentId = params.data.student_id;
 
-    //                 var eCell = document.createElement('div');
-    //                 eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
+                    var eCell = document.createElement('div');
+                    eCell.setAttribute("class", "oe-cell-editable oe-select-wrapper");
 
-    //                 var eSelect = document.createElement("select");
+                    var eSelect = document.createElement("select");
 
-    //                 var isAnswerValid = false;
-    //                 angular.forEach(gradingOptions, function(obj, key) {
-    //                     var eOption = document.createElement("option");
-    //                     var labelText = obj.name;
-    //                     if (obj.code.length > 0) {
-    //                         labelText = obj.code + ' - ' + labelText;
-    //                     }
-    //                     eOption.setAttribute("value", key);
-    //                     eOption.innerHTML = labelText;
-    //                     eSelect.appendChild(eOption);
-    //                     if (oldValue == obj.id) {
-    //                         isAnswerValid = true;
-    //                     }
-    //                 });
+                    var isAnswerValid = false;
+                    angular.forEach(options, function(obj, key) {
+                        var eOption = document.createElement("option");
+                        var labelText = obj.name;
+                        eOption.setAttribute("value", key);
+                        eOption.innerHTML = labelText;
+                        eSelect.appendChild(eOption);
+                        if (oldValue == obj.id) {
+                            isAnswerValid = true;
+                        }
+                    });
 
-    //                 // set selected value only when it is a valid option from gradingOptions list
-    //                 if (isAnswerValid) {
-    //                     eSelect.value = params.value;
-    //                 }
+                    // set selected value only when it is a valid option from gradingOptions list
+                    if (isAnswerValid) {
+                        eSelect.value = params.value;
+                    }
 
-    //                 eSelect.addEventListener('change', function () {
-    //                     var newValue = eSelect.value;
-    //                     params.data[params.colDef.field] = newValue;
+                    eSelect.addEventListener('change', function () {
+                        var newValue = eSelect.value;
+                        params.data[params.colDef.field] = newValue;
 
-    //                     if (angular.isUndefined(_results[studentId])) {
-    //                         _results[studentId] = {};
-    //                     }
+                        if (angular.isUndefined(_comments[studentId])) {
+                            _comments[studentId] = {};
+                        }
 
-    //                     if (angular.isUndefined(_results[studentId][institutionId])) {
-    //                         _results[studentId][institutionId] = {gradingOptionId: ''};
-    //                     }
+                        if (angular.isUndefined(_comments[params.data.student_id][params.colDef.field])) {
+                            _comments[params.data.student_id][params.colDef.field] = {};
+                        }
 
-    //                     _results[studentId][institutionId]['gradingOptionId'] = newValue;
-    //                 });
+                        _comments[params.data.student_id][params.colDef.field] = newValue;
+                    });
 
-    //                 eCell.appendChild(eSelect);
+                    eCell.appendChild(eSelect);
 
-    //                 return eCell;
-    //             },
-    //             suppressMenu: true
-    //         });
-    //     } else {
-    //         cols = angular.merge(cols, {
-    //             cellRenderer: function(params) {
-    //                 var cellValue = '';
-    //                 if (params.value.length != 0 && params.value != 0) {
-    //                     // show option code and name only when it is a valid option from gradingOptions list
-    //                     if (angular.isDefined(gradingOptions[params.value])) {
-    //                         cellValue = gradingOptions[params.value]['name'];
-    //                         if (gradingOptions[params.value]['code'].length > 0) {
-    //                             cellValue = gradingOptions[params.value]['code'] + ' - ' + cellValue;
-    //                         }
-    //                     }
-    //                 }
-    //                 // var cellValue = (params.value.length != 0 && params.value != 0) ? gradingOptions[params.value]['name'] : '';
+                    return eCell;
+                },
+                suppressMenu: true
+            });
+        } else {
+            cols = angular.merge(cols, {
+                cellRenderer: function(params) {
+                    var cellValue = '';
+                    if (params.value.length != 0 && params.value != 0) {
+                        // show option code and name only when it is a valid option from options list
+                        if (angular.isDefined(options[params.value])) {
+                            cellValue = options[params.value]['name'];
+                        }
+                    }
 
-    //                 var eCell = document.createElement('div');
-    //                 var eLabel = document.createTextNode(cellValue);
-    //                 eCell.appendChild(eLabel);
+                    var eCell = document.createElement('div');
+                    var eLabel = document.createTextNode(cellValue);
+                    eCell.appendChild(eLabel);
 
-    //                 return eCell;
-    //             },
-    //             suppressMenu: true
-    //         });
-    //     }
+                    return eCell;
+                },
+                suppressMenu: true
+            });
+        }
 
-    //     return cols;
-    // };
+        return cols;
+    };
 
-    function getRowData(academicPeriodId, institutionId, institutionClassId, educationGradeId, reportCardId, tab, limit, page) {
+    function getRowData(academicPeriodId, institutionId, institutionClassId, educationGradeId, reportCardId, commentCodeOptions, tab, limit, page) {
         var success = function(response, deferred) {
             if (angular.isDefined(response.data.error)) {
                 deferred.reject(response.data.error);
             } else {
                 var reportCardStudents = response.data.data;
+                var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
                 if (angular.isObject(reportCardStudents) && reportCardStudents.length > 0) {
                     var studentId = null;
@@ -325,8 +336,19 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
                                 name: reportCardStudent._matchingData.Students.name,
                                 student_id: reportCardStudent.student_id,
                                 student_status: reportCardStudent._matchingData.StudentStatuses.name,
-                                comments: reportCardStudent.comments,
+                                comments: '',
+                                comment_code: ''
                             };
+
+                            if (reportCardStudent.comments != null) {
+                                studentsData['comments'] = reportCardStudent.comments;
+                            }
+
+                            if (isSubjectTab) {
+                                if (reportCardStudent.comment_code != null) {
+                                    studentsData['comment_code'] = reportCardStudent.comment_code;
+                                }
+                            }
 
                             studentId = currentStudentId;
                         }
@@ -365,7 +387,7 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
         var promises = [];
 
         angular.forEach(comments, function(obj, studentId) {
-                var isSubjectTab = (tab.type == 'SUBJECT_TEACHER') ? true : false;
+                var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
                 var data = {
                     "report_card_id": reportCardId,
@@ -377,14 +399,23 @@ function InstitutionsCommentsSvc($filter, $q, KdOrmSvc) {
 
                 if (isSubjectTab) {
                     data["education_subject_id"] = tab.education_subject_id;
-                    console.log(data);
+                    data["comments"] = obj.comments;
+                    data["report_card_comment_code_id"] = obj.comment_code;
+
+                    KdSessionSvc.read('Auth.User.id')
+                    .then(function(response) {
+                        data["staff_id"] = response;
+                        promises.push(InstitutionStudentsReportCardsCommentsTable.save(data));
+                    }, function(error) {
+                        console.log(error);
+                    });
 
                 } else {
                     data["institution_class_id"] = classId;
 
-                    if (tab.type == 'PRINCIPAL') {
+                    if (tab.type == roles.PRINCIPAL) {
                         data["principal_comments"] = obj.comments;
-                    } else if (tab.type == 'HOMEROOM_TEACHER') {
+                    } else if (tab.type == roles.HOMEROOM_TEACHER) {
                         data["homeroom_teacher_comments"] = obj.comments;
                     }
 
