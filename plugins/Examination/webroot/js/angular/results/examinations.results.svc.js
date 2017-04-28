@@ -12,7 +12,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         ExaminationCentresTable: 'Examination.ExaminationCentres',
         ExaminationCentreStudentsTable: 'Examination.ExamCentreStudents',
         ExaminationItemResultsTable: 'Examination.ExaminationItemResults',
-        translation: 'translate'
     };
 
     var service = {
@@ -26,7 +25,8 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         getGrading: getGrading,
         calculateTotal: calculateTotal,
         saveRowData: saveRowData,
-        saveTotal: saveTotal
+        saveTotal: saveTotal,
+        translate: translate
     };
 
     return service;
