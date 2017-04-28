@@ -7,6 +7,7 @@ InstitutionCommentsController.$inject = ['$scope', '$anchorScroll', '$filter', '
 function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, UtilsSvc, AlertSvc, InstitutionsCommentsSvc) {
     var vm = this;
     $scope.action = 'view';
+    vm.commentCodeOptions = null;
     vm.currentTab = {};
     vm.comments = {};
 
@@ -36,61 +37,44 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
             vm.principalCommentsRequired = reportCardData.principal_comments_required;
             vm.homeroomTeacherCommentsRequired = reportCardData.homeroom_teacher_comments_required;
-            vm.subjectTeacherCommentsRequired = reportCardData.subject_teacher_comments_required;
+            vm.teacherCommentsRequired = reportCardData.teacher_comments_required;
 
-            var tabs = [];
-            if (vm.principalCommentsRequired) {
-                tabs.push({
-                    tabName: "Principal",
-                    type: "PRINCIPAL",
-                    education_subject_id: 0
-                });
-            }
-            if (vm.homeroomTeacherCommentsRequired) {
-                tabs.push({
-                    tabName: "Homeroom Teacher",
-                    type: "HOMEROOM_TEACHER",
-                    education_subject_id: 0
-                });
-            }
-            vm.tabs = tabs;
-
-            if (vm.subjectTeacherCommentsRequired) {
-                return InstitutionsCommentsSvc.getSubjects(vm.reportCardId, vm.classId);
-            }
+            return InstitutionsCommentsSvc.getTabs(vm.reportCardId, vm.classId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired);
         }, function(error)
         {
             // No Report Card
             console.log(error);
             AlertSvc.warning(vm, error);
         })
-        // getSubjects
-        .then(function(subjects)
+        // getTabs
+        .then(function(tabs)
         {
-            if (angular.isObject(subjects) && subjects.length > 0) {
-                angular.forEach(subjects, function(subjects, key)
-                {
-                    this.push({
-                        tabName: subjects.code + " - " + subjects.name + " Teacher",
-                        type: "SUBJECT_TEACHER",
-                        education_subject_id: subjects.education_subject_id,
-                    });
-                }, vm.tabs);
+            vm.tabs = tabs;
+
+            if (angular.isObject(tabs) && tabs.length > 0) {
+                var tab = tabs[0];
+                vm.initGrid(vm.classId, vm.educationGradeId, tab);
             }
+
+            return InstitutionsCommentsSvc.getCommentCodeOptions();
         }, function(error)
         {
-            // No Subjects
+            // No Tabs
+            console.log(error);
+            AlertSvc.warning(vm, error);
+        })
+        // getCommentCodeOptions
+        .then(function(response)
+        {
+            vm.commentCodeOptions = response.data;
+
+        }, function(error)
+        {
+            // No Comment Codes
             console.log(error);
             AlertSvc.warning(vm, error);
         })
         .finally(function(){
-            if (angular.isObject(vm.tabs) && vm.tabs.length > 0) {
-                var tab = vm.tabs[0];
-                vm.initGrid(vm.classId, vm.educationGradeId, tab);
-            } else {
-                AlertSvc.warning(vm, 'You have to configure the comments required first');
-            }
-
             UtilsSvc.isAppendLoader(false);
         });
     });
@@ -104,9 +88,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
     function initGrid(classId, educationGradeId, tab) {
         vm.gridOptions = {
-            context: {
-                education_subject_id: 0,
-            },
+            context: {},
             columnDefs: [],
             rowData: [],
             headerHeight: 38,
@@ -147,7 +129,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     function onChangeSubject(tab) {
         AlertSvc.reset(vm);
         vm.currentTab = tab;
-        console.log(vm.currentTab);
+
         if (vm.gridOptions != null) {
             // Always reset
             vm.gridOptions.api.setColumnDefs([]);
@@ -163,7 +145,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'institution-comment-table');
-                InstitutionsCommentsSvc.getRowData(vm.academicPeriodId, vm.institutionId, vm.classId, vm.educationGradeId, vm.reportCardId, tab, limit, page)
+                InstitutionsCommentsSvc.getRowData(vm.academicPeriodId, vm.institutionId, vm.classId, vm.educationGradeId, vm.reportCardId, vm.commentCodeOptions, tab, limit, page)
                 .then(function(response) {
                     var lastRowIndex = response.data.total;
 
@@ -189,7 +171,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     function onChangeColumnDefs(action, tab) {
         var deferred = $q.defer();
 
-        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.comments)
+        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.comments, vm.commentCodeOptions)
         .then(function(cols)
         {
             if (vm.gridOptions != null) {
@@ -226,10 +208,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 console.log(error);
             })
             .finally(function() {
-                vm.gridOptions.api.forEachNode(function(row) {
-                    InstitutionsCommentsSvc.saveTotal(row.data, row.data.student_id, row.data.institution_id, row.data.education_grade_id, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId);
-                });
-
                 $scope.action = 'view';
                 // reset comments object
                 vm.comments = {};
