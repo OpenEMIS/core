@@ -277,23 +277,24 @@ class InstitutionsController extends AppController
 
     public function StudentCompetencies($subaction = 'index')
     {
+
+
         if ($subaction == 'editStudents') {
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
-            pr($crumbTitle);
             $session = $this->request->session();
-            $roles = [];
-            $queryString = $this->ControllerAction->getQueryString();
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
-            $viewUrl = $this->ControllerAction->url('view');
-            $viewUrl['action'] = 'StudentCompetencies';
-            $viewUrl[0] = 'view';
-
             $indexUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'StudentCompetencies',
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
+            $this->Navigation->addCrumb($crumbTitle, $indexUrl);
+            $roles = [];
+            $queryString = $this->ControllerAction->getQueryString();
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'StudentCompetencies';
+            $viewUrl[0] = 'view';
 
             $alertUrl = [
                 'plugin' => 'Institution',
@@ -597,14 +598,13 @@ class InstitutionsController extends AppController
                 } elseif ($action == 'Results') {
                     $header = $name .' - '.__('Assessments');
                 } else {
-                    $header = $name .' - '.__(Inflector::humanize($action));
+                    $header = $name .' - '.__(Inflector::humanize(Inflector::underscore($action)));
                 }
                 $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
             }
         }
-
         $this->set('contentHeader', $header);
     }
 
