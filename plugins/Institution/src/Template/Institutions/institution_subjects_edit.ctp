@@ -29,7 +29,7 @@ $this->start('panelBody');
 ?>
 <form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionSubjectStudentsCtrl as InstitutionSubjectStudentsController">
     <div class="alert {{InstitutionSubjectStudentsController.class}}" ng-hide="InstitutionSubjectStudentsController.message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">Ã—</a>{{InstitutionSubjectStudentsController.message}}
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionSubjectStudentsController.message}}
     </div>
     <div class="input string required">
         <label><?= __('Name') ?></label>
@@ -105,9 +105,9 @@ $this->start('panelBody');
         <div class="form-buttons">
             <div class="button-label"></div>
             <button class="btn btn-default btn-save" type="button" ng-click="InstitutionSubjectStudentsController.postForm();">
-                <i class="fa fa-check"></i> Save
+                <i class="fa fa-check"></i> <?= __('Save') ?>
             </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> Cancel</a>', $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
+            <?= $this->Html->link('<i class="fa fa-close"></i> <?= __('Cancel') ?></a>', $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
             <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
         </div>
     </div>
