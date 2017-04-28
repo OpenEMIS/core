@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS `report_cards` (
  `description` text COLLATE utf8mb4_unicode_ci,
  `start_date` date NOT NULL,
  `end_date` date NOT NULL,
- `principal_comments_required` int(1) NOT NULL DEFAULT '0',
- `homeroom_teacher_comments_required` int(1) NOT NULL DEFAULT '0',
- `subject_teacher_comments_required` int(1) NOT NULL DEFAULT '0',
+ `principal_comments_required` int(1) NOT NULL,
+ `homeroom_teacher_comments_required` int(1) NOT NULL,
+ `teacher_comments_required` int(1) NOT NULL,
  `excel_template_name` varchar(250) COLLATE utf8mb4_unicode_ci NOT NULL,
  `excel_template` longblob NOT NULL,
  `academic_period_id` int(11) NOT NULL COMMENT 'links to academic_periods.id',
@@ -83,7 +83,8 @@ CREATE TABLE IF NOT EXISTS `institution_students_report_cards` (
 DROP TABLE IF EXISTS `institution_students_report_cards_comments`;
 CREATE TABLE IF NOT EXISTS `institution_students_report_cards_comments` (
  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
- `comments` text COLLATE utf8mb4_unicode_ci NOT NULL,
+ `comments` text COLLATE utf8mb4_unicode_ci,
+ `report_card_comment_code_id` int(11) NOT NULL COMMENT 'links to report_card_comment_codes.id',
  `report_card_id` int(11) NOT NULL COMMENT 'links to report_cards.id',
  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
@@ -96,6 +97,7 @@ CREATE TABLE IF NOT EXISTS `institution_students_report_cards_comments` (
  `created_user_id` int(11) NOT NULL,
  `created` datetime NOT NULL,
  PRIMARY KEY (`report_card_id`, `student_id`, `institution_id`, `academic_period_id`, `education_grade_id`, `education_subject_id`),
+ KEY `report_card_comment_code_id` (`report_card_comment_code_id`),
  KEY `report_card_id` (`report_card_id`),
  KEY `student_id` (`student_id`),
  KEY `institution_id` (`institution_id`),
@@ -106,3 +108,21 @@ CREATE TABLE IF NOT EXISTS `institution_students_report_cards_comments` (
  KEY `modified_user_id` (`modified_user_id`),
  KEY `created_user_id` (`created_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This table contains the comments from subject teachers for a particular institution student report card';
+
+-- report_card_comment_codes
+DROP TABLE IF EXISTS `report_card_comment_codes`;
+CREATE TABLE IF NOT EXISTS `report_card_comment_codes` (
+ `id` int(11) NOT NULL AUTO_INCREMENT,
+ `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+ `order` int(3) NOT NULL,
+ `visible` int(1) NOT NULL DEFAULT '1',
+ `editable` int(1) NOT NULL DEFAULT '1',
+ `default` int(1) NOT NULL DEFAULT '0',
+ `international_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+ `national_code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+ `modified_user_id` int(11) DEFAULT NULL,
+ `modified` datetime DEFAULT NULL,
+ `created_user_id` int(11) NOT NULL,
+ `created` datetime NOT NULL,
+ PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='This is a field option table containing the list of user-defined comment codes that can be used for student report cards';

@@ -15,5 +15,8 @@ DROP TABLE IF EXISTS `institution_students_report_cards`;
 -- institution_students_report_cards_comments
 DROP TABLE IF EXISTS `institution_students_report_cards_comments`;
 
+-- report_card_comment_codes
+DROP TABLE IF EXISTS `report_card_comment_codes`;
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3533';
