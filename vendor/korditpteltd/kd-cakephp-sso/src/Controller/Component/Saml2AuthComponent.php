@@ -8,23 +8,24 @@ use Cake\Event\Event;
 use Cake\Core\Configure;
 use Cake\Routing\Router;
 use Cake\Utility\Security;
+use OneLogin_Saml2_Auth;
+use OneLogin_Saml2_Error;
 
-require_once( ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
-
-class Saml2AuthComponent extends Component {
+class Saml2AuthComponent extends Component
+{
 
     public $components = ['Auth'];
-
     private $saml;
     private $clientId;
     private $authType;
     private $createUser;
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->session = $this->request->session();
         $settings = [];
-        $returnUrl = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-        $logout = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'],true);
+        $returnUrl = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
+        $logout = Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'], true);
 
         $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
         $samlAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('Saml2');
@@ -62,11 +63,12 @@ class Saml2AuthComponent extends Component {
 
         $this->createUser = isset($samlAttributes['allow_create_user']) ?  $samlAttributes['allow_create_user'] : 0;
 
-        $this->saml = new \OneLogin_Saml2_Auth($setting);
+        $this->saml = new OneLogin_Saml2_Auth($setting);
         $this->controller = $this->_registry->getController();
     }
 
-    private function addCertFingerPrintInformation($type, &$setting, $attributes) {
+    private function addCertFingerPrintInformation($type, &$setting, $attributes)
+    {
         $arr = [
             'certFingerprint',
             'certFingerprintAlgorithm',
@@ -81,13 +83,15 @@ class Saml2AuthComponent extends Component {
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Controller.Auth.authenticate'] = 'authenticate';
         return $events;
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         if (!$this->session->read('Auth.fallback')) {
             $this->controller->Auth->config('authenticate', [
                 'Form' => [
@@ -105,22 +109,17 @@ class Saml2AuthComponent extends Component {
         }
     }
 
-    public function startup(Event $event) {
-        if (!$this->controller->Auth->user()) {
-            $action = $this->request->params['action'];
-            if ($action == $this->config('loginAction') && !$this->session->read('Auth.fallback') && !$this->session->read('Saml2.remoteFail')) {
-                $this->login();
+    private function idpLogin()
+    {
+        try {
+            $this->processResponse();
+            if ($this->isAuthenticated()) {
+                return true;
+            } else {
+                return false;
             }
-        }
-
-    }
-
-    private function idpLogin() {
-        $this->processResponse();
-        if ($this->isAuthenticated()) {
-            return true;
-        } else {
-            return false;
+        } catch (OneLogin_Saml2_Error $e) {
+            $this->login();
         }
     }
 
@@ -133,7 +132,8 @@ class Saml2AuthComponent extends Component {
      * @param bool   $isPassive  When true the AuthNReuqest will set the Ispassive='true'
      *
      */
-    public function login($returnTo = null, $parameters = [], $forceAuthn = false, $isPassive = false) {
+    public function login($returnTo = null, $parameters = [], $forceAuthn = false, $isPassive = false)
+    {
         $this->saml->login($returnTo, $parameters, $forceAuthn, $isPassive);
     }
 
@@ -145,7 +145,8 @@ class Saml2AuthComponent extends Component {
      * @param string $nameId        The NameID that will be set in the LogoutRequest.
      * @param string $sessionIndex  The SessionIndex (taken from the SAML Response in the SSO process).
      */
-    public function logout($returnTo = null, $parameters = array(), $nameId = null, $sessionIndex = null) {
+    public function logout($returnTo = null, $parameters = array(), $nameId = null, $sessionIndex = null)
+    {
         $this->saml->logout($returnTo, $parameters, $nameId, $sessionIndex);
     }
 
@@ -154,7 +155,8 @@ class Saml2AuthComponent extends Component {
      *
      * @param string $requestId The ID of the AuthNRequest sent by this SP to the IdP
      */
-    public function processResponse($requestId = null) {
+    public function processResponse($requestId = null)
+    {
         $this->saml->processResponse($requestId);
     }
 
@@ -163,7 +165,8 @@ class Saml2AuthComponent extends Component {
      *
      * @return array  Errors
      */
-    public function getErrors() {
+    public function getErrors()
+    {
         return $this->saml->getErrors();
     }
 
@@ -172,7 +175,8 @@ class Saml2AuthComponent extends Component {
      *
      * @return boolean  True if the user is authenticated
      */
-    public function isAuthenticated() {
+    public function isAuthenticated()
+    {
         return $this->saml->isAuthenticated();
     }
 
@@ -181,7 +185,8 @@ class Saml2AuthComponent extends Component {
      *
      * @return array  Attributes of the user.
      */
-    public function getAttributes() {
+    public function getAttributes()
+    {
         return $this->saml->getAttributes();
     }
 
@@ -192,11 +197,13 @@ class Saml2AuthComponent extends Component {
      *
      * @return NULL || array Requested SAML attribute ($name).
      */
-    public function getAttribute($name) {
+    public function getAttribute($name)
+    {
         return $this->saml->getAttribute($name);
     }
 
-    public function authenticate(Event $event, ArrayObject $extra) {
+    public function authenticate(Event $event, ArrayObject $extra)
+    {
         $extra['authType'] = $this->authType;
         if ($this->controller->Auth->user()) {
             return true;
@@ -230,7 +237,6 @@ class Saml2AuthComponent extends Component {
             }
             return false;
         }
-
     }
 
     private function checkLogin($username = null, $extra = [])
@@ -259,6 +265,4 @@ class Saml2AuthComponent extends Component {
         $this->controller->dispatchEvent('Controller.Auth.afterCheckLogin', [$extra], $this);
         return $extra['loginStatus'];
     }
-
-
 }
