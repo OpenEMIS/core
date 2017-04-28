@@ -1775,8 +1775,9 @@ class ValidationBehavior extends Behavior {
 	public static function checkRoomCapacityMoreThanStudents($field, array $globalData)
 	{
 		$ExamRoomsStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
-		$studentCount = $ExamRoomsStudents->find()
-			->select(['count' => 'COUNT(*)'])
+		$query = $ExamRoomsStudents->find();
+		$studentCount = $query
+			->select(['count' => $query->func()->count('student_id')])
 			->where([$ExamRoomsStudents->aliasField('examination_centre_room_id') => $globalData['data']['id']])
 			->group([$ExamRoomsStudents->aliasField('examination_id')])
 			->toArray();
