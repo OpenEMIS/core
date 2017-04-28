@@ -198,8 +198,10 @@ class InstitutionClassesTable extends ControllerActionTable
 
         $this->field('staff_id', ['type' => 'select', 'options' => [], 'visible' => ['index'=>true, 'view'=>true, 'edit'=>true], 'attr' => ['label' => $this->getMessage($this->aliasField('staff_id'))]]);
 
+        $this->field('multigrade');
+
         $this->setFieldOrder([
-            'name', 'staff_id', 'male_students', 'female_students', 'total_students', 'subjects',
+            'name', 'staff_id', 'multigrade', 'male_students', 'female_students', 'total_students', 'subjects',
         ]);
 
     }
@@ -414,7 +416,7 @@ class InstitutionClassesTable extends ControllerActionTable
         }
 
         $this->setFieldOrder([
-            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'staff_id', 'students'
+            'academic_period_id', 'name', 'institution_shift_id', 'education_grades', 'staff_id', 'multigrade', 'students'
         ]);
 
     }
@@ -494,6 +496,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
         // $institutionId = $this->Session->read('Institution.Institutions.id');
         // $this->InstitutionShifts->duplicateInstitutionShifts($institutionId);
+
+        $this->field('multigrade', ['visible' => false]);
     }
 
 	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -522,6 +526,8 @@ class InstitutionClassesTable extends ControllerActionTable
                 'action' => 'Classes'
             ]);
         }
+
+        $this->field('multigrade', ['visible' => false]);
 
         $this->setFieldOrder([
             'academic_period_id', 'name', 'institution_shift_id', 'staff_id', 'students',
@@ -606,7 +612,20 @@ class InstitutionClassesTable extends ControllerActionTable
                                 $students[] = $virtualStudent;
                             }
                         }
-                        unset($studentOptions[$id]);
+
+                        foreach ($studentOptions as $group => $index) {
+                            if (is_array($index) && !empty($index)) {
+                                foreach ($index as $key => $value) {
+                                    if ($id == $key) {
+                                        unset($studentOptions[$group][$key]);
+
+                                        if (empty($studentOptions[$group])) {
+                                            unset($studentOptions[$group]);
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     //}
                 }
             }
@@ -622,22 +641,38 @@ class InstitutionClassesTable extends ControllerActionTable
                             if ($virtualStudent) {
                                 $students[] = $virtualStudent;
                             }
+                            foreach ($studentOptions as $group => $index) {
+                                if (is_array($index)) {
+                                    foreach ($index as $key => $value) {
+                                        if ($id == $key) {
+                                            unset($studentOptions[$group][$key]);
+
+                                            if (empty($studentOptions[$group])) {
+                                                unset($studentOptions[$group]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
-                        unset($studentOptions[$id]);
                     } else if ($this->request->data['student_id'] == -1) {
-                        foreach ($studentOptions as $id => $name) {
+                        foreach ($studentOptions as $group => $index) {
                             if (count($students)==$maxNumberOfStudents) {
                                 $this->Alert->warning($this->aliasField('maximumStudentsReached'));
                                 break;
                             }
-                            if ($id > 0) {
-                                $virtualStudent = $this->createVirtualStudentEntity($id, $entity);
-                                if ($virtualStudent) {
-                                    $students[] = $virtualStudent;
+                            if (is_array($index)) {
+                                foreach ($index as $id => $value) {
+                                    if ($id > 0) {
+                                        $virtualStudent = $this->createVirtualStudentEntity($id, $entity);
+                                        if ($virtualStudent) {
+                                            $students[] = $virtualStudent;
+                                        }
+                                    }
                                 }
-                                unset($studentOptions[$id]);
                             }
                         }
+                        $studentOptions = [];
                     }
                 }
             } else {
@@ -819,7 +854,14 @@ class InstitutionClassesTable extends ControllerActionTable
         }
     }
 
-
+    public function onGetMultigrade(Event $event, Entity $entity)
+    {
+        if (empty($entity->class_number)) {
+            return __('Yes');
+        } else {
+            return __('No');
+        }
+    }
 /******************************************************************************************************************
 **
 ** essential functions
@@ -881,7 +923,8 @@ class InstitutionClassesTable extends ControllerActionTable
             ->contain([
                 'Users' => function ($q) {
                         return $q->select(['id', 'openemis_no', 'first_name', 'middle_name', 'third_name', 'last_name', 'preferred_name']);
-                    }
+                    },
+                'EducationGrades'
             ])
             ->where([
                 $students->aliasField('institution_id') => $classEntity->institution_id,
@@ -889,6 +932,9 @@ class InstitutionClassesTable extends ControllerActionTable
                 $students->aliasField('education_grade_id') . ' IN' => $classGrades,
                 $students->aliasField('academic_period_id')  => $academicPeriodId,
                 'ClassStudents.id IS NULL' //dont have class assigned
+            ])
+            ->order([
+                'EducationGrades.order'
             ])
             ->toArray();
 
@@ -903,7 +949,7 @@ class InstitutionClassesTable extends ControllerActionTable
              */
             if (in_array($obj->education_grade_id, $classGrades)) {
                 if (isset($obj->user)) {
-                    $studentOptions[$obj->user->id] = $obj->user->name_with_id;
+                    $studentOptions[$obj->education_grade->name][$obj->user->id] = $obj->user->name_with_id;
                 } else {
                     $this->log('Data corrupted with no security user for student: '. $obj->id, 'debug');
                 }
