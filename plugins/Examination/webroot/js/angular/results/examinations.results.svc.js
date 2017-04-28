@@ -12,15 +12,12 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         ExaminationCentresExaminationsTable: 'Examination.ExaminationCentresExaminations',
         ExaminationCentreStudentsTable: 'Examination.ExamCentreStudents',
         ExaminationItemResultsTable: 'Examination.ExaminationItemResults',
-<<<<<<< HEAD
-        ExaminationCentresExaminationsSubjectsStudentsTable: 'Examination.ExaminationCentresExaminationsSubjectsStudents'
-=======
         translation: 'translate'
->>>>>>> 7443a5617b8b27e263311b3a57916fc8a9fc920a
     };
 
     var service = {
         init: init,
+        translate: translate,
         getExaminationCentreExaminations: getExaminationCentreExaminations,
         getSubjects: getSubjects,
         getColumnDefs: getColumnDefs,
@@ -40,13 +37,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         KdOrmSvc.init(models);
     };
 
-<<<<<<< HEAD
-    function getExaminationCentreExaminations(examinationCentreId, examinationId) {
-        return ExaminationCentresExaminationsTable
-            .select()
-            .where({examination_centre_id: examinationCentreId, examination_id: examinationId})
-            .contain(['AcademicPeriods', 'Examinations', 'ExaminationCentres'])
-=======
     function translate(data) {
         KdOrmSvc.init({translation: 'translate'});
         var success = function(response, deferred) {
@@ -56,11 +46,11 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         return translation.translate(data, {success:success, defer: true});
     };
 
-    function getExaminationCentre(examinationCentreId) {
-        return ExaminationCentresTable
-            .get(examinationCentreId)
-            .contain(['AcademicPeriods', 'Examinations'])
->>>>>>> 7443a5617b8b27e263311b3a57916fc8a9fc920a
+    function getExaminationCentreExaminations(examinationCentreId, examinationId) {
+        return ExaminationCentresExaminationsTable
+            .select()
+            .where({examination_centre_id: examinationCentreId, examination_id: examinationId})
+            .contain(['AcademicPeriods', 'Examinations', 'ExaminationCentres'])
             .ajax({defer: true});
     };
 
