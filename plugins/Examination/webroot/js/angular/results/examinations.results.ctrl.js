@@ -73,47 +73,14 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
         }
     });
 
-<<<<<<< HEAD
     function initGrid(academicPeriodId, examinationId, examinationCentreId, subject) {
-        vm.gridOptions = {
-            context: {
-                academic_period_id: academicPeriodId,
-                examination_id: examinationId,
-                examination_centre_id: examinationCentreId,
-                education_subject_id: 0,
-                examination_item_id: 0
-            },
-            columnDefs: [],
-            rowData: [],
-            headerHeight: 38,
-            rowHeight: 38,
-            enableColResize: false,
-            enableSorting: true,
-            unSortIcon: true,
-            enableFilter: true,
-            suppressMenuHide: true,
-            suppressCellSelection: true,
-            suppressMovableColumns: true,
-            singleClickEdit: true,
-            rowModelType: 'pagination',
-            onGridSizeChanged: function(e) {
-                this.api.sizeColumnsToFit();
-            },
-            onCellValueChanged: function(params) {
-                var institutionId = params.data.institution_id;
-
-                if (angular.isUndefined(vm.results[params.data.student_id])) {
-                    vm.results[params.data.student_id] = {};
-                }
-=======
-    function initGrid(academicPeriodId, examinationId, subject) {
         AggridLocaleSvc.getTranslatedGridLocale()
         .then(function(localeText){
             vm.gridOptions = {
                 context: {
                     academic_period_id: academicPeriodId,
                     examination_id: examinationId,
-                    examination_centre_id: 0,
+                    examination_centre_id: examinationCentreId,
                     education_subject_id: 0,
                     examination_item_id: 0
                 },
@@ -144,7 +111,6 @@ function ExaminationsResultsController($scope, $anchorScroll, $filter, $q, Utils
                     if (angular.isUndefined(vm.results[params.data.student_id][institutionId])) {
                         vm.results[params.data.student_id][institutionId] = {marks: ''};
                     }
->>>>>>> 7443a5617b8b27e263311b3a57916fc8a9fc920a
 
                     vm.results[params.data.student_id][institutionId]['marks'] = params.newValue;
 
