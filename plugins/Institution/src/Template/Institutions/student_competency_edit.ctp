@@ -38,15 +38,15 @@ $this->start('panelBody');
     </div>
     <div class="input string required">
         <label><?= __('Competency Template') ?></label>
-        <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
+        <input ng-model="InstitutionStudentCompetenciesController.competencyTemplateName" type="text" disabled="disabled">
     </div>
     <div class="input string required">
         <label><?= __('Competency Period') ?></label>
-        <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
+        <input ng-model="InstitutionStudentCompetenciesController.competencyPeriodName" type="text" disabled="disabled">
     </div>
     <div class="input string required">
         <label><?= __('Competency Item') ?></label>
-        <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
+        <input ng-model="InstitutionStudentCompetenciesController.competencyItemName" type="text" disabled="disabled">
     </div>
     <div class="form-buttons">
             <div class="button-label"></div>

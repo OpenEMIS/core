@@ -29,6 +29,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     Controller.postError = [];
     // format of competency result will be competencyperiodId.competencyItemId.studentId.criteriaId
     Controller.competencyItemResults = {};
+    Controller.competencyTemplateName = '';
+    Controller.criteriaOptions = [];
 
     // Function mapping
     Controller.postForm = postForm;
@@ -46,42 +48,24 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 Controller.academicPeriodName = response.academic_period.name;
                 var promises = [];
                 promises[0] = InstitutionStudentCompetenciesSvc.getCompetencyTemplate(Controller.academicPeriodId, Controller.competencyTemplateId);
+                return $q.all(promises);
             }, function(error) {
                 console.log(error);
             })
             .then(function (promises) {
-                var studentCompetencyResult = {};
-                angular.forEach(promises[0], function(value, key) {
-                    var toPush = {
-                        openemis_no: value.openemis_no,
-                        name: value.name,
-                        education_grade_name: value.education_grade_name,
-                        student_status_name: value.student_status_name,
-                        gender_name: value.gender_name,
-                        student_id: value.id,
-                        encodedVar: UtilsSvc.urlsafeBase64Encode(JSON.stringify(
-                            {
-                                student_id: value.id,
-                                institution_class_id: value.institution_class_id,
-                                education_grade_id: value.education_grade_id,
-                                academic_period_id: value.academic_period_id,
-                                institution_id: value.institution_id,
-                                student_status_id: value.student_status_id
-                            }
-                        ))
-                    };
-                    this.push(toPush);
-                }, unassignedStudentsArr);
-                Controller.unassignedStudents = unassignedStudentsArr;
-                Controller.shiftOptions = promises[1];
-                Controller.teacherOptions = promises[2];
+                var compentencyTemplate = promises[0];
+                Controller.competencyTemplateName = compentencyTemplate.name;
+                Controller.criteriaOptions = compentencyTemplate.criterias;
+                Controller.itemOptions = compentencyTemplate.items;
 
+                Controller.competencyPeriodName = compentencyTemplate.periods[0].name;
+                console.log(compentencyTemplate);
 
-                var toTranslate = [];
-                angular.forEach(Controller.colDef, function(value, key) {
-                    this.push(value.headerName);
-                }, toTranslate);
-                return InstitutionStudentCompetenciesSvc.translate(toTranslate);
+                // var toTranslate = [];
+                // angular.forEach(Controller.colDef, function(value, key) {
+                //     this.push(value.headerName);
+                // }, toTranslate);
+                // return InstitutionStudentCompetenciesSvc.translate(toTranslate);
             }, function (error) {
                 console.log(error);
             })
