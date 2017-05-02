@@ -94,6 +94,13 @@ class CustomFieldListBehavior extends Behavior {
 				$field['type'] = 'custom_field';
 				$field['label'] = $customField['name'];
 				$field['customField'] = ['id' => $customField['id'], 'field_type' => $customField['field_type']];
+
+				if ($customField['field_type'] == 'DECIMAL') {
+					$field['formatting'] = 'string';
+				} else {
+					$field['formatting'] = 'GENERAL';
+				}
+
 				$excelFields[] = $field;
 			} else {
 				$tableCustomFieldIds[] = $customField['id'];
