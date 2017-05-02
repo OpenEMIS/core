@@ -25,7 +25,7 @@ class CompetencyTemplatesTable extends ControllerActionTable
         $this->hasMany('StudentCompetencyResults', ['className' => 'Institution.StudentCompetencyResults', 'foreignKey' => ['competency_template_id', 'academic_period_id'], 'dependent' => true, 'cascadeCallbacks' => true, 'bindingKey' => ['id', 'academic_period_id']]);
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StudentCompetencies' => ['view', 'edit']
+            'StudentCompetencies' => ['view']
         ]);
 
         $this->setDeleteStrategy('restrict');
