@@ -53,7 +53,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         };
         return CompetencyTemplates
             .get(primaryKey)
-            .contain(['Periods', 'Criterias', 'StudentCompetencyResults'])
+            .contain(['Periods', 'Criterias', 'StudentCompetencyResults', 'Items'])
             .ajax({success: success, defer:true});
     }
 
