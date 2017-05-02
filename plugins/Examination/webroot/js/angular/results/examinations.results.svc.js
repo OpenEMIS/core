@@ -8,16 +8,16 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES'};
 
     var models = {
-        ExaminationItemsTable: 'Examination.ExaminationItems',
-        ExaminationCentresTable: 'Examination.ExaminationCentres',
+        ExaminationCentresExaminationsSubjectsTable: 'Examination.ExaminationCentresExaminationsSubjects',
+        ExaminationCentresExaminationsTable: 'Examination.ExaminationCentresExaminations',
         ExaminationCentreStudentsTable: 'Examination.ExamCentreStudents',
         ExaminationItemResultsTable: 'Examination.ExaminationItemResults',
-        translation: 'translate'
     };
 
     var service = {
         init: init,
-        getExaminationCentre: getExaminationCentre,
+        translate: translate,
+        getExaminationCentreExaminations: getExaminationCentreExaminations,
         getSubjects: getSubjects,
         getColumnDefs: getColumnDefs,
         renderMarks: renderMarks,
@@ -26,7 +26,7 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         getGrading: getGrading,
         calculateTotal: calculateTotal,
         saveRowData: saveRowData,
-        saveTotal: saveTotal
+        translate: translate
     };
 
     return service;
@@ -46,14 +46,15 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         return translation.translate(data, {success:success, defer: true});
     };
 
-    function getExaminationCentre(examinationCentreId) {
-        return ExaminationCentresTable
-            .get(examinationCentreId)
-            .contain(['AcademicPeriods', 'Examinations'])
+    function getExaminationCentreExaminations(examinationCentreId, examinationId) {
+        return ExaminationCentresExaminationsTable
+            .select()
+            .where({examination_centre_id: examinationCentreId, examination_id: examinationId})
+            .contain(['AcademicPeriods', 'Examinations', 'ExaminationCentres'])
             .ajax({defer: true});
     };
 
-    function getSubjects(examinationId) {
+    function getSubjects(examinationId, examinationCentreId) {
         var success = function(response, deferred) {
             var examinationSubjects = response.data.data;
 
@@ -61,8 +62,10 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                 var subjects = [];
                 angular.forEach(examinationSubjects, function(examinationSubject, key)
                 {
-                    if (examinationSubject.weight > 0) {
-                        this.push(examinationSubject);
+                    if (examinationSubject.hasOwnProperty('examination_item')) {
+                        if (examinationSubject.examination_item.weight > 0) {
+                            this.push(examinationSubject.examination_item);
+                        }
                     }
                 }, subjects);
 
@@ -76,10 +79,10 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             }
         };
 
-        return ExaminationItemsTable
+        return ExaminationCentresExaminationsSubjectsTable
             .select()
-            .contain(['EducationSubjects', 'ExaminationGradingTypes.GradingOptions'])
-            .where({examination_id: examinationId})
+            .contain(['ExaminationItems.ExaminationGradingTypes.GradingOptions', 'EducationSubjects'])
+            .where({examination_id: examinationId, examination_centre_id: examinationCentreId})
             .order(['EducationSubjects.order', 'ExaminationItems.code', 'ExaminationItems.name'])
             .ajax({success: success, defer: true});
     };
@@ -123,12 +126,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
             columnDefs.push({
                 headerName: "institution id",
                 field: "institution_id",
-                hide: true,
-                filterParams: filterParams
-            });
-            columnDefs.push({
-                headerName: "education grade id",
-                field: "education_grade_id",
                 hide: true,
                 filterParams: filterParams
             });
@@ -382,10 +379,9 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
                                 name: subjectStudent._matchingData.Users.name,
                                 student_id: currentStudentId,
                                 institution_id: subjectStudent.institution_id,
-                                education_grade_id: subjectStudent.education_grade_id,
                                 mark: '',
                                 weight: 0,
-                                total_mark: subjectStudent.total_mark
+                                total_mark: subjectStudent.ExaminationCentresExaminationsSubjectsStudents.total_mark
                             };
 
                             studentId = currentStudentId;
@@ -419,7 +415,6 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         return ExaminationCentreStudentsTable
             .select()
             .find('Results', {
-                academic_period_id: academicPeriodId,
                 examination_id: examinationId,
                 examination_centre_id: examinationCentreId,
                 examination_item_id: subject.id
@@ -502,24 +497,5 @@ function ExaminationsResultsSvc($filter, $q, KdOrmSvc) {
         }, this);
 
         return $q.all(promises);
-    };
-
-    function saveTotal(row, studentId, institutionId, educationGradeId, academicPeriodId, examinationId, examinationCentreId, educationSubjectId, examinationItemId) {
-        var totalMark = this.calculateTotal(row);
-        totalMark = !isNaN(parseFloat(totalMark)) ? $filter('number')(totalMark, 2) : null;
-
-        var data = {
-            "total_mark" : totalMark,
-            "student_id" : studentId,
-            "institution_id" : institutionId,
-            "education_grade_id" : educationGradeId,
-            "academic_period_id" : academicPeriodId,
-            "examination_id" : examinationId,
-            "examination_centre_id" : examinationCentreId,
-            "education_subject_id" : educationSubjectId,
-            "examination_item_id" : examinationItemId
-        };
-
-        ExaminationCentreStudentsTable.save(data);
     };
 }

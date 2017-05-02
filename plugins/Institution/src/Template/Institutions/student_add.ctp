@@ -72,7 +72,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
             ng-model="InstitutionStudentController.selectedStudent"
             ng-disabled="InstitutionStudentController.completeDisabled"
             ng-show="(InstitutionStudentController.step=='add_student' || InstitutionStudentController.step=='create_user')"
-            data-last="Complete">
+            data-last="<?= __('Complete') ?>">
             <?= __('Next') ?>
         </button>
     </div>
@@ -108,7 +108,7 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 </div>
 
                 <div class="search-action-btn margin-top-10 margin-bottom-10">
-                    <button class="btn btn-default btn-xs" ng-click="InstitutionStudentController.reloadInternalDatasource(true)">Filter</button>
+                    <button class="btn btn-default btn-xs" ng-click="InstitutionStudentController.reloadInternalDatasource(true)"><?= __('Filter') ?></button>
                     <button class="btn btn-outline btn-xs" ng-click="InstitutionStudentController.clearInternalSearchFilters()" type="reset" value="Clear"><?= __('Clear') ?></button>
                 </div>
             </div>
