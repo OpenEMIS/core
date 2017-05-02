@@ -37,9 +37,9 @@ class ReportCardCommentsTable extends ControllerActionTable
         $this->field('male_students', ['type' => 'integer']);
         $this->field('female_students', ['type' => 'integer']);
         $this->field('report_card');
-        // $this->field('education_grade_id');
+        $this->field('education_grade');
         $this->field('subjects');
-        $this->setFieldOrder(['academic_period_id', 'name', 'report_card', 'education_grade_id', 'subjects', 'male_students', 'female_students']);
+        $this->setFieldOrder(['name', 'report_card', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
     }
 
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -61,7 +61,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->extract('education_grade_id')
             ->toArray();
 
-        $ReportCards = TableRegistry::get('ReportCards.ReportCards');
+        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $reportCardOptions = $ReportCards->find('list')
             ->where([
                 $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
@@ -76,31 +76,73 @@ class ReportCardCommentsTable extends ControllerActionTable
         }
         //End
 
+        $Classes = TableRegistry::get('Institution.InstitutionClasses');
+        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+
         $query
             ->select([
-                'report_card_id' => 'ReportCards.id',
-                'report_card_code' => 'ReportCards.code',
-                'report_card_name' => 'ReportCards.name',
-                'report_card_education_grade' => 'ReportCards.education_grade_id'
+                'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
+                'institution_id' => $this->aliasField('institution_id'),
+                'education_grade_id' => $ReportCards->aliasField('education_grade_id'),
+                'report_card_id' => $ReportCards->aliasField('id'),
+                'report_card' => $query->func()->concat([
+                    $ReportCards->aliasField('code') => 'literal',
+                    " - ",
+                    $ReportCards->aliasField('name') => 'literal'
+                ])
             ])
-            ->innerJoin([$this->ClassGrades->alias() => $this->ClassGrades->table()], [
-                $this->ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')
+            ->innerJoin(
+                [$ClassGrades->alias() => $ClassGrades->table()],
+                [$ClassGrades->aliasField('institution_class_id = ') . $this->aliasField('id')]
+            )
+            ->innerJoin(
+                [$ReportCards->alias() => $ReportCards->table()],
+                [
+                    $ReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $ReportCards->aliasField('education_grade_id = ') . $ClassGrades->aliasField('education_grade_id')
+                ]
+            )
+            ->innerJoin(
+                [$EducationGrades->alias() => $EducationGrades->table()],
+                [$EducationGrades->aliasField('id = ') . $ReportCards->aliasField('education_grade_id')]
+            )
+            ->innerJoin(
+                [$EducationProgrammes->alias() => $EducationProgrammes->table()],
+                [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
+            )
+            ->where($where)
+            ->group([
+                $ClassGrades->aliasField('institution_class_id'),
+                $ReportCards->aliasField('id')
             ])
-            ->innerJoin([$ReportCards->alias() => $ReportCards->table()], [
-                $ReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                $ReportCards->aliasField('education_grade_id = ') . $this->ClassGrades->aliasField('education_grade_id')
-            ])
-            ->autoFields(true)
-            ->where($where);
+            ->autoFields(true);
+
+        $extra['options']['order'] = [
+            $EducationProgrammes->aliasField('order') => 'asc',
+            $EducationGrades->aliasField('order') => 'asc',
+            $ReportCards->aliasField('code') => 'asc',
+            $ReportCards->aliasField('name') => 'asc',
+            $this->aliasField('name') => 'asc'
+        ];
     }
 
-    public function onGetReportCard(Event $event, Entity $entity)
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)
     {
-        $value = '';
-        if ($entity->has('report_card_code') && $entity->has('report_card_name')) {
-            $value = $entity->report_card_code . ' - ' . $entity->report_card_name;
+        if ($field == 'name') {
+            return __('Class Name');
+        } else {
+            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
-        return $value;
+    }
+
+    public function onGetEducationGrade(Event $event, Entity $entity)
+    {
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $grade = $EducationGrades->get($entity->education_grade_id);
+
+        return $grade->programme_grade_name;
     }
 
     public function onGetFemaleStudents(Event $event, Entity $entity)
@@ -113,8 +155,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->where([
                 'Users.gender_id' => $gender_id,
                 $ClassStudents->aliasField('institution_class_id') => $entity->id,
-                $ClassStudents->aliasField('education_grade_id') => $entity->report_card_education_grade,
-                $ClassStudents->aliasField('student_status_id') .' > 0'
+                $ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id
             ])
             ->count();
         return $count;
@@ -130,8 +171,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->where([
                 'Users.gender_id' => $gender_id,
                 $ClassStudents->aliasField('institution_class_id') => $entity->id,
-                $ClassStudents->aliasField('education_grade_id') => $entity->report_card_education_grade,
-                $ClassStudents->aliasField('student_status_id') .' > 0'
+                $ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id
             ])
             ->count();
         return $count;
@@ -139,10 +179,14 @@ class ReportCardCommentsTable extends ControllerActionTable
 
     public function onGetSubjects(Event $event, Entity $entity)
     {
-        $ReportCardSubjects = TableRegistry::get('ReportCards.ReportCardSubjects');
-        $subjectCount = $ReportCardSubjects->find()
-            ->where([$ReportCardSubjects->aliasField('report_card_id') => $entity->report_card_id])
+        $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
+        $count = $ReportCardSubjects
+            ->find('MatchingClassSubjects', [
+                'report_card_id' => $entity->report_card_id,
+                'institution_class_id' => $entity->institution_class_id
+            ])
             ->count();
-        return $subjectCount;
+        return $count;
+    }
     }
 }
