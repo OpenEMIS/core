@@ -24,7 +24,7 @@ $this->start('toolbar');
 $this->end();
 $this->start('panelBody');
 ?>
-<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
+<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
     <div class="alert {{InstitutionStudentCompetenciesController.class}}" ng-hide="InstitutionStudentCompetenciesController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionStudentCompetenciesController.message}}
     </div>
@@ -40,22 +40,33 @@ $this->start('panelBody');
         <label><?= __('Competency Template') ?></label>
         <input ng-model="InstitutionStudentCompetenciesController.competencyTemplateName" type="text" disabled="disabled">
     </div>
-    <div class="input string required">
+    <div class="input">
         <label><?= __('Competency Period') ?></label>
-        <input ng-model="InstitutionStudentCompetenciesController.competencyPeriodName" type="text" disabled="disabled">
-    </div>
-    <div class="input string required">
-        <label><?= __('Competency Item') ?></label>
-        <input ng-model="InstitutionStudentCompetenciesController.competencyItemName" type="text" disabled="disabled">
-    </div>
-    <div class="form-buttons">
-            <div class="button-label"></div>
-            <button class="btn btn-default btn-save" type="button" ng-click="InstitutionStudentCompetenciesController.postForm();">
-                <i class="fa fa-check"></i> <?= __('Save') ?>
-            </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
-            <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
+        <div class="input-selection">
+            <div class="input">
+                <div class="selection-wrapper">
+                    <input ng-repeat="period in InstitutionStudentCompetenciesController.periodOptions" ng-value="{{period.id}}" kd-checkbox-radio="{{period.name}}" type="radio" name="competency_period" ng-model="InstitutionStudentCompetenciesController.selectedPeriod">
+                </div>
+            </div>
         </div>
+    </div>
+    <div class="input">
+        <label><?= __('Competency Period') ?></label>
+        <div class="input-selection">
+            <div class="input">
+                <div class="selection-wrapper">
+                    <input ng-repeat="item in InstitutionStudentCompetenciesController.itemOptions" ng-value="{{item.id}}" kd-checkbox-radio="{{item.name}}" type="radio" name="competency_item" ng-model="InstitutionStudentCompetenciesController.selectedItem">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="clearfix">
+    </div>
+    <hr>
+    <h3><?= __('Students') ?></h3>
+    <div id="institution-student-competency-table" class="table-wrapper">
+        <div ng-if="InstitutionStudentCompetenciesController.gridOptions" ag-grid="InstitutionStudentCompetenciesController.gridOptions" class="ag-fresh ag-height-fixed"></div>
+    </div>
 </form>
 <?php
 $this->end();
