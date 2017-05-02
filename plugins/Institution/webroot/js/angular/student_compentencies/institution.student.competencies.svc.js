@@ -16,7 +16,8 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
 
     var models = {
         InstitutionClasses: 'Institution.InstitutionClasses',
-        CompetencyTemplates: 'Competency.CompetencyTemplates'
+        CompetencyTemplates: 'Competency.CompetencyTemplates',
+        StudentCompetencyResults: 'Institution.StudentCompetencyResults'
     };
 
     return service;
@@ -43,6 +44,21 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         return InstitutionClasses
             .get(classId)
             .contain(['AcademicPeriods'])
+            .ajax({success: success, defer:true});
+    }
+
+    function getStudentCompetencyResults(templateId, periodId, itemId, institutionId, academicPeriodId) {
+        var success = function(response, deferred) {
+            deferred.resolve(response.data.data);
+        };
+        return StudentCompetencyResults
+            .find('studentResults', {
+                competency_template_id: templateId,
+                competency_period_id: periodId,
+                competency_item_id: itemId,
+                institution_id: institutionId,
+                academic_period_id: academicPeriodId
+            })
             .ajax({success: success, defer:true});
     }
 
