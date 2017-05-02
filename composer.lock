@@ -389,7 +389,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-                "reference": "7bd0112c0943af0fe5fc869640c30f81b60ca056"
+                "reference": "524698cb7f42bcf21a34d2e06873b57cea43bcfe"
             },
             "require": {
                 "admad/cakephp-jwt-auth": "^2.0",

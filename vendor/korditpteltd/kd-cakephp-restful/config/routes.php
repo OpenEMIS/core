@@ -36,6 +36,12 @@ Router::scope('/restful', [], function ($routes) {
             ['action' => 'translate', '_method' => 'POST']
         );
 
+        // Schema
+        $routes->connect('/:version/:model/schema',
+            ['action' => 'schema', '_method' => 'GET'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
+        );
+
         // Index
         $routes->connect( '/:version/:model',
             ['action' => 'index', '_method' => 'GET'],
