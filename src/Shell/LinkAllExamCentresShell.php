@@ -59,7 +59,7 @@ class LinkAllExamCentresShell extends Shell {
 
             // get all exam centres based on type (if type is selected)
             $examCentreQuery = $this->ExaminationCentres
-                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'examination_centre_type' => $examCentreTypeId])
+                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'academic_period_id' => $academicPeriodId, 'examination_centre_type' => $examCentreTypeId])
                 ->order([$this->ExaminationCentres->aliasField('code')]);
 
             $examCentresCount = $examCentreQuery->count();
