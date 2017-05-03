@@ -15,6 +15,10 @@ class TranslationsController extends AppController
         $this->ControllerAction->model('Localization.Translations');
         $this->loadComponent('RequestHandler');
         $this->Localization->autoCompile(false);
+        if ($this->request->is('post') && $this->request->param('action') == 'translate') {
+            $token = isset($this->request->cookies['csrfToken']) ? $this->request->cookies['csrfToken'] : '';
+            $this->request->env('HTTP_X_CSRF_TOKEN', $token);
+        }
     }
 
     public function beforeFilter(Event $event)
@@ -30,9 +34,10 @@ class TranslationsController extends AppController
         $this->set('contentHeader', __($header));
     }
 
-    public function translate($text)
+    public function translate()
     {
         $this->RequestHandler->renderAs($this, 'json');
+        $text = $this->request->data('text');
         $translated = __($text);
         $this->set('original_text', $text);
         $this->set('translated_text', $translated);
