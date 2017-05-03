@@ -38,66 +38,69 @@ class TrainingSessionResultsTable extends ControllerActionTable
 
 	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
 	{
-		$SessionResults = $this;
-		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
-        
-        $errors = $entity->errors();
+        $process = function($model, $entity) use ($data) {
+        	$sessionId = $data[$model->alias()]['training_session_id'];
+			$resultTypeId = $data[$model->alias()]['result_type'];
+			$trainees = $data[$model->alias()]['trainees'];
 
-		if (empty($errors)) {
-			$sessionId = $data[$SessionResults->alias()]['training_session_id'];
-			$resultTypeId = $data[$SessionResults->alias()]['result_type'];
-			$trainees = $data[$SessionResults->alias()]['trainees'];
-
-            $extra['traineesError'] = false;
-			foreach ($trainees as $key => $obj) {
-				if (strlen($obj['result']) > 0) {
+			$newEntities = [];
+			$deleteIds = [];
+			foreach ($trainees as $key => $trainee) {
+				if (strlen($trainee['result']) > 0) {
 					$resultData = [
-						'result' => $obj['result'],
+						'result' => $trainee['result'],
 						'training_result_type_id' => $resultTypeId,
-						'trainee_id' => $obj['trainee_id'],
-						'training_session_id' => $sessionId
+						'trainee_id' => $trainee['trainee_id'],
+						'training_session_id' => $sessionId,
+						'counterNo' => $key
 					];
 
-					if (isset($obj['id'])) {
-						$resultData['id'] = $obj['id'];
+					if (isset($trainee['id'])) {
+						$resultData['id'] = $trainee['id'];
 					}
 
-					$resultEntity = $TraineeResults->newEntity($resultData);
-                    
-                    if( $TraineeResults->save($resultEntity) ){
-					} else {
-                        if ($resultEntity->errors()) {
-                            $extra['traineesError'] = true;
-                            $entity->trainees[$key]['errors'] = $resultEntity->errors(); //to send over error message
-                            // $TraineeResults->log($resultEntity->errors(), 'debug');
-                        }
-					}
+					$newEntities[] = $resultData;
 				} else {
-					if (isset($obj['id'])) {
-						$TraineeResults->deleteAll([
-							$TraineeResults->aliasField('id') => $obj['id']
-						]);
+					if (isset($trainee['id'])) {
+						$deleteIds[$trainee['id']] = $trainee['id'];
 					}
 				}
 			}
-            if ($extra['traineesError'] == true) {
-                $this->Alert->error('general.edit.failed', ['reset' => true]);
-                $process = function($model, $entity) { //return new entity with error while reloading the page
-                    return false;
-                };
-                return $process;
-            }
-		} else {
-			return false;
-		}
-	}
 
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
-	{
-		// redirect back to edit page
-        if (!$extra['traineesError']) {
-            return $this->controller->redirect($this->url('edit'));
-        }
+			$success = $this->connection()->transactional(function() use ($newEntities, $entity) {
+                $return = true;
+                foreach ($newEntities as $key => $newData) {
+                	$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+                    $newEntity = $TraineeResults->newEntity($newData);
+                    if ($newEntity->errors('result')) {
+                        $counterNo = $newData['counterNo'];
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
+
+                        $entity->errors('trainees', ['result' => $newEntity->errors('result')]);
+                    }
+                    if (!$TraineeResults->save($newEntity)) {
+                        $return = false;
+                    }
+                }
+
+                return $return;
+            });
+
+            if ($success) {
+            	if (!empty($deleteIds)) {
+            		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+            		$TraineeResults->deleteAll([
+						$TraineeResults->aliasField('id IN ') => $deleteIds
+					]);
+            	}
+
+				return true;
+            } else {
+            	return false;
+            }
+        };
+
+        return $process;
 	}
 
 	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
