@@ -38,40 +38,21 @@ class NationalitiesTable extends ControllerActionTable
 
     public function onUpdateFieldIdentityTypeId(Event $event, array $attr, $action, Request $request)
     {
-        //get indentity type that already used / tied to nationality
-        $usedIdentityType = $this
-                            ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
-                            ->select([
-                                'id' => $this->aliasfield('identity_type_id')
-                            ])
-                            ->where([
-                                $this->aliasfield('identity_type_id IS NOT') => null
-                            ])
-                            ->toArray();
+        $Nationalities = $this;
+        $identityTypes = $this->IdentityTypes
+            ->find('list')
+            ->notMatching('Nationalities', function ($q) use ($Nationalities, $action, $attr) {
+                if ($action == 'edit') {
+                    $entity = $attr['entity'];
 
-        if ($action == 'edit') {
-            $entity = $attr['entity'];
-
-            if ($entity->has('identity_type_id') && !empty($entity->identity_type_id)) {
-                //check for multiple usage of identity type
-                $countNationality = $this->find()
-                                    ->where([
-                                        $this->aliasfield('identity_type_id') => $entity->identity_type_id
-                                    ])
-                                    ->count();
-                //if identity only use for one nationality or has not been used at all.
-                if ($countNationality <= 1 && !empty($usedIdentityType)) { 
-                    unset($usedIdentityType[$entity->identity_type_id]);
+                    $q->where([$Nationalities->aliasfield('id <> ') => $entity->id]);
                 }
-            }
-        }
-        
-        $options = $this->IdentityTypes->find('list')
-                    ->where([
-                        $this->IdentityTypes->aliasField('id NOT IN') => $usedIdentityType
-                    ])
-                    ->toArray();
-        $attr['options'] = $options;
+
+                return $q->where([$Nationalities->aliasfield('identity_type_id') . ' IS NOT NULL']);
+            })
+            ->toArray();
+
+        $attr['options'] = $identityTypes;
 
         return $attr;
     }
