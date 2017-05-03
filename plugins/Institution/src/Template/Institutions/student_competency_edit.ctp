@@ -45,17 +45,17 @@ $this->start('panelBody');
         <div class="input-selection">
             <div class="input">
                 <div class="selection-wrapper">
-                    <input ng-repeat="period in InstitutionStudentCompetenciesController.periodOptions" ng-value="{{period.id}}" kd-checkbox-radio="{{period.name}}" type="radio" name="competency_period" ng-model="InstitutionStudentCompetenciesController.selectedPeriod">
+                    <input ng-repeat="period in InstitutionStudentCompetenciesController.periodOptions" ng-value="{{period.id}}" kd-checkbox-radio="{{period.name}}" type="radio" name="competency_period" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);">
                 </div>
             </div>
         </div>
     </div>
     <div class="input">
-        <label><?= __('Competency Period') ?></label>
+        <label><?= __('Competency Item') ?></label>
         <div class="input-selection">
             <div class="input">
                 <div class="selection-wrapper">
-                    <input ng-repeat="item in InstitutionStudentCompetenciesController.itemOptions" ng-value="{{item.id}}" kd-checkbox-radio="{{item.name}}" type="radio" name="competency_item" ng-model="InstitutionStudentCompetenciesController.selectedItem">
+                    <input ng-repeat="item in InstitutionStudentCompetenciesController.itemOptions" ng-value="{{item.id}}" kd-checkbox-radio="{{item.name}}" type="radio" name="competency_item" ng-model="InstitutionStudentCompetenciesController.selectedItem" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
                 </div>
             </div>
         </div>
@@ -65,7 +65,7 @@ $this->start('panelBody');
     <hr>
     <h3><?= __('Students') ?></h3>
     <div id="institution-student-competency-table" class="table-wrapper">
-        <div ng-if="InstitutionStudentCompetenciesController.gridOptions" ag-grid="InstitutionStudentCompetenciesController.gridOptions" class="ag-fresh ag-height-fixed"></div>
+        <div ng-if="InstitutionStudentCompetenciesController.dataReady" ag-grid="InstitutionStudentCompetenciesController.gridOptions" class="ag-fresh ag-height-fixed"></div>
     </div>
 </form>
 <?php
