@@ -74,7 +74,10 @@ class AddAllInstitutionsExamCentreShell extends Shell {
                     foreach ($institutionPageData as $institution) {
                         // check if this exam centre was added while shell is still running
                         $existingExamCentre = $this->ExaminationCentres->find()
-                            ->where([$this->ExaminationCentres->aliasField('institution_id') => $institution->id])
+                            ->where([
+                                $this->ExaminationCentres->aliasField('institution_id') => $institution->id,
+                                $this->ExaminationCentres->aliasField('academic_period_id') => $academicPeriodId
+                            ])
                             ->first();
 
                         if (empty($existingExamCentre)) {
