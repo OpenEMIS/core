@@ -115,9 +115,6 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                         response.data[key]['headerName'] = value;
                     });
                     Controller.gridOptions.api.setColumnDefs(response.data);
-                    if (Object.keys(response.data).length < 15) {
-                        Controller.gridOptions.api.sizeColumnsToFit();
-                    }
                     var rowData = [];
                     var competencyCriteriaIds = [];
                     angular.forEach(criteria, function (value, key) {
@@ -152,6 +149,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                         rowData.push(row);
                     });
                     Controller.gridOptions.api.setRowData(rowData);
+                    Controller.gridOptions.columnApi.autoSizeAllColumns();
                 }, function(error){
                     console.log(error);
                 });
@@ -200,18 +198,15 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             Controller.gridOptions = {
                 context: {
                     institution_id: Controller.institution_id,
-                    class_id: Controller.class_id,
-                    assessment_id: Controller.assessment_id,
-                    academic_period_id: Controller.academic_period_id,
-                    education_grade_id: Controller.education_grade_id,
-                    education_subject_id: 0
+                    academic_period_id: Controller.academicPeriodId,
+                    competency_template_id: Controller.competencyTemplateId
                 },
                 columnDefs: [],
                 rowData: [],
                 headerHeight: 38,
                 rowHeight: 38,
                 minColWidth: 100,
-                enableColResize: false,
+                enableColResize: true,
                 enableSorting: true,
                 unSortIcon: true,
                 enableFilter: true,
@@ -228,11 +223,8 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
             Controller.gridOptions = {
                 context: {
                     institution_id: Controller.institution_id,
-                    class_id: Controller.class_id,
-                    assessment_id: Controller.assessment_id,
-                    academic_period_id: Controller.academic_period_id,
-                    education_grade_id: Controller.education_grade_id,
-                    education_subject_id: 0
+                    academic_period_id: Controller.academicPeriodId,
+                    competency_template_id: Controller.competencyTemplateId
                 },
                 columnDefs: [],
                 rowData: [],
