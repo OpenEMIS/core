@@ -17,13 +17,15 @@ class LinkAllExamCentresShell extends Shell {
 
     public function main() {
         if (!empty($this->args[0])) {
+            $args = explode(" ", $this->args[0]);
+
             $PAGE_LIMIT = 500;
             $pid = getmypid();
             $SystemProcesses = TableRegistry::get('SystemProcesses');
-            $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
-            $examinationId = !empty($this->args[1]) ? $this->args[1] : 0;
-            $academicPeriodId = !empty($this->args[2]) ? $this->args[2] : 0;
-            $examCentreTypeId = !empty($this->args[3]) ? $this->args[3] : 0;
+            $systemProcessId = !empty($args[0]) ? $args[0] : 0;
+            $examinationId = !empty($args[1]) ? $args[1] : 0;
+            $academicPeriodId = !empty($args[2]) ? $args[2] : 0;
+            $examCentreTypeId = !empty($args[3]) ? $args[3] : 0;
 
             $executedCount = 0;
             $this->out($pid.': Initialize Link All Exam Centres to Exam ('. Time::now() .')');

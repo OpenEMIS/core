@@ -283,11 +283,11 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
         $this->field('academic_period_id', ['type' => 'select']);
         $this->field('examination_id', ['type' => 'select', 'onChangeReload' => true]);
         $this->field('examination_education_grade', ['type' => 'readonly']);
-        $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true]);
+        $this->field('examination_centre_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('special_needs', ['type' => 'readonly']);
-        $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true]);
+        $this->field('institution_class_id', ['type' => 'select', 'onChangeReload' => true, 'entity' => $entity]);
         $this->field('auto_assign_to_rooms', ['type' => 'select', 'options' => $this->getSelectOptions('general.yesno')]);
-        $this->field('student_id');
+        $this->field('student_id', ['entity' => $entity]);
         $this->field('education_grade_id', ['type' => 'hidden']);
         $this->field('registration_number', ['visible' => false]);
 
