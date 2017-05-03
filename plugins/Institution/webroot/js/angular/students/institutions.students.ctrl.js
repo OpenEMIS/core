@@ -620,7 +620,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 if (userRecord.hasOwnProperty('institution_students')) {
                     if (userRecord.institution_students.length > 0) {
                         var schoolName = userRecord['institution_students'][0]['institution']['name'];
-                        AlertSvc.warning($scope, 'Student is already enrolled in ' + schoolName);
+                        AlertSvc.warning($scope, 'Student is already enrolled in %s', [schoolName]);
                         userRecord.date_of_birth = InstitutionsStudentsSvc.formatDate(userRecord.date_of_birth);
                         StudentController.selectedStudentData = userRecord;
                         StudentController.completeDisabled = true;
@@ -998,7 +998,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
             if (studentData.hasOwnProperty('institution_students')) {
                 if (studentData.institution_students.length > 0) {
                     var schoolName = studentData['institution_students'][0]['institution']['name'];
-                    AlertSvc.warning($scope, 'This student is already allocated to ' + schoolName);
+                    AlertSvc.warning($scope, 'This student is already allocated to %s', [schoolName]);
                     StudentController.completeDisabled = true;
                 }
             }
