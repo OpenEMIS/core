@@ -198,12 +198,14 @@ class ExaminationCentresTable extends ControllerActionTable {
         $extra['options']['sortWhitelist'] = $sortList;
 
         // search
+        $extra['auto_search'] = false;
         $search = $this->getSearchKey();
         if (!empty($search)) {
-            $extra['OR'] = [
+            $OR = [
                 [$this->aliasField('name').' LIKE' => '%' . $search . '%'],
                 [$this->aliasField('code').' LIKE' => '%' . $search . '%']
             ];
+            $query->where(['OR' => $OR]);
         }
     }
 
@@ -695,6 +697,7 @@ class ExaminationCentresTable extends ControllerActionTable {
     {
         if (isset($options['examination_id'])) {
             $examinationId = $options['examination_id'];
+            $academicPeriodId = $options['academic_period_id'];
 
             $query
                 ->find('list', [
@@ -703,7 +706,8 @@ class ExaminationCentresTable extends ControllerActionTable {
                 ])
                 ->notMatching('Examinations', function ($q) use ($examinationId) {
                     return $q->where(['Examinations.id' => $examinationId]);
-                });
+                })
+                ->where(['ExaminationCentres.academic_period_id' => $academicPeriodId]);
 
             if (isset($options['examination_centre_type']) && !empty($options['examination_centre_type'])) {
                 $type = $options['examination_centre_type'];
