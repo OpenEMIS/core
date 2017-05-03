@@ -273,10 +273,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
+            $academicPeriodId = isset($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id'] : $this->AcademicPeriods->getCurrent();
             $type = isset($request->data[$this->alias()]['examination_centre_type']) ? $request->data[$this->alias()]['examination_centre_type'] : 0;
 
             $examCentreOptions = $this->ExaminationCentres
-                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'examination_centre_type' => $type])
+                ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'academic_period_id' => $academicPeriodId, 'examination_centre_type' => $type])
                 ->count();
 
             $selectOptions = [];
@@ -313,10 +314,11 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
 
             } else {
                 $examinationId = isset($request->data[$this->alias()]['examination_id']) ? $request->data[$this->alias()]['examination_id'] : 0;
+                $academicPeriodId = isset($request->data[$this->alias()]['academic_period_id']) ? $request->data[$this->alias()]['academic_period_id'] : $this->AcademicPeriods->getCurrent();
                 $type = isset($request->data[$this->alias()]['examination_centre_type']) ? $request->data[$this->alias()]['examination_centre_type'] : 0;
 
                 $examCentreOptions = $this->ExaminationCentres
-                    ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'examination_centre_type' => $type])
+                    ->find('NotLinkedExamCentres', ['examination_id' => $examinationId, 'academic_period_id' => $academicPeriodId, 'examination_centre_type' => $type])
                     ->order([$this->ExaminationCentres->aliasField('code')])
                     ->toArray();
 
