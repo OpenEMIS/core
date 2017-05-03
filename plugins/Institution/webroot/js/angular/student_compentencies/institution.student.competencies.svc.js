@@ -192,11 +192,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                     eSelect.value = params.value;
 
                     eSelect.addEventListener('change', function () {
-                        vm.saveSingleRecordData(params, extra)
-                        .then(function(response) {
-                        }, function(error) {
-                            console.log(error);
-                        });
+                        vm.saveCompetencyResults(params, extra);
                     });
 
                     eCell.appendChild(eSelect);
@@ -224,8 +220,10 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         return cols;
     }
 
-    function saveCompetencyResults(data) {
-        InstitutionClasses.reset();
-        return InstitutionClasses.edit(data);
+    function saveCompetencyResults(param, extra) {
+        console.log(param);
+        // var data = {};
+        // InstitutionClasses.reset();
+        // return InstitutionClasses.edit(data);
     }
 };
