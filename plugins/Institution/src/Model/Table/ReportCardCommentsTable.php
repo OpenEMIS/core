@@ -83,9 +83,11 @@ class ReportCardCommentsTable extends ControllerActionTable
 
         $query
             ->select([
+                'name' => $this->aliasField('name'),
                 'institution_class_id' => $ClassGrades->aliasField('institution_class_id'),
                 'institution_id' => $this->aliasField('institution_id'),
                 'education_grade_id' => $ReportCards->aliasField('education_grade_id'),
+                'academic_period_id' => $ReportCards->aliasField('academic_period_id'),
                 'report_card_id' => $ReportCards->aliasField('id'),
                 'report_card' => $query->func()->concat([
                     $ReportCards->aliasField('code') => 'literal',
@@ -112,12 +114,18 @@ class ReportCardCommentsTable extends ControllerActionTable
                 [$EducationProgrammes->alias() => $EducationProgrammes->table()],
                 [$EducationProgrammes->aliasField('id = ') . $EducationGrades->aliasField('education_programme_id')]
             )
-            ->where($where)
+            ->where([
+                $where,
+                'OR' => [
+                    $ReportCards->aliasField('principal_comments_required') => 1,
+                    $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
+                    $ReportCards->aliasField('teacher_comments_required') => 1
+                ]
+            ])
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
                 $ReportCards->aliasField('id')
-            ])
-            ->autoFields(true);
+            ]);
 
         $extra['options']['order'] = [
             $EducationProgrammes->aliasField('order') => 'asc',
@@ -154,7 +162,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->contain('Users')
             ->where([
                 'Users.gender_id' => $gender_id,
-                $ClassStudents->aliasField('institution_class_id') => $entity->id,
+                $ClassStudents->aliasField('institution_class_id') => $entity->institution_class_id,
                 $ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id
             ])
             ->count();
@@ -170,7 +178,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->contain('Users')
             ->where([
                 'Users.gender_id' => $gender_id,
-                $ClassStudents->aliasField('institution_class_id') => $entity->id,
+                $ClassStudents->aliasField('institution_class_id') => $entity->institution_class_id,
                 $ClassStudents->aliasField('education_grade_id') => $entity->education_grade_id
             ])
             ->count();
@@ -188,5 +196,23 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->count();
         return $count;
     }
+
+    public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
+    {
+        $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
+
+        if (isset($buttons['view']['url'])) {
+            $buttons['view']['url'] = [
+                'plugin' => $this->controller->plugin,
+                'controller' => $this->controller->name,
+                'action' => 'Comments',
+                'institution_class_id' => $entity->institution_class_id,
+                'report_card_id' => $entity->report_card_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id
+            ];
+        }
+
+        return $buttons;
     }
 }
