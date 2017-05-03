@@ -536,11 +536,11 @@ class NavigationComponent extends Component
 					'selected' => ['Institutions.ReportCardComments','Institutions.Comments'],
 				],
 
-				'Institutions.ReportCardStatus' => [
-					'title' => 'Status',
+				'Institutions.ReportCardStatuses' => [
+					'title' => 'Statuses',
 					'parent' => 'Institutions.ReportCards',
 					'params' => ['plugin' => 'Institution'],
-					'selected' => ['Institutions.ReportCardStatus'],
+					'selected' => ['Institutions.ReportCardStatuses'],
 				],
 
 			'Institutions.Positions' => [
