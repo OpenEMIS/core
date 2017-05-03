@@ -44,7 +44,7 @@ var Autocomplete = {
 		}
 		if ($(obj).next().size() > 0) {
 			if($(obj).next().hasClass('error-message')) {
-				$(obj).next().empty();
+				$(obj).next().remove();
 			}
 		}
 		obj.after(Autocomplete.loader);
@@ -78,6 +78,10 @@ var Autocomplete = {
 
 			if (noResultsTxt != 'false') {
 				text.html(noResultsTxt);
+				// if not remove will append the error message.
+				if($(obj).next().hasClass('error-message')) {
+					$(obj).next().remove();
+				}
 				obj.after(text);
 			}
 
@@ -124,7 +128,19 @@ var Autocomplete = {
 		var length = this.element.attr('length');
 		if (length === undefined) length = 5;
 
-		var triggerAjax = function () {
+		var triggerAjax = function (event) {
+				// check if the event is undefined will clear the loader and show loader
+				if (event != undefined) {
+					var obj = $(event.target);
+					var loader = obj.parent().find('.autocomplete-loader');
+					// if not remove, it will append, will have more loader.
+					if (loader.length > 0) {
+						loader.remove();
+					}
+					// show the loader.
+					obj.after(Autocomplete.loader);
+				}
+
 	    		$.ajax({
 		            url: url,
 		            dataType: "json",
