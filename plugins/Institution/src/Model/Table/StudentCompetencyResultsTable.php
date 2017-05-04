@@ -18,7 +18,7 @@ class StudentCompetencyResultsTable extends AppTable
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'StudentCompetencies' => ['index']
+            'StudentCompetencies' => ['index', 'add']
         ]);
         $this->addBehavior('CompositeKey');
     }

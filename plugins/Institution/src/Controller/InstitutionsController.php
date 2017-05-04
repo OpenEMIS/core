@@ -277,9 +277,7 @@ class InstitutionsController extends AppController
 
     public function StudentCompetencies($subaction = 'index')
     {
-
-
-        if ($subaction == 'editStudents') {
+        if ($subaction == 'edit') {
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
             $session = $this->request->session();
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
@@ -678,7 +676,7 @@ class InstitutionsController extends AppController
                 break;
             case 'StudentCompetencies':
                 if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'editStudents') {
+                    if ($this->request->param('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'institution.student.competencies.ctrl',

@@ -44,6 +44,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     angular.element(document).ready(function () {
         InstitutionStudentCompetenciesSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
+        AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
         if (Controller.classId != null) {
             InstitutionStudentCompetenciesSvc.getClassDetails(Controller.classId)
             .then(function(response) {
@@ -73,6 +74,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 Controller.itemOptions = Controller.periodOptions[0].competency_items;
                 if (Controller.periodOptions.length > 0) {
                     Controller.selectedPeriod = Controller.periodOptions[0].id;
+                    Controller.selectedPeriodStatus = Controller.periodOptions[0].editable;
                 }
                 if (Controller.itemOptions.length > 0) {
                     Controller.selectedItem = Controller.periodOptions[0].competency_items[0].id;
@@ -96,7 +98,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
 
     });
 
-    function resetColumnDefs(criteria, item) {
+    function resetColumnDefs(criteria, period, selectedPeriodStatus, item) {
         var response = InstitutionStudentCompetenciesSvc.getColumnDefs(criteria, item, Controller.bodyDir);
 
         if (angular.isDefined(response.error)) {
@@ -139,7 +141,11 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                         }
                         var row = {
                             openemis_id: student.user.openemis_no,
+                            student_id: student.student_id,
                             name: student.user.name,
+                            competency_item_id: item,
+                            competency_period_id: period,
+                            period_editable: selectedPeriodStatus,
                             student_status_name: student.student_status.name,
                             student_status_code: student.student_status.code
                         };
@@ -149,7 +155,6 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                         rowData.push(row);
                     });
                     Controller.gridOptions.api.setRowData(rowData);
-                    Controller.gridOptions.columnApi.autoSizeAllColumns();
                 }, function(error){
                     console.log(error);
                 });
@@ -178,6 +183,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 if (value.id == Controller.selectedPeriod) {
                     Controller.itemOptions = value.competency_items;
                     Controller.selectedItem = value.competency_items[0].id;
+                    Controller.selectedPeriodStatus = value.editable;
                 }
             });
         }
@@ -186,7 +192,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         .then(function (results) {
             console.log(results);
             Controller.changeCriteria(results);
-            Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedItem);
+            Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
         }, function (error) {
 
         });
@@ -197,7 +203,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         .then(function(localeText){
             Controller.gridOptions = {
                 context: {
-                    institution_id: Controller.institution_id,
+                    institution_id: Controller.institutionId,
                     academic_period_id: Controller.academicPeriodId,
                     competency_template_id: Controller.competencyTemplateId
                 },
@@ -216,7 +222,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 singleClickEdit: true,
                 localeText: localeText,
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedItem);
+                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
                 }
             };
         }, function(error){
@@ -240,7 +246,7 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                 suppressMovableColumns: true,
                 singleClickEdit: true,
                 onGridReady: function() {
-                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedItem);
+                    Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
                 }
             };
         });
