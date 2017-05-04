@@ -584,6 +584,7 @@ class ExcelReportBehavior extends Behavior
                 // skip first row don't need to auto insert new row
                 if (!$this->suppressAutoInsertNewRow && $rowValue != $attr['rowValue']) {
                     $objWorksheet->insertNewRowBefore($rowValue);
+                    $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
                 }
 
                 $cellCoordinate = $columnValue.$rowValue;
