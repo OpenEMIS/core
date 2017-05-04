@@ -18,7 +18,7 @@ class CustomFieldsTable extends AppTable
 
     protected $fieldTypeFormat = ['OpenEMIS'];
     // Supported Field Types contain full list by default and can by override in individual model extends CustomFieldsTable
-    protected $supportedFieldTypes = ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER'];
+    protected $supportedFieldTypes = ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER'];
 
     private $fieldTypes = [];
     private $fieldTypeOptions = [];
@@ -199,22 +199,13 @@ class CustomFieldsTable extends AppTable
     public function getSupportedFieldTypesByModel($model)
     {
         $CustomModules = TableRegistry::get('CustomField.CustomModules');
-        $supportedFieldTypes = [];
-        if (!is_array($model)) {
-            $supportedFieldTypes = $CustomModules
-                ->find()
-                ->where([$CustomModules->aliasField('model') => $model])
-                ->first()
-                ->supported_field_types;
-        } else {
-            $results = $CustomModules
-                ->find()
-                ->where([$CustomModules->aliasField('model').' IN ' => $model])
-                ->toArray();
-            foreach ($results as $result) {
-                $supportedFieldTypes = array_merge($supportedFieldTypes, $result->supported_field_types);
-            }
-        }
+
+        $supportedFieldTypes = $CustomModules
+            ->find()
+            ->where([$CustomModules->aliasField('model') => $model])
+            ->first()
+            ->supported_field_types;
+
         return $supportedFieldTypes;
     }
 }

@@ -53,7 +53,7 @@ class StudentUserTable extends ControllerActionTable
 
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Student.Students.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add']
+            'Students' => ['index', 'add', 'edit']
         ]);
 
         $this->toggle('index', false);
@@ -172,7 +172,15 @@ class StudentUserTable extends ControllerActionTable
                 'on' => 'create'
             ])
             ->requirePresence('start_date', 'create')
-            ->requirePresence('education_grade_id', 'create')
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date'],
+                'on' => 'create'
+            ])
+			->requirePresence('education_grade_id', 'create')
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
+                'on' => 'create'
+            ])
             ->requirePresence('academic_period_id', 'create')
             ->allowEmpty('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [
@@ -328,7 +336,6 @@ class StudentUserTable extends ControllerActionTable
     private function addTransferButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->name, 'TransferRequests', 'add'])) {
-            $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
@@ -376,7 +383,6 @@ class StudentUserTable extends ControllerActionTable
     private function addPromoteButton(Entity $entity, ArrayObject $extra)
     {
         if ($this->AccessControl->check([$this->controller->name, 'Promotion', 'add'])) {
-            $session = $this->Session;
             $toolbarButtons = $extra['toolbarButtons'];
 
             $StudentsTable = TableRegistry::get('Institution.Students');
@@ -603,15 +609,13 @@ class StudentUserTable extends ControllerActionTable
         }
 
         $identityJoinType = (empty($identityNumber))? 'LEFT': 'INNER';
-        $default_identity_type = $this->Identities->IdentityTypes->getDefaultValue();
         $query->join([
             [
                 'type' => $identityJoinType,
                 'table' => 'user_identities',
                 'alias' => 'Identities',
                 'conditions' => array_merge([
-                        'Identities.security_user_id = ' . $this->aliasField('id'),
-                        'Identities.identity_type_id' => $default_identity_type
+                        'Identities.security_user_id = ' . $this->aliasField('id')
                     ], $identityConditions)
             ]
         ]);

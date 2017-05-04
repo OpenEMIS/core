@@ -48,7 +48,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         importMappingObj: importMappingObj,
         addUserIdentity: addUserIdentity,
         addUserNationality: addUserNationality,
-        getExternalSourceMapping: getExternalSourceMapping
+        getExternalSourceMapping: getExternalSourceMapping,
+        translate: translate
     };
 
     var models = {
@@ -82,6 +83,15 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         KdOrmSvc.controllerAction('ExternalAPI');
         KdOrmSvc.init(externalModels);
     };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
+    }
 
     function resetExternalVariable()
     {
@@ -277,7 +287,8 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
         var deferred = $q.defer();
         var vm = this;
         if (externalSource == null) {
-            userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date'])
+            userRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
+            userRecord['institution_id'] = this.getInstitutionId();
             delete userRecord['gender'];
             if (userRecord['nationality_id'] != '' && userRecord['nationality_id'] != undefined) {
                 userRecord['nationalities'] = [{
@@ -315,7 +326,7 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                 newUserRecord['academic_period_id'] = userRecord['academic_period_id'];
                 newUserRecord['education_grade_id'] = userRecord['education_grade_id'];
                 newUserRecord['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
-
+                newUserRecord['institution_id'] = vm.getInstitutionId();
 
                 newUserRecord['first_name'] = userRecord[attr['first_name_mapping']];
                 newUserRecord['last_name'] = userRecord[attr['last_name_mapping']];
@@ -354,11 +365,14 @@ function InstitutionsStudentsSvc($http, $q, $filter, KdOrmSvc) {
                         userData = response.data[0];
                         modifiedUser = userData;
                         delete modifiedUser['openemis_no'];
+                        delete modifiedUser['created'];
+                        delete modifiedUser['modified'];
                         modifiedUser['is_student'] = 1;
+                        modifiedUser['institution_id'] = this.getInstitutionId();
                         modifiedUser['academic_period_id'] = userRecord['academic_period_id'];
                         modifiedUser['education_grade_id'] = userRecord['education_grade_id'];
                         modifiedUser['start_date'] = vm.formatDateForSaving(userRecord['start_date']);
-                        StudentUser.save(modifiedUser)
+                        StudentUser.edit(modifiedUser)
                         .then(function(response) {
                             deferred.resolve([response.data, userData]);
                         }, function(error) {

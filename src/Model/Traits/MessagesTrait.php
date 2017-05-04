@@ -462,6 +462,18 @@ trait MessagesTrait
             'add_event' => 'Add Event',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
+        'WorkflowRules' => [
+            'process' => [
+                'start' => [
+                    'success' => 'The process has been started successfully.',
+                    'failed' => 'The process is not started due to errors encountered.'
+                ],
+                'abort' => [
+                    'success' => 'The process has been aborted successfully.',
+                    'failed' => 'The process is not aborted due to errors encountered.'
+                ]
+            ]
+        ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
         ],
@@ -607,7 +619,7 @@ trait MessagesTrait
             'survey_not_found' => 'No identifiable survey found',
             'no_answers' => 'No record were found in the file imported',
             'institution_network_connectivity_id' => 'code',
-            'exam_centre_dont_match' => 'Examination and centre combination cannot be found.'
+            'exam_centre_dont_match' => 'Examination centre cannot be found in the selected academic period.'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
@@ -642,6 +654,7 @@ trait MessagesTrait
         'InstitutionExaminationStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
+            'noLinkedExamCentres' => 'Please contact your administrator to set up available Examination Centres for the selected Examination'
         ],
         'Examinations' => [
             'noExaminationItems' => 'There are no examination items for this examination'
@@ -649,7 +662,10 @@ trait MessagesTrait
         'ExaminationCentres' => [
             'savingProcessStarted' => 'Examination centres are currently being added in the background'
         ],
-        'ExaminationCentreStudents' => [
+        'ExaminationCentresExaminations' => [
+            'savingProcessStarted' => 'Examination centres are currently being linked in the background'
+        ],
+        'ExaminationCentresExaminationsStudents' => [
             'notAvailableForRegistration' => 'Not available for registration',
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'This student is not assigned to a room as there are no available rooms.',
@@ -663,6 +679,9 @@ trait MessagesTrait
         'BulkStudentRegistration' => [
             'noStudentSelected' => 'There are no students selected',
             'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
+        ],
+        'ExaminationCentresExaminationsInvigilators' => [
+            'noInvigilatorsSelected' => 'There are no invigilators selected'
         ],
         'Textbooks' => [
             'noTextbooks' => 'No Textbooks',
@@ -699,6 +718,33 @@ trait MessagesTrait
         ],
         'Reports' => [
             'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
+        ],
+        'AlertRules' => [
+            'Attendance' => [
+                'threshold' => 'Days within 1 to 30'
+            ],
+            'LicenseRenewal' => [
+                'value' => 'Days within %d to %d',
+                'hour' => 'Hours within %d to %d '
+                    .'<br> Total accumulated hours based on'
+                    .'<br> selected field of study within the'
+                    .'<br> validity of license'
+            ],
+            'LicenseValidity' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'RetirementWarning' => [
+                'value' => 'Ages within %d to %d'
+            ],
+            'StaffEmployment' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffLeave' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffType' => [
+                'value' => 'Days within %d to %d'
+            ]
         ],
 
         // Validation Messages
@@ -766,7 +812,8 @@ trait MessagesTrait
             ],
             'InstitutionGrades' => [
                 'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleCheckStudentInEducationProgrammes' => 'Unable to set the end date because there are students still enrolled in this programme.'
                 ],
                 'start_date' => [
                     'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
@@ -891,6 +938,14 @@ trait MessagesTrait
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
             ],
+            'StudentUser' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
             'Staff' => [
                 'staff_name' => [
                     'ruleInstitutionStaffId' => 'Staff has already been added.'
@@ -923,6 +978,20 @@ trait MessagesTrait
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
+            'TransferApprovals' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
             ],
             'InstitutionFeeTypes' => [
@@ -1076,6 +1145,7 @@ trait MessagesTrait
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleContactValuePattern' => 'Please enter value with a valid format',
                     'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
@@ -1348,6 +1418,11 @@ trait MessagesTrait
                     'ruleRange' => 'Value must be within 0 to 100'
                 ]
             ],
+            'StaffTrainings' => [
+                'credit_hours' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ],
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
@@ -1360,6 +1435,11 @@ trait MessagesTrait
             ]
         ],
         'Education' => [
+            'EducationCycles' => [
+                'admission_age' => [
+                    'ruleRange' => 'Admision age must be within 0 to 99'
+                ]
+            ],
             'EducationGradesSubjects' => [
                 'hours_required' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value'
@@ -1450,6 +1530,10 @@ trait MessagesTrait
                 'maxValue' => 'Number should not be greater than %d',
                 'range' => 'Number should be between %d and %d'
             ],
+            'decimal' => [
+                'length' => 'Length should not exceed %d digits',
+                'precision' => 'Length should not exceed %d digits or decimal places should not exceed %d digits'
+            ],
             'date' => [
                 'earlier' => 'Date should be earlier than or equal to %s',
                 'later' => 'Date should be later than or equal to %s',
@@ -1539,11 +1623,17 @@ trait MessagesTrait
             'Examinations' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
+                'registration_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'registration_end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
             'ExaminationCentres' => [
                 'code' => [
-                    'ruleUnique' => 'Please enter a unique code for this examination centre in this examination'
+                    'ruleUnique' => 'Please enter a unique code for this examination centre in the selected academic period'
                 ],
                 'examination_id' => [
                     'ruleNoRunningSystemProcess' => 'There is currently a running process for this examination'
@@ -1559,7 +1649,7 @@ trait MessagesTrait
                 ],
                 'number_of_seats' => [
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
-                    'ruleExceedRoomCapacity' => 'Number of student exceeds the total number of seats available',
+                    'ruleCheckRoomCapacityMoreThanStudents' => 'Number of Seats must be more than the number of students in this room',
                     'ruleSeatsNumber' => 'Number of seats is out of range'
                 ]
             ],
@@ -1571,6 +1661,9 @@ trait MessagesTrait
                 'code' => [
                     'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
                 ],
+                'examination_date' => [
+                    'ruleCompareDateReverse' => 'Date should not be earlier than Registration End Date'
+                ]
             ],
             'ExaminationGradingTypes' => [
                 'code' => [
@@ -1602,13 +1695,18 @@ trait MessagesTrait
                     'ruleRange' => 'Mark entered exceeds system limit'
                 ]
             ],
-            'ExaminationCentreStudents' => [
+            'ExaminationCentresExaminationsStudents' => [
                 'registration_number' => [
                     'ruleUnique' => 'Registration Number must be unique'
                 ],
                 'student_id' => [
                     'ruleUnique' => 'This student is already registered to the selected exam',
                     'ruleNotInvigilator' => 'This student is an invigilator in this examination'
+                ]
+            ],
+            'ExamCentreStudents' => [
+                'examination_centre_room_id' => [
+                    'ruleExceedRoomCapacity' => 'There are no available seats in this room'
                 ]
             ],
             'BulkStudentRegistration' => [
@@ -1723,7 +1821,7 @@ trait MessagesTrait
         'Alert' => [
             'AlertRules' => [
                 'name' => [
-                    'ruleUnique' => 'This field has to be unique',
+                    'ruleUnique' => 'This field has to be unique'
                 ]
             ],
         ],
