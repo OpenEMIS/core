@@ -18,19 +18,19 @@ class RecordBehavior extends Behavior
     protected $_defaultConfig = [
         'events' => [
             'ControllerAction.Model.afterAction'            => ['callable' => 'afterAction', 'priority' => 1],
-            'ControllerAction.Model.add.onInitialize'        => ['callable' => 'addOnInitialize', 'priority' => 100],
-            'ControllerAction.Model.edit.onInitialize'        => ['callable' => 'editOnInitialize', 'priority' => 100],
-            'ControllerAction.Model.viewEdit.beforeQuery'    => ['callable' => 'viewEditBeforeQuery', 'priority' => 100],
-            'ControllerAction.Model.view.afterAction'        => ['callable' => 'viewAfterAction', 'priority' => 100],
+            'ControllerAction.Model.add.onInitialize'       => ['callable' => 'addOnInitialize', 'priority' => 100],
+            'ControllerAction.Model.edit.onInitialize'      => ['callable' => 'editOnInitialize', 'priority' => 100],
+            'ControllerAction.Model.viewEdit.beforeQuery'   => ['callable' => 'viewEditBeforeQuery', 'priority' => 100],
+            'ControllerAction.Model.view.afterAction'       => ['callable' => 'viewAfterAction', 'priority' => 100],
             'ControllerAction.Model.addEdit.beforePatch'    => ['callable' => 'addEditBeforePatch', 'priority' => 100],
             'ControllerAction.Model.addEdit.afterAction'    => ['callable' => 'addEditAfterAction', 'priority' => 100],
-            'ControllerAction.Model.add.beforeSave'        => ['callable' => 'addBeforeSave', 'priority' => 100],
+            'ControllerAction.Model.add.beforeSave'         => ['callable' => 'addBeforeSave', 'priority' => 100],
             'ControllerAction.Model.edit.afterQuery'        => ['callable' => 'editAfterQuery', 'priority' => 100],
             'ControllerAction.Model.edit.beforeSave'        => ['callable' => 'editBeforeSave', 'priority' => 100],
-            'Model.custom.onUpdateToolbarButtons'            => 'onUpdateToolbarButtons',
-            'Model.excel.onExcelUpdateFields'                => ['callable' => 'onExcelUpdateFields', 'priority' => 110],
+            'Model.custom.onUpdateToolbarButtons'           => 'onUpdateToolbarButtons',
+            'Model.excel.onExcelUpdateFields'               => ['callable' => 'onExcelUpdateFields', 'priority' => 110],
             'Model.excel.onExcelBeforeStart'                => 'onExcelBeforeStart',
-            'Model.excel.onExcelRenderCustomField'            => 'onExcelRenderCustomField'
+            'Model.excel.onExcelRenderCustomField'          => 'onExcelRenderCustomField'
         ],
         'model' => null,
         'behavior' => null,
@@ -52,7 +52,7 @@ class RecordBehavior extends Behavior
     ];
 
     // value for these field types will be saved on custom_field_values
-    private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
+    private $fieldValueArray = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
 
     private $CustomFieldValues = null;
     private $CustomTableCells = null;
@@ -96,6 +96,7 @@ class RecordBehavior extends Behavior
         // Each field type will have one behavior attached
         $this->_table->addBehavior('CustomField.RenderText');
         $this->_table->addBehavior('CustomField.RenderNumber');
+        $this->_table->addBehavior('CustomField.RenderDecimal');
         $this->_table->addBehavior('CustomField.RenderTextarea');
         $this->_table->addBehavior('CustomField.RenderDropdown');
         $this->_table->addBehavior('CustomField.RenderCheckbox');
@@ -357,7 +358,7 @@ class RecordBehavior extends Behavior
                 return $model->save($entity);
             } else {
                 $indexedErrors = [];
-                $fields = ['text_value', 'number_value', 'textarea_value', 'date_value', 'time_value', 'file'];
+                $fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
                 if (array_key_exists('custom_field_values', $errors)) {
                     if ($entity->has('custom_field_values')) {
                         foreach ($entity->custom_field_values as $key => $obj) {
@@ -404,11 +405,11 @@ class RecordBehavior extends Behavior
     }
 
     /**
-     *	Function to get the filter key from the filter specified
+     *  Function to get the filter key from the filter specified
      *
-     *	@param string $filter The filter provided by the custom module
-     *	@param string $model The model provided by the custom module
-     *	@return The filter foreign key name if found. If not it will return empty.
+     *  @param string $filter The filter provided by the custom module
+     *  @param string $model The model provided by the custom module
+     *  @return The filter foreign key name if found. If not it will return empty.
      */
     private function getFilterKey($filterAlias, $modelAlias)
     {
@@ -423,7 +424,7 @@ class RecordBehavior extends Behavior
         return $filterKey;
     }
 
-    public function getCustomFieldQuery($entity, $params=[])
+    public function getCustomFieldQuery($entity, $params = [])
     {
         $query = null;
         $withContain = array_key_exists('withContain', $params) ? $params['withContain'] : true;
@@ -524,8 +525,8 @@ class RecordBehavior extends Behavior
                             $query->contain([
                                 'CustomFields.CustomTableColumns' => function ($q) {
                                     return $q
-                                           ->find('visible')
-                                           ->find('order');
+                                        ->find('visible')
+                                        ->find('order');
                                 }
                             ]);
                         }
@@ -534,8 +535,8 @@ class RecordBehavior extends Behavior
                             $query->contain([
                                 'CustomFields.CustomTableRows' => function ($q) {
                                     return $q
-                                           ->find('visible')
-                                           ->find('order');
+                                        ->find('visible')
+                                        ->find('order');
                                 }
                             ]);
                         }
@@ -578,7 +579,7 @@ class RecordBehavior extends Behavior
 
         $query = $this->getCustomFieldQuery($entity, ['withContain' => ['CustomFields']]);
 
-        $fieldValues = [];    // values of custom field must be in sequence for validation errors to be placed correctly
+        $fieldValues = [];  // values of custom field must be in sequence for validation errors to be placed correctly
         if (!is_null($query)) {
             $customFields = $query->toArray();
 
@@ -596,6 +597,7 @@ class RecordBehavior extends Behavior
                         $valueData = [
                             'text_value' => null,
                             'number_value' => null,
+                            'decimal_value' => null,
                             'textarea_value' => null,
                             'date_value' => null,
                             'time_value' => null,
@@ -727,6 +729,7 @@ class RecordBehavior extends Behavior
                                 // onGet
                                 $fieldData['text_value'] = $obj->text_value;
                                 $fieldData['number_value'] = $obj->number_value;
+                                $fieldData['decimal_value'] = $obj->decimal_value;
                                 $fieldData['textarea_value'] = $obj->textarea_value;
                                 $fieldData['date_value'] = $obj->date_value;
                                 $fieldData['time_value'] = $obj->time_value;
@@ -745,7 +748,7 @@ class RecordBehavior extends Behavior
                                     return $event->result;
                                 }
                                 // End
-                            } elseif ($model->request->is(['post', 'put'])) {
+                            } else if ($model->request->is(['post', 'put'])) {
                                 // onPost, no actions
                             }
                             $values[$fieldId] = $fieldData;
@@ -985,10 +988,10 @@ class RecordBehavior extends Behavior
     }
 
     /**
-     *	Function to get the field values base on a given record id
+     *  Function to get the field values base on a given record id
      *
-     *	@param int $recordId The record id of the entity
-     *	@return array The field values of that given record id
+     *  @param int $recordId The record id of the entity
+     *  @return array The field values of that given record id
      */
     public function getFieldValue($recordId)
     {
@@ -1000,6 +1003,7 @@ class RecordBehavior extends Behavior
             $customFieldValueTable->aliasField($customFieldsForeignKey),
             'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
                 .' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
+                .' WHEN '.$customFieldValueTable->aliasField('decimal_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('decimal_value')
                 .' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
                 .' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
                 .' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
@@ -1030,7 +1034,7 @@ class RecordBehavior extends Behavior
         return $fieldValue;
     }
 
-    public function copyCustomFields($copyFrom, $copyTo, $generalOnly=false)
+    public function copyCustomFields($copyFrom, $copyTo, $generalOnly = false)
     {
         // default is all
         $model = $this->_table;
@@ -1105,7 +1109,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function text($data, $fieldInfo, $options=[])
+    private function text($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
             return $data[$fieldInfo['id']];
@@ -1114,7 +1118,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function number($data, $fieldInfo, $options=[])
+    private function number($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
             return $data[$fieldInfo['id']];
@@ -1123,7 +1127,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function textarea($data, $fieldInfo, $options=[])
+    private function decimal($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
             return $data[$fieldInfo['id']];
@@ -1132,7 +1136,16 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function dropdown($data, $fieldInfo, $options=[])
+    private function textarea($data, $fieldInfo, $options = [])
+    {
+        if (isset($data[$fieldInfo['id']])) {
+            return $data[$fieldInfo['id']];
+        } else {
+            return '';
+        }
+    }
+
+    private function dropdown($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
             if (isset($options[$data[$fieldInfo['id']]])) {
@@ -1145,7 +1158,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function checkbox($data, $fieldInfo, $options=[])
+    private function checkbox($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
             $values = explode(",", $data[$fieldInfo['id']]);
@@ -1165,7 +1178,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function date($data, $fieldInfo, $options=[])
+    private function date($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
             $date = date_create_from_format('Y-m-d', $data[$fieldInfo['id']]);
@@ -1175,7 +1188,7 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function time($data, $fieldInfo, $options=[])
+    private function time($data, $fieldInfo, $options = [])
     {
         if (isset($data[$fieldInfo['id']])) {
             $time = date_create_from_format('G:i:s', $data[$fieldInfo['id']]);
@@ -1185,12 +1198,12 @@ class RecordBehavior extends Behavior
         }
     }
 
-    private function student_list($data, $fieldInfo, $options=[])
+    private function student_list($data, $fieldInfo, $options = [])
     {
         return null;
     }
 
-    private function table($data, $fieldInfo, $options=[])
+    private function table($data, $fieldInfo, $options = [])
     {
         $id = $fieldInfo['id'];
         $colId = $fieldInfo['col_id'];

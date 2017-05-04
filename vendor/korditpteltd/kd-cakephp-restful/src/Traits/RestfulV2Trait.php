@@ -358,9 +358,7 @@ trait RestfulV2Trait {
 
     private function _showBlobContent(Query $query = null, $value, ArrayObject $extra)
     {
-        if ($value == true) {
-            $extra['blobContent'] = true;
-        }
+        $extra['blobContent'] = $value;
     }
 
     private function formatData(Entity $entity)
@@ -387,12 +385,25 @@ trait RestfulV2Trait {
                 $source = $entity->$property->source();
                 $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
                 if (!TableRegistry::exists($source)) {
-                    $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);  
+                    $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);
                 } else {
                     $entityTable = TableRegistry::get($source);
                 }
-                
+
                 $this->convertBinaryToBase64($entityTable, $entity->$property, $extra);
+            } elseif (is_array($entity->$property)) {
+                foreach ($entity->$property as $propertyEntity) {
+                    if ($propertyEntity instanceof Entity) {
+                        $source = $propertyEntity->source();
+                        $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+                        if (!TableRegistry::exists($source)) {
+                            $entityTable = TableRegistry::get($source, ['connectionName' => $_connectionName]);
+                        } else {
+                            $entityTable = TableRegistry::get($source);
+                        }
+                        $this->convertBinaryToBase64($entityTable, $propertyEntity, $extra);
+                    }
+                }
             } else {
                 if ($property == 'password') {
                     $entity->unsetProperty($property);
@@ -403,10 +414,9 @@ trait RestfulV2Trait {
                 $event = $table->dispatchEvent($eventKey, [$entity, $property, $extra], $this);
                 if ($event->result) {
                     $entity->$property = $event->result;
-                } else if (method_exists($this, $method)) {
+                } elseif (method_exists($this, $method)) {
                     $entity->$property = $this->$method($entity->$property, $extra);
                 }
-
             }
         }
     }

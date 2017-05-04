@@ -69,6 +69,10 @@ class InstitutionRoomsTable extends AppTable
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'SubjectStudents' => ['index']
+        ]);
     }
 
     public function validationDefault(Validator $validator)
@@ -122,6 +126,25 @@ class InstitutionRoomsTable extends AppTable
         ;
     }
 
+
+    public function findSubjectRoomOptions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $academicPeriodId = $options['academic_period_id'];
+        return $query
+            ->find('inUse', ['institution_id' => $institutionId, 'academic_period_id' => $academicPeriodId])
+            ->contain(['RoomTypes'])
+            ->where(['RoomTypes.classification' => 1]) // classification 1 is equal to Classroom, 0 is Non_Classroom
+            ->order(['RoomTypes.order', $this->aliasField('code'), $this->aliasField('name')])
+            ->formatResults(function ($results) {
+                $returnArr = [];
+                foreach ($results as $result) {
+                    $returnArr[] = ['group' => $result->room_type->name, 'id' => $result->id, 'name' => $result->code_name];
+                }
+                return $returnArr;
+            });
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -138,6 +161,7 @@ class InstitutionRoomsTable extends AppTable
             $functionName = "process$functionKey";
 
             if (method_exists($this, $functionName)) {
+                $event->stopPropagation();
                 $this->$functionName($entity);
             }
         }

@@ -3,12 +3,17 @@ namespace Restful\Controller\Component;
 
 use Exception;
 use ArrayObject;
-use Cake\Log\Log;
-use Cake\Utility\Hash;
-use Cake\ORM\Entity;
-use Restful\Controller\RestfulInterface;
-use Cake\Controller\Component;
+
+use Cake\Core\Configure;
+use Cake\Event\Event;
 use Cake\ORM\Table;
+use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
+use Cake\Controller\Component;
+use Cake\Utility\Hash;
+use Cake\Log\Log;
+
+use Restful\Controller\RestfulInterface;
 use Restful\Traits\RestfulV1Trait as RestfulTrait;
 
 class RestfulV1Component extends Component implements RestfulInterface
@@ -24,6 +29,68 @@ class RestfulV1Component extends Component implements RestfulInterface
         $this->controller = $this->_registry->getController();
         $this->Auth = $this->controller->Auth;
         $this->model = $this->config('model');
+    }
+
+    // Is called after the controller's beforeFilter method but before the controller executes the current action handler.
+    public function startup(Event $event)
+    {
+        $controller = $this->controller;
+        $request = $this->request;
+
+        if (empty($request->params['_ext'])) {
+            $request->params['_ext'] = 'json';
+        }
+
+        if (isset($request->model)) {
+            $tableAlias = $request->model;
+            $model = $this->instantiateModel($tableAlias);
+
+            if ($model != false) {
+                $this->model = $model;
+                // Event to get allowed action and allowed table to be accessible via restful
+                $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
+                if (is_array($event->result)) {
+                    $this->Auth->allow(true);
+                }
+            }
+        }
+    }
+
+    // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
+
+    public function beforeRender(Event $event)
+    {
+        $controller = $this->controller;
+        if ($controller->isDebugMode()) {
+            $serialize = array_merge(['request_method', 'action'], $controller->viewVars['_serialize']);
+            $controller->set([
+                'request_method' => $this->request->method(),
+                'action' => $this->request->params['action'],
+                '_serialize' => $serialize
+            ]);
+        }
+    }
+
+    public function isAuthorized($user = null)
+    {
+        $allowedActions = ['translate'];
+
+        $this->controller->setAuthorizedUser($user);
+        $model = $this->model;
+        $scope = $this->request->header('controlleraction');
+        $action = $this->request->params['action'];
+
+        if (in_array($action, $allowedActions)) {
+            return true;
+        }
+
+        $request = $this->request;
+        $extra = new ArrayObject(['request' => $request]);
+        $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
+        if ($event->result) {
+            return $event->result;
+        }
+        return false;
     }
 
     public function token()
@@ -133,9 +200,11 @@ class RestfulV1Component extends Component implements RestfulInterface
             $entity = $this->convertBase64ToBinary($entity);
             $target->save($entity);
             $this->formatData($entity);
+            $errors = $entity->errors();
+            $this->translate($errors);
             $this->controller->set([
                 'data' => $entity,
-                'error' => $entity->errors(),
+                'error' => $errors,
                 '_serialize' => ['data', 'error']
             ]);
         }
@@ -163,7 +232,7 @@ class RestfulV1Component extends Component implements RestfulInterface
             if ($table->exists([$table->primaryKey() => $id])) {
                 $primaryKey = $this->getIdKeys($table, [$table->primaryKey() => $id]);
                 $this->viewEntity($table, $primaryKey);
-            } else if ($this->urlsafeB64Decode($id) && $table->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
+            } elseif ($this->urlsafeB64Decode($id) && $table->exists([json_decode($this->urlsafeB64Decode($id), true)])) {
                 $primaryKey = $this->getIdKeys($table, json_decode($this->urlsafeB64Decode($id), true));
                 $this->viewEntity($table, $primaryKey);
             } else {
@@ -192,13 +261,15 @@ class RestfulV1Component extends Component implements RestfulInterface
             }
             $primaryKeyValues = $this->getIdKeys($target, $keyValues);
             if ($target->exists([$primaryKeyValues])) {
-                $entity = $table->get($primaryKeyValues);
-                $entity = $table->patchEntity($entity, $requestData);
+                $entity = $target->get($primaryKeyValues);
+                $entity = $target->patchEntity($entity, $requestData);
                 $entity = $this->convertBase64ToBinary($entity);
-                $table->save($entity);
+                $target->save($entity);
+                $errors = $entity->errors();
+                $this->translate($errors);
                 $this->controller->set([
                     'data' => $entity,
-                    'error' => $entity->errors(),
+                    'error' => $errors,
                     '_serialize' => ['data', 'error']
                 ]);
             } else {
@@ -240,6 +311,33 @@ class RestfulV1Component extends Component implements RestfulInterface
             } else {
                 $this->_outputError('Record does not exists');
             }
+        }
+    }
+
+    public function translate(&$array)
+    {
+        $translateItem = function (&$item, $key) {
+            $item = __($item);
+        };
+        array_walk_recursive($array, $translateItem);
+    }
+
+    private function instantiateModel($model)
+    {
+        $model = str_replace('-', '.', $model);
+        if (Configure::read('debug')) {
+            $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+            $target = TableRegistry::get($model, ['connectionName' => $_connectionName]);
+        } else {
+            $target = TableRegistry::get($model);
+        }
+
+        try {
+            $data = $target->find('all')->limit('1');
+            return $target;
+        } catch (Exception $e) {
+            $this->_outputError();
+            return false;
         }
     }
 }

@@ -60,21 +60,33 @@
 					<tr>
 						<?php
 
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.id", [ 'value' => $obj->id ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.student_id", [ 'value' => $n ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.student_status_id", [ 'value' => $obj->student_status_id ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.student_status.name", [ 'value' => $userData['student_status']['name'] ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_subject_id", [ 'value' => $obj->institution_subject_id ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_class_id", [ 'value' => $obj->institution_class_id ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.institution_id", [ 'value' => $obj->institution_id ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.academic_period_id", [ 'value' => $obj->academic_period_id ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.education_subject_id", [ 'value' => $obj->education_subject_id ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.education_grade_id", [ 'value' => $obj->education_grade_id ]);
+						//send encoded hidden fields to avoid post limit
+						$hiddenField = '';
+						$hiddenField = $this->ControllerAction->paramsEncode([
+							'id' => $obj->id, 
+							'student_id' => $n,
+							'student_status_id' => $obj->student_status_id, 
+							'student_status' => [
+								'name' => $userData['student_status']['name']
+							],
+							'institution_subject_id' => $obj->institution_subject_id, 
+							'institution_class_id' => $obj->institution_class_id, 
+							'institution_id' => $obj->institution_id,
+							'academic_period_id' => $obj->academic_period_id, 
+							'education_subject_id' => $obj->education_subject_id,
+							'education_grade_id' => $obj->education_grade_id, 
+							'user' =>[
+								'id' => $n,
+								'openemis_no' => $userData['openemis_no'],
+								'name' => $userData['name'], 
+								'gender' => [
+									'name' => $userData['gender']['name']
+								]
+							]
+						]);
 
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.id", [ 'value' => $n ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.openemis_no", [ 'value' => $userData['openemis_no'] ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.name", [ 'value' => $userData['name'] ]);
-						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.user.gender.name", [ 'value' => $userData['gender']['name'] ]);
+						echo $this->Form->hidden("InstitutionSubjects.subject_students.$n.hiddenField", [ 'value' => $hiddenField ]);
+
 						?>
 						<td><?= $userData['openemis_no'] ?></td>
 						<td><?= $userData['name'] ?></td>
@@ -121,7 +133,7 @@
 
 				<?php endif;?>
 
-			<?php endforeach ?>
+			<?php endforeach; ?>
 
 				</tbody>
 			</table>
