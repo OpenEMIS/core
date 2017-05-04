@@ -330,7 +330,6 @@ class StaffTable extends AppTable {
 			'Extracurriculars' => ['text' => __('Extracurriculars')],
 			'Memberships' => ['text' => __('Memberships')],
 			'Licenses' => ['text' => __('Licenses')],
-			'Trainings' => ['text' => __('Trainings')],
 			'StaffAppraisals' => ['text' => __('Appraisals')],
 		];
 
