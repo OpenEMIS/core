@@ -17,6 +17,7 @@ use PHPExcel_IOFactory;
 use PHPExcel_Worksheet;
 use PHPExcel_Cell;
 use PHPExcel_Cell_DataValidation;
+use PHPExcel_Style_Alignment;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -79,7 +80,7 @@ class ExcelReportBehavior extends Behavior
 
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
-        $extra['download'] = true;
+        $extra['download'] = $this->config('download');
 
         $filepath = $extra['path'] . $extra['file'];
         $extra['file_path'] = $extra['path'] . $extra['file'];
@@ -104,14 +105,14 @@ class ExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $assessmentId = $model->getQueryString('assessment_id');
-        $Assessments = TableRegistry::get('Assessments.Assessments');
+        $recordId = $model->getQueryString($this->config('templateTableKey'));
+        $Table = TableRegistry::get($this->config('templateTable'));
 
-        if (empty($assessmentId)) {
+        if (empty($recordId)) {
             $objPHPExcel = new \PHPExcel();
         } else {
             // Read from excel template attachment then create as temporary file in server so that can read back the same file and read as PHPExcel object
-            $entity = $Assessments->get($assessmentId);
+            $entity = $Table->get($recordId);
 
             if ($entity->has('excel_template_name')) {
                 $pathInfo = pathinfo($entity->excel_template_name);
