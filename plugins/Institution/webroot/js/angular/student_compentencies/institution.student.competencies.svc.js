@@ -125,6 +125,10 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                     return {error: 'You need to configure Grading Options first'};
                 }
                 var headerLabel = criteria.name;
+                if (criteria.code != null && criteria.code.length > 0) {
+                    headerLabel = criteria.code + ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="' + criteria.name + '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+                }
+
                 var field = 'competency_criteria_id_' + criteria.id;
                 var columnDef = {
                     headerName: headerLabel,
@@ -164,8 +168,9 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         cols = angular.merge(cols, {
             cellRenderer: function(params) {
                 var studentStatusCode = params.data.student_status_code;
+                var periodEditable = params.data.period_editable;
 
-                if (studentStatusCode == 'CURRENT') {
+                if (studentStatusCode == 'CURRENT' && periodEditable) {
                     if (params.value.length == 0) {
                         params.value = 0;
                     }
@@ -192,7 +197,13 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                     eSelect.value = params.value;
 
                     eSelect.addEventListener('change', function () {
-                        vm.saveCompetencyResults(params, extra);
+                        var newValue = eSelect.value;
+                        params.data[params.colDef.field] = newValue;
+                        vm.saveCompetencyResults(params)
+                        .then(function(response) {
+                        }, function(error) {
+                            console.log(error);
+                        });
                     });
 
                     eCell.appendChild(eSelect);
@@ -220,10 +231,28 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
         return cols;
     }
 
-    function saveCompetencyResults(param, extra) {
-        console.log(param);
-        // var data = {};
-        // InstitutionClasses.reset();
-        // return InstitutionClasses.edit(data);
+    function saveCompetencyResults(params) {
+        console.log(params)
+        var field = params.colDef.field;
+        var competencyTemplateId = params.context.competency_template_id;
+        var competencyItemId = params.data.competency_item_id;
+        var competencyCriteriaId = field.replace('competency_criteria_id_', '');
+        var competencyPeriodId = params.data.competency_period_id;
+        var institutionId = params.context.institution_id;
+        var academicPeriodId = params.context.academic_period_id;
+        var competencyGradingOptionId = params.data[field];
+        var studentId = params.data.student_id;
+
+        var saveObj = {
+            competency_grading_option_id: parseInt(competencyGradingOptionId),
+            student_id: studentId,
+            competency_template_id: competencyTemplateId,
+            competency_item_id: competencyItemId,
+            competency_criteria_id: parseInt(competencyCriteriaId),
+            competency_period_id: competencyPeriodId,
+            institution_id: institutionId,
+            academic_period_id: academicPeriodId
+        };
+        return StudentCompetencyResults.save(saveObj);
     }
 };
