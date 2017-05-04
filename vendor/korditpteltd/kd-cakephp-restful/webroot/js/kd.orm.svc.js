@@ -254,6 +254,32 @@ angular.module('kd.orm.svc', [])
                 data: data
             };
             return this.ajax(settings);
+        },
+
+        edit: function(data) {
+            this._method = 'PATCH';
+            var settings = {
+                headers: {'Content-Type': 'application/json'},
+                data: data
+            };
+            return this.ajax(settings);
+        },
+
+        translate: function(data, options = undefined) {
+            this._method = 'POST';
+            this._className = 'translate';
+            var settings = {
+                headers: {'Content-Type': 'application/json'},
+                data: data
+            };
+            if (options != undefined) {
+                if (options.defer != undefined) {
+                    settings.defer = options.defer;
+                    settings.success = options.success;
+                    settings.error = options.error;
+                }
+            }
+            return this.ajax(settings);
         }
     };
 

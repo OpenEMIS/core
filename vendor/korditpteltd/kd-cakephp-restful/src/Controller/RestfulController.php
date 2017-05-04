@@ -13,6 +13,7 @@ use Cake\Log\Log;
 use Cake\Utility\Inflector;
 use Restful\Controller\AppController;
 use Cake\Utility\Hash;
+use Cake\Core\Configure;
 
 class RestfulController extends AppController
 {
@@ -21,8 +22,10 @@ class RestfulController extends AppController
     protected $controllerAction = null;
     private $restfulComponent = null;
     private $supportedRestful = [
-        'v1' => 'v1'
+        'v1' => 'v1',
+        'v2' => 'v2'
     ];
+    private $user = null;
 
     public function initialize()
     {
@@ -75,21 +78,34 @@ class RestfulController extends AppController
         $componentName = 'Restful'. ucfirst($version);
         $this->loadComponent('Restful.'.$componentName, ['model' => $this->model]);
         $this->restfulComponent = $this->{$componentName};
-
     }
 
     public function isAuthorized($user = null)
     {
+        $this->user = $user;
         $model = $this->model;
         $scope = $this->controllerAction;
         $action = $this->request->params['action'];
         $request = $this->request;
         $extra = new ArrayObject(['request' => $request]);
+        if ($action == 'translate') {
+            return true;
+        }
         $event = $model->dispatchEvent('Restful.Model.isAuthorized', [$scope, $action, $extra], $this);
         if ($event->result) {
             return $event->result;
         }
         return false;
+    }
+
+    public function setUser($user)
+    {
+        $this->user = $user;
+    }
+
+    public function getUser()
+    {
+        return $this->user;
     }
 
     public function beforeRender(Event $event)
@@ -136,20 +152,45 @@ class RestfulController extends AppController
         $this->restfulComponent->view($id);
     }
 
-    public function edit($id)
+    public function edit()
     {
-        $this->restfulComponent->edit($id);
+        $this->restfulComponent->edit();
     }
 
-    public function delete($id)
+    public function delete()
     {
-        $this->restfulComponent->delete($id);
+        $this->restfulComponent->delete();
+    }
+
+    public function translate()
+    {
+        $original = $this->request->data;
+        $translated = $this->request->data;
+        $this->restfulComponent->translate($translated);
+        $this->set([
+            'translated' => $translated,
+            'original' => $original,
+            '_serialize' => ['translated', 'original']
+        ]);
+    }
+
+    private function initTable(Table $table, $connectionName = 'default')
+    {
+        $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : $connectionName;
+        $table::setConnectionName($_connectionName);
+        return $table;
     }
 
     private function _instantiateModel($model)
     {
         $model = str_replace('-', '.', $model);
-        $target = TableRegistry::get($model);
+        if (Configure::read('debug')) {
+            $_connectionName = $this->request->query('_db') ? $this->request->query('_db') : 'default';
+            $target = TableRegistry::get($model, ['connectionName' => $_connectionName]);
+        } else {
+            $target = TableRegistry::get($model);
+        }
+
         try {
             $data = $target->find('all')->limit('1');
             return $target;

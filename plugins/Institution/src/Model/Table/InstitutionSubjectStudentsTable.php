@@ -36,8 +36,11 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			]
 		]);
 
+		$this->addBehavior('CompositeKey');
+
 		$this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index', 'add']
+            'Results' => ['index', 'add'],
+            'OpenEMIS_Classroom' => ['index']
         ]);
 	}
 
@@ -49,11 +52,11 @@ class InstitutionSubjectStudentsTable extends AppTable {
         return $events;
     }
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		if ($entity->isNew()) {
-			$entity->id = Text::uuid();
-		}
-	}
+	// public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
+	// 	if ($entity->isNew()) {
+	// 		$entity->id = Text::uuid();
+	// 	}
+	// }
 
     public function studentsAfterSave(Event $event, $student)
     {
@@ -168,6 +171,70 @@ class InstitutionSubjectStudentsTable extends AppTable {
 			->order([
 				$this->aliasField('student_id')
 			]);
+	}
+
+	public function findAssessmentResults(Query $query, array $options) {
+		$institutionId = $options['institution_id'];
+		$academicPeriodId = $options['academic_period_id'];
+		$classId = $options['institution_class_id'];
+		$assessmentId = $options['assessment_id'];
+		$educationGradeId = $options['education_grade_id'];
+		$educationSubjectId = $options['education_subject_id'];
+		$assessmentPeriodId = $options['assessment_period_id'];
+
+		$Users = $this->Users;
+		$InstitutionSubjects = $this->InstitutionSubjects;
+		$ItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+		$GradingOptions = TableRegistry::get('Assessment.AssessmentGradingOptions');
+
+		$query
+			->select([
+				$ItemResults->aliasField('id'),
+				$ItemResults->aliasField('marks'),
+				$ItemResults->aliasField('assessment_grading_option_id'),
+				$ItemResults->aliasField('assessment_period_id'),
+				$GradingOptions->aliasField('code'),
+				$GradingOptions->aliasField('name')
+			])
+			->matching('Users')
+			->innerJoin(
+				[$InstitutionSubjects->alias() => $InstitutionSubjects->table()],
+				[
+					$InstitutionSubjects->aliasField('id = ') . $this->aliasField('institution_subject_id'),
+					$InstitutionSubjects->aliasField('institution_id') => $institutionId,
+					$InstitutionSubjects->aliasField('academic_period_id') => $academicPeriodId,
+					$InstitutionSubjects->aliasField('education_subject_id') => $educationSubjectId
+				]
+			)
+			->leftJoin(
+				[$ItemResults->alias() => $ItemResults->table()],
+				[
+					$ItemResults->aliasField('student_id = ') . $this->aliasField('student_id'),
+					$ItemResults->aliasField('academic_period_id') => $academicPeriodId,
+					$ItemResults->aliasField('assessment_id') => $assessmentId,
+					$ItemResults->aliasField('education_grade_id') => $educationGradeId,
+					$ItemResults->aliasField('education_subject_id') => $educationSubjectId,
+					$ItemResults->aliasField('assessment_period_id') => $assessmentPeriodId
+				]
+			)
+			->leftJoin(
+				[$GradingOptions->alias() => $GradingOptions->table()],
+				[
+					$GradingOptions->aliasField('id = ') . $ItemResults->aliasField('assessment_grading_option_id')
+				]
+			)
+			->where([
+				$this->aliasField('institution_class_id') => $classId
+			])
+			->group([
+				$this->aliasField('student_id')
+			])
+			->order([
+				$Users->aliasField('first_name'), $Users->aliasField('last_name')
+			])
+			->autoFields(true);
+
+		return $query;
 	}
 
 	public function getMaleCountBySubject($subjectId) {

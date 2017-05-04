@@ -688,6 +688,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
         // ensure that all students are removed from entity if all students are deleted
         if (!array_key_exists('subject_students', $data[$this->alias()])) {
             $data[$this->alias()]['subject_students'] = [];
+        } else {
+            //decode the hidden fields sent from ctp
+            $subjectStudentsData = $data[$this->alias()]['subject_students'];
+            if (!empty($subjectStudentsData)) {
+                foreach ($subjectStudentsData as $key => $value) {
+                    $data[$this->alias()]['subject_students'][$key] = $this->paramsDecode($subjectStudentsData[$key]['hiddenField']);
+                }
+            }
         }
     }
 
@@ -716,6 +724,15 @@ class InstitutionSubjectsTable extends ControllerActionTable
              * Changed in PHPOE-1799-2 for PHPOE-1780. convert security_users_id to student_id
              */
             if (array_key_exists('subject_students', $this->request->data[$this->alias()])) {
+                //decode the hidden fields sent from ctp
+                $subjectStudentsData = $this->request->data[$this->alias()]['subject_students'];
+                if (!empty($subjectStudentsData)) {
+                    foreach ($subjectStudentsData as $key => $value) {
+                        $this->request->data[$this->alias()]['subject_students'][$key] = $this->paramsDecode($subjectStudentsData[$key]['hiddenField']);
+                    }
+                }
+                $entity->subject_students = $this->request->data[$this->alias()]['subject_students']; //re-patch entity from decoding the hiddenField
+                
                 foreach ($this->request->data[$this->alias()]['subject_students'] as $row) {
                     if (array_key_exists($row['student_id'], $studentOptions)) {
 
@@ -785,8 +802,16 @@ class InstitutionSubjectsTable extends ControllerActionTable
         if (!empty($roomOptions)) {
             $this->fields['rooms']['options'] = $roomOptions;
         }
+        
+        //cleanup hiddenField so it wont be listed.
+        $cleanStudents = [];
+        foreach ($students as $key => $value) {
+            if (!$students[$key]->has('hiddenField')) {
+                $cleanStudents[] = $students[$key];
+            }
+        }
         $this->fields['students']['data'] = [
-            'students' => $students,
+            'students' => $cleanStudents,
             'studentOptions' => $studentOptions
         ];
 
@@ -948,8 +973,14 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $relationKey = 'subject_'.strtolower($persona);
         foreach ($entity->$relationKey as $data) {
             if (strtolower($persona)=='students') {
-                if ($data->student_id == $id) {
-                    $recordId = $data->id;
+                if (is_object($data)) {
+                   if ($data->student_id == $id) {
+                        $recordId = $data->id;
+                    } 
+                } else if (array_key_exists('student_id', $data)) {
+                    if ($data['student_id'] == $id) {
+                        $recordId = $data['id'];
+                    } 
                 }
             } else {
                 if ($data->staff_id == $id) {
@@ -1096,6 +1127,7 @@ class InstitutionSubjectsTable extends ControllerActionTable
         $rooms = $this->Rooms
             ->find('inUse', ['institution_id' => $entity->institution_id, 'academic_period_id' => $entity->academic_period_id])
             ->contain(['RoomTypes'])
+            ->where(['RoomTypes.classification' => 1]) // classification 1 is equal to Classroom, 0 is Non_Classroom
             ->order(['RoomTypes.order', $this->Rooms->aliasField('code'), $this->Rooms->aliasField('name')])
             ->toArray();
 

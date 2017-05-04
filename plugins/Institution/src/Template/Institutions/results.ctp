@@ -40,9 +40,6 @@ $this->start('toolbar');
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="onBackClick()">
             <i class="fa kd-back"></i>
         </button>
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="onSaveClick()">
-            <i class="fa fa-save"></i>
-        </button>
         <!-- End -->
     <?php endif; ?>
 
@@ -69,7 +66,7 @@ $roles = '[' . implode(",", $_roles) . ']';
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
                 <uib-tabset justified="true">
-                    <uib-tab heading="{{subject.name}}" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
+                    <uib-tab heading="<?= __('{{subject.name}}') ?>" ng-repeat="subject in subjects" ng-click="onChangeSubject(subject)">
                     </uib-tab>
                 </uib-tabset>
                 <div class="tabs-divider"></div>

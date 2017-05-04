@@ -69,7 +69,8 @@ class AcademicPeriodsTable extends AppTable
             'Students' => ['index'],
             'Staff' => ['index'],
             'Results' => ['index'],
-            'StudentExaminationResults' => ['index']
+            'StudentExaminationResults' => ['index'],
+            'OpenEMIS_Classroom' => ['index', 'view']
         ]);
     }
 
@@ -87,6 +88,59 @@ class AcademicPeriodsTable extends AppTable
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
             ])
             ;
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.onBeforeGetData'] = 'onBeforeGetData';
+        $events['Restful.Model.onBeforeFormatResult'] = 'onBeforeFormatResult';
+        return $events;
+    }
+
+    public function onBeforeGetData(Event $event, $action, ArrayObject $extra)
+    {
+        switch ($action) {
+            case 'weeklist':
+                $todayDate = date("Y-m-d");
+                $weekOptions = [];
+
+                if (isset($extra['primaryKey']) && is_array($extra['primaryKey']) && isset($extra['primaryKey']['id'])) {
+                    $academicPeriodId = $extra['primaryKey']['id'];
+
+                    $weeks = $this->getAttendanceWeeks($academicPeriodId);
+                    $weekStr = __('Week') . ' %d (%s - %s)';
+                    $currentWeek = null;
+
+                    foreach ($weeks as $index => $dates) {
+                        $startDay = $dates[0]->format('Y-m-d');
+                        $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            $weekAttr['current'] = true;
+                            $currentWeek = $index;
+                        } else {
+                            $weekStr = __('Week') . ' %d (%s - %s)';
+                        }
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekOptions[$index] = $weekAttr;
+                    }
+                }
+
+                return $weekOptions;
+                break;
+            default:
+                break;
+        }
+    }
+
+    public function onBeforeFormatResult(Event $event, $data, ArrayObject $extra)
+    {
+        return $data;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
