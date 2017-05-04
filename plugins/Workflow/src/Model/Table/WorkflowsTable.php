@@ -38,11 +38,13 @@ class WorkflowsTable extends AppTable {
         'through' => 'Workflow.WorkflowsFilters',
         'dependent' => true
     ];
+    private $excludedModels = ['Institution.InstitutionCases'];
 
     public function initialize(array $config) {
         parent::initialize($config);
         $this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
         $this->hasMany('WorkflowSteps', ['className' => 'Workflow.WorkflowSteps', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('WorkflowRules', ['className' => 'Workflow.WorkflowRules', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->WorkflowsFilters = TableRegistry::get('Workflow.WorkflowsFilters');
     }
@@ -424,17 +426,21 @@ class WorkflowsTable extends AppTable {
 
             // Loop through modelOptions and unset it if the model do not have filter and already created workflow.
             foreach ($modelOptions as $key => $value) {
-                $filter = $this->WorkflowModels->get($key)->filter;
+                $workflowModelEntity = $this->WorkflowModels->get($key);
+                $filter = $workflowModelEntity->filter;
+                $registryAlias = $workflowModelEntity->model;
                 if (empty($filter)) {
-                    $workflowResults = $this
-                        ->find()
-                        ->where([
-                            $this->aliasField('workflow_model_id') => $key
-                        ])
-                        ->all();
+                    if (!in_array($registryAlias, $this->excludedModels)) {
+                        $workflowResults = $this
+                            ->find()
+                            ->where([
+                                $this->aliasField('workflow_model_id') => $key
+                            ])
+                            ->all();
 
-                    if (!$workflowResults->isEmpty()) {
-                        unset($modelOptions[$key]);
+                        if (!$workflowResults->isEmpty()) {
+                            unset($modelOptions[$key]);
+                        }
                     }
                 }
             }
@@ -537,7 +543,7 @@ class WorkflowsTable extends AppTable {
 
     private function setupFields(Entity $entity)
     {
-        $this->ControllerAction->field('message',['visible' => false]);
+        $this->ControllerAction->field('message', ['visible' => false]);
 
         $selectedModel = $entity->workflow_model_id;
 
@@ -826,7 +832,7 @@ class WorkflowsTable extends AppTable {
 
             $subject = TableRegistry::get($model);
 
-            if ($entity->has('filters')) {
+            if ($entity->has($statusKey) && $entity->has('filters')) {
                 // When edit: If filterIds is clear, fall back to the first step of Default Workflows (Apply To All)
                 if (empty($entity->filters) && !$entity->isNew()) {
                     $originalFilters = $entity->extractOriginal(['filters']);
@@ -917,5 +923,9 @@ class WorkflowsTable extends AppTable {
         }
 
         return compact('isEditable', 'isDeletable');
+    }
+
+    public function getExcludedModels() {
+        return $this->excludedModels;
     }
 }

@@ -237,8 +237,11 @@ class ExcelBehavior extends Behavior
             if ($this->config('orientation') == 'landscape') {
                 $headerRow = [];
                 $headerStyle = [];
+                $headerFormat = [];
                 foreach ($fields as $attr) {
                     $headerRow[] = $attr['label'];
+                    $headerStyle[] = isset($attr['style']) ? $attr['style'] : [];
+                    $headerFormat[] = isset($attr['formatting']) ? $attr['formatting'] : 'GENERAL';
                 }
 
                 // Any additional custom headers that require to be appended on the right side of the sheet
@@ -246,6 +249,8 @@ class ExcelBehavior extends Behavior
                 if (isset($sheet['additionalHeader'])) {
                     $headerRow = array_merge($headerRow, $sheet['additionalHeader']);
                 }
+
+                $writer->writeSheetHeader($sheetName, $headerFormat, true); // true will surpress the header.
 
                 $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
 
@@ -360,7 +365,9 @@ class ExcelBehavior extends Behavior
                     'key' => $table->aliasField($col),
                     'field' => $col,
                     'type' => $field['type'],
-                    'label' => $label
+                    'label' => $label,
+                    'style' => [],
+                    'formatting' => 'GENERAL'
                 ];
             }
         }

@@ -41,8 +41,8 @@ class AppTable extends Table
                 'events' => [
                     'Model.beforeSave' => [
                         'created' => 'new',
-                           'modified' => 'existing'
-                       ]
+                        'modified' => 'existing'
+                    ]
                 ]
             ]);
         }
@@ -429,19 +429,7 @@ class AppTable extends Table
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
-        $primaryKey = $this->primaryKey();
-        $id = null;
-        $primaryKeyValue = [];
-        if (is_array($primaryKey)) {
-            foreach ($primaryKey as $key) {
-                $primaryKeyValue[$key] = $entity->getOriginal($key);
-            }
-        } else {
-            $primaryKeyValue[$primaryKey] = $entity->getOriginal($primaryKey);
-        }
-
-        $encodedKeys = $this->paramsEncode($primaryKeyValue);
-        $id = $encodedKeys;
+        $id = $this->getEncodedKeys($entity);
 
         if (array_key_exists('view', $buttons)) {
             $buttons['view']['url'][] = $id;
@@ -532,6 +520,23 @@ class AppTable extends Table
             $key = Inflector::underscore(Inflector::singularize($tableObj->alias()));
         }
         return $key;
+    }
+
+    public function getEncodedKeys(Entity $entity)
+    {
+        $primaryKey = $this->primaryKey();
+        $primaryKeyValue = [];
+        if (is_array($primaryKey)) {
+            foreach ($primaryKey as $key) {
+                $primaryKeyValue[$key] = $entity->getOriginal($key);
+            }
+        } else {
+            $primaryKeyValue[$primaryKey] = $entity->getOriginal($primaryKey);
+        }
+
+        $encodedKeys = $this->paramsEncode($primaryKeyValue);
+
+        return $encodedKeys;
     }
 
     public function startsWith($haystack, $needle)

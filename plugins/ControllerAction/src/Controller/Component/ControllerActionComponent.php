@@ -1398,7 +1398,7 @@ class ControllerActionComponent extends Component
         $this->config['form'] = true;
     }
 
-    public function remove($id=0)
+    public function remove($id = 0)
     {
         $ids = ($id) ? $this->paramsDecode($id) : 0;
         $request = $this->request;
@@ -1438,11 +1438,11 @@ class ControllerActionComponent extends Component
                     'tableLabel' => 'Apply To'
                 ];
                 if ($this->deleteStrategy == 'transfer') {
-                    $label['nameLabel'] = 'Convert From';
-                    $label['tableLabel'] = 'Apply To';
+                    $label['nameLabel'] = __('Convert From');
+                    $label['tableLabel'] = __('Apply To');
                 } elseif ($this->deleteStrategy == 'restrict') {
-                    $label['nameLabel'] = 'To Be Deleted';
-                    $label['tableLabel'] = 'Associated Records';
+                    $label['nameLabel'] = __('To Be Deleted');
+                    $label['tableLabel'] = __('Associated Records');
                 }
 
                 $extra['keyField'] = $model->primaryKey();
@@ -1462,7 +1462,7 @@ class ControllerActionComponent extends Component
                         $notIdKeys[$key.' <>'] = $value;
                         unset($notIdKeys[$key]);
                     }
-                    $query->find()->where($notIdKeys);
+                    $query->find('all')->where($notIdKeys);
 
                     // Event: deleteUpdateCovertOptions
                     $this->debug(__METHOD__, ': Event -> ControllerAction.Model.onGetConvertOptions');
@@ -1471,8 +1471,11 @@ class ControllerActionComponent extends Component
                         return $event->result;
                     }
 
-                    foreach ($convertOptions as $value) {
-                        $keysToEncode = $model->getIdKeys($model, $value, false);
+                    $convertOptionResults = $query->toArray();
+
+                    $convertOptions = [];
+                    foreach ($convertOptionResults as $key => $value) {
+                        $keysToEncode = $model->getIdKeys($model, $key, false);
                         $encodedKey = $model->paramsEncode($keysToEncode);
                         $convertOptions[$encodedKey] = $value->$extra['valueField'];
                     }
@@ -1517,7 +1520,7 @@ class ControllerActionComponent extends Component
                                     $title = $assoc->name();
                                 }
                                 $title = Inflector::humanize(Inflector::underscore($title));
-                                $associations[$assoc->alias()] = ['model' => $title, 'count' => $count];
+                                $associations[$assoc->alias()] = ['model' => __($title), 'count' => $count];
                                 $totalCount += $count;
                             }
                         }

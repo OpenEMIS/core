@@ -132,7 +132,8 @@ class AccessControlComponent extends Component
         ];
 
         if ($roles->all()->count() > 0) {
-            // Newly created system role or user role will have no security functions prepopulated in the table, thus the following may return empty
+            // Newly created system role or user role will have no security functions prepopulated in the table,
+            // thus the following may return empty
             $lastModified = $SecurityRoleFunctions->find()
                 ->select($selectedColumns)
                 ->where([$SecurityRoleFunctions->aliasField('security_role_id') . ' IN' => $roles])
@@ -201,7 +202,7 @@ class AccessControlComponent extends Component
         }
     }
 
-    public function check($url=[], $roleIds=[])
+    public function check($url = [], $roleIds = [])
     {
         $superAdmin = $this->Auth->user('super_admin');
 
