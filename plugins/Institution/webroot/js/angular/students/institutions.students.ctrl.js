@@ -510,13 +510,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         return studentRecords;
     }
 
-    function insertStudentData(studentId, genderId, academicPeriodId, educationGradeId, classId, startDate, endDate, userRecord) {
+    function insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, userRecord) {
         UtilsSvc.isAppendLoader(true);
         AlertSvc.reset($scope);
         var data = {
             student_id: studentId,
             student_name: studentId,
-            gender_id: genderId,
             academic_period_id: academicPeriodId,
             education_grade_id: educationGradeId,
             start_date: startDate,
@@ -702,21 +701,19 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         var endDate = $scope.endDate;
 
         if (!StudentController.createNewStudent) {
-            var genderId = StudentController.selectedStudentData.gender_id;
             if (StudentController.externalSearch) {
                 var studentData = StudentController.selectedStudentData;
                 var amendedStudentData = Object.assign({}, studentData);
                 amendedStudentData.date_of_birth = InstitutionsStudentsSvc.formatDate(amendedStudentData.date_of_birth);
-                StudentController.addStudentUser(amendedStudentData, genderId, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                StudentController.addStudentUser(amendedStudentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
             } else {
                 var studentId = StudentController.selectedStudent;
-                StudentController.insertStudentData(studentId, genderId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, {});
             }
         } else {
             console.log('postForm');
             if (StudentController.selectedStudentData != null) {
                 console.log('not null');
-                var genderId = StudentController.selectedStudentData.gender_id;
                 var studentData = {};
                 var log = [];
                 angular.forEach(StudentController.selectedStudentData, function(value, key) {
@@ -747,12 +744,12 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
                 delete studentData['modified_user_id'];
                 delete studentData['created'];
                 delete studentData['created_user_id'];
-                StudentController.addStudentUser(studentData, genderId, academicPeriodId, educationGradeId, classId, startDate, endDate);
+                StudentController.addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate);
             }
         }
     }
 
-    function addStudentUser(studentData, genderId, academicPeriodId, educationGradeId, classId, startDate, endDate) {
+    function addStudentUser(studentData, academicPeriodId, educationGradeId, classId, startDate, endDate) {
 
         var newStudentData = studentData;
         newStudentData['academic_period_id'] = academicPeriodId;
@@ -767,7 +764,7 @@ function InstitutionStudentController($location, $q, $scope, $window, $filter, U
         .then(function(user){
             if (user[0].error.length === 0) {
                 var studentId = user[0].data.id;
-                StudentController.insertStudentData(studentId, genderId, academicPeriodId, educationGradeId, classId, startDate, endDate, user[1]);
+                StudentController.insertStudentData(studentId, academicPeriodId, educationGradeId, classId, startDate, endDate, user[1]);
             } else {
                 StudentController.postResponse = user[0];
                 console.log(user[0]);

@@ -704,7 +704,7 @@ class ValidationBehavior extends Behavior {
                     $query = $Users->find()
                             ->contain('Genders')
                             ->where([
-                                $Users->aliasField('id') => $globalData['data'][$fieldType]
+                                $Users->aliasField('id') => $globalData['data']['student_id']
                             ])
                             ->select([
                                 'Genders.code'
@@ -714,13 +714,14 @@ class ValidationBehavior extends Behavior {
                 } else if ($fieldType == 'gender_id') { //if validate gender, then can straight away get its code.
                     $userGender = $UserGenders->get($globalData['data'][$fieldType])->code;
                 }
-                //return ($userGender == $institutionGender);
+                
                 if ($userGender != $institutionGenderCode) {
                 	return $model->getMessage("$registryAlias.$fieldType.compareStudentGenderWithInstitution", ['sprintf' => [$institutionGender]]);
+                } else {
+					return true;
                 }
             }
         }
-        return true;
 	}
 
     public static function institutionStaffId($field, array $globalData) {
