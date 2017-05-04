@@ -37,7 +37,10 @@
 								<td><?= $obj->user->name ?></td>
 								<td><?= $ControllerAction['table']->formatDate($obj->start_date) ?></td>
 								<td><?= $ControllerAction['table']->formatDate($obj->end_date) ?></td>
-								<td><?= (is_object($obj->staff_status) ? $obj->staff_status->name : '') ?></td>
+								<td><?php
+									$staffStatus = is_object($obj->staff_status) ? $obj->staff_status->name : '';
+									echo __($staffStatus);
+								 ?></td>
 								<td><?= $obj->FTE ?></td>
 							</tr>
 						<?php endif ?>
