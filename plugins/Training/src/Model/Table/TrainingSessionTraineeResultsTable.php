@@ -21,4 +21,16 @@ class TrainingSessionTraineeResultsTable extends AppTable {
                 'rule' => ['maxLength', 10]
             ]);
     }
+
+    public function getTrainingSessionResults($sessionId) {
+        $results = $this->find()
+            ->where([$this->aliasField('training_session_id') => $sessionId])
+            ->toArray();
+
+        $returnArray = [];
+        foreach ($results as $result) {
+            $returnArray[$sessionId][$result['trainee_id']][$result['training_result_type_id']] = $result['result'];
+        }
+        return $returnArray;
+    }
 }

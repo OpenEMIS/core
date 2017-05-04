@@ -23,24 +23,20 @@
 		$displayReorder = isset($reorder) && $reorder && count($tableCells) > 0;
 		if ($displayReorder) {
 			echo $this->Html->script('ControllerAction.reorder', ['block' => true]);
-			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];	
+			$tableHeaders[] = [__('Reorder') => ['class' => 'cell-reorder']];
 		} else {
 			$tableHeaders[] = [__('') => ['class' => 'cell-reorder']];
 			$displayReorder = true;
 		}
-	?>	
+	?>
 	<div class="clearfix"></div>
 		<hr>
 		<h3><?= __($labels['custom_fields'])?></h3>
 		<div class="clearfix">
-			<?=
-				$this->Form->input($alias.".selected_custom_field", [
-					'label' => $labels['add_field'],
-					'type' => 'select',
-					'options' => $attr['options'],
-					'value' => 0,
-					'onchange' => "$('#reload').val('addField').click();"
-				]);
+			<?php
+				$attr['model'] = $alias;
+				$attr['field'] = 'selected_custom_field';
+				echo $this->HtmlField->chosenSelectInput($attr, ['label' => $labels['add_field'], 'multiple' => false, 'onchange' => "$('#reload').val('addField').click();"]);
 			?>
 			<?=
 				$this->Form->input($alias.".sectiontxt", [
