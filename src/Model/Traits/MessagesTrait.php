@@ -418,6 +418,18 @@ trait MessagesTrait {
             'add_event' => 'Add Event',
             'restrictDelete' => 'Delete operation is not allowed as this is a system defined record.'
         ],
+        'WorkflowRules' => [
+            'process' => [
+                'start' => [
+                    'success' => 'The process has been started successfully.',
+                    'failed' => 'The process is not started due to errors encountered.'
+                ],
+                'abort' => [
+                    'success' => 'The process has been aborted successfully.',
+                    'failed' => 'The process is not aborted due to errors encountered.'
+                ]
+            ]
+        ],
         'WorkflowStatuses' => [
             'noSteps' => 'No Available Workflow Steps'
         ],
@@ -642,10 +654,46 @@ trait MessagesTrait {
         'StudentCompetencies' => [
             'noPeriod' => 'No Period',
             'noItem' => 'No Item',
-            'noCriterias' => 'Please setup competency criterias for the selected item',
+            'noCriterias' => 'Please setup competency criterias for the selected item'
+        ],
+        'Licenses' => [
+            'select_classification' => 'Select Classification'
         ],
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
+        ],
+        'UserContacts' => [
+            'noEmailRemain' => 'There should be at least one Email record'
+        ],
+        'Reports' => [
+            'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
+        ],
+        'AlertRules' => [
+            'Attendance' => [
+                'threshold' => 'Days within 1 to 30'
+            ],
+            'LicenseRenewal' => [
+                'value' => 'Days within %d to %d',
+                'hour' => 'Hours within %d to %d '
+                    .'<br> Total accumulated hours based on'
+                    .'<br> selected field of study within the'
+                    .'<br> validity of license'
+            ],
+            'LicenseValidity' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'RetirementWarning' => [
+                'value' => 'Ages within %d to %d'
+            ],
+            'StaffEmployment' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffLeave' => [
+                'value' => 'Days within %d to %d'
+            ],
+            'StaffType' => [
+                'value' => 'Days within %d to %d'
+            ]
         ],
 
         // Validation Messages
@@ -657,6 +705,9 @@ trait MessagesTrait {
                 'noSubjectSelected' => 'There is no subject selected',
                 'noProgrammes' => 'There is no programme set for this institution',
                 'noSections' => 'There is no class under the selected academic period',
+                'date_opened' => [
+                    'ruleLessThanToday' => 'Date should not be later than today'
+                ],
                 'date_closed' => [
                     'ruleCompareDateReverse' => 'Date Closed should not be earlier than Date Opened'
                 ],
@@ -671,7 +722,11 @@ trait MessagesTrait {
                     'ruleLatitude' => 'Please enter a valid Latitude'
                 ],
                 'area_id' => [
-                    'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.'
+                    'ruleAuthorisedArea' => 'You have not been authorised to add an institution into that area.',
+                    'configuredArea' => 'Please select area from %s level.'
+                ],
+                'area_administrative_id' => [
+                    'configuredArea' => 'Please select area administrative from %s level.'
                 ],
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
@@ -706,7 +761,8 @@ trait MessagesTrait {
             ],
             'InstitutionGrades' => [
                 'end_date' => [
-                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date',
+                    'ruleCheckStudentInEducationProgrammes' => 'Unable to set the end date because there are students still enrolled in this programme.'
                 ],
                 'start_date' => [
                     'ruleCompareWithInstitutionDateOpened' => 'Start Date should not be earlier than Institution Date Opened'
@@ -831,6 +887,14 @@ trait MessagesTrait {
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
             ],
+            'StudentUser' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
             'Staff' => [
                 'staff_name' => [
                     'ruleInstitutionStaffId' => 'Staff has already been added.'
@@ -863,6 +927,20 @@ trait MessagesTrait {
                 ],
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
+                ],
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+            ],
+            'TransferApprovals' => [
+                'start_date' => [
+                    'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
+                ],
+                'education_grade_id' => [
+                    'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
             ],
             'InstitutionFeeTypes' => [
@@ -1016,9 +1094,11 @@ trait MessagesTrait {
                     'ruleValidateNumeric' => 'Please enter a valid Numeric value',
                     'ruleValidateEmail' => 'Please enter a valid Email',
                     'ruleValidateEmergency' => 'Please enter a valid Value',
+                    'ruleContactValuePattern' => 'Please enter value with a valid format',
+                    'ruleUniqueContactValue' => 'Contact value must be unique for each type',
                 ],
                 'preferred' => [
-                    'ruleValidatePreferred' => 'Please select a preferred contact type'
+                    'ruleValidatePreferred' => 'There must be one Preferred Contact for each Contact Type'
                 ],
             ],
             'Identities' => [
@@ -1287,6 +1367,11 @@ trait MessagesTrait {
                     'ruleRange' => 'Value must be within 0 to 100'
                 ]
             ],
+            'StaffTrainings' => [
+                'credit_hours' => [
+                    'ruleRange' => 'Value must be within 1 to 99'
+                ],
+            ],
         ],
         'AcademicPeriod' => [
             'AcademicPeriods' => [
@@ -1483,6 +1568,12 @@ trait MessagesTrait {
             'Examinations' => [
                 'code' => [
                     'ruleUniqueCode' => 'Code must be unique for the same academic period',
+                ],
+                'registration_start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'registration_end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
                 ]
             ],
             'ExaminationCentres' => [
@@ -1515,6 +1606,9 @@ trait MessagesTrait {
                 'code' => [
                     'ruleUniqueCodeWithinForm' => 'Code must be unique in the same examination',
                 ],
+                'examination_date' => [
+                    'ruleCompareDateReverse' => 'Date should not be earlier than Registration End Date'
+                ]
             ],
             'ExaminationGradingTypes' => [
                 'code' => [
@@ -1627,6 +1721,13 @@ trait MessagesTrait {
                 ],
             ],
         ],
+        'FieldOption' => [
+            'LicenseClassifications' => [
+                'name' => [
+                    'ruleUnique' => 'This name already exists in the system',
+                ]
+            ]
+        ],
         'Configuration' => [
             'ConfigProductLists' => [
                 'name' => [
@@ -1644,12 +1745,23 @@ trait MessagesTrait {
                     'invalidUrl' => 'You have entered an invalid URL.',
                     'ruleValidateJsonAPI' => 'URL or data in URL is invalid.'
                 ]
+            ],
+            'ConfigWebhooks' => [
+                'triggered_event' => [
+                    'ruleNotEmpty' => 'This field cannot be left empty'
+                ],
+                'url' => [
+                    'invalidUrl' => 'You have entered an invalid URL'
+                ],
+                'name' => [
+                    'ruleUnique' => 'This webhook name already exists in the system',
+                ],
             ]
         ],
         'Alert' => [
             'AlertRules' => [
                 'name' => [
-                    'ruleUnique' => 'This field has to be unique',
+                    'ruleUnique' => 'This field has to be unique'
                 ]
             ],
         ],

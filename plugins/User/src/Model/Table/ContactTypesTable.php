@@ -35,8 +35,7 @@ class ContactTypesTable extends ControllerActionTable
 	public function findWithContactOptions(Query $query, array $options)
 	{
 		return $query
-			->contain(['ContactOptions'])
-			->order([$this->aliasField('order') => 'ASC']);
+			->contain(['ContactOptions']);
 	}
 
 	public function validationDefault(Validator $validator) {
@@ -46,6 +45,7 @@ class ContactTypesTable extends ControllerActionTable
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
+		$this->field('validation_pattern', ['after' => 'name', 'sort' => false]);
 		$this->field('contact_option_id', ['visible' => 'false']);
 		$this->field('default', ['visible' => 'false']);
 		$this->field('editable', ['visible' => 'false']);

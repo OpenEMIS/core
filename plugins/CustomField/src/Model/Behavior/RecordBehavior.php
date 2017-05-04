@@ -388,7 +388,7 @@ class RecordBehavior extends Behavior {
      *	@param string $model The model provided by the custom module
      *	@return The filter foreign key name if found. If not it will return empty.
      */
-	public function getFilterKey($filterAlias, $modelAlias) {
+	private function getFilterKey($filterAlias, $modelAlias) {
 		$filterKey = '';
 		$associations = TableRegistry::get($filterAlias)->associations();
 		foreach ($associations as $assoc) {

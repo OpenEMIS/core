@@ -34,22 +34,6 @@ class SpecialNeedsTable extends ControllerActionTable {
 		$this->fields['special_need_difficulty_id']['type'] = 'select';
 	}
 
-	public function indexBeforeAction(Event $event) {
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('special_need_date', $order++);
-		$this->ControllerAction->setFieldOrder('special_need_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('special_need_difficulty_id', $order++);
-		$this->ControllerAction->setFieldOrder('comment', $order++);
-	}
-
-	public function addEditBeforeAction(Event $event) {
-		$order = 0;
-		$this->ControllerAction->setFieldOrder('special_need_type_id', $order++);
-		$this->ControllerAction->setFieldOrder('special_need_date', $order++);
-		$this->ControllerAction->setFieldOrder('special_need_difficulty_id', $order++);
-		$this->ControllerAction->setFieldOrder('comment', $order++);
-	}
-
 	public function validationDefault(Validator $validator) {
 		$validator = parent::validationDefault($validator);
 
@@ -89,6 +73,7 @@ class SpecialNeedsTable extends ControllerActionTable {
 
 	public function afterAction(Event $event, $data) {
 		$this->setupTabElements();
+		$this->setFieldOrder(['special_need_date', 'special_need_type_id', 'special_need_difficulty_id', 'comment']);
 	}
 
 	public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)

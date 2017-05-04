@@ -64,7 +64,8 @@ class UsersTable extends AppTable {
 		$this->addBehavior('Area.Areapicker');
 		$this->addBehavior('User.AdvancedNameSearch');
 		$this->addBehavior('Restful.RestfulAccessControl', [
-        	'StaffRoom' => ['index', 'add']
+        	'StaffRoom' => ['index', 'add'],
+        	'OpenEMIS_Classroom' => ['view', 'edit']
         ]);
 	}
 
@@ -76,7 +77,8 @@ class UsersTable extends AppTable {
 			'Model.Users.updateLoginLanguage' => 'updateLoginLanguage',
 			'Model.UserNationalities.onChange' => 'onChangeUserNationalities',
 			'Model.UserIdentities.onChange' => 'onChangeUserIdentities',
-            'Model.Nationalities.onChange' => 'onChangeNationalities'
+            'Model.Nationalities.onChange' => 'onChangeNationalities',
+            'Model.UserContacts.onChange' => 'onChangeUserContacts'
 		];
 
 		$events = array_merge($events, $newEvent);
@@ -94,25 +96,68 @@ class UsersTable extends AppTable {
 
 	public function afterLogin(Event $event, $user)
     {
-    	$user['last_login'] = new Time();
+    	$lastLogin = new Time();
     	$controller = $event->subject();
     	$SSO = $controller->SSO;
     	$Cookie = $controller->Localization->getCookie();
     	$session = $controller->request->session();
     	if ($session->read('System.language_menu') && $SSO->getAuthenticationType() != 'Local') {
-    		if (empty($user['preferred_language'])) {
-    			$user['preferred_language'] = 'en';
-    		}
-    		$Cookie->write('System.language', $user['preferred_language']);
+			$preferredLanguage = !empty($user['preferred_language']) ? $user['preferred_language'] : 'en';
+    		$Cookie->write('System.language', $preferredLanguage);
     	} else {
-    		$user['preferred_language'] = $session->read('System.language');
+    		$preferredLanguage = $session->read('System.language');
     	}
-    	$userEntity = $this->newEntity($user);
-    	$this->save($userEntity);
+    	$this->updateAll([
+    		'last_login' => $lastLogin,
+    		'preferred_language' => $preferredLanguage
+    	], ['id' => $user['id']]);
     }
 
 	public function createAuthorisedUser(Event $event, $userName, array $userInfo) {
-        return false;
+       	$openemisNo = $this->getUniqueOpenemisId();
+
+        $GenderTable = TableRegistry::get('User.Genders');
+        $genderList = $GenderTable->find('list')->toArray();
+
+        // Just in case the gender is others
+        if (!isset($userInfo['gender'])) {
+        	$userInfo['gender'] = null;
+        }
+        $gender = array_search($userInfo['gender'], $genderList);
+        if ($gender === false) {
+            $gender = key($genderList);
+        }
+
+        if (isset($userInfo['dateOfBirth'])) {
+			try {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', $userInfo['dateOfBirth']);
+			} catch (\Exception $e) {
+				$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+			}
+        } else {
+        	$dateOfBirth = Time::createFromFormat('Y-m-d', '1970-01-01');
+        }
+
+
+        $date = Time::now();
+        $data = [
+            'username' => $userName,
+            'openemis_no' => $openemisNo,
+            'first_name' => $userInfo['firstName'],
+            'last_name' => $userInfo['lastName'],
+            'gender_id' => $gender,
+            'date_of_birth' => $dateOfBirth,
+            'super_admin' => 0,
+            'status' => 1,
+            'created_user_id' => 1,
+            'created' => $date,
+        ];
+        $userEntity = $this->newEntity($data, ['validate' => false]);
+        if ($this->save($userEntity)) {
+        	return $userName;
+        } else {
+        	return false;
+        }
 	}
 
 	public static function handleAssociations($model) {
@@ -597,38 +642,39 @@ class UsersTable extends AppTable {
 		return $buttons;
 	}
 
-	public function autocomplete($search) {
-		$search = sprintf('%s%%', $search);
-		$list = $this
-			->find()
-			->select([
-				$this->aliasField('openemis_no'),
-				$this->aliasField('first_name'),
-				$this->aliasField('middle_name'),
-				$this->aliasField('third_name'),
-				$this->aliasField('last_name'),
-				$this->aliasField('preferred_name'),
-				$this->aliasField('id')
-			])
-			->where([
-				'OR' => [
-					$this->aliasField('openemis_no') . ' LIKE' => $search,
-					$this->aliasField('first_name') . ' LIKE' => $search,
-					$this->aliasField('middle_name') . ' LIKE' => $search,
-					$this->aliasField('third_name') . ' LIKE' => $search,
-					$this->aliasField('last_name') . ' LIKE' => $search
-				]
-			])
-			->order([$this->aliasField('first_name')])
-			->limit(100)
-			->all();
+	// autocomplete used for TrainingSessions
+	// the same function is found in Security.Users
+	public function autocomplete($search)
+	{
+		$data = [];
+		if (!empty($search)) {
+			$query = $this
+				->find()
+				->select([
+					$this->aliasField('openemis_no'),
+					$this->aliasField('first_name'),
+					$this->aliasField('middle_name'),
+					$this->aliasField('third_name'),
+					$this->aliasField('last_name'),
+					$this->aliasField('preferred_name'),
+					$this->aliasField('id')
+				])
+				->order([
+					$this->aliasField('first_name'),
+					$this->aliasField('last_name')
+				])
+				->limit(100);
 
-		$data = array();
-		foreach($list as $obj) {
-			$data[] = [
-				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
-				'value' => $obj->id
-			];
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$list = $query->toArray();
+
+			foreach($list as $obj) {
+				$data[] = [
+					'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+					'value' => $obj->id
+				];
+			}
 		}
 		return $data;
 	}
@@ -658,7 +704,7 @@ class UsersTable extends AppTable {
 		}
 	}
 
-	public function onChangeUserNationalities(Event $event, Entity $entity) 
+	public function onChangeUserNationalities(Event $event, Entity $entity)
 	{
 		$nationalityId = $entity->nationality_id;
 		$Nationalities = TableRegistry::get('FieldOption.Nationalities');
@@ -692,15 +738,15 @@ class UsersTable extends AppTable {
                 'nationality_id' => $nationalityId,
                 'identity_type_id' => $nationality->identity_type_id,
                 'identity_number' => $identityNumber
-            ], 
+            ],
             ['id' => $entity->security_user_id]
         );
 	}
 
-    public function onChangeUserIdentities(Event $event, Entity $entity) 
+    public function onChangeUserIdentities(Event $event, Entity $entity)
     {
         $UserNationalityTable = TableRegistry::get('User.UserNationalities');
-        
+
         //check whether identity number / type is tied to preferred nationality.
         $isPreferredNationality = $UserNationalityTable
                                 ->find()
@@ -736,13 +782,13 @@ class UsersTable extends AppTable {
                     'nationality_id' => $preferredNationality->nationality_id,
                     'identity_type_id' => $preferredNationality->identityTypeId,
                     'identity_number' => $identityNumber
-                ], 
+                ],
                 ['id' => $entity->security_user_id]
             );
         }
     }
 
-	public function onChangeNationalities(Event $event, Entity $entity) 
+	public function onChangeNationalities(Event $event, Entity $entity)
     {
         $nationalityId = $entity->id;
         $identityTypeId = $entity->identity_type_id;
@@ -757,20 +803,29 @@ class UsersTable extends AppTable {
                 SELECT `security_user_id`, `identity_type_id`, `number`
                 FROM `user_identities` `U1`
                 WHERE `created` = (
-                    SELECT MAX(`created`) 
-                    FROM `user_identities` 
+                    SELECT MAX(`created`)
+                    FROM `user_identities`
                     WHERE  `security_user_id` = `U1`.`security_user_id`
                     AND `identity_type_id` = ?
                 )
-            )AS UI 
+            )AS UI
                 ON (
-                    `UI`.`identity_type_id` = `N`.`identity_type_id` 
+                    `UI`.`identity_type_id` = `N`.`identity_type_id`
                     AND `UI`.`security_user_id` = `SU`.`id`
                 )
-            SET 
-                `SU`.`identity_type_id` = ?, 
+            SET
+                `SU`.`identity_type_id` = ?,
                 `SU`.`identity_number` = `UI`.`number`',
             [$nationalityId,$identityTypeId,$identityTypeId],['integer','integer','integer']
         );
+    }
+
+    public function onChangeUserContacts(Event $event, Entity $entity)
+    {
+        $securityUserId = $entity->security_user_id;
+        $email = $entity->value;
+
+        // update the user email with preferred email
+        $this->updateAll(['email' => $email],['id' => $securityUserId]);
     }
 }

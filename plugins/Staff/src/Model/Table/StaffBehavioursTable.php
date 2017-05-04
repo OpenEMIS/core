@@ -14,15 +14,17 @@ class StaffBehavioursTable extends AppTable {
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
+		$this->belongsTo('BehaviourClassifications', ['className' => 'Student.BehaviourClassifications', 'foreignKey' => 'behaviour_classification_id']);
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $settings) {
 		$this->ControllerAction->field('staff_id', ['visible' => false]);
 		$this->ControllerAction->field('staff_behaviour_category_id', ['type' => 'select']);
+		$this->ControllerAction->field('behaviour_classification_id', ['type' => 'select']);
 		$this->ControllerAction->field('description', ['visible' => false]);
 		$this->ControllerAction->field('action', ['visible' => false]);
 
-		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'title', 'staff_behaviour_category_id']);
+		$this->ControllerAction->setFieldOrder(['institution_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {

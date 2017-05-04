@@ -108,6 +108,20 @@ Router::scope('/restful', [], function ($routes) {
 
         $routes->connect('/', ['action' => 'nothing']);
         $routes->connect('/token', ['action' => 'token', '_method' => 'GET']);
+        $routes->connect('/:version/ajax/:component/:method',
+            ['action' => 'ajax', '_method' => 'GET'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['component', 'method']]
+        );
+
+        // Translate
+        $routes->connect( '/:version/translate',
+            ['action' => 'translate', '_method' => 'POST'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
+        );
+
+        $routes->connect( '/translate',
+            ['action' => 'translate', '_method' => 'POST']
+        );
 
         // Index
         $routes->connect( '/:version/:model',
@@ -122,7 +136,7 @@ Router::scope('/restful', [], function ($routes) {
         // View
         $routes->connect( '/:version/:model/:id',
             ['action' => 'view', '_method' => 'GET'],
-            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['model', 'id']]
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
         );
 
         $routes->connect( '/:model/:id',
@@ -141,25 +155,23 @@ Router::scope('/restful', [], function ($routes) {
         );
 
         // Edit
-        $routes->connect( '/:version/:model/:id',
+        $routes->connect( '/:version/:model',
             ['action' => 'edit', '_method' => 'PATCH'],
-            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
         );
 
-        $routes->connect( '/:model/:id',
-            ['action' => 'edit', '_method' => 'PATCH'],
-            ['pass' => ['id']]
+        $routes->connect( '/:model',
+            ['action' => 'edit', '_method' => 'PATCH']
         );
 
         // Delete
-        $routes->connect( '/:version/:model/:id',
+        $routes->connect( '/:version/:model',
             ['action' => 'delete', '_method' => 'DELETE'],
-            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['id']]
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
         );
 
-        $routes->connect( '/:model/:id',
-            ['action' => 'delete', '_method' => 'DELETE'],
-            ['pass' => ['id']]
+        $routes->connect( '/:model',
+            ['action' => 'delete', '_method' => 'DELETE']
         );
     });
 });
