@@ -1449,7 +1449,12 @@ trait MessagesTrait {
                 'end_date' => [
                     'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
                 ]
-            ]
+            ],
+            'TrainingSessionTraineeResults' => [
+                'result' => [
+                    'ruleMaxLength' => 'Result entered exceeds 10 characters'
+                ],
+            ],
         ],
         'Workflow' => [
             'Workflows' => [
