@@ -594,7 +594,8 @@ trait MessagesTrait {
             'notSupport' => 'Not supported in this form.'
         ],
         'ExaminationStudents' => [
-            'restrictAdd' => 'Add operation is not allowed.'
+            'restrictAdd' => 'Add operation is not allowed.',
+            'notAssignedRoom' => 'Not all students are assigned to a room, please manually assigned the students to the room.'
         ],
         'ExaminationNotRegisteredStudents' => [
             'restrictAdd' => 'Add operation is not allowed.'
