@@ -163,6 +163,7 @@ class StudentsTable extends ControllerActionTable
             ])
             ->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
                 'rule' => ['compareStudentGenderWithInstitution']
+            ])
             ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
                 'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
                 'on' => 'create'
