@@ -175,7 +175,15 @@ class StudentUserTable extends ControllerActionTable
                 'rule' => ['compareStudentGenderWithInstitution']
             ])
             ->requirePresence('start_date', 'create')
-            ->requirePresence('education_grade_id', 'create')
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date'],
+                'on' => 'create'
+            ])
+			->requirePresence('education_grade_id', 'create')
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
+                'on' => 'create'
+            ])
             ->requirePresence('academic_period_id', 'create')
             ->allowEmpty('postal_code')
             ->add('postal_code', 'ruleCustomPostalCode', [

@@ -1967,4 +1967,94 @@ class ValidationBehavior extends Behavior {
         }
         return true;
     }
+
+    public static function checkStudentInEducationProgrammes($field, array $globalData)
+    {
+        $endDate = new DateTime($field);
+        $today = new DateTime('now');
+
+
+        if ($endDate < $today) { //if programme ended before today
+            //then check whether there are students already enrolled after that past date
+            $InstitutionStudents = TableRegistry::get('Institution.Students');
+            $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+            $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
+
+            $query = $InstitutionStudents
+                    ->find()
+                    ->where([
+                        $InstitutionStudents->aliasField('institution_id') => $globalData['data']['institution_id'],
+                        $InstitutionStudents->aliasField('education_grade_id') => $globalData['data']['education_grade_id'],
+                        $InstitutionStudents->aliasField('student_status_id') => $enrolledStatus,
+                        $InstitutionStudents->aliasField('start_date > ') => $globalData['data']['end_date']
+                    ])
+                    ->count();
+
+            if ($query > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static function checkProgrammeEndDate($field, $caller, array $globalData)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $model = $globalData['providers']['table'];
+        $registryAlias = $model->registryAlias();
+        $data = $globalData['data'];
+
+        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+            $query = $InstitutionGrades
+                    ->find()
+                    ->where([
+                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                    ])
+                    ->first();
+
+            $programmeEndDate = $query->end_date;
+
+            if (!empty($programmeEndDate)) {
+                $programmeEndDate = new DateTime($programmeEndDate);
+                $today = new DateTime('now');
+                $validationErrorMsg = '';
+
+                if ($programmeEndDate < $today) {
+                    $validationErrorMsg = "$registryAlias.education_grade_id.checkProgrammeEndDate";
+                    return $model->getMessage($validationErrorMsg, ['sprintf' => [$programmeEndDate->format('d-m-Y')]]);
+                }
+            }
+        }
+        return true;
+    }
+
+    public static function checkProgrammeEndDateAgainstStudentStartDate($field, $caller, array $globalData)
+    {
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $model = $globalData['providers']['table'];
+        $data = $globalData['data'];
+
+        if (array_key_exists('education_grade_id', $data) && !empty($data['education_grade_id'])) {
+            $query = $InstitutionGrades
+                    ->find()
+                    ->where([
+                        $InstitutionGrades->aliasField('education_grade_id') => $data['education_grade_id'],
+                        $InstitutionGrades->aliasField('institution_id') => $data['institution_id']
+                    ])
+                    ->first();
+
+            $programmeEndDate = $query->end_date;
+
+            if (!empty($programmeEndDate)) {
+                $programmeEndDate = new DateTime($programmeEndDate);
+                $studentStartDate = new DateTime($data['start_date']);
+                
+                if ($programmeEndDate < $studentStartDate) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 }

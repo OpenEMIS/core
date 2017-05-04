@@ -223,8 +223,8 @@ class TrainingApplicationsTable extends ControllerActionTable
                     }
 
                     $row['url'] = $url;
-                    $row['status'] = $row->_matchingData['Statuses']->name;
-                    $row['request_title'] = $row->staff->name_with_id . ': ' . $row->session->course->code_name . ' (' . $row->session->code_name . ')';
+                    $row['status'] = __($row->_matchingData['Statuses']->name);
+                    $row['request_title'] = sprintf(__('%s applying for session %s in %s'), $row->staff->name_with_id, $row->session->code_name, $row->session->course->code_name);
                     $row['institution'] = $row->institution->code_name;
                     $row['received_date'] = $receivedDate;
                     $row['requester'] = $row->created_user->name_with_id;
