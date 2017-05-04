@@ -97,6 +97,19 @@ class StudentAdmissionTable extends AppTable {
 		return $events;
 	}
 
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        //this is meant to force gender_id validation
+        if ($data->offsetExists('student_id')) {
+            $studentId = $data['student_id'];
+
+            if (!$data->offsetExists('gender_id')) {
+                $query = $this->Users->get($studentId);
+                $data['gender_id'] = $query->gender_id;
+            }
+        }
+    }
+
 	public function studentsAfterSave(Event $event, $student)
 	{
 		$StudentStatuses = TableRegistry::get('Student.StudentStatuses');
