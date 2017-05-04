@@ -349,6 +349,7 @@ class TrainingSessionsTable extends ControllerActionTable
                                 'Positions.staff_position_title_id IN' => $targetPopulationIds
                             ]);
                     })
+                    ->where([$Staff->aliasField('staff_status_id') => 1]) // 1 = ASSIGNED, 2 = END_OF_ASSIGNMENT
                     ->group([$Staff->aliasField('staff_id')])
                     ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')]);
 
@@ -845,7 +846,9 @@ class TrainingSessionsTable extends ControllerActionTable
                                 return $q
                                     ->find('all')
                                     ->where(['Users.openemis_no' => $openemis_no]);
-                            });
+                            })
+                            ->where([$Staff->aliasField('staff_status_id') => 1]) // 1 = ASSIGNED, 2 = END_OF_ASSIGNMENT
+                            ;
 
                 if (!empty($targetPopulationIds)) {
                     $trainee =  $trainee
