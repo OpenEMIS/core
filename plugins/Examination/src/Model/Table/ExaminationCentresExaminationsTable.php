@@ -435,12 +435,12 @@ class ExaminationCentresExaminationsTable extends ControllerActionTable
     private function triggerLinkAllExamCentresShell($systemProcessId, $examinationId, $academicPeriodId, $examCentreTypeId = null)
     {
         $args = '';
-        $args .= !is_null($systemProcessId) ? ' '.$systemProcessId : '';
+        $args .= !is_null($systemProcessId) ? ''.$systemProcessId : '';
         $args .= !is_null($examinationId) ? ' '.$examinationId : '';
         $args .= !is_null($academicPeriodId) ? ' '.$academicPeriodId : '';
         $args .= !is_null($examCentreTypeId) ? ' '.$examCentreTypeId : '';
 
-        $cmd = ROOT . DS . 'bin' . DS . 'cake LinkAllExamCentres '.$args;
+        $cmd = ROOT . DS . 'bin' . DS . 'cake LinkAllExamCentres "'.$args.'"';
         $logs = ROOT . DS . 'logs' . DS . 'LinkAllExamCentres.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
 
