@@ -528,7 +528,21 @@ class ExcelReportBehavior extends Behavior
 
             $extra['placeholders'] = $placeholders;
         } else if (!is_null($affectedRowValue)) {
-            // to-do: logic to shift coordinate of unprocessed placeholder to down if it is affected after auto insert new row
+            $placeholders = [];
+            foreach ($extra['placeholders'] as $columnIndex => $rowsObj) {
+                foreach($rowsObj as $rowIndex => $obj) {
+                    if ($rowIndex >= $affectedRowValue) {
+                        // logic to shift coordinate of unprocessed placeholder below if it is affected after auto insert new row
+                        $newRowIndex = $rowIndex + 1;
+                        $placeholders[$columnIndex][$newRowIndex] = $extra['placeholders'][$columnIndex][$rowIndex];
+                    } else {
+                        // if is not affected, the stay as it is
+                        $placeholders[$columnIndex][$rowIndex] = $extra['placeholders'][$columnIndex][$rowIndex];
+                    }
+                }
+            }
+
+            $extra['placeholders'] = $placeholders;
         }
     }
 
@@ -582,9 +596,10 @@ class ExcelReportBehavior extends Behavior
                     $nestedRowValue = $rowValue;
                     // always output children to the immediate next column
                     $nestedColumnIndex = $columnIndex + 1;
+                    // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
                     $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+
                     foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
-                        // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
                         if (!$this->suppressAutoInsertNewRow && $nestedRowValue != $rowValue) {
                             $objWorksheet->insertNewRowBefore($nestedRowValue);
                             $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
@@ -607,7 +622,7 @@ class ExcelReportBehavior extends Behavior
                         $cellStyle->getAlignment()->setVertical(PHPExcel_Style_Alignment::VERTICAL_CENTER);
                         $objWorksheet->duplicateStyle($cellStyle, $mergeRange);
 
-                        $rowValue = $nestedRowValue;
+                        $rowValue = $nestedRowValue-1;
                     }
                 }
 
@@ -617,11 +632,6 @@ class ExcelReportBehavior extends Behavior
             // replace placeholder as blank if data is empty
             $cellCoordinate = $columnValue.$rowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
-        }
-
-        // only insert new row for the first column which have repeat-rows
-        if ($this->suppressAutoInsertNewRow == false) {
-            $this->suppressAutoInsertNewRow = true;
         }
     }
 
