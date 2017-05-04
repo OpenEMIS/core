@@ -19,7 +19,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     private $queryString;
     private $examCentreId;
-    private $examCentreRoomStudents = [];
 
     public function initialize(array $config) {
         $this->table('examination_centres_examinations_students');
@@ -182,16 +181,6 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
             $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
         }
-
-        $ExamCentreRoomStudents = $this->ExaminationCentreRoomsExaminationsStudents;
-        $this->examCentreRoomStudents = $ExamCentreRoomStudents->find('list', [
-                'keyField' => 'student_id',
-                'valueField' => 'room_name'
-            ])
-            ->innerJoinWith('ExaminationCentreRooms')
-            ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
-            ->where([$ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId])
-            ->toArray();
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields)
@@ -229,24 +218,20 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onGetRoom(Event $event, Entity $entity)
     {
-        if ($this->action == 'index') {
-            return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
-        } else if ($this->action == 'view') {
-            $ExamCentreRoomStudents = $this->ExaminationCentreRoomsExaminationsStudents;
-            $examCentreRoomStudents = $ExamCentreRoomStudents->find()
-                ->innerJoinWith('ExaminationCentreRooms')
-                ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
-                ->where([
-                    $ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId,
-                    $ExamCentreRoomStudents->aliasField('examination_id') => $entity->examination_id,
-                    $ExamCentreRoomStudents->aliasField('student_id') => $entity->student_id
-                ])
-                ->first();
-            if (!empty($examCentreRoomStudents)) {
-                return $examCentreRoomStudents->room_name;
-            } else {
-                return '';
-            }
+        $ExamCentreRoomStudents = $this->ExaminationCentreRoomsExaminationsStudents;
+        $examCentreRoomStudents = $ExamCentreRoomStudents->find()
+            ->innerJoinWith('ExaminationCentreRooms')
+            ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
+            ->where([
+                $ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId,
+                $ExamCentreRoomStudents->aliasField('examination_id') => $entity->examination_id,
+                $ExamCentreRoomStudents->aliasField('student_id') => $entity->student_id
+            ])
+            ->first();
+        if (!empty($examCentreRoomStudents)) {
+            return $examCentreRoomStudents->room_name;
+        } else {
+            return '';
         }
     }
 
