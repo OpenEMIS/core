@@ -654,7 +654,7 @@ class InstitutionExaminationStudentsTable extends ControllerActionTable
                             }
                         }
                         if (!empty($roomStudents)) {
-                            $model->Alert->warning($this->aliasField('notAssignedRoom'));
+                            $model->Alert->warning('ExaminationStudents.notAssignedRoom');
                         }
                         return true;
                     } else {
