@@ -92,6 +92,7 @@ class StudentsTable extends ControllerActionTable
                 'education_grade_id',
                 'academic_period_id',
                 'student_status_id',
+                'previous_institution_student_id'
             ],
             'order' => $advancedSearchFieldOrder
         ]);
@@ -140,8 +141,6 @@ class StudentsTable extends ControllerActionTable
             ])
             ->add('academic_period_id', [
             ])
-            ->add('education_grade_id', [
-            ])
             ->allowEmpty('student_name')
             ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
                 'rule' => ['studentNotEnrolledInAnyInstitutionAndSameEducationSystem', []],
@@ -164,6 +163,13 @@ class StudentsTable extends ControllerActionTable
             ])
             ->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
                 'rule' => ['compareStudentGenderWithInstitution']
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
+                'on' => 'create'
+            ])
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date'],
+                'on' => 'create'
             ])
             ;
         return $validator;
