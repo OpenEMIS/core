@@ -233,7 +233,7 @@ class ImportStudentsTable extends AppTable {
         }
         if (empty($student->date_of_birth)) {
             $rowInvalidCodeCols['date_of_birth'] = __('Student\'s date of birth is empty. Please correct it at Directory page');
-            
+            return false;
         }
         $tempRow['student_name'] = $tempRow['student_id'];
 
@@ -362,12 +362,7 @@ class ImportStudentsTable extends AppTable {
         }
 
         //check student gender against institution gender (use existing function from validation behavior)
-        $globalData['field'] = 'student_id';
-        $globalData['data']['institution_id'] = $this->institutionId;
-        $globalData['data']['student_id'] = $tempRow['student_id'];
-        $globalData['providers']['table'] = $this->InstitutionStudents;
-
-        $result = $this->compareStudentGenderWithInstitution($tempRow['student_id'], $globalData);
+        $result = $this->checkStudentGenderAgainstInstitutionGender($tempRow['student_id'], $this->institutionId);
             
         if ($result !== true) {
             $rowInvalidCodeCols['student_id'] = __($result);
@@ -376,6 +371,37 @@ class ImportStudentsTable extends AppTable {
         //end of checking student gender
 
         return true;
+    }
+
+    private function checkStudentGenderAgainstInstitutionGender($studentId, $institutionId) 
+    {
+        if (!empty($institutionId)) {
+            //get institution gender
+            $query = $this->Institutions->find()
+                    ->contain('Genders')
+                    ->where([$Institutions->aliasField('id') => $institutionId])
+                    ->select(['Genders.code', 'Genders.name'])
+                    ->first();
+            $institutionGender = $query->Genders->name;
+            $institutionGenderCode = $query->Genders->code;
+
+            if ($institutionGenderCode == 'X') { //if mixed then always true
+                return true;
+            } else {
+                $query = $this->Students->find()
+                        ->contain('Genders')
+                        ->where([$Users->aliasField('id') => $studentId])
+                        ->select(['Genders.code'])
+                        ->first();
+                $userGender = $query->Genders->code;
+
+                if ($userGender != $institutionGenderCode) {
+                    return sprintf('Institution only accepts %s student.', $institutionGender);
+                } else {
+                    return true;
+                }
+            }
+        }
     }
 
     public function onImportSetModelPassedRecord(Event $event, Entity $clonedEntity, $columns, ArrayObject $tempPassedRecord, ArrayObject $originalRow) {

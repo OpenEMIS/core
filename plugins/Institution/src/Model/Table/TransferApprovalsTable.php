@@ -45,6 +45,9 @@ class TransferApprovalsTable extends AppTable {
             ->add('start_date', 'ruleCompareDate', [
                 'rule' => ['compareDate', 'end_date', false]
             ])
+            ->add('student_id', 'rulecompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
         ;
     }
 
