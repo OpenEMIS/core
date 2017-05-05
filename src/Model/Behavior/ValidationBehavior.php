@@ -899,19 +899,12 @@ class ValidationBehavior extends Behavior {
 
 	public static function inAcademicPeriod($field, $academicFieldName, $options = [], $globalData)
 	{
-// pr('inAcademicPeriod');
-// pr($field);
-// pr($academicFieldName);
-// pr($options);
-// pr($globalData);
-// die;
 		if (array_key_exists($academicFieldName, $globalData['data'])) {
 			$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 			$periodObj = $AcademicPeriods
 					->findById($globalData['data'][$academicFieldName])
 					->first();
-// pr($periodObj);
-// die;
+
 			if (!empty($periodObj)) {
 				$excludeFirstDay = array_key_exists('excludeFirstDay', $options) ? $options['excludeFirstDay'] : null;
 		        $excludeLastDay = array_key_exists('excludeLastDay', $options) ? $options['excludeLastDay'] : null;
