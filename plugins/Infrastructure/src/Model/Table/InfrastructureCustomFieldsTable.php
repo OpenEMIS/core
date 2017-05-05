@@ -7,11 +7,11 @@ class InfrastructureCustomFieldsTable extends CustomFieldsTable
 {
     public function initialize(array $config)
     {
-        $this->supportedFieldTypes = $this->getSupportedFieldTypesByModel([
-            'Institution.InstitutionLands',
-            'Institution.InstitutionBuildings',
-            'Institution.InstitutionFloors',
-            'Institution.InstitutionRooms']);
+        // $this->supportedFieldTypes = $this->getSupportedFieldTypesByModel([
+        //     'Institution.InstitutionLands',
+        //     'Institution.InstitutionBuildings',
+        //     'Institution.InstitutionFloors',
+        //     'Institution.InstitutionRooms']);
         parent::initialize($config);
         $this->hasMany('CustomFieldOptions', ['className' => 'Infrastructure.InfrastructureCustomFieldOptions', 'foreignKey' => 'infrastructure_custom_field_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('CustomFieldValues', ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);

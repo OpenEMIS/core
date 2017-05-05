@@ -11,13 +11,13 @@ class RoomCustomFieldsTable extends CustomFieldsTable
         $this->supportedFieldTypes = $this->getSupportedFieldTypesByModel('Institution.InstitutionRooms');
         parent::initialize($config);
         $this->hasMany('CustomFieldOptions', ['className' => 'Infrastructure.InfrastructureCustomFieldOptions', 'foreignKey' => 'infrastructure_custom_field_id', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('CustomFieldValues', ['className' => 'Infrastructure.InfrastructureCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('CustomFieldValues', ['className' => 'Institution.RoomCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('CustomForms', [
-            'className' => 'Infrastructure.InfrastructureCustomForms',
+            'className' => 'Institution.RoomCustomForms',
             'joinTable' => 'infrastructure_custom_forms_fields',
             'foreignKey' => 'infrastructure_custom_field_id',
             'targetForeignKey' => 'infrastructure_custom_form_id',
-            'through' => 'Infrastructure.InfrastructureCustomFormsFields',
+            'through' => 'Institution.RoomCustomFormsFields',
             'dependent' => true
         ]);
     }
