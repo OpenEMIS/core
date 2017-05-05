@@ -131,13 +131,6 @@ class StaffBehavioursTable extends ControllerActionTable
 
 	public function addBeforeAction(Event $event, ArrayObject $extra)
 	{
-		if(!empty($this->request->data[$this->alias()]['academic_period_id'])) {
-			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-			$academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
-			$this->request->data[$this->alias()]['academic_start_date'] = $academicPeriod->start_date;
-			$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
-		}
-
 		$this->field('date_of_behaviour');
 		$this->field('academic_period_id');
 		$this->field('staff_behaviour_category_id', ['type' => 'select']);
@@ -152,7 +145,6 @@ class StaffBehavioursTable extends ControllerActionTable
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$this->fields['staff_id']['attr']['value'] = $entity->staff->name_with_id;
 		$this->field('date_of_behaviour');
 		$this->field('academic_period_id');
 		$this->field('staff_behaviour_category_id', ['entity' => $entity]);
@@ -179,14 +171,17 @@ class StaffBehavioursTable extends ControllerActionTable
 		$startDate = '';
 		$endDate = '';
 		if($action == 'add' && !empty($request->data[$this->alias()]['academic_period_id'])) {
+			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+			$academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+
+			$startDate = $academicPeriod->start_date;
+			$endDate = $academicPeriod->end_date;
+
 			$todayDate = new Date();
 			$inputDate = Date::createfromformat('d-m-Y',$request->data[$this->alias()]['date_of_behaviour']); //string to date object
 
-			$startDate = $request->data[$this->alias()]['academic_start_date'];
-			$endDate = $request->data[$this->alias()]['academic_end_date'];
-
 			// if today date is not within selected academic period, default date will be start of the year
-			if ($inputDate <= $startDate || $inputDate >= $endDate) {
+			if ($inputDate <= $startDate || $inputDate > $endDate) {
 				$attr['value'] = $startDate->format('d-m-Y');
 
 				// if today date is within selected academic period, default date will be current date
@@ -268,7 +263,12 @@ class StaffBehavioursTable extends ControllerActionTable
 
 			$attr['options'] = $staffOptions;
 		} else if ($action == 'edit') {
+			$entityId = $this->paramsDecode($this->paramsPass(0))['id'];
+			$staffId = $this->get($entityId)->staff_id;
+			$staffName = $this->Staff->get($staffId)->name_with_id;
+
 			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $staffName;
 		}
 		return $attr;
 	}
