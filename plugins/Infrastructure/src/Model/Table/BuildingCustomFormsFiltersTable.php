@@ -9,7 +9,7 @@ class BuildingCustomFormsFiltersTable extends AppTable
     {
         $this->table('infrastructure_custom_forms_filters');
         parent::initialize($config);
-        $this->belongsTo('CustomForms', ['className' => 'Infrastructure.InfrastructureCustomForms', 'foreignKey' => 'infrastructure_custom_form_id']);
+        $this->belongsTo('CustomForms', ['className' => 'Infrastructure.BuildingCustomForms', 'foreignKey' => 'infrastructure_custom_form_id']);
         $this->belongsTo('CustomFilters', ['className' => 'Infrastructure.BuildingTypes', 'foreignKey' => 'infrastructure_custom_filter_id']);
     }
 }

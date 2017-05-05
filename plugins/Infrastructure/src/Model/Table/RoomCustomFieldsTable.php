@@ -13,11 +13,11 @@ class RoomCustomFieldsTable extends CustomFieldsTable
         $this->hasMany('CustomFieldOptions', ['className' => 'Infrastructure.InfrastructureCustomFieldOptions', 'foreignKey' => 'infrastructure_custom_field_id', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('CustomFieldValues', ['className' => 'Institution.RoomCustomFieldValues', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsToMany('CustomForms', [
-            'className' => 'Institution.RoomCustomForms',
+            'className' => 'Infrastructure.RoomCustomForms',
             'joinTable' => 'infrastructure_custom_forms_fields',
             'foreignKey' => 'infrastructure_custom_field_id',
             'targetForeignKey' => 'infrastructure_custom_form_id',
-            'through' => 'Institution.RoomCustomFormsFields',
+            'through' => 'Infrastructure.InfrastructureCustomFormsFields',
             'dependent' => true
         ]);
     }
