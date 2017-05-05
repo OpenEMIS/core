@@ -194,6 +194,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                     eSelect.value = params.value;
 
                     eSelect.addEventListener('change', function () {
+                        console.log('here');
                         var newValue = eSelect.value;
                         params.data[params.colDef.field] = newValue;
                         vm.saveCompetencyResults(params)
@@ -229,7 +230,6 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
     }
 
     function saveCompetencyResults(params) {
-        console.log(params)
         var field = params.colDef.field;
         var competencyTemplateId = params.context.competency_template_id;
         var competencyItemId = params.data.competency_item_id;

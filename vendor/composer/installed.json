@@ -3838,7 +3838,7 @@
         "source": {
             "type": "git",
             "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-            "reference": "c07734b6ab75bc1fb574088188720af4f3872089"
+            "reference": "872ead27dc8916e1d4dac5463174820aea82c65a"
         },
         "require": {
             "admad/cakephp-jwt-auth": "^2.0",
@@ -3848,7 +3848,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-05-05 08:08:17",
+        "time": "2017-05-05 09:12:09",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
