@@ -159,7 +159,7 @@ var Autocomplete = {
 		this.element.keypress(function(event) {
 		    var keycode = (event.keyCode ? event.keyCode : event.which);
 		    if(keycode == '13'){
-		    	triggerAjax();
+		    	triggerAjax(event);
 		        event.preventDefault();
 		    }
 		});
