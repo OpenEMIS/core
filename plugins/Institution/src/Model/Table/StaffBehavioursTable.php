@@ -2,20 +2,26 @@
 namespace Institution\Model\Table;
 
 use ArrayObject;
+
+use Cake\I18n\Date;
 use Cake\Event\Event;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
+use Cake\Validation\Validator;
+
 use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
-class StaffBehavioursTable extends ControllerActionTable {
+class StaffBehavioursTable extends ControllerActionTable
+{
 	use OptionsTrait;
 
 	public function initialize(array $config)
 	{
 		parent::initialize($config);
+		$this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods', 'foreignKey' => 'academic_period_id']);
 		$this->belongsTo('Staff', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('StaffBehaviourCategories', ['className' => 'Staff.StaffBehaviourCategories']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
@@ -34,6 +40,25 @@ class StaffBehavioursTable extends ControllerActionTable {
 		$events['InstitutionCase.onSetCustomCaseTitle'] = 'onSetCustomCaseTitle';
 		$events['InstitutionCase.onSetCustomCaseSummary'] = 'onSetCustomCaseSummary';
         return $events;
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+
+        return $validator
+        	->add('date_of_behaviour', [
+				'ruleInAcademicPeriod' => [
+					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
+					'provider' => 'table',
+					'on' => function ($context) {
+						if (array_key_exists('academic_period_id', $context['data'])) {
+							return !empty($context['data']['academic_period_id']);
+						}
+				    }
+				]
+			])
+        ;
     }
 
 	public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -63,6 +88,7 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
+		$this->field('academic_period_id', ['visible' => false]);
 		$this->field('description', ['visible' => false]);
 		$this->field('action', ['visible' => false]);
 		$this->field('time_of_behaviour', ['visible' => false]);
@@ -75,11 +101,10 @@ class StaffBehavioursTable extends ControllerActionTable {
 		$extra['elements']['controls'] = ['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => [], 'order' => 1];
 
 		// Setup period options
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		// $periodOptions = ['0' => __('All Periods')];
-		$periodOptions = $AcademicPeriod->getList();
+		$periodOptions = $this->AcademicPeriods->getList();
 		if (empty($this->request->query['academic_period_id'])) {
-			$this->request->query['academic_period_id'] = $AcademicPeriod->getCurrent();
+			$this->request->query['academic_period_id'] = $this->AcademicPeriods->getCurrent();
 		}
 
 		$Staff = TableRegistry::get('Institution.Staff');
@@ -106,14 +131,6 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 	public function addBeforeAction(Event $event, ArrayObject $extra)
 	{
-		if(!empty($this->request->data[$this->alias()]['academic_period_id'])) {
-			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-			$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
-			$academicPeriod = $AcademicPeriodTable->get($academicPeriodId);
-			$this->request->data[$this->alias()]['academic_start_date'] = $academicPeriod->start_date;
-			$this->request->data[$this->alias()]['academic_end_date'] = $academicPeriod->end_date;
-		}
-
 		$this->field('date_of_behaviour');
 		$this->field('academic_period_id');
 		$this->field('staff_behaviour_category_id', ['type' => 'select']);
@@ -128,11 +145,12 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$this->fields['staff_id']['attr']['value'] = $entity->staff->name_with_id;
+		$this->field('date_of_behaviour');
+		$this->field('academic_period_id');
 		$this->field('staff_behaviour_category_id', ['entity' => $entity]);
 		$this->field('behaviour_classification_id', ['entity' => $entity]);
 
-		$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
+		$this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -150,23 +168,50 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 	public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, Request $request)
 	{
-		if(!empty($request->data[$this->alias()]['academic_period_id'])) {
-			$startDate = $request->data[$this->alias()]['academic_start_date'];
-			$endDate = $request->data[$this->alias()]['academic_end_date'];
-			$attr['value'] = $startDate->format('d-m-Y');
+		$startDate = '';
+		$endDate = '';
+		if($action == 'add' && !empty($request->data[$this->alias()]['academic_period_id'])) {
+			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
+			$academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+
+			$startDate = $academicPeriod->start_date;
+			$endDate = $academicPeriod->end_date;
+
+			$todayDate = new Date();
+			$inputDate = Date::createfromformat('d-m-Y',$request->data[$this->alias()]['date_of_behaviour']); //string to date object
+
+			// if today date is not within selected academic period, default date will be start of the year
+			if ($inputDate <= $startDate || $inputDate > $endDate) {
+				$attr['value'] = $startDate->format('d-m-Y');
+
+				// if today date is within selected academic period, default date will be current date
+				if ($startDate <= $todayDate && $todayDate <= $endDate) {
+					$attr['value'] = $todayDate->format('d-m-Y');
+				}
+			}
+
 			$attr['default_date'] = false;
 			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-			return $attr;
+		} else if ($action == 'edit' && !empty($this->paramsPass(0))) {
+			// restrict the date options only on the selected academic period
+			$entityId = $this->paramsDecode($this->paramsPass(0))['id'];
+			$academicPeriodId = $this->get($entityId)->academic_period_id;
+
+			$startDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
+			$endDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
+
+			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
 		}
+
+		return $attr;
 	}
 
 	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
 	{
 		$institutionId = $this->Session->read('Institution.Institutions.id');
-		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 
 		if ($action == 'add') {
-			$periodOptions = $AcademicPeriod->getList(['isEditable'=>true]);
+			$periodOptions = $this->AcademicPeriods->getList(['isEditable'=>true]);
 			$selectedPeriod = 0;
 			if ($request->is(['post', 'put'])) {
 				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
@@ -177,13 +222,20 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 			//set start and end dates for date of behaviour based on chosen academic period
 			if (!empty($selectedPeriod)) {
-				$periodEntity = $AcademicPeriod->get($selectedPeriod);
+				$periodEntity = $this->AcademicPeriods->get($selectedPeriod);
 				$dateOptions = [
 					'startDate' => $periodEntity->start_date->format('d-m-Y'),
 					'endDate' => $periodEntity->end_date->format('d-m-Y')
 				];
 				$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
 			}
+		} else if ($action == 'edit' && !empty($this->paramsPass(0))) {
+			$entityId = $this->paramsDecode($this->paramsPass(0))['id'];
+			$academicPeriodId = $this->get($entityId)->academic_period_id;
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $academicPeriodId;
+			$attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriodId)->name;
 		}
 		return $attr;
 	}
@@ -211,7 +263,12 @@ class StaffBehavioursTable extends ControllerActionTable {
 
 			$attr['options'] = $staffOptions;
 		} else if ($action == 'edit') {
+			$entityId = $this->paramsDecode($this->paramsPass(0))['id'];
+			$staffId = $this->get($entityId)->staff_id;
+			$staffName = $this->Staff->get($staffId)->name_with_id;
+
 			$attr['type'] = 'readonly';
+			$attr['attr']['value'] = $staffName;
 		}
 		return $attr;
 	}
@@ -249,7 +306,7 @@ class StaffBehavioursTable extends ControllerActionTable {
     	]);
     	$title = '';
     	$title .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
-    	
+
 		return $title;
     }
 
@@ -260,7 +317,7 @@ class StaffBehavioursTable extends ControllerActionTable {
     	]);
     	$summary = '';
     	$summary .= $recordEntity->staff->name.' '.__('from').' '.$recordEntity->institution->code_name.' '.__('with').' '.$recordEntity->staff_behaviour_category->name;
-    	
+
     	return $summary;
     }
 }
