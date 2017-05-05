@@ -304,6 +304,9 @@ $this->Html->script('ControllerAction.../plugins/datepicker/js/bootstrap-datepic
                 <div class="input string">
                     <label><?= __('Gender') ?></label>
                     <input ng-model="InstitutionStudentController.selectedStudentData.gender.name" type="string" disabled="disabled">
+                    <div ng-if="InstitutionStudentController.postResponse.error.gender_id" class="error-message">
+                        <p ng-repeat="error in InstitutionStudentController.postResponse.error.gender_id">{{ error }}</p>
+                    </div>
                 </div>
                 <div class="input select required" ng-model="InstitutionStudentController.postResponse" ng-show="!InstitutionStudentController.completeDisabled">
                     <label><?= __('Academic Period') ?></label>
