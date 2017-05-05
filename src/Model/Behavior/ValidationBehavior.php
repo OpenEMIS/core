@@ -698,19 +698,28 @@ class ValidationBehavior extends Behavior {
                 return true;
             } else {
                 //get user gender
+                $userGender = '';
                 $Users = TableRegistry::get('User.Users');
                 $UserGenders = TableRegistry::get('User.Genders');
-                if ($fieldType == 'student_id') { //if validate on student_id, then need to find user gender.
-                    $query = $Users->find()
+                if ($fieldType != 'gender_id') { //if validate on student_id, then need to find user gender.
+
+                	if (array_key_exists('student_id', $globalData['data'])) {
+                		$studentId = $globalData['data']['student_id'];
+                	}
+
+                	if (!empty($studentId)) {
+                		$query = $Users->find()
                             ->contain('Genders')
                             ->where([
-                                $Users->aliasField('id') => $globalData['data']['student_id']
+                                $Users->aliasField('id') => $studentId
                             ])
                             ->select([
                                 'Genders.code'
                             ])
                             ->first();
-                    $userGender = $query->Genders->code;
+                    	$userGender = $query->Genders->code;
+                	}
+                    
                 } else if ($fieldType == 'gender_id') { //if validate gender, then can straight away get its code.
                     $userGender = $UserGenders->get($globalData['data'][$fieldType])->code;
                 }
