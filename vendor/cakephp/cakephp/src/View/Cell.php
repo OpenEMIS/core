@@ -25,13 +25,13 @@ use Cake\ORM\Locator\LocatorAwareTrait;
 use Cake\Utility\Inflector;
 use Cake\View\Exception\MissingCellViewException;
 use Cake\View\Exception\MissingTemplateException;
+use Error;
 use Exception;
 use ReflectionException;
 use ReflectionMethod;
 
 /**
  * Cell base.
- *
  */
 abstract class Cell
 {
@@ -172,7 +172,7 @@ abstract class Cell
     {
         $cache = [];
         if ($this->_cache) {
-            $cache = $this->_cacheConfig($this->action);
+            $cache = $this->_cacheConfig($this->action, $template);
         }
 
         $render = function () use ($template) {
@@ -220,6 +220,7 @@ abstract class Cell
         if ($cache) {
             return Cache::remember($cache['key'], $render, $cache['config']);
         }
+
         return $render();
     }
 
@@ -229,14 +230,16 @@ abstract class Cell
      * If the key is undefined, the cell class and action name will be used.
      *
      * @param string $action The action invoked.
+     * @param string|null $template The name of the template to be rendered.
      * @return array The cache configuration.
      */
-    protected function _cacheConfig($action)
+    protected function _cacheConfig($action, $template = null)
     {
         if (empty($this->_cache)) {
             return [];
         }
-        $key = 'cell_' . Inflector::underscore(get_class($this)) . '_' . $action;
+        $template = $template ?: "default";
+        $key = 'cell_' . Inflector::underscore(get_class($this)) . '_' . $action . '_' . $template;
         $key = str_replace('\\', '_', $key);
         $default = [
             'config' => 'default',
@@ -245,6 +248,7 @@ abstract class Cell
         if ($this->_cache === true) {
             return $default;
         }
+
         return $this->_cache + $default;
     }
 
@@ -257,14 +261,18 @@ abstract class Cell
      * This is because PHP will not allow a __toString() method to throw an exception.
      *
      * @return string Rendered cell
+     * @throws \Error Include error details for PHP 7 fatal errors.
      */
     public function __toString()
     {
         try {
             return $this->render();
         } catch (Exception $e) {
-            trigger_error('Could not render cell - ' . $e->getMessage(), E_USER_WARNING);
+            trigger_error(sprintf('Could not render cell - %s [%s, line %d]', $e->getMessage(), $e->getFile(), $e->getLine()), E_USER_WARNING);
+
             return '';
+        } catch (Error $e) {
+            throw new Error(sprintf('Could not render cell - %s [%s, line %d]', $e->getMessage(), $e->getFile(), $e->getLine()));
         }
     }
 
