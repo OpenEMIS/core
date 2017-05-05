@@ -4,7 +4,7 @@ namespace Restful\Model\Behavior;
 use ArrayObject;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Log\Log;
+
 class RestfulAccessControlBehavior extends Behavior {
 
     protected $_defaultConfig = [
