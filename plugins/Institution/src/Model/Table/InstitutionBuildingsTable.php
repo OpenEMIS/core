@@ -48,13 +48,13 @@ class InstitutionBuildingsTable extends AppTable
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
-            'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
+            'fieldClass' => ['className' => 'Infrastructure.BuildingCustomFields'],
             'formKey' => 'infrastructure_custom_form_id',
             'filterKey' => 'infrastructure_custom_filter_id',
             'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
-            'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
-            'recordKey' => 'institution_room_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'formFilterClass' => ['className' => 'Infrastructure.BuildingCustomFormsFilters'],
+            'recordKey' => 'institution_building_id',
+            'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => null
         ]);
 

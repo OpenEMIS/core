@@ -47,13 +47,13 @@ class InstitutionLandsTable extends AppTable
             'fieldKey' => 'infrastructure_custom_field_id',
             'tableColumnKey' => null,
             'tableRowKey' => null,
-            'fieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFields'],
+            'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
             'formKey' => 'infrastructure_custom_form_id',
             'filterKey' => 'infrastructure_custom_filter_id',
             'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
-            'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
-            'recordKey' => 'institution_room_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
+            'recordKey' => 'institution_land_id',
+            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true, 'cascadeCallbacks' => true],
             'tableCellClass' => null
         ]);
 
