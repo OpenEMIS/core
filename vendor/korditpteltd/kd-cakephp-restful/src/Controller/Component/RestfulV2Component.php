@@ -17,7 +17,6 @@ use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
-use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 
 use Restful\Model\Table\RestfulAppTable;
 use Restful\Controller\RestfulInterface;
@@ -688,6 +687,12 @@ class RestfulV2Component extends Component implements RestfulInterface
         $requestQueries = $this->request->query;
 
         $conditions = [];
+        foreach ($requestQueries as $key => $value) {
+            if (!$this->startsWith($key, '_')) {
+                $conditions[$key] = $value;
+                unset($requestQueries[$key]);
+            }
+        }
         if (!empty($conditions)) {
             $requestQueries['_conditions'] = $conditions;
             $extra['conditions'] = $conditions;
