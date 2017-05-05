@@ -43,7 +43,7 @@ class DebugTimer
         if (!$name) {
             $named = false;
             $calledFrom = debug_backtrace();
-            $_name = $name = Debugger::trimpath($calledFrom[0]['file']) . ' line ' . $calledFrom[0]['line'];
+            $name = Debugger::trimPath($calledFrom[0]['file']) . ' line ' . $calledFrom[0]['line'];
         } else {
             $named = true;
         }
@@ -68,6 +68,7 @@ class DebugTimer
             'message' => $message,
             'named' => $named
         ];
+
         return true;
     }
 
@@ -107,6 +108,7 @@ class DebugTimer
             return false;
         }
         self::$_timers[$name]['end'] = $end;
+
         return true;
     }
 
@@ -149,6 +151,7 @@ class DebugTimer
         if ($clear) {
             self::$_timers = [];
         }
+
         return $times;
     }
 
@@ -160,6 +163,7 @@ class DebugTimer
     public static function clear()
     {
         self::$_timers = [];
+
         return true;
     }
 
@@ -175,6 +179,7 @@ class DebugTimer
         if (!isset(self::$_timers[$name]['start']) || !isset(self::$_timers[$name]['end'])) {
             return 0;
         }
+
         return round(self::$_timers[$name]['end'] - self::$_timers[$name]['start'], $precision);
     }
 
@@ -187,6 +192,7 @@ class DebugTimer
     {
         $start = self::requestStartTime();
         $now = microtime(true);
+
         return ($now - $start);
     }
 
@@ -204,6 +210,7 @@ class DebugTimer
         } else {
             $startTime = env('REQUEST_TIME');
         }
+
         return $startTime;
     }
 }
