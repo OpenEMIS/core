@@ -1,4 +1,4 @@
-<?php if (!empty($academicPeriodOptions) || !empty($reportCardOptions)) : ?>
+<?php if (!empty($academicPeriodOptions) || !empty($reportCardOptions) || !empty($classOptions)) : ?>
     <div class="toolbar-responsive panel-toolbar">
         <div class="toolbar-wrapper">
             <?php
@@ -32,6 +32,19 @@
                         'url' => $baseUrl,
                         'data-named-key' => 'report_card_id',
                         'data-named-group' => 'academic_period_id'
+                    ));
+                }
+
+                if (!empty($classOptions)) {
+                    echo $this->Form->input('class_id', array(
+                        'type' => 'select',
+                        'class' => 'form-control',
+                        'label' => false,
+                        'options' => $classOptions,
+                        'default' => $selectedClass,
+                        'url' => $baseUrl,
+                        'data-named-key' => 'class_id',
+                        'data-named-group' => 'report_card_id'
                     ));
                 }
             ?>
