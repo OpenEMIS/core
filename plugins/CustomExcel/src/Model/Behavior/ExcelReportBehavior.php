@@ -314,7 +314,10 @@ class ExcelReportBehavior extends Behavior
             }
         } else {
             $formattedPlaceholder = $this->formatPlaceholder($placeholder);
-            $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+            $placeholderId = $this->splitDisplayValue($placeholder)[0].'.id';
+            $formattedPlaceholderId = $this->formatPlaceholder($placeholderId);
+
+            $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
         }
 
         return $placeholderData;
@@ -355,6 +358,7 @@ class ExcelReportBehavior extends Behavior
         $attr['children'] = array_key_exists('children', $settings) ? $settings['children'] : [];
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
+        $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : [];
 
         // Start attributes  for dropdown
         $dropdownAttrs = ['source', 'promptTitle', 'prompt', 'errorTitle', 'error'];
@@ -600,7 +604,19 @@ class ExcelReportBehavior extends Behavior
                     // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
                     $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
 
-                    foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
+                    $filter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null;
+                    if (!is_null($filter)) {
+                        list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedAttr['displayValue']);
+                        $filterStr = $this->formatFilter($filter);
+
+                        $placeholderFormat = $this->formatPlaceholder($placeholderPrefix).$filterStr.".".$placeholderSuffix;
+                        $placeholder = sprintf($placeholderFormat, $key);
+                        $nestedData = Hash::extract($extra['vars'], $placeholder);
+                    } else {
+                        $nestedData = $nestedAttr['data'];
+                    }
+
+                    foreach ($nestedData as $nestedKey => $nestedValue) {
                         if (!$this->suppressAutoInsertNewRow && $nestedRowValue != $rowValue) {
                             $objWorksheet->insertNewRowBefore($nestedRowValue);
                             $this->updatePlaceholderCoordinate(null, $nestedRowValue, $extra);
