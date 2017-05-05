@@ -668,6 +668,71 @@ class ValidationBehavior extends Behavior {
 		return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField]);
 	}
 
+    public static function compareStudentGenderWithInstitution($field, array $globalData)
+    {
+    	$model = $globalData['providers']['table'];
+    	$registryAlias = $model->registryAlias();
+
+        if (!empty($globalData)) {
+        	$fieldType = $globalData['field']; //enable many models field use this same function
+        	$institutionId = $globalData['data']['institution_id'];
+        }
+
+        if (!empty($institutionId)) {
+            //get institution gender
+            $Institutions = TableRegistry::get('Institution.Institutions');
+
+            $query = $Institutions->find()
+                    ->contain('Genders')
+                    ->where([
+                        $Institutions->aliasField('id') => $institutionId
+                    ])
+                    ->select([
+                        'Genders.code', 'Genders.name'
+                    ])
+                    ->first();
+            $institutionGender = $query->Genders->name;
+            $institutionGenderCode = $query->Genders->code;
+
+            if ($institutionGenderCode == 'X') { //if mixed then always true
+                return true;
+            } else {
+                //get user gender
+                $userGender = '';
+                $Users = TableRegistry::get('User.Users');
+                $UserGenders = TableRegistry::get('User.Genders');
+                if ($fieldType != 'gender_id') { //if validate on student_id, then need to find user gender.
+
+                	if (array_key_exists('student_id', $globalData['data'])) {
+                		$studentId = $globalData['data']['student_id'];
+                	}
+
+                	if (!empty($studentId)) {
+                		$query = $Users->find()
+                            ->contain('Genders')
+                            ->where([
+                                $Users->aliasField('id') => $studentId
+                            ])
+                            ->select([
+                                'Genders.code'
+                            ])
+                            ->first();
+                    	$userGender = $query->Genders->code;
+                	}
+                    
+                } else if ($fieldType == 'gender_id') { //if validate gender, then can straight away get its code.
+                    $userGender = $UserGenders->get($globalData['data'][$fieldType])->code;
+                }
+                
+                if ($userGender != $institutionGenderCode) {
+                	return $model->getMessage("$registryAlias.$fieldType.compareStudentGenderWithInstitution", ['sprintf' => [$institutionGender]]);
+                } else {
+					return true;
+                }
+            }
+        }
+	}
+
     public static function institutionStaffId($field, array $globalData) {
         $Staff = TableRegistry::get('Institution.Staff');
 
