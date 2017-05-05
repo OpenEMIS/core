@@ -292,29 +292,29 @@ angular.module('kd.data.svc', [])
         },
 
         save: function(data) {
-            this._method = 'POST';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
-                data: data
+                data: data,
+                method: 'POST'
             };
             return this.ajax(settings);
         },
 
         edit: function(data) {
-            this._method = 'PATCH';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
-                data: data
+                data: data,
+                method: 'PATCH'
             };
             return this.ajax(settings);
         },
 
         translate: function(data, options = undefined) {
-            this._method = 'POST';
             this._className = 'translate';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
-                data: data
+                data: data,
+                method: 'POST'
             };
             if (options != undefined) {
                 if (options.defer != undefined) {
