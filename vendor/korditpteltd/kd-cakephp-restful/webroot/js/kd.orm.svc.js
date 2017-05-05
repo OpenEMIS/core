@@ -198,7 +198,7 @@ angular.module('kd.orm.svc', [])
             if (success == null && error == null) {
                 return $http(settings);
             }
-
+            this.reset();
             var httpResponse = $http(settings).then(success, error);
             return requireDeferred ? deferred.promise : httpResponse;
         },

@@ -80,6 +80,12 @@ class StudentAdmissionTable extends AppTable {
 				'rule' => ['checkAdmissionAgeWithEducationCycleGrade'],
 				'on' => 'create'
 			])
+			->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
+            ->add('institution_id', 'ruleCompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
 			->allowEmpty('class')
 			->add('class', 'ruleClassMaxLimit', [
 				'rule' => ['checkInstitutionClassMaxLimit'],
@@ -103,6 +109,19 @@ class StudentAdmissionTable extends AppTable {
 		$events['Workbench.Model.onGetList'] = 'onGetWorkbenchList';
 		return $events;
 	}
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        //this is meant to force gender_id validation
+        if ($data->offsetExists('student_id')) {
+            $studentId = $data['student_id'];
+
+            if (!$data->offsetExists('gender_id')) {
+                $query = $this->Users->get($studentId);
+                $data['gender_id'] = $query->gender_id;
+            }
+        }
+    }
 
 	public function studentsAfterSave(Event $event, $student)
 	{
