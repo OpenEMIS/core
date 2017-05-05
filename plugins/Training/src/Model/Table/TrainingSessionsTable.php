@@ -330,6 +330,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
                 $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
                 $Staff = TableRegistry::get('Institution.Staff');
+                $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
                 $Users = TableRegistry::get('User.Users');
                 $Positions = TableRegistry::get('Institution.InstitutionPositions');
                 $search = sprintf('%s%%', $term);
@@ -339,6 +340,7 @@ class TrainingSessionsTable extends ControllerActionTable
                     ->where([$TargetPopulations->aliasField('training_course_id') => $entity->training_course_id])
                     ->toArray();
 
+                $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
                 $query = $Staff
                     ->find()
                     ->matching('Users')
@@ -349,7 +351,7 @@ class TrainingSessionsTable extends ControllerActionTable
                                 'Positions.staff_position_title_id IN' => $targetPopulationIds
                             ]);
                     })
-                    ->where([$Staff->aliasField('staff_status_id') => 1]) // 1 = ASSIGNED, 2 = END_OF_ASSIGNMENT
+                    ->where([$Staff->aliasField('staff_status_id') => $assignedStatus])
                     ->group([$Staff->aliasField('staff_id')])
                     ->order([$Users->aliasField('first_name'), $Users->aliasField('last_name')]);
 
@@ -801,6 +803,7 @@ class TrainingSessionsTable extends ControllerActionTable
 
             $TargetPopulations = TableRegistry::get('Training.TrainingCoursesTargetPopulations');
             $Staff = TableRegistry::get('Institution.Staff');
+            $StaffStatuses = TableRegistry::get('Staff.StaffStatuses');
             $Users = TableRegistry::get('User.Users');
             $Positions = TableRegistry::get('Institution.InstitutionPositions');
 
@@ -840,6 +843,7 @@ class TrainingSessionsTable extends ControllerActionTable
                 if (in_array($openemis_no, $traineeIds)) {
                     continue;
                 }
+                $assignedStatus = $StaffStatuses->getIdByCode('ASSIGNED');
                 $trainee = $Staff
                             ->find()
                             ->matching('Users', function ($q) use ($openemis_no) {
@@ -847,7 +851,7 @@ class TrainingSessionsTable extends ControllerActionTable
                                     ->find('all')
                                     ->where(['Users.openemis_no' => $openemis_no]);
                             })
-                            ->where([$Staff->aliasField('staff_status_id') => 1]) // 1 = ASSIGNED, 2 = END_OF_ASSIGNMENT
+                            ->where([$Staff->aliasField('staff_status_id') => $assignedStatus])
                             ;
 
                 if (!empty($targetPopulationIds)) {
