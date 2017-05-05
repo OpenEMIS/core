@@ -1993,7 +1993,7 @@ class ValidationBehavior extends Behavior {
             if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $studentStartDate = new DateTime($data['start_date']);
-                
+
                 if ($programmeEndDate < $studentStartDate) {
                     return false;
                 }
