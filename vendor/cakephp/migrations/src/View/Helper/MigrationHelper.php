@@ -203,14 +203,29 @@ class MigrationHelper extends Helper
             foreach ($tableConstraints as $name) {
                 $constraint = $tableSchema->constraint($name);
                 if (isset($constraint['update'])) {
-                    $constraint['update'] = strtoupper(Inflector::underscore($constraint['update']));
-                    $constraint['delete'] = strtoupper(Inflector::underscore($constraint['delete']));
+                    $constraint['update'] = $this->formatConstraintAction($constraint['update']);
+                    $constraint['delete'] = $this->formatConstraintAction($constraint['delete']);
                 }
                 $constraints[$name] = $constraint;
             }
         }
 
         return $constraints;
+    }
+
+    /**
+     * Format a constraint action if it is not already in the format expected by Phinx
+     *
+     * @param string $constraint Constraint action name
+     * @return string Constraint action name altered if needed.
+     */
+    public function formatConstraintAction($constraint)
+    {
+        if (defined('\Phinx\Db\Table\ForeignKey::' . $constraint)) {
+            return $constraint;
+        }
+
+        return strtoupper(Inflector::underscore($constraint));
     }
 
     /**
@@ -291,6 +306,14 @@ class MigrationHelper extends Helper
         ];
     }
 
+    /**
+     * Compute the final array of options to display in a `addColumn` or `changeColumn` instruction.
+     * The method also takes care of translating properties names between CakePHP database layer and phinx database
+     * layer.
+     *
+     * @param array $options Array of options to compute the final list from.
+     * @return array
+     */
     public function getColumnOption($options)
     {
         $wantedOptions = array_flip([
@@ -301,7 +324,8 @@ class MigrationHelper extends Helper
             'null',
             'comment',
             'autoIncrement',
-            'precision'
+            'precision',
+            'after'
         ]);
         $columnOptions = array_intersect_key($options, $wantedOptions);
         if (empty($columnOptions['comment'])) {
@@ -318,8 +342,15 @@ class MigrationHelper extends Helper
         } else {
             // due to Phinx using different naming for the precision and scale to CakePHP
             $columnOptions['scale'] = $columnOptions['precision'];
-            $columnOptions['precision'] = $columnOptions['limit'];
-            unset($columnOptions['limit']);
+
+            if (isset($columnOptions['limit'])) {
+                $columnOptions['precision'] = $columnOptions['limit'];
+                unset($columnOptions['limit']);
+            }
+            if (isset($columnOptions['length'])) {
+                $columnOptions['precision'] = $columnOptions['length'];
+                unset($columnOptions['length']);
+            }
         }
 
         return $columnOptions;
@@ -331,7 +362,7 @@ class MigrationHelper extends Helper
      * @param string $value A value to represent as a string
      * @return mixed
      */
-    public function value($value)
+    public function value($value, $numbersAsString = false)
     {
         if ($value === null || $value === 'null' || $value === 'NULL') {
             return 'null';
@@ -345,7 +376,7 @@ class MigrationHelper extends Helper
             return $value ? 'true' : 'false';
         }
 
-        if (is_numeric($value) || ctype_digit($value)) {
+        if (!$numbersAsString && (is_numeric($value) || ctype_digit($value))) {
             return (float)$value;
         }
 
@@ -428,7 +459,7 @@ class MigrationHelper extends Helper
                 ]);
                 $v = sprintf('[%s]', $v);
             } else {
-                $v = $this->value($v);
+                $v = $this->value($v, $k === 'default');
             }
             if (!is_numeric($k)) {
                 $v = "'$k' => $v";

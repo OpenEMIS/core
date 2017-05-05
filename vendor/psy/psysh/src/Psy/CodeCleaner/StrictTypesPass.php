@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -36,7 +36,7 @@ class StrictTypesPass extends CodeCleanerPass
      * Otherwise, apply remembered strict types declaration to to the code until
      * a new declaration is encountered.
      *
-     * @throws FatalErrorException if an invalid `strict_types` declaration is found.
+     * @throws FatalErrorException if an invalid `strict_types` declaration is found
      *
      * @param array $nodes
      */
