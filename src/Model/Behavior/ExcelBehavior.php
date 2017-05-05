@@ -10,9 +10,7 @@ use Cake\I18n\Time;
 use Cake\Utility\Inflector;
 use ControllerAction\Model\Traits\EventTrait;
 use Cake\I18n\I18n;
-
-// 3rd party xlsx writer library
-require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.php');
+use XLSXWriter;
 
 // Events
 // public function onExcelBeforeGenerate(Event $event, ArrayObject $settings) {}
@@ -23,7 +21,8 @@ require_once(ROOT . DS . 'vendor' . DS  . 'XLSXWriter' . DS . 'xlsxwriter.class.
 // public function onExcelEndSheet(Event $event, ArrayObject $settings, $totalProcessed) {}
 // public function onExcelGetLabel(Event $event, $column) {}
 
-class ExcelBehavior extends Behavior {
+class ExcelBehavior extends Behavior
+{
 
     use EventTrait;
 
@@ -39,7 +38,8 @@ class ExcelBehavior extends Behavior {
         'sheet_limit' =>  1000000 // 1 mil rows and header row
     ];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $this->config('excludes', array_merge($this->config('default_excludes'), $this->config('excludes')));
         if (!array_key_exists('filename', $config)) {
             $this->config('filename', $this->_table->alias());
@@ -64,7 +64,8 @@ class ExcelBehavior extends Behavior {
         }
     }
 
-    private function eventMap($method) {
+    private function eventMap($method)
+    {
         $exists = false;
         if (in_array($method, $this->events)) {
             $exists = true;
@@ -74,7 +75,8 @@ class ExcelBehavior extends Behavior {
         return $exists;
     }
 
-    public function excel($id=0) {
+    public function excel($id = 0)
+    {
         $ids = empty($id) ? [] : $this->_table->paramsDecode($id);
         $this->generateXLXS($ids);
     }
@@ -97,11 +99,13 @@ class ExcelBehavior extends Behavior {
         return true;
     }
 
-    private function eventKey($key) {
+    private function eventKey($key)
+    {
         return 'Model.excel.' . $key;
     }
 
-    public function generateXLXS($settings=[]) {
+    public function generateXLXS($settings = [])
+    {
         $_settings = [
             'file' => $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx',
             'path' => WWW_ROOT . $this->config('folder') . DS,
@@ -112,17 +116,19 @@ class ExcelBehavior extends Behavior {
 
         $this->dispatchEvent($this->_table, $this->eventKey('onExcelBeforeGenerate'), 'onExcelBeforeGenerate', [$_settings]);
 
-        $writer = new \XLSXWriter();
+        $writer = new XLSXWriter();
         $excel = $this;
 
-        $generate = function($settings) {
+        $generate = function ($settings) {
             $this->generate($settings);
         };
 
         $_settings['writer'] = $writer;
 
         $event = $this->dispatchEvent($this->_table, $this->eventKey('onExcelGenerate'), 'onExcelGenerate', [$_settings]);
-        if ($event->isStopped()) { return $event->result; }
+        if ($event->isStopped()) {
+            return $event->result;
+        }
         if (is_callable($event->result)) {
             $generate = $event->result;
         }
@@ -143,7 +149,8 @@ class ExcelBehavior extends Behavior {
         }
     }
 
-    public function generate($settings=[]) {
+    public function generate($settings = [])
+    {
         $writer = $settings['writer'];
         $sheets = new ArrayObject();
 
@@ -174,7 +181,7 @@ class ExcelBehavior extends Behavior {
             $sheetName = $sheet['name'];
 
             // Check to make sure the string length does not exceed 31 characters
-            $sheetName = (strlen($sheetName) > 31) ? substr($sheetName,0,27).'....' : $sheetName;
+            $sheetName = (strlen($sheetName) > 31) ? substr($sheetName, 0, 27).'....' : $sheetName;
 
             // Check to make sure that no two sheets has the same name
             $counter = 1;
@@ -186,7 +193,7 @@ class ExcelBehavior extends Behavior {
                     $initialLength = strlen($sheetName);
                 }
                 if (strlen($sheetName) > 23) {
-                    $sheetName = substr($sheetName,0,23).'('.$counter++.')';
+                    $sheetName = substr($sheetName, 0, 23).'('.$counter++.')';
                 } else {
                     $sheetName = $sheetName.'('.$counter++.')';
                 }
@@ -229,17 +236,24 @@ class ExcelBehavior extends Behavior {
             $this->onEvent($table, $this->eventKey('onExcelBeforeWrite'), 'onExcelBeforeWrite');
             if ($this->config('orientation') == 'landscape') {
                 $headerRow = [];
+                $headerStyle = [];
+                $headerFormat = [];
+
                 foreach ($fields as $attr) {
                     $headerRow[] = $attr['label'];
+                    $headerStyle[] = isset($attr['style']) ? $attr['style'] : [];
+                    $headerFormat[] = isset($attr['formatting']) ? $attr['formatting'] : 'GENERAL';
                 }
 
                 // Any additional custom headers that require to be appended on the right side of the sheet
                 // Header column count must be more than the additional data columns
-                if(isset($sheet['additionalHeader'])) {
+                if (isset($sheet['additionalHeader'])) {
                     $headerRow = array_merge($headerRow, $sheet['additionalHeader']);
                 }
 
-                $writer->writeSheetRow($sheetName, $headerRow);
+                $writer->writeSheetHeader($sheetName, $headerFormat, true); // true will surpress the header.
+
+                $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
 
                 $this->dispatchEvent($table, $this->eventKey('onExcelAfterHeader'), 'onExcelAfterHeader', [$settings], true);
 
@@ -258,14 +272,12 @@ class ExcelBehavior extends Behavior {
 
                     // process each row based on the result set
                     foreach ($resultSet as $entity) {
-
                         if ($sheetRowCount >= $this->config('sheet_limit')) {
-
                             $sheetCount++;
                             $sheetName = $baseSheetName . '_' . $sheetCount;
 
                             // rewrite header into new sheet
-                            $writer->writeSheetRow($sheetName, $headerRow);
+                            $writer->writeSheetRow($sheetName, $headerRow, $headerStyle);
 
                             $sheetRowCount= 0;
                         }
@@ -273,20 +285,18 @@ class ExcelBehavior extends Behavior {
                         $settings['entity'] = $entity;
 
                         $row = [];
+                        $rowStyle = [];
                         foreach ($fields as $attr) {
-                            $row[] = $this->getValue($entity, $table, $attr);
-                        }
-
-                        // For custom data to be appended on the right side of the spreadsheet
-                        if (!empty ($additionalRows)) {
-                            $row = array_merge($row, array_shift($additionalRows));
+                            $rowDataWithStyle = $this->getValue($entity, $table, $attr);
+                            $row[] = $rowDataWithStyle['rowData'];
+                            $rowStyle[] = $rowDataWithStyle['style'];
                         }
 
                         $sheetRowCount++;
                         $rowCount++;
                         $event = $this->dispatchEvent($table, $this->eventKey('onExcelBeforeWrite'), null, [$settings, $rowCount, $percentCount]);
                         if (!$event->result) {
-                            $writer->writeSheetRow($sheetName, $row);
+                            $writer->writeSheetRow($sheetName, $row, $rowStyle);
                         }
                     }
                 }
@@ -294,13 +304,16 @@ class ExcelBehavior extends Behavior {
                 $entity = $query->first();
                 foreach ($fields as $attr) {
                     $row = [$attr['label']];
-                    $row[] = $this->getValue($entity, $table, $attr);
-                    $writer->writeSheetRow($sheetName, $row);
+                    $rowStyle = [[]];
+                    $rowDataWithStyle = $this->getValue($entity, $table, $attr);
+                    $row[] = $rowDataWithStyle['rowData'];
+                    $rowStyle[] = $rowDataWithStyle['style'];
+                    $writer->writeSheetRow($sheetName, $row, $rowStyle);
                 }
 
                 // Any additional custom headers that require to be appended on the left column of the sheet
                 $additionalHeader = [];
-                if(isset($sheet['additionalHeader'])) {
+                if (isset($sheet['additionalHeader'])) {
                     $additionalHeader = $sheet['additionalHeader'];
                 }
                 // Data to be appended on the right column of spreadsheet
@@ -309,10 +322,11 @@ class ExcelBehavior extends Behavior {
                     $additionalRows = $sheet['additionalData'];
                 }
 
-                for ($i = 0; $i < count($additionalHeader) ;$i++) {
+                for ($i = 0; $i < count($additionalHeader); $i++) {
                     $row = [$additionalHeader[$i]];
                     $row[] = $additionalRows[$i];
-                    $writer->writeSheetRow($sheetName, $row);
+                    $rowStyle = [[], []];
+                    $writer->writeSheetRow($sheetName, $row, $rowStyle);
                 }
                 $rowCount++;
             }
@@ -322,7 +336,8 @@ class ExcelBehavior extends Behavior {
         }
     }
 
-    private function getFields($table, $settings) {
+    private function getFields($table, $settings)
+    {
         $schema = $table->schema();
         $columns = $schema->columns();
         $excludes = $this->config('excludes');
@@ -351,7 +366,9 @@ class ExcelBehavior extends Behavior {
                     'key' => $table->aliasField($col),
                     'field' => $col,
                     'type' => $field['type'],
-                    'label' => $label
+                    'label' => $label,
+                    'style' => [],
+                    'formatting' => 'GENERAL'
                 ];
             }
         }
@@ -380,15 +397,18 @@ class ExcelBehavior extends Behavior {
         $settings['sheet']['fields'] = $fields;
     }
 
-    private function getFooter() {
+    private function getFooter()
+    {
         $footer = [__("Report Generated") . ": "  . date("Y-m-d H:i:s")];
         return $footer;
     }
 
-    private function getValue($entity, $table, $attr) {
+    private function getValue($entity, $table, $attr)
+    {
         $value = '';
         $field = $attr['field'];
         $type = $attr['type'];
+        $style = [];
 
         if (!empty($entity)) {
             if (!in_array($type, ['string', 'integer', 'decimal', 'text'])) {
@@ -399,13 +419,25 @@ class ExcelBehavior extends Behavior {
                     $event = $this->dispatchEvent($table, $this->eventKey($method), null, [$entity, $attr]);
                 }
                 if ($event->result) {
-                    $value = $event->result;
+                    $returnedResult = $event->result;
+                    if (is_array($returnedResult)) {
+                        $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
+                        $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
+                    } else {
+                        $value = $returnedResult;
+                    }
                 }
             } else {
                 $method = 'onExcelGet' . Inflector::camelize($field);
                 $event = $this->dispatchEvent($table, $this->eventKey($method), $method, [$entity], true);
                 if ($event->result) {
-                    $value = $event->result;
+                    $returnedResult = $event->result;
+                    if (is_array($returnedResult)) {
+                        $value = isset($returnedResult['value']) ? $returnedResult['value'] : '';
+                        $style = isset($returnedResult['style']) ? $returnedResult['style'] : [];
+                    } else {
+                        $value = $returnedResult;
+                    }
                 } else if ($entity->has($field)) {
                     if ($this->isForeignKey($table, $field)) {
                         $associatedField = $this->getAssociatedKey($table, $field);
@@ -418,10 +450,11 @@ class ExcelBehavior extends Behavior {
                 }
             }
         }
-        return __($value);
+        return ['rowData' => __($value), 'style' => $style];
     }
 
-    private function isForeignKey($table, $field) {
+    private function isForeignKey($table, $field)
+    {
         foreach ($table->associations() as $assoc) {
             if ($assoc->type() == 'manyToOne') { // belongsTo associations
                 if ($field === $assoc->foreignKey()) {
@@ -432,7 +465,8 @@ class ExcelBehavior extends Behavior {
         return false;
     }
 
-    public function getAssociatedTable($table, $field) {
+    public function getAssociatedTable($table, $field)
+    {
         $relatedModel = null;
 
         foreach ($table->associations() as $assoc) {
@@ -446,7 +480,8 @@ class ExcelBehavior extends Behavior {
         return $relatedModel;
     }
 
-    public function getAssociatedKey($table, $field) {
+    public function getAssociatedKey($table, $field)
+    {
         $tableObj = $this->getAssociatedTable($table, $field);
         $key = null;
         if (is_object($tableObj)) {
@@ -455,7 +490,8 @@ class ExcelBehavior extends Behavior {
         return $key;
     }
 
-    private function contain(Query $query, $fields, $table) {
+    private function contain(Query $query, $fields, $table)
+    {
         $contain = [];
         foreach ($fields as $attr) {
             $field = $attr['field'];
@@ -466,7 +502,8 @@ class ExcelBehavior extends Behavior {
         $query->contain($contain);
     }
 
-    private function download($path) {
+    private function download($path)
+    {
         $filename = basename($path);
 
         header("Pragma: public", true);
@@ -488,7 +525,8 @@ class ExcelBehavior extends Behavior {
         }
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Model.custom.onUpdateToolbarButtons'] = ['callable' => 'onUpdateToolbarButtons', 'priority' => 0];
 
@@ -499,11 +537,13 @@ class ExcelBehavior extends Behavior {
         return $events;
     }
 
-    private function isCAv4() {
+    private function isCAv4()
+    {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
         $action = $this->_table->action;
         if (in_array($action, $this->config('pages'))) {
             $toolbarButtons = isset($extra['toolbarButtons']) ? $extra['toolbarButtons'] : [];
@@ -527,10 +567,10 @@ class ExcelBehavior extends Behavior {
             $toolbarButtons['export']['url'] = $url;
             $extra['toolbarButtons'] = $toolbarButtons;
         }
-
     }
 
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
         if ($buttons->offsetExists('view')) {
             $export = $buttons['view'];
             $export['type'] = 'button';
