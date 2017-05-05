@@ -126,7 +126,7 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 }
                 var headerLabel = criteria.name;
                 if (criteria.code != null && criteria.code.length > 0) {
-                    headerLabel = criteria.code + ' <i class="fa fa-info-circle fa-lg fa-right icon-blue" tooltip-placement="top" uib-tooltip="' + criteria.name + '" tooltip-append-to-body="true" tooltip-class="tooltip-blue"></i>';
+                    headerLabel = criteria.code + " <span class='divider'></span> " + criteria.name;
                 }
 
                 var field = 'competency_criteria_id_' + criteria.id;
@@ -171,9 +171,6 @@ function InstitutionStudentCompetenciesSvc($http, $q, $filter, KdDataSvc) {
                 var periodEditable = params.data.period_editable;
 
                 if (studentStatusCode == 'CURRENT' && periodEditable) {
-                    if (params.value.length == 0) {
-                        params.value = 0;
-                    }
 
                     var oldValue = params.value;
                     var studentId = params.data.student_id;

@@ -44,7 +44,6 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
     angular.element(document).ready(function () {
         InstitutionStudentCompetenciesSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
-        AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
         if (Controller.classId != null) {
             InstitutionStudentCompetenciesSvc.getClassDetails(Controller.classId)
             .then(function(response) {
@@ -155,6 +154,12 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                         rowData.push(row);
                     });
                     Controller.gridOptions.api.setRowData(rowData);
+                    if (response.data.length > 4) {
+                        AlertSvc.info(Controller, "Changes will be automatically saved when any value is changed");
+                    } else {
+                        Controller.gridOptions.api.sizeColumnsToFit();
+                        AlertSvc.warning(Controller, "Please setup competency criterias for the selected item");
+                    }
                 }, function(error){
                     console.log(error);
                 });
@@ -190,7 +195,6 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
         InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
                     Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId)
         .then(function (results) {
-            console.log(results);
             Controller.changeCriteria(results);
             Controller.resetColumnDefs(Controller.criteriaGradeOptions, Controller.selectedPeriod, Controller.selectedPeriodStatus, Controller.selectedItem);
         }, function (error) {
