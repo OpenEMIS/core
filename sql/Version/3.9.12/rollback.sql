@@ -1,3 +1,12 @@
+-- POCOR-3271
+-- `institution_genders`
+DROP TABLE IF EXISTS `institution_genders`;
+RENAME TABLE `z_3271_institution_genders` TO `institution_genders`;
+
+-- system_patches
+DELETE FROM `system_patches` WHERE `issue`='POCOR-3271';
+
+
 -- POCOR-3690
 -- examination_centres_examinations
 DROP TABLE IF EXISTS `examination_centres_examinations`;
