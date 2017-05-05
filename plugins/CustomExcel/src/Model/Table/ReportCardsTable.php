@@ -75,13 +75,14 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('report_card_id', $params)) {
             $ReportCards = TableRegistry::get('ReportCard.ReportCards');
             $entity = $ReportCards->get($params['report_card_id'], [
-                'contain' => ['AcademicPeriods', 'EducationGrades']
-            ]);
+                    'contain' => ['AcademicPeriods', 'EducationGrades']
+                ])
+                ->toArray();
 
             $extra['report_card_start_date'] = $entity->start_date;
             $extra['report_card_end_date'] = $entity->end_date;
             $extra['report_card_education_grade_id'] = $entity->education_grade_id;
-            return $entity->toArray();
+            return $entity;
         }
     }
 
@@ -100,7 +101,7 @@ class ReportCardsTable extends AppTable
                 ])
                 ->first();
 
-            return $entity->toArray();
+            return $entity;
         }
     }
 
@@ -117,7 +118,7 @@ class ReportCardsTable extends AppTable
                     $this->aliasField('student_id') => $params['student_id']
                 ])
                 ->first();
-            return $entity->toArray();
+            return $entity;
         }
     }
 
@@ -127,7 +128,7 @@ class ReportCardsTable extends AppTable
             $Institutions = TableRegistry::get('Institution.Institutions');
             $entity = $Institutions->get($params['institution_id']);
 
-            return $entity->toArray();
+            return $entity;
         }
     }
 
@@ -136,9 +137,10 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('institution_class_id', $params)) {
             $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
             $entity = $InstitutionClasses->get($params['institution_class_id'], [
-                'contain' => ['Staff']
-            ]);
-            return $entity->toArray();
+                    'contain' => ['Staff']
+                ])
+                ->toArray();
+            return $entity;
         }
     }
 
@@ -153,8 +155,9 @@ class ReportCardsTable extends AppTable
                     $StudentBehaviours->aliasField('institution_id') => $params['institution_id'],
                     $StudentBehaviours->aliasField('date_of_behaviour > ') => $extra['report_card_start_date'],
                     $StudentBehaviours->aliasField('date_of_behaviour < ') => $extra['report_card_end_date'],
-                ]);
-            return $entity->toArray();
+                ])
+                ->toArray();
+            return $entity;
         }
     }
 
@@ -244,7 +247,7 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('assessment_id', $extra)) {
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
-            $results = $AssessmentPeriods->find()
+            $entity = $AssessmentPeriods->find()
                 ->where([
                     $AssessmentPeriods->aliasField('assessment_id') => $extra['assessment_id'],
                     $AssessmentPeriods->aliasField('start_date') . ' >=' => $extra['report_card_start_date'],
@@ -252,8 +255,9 @@ class ReportCardsTable extends AppTable
                 ])
                 ->hydrate(false)
                 ->all();
-            $extra['assessment_period_ids'] = $results->extract('id')->toArray();
-            return $results->toArray();
+
+            $extra['assessment_period_ids'] = $entity->extract('id')->toArray();
+            return $entity->toArray();
         }
     }
 
@@ -261,15 +265,15 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('assessment_id', $extra)) {
             $AssessmentItems = TableRegistry::get('Assessment.AssessmentItems');
-            $results = $AssessmentItems->find()
+            $entity = $AssessmentItems->find()
                 ->contain(['EducationSubjects'])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $extra['assessment_id']])
                 ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name'])
                 ->hydrate(false)
                 ->all();
 
-            $extra['assessment_period_subjects'] = $results->extract('education_subject_id')->toArray();
-            return $results->toArray();
+            $extra['assessment_period_subjects'] = $entity->extract('education_subject_id')->toArray();
+            return $entity->toArray();
         }
     }
 
@@ -323,39 +327,7 @@ class ReportCardsTable extends AppTable
                 ->hydrate(false)
                 ->toArray();
 
-            $results = [];
-            foreach ($entity as $key => $obj) {
-                $studentId = $obj['student_id'];
-                $results[$obj['assessment_period_id']][$obj['education_subject_id']] = [
-                    'institution_id' => $obj['institution_id'],
-                    'academic_period_id' => $obj['academic_period_id'],
-                    'assessment_id' => $obj['assessment_id'],
-                    'assessment_period_id' => $obj['assessment_period_id'],
-                    'education_subject_id' => $obj['education_subject_id'],
-                    'marks_formatted' => $obj['marks_formatted']
-                ];
-            }
-
-            foreach ($extra['assessment_period_ids'] as $assessment_period_id) {
-                if (!array_key_exists($assessment_period_id, $results)) {
-                    $results[$assessment_period_id] = [];
-                }
-
-                foreach ($extra['assessment_period_subjects'] as $education_subject_id) {
-                    if (!array_key_exists($education_subject_id, $results[$assessment_period_id])) {
-                        $results[$assessment_period_id][$education_subject_id] = [
-                            'institution_id' => $params['institution_id'],
-                            'academic_period_id' => $params['academic_period_id'],
-                            'assessment_id' => $extra['assessment_id'],
-                            'assessment_period_id' => $assessment_period_id,
-                            'education_subject_id' => $education_subject_id,
-                            'marks_formatted' => 0
-                        ];
-                    }
-                }
-            }
-            $results = array_values($results);
-            return $results;
+            return $entity;
         }
     }
 }
