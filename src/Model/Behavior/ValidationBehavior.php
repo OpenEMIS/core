@@ -701,7 +701,7 @@ class ValidationBehavior extends Behavior {
                 $userGender = '';
                 $Users = TableRegistry::get('User.Users');
                 $UserGenders = TableRegistry::get('User.Genders');
-                if ($fieldType != 'gender_id') { //if validate on student_id, then need to find user gender.
+                if ($fieldType == 'institution_id') { 
 
                 	if (array_key_exists('student_id', $globalData['data'])) {
                 		$studentId = $globalData['data']['student_id'];
