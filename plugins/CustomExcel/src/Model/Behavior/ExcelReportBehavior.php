@@ -764,7 +764,7 @@ class ExcelReportBehavior extends Behavior
         $nestedColumnsArray = isset($columnsArray['children']['columns']) ? $columnsArray['children']['columns'] : [];
         $nestedMatchFrom = array_key_exists('matchFrom', $nestedColumnsArray) ? $nestedColumnsArray['matchFrom'] : [];
         $nestedMatchTo = array_key_exists('matchTo', $nestedColumnsArray) ? $nestedColumnsArray['matchTo'] : [];
-        $nestedColumnData = $this->getPlaceholderData($nestedMatchFrom, $extra);
+        $nestedColumnData = !empty($nestedMatchFrom) ? $this->getPlaceholderData($nestedMatchFrom, $extra) : [];
 
         $filterStr = $this->formatFilter($matchTo);
         if (!empty($nestedColumnData)) {
@@ -793,7 +793,20 @@ class ExcelReportBehavior extends Behavior
                     $columnIndex++;
                 }
             } else {
-                // to-do: get value and write to cell
+                $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
+                if (!is_null($filterValue)) {
+                    $placeholder = sprintf($placeholderFormat, $filterValue, $value);
+                } else {
+                    $placeholder = sprintf($placeholderFormat, $value);
+                }
+                $matchData = Hash::extract($extra['vars'], $placeholder);
+                $matchValue = !empty($matchData) ? current($matchData) : '';
+
+                // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
+                $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
+                $cellCoordinate = $columnValue.$rowValue;
+
+                $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
             }
         }
     }
