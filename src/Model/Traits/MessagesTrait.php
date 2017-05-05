@@ -867,6 +867,9 @@ trait MessagesTrait {
                         'inAnotherSchool' => 'Student is already enrolled in another school.',
                     ],
                     'ruleStudentNotCompletedGrade' => 'Student has already completed the selected grade.',
+                ],
+                'institution_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
                 ]
             ],
             'IndividualPromotion' => [
@@ -894,6 +897,9 @@ trait MessagesTrait {
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
+                'gender_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
+                ],
             ],
             'StudentUser' => [
                 'start_date' => [
@@ -901,6 +907,9 @@ trait MessagesTrait {
                 ],
                 'education_grade_id' => [
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
+                ],
+                'gender_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
                 ],
             ],
             'Staff' => [
@@ -936,6 +945,12 @@ trait MessagesTrait {
                 'class' => [
                     'ruleClassMaxLimit' => 'Reached the maximum number of students allowed in a class.'
                 ],
+                'gender_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
+                ],
+                'institution_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
+                ],
                 'start_date' => [
                     'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
                 ],
@@ -950,6 +965,10 @@ trait MessagesTrait {
                 'education_grade_id' => [
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
+                'institution_id' => [
+                    'compareStudentGenderWithInstitution' => 'The selected institution only accepts %s student.'
+                ],
+
             ],
             'InstitutionFeeTypes' => [
                 'amount' => [
