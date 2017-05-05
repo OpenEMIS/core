@@ -1,3 +1,7 @@
+v3.9.12
+- Implemented decimal type for custom fields
+- Redevelop add multiple students to classes and subjects page
+
 v3.9.11
 - Implemented alerts for Training Credits Hours that does not fulfil required amount in Staff > Training > Courses tab
 - Added a year filter for Reports > Institution with no Students
