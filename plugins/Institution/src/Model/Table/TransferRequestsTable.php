@@ -75,7 +75,7 @@ class TransferRequestsTable extends ControllerActionTable
                 ]],
                 'on' => 'create'
             ])
-            ->add('student_id', 'rulecompareStudentGenderWithInstitution', [
+            ->add('institution_id', 'rulecompareStudentGenderWithInstitution', [
                 'rule' => ['compareStudentGenderWithInstitution']
             ])
         ;
