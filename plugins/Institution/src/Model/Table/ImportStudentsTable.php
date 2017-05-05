@@ -379,7 +379,7 @@ class ImportStudentsTable extends AppTable {
             //get institution gender
             $query = $this->Institutions->find()
                     ->contain('Genders')
-                    ->where([$Institutions->aliasField('id') => $institutionId])
+                    ->where([$this->Institutions->aliasField('id') => $institutionId])
                     ->select(['Genders.code', 'Genders.name'])
                     ->first();
             $institutionGender = $query->Genders->name;
@@ -390,7 +390,7 @@ class ImportStudentsTable extends AppTable {
             } else {
                 $query = $this->Students->find()
                         ->contain('Genders')
-                        ->where([$Users->aliasField('id') => $studentId])
+                        ->where([$this->Students->aliasField('id') => $studentId])
                         ->select(['Genders.code'])
                         ->first();
                 $userGender = $query->Genders->code;
