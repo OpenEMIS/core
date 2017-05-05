@@ -288,7 +288,16 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
             $this->Navigation->addCrumb($crumbTitle, $indexUrl);
-            $roles = [];
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                $action = 'edit';
+                if (!$AccessControl->check(['Institutions', 'StudentCompetencies', $action], $roles)) {
+                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
+                    return $this->redirect($url);
+                }
+            }
             $queryString = $this->ControllerAction->getQueryString();
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentCompetencies';

@@ -9,8 +9,9 @@ use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\Routing\Router;
 use Cake\Validation\Validator;
-
-require_once(ROOT . DS . 'vendor' . DS . 'onelogin' . DS . 'php-saml' . DS . '_toolkit_loader.php');
+use OneLogin_Saml2_Constants;
+use OneLogin_Saml_Settings;
+use OneLogin_Saml2_Error;
 
 class AuthenticationBehavior extends Behavior
 {
@@ -169,19 +170,19 @@ class AuthenticationBehavior extends Behavior
     {
         try {
             // Now we only validate SP settings
-            $settings = new \OneLogin_Saml2_Settings($settingsInfo, true);
+            $settings = new OneLogin_Saml2_Settings($settingsInfo, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
                 header('Content-Type: text/xml');
                 return $metadata;
             } else {
-                throw new \OneLogin_Saml2_Error(
+                throw new OneLogin_Saml2_Error(
                     'Invalid SP metadata: '.implode(', ', $errors),
-                    \OneLogin_Saml2_Error::METADATA_SP_INVALID
+                    OneLogin_Saml2_Error::METADATA_SP_INVALID
                 );
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return $e->getMessage();
         }
     }
@@ -273,9 +274,9 @@ class AuthenticationBehavior extends Behavior
         } elseif ($key == 'sp_slo') {
             return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'logout'], true);
         } elseif ($key == 'idp_sso_binding' && empty($attributeValue)) {
-            return \OneLogin_Saml2_Constants::BINDING_HTTP_POST;
+            return OneLogin_Saml2_Constants::BINDING_HTTP_POST;
         } elseif ($key == 'idp_slo_binding' && empty($attributeValue)) {
-            return \OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
+            return OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
         } elseif ($key == 'sp_acs') {
             return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'], true);
         }
@@ -341,7 +342,7 @@ class AuthenticationBehavior extends Behavior
 
                 $tableHeaders = [__('Attribute Name'), __('Value')];
                 $tableCells = [];
-                foreach ($attribute as $key => $value) {
+                foreach ($attribute as $value) {
                     $row = [];
                     $row[] = $value['label'];
                     if ($value['label'] == 'Allow User Creation') {
