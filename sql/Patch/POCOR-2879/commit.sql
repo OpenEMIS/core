@@ -9,5 +9,7 @@ INNER JOIN institution_class_grades ON institution_class_grades.institution_clas
 INNER JOIN education_grades_subjects ON education_grades_subjects.education_grade_id = institution_class_grades.education_grade_id AND institution_subjects.education_subject_id = education_grades_subjects.education_subject_id
 SET institution_subjects.education_grade_id = education_grades_subjects.education_grade_id;
 
+UPDATE `institution_subjects` SET `education_grade_id` = 0 WHERE `education_grade_id` IS NULL;
+
 ALTER TABLE `institution_subjects`
 CHANGE COLUMN `education_grade_id` `education_grade_id` INT(11) NOT NULL ;
