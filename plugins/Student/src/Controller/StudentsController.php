@@ -127,7 +127,7 @@ class StudentsController extends AppController {
 		$action = $this->request->params['action'];
 		$institutionName = $session->read('Institution.Institutions.name');
 		$institutionId = $session->read('Institution.Institutions.id');
-		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $institutionId]);
+		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
 		$this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
 		$header = __('Students');
 
