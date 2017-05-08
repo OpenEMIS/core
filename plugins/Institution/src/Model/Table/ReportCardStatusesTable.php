@@ -48,31 +48,51 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        // generate action button
+        if (isset($buttons['view'])) {
+            unset($buttons['view']);
+        }
+
+        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+        $params = [
+            'report_card_id' => $this->request->query('report_card_id'),
+            'student_id' => $entity->student_id,
+            'institution_id' => $entity->institution_id,
+            'academic_period_id' => $entity->academic_period_id,
+            'education_grade_id' => $entity->education_grade_id,
+            'institution_class_id' => $entity->institution_class_id
+        ];
+
+        // generate button
         $url = [
             'plugin' => 'CustomExcel',
             'controller' => 'CustomExcels',
             'action' => 'export',
             'ReportCards'
         ];
-        $params = [
-            'institution_id' => $entity->institution_id,
-            'institution_class_id' => $entity->institution_class_id,
-            'report_card_id' => $this->request->query('report_card_id'),
-            'academic_period_id' => $entity->academic_period_id,
-            'student_id' => $entity->student_id
-        ];
-        $url = $this->setQueryString($url, $params);
+        $generateUrl = $this->setQueryString($url, $params);
         $buttons['generate'] = [
             'label' => '<i class="fa fa-tasks"></i>'.__('Generate'),
-            'attr' => $buttons['view']['attr'],
-            'url' => $url
+            'attr' => $indexAttr,
+            'url' => $generateUrl
         ];
         // end
 
-        if (isset($buttons['view'])) {
-            unset($buttons['view']);
+        // download button
+        if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::GENERATED) {
+            $downloadUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'InstitutionStudentsReportCards',
+                '0' => 'download',
+                '1' => $this->paramsEncode($params)
+            ];
+            $buttons['download'] = [
+                'label' => '<i class="fa kd-download"></i>'.__('Download'),
+                'attr' => $indexAttr,
+                'url' => $downloadUrl
+            ];
         }
+        // end
 
         return $buttons;
     }
@@ -197,6 +217,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $query
             ->select([
+                $StudentReportCards->aliasField('id'),
                 $StudentReportCards->aliasField('report_card_id'),
                 $StudentReportCards->aliasField('status')
             ])
@@ -219,10 +240,11 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function onGetStatus(Event $event, Entity $entity)
     {
-        $value = $this->statusOptions[self::NEW_REPORT];
         if ($entity->has('InstitutionStudentsReportCards') && !empty($entity->InstitutionStudentsReportCards['status'])) {
             $status = $entity->InstitutionStudentsReportCards['status'];
             $value = $this->statusOptions[$status];
+        } else {
+            $value = $this->statusOptions[self::NEW_REPORT];
         }
         return $value;
     }

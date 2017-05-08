@@ -33,9 +33,8 @@ class ReportCardsTable extends AppTable
         $this->addBehavior('CustomExcel.ExcelReport', [
             'templateTable' => 'ReportCard.ReportCards',
             'templateTableKey' => 'report_card_id',
-            'fileExtension' => 'pdf',
-            'download' => true,
-            'upload' => true,
+            'format' => 'pdf',
+            'save' => true,
             'variables' => [
                 'ReportCards',
                 'InstitutionStudentsReportCards',
@@ -58,6 +57,8 @@ class ReportCardsTable extends AppTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['ExcelTemplates.Model.onExcelTemplateBeforeGenerate'] = 'onExcelTemplateBeforeGenerate';
+        $events['ExcelTemplates.Model.onExcelTemplateSave'] = 'onExcelTemplateSave';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportCards'] = 'onExcelTemplateInitialiseReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassStudents'] = 'onExcelTemplateInitialiseClassStudents';
@@ -73,6 +74,33 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
         return $events;
+    }
+
+    public function onExcelTemplateBeforeGenerate(Event $event, array $params, ArrayObject $extra)
+    {
+        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        if (!$StudentsReportCards->exists($params)) {
+            $params['status'] = $StudentsReportCards::IN_PROGRESS;
+            $newEntity = $StudentsReportCards->newEntity($params);
+            $StudentsReportCards->save($newEntity);
+        } else {
+            $StudentsReportCards->updateAll(['status' => $StudentsReportCards::IN_PROGRESS], $params);
+        }
+    }
+
+    public function onExcelTemplateSave(Event $event, array $params, ArrayObject $extra)
+    {
+        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $status = $StudentsReportCards::GENERATED;
+        $filepath = $extra['file_path'];
+        $fileName = basename($filepath);
+        $fileContent = file_get_contents($filepath);
+
+        $StudentsReportCards->updateAll([
+            'status' => $status,
+            'file_name' => $fileName,
+            'file_content' => $fileContent
+        ], $params);
     }
 
     public function onExcelTemplateInitialiseReportCards(Event $event, array $params, ArrayObject $extra)
