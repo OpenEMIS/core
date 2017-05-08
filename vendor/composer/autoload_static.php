@@ -76,10 +76,12 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         ),
         'F' => 
         array (
+            'FontLib\\' => 8,
             'Firebase\\JWT\\' => 13,
         ),
         'D' => 
         array (
+            'Dompdf\\' => 7,
             'Doctrine\\Instantiator\\' => 22,
             'DeepCopy\\' => 9,
             'DebugKit\\Test\\Fixture\\' => 22,
@@ -226,9 +228,17 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         array (
             0 => __DIR__ . '/..' . '/justinrainbow/json-schema/src/JsonSchema',
         ),
+        'FontLib\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/phenx/php-font-lib/src/FontLib',
+        ),
         'Firebase\\JWT\\' => 
         array (
             0 => __DIR__ . '/..' . '/firebase/php-jwt/src',
+        ),
+        'Dompdf\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/dompdf/dompdf/src',
         ),
         'Doctrine\\Instantiator\\' => 
         array (
@@ -309,6 +319,17 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
     );
 
     public static $prefixesPsr0 = array (
+        'S' => 
+        array (
+            'Svg\\' => 
+            array (
+                0 => __DIR__ . '/..' . '/phenx/php-svg-lib/src',
+            ),
+            'Sabberworm\\CSS' => 
+            array (
+                0 => __DIR__ . '/..' . '/sabberworm/php-css-parser/lib',
+            ),
+        ),
         'P' => 
         array (
             'Prophecy\\' => 
@@ -352,6 +373,7 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
     );
 
     public static $classMap = array (
+        'Cpdf' => __DIR__ . '/..' . '/dompdf/dompdf/lib/Cpdf.php',
         'File_Iterator' => __DIR__ . '/..' . '/phpunit/php-file-iterator/src/Iterator.php',
         'File_Iterator_Facade' => __DIR__ . '/..' . '/phpunit/php-file-iterator/src/Facade.php',
         'File_Iterator_Factory' => __DIR__ . '/..' . '/phpunit/php-file-iterator/src/Factory.php',
@@ -3917,6 +3939,11 @@ class ComposerStaticInit72a01c504b78abcca347330aef43d827
         'Google_Utils_URITemplate' => __DIR__ . '/..' . '/google/apiclient/src/Google/Utils/URITemplate.php',
         'Google_Verifier_Abstract' => __DIR__ . '/..' . '/google/apiclient/src/Google/Verifier/Abstract.php',
         'Google_Verifier_Pem' => __DIR__ . '/..' . '/google/apiclient/src/Google/Verifier/Pem.php',
+        'HTML5_Data' => __DIR__ . '/..' . '/dompdf/dompdf/lib/html5lib/Data.php',
+        'HTML5_InputStream' => __DIR__ . '/..' . '/dompdf/dompdf/lib/html5lib/InputStream.php',
+        'HTML5_Parser' => __DIR__ . '/..' . '/dompdf/dompdf/lib/html5lib/Parser.php',
+        'HTML5_Tokenizer' => __DIR__ . '/..' . '/dompdf/dompdf/lib/html5lib/Tokenizer.php',
+        'HTML5_TreeBuilder' => __DIR__ . '/..' . '/dompdf/dompdf/lib/html5lib/TreeBuilder.php',
         'Mobile_Detect' => __DIR__ . '/..' . '/mobiledetect/mobiledetectlib/Mobile_Detect.php',
         'OneLogin_Saml2_Auth' => __DIR__ . '/..' . '/onelogin/php-saml/lib/Saml2/Auth.php',
         'OneLogin_Saml2_AuthnRequest' => __DIR__ . '/..' . '/onelogin/php-saml/lib/Saml2/AuthnRequest.php',
