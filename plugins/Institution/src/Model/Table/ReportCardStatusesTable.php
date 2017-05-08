@@ -7,6 +7,8 @@ use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
+use Cake\Log\Log;
+use ZipArchive;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardStatusesTable extends ControllerActionTable
@@ -44,6 +46,13 @@ class ReportCardStatusesTable extends ControllerActionTable
         ];
     }
 
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.generateAll'] = 'generateAll';
+        $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+        return $events;
+    }
+
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
@@ -62,7 +71,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             'institution_class_id' => $entity->institution_class_id
         ];
 
-        // generate button
+        // Generate button
         $url = [
             'plugin' => 'CustomExcel',
             'controller' => 'CustomExcels',
@@ -77,7 +86,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         ];
         // end
 
-        // download button
+        // Download button
         if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::GENERATED) {
             $downloadUrl = [
                 'plugin' => 'Institution',
@@ -120,18 +129,11 @@ class ReportCardStatusesTable extends ControllerActionTable
             $params = [
                 'institution_id' => $this->Session->read('Institution.Institutions.id'),
                 'institution_class_id' => $classId,
-                'report_card_id' => $reportCardId,
-                'academic_period_id' => $this->request->query('academic_period_id'),
-                'student_id' => 2090
+                'report_card_id' => $reportCardId
             ];
 
-            // generate all button
-            $url = [
-                'plugin' => 'CustomExcel',
-                'controller' => 'CustomExcels',
-                'action' => 'export',
-                'ReportCards'
-            ];
+            // Generate all button
+            $url = $this->url('generateAll');
             $generateButton['url'] = $this->setQueryString($url, $params);
             $generateButton['type'] = 'button';
             $generateButton['label'] = '<i class="fa fa-tasks"></i>';
@@ -140,8 +142,9 @@ class ReportCardStatusesTable extends ControllerActionTable
             $extra['toolbarButtons']['generateAll'] = $generateButton;
             // end
 
-            // download all button
-            $downloadButton['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreExams', 'add'];
+            // Download all button
+            $url = $this->url('downloadAll');
+            $downloadButton['url'] = $this->setQueryString($url, $params);
             $downloadButton['type'] = 'button';
             $downloadButton['label'] = '<i class="fa kd-download"></i>';
             $downloadButton['attr'] = $toolbarAttr;
@@ -160,8 +163,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
     }
 
-     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-     {
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $Classes = $this->InstitutionClasses;
         $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
@@ -270,5 +273,88 @@ class ReportCardStatusesTable extends ControllerActionTable
             }
         }
         return $value;
+    }
+
+    public function generateAll()
+    {
+        $params = $this->getQueryString();
+        $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+
+        $this->Alert->warning('general.notExists');
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    public function downloadAll()
+    {
+        $params = $this->getQueryString();
+        $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+
+        $files = $StudentReportCards->find()
+            ->contain(['Students', 'ReportCards'])
+            ->where([
+                $StudentReportCards->aliasField('institution_id') => $params['institution_id'],
+                $StudentReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $StudentReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $StudentReportCards->aliasField('file_name IS NOT NULL'),
+                $StudentReportCards->aliasField('file_content IS NOT NULL')
+            ])
+            ->toArray();
+
+        if (!empty($files)) {
+            $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
+            $zipName = 'ReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
+            $zipFilePath = $path . $zipName;
+
+            $zip = new ZipArchive;
+            $zip->open($zipFilePath, ZipArchive::CREATE);
+            $fileType = 'pdf';
+            foreach ($files as $file) {
+              $fileName = $file->report_card->code . '_' . $file->student->openemis_no . '_' . $file->student->name . '.' . $fileType;
+              $zip->addFromString($fileName,  $this->getFile($file->file_content));
+            }
+            $zip->close();
+
+            header("Pragma: public", true);
+            header("Expires: 0"); // set expiration time
+            header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+            header("Content-Type: application/force-download");
+            header("Content-Type: application/zip");
+            header("Content-Length:" . filesize($zipFilePath));
+            header('Content-Disposition: attachment; filename="' . $zipName . '"');
+            readfile($zipFilePath);
+
+        } else {
+            $this->Alert->warning('general.notExists');
+            return $this->controller->redirect($this->url('index'));
+        }
+    }
+
+    private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId)
+    {
+        $args = '';
+        $args .= !is_null($institutionId) ? ' '.$institutionId : '';
+        $args .= !is_null($institutionClassId) ? ' '.$institutionClassId : '';
+        $args .= !is_null($reportCardId) ? ' '.$reportCardId : '';
+
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args;
+        $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
+        $shellCmd = $cmd . ' >> ' . $logs;
+
+        try {
+            $pid = exec($shellCmd);
+            Log::write('debug', $shellCmd);
+        } catch(\Exception $ex) {
+            Log::write('error', __METHOD__ . ' exception when generate all report cards : '. $ex);
+        }
+    }
+
+    private function getFile($phpResourceFile) {
+        $file = '';
+        while (!feof($phpResourceFile)) {
+            $file .= fread($phpResourceFile, 8192);
+        }
+        fclose($phpResourceFile);
+
+        return $file;
     }
 }
