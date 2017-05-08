@@ -71,5 +71,14 @@ UPDATE custom_modules
 SET id = 7
 WHERE id = 10;
 
+-- revert security function
+UPDATE `security_functions`
+SET
+  `_view`='Fields.index|Fields.view|Pages.index|Pages.view|Types.index|Types.view|RoomPages.index|RoomPages.view|RoomTypes.index|RoomTypes.view',
+  `_edit`='Fields.edit|Pages.edit|Types.edit|RoomPages.edit|RoomTypes.edit',
+  `_add`='Fields.add|Pages.add|Types.add|RoomPages.add|RoomTypes.add',
+  `_delete`='Fields.remove|Pages.remove|Types.remove|RoomPages.remove|RoomTypes.remove'
+WHERE `id`='5018';
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3853';
