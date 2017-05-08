@@ -90,12 +90,17 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // Download button
         if ($entity->has('InstitutionStudentsReportCards') && in_array($entity->InstitutionStudentsReportCards['status'], [self::GENERATED, self::PUBLISHED])) {
+            $downloadParams = $params;
+            if (isset($downloadParams['institution_class_id'])) {
+                unset($downloadParams['institution_class_id']);
+            }
+
             $downloadUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
                 'action' => 'InstitutionStudentsReportCards',
                 '0' => 'download',
-                '1' => $this->paramsEncode($params)
+                '1' => $this->paramsEncode($downloadParams)
             ];
             $buttons['download'] = [
                 'label' => '<i class="fa kd-download"></i>'.__('Download'),
@@ -109,7 +114,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::GENERATED) {
             $url = $this->url('publish');
             $publishUrl = $this->setQueryString($url, $params);
-            $buttons['download'] = [
+            $buttons['publish'] = [
                 'label' => '<i class="fa fa-share-square-o"></i>'.__('Publish'),
                 'attr' => $indexAttr,
                 'url' => $publishUrl
@@ -121,7 +126,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::PUBLISHED) {
             $url = $this->url('unpublish');
             $unpublishUrl = $this->setQueryString($url, $params);
-            $buttons['download'] = [
+            $buttons['unpublish'] = [
                 'label' => '<i class="fa fa-lock"></i>'.__('Unpublish'),
                 'attr' => $indexAttr,
                 'url' => $unpublishUrl
