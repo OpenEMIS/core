@@ -18,12 +18,14 @@ use PHPExcel_Worksheet;
 use PHPExcel_Cell;
 use PHPExcel_Cell_DataValidation;
 use PHPExcel_Style_Alignment;
+USE PHPExcel_Settings;
 
 class ExcelReportBehavior extends Behavior
 {
     protected $_defaultConfig = [
         'folder' => 'export',
-        'subfolder' => 'customexcel'
+        'subfolder' => 'customexcel',
+        'fileExtension' => 'xlsx'
     ];
 
     // function name and keyword pairs
@@ -78,7 +80,7 @@ class ExcelReportBehavior extends Behavior
         $params = $model->getQueryString();
         $extra['vars'] = $this->getVars($params, $extra);
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.xlsx';
+        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('fileExtension');
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
         $extra['download'] = $this->config('download');
 
@@ -229,7 +231,17 @@ class ExcelReportBehavior extends Behavior
 
     public function saveExcel($objPHPExcel, $filepath)
     {
-        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        $writer = 'Excel2007';
+
+        if ($this->config('fileExtension') == 'pdf') {
+            $rendererName = PHPExcel_Settings::PDF_RENDERER_DOMPDF;
+            $rendererLibrary = 'dompdf';
+            $rendererLibraryPath = ROOT . DS . 'vendor' . DS . $rendererLibrary;
+            PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath);
+            $writer = 'PDF';
+        }
+
+        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, $writer);
         $objWriter->save($filepath);
     }
 
@@ -433,6 +445,10 @@ class ExcelReportBehavior extends Behavior
 
         if (!empty($extra['placeholders'])) {
             $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
+        }
+
+        if ($this->config('fileExtension') == 'pdf') {
+            $objWorksheet->setShowGridlines(false);
         }
     }
 
