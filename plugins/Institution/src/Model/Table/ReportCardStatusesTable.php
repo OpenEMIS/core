@@ -50,6 +50,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+        $events['ControllerAction.Model.publish'] = 'publish';
+        $events['ControllerAction.Model.unpublish'] = 'unpublish';
         return $events;
     }
 
@@ -87,7 +89,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         // end
 
         // Download button
-        if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::GENERATED) {
+        if ($entity->has('InstitutionStudentsReportCards') && in_array($entity->InstitutionStudentsReportCards['status'], [self::GENERATED, self::PUBLISHED])) {
             $downloadUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -99,6 +101,30 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'label' => '<i class="fa kd-download"></i>'.__('Download'),
                 'attr' => $indexAttr,
                 'url' => $downloadUrl
+            ];
+        }
+        // end
+
+        // Publish button
+        if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::GENERATED) {
+            $url = $this->url('publish');
+            $publishUrl = $this->setQueryString($url, $params);
+            $buttons['download'] = [
+                'label' => '<i class="fa fa-share-square-o"></i>'.__('Publish'),
+                'attr' => $indexAttr,
+                'url' => $publishUrl
+            ];
+        }
+        // end
+
+        // Unpublish button
+        if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::PUBLISHED) {
+            $url = $this->url('unpublish');
+            $unpublishUrl = $this->setQueryString($url, $params);
+            $buttons['download'] = [
+                'label' => '<i class="fa fa-lock"></i>'.__('Unpublish'),
+                'attr' => $indexAttr,
+                'url' => $unpublishUrl
             ];
         }
         // end
@@ -153,12 +179,23 @@ class ReportCardStatusesTable extends ControllerActionTable
             // end
 
             // publish all button
-            $publishButton['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentreExams', 'add'];
+            $url = $this->url('publish');
+            $publishButton['url'] = $this->setQueryString($url, $params);
             $publishButton['type'] = 'button';
             $publishButton['label'] = '<i class="fa fa-share-square-o"></i>';
             $publishButton['attr'] = $toolbarAttr;
             $publishButton['attr']['title'] = __('Publish All');
             $extra['toolbarButtons']['publishAll'] = $publishButton;
+            // end
+
+            // unpublish all button
+            $url = $this->url('unpublish');
+            $unpublishButton['url'] = $this->setQueryString($url, $params);
+            $unpublishButton['type'] = 'button';
+            $unpublishButton['label'] = '<i class="fa fa-lock"></i>';
+            $unpublishButton['attr'] = $toolbarAttr;
+            $unpublishButton['attr']['title'] = __('Unpublish All');
+            $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
             // end
         }
     }
@@ -288,6 +325,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $StudentReportCards->find()
             ->contain(['Students', 'ReportCards'])
@@ -295,6 +333,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 $StudentReportCards->aliasField('institution_id') => $params['institution_id'],
                 $StudentReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
                 $StudentReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $StudentReportCards->aliasField('status IN ') => $statusArray,
                 $StudentReportCards->aliasField('file_name IS NOT NULL'),
                 $StudentReportCards->aliasField('file_content IS NOT NULL')
             ])
@@ -329,6 +368,32 @@ class ReportCardStatusesTable extends ControllerActionTable
         }
     }
 
+    public function publish()
+    {
+        $params = $this->getQueryString();
+
+        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $StudentsReportCards->updateAll(['status' => $StudentsReportCards::PUBLISHED], [
+            $params,
+            'status' => $StudentsReportCards::GENERATED
+        ]);
+
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    public function unpublish()
+    {
+        $params = $this->getQueryString();
+
+        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $StudentsReportCards->updateAll(['status' => $StudentsReportCards::NEW_REPORT], [
+            $params,
+            'status' => $StudentsReportCards::PUBLISHED
+        ]);
+
+        return $this->controller->redirect($this->url('index'));
+    }
+
     private function triggerGenerateAllReportCardsShell($institutionId, $institutionClassId, $reportCardId)
     {
         $args = '';
@@ -336,7 +401,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $args .= !is_null($institutionClassId) ? ' '.$institutionClassId : '';
         $args .= !is_null($reportCardId) ? ' '.$reportCardId : '';
 
-        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards '.$args;
+        $cmd = ROOT . DS . 'bin' . DS . 'cake GenerateAllReportCards'.$args;
         $logs = ROOT . DS . 'logs' . DS . 'GenerateAllReportCards.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
 
