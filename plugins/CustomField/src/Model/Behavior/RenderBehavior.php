@@ -74,7 +74,7 @@ class RenderBehavior extends Behavior {
                     $this->SurveyRulesTable->aliasField('enabled') => 1
                 ])
                 ->select([
-                    $this->SurveyRulesTable->aliasField('survey_question_id'), 
+                    $this->SurveyRulesTable->aliasField('survey_question_id'),
                     $this->SurveyRulesTable->aliasField('dependent_question_id'),
                     $this->SurveyRulesTable->aliasField('show_options')
                 ])
@@ -89,8 +89,8 @@ class RenderBehavior extends Behavior {
             }
         }
         if (isset($this->surveyRules[$fieldId])) {
-            $value = '<fieldset 
-                ng-disabled="!RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');" 
+            $value = '<fieldset
+                ng-disabled="!RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');"
                 ng-show="RelevancyRulesController.showDropdown('.$this->surveyRules[$fieldId]['dependent_question_id'].', '.$this->surveyRules[$fieldId]['show_options'].');"
                 >' . $html;
             $value .= '</fieldset>';
@@ -100,5 +100,24 @@ class RenderBehavior extends Behavior {
             $html = $value;
         }
         return $html;
+    }
+
+    protected function getStepFromParams($params=[]) {
+        if (array_key_exists('precision', $params) && ($params['precision'] > 0)) {
+            $step = '0.';
+
+            for ($i=1; $i <= $params['precision']; $i++) {
+                // last precision will be 1
+                if ($i == ($params['precision'])) {
+                    $step = $step . '1';
+                } else {
+                    $step = $step . '0';
+                }
+            }
+
+            return $step;
+        }
+
+        return null;
     }
 }

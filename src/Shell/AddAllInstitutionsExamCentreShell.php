@@ -8,12 +8,6 @@ use Cake\Console\Shell;
 use Cake\I18n\Time;
 
 class AddAllInstitutionsExamCentreShell extends Shell {
-    const NEW_PROCESS = 1;
-    const COMPLETED = 3;
-    const RUNNING = 2;
-    const ERROR = -2;
-    const ABORT = -1;
-
     public function initialize() {
         parent::initialize();
         $this->loadModel('Examination.ExaminationCentres');
@@ -22,99 +16,113 @@ class AddAllInstitutionsExamCentreShell extends Shell {
 
     public function main() {
         if (!empty($this->args[0])) {
+            $PAGE_LIMIT = 500;
             $pid = getmypid();
             $SystemProcesses = TableRegistry::get('SystemProcesses');
-            $examinationId = !empty($this->args[0]) ? $this->args[0] : 0;
+            $systemProcessId = !empty($this->args[0]) ? $this->args[0] : 0;
             $academicPeriodId = !empty($this->args[1]) ? $this->args[1] : 0;
-            $systemProcessId = !empty($this->args[2]) ? $this->args[2] : 0;
-            $institutionTypeId = !empty($this->args[3]) ? $this->args[3] : 0;
+            $institutionTypeId = !empty($this->args[2]) ? $this->args[2] : 0;
 
             $executedCount = 0;
-            $this->out('Initialize Add All Institutions As Exam Centres: '.$pid);
-            $SystemProcesses->updateProcess($systemProcessId, null, self::RUNNING);
+            $this->out($pid.': Initialize Add All Institutions As Exam Centres ('. Time::now() .')');
+            $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, $executedCount);
 
             $obj = [];
             $obj['academic_period_id'] = $academicPeriodId;
-            $obj['examination_id'] = $examinationId;
 
-            // get special needs and subjects from SystemProcesses params
+            // get special needs from SystemProcesses params
             if (!empty($systemProcessId)) {
                 $SystemProcesses->updatePid($systemProcessId, $pid);
                 $processData = $SystemProcesses->get($systemProcessId);
                 if (!empty($processData)) {
                     $params = $processData->params;
-                    $paramsObj = json_decode($params);
+                    $paramsObj = json_decode($params, true);
                 }
             }
 
             if (isset($paramsObj)) {
-                if (isset($paramsObj->special_needs) && !empty($paramsObj->special_needs)) {
+                if (isset($paramsObj['special_needs']) && !empty($paramsObj['special_needs'])) {
                     $obj['examination_centre_special_needs'] = [];
-                    foreach($paramsObj->special_needs as $need) {
+                    foreach($paramsObj['special_needs'] as $need) {
                         $obj['examination_centre_special_needs'][] = [
-                            'examination_id' => $examinationId,
-                            'academic_period_id' => $academicPeriodId,
                             'special_need_type_id' => $need
-                        ];
-                    }
-                }
-
-                if (isset($paramsObj->subjects) && !empty($paramsObj->subjects)) {
-                    $obj['examination_centre_subjects'] = [];
-                    foreach($paramsObj->subjects as $subject) {
-                        $obj['examination_centre_subjects'][] = [
-                            'examination_id' => $examinationId,
-                            'academic_period_id' => $academicPeriodId,
-                            'education_subject_id' => $subject
                         ];
                     }
                 }
             }
 
             // get all institutions based on type (if type is selected)
-            $institutionQuery = $this->Institutions->find('NotExamCentres', ['examination_id' => $examinationId]);
+            $institutionQuery = $this->Institutions->find('NotExamCentres', ['academic_period_id' => $academicPeriodId]);
             if (!empty($institutionTypeId)) {
                 $institutionQuery->where([$this->Institutions->aliasField('institution_type_id') => $institutionTypeId]);
             }
-            $allInstitutionsData = $institutionQuery->toArray();
 
-            $newEntities = [];
-            foreach ($allInstitutionsData as $institution) {
-                // check if this exam centre was added while shell is still running
-                $existingExamCentre = $this->ExaminationCentres->find()
-                    ->where([
-                        $this->ExaminationCentres->aliasField('institution_id') => $institution->id,
-                        $this->ExaminationCentres->aliasField('examination_id') => $examinationId,
-                    ])
-                    ->first();
+            $institutionCount = $institutionQuery->count();
+            $this->out($pid.': Total number records to save: '. $institutionCount);
+            $this->out($pid.': Processing '. $PAGE_LIMIT .' records on each page');
+            $saveError = 0;
+            $page = 1;
+            $loop = ($institutionCount > 0);
 
-                if (empty($existingExamCentre)) {
-                    $obj['institution_id'] = $institution->id;
-                    $obj['area_id'] = $institution->area_id;
-                    $obj['name'] = $institution->name;
-                    $obj['code'] = $institution->code;
-                    $obj['address'] = $institution->address;
-                    $obj['postal_code'] = $institution->postal_code;
-                    $obj['contact_person'] = $institution->contact_person;
-                    $obj['telephone'] = $institution->telephone;
-                    $obj['fax'] = $institution->fax;
-                    $obj['email'] = $institution->email;
-                    $obj['website'] = $institution->website;
-                    $newEntities[] = $this->ExaminationCentres->newEntity($obj, ['validate' => false]);
+            while ($loop) {
+                $institutionPageData = $institutionQuery->limit($PAGE_LIMIT)->toArray();
+
+                if (!empty($institutionPageData)) {
+                    $this->out($pid.': Processing PAGE '.$page.' ('. Time::now() .')');
+                    $newEntities = [];
+
+                    foreach ($institutionPageData as $institution) {
+                        // check if this exam centre was added while shell is still running
+                        $existingExamCentre = $this->ExaminationCentres->find()
+                            ->where([
+                                $this->ExaminationCentres->aliasField('institution_id') => $institution->id,
+                                $this->ExaminationCentres->aliasField('academic_period_id') => $academicPeriodId
+                            ])
+                            ->first();
+
+                        if (empty($existingExamCentre)) {
+                            $obj['institution_id'] = $institution->id;
+                            $obj['area_id'] = $institution->area_id;
+                            $obj['name'] = $institution->name;
+                            $obj['code'] = $institution->code;
+                            $obj['address'] = $institution->address;
+                            $obj['postal_code'] = $institution->postal_code;
+                            $obj['contact_person'] = $institution->contact_person;
+                            $obj['telephone'] = $institution->telephone;
+                            $obj['fax'] = $institution->fax;
+                            $obj['email'] = $institution->email;
+                            $obj['website'] = $institution->website;
+                            $newEntities[] = $this->ExaminationCentres->newEntity($obj, ['validate' => false]);
+                        }
+                    }
+
+                    try {
+                        $this->out($pid.': Saving page '.$page.' ('. Time::now() .')');
+                        $this->ExaminationCentres->saveMany($newEntities);
+
+                    } catch (\Exception $e) {
+                        $this->out($pid.': Error encoutered saving PAGE '. $page .' ('.Time::now() .')');
+                        $this->out($e->getMessage());
+                        $saveError = 1;
+                    }
+
+                    $executedCount += count($newEntities);
+                    $SystemProcesses->updateProcess($systemProcessId, null, $SystemProcesses::RUNNING, $executedCount);
+                    $this->out($pid.': End processing PAGE '.$page.' ('. Time::now() .')');
+                    $page++;
+
+                } else {
+                    $loop = false;
                 }
             }
 
-            try {
-                $this->out('Saving All Institutions ('. count($newEntities) .') As Exam Centres: '.$pid);
-                $this->ExaminationCentres->saveMany($newEntities);
-
-                $SystemProcesses->updateProcess($systemProcessId, Time::now(), self::COMPLETED);
-                $this->out('End Add All Institutions As Exam Centres: '.$pid);
-            } catch (\Exception $e) {
-                $this->out('Error during Saving All Institutions As Exam Centres: '.$pid);
-                $this->out($e->getMessage());
-                $SystemProcesses->updateProcess($systemProcessId, Time::now(), self::ERROR);
+            if ($saveError != 1) {
+                $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::COMPLETED);
+            } else {
+                $SystemProcesses->updateProcess($systemProcessId, Time::now(), $SystemProcesses::ERROR);
             }
+
+            $this->out($pid.': End Add All Institutions As Exam Centres ('. Time::now() .')');
         }
     }
 }
