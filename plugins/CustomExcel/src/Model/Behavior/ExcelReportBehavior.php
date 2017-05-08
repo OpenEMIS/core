@@ -25,7 +25,8 @@ class ExcelReportBehavior extends Behavior
     protected $_defaultConfig = [
         'folder' => 'export',
         'subfolder' => 'customexcel',
-        'fileExtension' => 'xlsx'
+        'format' => 'xlsx',
+        'download' => true
     ];
 
     // function name and keyword pairs
@@ -80,27 +81,34 @@ class ExcelReportBehavior extends Behavior
         $params = $model->getQueryString();
         $extra['vars'] = $this->getVars($params, $extra);
 
-        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('fileExtension');
+        $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
         $extra['download'] = $this->config('download');
+        $extra['save'] = $this->config('save');
 
         $filepath = $extra['path'] . $extra['file'];
         $extra['file_path'] = $extra['path'] . $extra['file'];
 
         $objPHPExcel = $this->loadExcelTemplate($extra);
+        $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this);
         $this->generateExcel($objPHPExcel, $extra);
-        $this->saveExcel($objPHPExcel, $filepath);
+        $this->saveFile($objPHPExcel, $filepath);
 
         if ($extra->offsetExists('tmp_file_path')) {
-            // delete temporary excel file after save
+            // delete temporary excel template file after save
             $this->deleteFile($extra['tmp_file_path']);
         }
 
-        if ($extra['download']) {
-            $this->downloadExcel($filepath);
-            // delete excel file after download
-            $this->deleteFile($filepath);
+        if ($extra['save']) {
+            $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSave', [$params, $extra], $this);
         }
+
+        if ($extra['download']) {
+            $this->downloadFile($filepath);
+        }
+
+        // delete excel file after save/download
+        $this->deleteFile($filepath);
     }
 
     public function loadExcelTemplate(ArrayObject $extra)
@@ -229,11 +237,11 @@ class ExcelReportBehavior extends Behavior
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
     }
 
-    public function saveExcel($objPHPExcel, $filepath)
+    public function saveFile($objPHPExcel, $filepath)
     {
         $writer = 'Excel2007';
 
-        if ($this->config('fileExtension') == 'pdf') {
+        if ($this->config('format') == 'pdf') {
             $rendererName = PHPExcel_Settings::PDF_RENDERER_DOMPDF;
             $rendererLibrary = 'dompdf';
             $rendererLibraryPath = ROOT . DS . 'vendor' . DS . $rendererLibrary;
@@ -245,7 +253,7 @@ class ExcelReportBehavior extends Behavior
         $objWriter->save($filepath);
     }
 
-    public function downloadExcel($filepath)
+    public function downloadFile($filepath)
     {
         $filename = basename($filepath);
 
@@ -447,7 +455,7 @@ class ExcelReportBehavior extends Behavior
             $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
         }
 
-        if ($this->config('fileExtension') == 'pdf') {
+        if ($this->config('format') == 'pdf') {
             $objWorksheet->setShowGridlines(false);
         }
     }
