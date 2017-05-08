@@ -14,7 +14,7 @@
             "reference": "52f8de3670cc1ef45a916f40f732937436d028c8",
             "shasum": ""
         },
-        "time": "2012-11-26 21:35:57",
+        "time": "2012-11-26T21:35:57+00:00",
         "type": "composer-installer",
         "extra": {
             "class": "Aura\\Composer\\DefaultInstaller"
@@ -61,7 +61,7 @@
             "aura/installer-default": "1.0.*",
             "php": ">=5.4.0"
         },
-        "time": "2014-08-24 00:00:00",
+        "time": "2014-08-24T00:00:00+00:00",
         "type": "aura-package",
         "extra": {
             "aura": {
@@ -142,7 +142,7 @@
             "ext-xmlwriter": "*",
             "php": ">=5.2.0"
         },
-        "time": "2015-05-05 00:10:25",
+        "time": "2015-05-05T00:10:25+00:00",
         "type": "library",
         "installation-source": "source",
         "autoload": {
@@ -199,7 +199,7 @@
         "require": {
             "php": ">=5.6.0"
         },
-        "time": "2015-07-28 20:34:47",
+        "time": "2015-07-28T20:34:47+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -249,7 +249,7 @@
         "suggest": {
             "ext-uopz": "*"
         },
-        "time": "2015-10-12 03:26:01",
+        "time": "2015-10-12T03:26:01+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -299,7 +299,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.8"
         },
-        "time": "2015-12-08 07:14:41",
+        "time": "2015-12-08T07:14:41+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -357,7 +357,7 @@
             "phpunit/phpunit": "~4.0",
             "squizlabs/php_codesniffer": "~2.0"
         },
-        "time": "2015-06-14 21:17:01",
+        "time": "2015-06-14T21:17:01+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -406,7 +406,7 @@
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2015-06-21 13:50:34",
+        "time": "2015-06-21T13:50:34+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -452,7 +452,7 @@
         "require-dev": {
             "phpunit/phpunit": "3.7.*"
         },
-        "time": "2014-01-12 16:20:24",
+        "time": "2014-01-12T16:20:24+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -508,7 +508,7 @@
             "phpunit/phpunit": "3.7.*",
             "squizlabs/php_codesniffer": "1.*"
         },
-        "time": "2014-04-08 15:00:19",
+        "time": "2014-04-08T15:00:19+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -554,7 +554,7 @@
             "phpunit/phpunit": "~4.0",
             "squizlabs/php_codesniffer": "~1.5"
         },
-        "time": "2015-04-20 18:58:01",
+        "time": "2015-04-20T18:58:01+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -595,7 +595,7 @@
         "require-dev": {
             "phpunit/phpunit": "@stable"
         },
-        "time": "2014-10-24 07:27:01",
+        "time": "2014-10-24T07:27:01+00:00",
         "type": "project",
         "installation-source": "dist",
         "autoload": {
@@ -627,7 +627,7 @@
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2015-07-22 18:31:08",
+        "time": "2015-07-22T18:31:08+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -673,7 +673,7 @@
             "cakephp/cakephp": "~3.1",
             "firebase/php-jwt": "~3.0"
         },
-        "time": "2016-04-02 19:34:30",
+        "time": "2016-04-02T19:34:30+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -722,7 +722,7 @@
         "require-dev": {
             "phpunit/phpunit": "^4.6"
         },
-        "time": "2015-12-27 11:43:31",
+        "time": "2015-12-27T11:43:31+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -779,7 +779,7 @@
             "phpunit/phpunit": "3.7.*",
             "squizlabs/php_codesniffer": "~2.3"
         },
-        "time": "2016-02-02 18:50:42",
+        "time": "2016-02-02T18:50:42+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -832,7 +832,7 @@
             "ext-mcrypt": "Install the Mcrypt extension in order to speed up a few other cryptographic operations.",
             "ext-openssl": "Install the OpenSSL extension in order to speed up a wide variety of cryptographic operations."
         },
-        "time": "2016-10-04 00:57:04",
+        "time": "2016-10-04T00:57:04+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -908,7 +908,7 @@
         "require": {
             "cakephp/cakephp": ">3.1.0"
         },
-        "time": "2017-03-21 08:52:27",
+        "time": "2017-03-21T08:52:27+00:00",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
@@ -956,7 +956,7 @@
             "composer/composer": "1.0.*@dev",
             "phpunit/phpunit": "^4.8|^5.7|^6.0"
         },
-        "time": "2017-03-21 13:48:47",
+        "time": "2017-03-21T13:48:47+00:00",
         "type": "composer-installer",
         "extra": {
             "class": "Cake\\Composer\\Installer\\PluginInstaller"
@@ -1000,7 +1000,7 @@
         "require-dev": {
             "phpunit/phpunit": "*"
         },
-        "time": "2017-03-29 13:59:30",
+        "time": "2017-03-29T13:59:30+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1067,7 +1067,7 @@
             "ext-mcrypt": "Install mcrypt and php5-mcrypt libs in order to support encryption",
             "lib-openssl": "Install openssl lib in order to handle with x509 certs (require to support sign and encryption)"
         },
-        "time": "2017-03-13 09:56:49",
+        "time": "2017-03-13T09:56:49+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1107,7 +1107,7 @@
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2016-08-06 14:39:51",
+        "time": "2016-08-06T14:39:51+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1169,7 +1169,7 @@
             "phpunit/phpunit": "^4.6 || ^5.5",
             "zendframework/zend-coding-standard": "~1.0.0"
         },
-        "time": "2017-04-06 16:18:34",
+        "time": "2017-04-06T16:18:34+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1213,7 +1213,7 @@
         "require": {
             "php": ">=5.3.0"
         },
-        "time": "2016-10-10 12:19:37",
+        "time": "2016-10-10T12:19:37+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1269,7 +1269,7 @@
             "phpstan/phpstan": "^0.6.4",
             "phpunit/phpunit": "<6.0"
         },
-        "time": "2017-04-27 01:27:49",
+        "time": "2017-04-27T01:27:49+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1349,7 +1349,7 @@
         "suggest": {
             "ext-openssl": "To use Security::encrypt() or have secure CSRF token generation."
         },
-        "time": "2017-04-07 02:04:27",
+        "time": "2017-04-07T02:04:27+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -1401,7 +1401,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.0|~5.0"
         },
-        "time": "2017-03-05 18:23:57",
+        "time": "2017-03-05T18:23:57+00:00",
         "bin": [
             "bin/php-parse"
         ],
@@ -1453,7 +1453,7 @@
         "suggest": {
             "ext-mbstring": "For best performance"
         },
-        "time": "2016-11-14 01:06:16",
+        "time": "2016-11-14T01:06:16+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1521,7 +1521,7 @@
         "suggest": {
             "ext-symfony_debug": ""
         },
-        "time": "2017-03-12 16:07:05",
+        "time": "2017-03-12T16:07:05+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1587,7 +1587,7 @@
             "symfony/class-loader": "~2.8|~3.0",
             "symfony/http-kernel": "~2.8|~3.0"
         },
-        "time": "2017-03-28 21:38:24",
+        "time": "2017-03-28T21:38:24+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1652,7 +1652,7 @@
             "symfony/filesystem": "",
             "symfony/process": ""
         },
-        "time": "2017-04-04 14:33:42",
+        "time": "2017-04-04T14:33:42+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1721,7 +1721,7 @@
             "ext-readline": "Enables support for arrow-key history navigation, and showing and manipulating command history.",
             "hoa/console": "A pure PHP readline implementation. You'll want this if your PHP install doesn't already support readline or libedit."
         },
-        "time": "2017-03-19 21:40:44",
+        "time": "2017-03-19T21:40:44+00:00",
         "bin": [
             "bin/psysh"
         ],
@@ -1784,7 +1784,7 @@
         "suggest": {
             "symfony/console": "For validating YAML files using the lint command"
         },
-        "time": "2017-03-20 09:45:15",
+        "time": "2017-03-20T09:45:15+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1835,7 +1835,7 @@
         "require": {
             "php": ">=5.6"
         },
-        "time": "2016-10-03 07:35:21",
+        "time": "2016-10-03T07:35:21+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1883,7 +1883,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.4"
         },
-        "time": "2016-11-19 07:33:16",
+        "time": "2016-11-19T07:33:16+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1939,7 +1939,7 @@
         "require-dev": {
             "phpunit/phpunit": "~5"
         },
-        "time": "2017-02-18 15:18:39",
+        "time": "2017-02-18T15:18:39+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1988,7 +1988,7 @@
             "ext-mbstring": "*",
             "phpunit/phpunit": "~4.4"
         },
-        "time": "2016-11-19 08:54:04",
+        "time": "2016-11-19T08:54:04+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2055,7 +2055,7 @@
         "require-dev": {
             "phpunit/phpunit": "^5.0"
         },
-        "time": "2016-11-26 07:53:53",
+        "time": "2016-11-26T07:53:53+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2109,7 +2109,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.4"
         },
-        "time": "2017-01-29 09:50:25",
+        "time": "2017-01-29T09:50:25+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2182,7 +2182,7 @@
         "suggest": {
             "ext-soap": "*"
         },
-        "time": "2016-12-08 20:27:08",
+        "time": "2016-12-08T20:27:08+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2234,7 +2234,7 @@
         "require-dev": {
             "phpunit/phpunit": "^4.8.35 || ^5.7 || ^6.0"
         },
-        "time": "2017-02-26 11:10:40",
+        "time": "2017-02-26T11:10:40+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2282,7 +2282,7 @@
         "require": {
             "php": ">=5.3.3"
         },
-        "time": "2016-10-03 07:40:28",
+        "time": "2016-10-03T07:40:28+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2334,7 +2334,7 @@
         "require-dev": {
             "phpunit/phpunit": "^5.7 || ^6.0"
         },
-        "time": "2017-03-04 06:30:41",
+        "time": "2017-03-04T06:30:41+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2382,7 +2382,7 @@
         "require-dev": {
             "phpunit/phpunit": "~4.2"
         },
-        "time": "2017-02-27 10:12:30",
+        "time": "2017-02-27T10:12:30+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2444,7 +2444,7 @@
         "suggest": {
             "ext-xdebug": "^2.5.1"
         },
-        "time": "2017-04-02 07:44:40",
+        "time": "2017-04-02T07:44:40+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2498,7 +2498,7 @@
             "phpunit/phpunit": "^4.6",
             "sebastian/version": "^1.0.1"
         },
-        "time": "2016-11-23 20:04:58",
+        "time": "2016-11-23T20:04:58+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2551,7 +2551,7 @@
             "mockery/mockery": "^0.9.4",
             "phpunit/phpunit": "^5.2||^4.8.24"
         },
-        "time": "2016-11-25 06:54:22",
+        "time": "2016-11-25T06:54:22+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2602,7 +2602,7 @@
             "mockery/mockery": "^0.9.4",
             "phpunit/phpunit": "^4.4"
         },
-        "time": "2016-09-30 07:12:33",
+        "time": "2016-09-30T07:12:33+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2650,7 +2650,7 @@
             "phpspec/phpspec": "^2.5|^3.2",
             "phpunit/phpunit": "^4.8 || ^5.6.5"
         },
-        "time": "2017-03-02 20:05:34",
+        "time": "2017-03-02T20:05:34+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2711,7 +2711,7 @@
             "doctrine/collections": "1.*",
             "phpunit/phpunit": "~4.1"
         },
-        "time": "2017-04-12 18:52:22",
+        "time": "2017-04-12T18:52:22+00:00",
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2782,7 +2782,7 @@
             "ext-xdebug": "*",
             "phpunit/php-invoker": "~1.1"
         },
-        "time": "2017-04-03 02:22:27",
+        "time": "2017-04-03T02:22:27+00:00",
         "bin": [
             "phpunit"
         ],
@@ -2835,7 +2835,7 @@
         "require": {
             "php": ">=5.5.9"
         },
-        "time": "2017-03-26 15:47:15",
+        "time": "2017-03-26T15:47:15+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2893,7 +2893,7 @@
         "suggest": {
             "symfony/yaml": "To use the yaml reference dumper"
         },
-        "time": "2017-04-04 15:30:56",
+        "time": "2017-04-04T15:30:56+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2950,7 +2950,7 @@
         "require-dev": {
             "phpunit/phpunit": "^4.8.26|^5.0"
         },
-        "time": "2016-10-27 10:16:12",
+        "time": "2016-10-27T10:16:12+00:00",
         "bin": [
             "bin/phinx"
         ],
@@ -3021,7 +3021,7 @@
         "suggest": {
             "cakephp/bake": "Required if you want to generate migrations."
         },
-        "time": "2017-01-07 16:45:31",
+        "time": "2017-01-07T16:45:31+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -3064,7 +3064,7 @@
         "require": {
             "php": ">=5.5.9"
         },
-        "time": "2017-03-27 18:07:02",
+        "time": "2017-03-27T18:07:02+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3115,7 +3115,7 @@
         "require": {
             "php": ">=5.5.9"
         },
-        "time": "2017-03-20 09:32:19",
+        "time": "2017-03-20T09:32:19+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3166,7 +3166,7 @@
         "require": {
             "php": ">=5.3"
         },
-        "time": "2015-10-13 18:44:15",
+        "time": "2015-10-13T18:44:15+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3215,7 +3215,7 @@
         "require-dev": {
             "phpunit/phpunit": "^4.5"
         },
-        "time": "2017-03-06 16:42:24",
+        "time": "2017-03-06T16:42:24+00:00",
         "bin": [
             "bin/jsonlint"
         ],
@@ -3263,7 +3263,7 @@
         "require": {
             "php": ">=5.3"
         },
-        "time": "2017-03-18 11:32:45",
+        "time": "2017-03-18T11:32:45+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3319,7 +3319,7 @@
             "phpdocumentor/phpdocumentor": "~2",
             "phpunit/phpunit": "^4.8.22"
         },
-        "time": "2017-03-22 22:43:35",
+        "time": "2017-03-22T22:43:35+00:00",
         "bin": [
             "bin/validate-json"
         ],
@@ -3386,7 +3386,7 @@
             "phpunit/phpunit": "^4.5 || ^5.0.5",
             "phpunit/phpunit-mock-objects": "2.3.0 || ^3.0"
         },
-        "time": "2017-04-03 19:08:52",
+        "time": "2017-04-03T19:08:52+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3449,7 +3449,7 @@
             "phpunit/phpunit": "^4.5 || ^5.0.5",
             "phpunit/phpunit-mock-objects": "2.3.0 || ^3.0"
         },
-        "time": "2016-08-30 16:08:34",
+        "time": "2016-08-30T16:08:34+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3519,7 +3519,7 @@
         "suggest": {
             "symfony/process": "This is necessary to reliably check whether openssl_x509_parse is vulnerable on older php versions, but can be ignored on PHP 5.5.6+"
         },
-        "time": "2017-03-06 11:59:08",
+        "time": "2017-03-06T11:59:08+00:00",
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3591,7 +3591,7 @@
             "ext-zip": "Enabling the zip extension allows you to unzip archives",
             "ext-zlib": "Allow gzip compression of HTTP requests"
         },
-        "time": "2017-03-10 08:29:45",
+        "time": "2017-03-10T08:29:45+00:00",
         "bin": [
             "bin/composer"
         ],
@@ -3659,7 +3659,7 @@
         "suggest": {
             "ext-sqlite": "DebugKit needs to store panel data in a database. SQLite is simple and easy to use."
         },
-        "time": "2017-03-16 01:28:35",
+        "time": "2017-03-16T01:28:35+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -3715,7 +3715,7 @@
             "cakephp/cakephp-codesniffer": "^2.1",
             "phpunit/phpunit": "*"
         },
-        "time": "2017-01-31 00:59:03",
+        "time": "2017-01-31T00:59:03+00:00",
         "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
@@ -3762,7 +3762,7 @@
         "require-dev": {
             "phpunit/phpunit": "4.3.*"
         },
-        "time": "2017-03-09 16:25:31",
+        "time": "2017-03-09T16:25:31+00:00",
         "type": "project",
         "installation-source": "source",
         "autoload": {
@@ -3800,7 +3800,7 @@
             "onelogin/php-saml": "^2.9",
             "phpseclib/phpseclib": "^2.0"
         },
-        "time": "2017-04-27 07:04:39",
+        "time": "2017-04-27T07:04:39+00:00",
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
@@ -3845,7 +3845,7 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
-        "time": "2017-04-27 07:38:12",
+        "time": "2017-04-27T07:38:12+00:00",
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
@@ -3884,5 +3884,190 @@
         "support": {
             "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
         }
+    },
+    {
+        "name": "sabberworm/php-css-parser",
+        "version": "6.0.1",
+        "version_normalized": "6.0.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/sabberworm/PHP-CSS-Parser.git",
+            "reference": "9ea4b00c569b19f731d0c2e0e802055877ff40c2"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/sabberworm/PHP-CSS-Parser/zipball/9ea4b00c569b19f731d0c2e0e802055877ff40c2",
+            "reference": "9ea4b00c569b19f731d0c2e0e802055877ff40c2",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.2"
+        },
+        "time": "2015-08-24T08:48:52+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Sabberworm\\CSS": "lib/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Raphael Schweikert"
+            }
+        ],
+        "description": "Parser for CSS Files written in PHP",
+        "homepage": "http://www.sabberworm.com/blog/2010/6/10/php-css-parser",
+        "keywords": [
+            "css",
+            "parser",
+            "stylesheet"
+        ]
+    },
+    {
+        "name": "phenx/php-svg-lib",
+        "version": "v0.2",
+        "version_normalized": "0.2.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/PhenX/php-svg-lib.git",
+            "reference": "de291bec8449b89acfe85691b5c71434797959dc"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/PhenX/php-svg-lib/zipball/de291bec8449b89acfe85691b5c71434797959dc",
+            "reference": "de291bec8449b89acfe85691b5c71434797959dc",
+            "shasum": ""
+        },
+        "require": {
+            "sabberworm/php-css-parser": "6.0.*"
+        },
+        "time": "2016-12-13T20:25:45+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Svg\\": "src/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "LGPL-3.0"
+        ],
+        "authors": [
+            {
+                "name": "Fabien Ménager",
+                "email": "fabien.menager@gmail.com"
+            }
+        ],
+        "description": "A library to read, parse and export to PDF SVG files.",
+        "homepage": "https://github.com/PhenX/php-svg-lib"
+    },
+    {
+        "name": "phenx/php-font-lib",
+        "version": "0.5",
+        "version_normalized": "0.5.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/PhenX/php-font-lib.git",
+            "reference": "19ad2bebc35be028fcc0221025fcbf3d436a3962"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/PhenX/php-font-lib/zipball/19ad2bebc35be028fcc0221025fcbf3d436a3962",
+            "reference": "19ad2bebc35be028fcc0221025fcbf3d436a3962",
+            "shasum": ""
+        },
+        "require-dev": {
+            "phpunit/phpunit": "^4.8"
+        },
+        "time": "2017-02-11T10:58:43+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "FontLib\\": "src/FontLib"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "LGPL-3.0"
+        ],
+        "authors": [
+            {
+                "name": "Fabien Ménager",
+                "email": "fabien.menager@gmail.com"
+            }
+        ],
+        "description": "A library to read, parse, export and make subsets of different types of font files.",
+        "homepage": "https://github.com/PhenX/php-font-lib"
+    },
+    {
+        "name": "dompdf/dompdf",
+        "version": "v0.8.0",
+        "version_normalized": "0.8.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/dompdf/dompdf.git",
+            "reference": "0f418c6b58fdeafc2a0e80eb1fa5e644e185089c"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/dompdf/dompdf/zipball/0f418c6b58fdeafc2a0e80eb1fa5e644e185089c",
+            "reference": "0f418c6b58fdeafc2a0e80eb1fa5e644e185089c",
+            "shasum": ""
+        },
+        "require": {
+            "ext-dom": "*",
+            "ext-gd": "*",
+            "ext-mbstring": "*",
+            "phenx/php-font-lib": "0.5.*",
+            "phenx/php-svg-lib": "0.2.*",
+            "php": ">=5.3.0"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "4.8.*",
+            "squizlabs/php_codesniffer": "2.*"
+        },
+        "time": "2017-02-16T02:40:40+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-develop": "0.7-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "Dompdf\\": "src/"
+            },
+            "classmap": [
+                "lib/"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "LGPL-2.1"
+        ],
+        "authors": [
+            {
+                "name": "Fabien Ménager",
+                "email": "fabien.menager@gmail.com"
+            },
+            {
+                "name": "Brian Sweeney",
+                "email": "eclecticgeek@gmail.com"
+            },
+            {
+                "name": "Gabriel Bull",
+                "email": "me@gabrielbull.com"
+            }
+        ],
+        "description": "DOMPDF is a CSS 2.1 compliant HTML to PDF converter",
+        "homepage": "https://github.com/dompdf/dompdf"
     }
 ]
