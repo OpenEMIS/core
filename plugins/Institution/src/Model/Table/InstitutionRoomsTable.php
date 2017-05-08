@@ -81,7 +81,7 @@ class InstitutionRoomsTable extends AppTable
         return $validator
             ->add('code', [
                 'ruleUnique' => [
-                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id']]],
+                    'rule' => ['validateUnique', ['scope' => ['start_date', 'institution_id', 'academic_period_id']]],
                     'provider' => 'table'
                 ]
             ])
