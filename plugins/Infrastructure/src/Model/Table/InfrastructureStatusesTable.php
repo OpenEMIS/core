@@ -9,9 +9,9 @@ class InfrastructureStatusesTable extends ControllerActionTable
     {
         parent::initialize($config);
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'room_status_id']);
-        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'land_status_id']);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'building_status_id']);
+        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true, 'cascadeCallbacks' => true, 'foreignKey' => 'floor_status_id']);
     }
 
     public function findCodeList()
