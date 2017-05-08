@@ -227,7 +227,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         if ($entity->has('user')) {
             $user = $entity->user;
             if ($user->has('main_nationality') && !empty($user->main_nationality)) {
-                return $user->main_nationality->name;
+                return __($user->main_nationality->name);
             }
         }
     }
