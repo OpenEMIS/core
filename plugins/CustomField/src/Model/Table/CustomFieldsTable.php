@@ -17,7 +17,7 @@ class CustomFieldsTable extends AppTable {
 
 	protected $fieldTypeFormat = ['OpenEMIS'];
 	// Supported Field Types contain full list by default and can by override in individual model extends CustomFieldsTable
-	protected $supportedFieldTypes = ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER'];
+	protected $supportedFieldTypes = ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER'];
 
 	private $fieldTypes = [];
 	private $fieldTypeOptions = [];

@@ -41,6 +41,13 @@ class EducationCyclesTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
+		$validator
+	        ->add('admission_age', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 99]
+                ]
+            ])
+	    ;
 		return $validator;
 	}
 
@@ -55,6 +62,7 @@ class EducationCyclesTable extends ControllerActionTable
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('education_level_id');
+		$this->field('admission_age', ['after' => 'name', 'attr' => ['min' => 0, 'max' => 99]]);
 	}
 
 	public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)
