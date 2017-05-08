@@ -151,6 +151,24 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         }
     }
 
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'Users.Nationalities.NationalitiesLookUp'
+        ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('nationalities', [
+            'type' => 'element',
+            'element' => 'nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
+    }
+
+
     public function afterAction(Event $event, ArrayObject $extra)
     {
         if ($this->action == 'index' || $this->action == 'view') {
@@ -162,9 +180,12 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
                 $this->field('tooltip_column', [
                     'after' => 'transferred'
                 ]);
-            }
+                $this->field('nationality');
 
-            $this->setFieldOrder('registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'identity_number', 'institution_id', 'repeated', 'transferred');
+                $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_number', 'institution_id', 'repeated', 'transferred']);
+            } else if ($this->action == 'view') {
+                $this->setFieldOrder(['registration_number', 'academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'nationalities', 'identity_number', 'repeated', 'transferred']);
+            }
         }
     }
 
@@ -227,6 +248,31 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             return '';
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetNationality(Event $event, Entity $entity)
+    {   
+        if ($this->action == 'index') {
+            if ($entity) {
+                if ($entity->extractOriginal(['student_id'])) {
+                    $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+                }
+
+                $query = $this->Users
+                        ->find()
+                        ->contain('MainNationalities')
+                        ->where([
+                            $this->Users->aliasField('id') => $studentId
+                        ])
+                        ->first();
+
+                if (!empty($query)) {
+                    if ($query->has('main_nationality') && !empty($query->main_nationality)) {
+                        return $query->main_nationality->name;
+                    }
+                }
+            }
         }
     }
 
