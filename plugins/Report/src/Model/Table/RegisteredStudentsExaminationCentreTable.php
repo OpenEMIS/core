@@ -9,19 +9,37 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class RegisteredStudentsExaminationCentreTable extends AppTable  {
+class RegisteredStudentsExaminationCentreTable extends AppTable
+{
     public function initialize(array $config)
     {
-        $this->table('examination_centre_students');
+        $this->table('examination_centres_examinations_students');
         parent::initialize($config);
-
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsTo('ExaminationCentresExaminations', [
+            'className' => 'Examination.ExaminationCentresExaminations',
+            'foreignKey' => ['examination_centre_id', 'examination_id']
+        ]);
+        $this->belongsToMany('ExaminationCentresExaminationsSubjects', [
+            'className' => 'Examination.ExaminationCentresExaminationsSubjects',
+            'joinTable' => 'examination_centres_examinations_subjects_students',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', [
+            'className' => 'Examination.ExaminationCentreRoomsExaminationsStudents',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('Excel', [
             'excludes' => ['id', 'total_mark'],
@@ -31,7 +49,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -40,24 +59,26 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $requestData = json_decode($settings['process']['params']);
         $selectedExam = $requestData->examination_id;
         $selectedExamCentre = $requestData->examination_centre_id;
+        $examGrade = $this->Examinations->get($selectedExam)->education_grade_id;
 
         $ClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
         $Class = TableRegistry::get('Institution.InstitutionClasses');
         $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
         $enrolledStatus = $StudentStatuses->getIdByCode('CURRENT');
-        $RoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
+        $RoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
         $Rooms = TableRegistry::get('Examination.ExaminationCentreRooms');
 
         $query
-            ->contain(['Users.Genders', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions'])
+            ->contain(['Users.Genders', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions', 'Examinations.EducationGrades'])
             ->leftJoin([$ClassStudents->alias() => $ClassStudents->table()], [
                 $ClassStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ClassStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                $ClassStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                $ClassStudents->aliasField('education_grade_id = ') . $examGrade,
                 $ClassStudents->aliasField('student_status_id = ') . $enrolledStatus
             ])
             ->leftJoin([$Class->alias() => $Class->table()], [
@@ -65,20 +86,17 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
             ])
             ->leftJoin([$RoomStudents->alias() => $RoomStudents->table()], [
                 $RoomStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
-                $RoomStudents->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                $RoomStudents->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                 $RoomStudents->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                 $RoomStudents->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id')
             ])
             ->leftJoin([$Rooms->alias() => $Rooms->table()], [
                 $Rooms->aliasField('id = ') . $RoomStudents->aliasField('examination_centre_room_id'),
             ])
-            ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name'])
+            ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name', 'room_name' => 'ExaminationCentreRooms.name', 'education_grade' => 'EducationGrades.name'])
             ->where([$this->aliasField('examination_id') => $selectedExam])
-            ->group([$this->aliasField('student_id')])
-            ->order([$this->aliasField('institution_id'), $this->aliasField('examination_centre_id'), 'ExaminationCentreRooms.id']);
+            ->order([$this->aliasField('examination_centre_id'), 'ExaminationCentreRooms.id', $this->aliasField('institution_id')]);
 
-        if ($selectedExamCentre != -1) {
+        if (!empty($selectedExamCentre)) {
             $query->where([$this->aliasField('examination_centre_id') => $selectedExamCentre]);
         }
     }
@@ -200,9 +218,9 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         ];
 
         $newFields[] = [
-            'key' => 'RegisteredStudentsExaminationCentre.education_grade_id',
-            'field' => 'education_grade_id',
-            'type' => 'integer',
+            'key' => 'EducationGrades.education_grade',
+            'field' => 'education_grade',
+            'type' => 'string',
             'label' => '',
         ];
 
@@ -216,7 +234,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetExaminationId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetExaminationId(Event $event, Entity $entity)
     {
         if ($entity->examination_id) {
             return $entity->examination->code_name;
@@ -225,7 +243,7 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetExaminationCentreId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetExaminationCentreId(Event $event, Entity $entity)
     {
         if ($entity->examination_centre_id) {
             return $entity->examination_centre->code_name;
@@ -234,7 +252,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetStudentType(Event $event, Entity $entity) {
+    public function onExcelGetStudentType(Event $event, Entity $entity)
+    {
         $normal = 'Normal Candidate';
         $private = 'Private Candidate';
 
@@ -245,7 +264,8 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetSpecialNeeds(Event $event, Entity $entity) {
+    public function onExcelGetSpecialNeeds(Event $event, Entity $entity)
+    {
         if ($entity->has('user') && $entity->user->has('special_needs') && !empty($entity->user->special_needs)) {
             $specialNeeds = $entity->user->special_needs;
             $allSpecialNeeds = [];
@@ -260,19 +280,10 @@ class RegisteredStudentsExaminationCentreTable extends AppTable  {
         }
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetInstitutionId(Event $event, Entity $entity)
     {
         if ($entity->institution_id) {
             return $entity->institution->code_name;
-        } else {
-            return '';
-        }
-    }
-
-    public function onExcelGetEducationGradeId(Event $event, Entity $entity, array $attr)
-    {
-        if ($entity->education_grade_id) {
-            return $entity->education_grade->programme_grade_name;
         } else {
             return '';
         }

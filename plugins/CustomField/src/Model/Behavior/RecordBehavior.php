@@ -51,7 +51,7 @@ class RecordBehavior extends Behavior {
 	];
 
 	// value for these field types will be saved on custom_field_values
-	private $fieldValueArray = ['TEXT', 'NUMBER', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
+	private $fieldValueArray = ['TEXT', 'NUMBER', 'DECIMAL', 'TEXTAREA', 'DROPDOWN', 'CHECKBOX', 'DATE', 'TIME', 'COORDINATES', 'FILE'];
 
 	private $CustomFieldValues = null;
 	private $CustomTableCells = null;
@@ -94,6 +94,7 @@ class RecordBehavior extends Behavior {
 		// Each field type will have one behavior attached
 		$this->_table->addBehavior('CustomField.RenderText');
 		$this->_table->addBehavior('CustomField.RenderNumber');
+		$this->_table->addBehavior('CustomField.RenderDecimal');
 		$this->_table->addBehavior('CustomField.RenderTextarea');
 		$this->_table->addBehavior('CustomField.RenderDropdown');
 		$this->_table->addBehavior('CustomField.RenderCheckbox');
@@ -335,7 +336,7 @@ class RecordBehavior extends Behavior {
         		return $model->save($entity);
 			} else {
 				$indexedErrors = [];
-				$fields = ['text_value', 'number_value', 'textarea_value', 'date_value', 'time_value', 'file'];
+				$fields = ['text_value', 'number_value', 'decimal_value', 'textarea_value', 'date_value', 'time_value', 'file'];
 				if (array_key_exists('custom_field_values', $errors)) {
 					if ($entity->has('custom_field_values')) {
 						foreach ($entity->custom_field_values as $key => $obj) {
@@ -571,6 +572,7 @@ class RecordBehavior extends Behavior {
 						$valueData = [
 							'text_value' => null,
 							'number_value' => null,
+							'decimal_value' => null,
 							'textarea_value' => null,
 							'date_value' => null,
 							'time_value' => null,
@@ -665,7 +667,7 @@ class RecordBehavior extends Behavior {
 			$fieldOrder = [];
 			// temporary fix: to make custom fields appear before map in Institutions > General > Overview
 			$ignoreFields = ['id', 'map_section', 'map', 'modified_user_id', 'modified', 'created_user_id', 'created'];
-			
+
 			// re-order array sequence based on 'order' attribute value.
 			$modelFields = $model->fields;
 			uasort($modelFields, function($a,$b){ return $a['order']-$b['order'];});
@@ -697,6 +699,7 @@ class RecordBehavior extends Behavior {
 								// onGet
 								$fieldData['text_value'] = $obj->text_value;
 								$fieldData['number_value'] = $obj->number_value;
+								$fieldData['decimal_value'] = $obj->decimal_value;
 								$fieldData['textarea_value'] = $obj->textarea_value;
 								$fieldData['date_value'] = $obj->date_value;
 								$fieldData['time_value'] = $obj->time_value;
@@ -962,6 +965,7 @@ class RecordBehavior extends Behavior {
 			$customFieldValueTable->aliasField($customFieldsForeignKey),
 			'field_value' => '(GROUP_CONCAT((CASE WHEN '.$customFieldValueTable->aliasField('text_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('text_value')
 				.' WHEN '.$customFieldValueTable->aliasField('number_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('number_value')
+				.' WHEN '.$customFieldValueTable->aliasField('decimal_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('decimal_value')
 				.' WHEN '.$customFieldValueTable->aliasField('textarea_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('textarea_value')
 				.' WHEN '.$customFieldValueTable->aliasField('date_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('date_value')
 				.' WHEN '.$customFieldValueTable->aliasField('time_value').' IS NOT NULL THEN '.$customFieldValueTable->aliasField('time_value')
@@ -1074,6 +1078,14 @@ class RecordBehavior extends Behavior {
 	}
 
 	private function number($data, $fieldInfo, $options=[]) {
+		if (isset($data[$fieldInfo['id']])) {
+			return $data[$fieldInfo['id']];
+		} else {
+			return '';
+		}
+	}
+
+	private function decimal($data, $fieldInfo, $options=[]) {
 		if (isset($data[$fieldInfo['id']])) {
 			return $data[$fieldInfo['id']];
 		} else {

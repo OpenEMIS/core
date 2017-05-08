@@ -9,11 +9,16 @@
         "cakephp/cakephp": "3.3.*",
         "mobiledetect/mobiledetectlib": "2.*",
         "PHPOffice/PHPExcel": "dev-master",
-        "mk-j/php_xlsxwriter": "dev-master",
         "korditpteltd/kd-cakephp-restful": "1.1.x-dev",
         "admad/cakephp-jwt-auth": "2.0.1",
+<<<<<<< HEAD
         "korditpteltd/kd-cakephp-sso": "1.*",
         "korditpteltd/kd-cakephp-webhooks": "^1.0"
+=======
+        "korditpteltd/kd-cakephp-sso": "1.0.*",
+        "korditpteltd/kd-cakephp-webhooks": "^1.0",
+        "mk-j/php_xlsxwriter": "^0.32.0"
+>>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
     },
     "require-dev": {
         "psy/psysh": "@stable",
