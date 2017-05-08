@@ -37,6 +37,12 @@ class InfrastructureShell extends Shell
     private function copyProcess($copyFrom, $copyTo)
     {
         $containCount = 0;
+        $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $AcademicPeriodObj = $AcademicPeriods->get($copyTo);
+        $startDate = $AcademicPeriodObj->start_date;
+        $startYear = $AcademicPeriodObj->start_year;
+        $endDate = $AcademicPeriodObj->end_date;
+        $endYear = $AcademicPeriodObj->end_year;
         $InfrastructureStatuses = TableRegistry::get('Infrastructure.InfrastructureStatuses');
         $inUseId = $InfrastructureStatuses->getIdByCode('IN_USE');
         $query = null;
@@ -59,29 +65,41 @@ class InfrastructureShell extends Shell
                 switch ($containCount) {
                     case 1:
                         $containQuery = [
-                            $contain => function ($query) use ($inUseId) {
+                            'InstitutionBuildings' => function ($query) use ($inUseId) {
                                 return $query->where([
-                                    'InstitutionBuildings.building_status_id' => $inUseId
+                                    'InstitutionBuildings.building_status_id' => $inUseId,
                                 ]);
                             }
                         ];
                         break;
                     case 2:
                         $containQuery = [
-                            $contain => function ($query) use ($inUseId) {
+                            'InstitutionBuildings' => function ($query) use ($inUseId) {
                                 return $query->where([
                                     'InstitutionBuildings.building_status_id' => $inUseId,
-                                    'InstitutionFloors.floor_status_id' => $inUseId
+                                ]);
+                            },
+                            'InstitutionBuildings.InstitutionFloors' => function ($query) use ($inUseId) {
+                                return $query->where([
+                                    'InstitutionFloors.floor_status_id' => $inUseId,
                                 ]);
                             }
                         ];
                         break;
                     case 3:
                         $containQuery = [
-                            $contain => function ($query) use ($inUseId) {
+                            'InstitutionBuildings' => function ($query) use ($inUseId) {
                                 return $query->where([
                                     'InstitutionBuildings.building_status_id' => $inUseId,
+                                ]);
+                            },
+                            'InstitutionBuildings.InstitutionFloors' => function ($query) use ($inUseId) {
+                                return $query->where([
                                     'InstitutionFloors.floor_status_id' => $inUseId,
+                                ]);
+                            },
+                            'InstitutionBuildings.InstitutionFloors.InstitutionRooms' => function ($query) use ($inUseId) {
+                                return $query->where([
                                     'InstitutionRooms.room_status_id' => $inUseId
                                 ]);
                             }
@@ -91,33 +109,55 @@ class InfrastructureShell extends Shell
                 $query = $query->contain($containQuery);
             }
         }
+        if (!is_null($query)) {
+            $totalRecords = $query->count();
+            $this->out('Total Records to be processed: ' . $totalRecords);
+        } else {
+            $this->out('No records processed');
+        }
 
         $limit = 100;
         $page = 1;
+        $countRecords = 0;
 
         while (!is_null($query) && $query->page($page, $limit)->count() > 0) {
-            $executedQuery = $query->page($page, $limit);
+            $executedQuery = $query->page($page, $limit)->hydrate(false);
             foreach ($executedQuery->toArray() as $land) {
                 $saveOptions = [];
-                $land->previous_institution_land_id = $land->id;
-                $land->unsetProperty('id');
-                if ($land->offsetExists('institution_buildings')) {
+                $land['previous_institution_land_id'] = $land['id'];
+                $land['start_date'] = $startDate;
+                $land['end_date'] = $endDate;
+                $land['start_year'] = $startYear;
+                $land['end_year'] = $endYear;
+                $land['academic_period_id'] = $copyTo;
+                unset($land['id']);
+                if (isset($land['institution_buildings']) && !empty($land['institution_buildings'])) {
                     $saveOptions = ['associated' => 'InstitutionBuildings'];
-                    foreach ($land->institution_buildings as &$building) {
-                        $building->previous_institution_building_id = $building->id;
-                        $building->unsetProperty('id');
-                        $building->unsetProperty('institution_land_id');
-                        if ($building->offsetExists('institution_floors')) {
+                    foreach ($land['institution_buildings'] as &$building) {
+                        $building['previous_institution_building_id'] = $building['id'];
+                        $building['start_date'] = $startDate;
+                        $building['end_date'] = $endDate;
+                        $building['start_year'] = $startYear;
+                        $building['end_year'] = $endYear;
+                        $building['academic_period_id'] = $copyTo;
+                        unset($building['id']);
+                        unset($building['institution_land_id']);
+                        if (isset($building['institution_floors']) && !empty($building['institution_floors'])) {
                             $saveOptions = ['associated' => [
                                 'InstitutionBuildings' =>
                                     ['associated' => 'InstitutionFloors']
                                 ]
                             ];
-                            foreach ($building->institution_floors as &$floor) {
-                                $floor->previous_institution_floor_id = $floor->id;
-                                $floor->unsetProperty('id');
-                                $floor->unsetProperty('institution_building_id');
-                                if ($floor->offsetExists('institution_rooms')) {
+                            foreach ($building['institution_floors'] as &$floor) {
+                                $floor['previous_institution_floor_id'] = $floor['id'];
+                                $floor['start_date'] = $startDate;
+                                $floor['end_date'] = $endDate;
+                                $floor['start_year'] = $startYear;
+                                $floor['end_year'] = $endYear;
+                                $floor['academic_period_id'] = $copyTo;
+                                unset($floor['id']);
+                                unset($floor['institution_building_id']);
+                                if (isset($floor['institution_rooms']) && !empty($floor['institution_rooms'])) {
                                     $saveOptions = ['associated' => [
                                         'InstitutionBuildings' =>
                                             ['associated' => [
@@ -128,16 +168,24 @@ class InfrastructureShell extends Shell
                                             ]
                                         ]
                                     ];
-                                    foreach ($building->institution_rooms as &$room) {
-                                        $room->previous_room_id = $room->id;
-                                        $floor->unsetProperty('id');
-                                        $floor->unsetProperty('institution_floor_id');
+                                    foreach ($floor['institution_rooms'] as &$room) {
+                                        $room['previous_room_id'] = $room['id'];
+                                        $room['start_date'] = $startDate;
+                                        $room['end_date'] = $endDate;
+                                        $room['start_year'] = $startYear;
+                                        $room['end_year'] = $endYear;
+                                        $room['academic_period_id'] = $copyTo;
+                                        unset($room['id']);
+                                        unset($room['institution_floor_id']);
                                     }
                                 }
                             }
                         }
                     }
-                    $InstitutionLands->save($land);
+                    $newEntity = $InstitutionLands->newEntity($land, $saveOptions);
+                    $InstitutionLands->save($newEntity, $saveOptions);
+                    $countRecords++;
+                    $this->out('Processed Record '. $countRecords . ' of ' . $totalRecords);
                 }
             }
             $page++;

@@ -1004,6 +1004,51 @@ trait MessagesTrait
                     'ruleUnique' => 'Please enter a unique code'
                 ]
             ],
+            'InstitutionLands' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
+            'InstitutionBuildings' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
+            'InstitutionFloors' => [
+                'code' => [
+                    'ruleUnique' => 'Please enter a unique code'
+                ],
+                'start_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.'
+                ],
+                'end_date' => [
+                    'ruleInAcademicPeriod' => 'Date range is not within the academic period.',
+                    'ruleCompareDateReverse' => 'End Date should not be earlier than Start Date'
+                ],
+                'new_start_date' => [
+                    'ruleCompareDateReverse' => 'New Start Date should not be earlier than or same as Start Date'
+                ]
+            ],
             'InstitutionRooms' => [
                 'code' => [
                     'ruleUnique' => 'Please enter a unique code'
