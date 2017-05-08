@@ -33,6 +33,7 @@ class ReportCardsTable extends AppTable
         $this->addBehavior('CustomExcel.ExcelReport', [
             'templateTable' => 'ReportCard.ReportCards',
             'templateTableKey' => 'report_card_id',
+            'fileExtension' => 'pdf',
             'download' => true,
             'upload' => true,
             'variables' => [
