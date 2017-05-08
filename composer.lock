@@ -4,12 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
-    "hash": "546847a156e5ae1b11a273ca6232512b",
-    "content-hash": "da3fe6c6f63b2a5353112913d80038a6",
-=======
-    "content-hash": "a7e489abcb9dc82710fceec5c3d20856",
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+    "content-hash": "70ef7304c36673e7719408977a5025ca",
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -247,11 +242,7 @@
             "keywords": [
                 "framework"
             ],
-<<<<<<< HEAD
-            "time": "2017-04-07 02:04:27"
-=======
-            "time": "2016-06-21T03:01:37+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-07T02:04:27+00:00"
         },
         {
             "name": "cakephp/chronos",
@@ -308,11 +299,7 @@
                 "datetime",
                 "time"
             ],
-<<<<<<< HEAD
-            "time": "2017-04-27 01:27:49"
-=======
-            "time": "2016-06-15T06:26:37+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-27T01:27:49+00:00"
         },
         {
             "name": "firebase/php-jwt",
@@ -453,11 +440,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-<<<<<<< HEAD
             "time": "2017-05-05 09:12:09"
-=======
-            "time": "2017-04-26T08:50:43+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
@@ -465,7 +448,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
-                "reference": "3aba89c119091d98d61298113bed819ad820a77d"
+                "reference": "48293cbfbb28b4d28efb46912e716a071c2e1e5e"
             },
             "require": {
                 "cakephp/cakephp": ">=3.3.0 <3.4",
@@ -499,11 +482,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
-<<<<<<< HEAD
-            "time": "2017-04-27 07:04:39"
-=======
-            "time": "2017-03-20T09:46:41+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-27T07:04:39+00:00"
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
@@ -511,7 +490,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
-                "reference": "ccdc6b88ed7f4f4027499501587992e37cab8cd5"
+                "reference": "7ceeb16332bc4d936e244972d9729c0cc3d026f3"
             },
             "require": {
                 "cakephp/cakephp": ">3.1.0"
@@ -583,11 +562,7 @@
                 "xls",
                 "xlsx"
             ],
-<<<<<<< HEAD
-            "time": "2017-03-09 16:25:31"
-=======
             "time": "2017-03-09T16:25:31+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
         },
         {
             "name": "mobiledetect/mobiledetectlib",
@@ -639,11 +614,7 @@
                 "mobile detector",
                 "php mobile detect"
             ],
-<<<<<<< HEAD
-            "time": "2017-03-29 13:59:30"
-=======
-            "time": "2016-04-24T09:47:16+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-03-29T13:59:30+00:00"
         },
         {
             "name": "onelogin/php-saml",
@@ -697,11 +668,7 @@
                 "onelogin",
                 "saml"
             ],
-<<<<<<< HEAD
-            "time": "2017-03-13 09:56:49"
-=======
-            "time": "2016-07-19T17:14:29+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-03-13T09:56:49+00:00"
         },
         {
             "name": "phpoffice/phpexcel",
@@ -758,7 +725,7 @@
                 "xls",
                 "xlsx"
             ],
-            "time": "2015-05-05T00:10:25+00:00"
+            "time": "2015-05-05 00:10:25"
         },
         {
             "name": "phpseclib/phpseclib",
@@ -900,7 +867,7 @@
                 "request",
                 "response"
             ],
-            "time": "2016-08-06 14:39:51"
+            "time": "2016-08-06T14:39:51+00:00"
         },
         {
             "name": "psr/log",
@@ -947,8 +914,7 @@
                 "psr",
                 "psr-3"
             ],
-<<<<<<< HEAD
-            "time": "2016-10-10 12:19:37"
+            "time": "2016-10-10T12:19:37+00:00"
         },
         {
             "name": "zendframework/zend-diactoros",
@@ -1000,10 +966,7 @@
                 "psr",
                 "psr-7"
             ],
-            "time": "2017-04-06 16:18:34"
-=======
-            "time": "2012-12-21T11:40:51+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-06T16:18:34+00:00"
         }
     ],
     "packages-dev": [
@@ -1052,11 +1015,7 @@
                 "bake",
                 "cakephp"
             ],
-<<<<<<< HEAD
-            "time": "2017-01-31 00:59:03"
-=======
-            "time": "2016-06-28T01:58:30+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-01-31T00:59:03+00:00"
         },
         {
             "name": "cakephp/debug_kit",
@@ -1115,11 +1074,7 @@
                 "debug",
                 "kit"
             ],
-<<<<<<< HEAD
-            "time": "2017-05-02 01:12:10"
-=======
-            "time": "2016-05-28T15:47:46+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-05-02T01:12:10+00:00"
         },
         {
             "name": "cakephp/migrations",
@@ -1169,11 +1124,7 @@
                 "cakephp",
                 "migrations"
             ],
-<<<<<<< HEAD
-            "time": "2017-01-07 16:45:31"
-=======
-            "time": "2016-06-14T21:01:47+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-01-07T16:45:31+00:00"
         },
         {
             "name": "cakephp/plugin-installer",
@@ -1214,8 +1165,7 @@
                 }
             ],
             "description": "A composer installer for CakePHP 3.0+ plugins.",
-<<<<<<< HEAD
-            "time": "2017-03-21 13:48:47"
+            "time": "2017-03-21T13:48:47+00:00"
         },
         {
             "name": "composer/ca-bundle",
@@ -1274,7 +1224,7 @@
                 "ssl",
                 "tls"
             ],
-            "time": "2017-03-06 11:59:08"
+            "time": "2017-03-06T11:59:08+00:00"
         },
         {
             "name": "composer/composer",
@@ -1351,7 +1301,7 @@
                 "dependency",
                 "package"
             ],
-            "time": "2017-03-10 08:29:45"
+            "time": "2017-03-10T08:29:45+00:00"
         },
         {
             "name": "composer/semver",
@@ -1413,7 +1363,7 @@
                 "validation",
                 "versioning"
             ],
-            "time": "2016-08-30 16:08:34"
+            "time": "2016-08-30T16:08:34+00:00"
         },
         {
             "name": "composer/spdx-licenses",
@@ -1474,10 +1424,7 @@
                 "spdx",
                 "validator"
             ],
-            "time": "2017-04-03 19:08:52"
-=======
-            "time": "2016-04-28T03:01:34+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-03T19:08:52+00:00"
         },
         {
             "name": "dnoegel/php-xdg-base-dir",
@@ -1768,7 +1715,7 @@
                 "json",
                 "schema"
             ],
-            "time": "2017-03-22 22:43:35"
+            "time": "2017-03-22T22:43:35+00:00"
         },
         {
             "name": "myclabs/deep-copy",
@@ -1810,11 +1757,7 @@
                 "object",
                 "object graph"
             ],
-<<<<<<< HEAD
-            "time": "2017-04-12 18:52:22"
-=======
-            "time": "2015-11-20T12:04:31+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-12T18:52:22+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -1865,11 +1808,7 @@
                 "parser",
                 "php"
             ],
-<<<<<<< HEAD
-            "time": "2017-03-05 18:23:57"
-=======
-            "time": "2016-04-19T13:41:41+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-03-05T18:23:57+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",
@@ -1968,11 +1907,7 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
-<<<<<<< HEAD
-            "time": "2016-09-30 07:12:33"
-=======
-            "time": "2016-06-10T09:48:41+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-09-30T07:12:33+00:00"
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -2019,11 +1954,7 @@
                     "email": "me@mikevanriel.com"
                 }
             ],
-<<<<<<< HEAD
-            "time": "2016-11-25 06:54:22"
-=======
-            "time": "2016-06-10T07:14:17+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-11-25T06:54:22+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -2086,11 +2017,7 @@
                 "spy",
                 "stub"
             ],
-<<<<<<< HEAD
-            "time": "2017-03-02 20:05:34"
-=======
-            "time": "2016-06-07T08:13:47+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-03-02T20:05:34+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -2153,11 +2080,7 @@
                 "testing",
                 "xunit"
             ],
-<<<<<<< HEAD
-            "time": "2017-04-02 07:44:40"
-=======
-            "time": "2016-06-03T05:03:56+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-02T07:44:40+00:00"
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -2204,11 +2127,7 @@
                 "filesystem",
                 "iterator"
             ],
-<<<<<<< HEAD
-            "time": "2016-10-03 07:40:28"
-=======
-            "time": "2015-06-21T13:08:43+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-10-03T07:40:28+00:00"
         },
         {
             "name": "phpunit/php-text-template",
@@ -2298,11 +2217,7 @@
             "keywords": [
                 "timer"
             ],
-<<<<<<< HEAD
-            "time": "2017-02-26 11:10:40"
-=======
-            "time": "2016-05-12T18:03:57+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-02-26T11:10:40+00:00"
         },
         {
             "name": "phpunit/php-token-stream",
@@ -2351,11 +2266,7 @@
             "keywords": [
                 "tokenizer"
             ],
-<<<<<<< HEAD
-            "time": "2017-02-27 10:12:30"
-=======
-            "time": "2015-09-15T10:49:45+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-02-27T10:12:30+00:00"
         },
         {
             "name": "phpunit/phpunit",
@@ -2437,11 +2348,7 @@
                 "testing",
                 "xunit"
             ],
-<<<<<<< HEAD
-            "time": "2017-04-03 02:22:27"
-=======
-            "time": "2016-06-16T06:01:15+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-03T02:22:27+00:00"
         },
         {
             "name": "phpunit/phpunit-mock-objects",
@@ -2500,11 +2407,7 @@
                 "mock",
                 "xunit"
             ],
-<<<<<<< HEAD
-            "time": "2016-12-08 20:27:08"
-=======
-            "time": "2016-06-12T07:37:26+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-12-08T20:27:08+00:00"
         },
         {
             "name": "psy/psysh",
@@ -2577,11 +2480,7 @@
                 "interactive",
                 "shell"
             ],
-<<<<<<< HEAD
-            "time": "2017-03-19 21:40:44"
-=======
-            "time": "2016-03-09T05:03:14+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-03-19T21:40:44+00:00"
         },
         {
             "name": "robmorgan/phinx",
@@ -2647,11 +2546,7 @@
                 "migrations",
                 "phinx"
             ],
-<<<<<<< HEAD
-            "time": "2016-10-27 10:16:12"
-=======
-            "time": "2016-03-07T14:09:22+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-10-27T10:16:12+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -2696,11 +2591,7 @@
             ],
             "description": "Looks up which function or method a line of code belongs to",
             "homepage": "https://github.com/sebastianbergmann/code-unit-reverse-lookup/",
-<<<<<<< HEAD
-            "time": "2017-03-04 06:30:41"
-=======
-            "time": "2016-02-13T06:45:14+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-03-04T06:30:41+00:00"
         },
         {
             "name": "sebastian/comparator",
@@ -2764,11 +2655,7 @@
                 "compare",
                 "equality"
             ],
-<<<<<<< HEAD
-            "time": "2017-01-29 09:50:25"
-=======
-            "time": "2015-07-26T15:48:44+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-01-29T09:50:25+00:00"
         },
         {
             "name": "sebastian/diff",
@@ -2870,11 +2757,7 @@
                 "environment",
                 "hhvm"
             ],
-<<<<<<< HEAD
-            "time": "2016-11-26 07:53:53"
-=======
-            "time": "2016-05-17T03:18:57+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-11-26T07:53:53+00:00"
         },
         {
             "name": "sebastian/exporter",
@@ -2941,11 +2824,7 @@
                 "export",
                 "exporter"
             ],
-<<<<<<< HEAD
-            "time": "2016-11-19 08:54:04"
-=======
-            "time": "2016-06-17T09:04:28+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-11-19T08:54:04+00:00"
         },
         {
             "name": "sebastian/global-state",
@@ -3042,11 +2921,7 @@
             ],
             "description": "Traverses array structures and object graphs to enumerate all referenced objects",
             "homepage": "https://github.com/sebastianbergmann/object-enumerator/",
-<<<<<<< HEAD
-            "time": "2017-02-18 15:18:39"
-=======
-            "time": "2016-01-28T13:25:10+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-02-18T15:18:39+00:00"
         },
         {
             "name": "sebastian/recursion-context",
@@ -3099,11 +2974,7 @@
             ],
             "description": "Provides functionality to recursively process PHP variables",
             "homepage": "http://www.github.com/sebastianbergmann/recursion-context",
-<<<<<<< HEAD
-            "time": "2016-11-19 07:33:16"
-=======
-            "time": "2015-11-11T19:50:13+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-11-19T07:33:16+00:00"
         },
         {
             "name": "sebastian/resource-operations",
@@ -3188,8 +3059,7 @@
             ],
             "description": "Library that helps with managing the version number of Git-hosted PHP projects",
             "homepage": "https://github.com/sebastianbergmann/version",
-<<<<<<< HEAD
-            "time": "2016-10-03 07:35:21"
+            "time": "2016-10-03T07:35:21+00:00"
         },
         {
             "name": "seld/cli-prompt",
@@ -3237,7 +3107,7 @@
                 "input",
                 "prompt"
             ],
-            "time": "2017-03-18 11:32:45"
+            "time": "2017-03-18T11:32:45+00:00"
         },
         {
             "name": "seld/jsonlint",
@@ -3286,7 +3156,7 @@
                 "parser",
                 "validator"
             ],
-            "time": "2017-03-06 16:42:24"
+            "time": "2017-03-06T16:42:24+00:00"
         },
         {
             "name": "seld/phar-utils",
@@ -3330,10 +3200,7 @@
             "keywords": [
                 "phra"
             ],
-            "time": "2015-10-13 18:44:15"
-=======
-            "time": "2016-02-04T12:56:52+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2015-10-13T18:44:15+00:00"
         },
         {
             "name": "symfony/config",
@@ -3389,11 +3256,7 @@
             ],
             "description": "Symfony Config Component",
             "homepage": "https://symfony.com",
-<<<<<<< HEAD
-            "time": "2017-04-12 14:13:17"
-=======
-            "time": "2016-05-20T11:48:17+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-12T14:13:17+00:00"
         },
         {
             "name": "symfony/console",
@@ -3456,8 +3319,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
-<<<<<<< HEAD
-            "time": "2017-04-26 01:39:17"
+            "time": "2017-04-26T01:39:17+00:00"
         },
         {
             "name": "symfony/debug",
@@ -3514,10 +3376,7 @@
             ],
             "description": "Symfony Debug Component",
             "homepage": "https://symfony.com",
-            "time": "2017-04-19 20:17:50"
-=======
-            "time": "2016-06-14T11:18:07+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-19T20:17:50+00:00"
         },
         {
             "name": "symfony/filesystem",
@@ -3566,8 +3425,7 @@
             ],
             "description": "Symfony Filesystem Component",
             "homepage": "https://symfony.com",
-<<<<<<< HEAD
-            "time": "2017-04-12 14:13:17"
+            "time": "2017-04-12T14:13:17+00:00"
         },
         {
             "name": "symfony/finder",
@@ -3616,10 +3474,7 @@
             ],
             "description": "Symfony Finder Component",
             "homepage": "https://symfony.com",
-            "time": "2017-04-12 14:13:17"
-=======
-            "time": "2016-04-12T18:27:47+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-12T14:13:17+00:00"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -3678,8 +3533,7 @@
                 "portable",
                 "shim"
             ],
-<<<<<<< HEAD
-            "time": "2016-11-14 01:06:16"
+            "time": "2016-11-14T01:06:16+00:00"
         },
         {
             "name": "symfony/process",
@@ -3728,10 +3582,7 @@
             ],
             "description": "Symfony Process Component",
             "homepage": "https://symfony.com",
-            "time": "2017-04-12 14:13:17"
-=======
-            "time": "2016-05-18T14:26:46+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-04-12T14:13:17+00:00"
         },
         {
             "name": "symfony/var-dumper",
@@ -3799,11 +3650,7 @@
                 "debug",
                 "dump"
             ],
-<<<<<<< HEAD
-            "time": "2017-05-01 14:55:58"
-=======
-            "time": "2016-05-24T10:06:56+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-05-01T14:55:58+00:00"
         },
         {
             "name": "symfony/yaml",
@@ -3858,11 +3705,7 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
-<<<<<<< HEAD
-            "time": "2017-05-01 14:55:58"
-=======
-            "time": "2016-06-14T11:18:07+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2017-05-01T14:55:58+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -3912,11 +3755,7 @@
                 "check",
                 "validate"
             ],
-<<<<<<< HEAD
-            "time": "2016-11-23 20:04:58"
-=======
-            "time": "2015-08-24T13:29:44+00:00"
->>>>>>> 41e06575ee3e5ec92d5ffefbeff6cb5d0e417558
+            "time": "2016-11-23T20:04:58+00:00"
         }
     ],
     "aliases": [],
