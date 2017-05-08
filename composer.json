@@ -13,7 +13,8 @@
         "korditpteltd/kd-cakephp-restful": "1.1.x-dev",
         "admad/cakephp-jwt-auth": "2.0.1",
         "korditpteltd/kd-cakephp-sso": "1.*",
-        "korditpteltd/kd-cakephp-webhooks": "^1.0"
+        "korditpteltd/kd-cakephp-webhooks": "^1.0",
+        "dompdf/dompdf": "^0.8.0"
     },
     "require-dev": {
         "psy/psysh": "@stable",
