@@ -904,3 +904,12 @@ RENAME TO `z_3853_institution_infrastructures`;
 ALTER TABLE `infrastructure_custom_forms`
 DROP COLUMN `original_id`,
 DROP COLUMN `original_module_id`;
+
+-- Patch security function
+UPDATE `security_functions`
+SET
+  `_view`='Fields.index|Fields.view|Pages.index|Pages.view|LandTypes.index|LandTypes.view|BuildingTypes.index|BuildingTypes.view|FloorTypes.index|FloorTypes.view|RoomTypes.index|RoomTypes.view',
+  `_edit`='Fields.edit|Pages.edit|LandTypes.edit|BuildingTypes.edit|FloorTypes.edit|RoomTypes.edit',
+  `_add`='Fields.add|Pages.add|LandTypes.add|BuildingTypes.add|FloorTypes.add|RoomTypes.add',
+  `_delete`='Fields.remove|Pages.remove|LandTypes.remove|BuildingTypes.remove|FloorTypes.remove|RoomTypes.remove'
+WHERE `id`='5018';
