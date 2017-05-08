@@ -7,6 +7,7 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
 
 class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -32,8 +33,35 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         if ($this->action == 'index' || $this->action == 'view') {
             $this->field('identity_number', ['after' => 'date_of_birth']);
             $this->field('repeated');
-            $this->setFieldOrder('openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number', 'repeated');
+
+            if ($this->action == 'index') {
+                $this->field('nationality');
+
+                $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_number', 'institution_id', 'repeated', 'transferred']);
+                $this->setFieldOrder('openemis_no', 'student_id', 'date_of_birth', 'nationality', 'identity_number', 'gender_id', 'repeated');
+
+            } else if ($this->action == 'view') {
+                
+                $this->setFieldOrder('openemis_no', 'academic_period_id', 'examination_id', 'student_id', 'date_of_birth', 'nationalities', 'identity_number', 'gender_id', 'repeated');
+            }
         }
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'Users.Nationalities.NationalitiesLookUp'
+        ]);
+    }
+
+    public function viewAfterAction(Event $event, Entity $entity)
+    {
+        $this->field('nationalities', [
+            'type' => 'element',
+            'element' => 'nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
     }
 
     public function implementedEvents()
@@ -48,6 +76,31 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
             return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetNationality(Event $event, Entity $entity)
+    {   
+        if ($this->action == 'index') {
+            if ($entity) {
+                if ($entity->extractOriginal(['student_id'])) {
+                    $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+                }
+
+                $query = $this->Users
+                        ->find()
+                        ->contain('MainNationalities')
+                        ->where([
+                            $this->Users->aliasField('id') => $studentId
+                        ])
+                        ->first();
+
+                if (!empty($query)) {
+                    if ($query->has('main_nationality') && !empty($query->main_nationality)) {
+                        return $query->main_nationality->name;
+                    }
+                }
+            }
         }
     }
 
