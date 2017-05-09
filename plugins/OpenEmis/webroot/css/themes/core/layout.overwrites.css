@@ -935,4 +935,15 @@ a,
     border-right: 1px solid #DDD !important;
 }
 
+.ag-fresh .ag-header-icon#agMenu {
+    display: block !important;
+}
+
+.ag-menu input.ag-filter-filter {
+    width: 89% !important;
+}
+
+.ag-fresh .ag-menu {
+    border: none !important;
+}
 /* End of fix for POCOR-3880 */

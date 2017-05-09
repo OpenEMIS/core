@@ -70,13 +70,13 @@ function InstitutionStudentCompetenciesController($scope, $q, $window, $http, Ut
                     Controller.criteriaGradeOptions[value.id]['id'] = value.id;
                 });
                 Controller.periodOptions = competencyTemplate.periods;
-                Controller.itemOptions = Controller.periodOptions[0].competency_items;
                 if (Controller.periodOptions.length > 0) {
+                    Controller.itemOptions = Controller.periodOptions[0].competency_items;
                     Controller.selectedPeriod = Controller.periodOptions[0].id;
                     Controller.selectedPeriodStatus = Controller.periodOptions[0].editable;
-                }
-                if (Controller.itemOptions.length > 0) {
-                    Controller.selectedItem = Controller.periodOptions[0].competency_items[0].id;
+                    if (Controller.itemOptions.length > 0) {
+                        Controller.selectedItem = Controller.periodOptions[0].competency_items[0].id;
+                    }
                 }
                 return InstitutionStudentCompetenciesSvc.getStudentCompetencyResults(
                     Controller.competencyTemplateId, Controller.selectedPeriod, Controller.selectedItem, Controller.institutionId, Controller.academicPeriodId);
