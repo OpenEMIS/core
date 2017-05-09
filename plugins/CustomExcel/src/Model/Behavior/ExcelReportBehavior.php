@@ -379,7 +379,8 @@ class ExcelReportBehavior extends Behavior
         $attr['children'] = array_key_exists('children', $settings) ? $settings['children'] : [];
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
-        $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : [];
+        $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : null;
+        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : null;
 
         // Start attributes  for dropdown
         $dropdownAttrs = ['source', 'promptTitle', 'prompt', 'errorTitle', 'error'];
@@ -667,8 +668,17 @@ class ExcelReportBehavior extends Behavior
             $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
 
+            $mergeColumns = array_key_exists('mergeColumns', $nestedAttr) ? $nestedAttr['mergeColumns'] : null;
+            if (!is_null($mergeColumns)) {
+                $rangeColumnIndex = ($nestedColumnIndex + $mergeColumns);
+                $rangeColumnValue = $objCell->stringFromColumnIndex($rangeColumnIndex-1);
+                $mergeRange = $nestedColumnValue.$nestedRowValue.":".$rangeColumnValue.$nestedRowValue;
+                $objWorksheet->mergeCells($mergeRange);
+            }
+
             if (!empty($secondNestedRow)) {
-                $nestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                $secondNestedColumnIndex = isset($rangeColumnIndex) ? $rangeColumnIndex : $nestedColumnIndex;
+                $nestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $secondNestedColumnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
             }
 
             $nestedRowValue++;
