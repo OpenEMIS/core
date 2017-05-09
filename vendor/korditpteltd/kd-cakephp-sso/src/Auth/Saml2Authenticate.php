@@ -35,6 +35,7 @@ class Saml2Authenticate extends BaseAuthenticate
                         'lastName' => isset($userAttribute[$fields['saml_last_name_mapping']][0]) ? $userAttribute[$fields['saml_last_name_mapping']][0] : ' - ',
                         'gender' => isset($userAttribute[$fields['saml_gender_mapping']][0]) ? $userAttribute[$fields['saml_gender_mapping']][0] : ' - ',
                         'dateOfBirth' => isset($userAttribute[$fields['saml_date_of_birth_mapping']][0]) ? $userAttribute[$fields['saml_date_of_birth_mapping']][0] : ' - ',
+                        'role' => isset($userAttribute[$fields['saml_role_mapping']][0]) ? $userAttribute[$fields['saml_role_mapping']][0] : '',
                     ];
 
                     $User = TableRegistry::get($this->_config['userModel']);
