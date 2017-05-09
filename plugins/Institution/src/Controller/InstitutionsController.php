@@ -107,7 +107,6 @@ class InstitutionsController extends AppController
     public function Textbooks()                     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']); }
     public function StudentCompetencies()           { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']); }
     public function StudentCompetencyResults()      { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']); }
-    public function StudentSurveys()                { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
     public function StudentTextbooks()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']); }
     public function StaffAttendances()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StaffAttendances']); }
     public function Indexes()                       { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Indexes']); }
@@ -818,11 +817,13 @@ class InstitutionsController extends AppController
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')],
+            'StudentSurveys' => ['text' => __('Surveys')]
         ];
 
         if ($type == 'Staff') {
             $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
             unset($studentTabElements['Guardians']);
+            unset($studentTabElements['StudentSurveys']);   // Only Student has Survey tab
         }
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -838,12 +839,6 @@ class InstitutionsController extends AppController
             $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
 
             // $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
-
-            // Only Student has Survey tab
-            if ($userRole == 'Student') {
-                $tabElements[$userRole.'Surveys'] = ['text' => __('Survey')];
-                $tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
-            }
 
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
 
@@ -868,13 +863,10 @@ class InstitutionsController extends AppController
             $params = [];
             switch ($key) {
                 case $userRole.'User':
-                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
+                    $params = [$this->ControllerAction->paramsEncode(['id' => $userId]), 'id' => $id];
                     break;
                 case $userRole.'Account':
-                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
-                    break;
-                case $userRole.'Surveys':
-                    $params = ['user_id' => $userId];
+                    $params = [$this->ControllerAction->paramsEncode(['id' => $userId]), 'id' => $id];
                     break;
             }
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
