@@ -11,11 +11,12 @@
 
 namespace Symfony\Component\Config\Tests\Definition\Builder;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition as NumericNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\IntegerNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\FloatNodeDefinition;
 
-class NumericNodeDefinitionTest extends \PHPUnit_Framework_TestCase
+class NumericNodeDefinitionTest extends TestCase
 {
     /**
      * @expectedException \InvalidArgumentException
@@ -92,7 +93,7 @@ class NumericNodeDefinitionTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @expectedException Symfony\Component\Config\Definition\Exception\InvalidDefinitionException
+     * @expectedException \Symfony\Component\Config\Definition\Exception\InvalidDefinitionException
      * @expectedExceptionMessage ->cannotBeEmpty() is not applicable to NumericNodeDefinition.
      */
     public function testCannotBeEmptyThrowsAnException()

@@ -4,7 +4,7 @@ namespace Configuration\Controller;
 use ArrayObject;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 
 class ConfigurationsController extends AppController
 {

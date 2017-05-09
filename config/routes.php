@@ -21,6 +21,7 @@
 use Cake\Core\Plugin;
 use Cake\Routing\RouteBuilder;
 use Cake\Routing\Router;
+use Cake\Routing\Route\DashedRoute;
 
 /**
  * The default class to use for all routes
@@ -181,10 +182,10 @@ Router::scope('/session', ['plugin' => 'Restful'], function ($routes) {
     $routes->scope('/', ['controller' => 'Session'], function ($routes) {
         $routes->extensions(['json']);
 
-        $routes->connect('/:key',   ['action' => 'check', '_method' => 'CHECK'], ['pass' => ['key']]);
-        $routes->connect('/:key',   ['action' => 'read', '_method' => 'GET'], ['pass' => ['key']]);
-        $routes->connect('/',       ['action' => 'write', '_method' => 'POST']);
-        $routes->connect('/:key',   ['action' => 'delete', '_method' => 'DELETE'], ['pass' => ['key']]);
+        $routes->connect('/:key', ['action' => 'check', '_method' => 'CHECK'], ['pass' => ['key']]);
+        $routes->connect('/:key', ['action' => 'read', '_method' => 'GET'], ['pass' => ['key']]);
+        $routes->connect('/', ['action' => 'write', '_method' => 'POST']);
+        $routes->connect('/:key', ['action' => 'delete', '_method' => 'DELETE'], ['pass' => ['key']]);
     });
 });
 
