@@ -11,6 +11,7 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
+use Cake\ORM\ResultSet;
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -180,7 +181,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->floorLevel = $this->Levels->getFieldByCode('FLOOR', 'id');
         $this->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'floor_type_id', 'floor_status_id']);
@@ -197,13 +198,11 @@ class InstitutionFloorsTable extends ControllerActionTable
         $this->field('infrastructure_condition_id', ['visible' => false]);
         $this->field('previous_institution_floor_id', ['visible' => false]);
 
-        $toolbarElements = [];
-        $toolbarElements = $this->addBreadcrumbElement($toolbarElements);
-        $toolbarElements = $this->addControlFilterElement($toolbarElements);
-        $this->controller->set('toolbarElements', $toolbarElements);
+        $extra['elements']['toolbarElements'] = $this->addBreadcrumbElement();
+        $extra['elements']['control'] = $this->addControlFilterElement();
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $parentId = $this->getQueryString('institution_building_id');
         if (!is_null($parentId)) {
@@ -252,7 +251,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         ];
     }
 
-    public function indexAfterAction(Event $event, $data)
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
     {
         $session = $this->request->session();
 
@@ -264,12 +263,12 @@ class InstitutionFloorsTable extends ControllerActionTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain(['AcademicPeriods', 'InstitutionBuildings', 'FloorTypes', 'InfrastructureConditions']);
     }
 
-    public function editBeforeAction(Event $event)
+    public function editBeforeAction(Event $event, ArrayObject $extra)
     {
         $session = $this->request->session();
 
@@ -281,7 +280,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity)
+    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
@@ -343,25 +342,25 @@ class InstitutionFloorsTable extends ControllerActionTable
         $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
     }
 
-    public function addEditBeforeAction(Event $event)
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
         $toolbarElements = $this->addBreadcrumbElement();
         $this->controller->set('toolbarElements', $toolbarElements);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
 
-    public function editAfterAction(Event $event, Entity $entity)
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $selectedEditType = $this->request->query('edit_type');
         if ($selectedEditType == self::END_OF_USAGE || $selectedEditType == self::CHANGE_IN_TYPE) {
@@ -730,7 +729,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         return $autoGenerateCode;
     }
 
-    private function addBreadcrumbElement($toolbarElements = [])
+    private function addBreadcrumbElement()
     {
         $crumbs = [];
         $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
@@ -747,14 +746,14 @@ class InstitutionFloorsTable extends ControllerActionTable
         $crumbs[] = [
             'name' => $this->getQueryString('institution_building_name')
         ];
-        $toolbarElements[] = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => []];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/breadcrumb', 'data' => compact('crumbs'), 'options' => [], 'order' => 1];
 
         return $toolbarElements;
     }
 
-    private function addControlFilterElement($toolbarElements = [])
+    private function addControlFilterElement()
     {
-        $toolbarElements[] = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => []];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => [], 'order' => 2];
         return $toolbarElements;
     }
 
