@@ -34,5 +34,9 @@ CREATE TABLE IF NOT EXISTS `staff_behaviours` (
 INSERT INTO `staff_behaviours` (`id`, `description`, `date_of_behaviour`, `time_of_behaviour`, `academic_period_id`, `staff_id`, `institution_id`, `staff_behaviour_category_id`, `behaviour_classification_id`, `modified_user_id`, `modified`, `created_user_id`, `created`)
 SELECT `Z`.`id`, `Z`.`description`, `Z`.`date_of_behaviour`, `Z`.`time_of_behaviour`, `AP`.`id`, `Z`.`staff_id`, `Z`.`institution_id`, `Z`.`staff_behaviour_category_id`, `Z`.`behaviour_classification_id`, `Z`.`modified_user_id`, `Z`.`modified`, `Z`.`created_user_id`, `Z`.`created`
 FROM `z_3936_staff_behaviours` AS `Z`
-LEFT JOIN `academic_periods` AS `AP` on `AP`.`start_year` = YEAR(`Z`.`date_of_behaviour`);
+INNER JOIN `academic_periods` AS `AP`
+ON `AP`.`start_date` <= `Z`.`date_of_behaviour` AND `AP`.`end_date` >= `Z`.`date_of_behaviour`
+INNER JOIN `academic_period_levels` AS `APL`
+ON `APL`.`id` = `AP`.`academic_period_level_id`
+AND `APL`.`level` = 1;
 

@@ -50,12 +50,7 @@ class StaffBehavioursTable extends ControllerActionTable
         	->add('date_of_behaviour', [
 				'ruleInAcademicPeriod' => [
 					'rule' => ['inAcademicPeriod', 'academic_period_id', []],
-					'provider' => 'table',
-					'on' => function ($context) {
-						if (array_key_exists('academic_period_id', $context['data'])) {
-							return !empty($context['data']['academic_period_id']);
-						}
-				    }
+					'provider' => 'table'
 				]
 			])
         ;
@@ -73,16 +68,6 @@ class StaffBehavioursTable extends ControllerActionTable
 			]);
 		} else {
 			return $entity->staff->openemis_no;
-		}
-	}
-
-	public function beforeAction(Event $event, ArrayObject $extra)
-	{
-		$this->field('openemis_no');
-		$this->field('staff_id');
-
-		if ($this->action == 'view') {
-			$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 		}
 	}
 
@@ -129,10 +114,18 @@ class StaffBehavioursTable extends ControllerActionTable
 		// will need to check for search by name: AdvancedNameSearchBehavior
 	}
 
-	public function addBeforeAction(Event $event, ArrayObject $extra)
+	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$this->field('date_of_behaviour');
-		$this->field('academic_period_id');
+		$this->field('openemis_no', ['entity' => $entity]);
+
+		$this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
+	}
+
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		$this->field('academic_period_id', ['entity' => $entity]);
+		$this->field('staff_id', ['entity' => $entity]);
+		$this->field('date_of_behaviour', ['entity' => $entity]);
 		$this->field('staff_behaviour_category_id', ['type' => 'select']);
 		$this->field('behaviour_classification_id', ['type' => 'select']);
 		$this->setFieldOrder(['academic_period_id', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
@@ -140,17 +133,18 @@ class StaffBehavioursTable extends ControllerActionTable
 
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
 	{
-		$query->contain(['Staff', 'StaffBehaviourCategories', 'BehaviourClassifications']);
+		$query->contain(['AcademicPeriods', 'Staff', 'StaffBehaviourCategories', 'BehaviourClassifications']);
 	}
 
 	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
 	{
-		$this->field('date_of_behaviour');
-		$this->field('academic_period_id');
+		$this->field('academic_period_id', ['entity' => $entity]);
+		$this->field('staff_id', ['entity' => $entity]);
+		$this->field('date_of_behaviour', ['entity' => $entity]);
 		$this->field('staff_behaviour_category_id', ['entity' => $entity]);
 		$this->field('behaviour_classification_id', ['entity' => $entity]);
 
-		$this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'date_of_behaviour', 'time_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
+		$this->setFieldOrder(['academic_period_id', 'openemis_no', 'staff_id', 'staff_behaviour_category_id', 'behaviour_classification_id', 'date_of_behaviour', 'time_of_behaviour']);
 	}
 
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
@@ -158,85 +152,75 @@ class StaffBehavioursTable extends ControllerActionTable
 		$entity->showDeletedValueAs = $entity->description;
 	}
 
-	public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
+	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
 	{
-		if ($action == 'edit' || $action == 'add') {
-			$attr['visible'] = false;
+		if ($action == 'add') {
+			$entity = $attr['entity'];
+
+            $academicPeriodOptions = $this->AcademicPeriods->getYearList(['withLevels' => true, 'isEditable' => true]);
+            if ($entity->has('academic_period_id')) {
+                $selectedPeriod = $entity->academic_period_id;
+            } else {
+                if (is_null($request->query('academic_period_id'))) {
+                    $selectedPeriod = $this->AcademicPeriods->getCurrent();
+                } else {
+                    $selectedPeriod = $request->query('academic_period_id');
+                }
+                $entity->academic_period_id = $selectedPeriod;
+            }
+
+            $attr['select'] = false;
+            $attr['options'] = $academicPeriodOptions;
+            $attr['value'] = $selectedPeriod;
+            $attr['attr']['value'] = $selectedPeriod;
+            $attr['onChangeReload'] = 'changePeriod';
+		} else if ($action == 'edit') {
+			$entity = $attr['entity'];
+
+			$attr['type'] = 'readonly';
+			$attr['value'] = $entity->academic_period_id;
+			$attr['attr']['value'] = $entity->academic_period->name;
 		}
+
 		return $attr;
 	}
 
 	public function onUpdateFieldDateOfBehaviour(Event $event, array $attr, $action, Request $request)
 	{
-		$startDate = '';
-		$endDate = '';
-		if($action == 'add' && !empty($request->data[$this->alias()]['academic_period_id'])) {
-			$academicPeriodId = $this->request->data[$this->alias()]['academic_period_id'];
-			$academicPeriod = $this->AcademicPeriods->get($academicPeriodId);
+		if ($action == 'add' || $action == 'edit') {
+			$entity = $attr['entity'];
+
+			$selectedPeriod = $entity->academic_period_id;
+			$academicPeriod = $this->AcademicPeriods->get($selectedPeriod);
 
 			$startDate = $academicPeriod->start_date;
 			$endDate = $academicPeriod->end_date;
 
-			$todayDate = new Date();
-			$inputDate = Date::createfromformat('d-m-Y',$request->data[$this->alias()]['date_of_behaviour']); //string to date object
+			$todayDate = Date::now();
+			if (!empty($request->data[$this->alias()]['date_of_behaviour'])) {
+				$inputDate = Date::createfromformat('d-m-Y', $request->data[$this->alias()]['date_of_behaviour']); //string to date object
 
-			// if today date is not within selected academic period, default date will be start of the year
-			if ($inputDate <= $startDate || $inputDate > $endDate) {
-				$attr['value'] = $startDate->format('d-m-Y');
+				// if today date is not within selected academic period, default date will be start of the year
+				if ($inputDate < $startDate || $inputDate > $endDate) {
+					$attr['value'] = $startDate->format('d-m-Y');
 
-				// if today date is within selected academic period, default date will be current date
-				if ($startDate <= $todayDate && $todayDate <= $endDate) {
+					// if today date is within selected academic period, default date will be current date
+					if ($todayDate >= $startDate && $todayDate <= $endDate) {
+						$attr['value'] = $todayDate->format('d-m-Y');
+					}
+				}
+			} else {
+				if ($todayDate <= $startDate || $todayDate >= $endDate) {
+					$attr['value'] = $startDate->format('d-m-Y');
+				} else {
 					$attr['value'] = $todayDate->format('d-m-Y');
 				}
 			}
 
-			$attr['default_date'] = false;
 			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
-		} else if ($action == 'edit' && !empty($this->paramsPass(0))) {
-			// restrict the date options only on the selected academic period
-			$entityId = $this->paramsDecode($this->paramsPass(0))['id'];
-			$academicPeriodId = $this->get($entityId)->academic_period_id;
-
-			$startDate = $this->AcademicPeriods->get($academicPeriodId)->start_date;
-			$endDate = $this->AcademicPeriods->get($academicPeriodId)->end_date;
-
-			$attr['date_options'] = ['startDate' => $startDate->format('d-m-Y'), 'endDate' => $endDate->format('d-m-Y')];
+			$attr['date_options']['todayBtn'] = false;
 		}
 
-		return $attr;
-	}
-
-	public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
-	{
-		$institutionId = $this->Session->read('Institution.Institutions.id');
-
-		if ($action == 'add') {
-			$periodOptions = $this->AcademicPeriods->getList(['isEditable'=>true]);
-			$selectedPeriod = 0;
-			if ($request->is(['post', 'put'])) {
-				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
-			}
-
-			$attr['options'] = $periodOptions;
-			$attr['onChangeReload'] = 'changePeriod';
-
-			//set start and end dates for date of behaviour based on chosen academic period
-			if (!empty($selectedPeriod)) {
-				$periodEntity = $this->AcademicPeriods->get($selectedPeriod);
-				$dateOptions = [
-					'startDate' => $periodEntity->start_date->format('d-m-Y'),
-					'endDate' => $periodEntity->end_date->format('d-m-Y')
-				];
-				$this->fields['date_of_behaviour']['date_options'] = $dateOptions;
-			}
-		} else if ($action == 'edit' && !empty($this->paramsPass(0))) {
-			$entityId = $this->paramsDecode($this->paramsPass(0))['id'];
-			$academicPeriodId = $this->get($entityId)->academic_period_id;
-
-			$attr['type'] = 'readonly';
-			$attr['value'] = $academicPeriodId;
-			$attr['attr']['value'] = $this->AcademicPeriods->get($academicPeriodId)->name;
-		}
 		return $attr;
 	}
 
@@ -245,10 +229,8 @@ class StaffBehavioursTable extends ControllerActionTable
 		if ($action == 'add') {
 			$staffOptions = [];
 
-			$selectedPeriod = 0;
-			if ($request->is(['post', 'put'])) {
-				$selectedPeriod = $request->data($this->aliasField('academic_period_id'));
-			}
+			$entity = $attr['entity'];
+			$selectedPeriod = $entity->academic_period_id;
 
 			if (!empty($selectedPeriod)) {
 				$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -263,12 +245,11 @@ class StaffBehavioursTable extends ControllerActionTable
 
 			$attr['options'] = $staffOptions;
 		} else if ($action == 'edit') {
-			$entityId = $this->paramsDecode($this->paramsPass(0))['id'];
-			$staffId = $this->get($entityId)->staff_id;
-			$staffName = $this->Staff->get($staffId)->name_with_id;
+			$entity = $attr['entity'];
 
 			$attr['type'] = 'readonly';
-			$attr['attr']['value'] = $staffName;
+			$attr['value'] = $entity->staff_id;
+			$attr['attr']['value'] = $entity->staff->name_with_id;
 		}
 		return $attr;
 	}
