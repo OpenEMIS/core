@@ -250,6 +250,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, $writer);
+        $objWriter->writeAllSheets();
         $objWriter->save($filepath);
     }
 
