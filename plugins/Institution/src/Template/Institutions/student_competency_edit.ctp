@@ -42,7 +42,8 @@ $this->start('panelBody');
     </div>
     <div class="input">
         <label><?= __('Competency Period') ?></label>
-        <div class="input-selection">
+        <input ng-hide="InstitutionStudentCompetenciesController.itemOptions.length > 0" value="<?= __('No Period') ?>" type="text" disabled="disabled">
+        <div class="input-selection" ng-show="InstitutionStudentCompetenciesController.periodOptions.length > 0">
             <div class="input">
                 <div class="selection-wrapper">
                     <input ng-repeat="period in InstitutionStudentCompetenciesController.periodOptions" ng-value="{{period.id}}" kd-checkbox-radio="{{period.name}}" type="radio" name="competency_period" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);">
@@ -52,7 +53,8 @@ $this->start('panelBody');
     </div>
     <div class="input">
         <label><?= __('Competency Item') ?></label>
-        <div class="input-selection">
+        <input ng-hide="InstitutionStudentCompetenciesController.itemOptions.length > 0" value="<?= __('No Item') ?>" type="text" disabled="disabled">
+        <div class="input-selection" ng-show="InstitutionStudentCompetenciesController.itemOptions.length > 0">
             <div class="input">
                 <div class="selection-wrapper">
                     <input ng-repeat="item in InstitutionStudentCompetenciesController.itemOptions" ng-value="{{item.id}}" kd-checkbox-radio="{{item.name}}" type="radio" name="competency_item" ng-model="InstitutionStudentCompetenciesController.selectedItem" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
