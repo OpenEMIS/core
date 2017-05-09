@@ -38,6 +38,7 @@ class ReportCardsTable extends AppTable
             'variables' => [
                 'ReportCards',
                 'InstitutionStudentsReportCards',
+                'InstitutionStudentsReportCardsComments',
                 'ClassStudents',
                 'Institutions',
                 'InstitutionClasses',
@@ -61,6 +62,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateSave'] = 'onExcelTemplateSave';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseReportCards'] = 'onExcelTemplateInitialiseReportCards';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCards'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCards';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentsReportCardsComments'] = 'onExcelTemplateInitialiseInstitutionStudentsReportCardsComments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseClassStudents'] = 'onExcelTemplateInitialiseClassStudents';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutions'] = 'onExcelTemplateInitialiseInstitutions';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionClasses'] = 'onExcelTemplateInitialiseInstitutionClasses';
@@ -123,7 +125,6 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
             $entity = $StudentsReportCards->find()
-                ->contain(['StudentsReportCardsComments.EducationSubjects', 'StudentsReportCardsComments.CommentCodes'])
                 ->where([
                     $StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
                     $StudentsReportCards->aliasField('student_id') => $params['student_id'],
@@ -132,6 +133,25 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
                 ->first();
+
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseInstitutionStudentsReportCardsComments(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $StudentsReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
+            $entity = $StudentsReportCardsComments->find()
+                ->contain(['EducationSubjects', 'CommentCodes'])
+                ->where([
+                    $StudentsReportCardsComments->aliasField('report_card_id') => $params['report_card_id'],
+                    $StudentsReportCardsComments->aliasField('student_id') => $params['student_id'],
+                    $StudentsReportCardsComments->aliasField('institution_id') => $params['institution_id'],
+                    $StudentsReportCardsComments->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $StudentsReportCardsComments->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
+                ])
+                ->toArray();
 
             return $entity;
         }
