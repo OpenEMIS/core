@@ -11,10 +11,10 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionRoomsTable extends AppTable
+class InstitutionRoomsTable extends ControllerActionTable
 {
     use OptionsTrait;
     const UPDATE_DETAILS = 1;    // In Use
@@ -73,6 +73,7 @@ class InstitutionRoomsTable extends AppTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'SubjectStudents' => ['index']
         ]);
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator)
@@ -246,17 +247,17 @@ class InstitutionRoomsTable extends AppTable
     public function indexBeforeAction(Event $event)
     {
         $this->roomLevel = $this->Levels->getFieldByCode('ROOM', 'id');
-        $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
-        $this->ControllerAction->field('institution_id');
-        $this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
+        $this->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'room_type_id', 'room_status_id']);
+        $this->field('institution_id');
+        $this->field('infrastructure_level', ['after' => 'name']);
         $this->fields['institution_floor_id']['visible'] = false;
-        $this->ControllerAction->field('start_date', ['visible' => false]);
-        $this->ControllerAction->field('start_year', ['visible' => false]);
-        $this->ControllerAction->field('end_date', ['visible' => false]);
-        $this->ControllerAction->field('end_year', ['visible' => false]);
-        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
-        $this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
-        $this->ControllerAction->field('previous_room_id', ['visible' => false]);
+        $this->field('start_date', ['visible' => false]);
+        $this->field('start_year', ['visible' => false]);
+        $this->field('end_date', ['visible' => false]);
+        $this->field('end_year', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);
+        $this->field('infrastructure_condition_id', ['visible' => false]);
+        $this->field('previous_room_id', ['visible' => false]);
 
         $toolbarElements = [];
         $toolbarElements = $this->addBreadcrumbElement($toolbarElements);
@@ -367,7 +368,7 @@ class InstitutionRoomsTable extends AppTable
                 $session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
             }
 
-            $url = $this->ControllerAction->url('index');
+            $url = $this->url('index');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
@@ -380,7 +381,7 @@ class InstitutionRoomsTable extends AppTable
                 if ($diff->days == 0) {
                     $session->write($sessionKey, $this->aliasField('change_in_room_type.restrictEdit'));
 
-                    $url = $this->ControllerAction->url('edit');
+                    $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
@@ -405,7 +406,7 @@ class InstitutionRoomsTable extends AppTable
                 $session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
             }
 
-            $url = $this->ControllerAction->url('index');
+            $url = $this->url('index');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
@@ -494,7 +495,7 @@ class InstitutionRoomsTable extends AppTable
     //         $field = 'institution_infrastructure_id';
     //         $after = $field;
     //         foreach ($list as $key => $infrastructure) {
-    //             $this->ControllerAction->field($field.$key, [
+    //             $this->field($field.$key, [
     //                 'type' => 'readonly',
     //                 'attr' => ['label' => $infrastructure->_matchingData['Levels']->name],
     //                 'value' => $infrastructure->code_name,
@@ -810,23 +811,23 @@ class InstitutionRoomsTable extends AppTable
 
     private function setupFields(Entity $entity)
     {
-        $this->ControllerAction->setFieldOrder([
+        $this->setFieldOrder([
             'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_id', 'new_room_type', 'new_start_date'
         ]);
 
-        $this->ControllerAction->field('change_type');
-        $this->ControllerAction->field('room_status_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
-        $this->ControllerAction->field('institution_id');
-        $this->ControllerAction->field('institution_floor_id');
-        $this->ControllerAction->field('code');
-        $this->ControllerAction->field('name');
-        $this->ControllerAction->field('room_type_id', ['type' => 'select', 'entity' => $entity]);
-        $this->ControllerAction->field('start_date', ['entity' => $entity]);
-        $this->ControllerAction->field('end_date', ['entity' => $entity]);
-        $this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
-        $this->ControllerAction->field('previous_room_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('subjects', [
+        $this->field('change_type');
+        $this->field('room_status_id', ['type' => 'hidden']);
+        $this->field('academic_period_id', ['entity' => $entity]);
+        $this->field('institution_id');
+        $this->field('institution_floor_id');
+        $this->field('code');
+        $this->field('name');
+        $this->field('room_type_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('start_date', ['entity' => $entity]);
+        $this->field('end_date', ['entity' => $entity]);
+        $this->field('infrastructure_condition_id', ['type' => 'select']);
+        $this->field('previous_room_id', ['type' => 'hidden']);
+        $this->field('subjects', [
             'type' => 'chosenSelect',
             'fieldNameKey' => 'subjects',
             'fieldName' => $this->alias() . '.subjects._ids',
@@ -834,8 +835,8 @@ class InstitutionRoomsTable extends AppTable
             'valueWhenEmpty' => '<span>&lt;'.__('No Subject Allocated').'&gt;</span>',
             'entity' => $entity
         ]);
-        $this->ControllerAction->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
-        $this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
+        $this->field('new_room_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
+        $this->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
     }
 
     private function getAutoGenerateCode($parentId)
@@ -877,14 +878,14 @@ class InstitutionRoomsTable extends AppTable
     private function addBreadcrumbElement($toolbarElements = [])
     {
         $entity = $this->InstitutionFloors->get($this->getQueryString('institution_floor_id'), ['contain' => ['InstitutionBuildings.InstitutionLands']]);
-        $buildingUrl = $this->ControllerAction->url('index');
+        $buildingUrl = $this->url('index');
         $buildingUrl['action'] = 'Buildings';
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_building->institution_land->id,
             'institution_land_name' => $entity->institution_building->institution_land->name
         ]);
 
-        $floorUrl = $this->ControllerAction->url('index');
+        $floorUrl = $this->url('index');
         $floorUrl['action'] = 'Buildings';
         $floorUrl = $this->setQueryString($floorUrl, [
             'institution_land_id' => $entity->institution_building->id,
@@ -997,7 +998,7 @@ class InstitutionRoomsTable extends AppTable
         $newEntity = $this->save($newEntity);
         // End
 
-        $url = $this->ControllerAction->url('edit');
+        $url = $this->url('edit');
         unset($url['type']);
         unset($url['edit_type']);
         $url[1] = $this->paramsEncode(['id' => $newEntity->id]);

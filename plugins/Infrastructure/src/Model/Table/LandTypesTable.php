@@ -28,6 +28,7 @@ class LandTypesTable extends ControllerActionTable
         $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $InfrastructureLevels->find('list')->toArray();
         $this->landLevel = $InfrastructureLevels->getFieldByCode('LAND', 'id');
+        $this->setDeleteStrategy('restrict');
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)

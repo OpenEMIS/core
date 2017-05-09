@@ -28,6 +28,7 @@ class BuildingTypesTable extends ControllerActionTable
         $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $InfrastructureLevels->find('list')->toArray();
         $this->buildingLevel = $InfrastructureLevels->getFieldByCode('BUILDING', 'id');
+        $this->setDeleteStrategy('restrict');
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)

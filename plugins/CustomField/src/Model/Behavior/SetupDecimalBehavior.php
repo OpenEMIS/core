@@ -19,7 +19,7 @@ class SetupDecimalBehavior extends SetupBehavior
         parent::initialize($config);
     }
 
-    public function addBeforeAction(Event $event)
+    public function addBeforeAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
         $fieldTypes = $model->getFieldTypes();
@@ -31,7 +31,7 @@ class SetupDecimalBehavior extends SetupBehavior
         }
     }
 
-    public function editAfterQuery(Event $event, Entity $entity)
+    public function editAfterQuery(Event $event, Entity $entity, ArrayObject $extra)
     {
         if ($entity->field_type == $this->fieldTypeCode) {
             $this->buildDecimalValidator();
@@ -84,8 +84,8 @@ class SetupDecimalBehavior extends SetupBehavior
             }
         }
 
-        $model->ControllerAction->field('decimal_length');
-        $model->ControllerAction->field('decimal_precision');
+        $model->field('decimal_length');
+        $model->field('decimal_precision');
     }
 
     public function onUpdateFieldDecimalLength(Event $event, array $attr, $action, Request $request)
@@ -93,7 +93,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $minLength = $this->inputLimits['decimal_value']['length']['min'];
         $maxLength = $this->inputLimits['decimal_value']['length']['max'];
 
-        $tooltipMessage = vsprintf(__('%d - %d'),[$minLength, $maxLength]);
+        $tooltipMessage = vsprintf(__('%d - %d'), [$minLength, $maxLength]);
 
         $attr['attr']['min'] = $minLength;
         $attr['attr']['max'] = $maxLength;
@@ -118,7 +118,7 @@ class SetupDecimalBehavior extends SetupBehavior
         $minPrecision = $this->inputLimits['decimal_value']['precision']['min'];
         $maxPrecision = $this->inputLimits['decimal_value']['precision']['max'];
 
-        $tooltipMessage = vsprintf(__('%d - %d'),[$minPrecision, $maxPrecision]);
+        $tooltipMessage = vsprintf(__('%d - %d'), [$minPrecision, $maxPrecision]);
 
         $attr['attr']['min'] = $minPrecision;
         $attr['attr']['max'] = $maxPrecision;

@@ -63,7 +63,6 @@ class OpenEmisBehavior extends Behavior
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $model = $this->_table;
-
         if ($model->action == 'index' || $model->action == 'view') {
             $modal = [];
             $modal['title'] = $model->getHeader($model->alias()); //$modal['title'] = $model->alias();
@@ -93,7 +92,6 @@ class OpenEmisBehavior extends Behavior
         $model->controller->set('action', $this->_table->action);
         $model->controller->set('indexElements', []);
         // end deprecated
-
         $this->attachEntityInfoToToolBar($extra);
 
         $access = $model->AccessControl;
@@ -161,21 +159,6 @@ class OpenEmisBehavior extends Behavior
                     // to attach primary key to the button attributes for delete operation
                     if (array_key_exists('remove', $toolbarButtons)) {
                         $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
-                    }
-                }
-
-                $isDownloadButtonEnabled = $toolbarButtons->offsetExists('download');
-                if ($isDownloadButtonEnabled) {
-                    if ($download = $model->actions('download')) {
-                        $determineShow = $download['show'];
-                        if (is_callable($download['show'])) {
-                            $determineShow = $determineShow();
-                        }
-                    }
-                    if ($determineShow) {
-                        $toolbarButtons['download']['url'][] = $encodedIds;
-                    } else {
-                        $toolbarButtons->offsetUnset('download'); // removes download button
                     }
                 }
             }

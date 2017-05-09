@@ -28,6 +28,7 @@ class FloorTypesTable extends ControllerActionTable
         $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $InfrastructureLevels->find('list')->toArray();
         $this->floorLevel = $InfrastructureLevels->getFieldByCode('FLOOR', 'id');
+        $this->setDeleteStrategy('restrict');
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)
