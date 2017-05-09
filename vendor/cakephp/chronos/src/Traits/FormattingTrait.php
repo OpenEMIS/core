@@ -227,7 +227,7 @@ trait FormattingTrait
      * Returns the quarter
      *
      * @param bool $range Range.
-     * @return mixed 1, 2, 3, or 4 quarter of year or array if $range true
+     * @return int|array 1, 2, 3, or 4 quarter of year or array if $range true
      */
     public function toQuarter($range = false)
     {
@@ -247,5 +247,13 @@ trait FormattingTrait
             case 4:
                 return [$year . '-10-01', $year . '-12-31'];
         }
+    }
+
+    /**
+     * @return int
+     */
+    public function toWeek()
+    {
+        return (int)$this->format('W');
     }
 }

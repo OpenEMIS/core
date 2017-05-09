@@ -161,11 +161,8 @@ class SecurityGroupUsersTable extends AppTable {
 		}
 	}
 
-	public function getInstitutionsByUser($userId = null)
+	public function getInstitutionsByUser($userId = 0)
 	{
-		if (is_null($userId)) {
-			$userId = $this->Auth->user('id');
-		}
 
 		$groupIds = $this
 			->find('list', ['keyField' => 'id', 'valueField' => 'security_group_id'])

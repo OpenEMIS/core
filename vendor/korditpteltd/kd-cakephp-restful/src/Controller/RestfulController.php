@@ -5,7 +5,7 @@ use Cake\Log\Log;
 
 class RestfulController extends AppController
 {
-    private $debug = false;
+    private $bypassAuth = false; // setting this value to true will bypass authentication for debugging purposes
     private $restfulComponent = null;
     private $supportedRestful = [
         'v1' => 'v1',
@@ -27,6 +27,9 @@ class RestfulController extends AppController
         ]);
         $this->restfulComponent = $this->{$componentName};
         $this->Auth->allow('token');
+        if ($this->bypassAuth) {
+            $this->Auth->allow();
+        }
     }
 
     private function getComponentVersion()
@@ -46,11 +49,6 @@ class RestfulController extends AppController
             $version = array_shift($this->supportedRestful);
         }
         return $version;
-    }
-
-    public function isDebugMode()
-    {
-        return $this->debug;
     }
 
     public function isAuthorized($user = null)
@@ -82,6 +80,11 @@ class RestfulController extends AppController
     {
         $this->autoRender = false;
         $this->restfulComponent->options();
+    }
+
+    public function schema()
+    {
+        $this->restfulComponent->schema();
     }
 
     public function index()
