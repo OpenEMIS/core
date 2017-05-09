@@ -15,7 +15,7 @@
         "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
     },
     "require": {
-        "cakephp/cakephp": ">=3.2",
+        "cakephp/cakephp": ">=3.3.0 <3.4",
         "admad/cakephp-jwt-auth": "^2.0"
     },
     "require-dev": {

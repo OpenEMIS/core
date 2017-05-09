@@ -7,7 +7,7 @@ use Cake\Event\Event;
 use Cake\ORM\Table;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 use Cake\Network\Request;
 use Cake\Routing\Router;
 use Cake\Utility\Text;
@@ -54,7 +54,7 @@ class SingleLogoutTable extends Table
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-        } catch(\Exception $ex) {
+        } catch (\Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
     }
@@ -66,7 +66,7 @@ class SingleLogoutTable extends Table
         $shellCmd = $cmd . ' >> ' . $logs;
         try {
             $pid = exec($shellCmd);
-        } catch(\Exception $ex) {
+        } catch (\Exception $ex) {
             Log::write('error', __METHOD__ . ' exception when login : '. $ex);
         }
     }
@@ -114,6 +114,5 @@ class SingleLogoutTable extends Table
             Log::write('error', $entity);
             Log::write('error', $e);
         }
-
     }
 }

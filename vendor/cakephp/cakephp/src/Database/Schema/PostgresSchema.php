@@ -29,6 +29,7 @@ class PostgresSchema extends BaseSchema
     {
         $sql = 'SELECT table_name as name FROM information_schema.tables WHERE table_schema = ? ORDER BY name';
         $schema = empty($config['schema']) ? 'public' : $config['schema'];
+
         return [$sql, [$schema]];
     }
 
@@ -42,8 +43,11 @@ class PostgresSchema extends BaseSchema
             data_type AS type,
             is_nullable AS null, column_default AS default,
             character_maximum_length AS char_length,
+            c.collation_name,
             d.description as comment,
             ordinal_position,
+            c.numeric_precision as column_precision,
+            c.numeric_scale as column_scale,
             pg_get_serial_sequence(attr.attrelid::regclass::text, attr.attname) IS NOT NULL AS has_serial
         FROM information_schema.columns c
         INNER JOIN pg_catalog.pg_namespace ns ON (ns.nspname = table_schema)
@@ -55,6 +59,7 @@ class PostgresSchema extends BaseSchema
         ORDER BY ordinal_position';
 
         $schema = empty($config['schema']) ? 'public' : $config['schema'];
+
         return [$sql, [$tableName, $schema, $config['database']]];
     }
 
@@ -129,6 +134,11 @@ class PostgresSchema extends BaseSchema
         ) {
             return ['type' => 'decimal', 'length' => null];
         }
+
+        if (strpos($col, 'json') !== false) {
+            return ['type' => 'json', 'length' => null];
+        }
+
         return ['type' => 'text', 'length' => null];
     }
 
@@ -150,12 +160,19 @@ class PostgresSchema extends BaseSchema
         if (!empty($row['has_serial'])) {
             $field['autoIncrement'] = true;
         }
+
         $field += [
             'default' => $this->_defaultValue($row['default']),
             'null' => $row['null'] === 'YES' ? true : false,
+            'collate' => $row['collation_name'],
             'comment' => $row['comment']
         ];
         $field['length'] = $row['char_length'] ?: $field['length'];
+
+        if ($field['type'] === 'numeric' || $field['type'] === 'decimal') {
+            $field['length'] = $row['column_precision'];
+            $field['precision'] = $row['column_scale'] ? $row['column_scale'] : null;
+        }
         $table->addColumn($row['name'], $field);
     }
 
@@ -210,6 +227,7 @@ class PostgresSchema extends BaseSchema
         if (!empty($config['schema'])) {
             $schema = $config['schema'];
         }
+
         return [$sql, [$schema, $tableName]];
     }
 
@@ -228,6 +246,7 @@ class PostgresSchema extends BaseSchema
         }
         if ($type === Table::CONSTRAINT_PRIMARY || $type === Table::CONSTRAINT_UNIQUE) {
             $this->_convertConstraint($table, $name, $type, $row);
+
             return;
         }
         $index = $table->index($name);
@@ -287,6 +306,7 @@ class PostgresSchema extends BaseSchema
         ORDER BY name, a.attnum, ab.attnum DESC";
 
         $schema = empty($config['schema']) ? 'public' : $config['schema'];
+
         return [$sql, [$schema, $tableName]];
     }
 
@@ -319,6 +339,7 @@ class PostgresSchema extends BaseSchema
         if ($clause === 'c') {
             return Table::ACTION_CASCADE;
         }
+
         return Table::ACTION_SET_NULL;
     }
 
@@ -339,6 +360,7 @@ class PostgresSchema extends BaseSchema
             'datetime' => ' TIMESTAMP',
             'timestamp' => ' TIMESTAMP',
             'uuid' => ' UUID',
+            'json' => ' JSONB'
         ];
 
         if (isset($typeMap[$data['type']])) {
@@ -370,6 +392,11 @@ class PostgresSchema extends BaseSchema
             }
         }
 
+        $hasCollate = ['text', 'string'];
+        if (in_array($data['type'], $hasCollate, true) && isset($data['collate']) && $data['collate'] !== '') {
+            $out .= ' COLLATE "' . $data['collate'] . '"';
+        }
+
         if ($data['type'] === 'float' && isset($data['precision'])) {
             $out .= '(' . (int)$data['precision'] . ')';
         }
@@ -383,7 +410,7 @@ class PostgresSchema extends BaseSchema
         if (isset($data['null']) && $data['null'] === false) {
             $out .= ' NOT NULL';
         }
-        if (isset($data['null']) && $data['null'] === true) {
+        if (isset($data['null']) && $data['null'] === true && $data['type'] === 'timestamp') {
             $out .= ' DEFAULT NULL';
             unset($data['default']);
         }
@@ -394,6 +421,7 @@ class PostgresSchema extends BaseSchema
             }
             $out .= ' DEFAULT ' . $this->_driver->schemaValue($defaultValue);
         }
+
         return $out;
     }
 
@@ -446,6 +474,7 @@ class PostgresSchema extends BaseSchema
             [$this->_driver, 'quoteIdentifier'],
             $data['columns']
         );
+
         return sprintf(
             'CREATE INDEX %s ON %s (%s)',
             $this->_driver->quoteIdentifier($name),
@@ -467,6 +496,7 @@ class PostgresSchema extends BaseSchema
         if ($data['type'] === Table::CONSTRAINT_UNIQUE) {
             $out .= ' UNIQUE';
         }
+
         return $this->_keySql($out, $data);
     }
 
@@ -493,6 +523,7 @@ class PostgresSchema extends BaseSchema
                 $this->_foreignOnClause($data['delete'])
             );
         }
+
         return $prefix . ' (' . implode(', ', $columns) . ')';
     }
 
@@ -521,6 +552,7 @@ class PostgresSchema extends BaseSchema
                 );
             }
         }
+
         return $out;
     }
 
@@ -530,6 +562,7 @@ class PostgresSchema extends BaseSchema
     public function truncateTableSql(Table $table)
     {
         $name = $this->_driver->quoteIdentifier($table->name());
+
         return [
             sprintf('TRUNCATE %s RESTART IDENTITY CASCADE', $name)
         ];
@@ -547,6 +580,7 @@ class PostgresSchema extends BaseSchema
             'DROP TABLE %s CASCADE',
             $this->_driver->quoteIdentifier($table->name())
         );
+
         return [$sql];
     }
 }

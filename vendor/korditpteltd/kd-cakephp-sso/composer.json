@@ -19,7 +19,7 @@
         "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
     },
     "require": {
-        "cakephp/cakephp": ">3.0.0 <3.3.0",
+        "cakephp/cakephp": ">=3.3.0 <3.4",
         "firebase/php-jwt": "~3.0",
         "google/apiclient": "1.1.7",
         "onelogin/php-saml": "^2.9",
