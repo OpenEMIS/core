@@ -12,6 +12,7 @@ use Cake\Network\Exception\NotFoundException;
 class DownloadBehavior extends Behavior
 {
     protected $_defaultConfig = [
+        'show' => true,
         'name' => 'file_name',
         'content' => 'file_content'
     ];
@@ -40,7 +41,6 @@ class DownloadBehavior extends Behavior
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.download'] = 'download';
-        $events['ControllerAction.Model.afterAction'] = 'afterAction';
         return $events;
     }
 
@@ -84,27 +84,5 @@ class DownloadBehavior extends Behavior
         fclose($phpResourceFile);
 
         return $file;
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($extra->offsetExists('toolbarButtons')) {
-            $toolbarButtons = $extra['toolbarButtons'];
-            $isDownloadButtonEnabled = $toolbarButtons->offsetExists('download');
-            if ($isDownloadButtonEnabled) {
-                $model = $this->_table;
-                if ($download = $model->actions('download')) {
-                    $determineShow = $download['show'];
-                    if (is_callable($download['show'])) {
-                        $determineShow = $determineShow();
-                    }
-                }
-                if ($determineShow) {
-                    $toolbarButtons['download']['url'][] = $encodedIds;
-                } else {
-                    $toolbarButtons->offsetUnset('download'); // removes download button
-                }
-            }
-        }
     }
 }

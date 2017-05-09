@@ -161,6 +161,22 @@ class OpenEmisBehavior extends Behavior
                         $toolbarButtons['remove']['attr']['field-value'] = $encodedIds;
                     }
                 }
+
+                $isDownloadButtonEnabled = $toolbarButtons->offsetExists('download');
+                if ($isDownloadButtonEnabled) {
+                    $model = $this->_table;
+                    if ($download = $model->actions('download')) {
+                        $determineShow = $download['show'];
+                        if (is_callable($download['show'])) {
+                            $determineShow = $determineShow();
+                        }
+                    }
+                    if ($determineShow) {
+                        $toolbarButtons['download']['url'][] = $encodedIds;
+                    } else {
+                        $toolbarButtons->offsetUnset('download'); // removes download button
+                    }
+                }
             }
 
             $actions = ['index', 'add', 'edit', 'remove'];

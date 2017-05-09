@@ -101,7 +101,7 @@ class SurveyFormsTable extends CustomFormsTable
                 'escape' => false,
                 'title' => __('Download')
             ];
-            $extra['toolbarButtons']['download'] = $toolbarButtons;
+            $extra['toolbarButtons']['downloads'] = $toolbarButtons;
         }
     }
 
