@@ -45,8 +45,10 @@ class ReportCardsTable extends AppTable
                 'StudentBehaviours',
                 'InstitutionStudentAbsences',
                 'CompetencyTemplates',
+                'CompetencyPeriods',
                 'CompetencyItems',
                 'CompetencyCriterias',
+                'StudentCompetencyResults',
                 'Assessments',
                 'AssessmentPeriods',
                 'AssessmentItems',
@@ -69,8 +71,10 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentBehaviours'] = 'onExcelTemplateInitialiseStudentBehaviours';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseInstitutionStudentAbsences'] = 'onExcelTemplateInitialiseInstitutionStudentAbsences';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyTemplates'] = 'onExcelTemplateInitialiseCompetencyTemplates';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyPeriods'] = 'onExcelTemplateInitialiseCompetencyPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyItems'] = 'onExcelTemplateInitialiseCompetencyItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseCompetencyCriterias'] = 'onExcelTemplateInitialiseCompetencyCriterias';
+        $events['ExcelTemplates.Model.onExcelTemplateInitialiseStudentCompetencyResults'] = 'onExcelTemplateInitialiseStudentCompetencyResults';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessments'] = 'onExcelTemplateInitialiseAssessments';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
@@ -132,6 +136,7 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StudentsReportCards->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
+                ->hydrate(false)
                 ->first();
 
             return $entity;
@@ -169,6 +174,7 @@ class ReportCardsTable extends AppTable
                     $this->aliasField('institution_class_id') => $params['institution_class_id'],
                     $this->aliasField('student_id') => $params['student_id']
                 ])
+                ->hydrate(false)
                 ->first();
             return $entity;
         }
@@ -279,6 +285,23 @@ class ReportCardsTable extends AppTable
         }
     }
 
+    public function onExcelTemplateInitialiseCompetencyPeriods(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('academic_period_id', $params)) {
+            $CompetencyPeriods = TableRegistry::get('Competency.CompetencyPeriods');
+            $entity = $CompetencyPeriods->find()
+                ->where([
+                    $CompetencyPeriods->aliasField('academic_period_id') => $params['academic_period_id'],
+                    $CompetencyPeriods->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    $CompetencyPeriods->aliasField('start_date') . ' >=' => $extra['report_card_start_date'],
+                    $CompetencyPeriods->aliasField('end_date') . ' <=' => $extra['report_card_end_date']
+                ])
+                ->toArray();
+
+            return $entity;
+        }
+    }
+
     public function onExcelTemplateInitialiseCompetencyItems(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('academic_period_id', $params)) {
@@ -287,7 +310,8 @@ class ReportCardsTable extends AppTable
                 ->where([
                     $CompetencyItems->aliasField('academic_period_id') => $params['academic_period_id'],
                     $CompetencyItems->aliasField('competency_template_id IN ') => $extra['competency_templates_ids']
-                ])->toArray();
+                ])
+                ->toArray();
 
             return $entity;
         }
@@ -301,7 +325,26 @@ class ReportCardsTable extends AppTable
                 ->where([
                     $CompetencyCriterias->aliasField('academic_period_id') => $params['academic_period_id'],
                     $CompetencyCriterias->aliasField('competency_template_id IN ') => $extra['competency_templates_ids']
-                ])->toArray();
+                ])
+                ->toArray();
+
+            return $entity;
+        }
+    }
+
+    public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
+    {
+        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+            $StudentCompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
+            $entity = $StudentCompetencyResults->find()
+                ->contain('CompetencyGradingOptions')
+                ->where([
+                    $StudentCompetencyResults->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    $StudentCompetencyResults->aliasField('student_id') => $params['student_id'],
+                    $StudentCompetencyResults->aliasField('institution_id') => $params['institution_id'],
+                    $StudentCompetencyResults->aliasField('academic_period_id') => $params['academic_period_id'],
+                ])
+                ->toArray();
 
             return $entity;
         }
@@ -332,7 +375,6 @@ class ReportCardsTable extends AppTable
                     $AssessmentPeriods->aliasField('start_date') . ' >=' => $extra['report_card_start_date'],
                     $AssessmentPeriods->aliasField('end_date') . ' <=' => $extra['report_card_end_date']
                 ])
-                ->hydrate(false)
                 ->all();
 
             $extra['assessment_period_ids'] = $entity->extract('id')->toArray();
@@ -348,7 +390,6 @@ class ReportCardsTable extends AppTable
                 ->contain(['EducationSubjects'])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $extra['assessment_id']])
                 ->order(['EducationSubjects.order', 'EducationSubjects.code', 'EducationSubjects.name'])
-                ->hydrate(false)
                 ->all();
 
             $extra['assessment_period_subjects'] = $entity->extract('education_subject_id')->toArray();
@@ -403,7 +444,6 @@ class ReportCardsTable extends AppTable
                         return $row;
                     });
                 })
-                ->hydrate(false)
                 ->toArray();
 
             return $entity;
