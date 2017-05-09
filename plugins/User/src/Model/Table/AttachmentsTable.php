@@ -32,10 +32,16 @@ class AttachmentsTable extends ControllerActionTable
             'dependent' => true
         ]);
 
-        $this->addBehavior('ControllerAction.Download', [
-            'name' => 'file_name',
-            'content' => 'file_content'
-        ]);
+                //change behaviour config
+        if ($this->behaviors()->has('ControllerAction')) {
+            $this->behaviors()->get('ControllerAction')->config([
+                'actions' => [
+                    'download' => ['show' => true] //to show download on toolbar
+                ]
+            ]);
+        }
+
+
     }
 
     public function beforeAction(Event $event, ArrayObject $extra)
