@@ -11,19 +11,21 @@ class InfrastructuresController extends AppController
     public function initialize()
     {
         parent::initialize();
-        $this->ControllerAction->models = [
-            'Fields' => ['className' => 'Infrastructure.InfrastructureCustomFields', 'options' => ['deleteStrategy' => 'restrict']],
-            'Pages' => ['className' => 'Infrastructure.LandCustomForms', 'options' => ['deleteStrategy' => 'restrict']]
-        ];
         $this->loadComponent('Paginator');
         $this->loadComponent('FieldOption.FieldOption');
     }
 
-    // CAv4
-    public function Types()
+    public function Fields()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.InfrastructureTypes']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.InfrastructureCustomFields']);
     }
+
+    public function Pages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.LandCustomForms']);
+    }
+
+    // CAv4
     public function LandTypes()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.LandTypes']);

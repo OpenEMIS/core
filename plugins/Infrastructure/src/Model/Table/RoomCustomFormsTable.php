@@ -31,6 +31,7 @@ class RoomCustomFormsTable extends CustomFormsTable
         $this->table('infrastructure_custom_forms');
         parent::initialize($config);
         $this->addBehavior('Infrastructure.Pages', ['module' => 'Room']);
+        $this->setDeleteStrategy('restrict');
     }
 
     public function onUpdateFieldCustomModuleId(Event $event, array $attr, $action, Request $request)

@@ -913,3 +913,12 @@ SET
   `_add`='Fields.add|Pages.add|LandTypes.add|BuildingTypes.add|FloorTypes.add|RoomTypes.add',
   `_delete`='Fields.remove|Pages.remove|LandTypes.remove|BuildingTypes.remove|FloorTypes.remove|RoomTypes.remove'
 WHERE `id`='5018';
+
+UPDATE `security_functions`
+SET
+  `_view`='Lands.index|Lands.view|Buildings.index|Buildings.view|Floors.index|Floors.view|Rooms.index|Rooms.view',
+  `_edit`='Lands.edit|Buildings.edit|Floors.edit|Rooms.edit',
+  `_add`='Lands.add|Buildings.add|Floors.add|Rooms.add',
+  `_delete`='Lands.remove|Buildings.remove|Floors.remove|Rooms.remove'
+WHERE `id`='1011';
+

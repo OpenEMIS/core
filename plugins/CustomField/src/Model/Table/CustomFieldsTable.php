@@ -7,10 +7,11 @@ use Cake\ORM\Entity;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
-use App\Model\Table\AppTable;
-use App\Model\Traits\OptionsTrait;
 
-class CustomFieldsTable extends AppTable
+use App\Model\Traits\OptionsTrait;
+use App\Model\Table\ControllerActionTable;
+
+class CustomFieldsTable extends ControllerActionTable
 {
     use OptionsTrait;
     const MANDATORY_NO = 0;
@@ -67,9 +68,9 @@ class CustomFieldsTable extends AppTable
         return $isUnique == 1 ? ($entity->is_unique == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>') : '<i class="fa fa-minus"></i>';
     }
 
-    public function beforeAction(Event $event)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('params', ['visible' => false]);
+        $this->field('params', ['visible' => false]);
     }
 
     public function viewAfterAction(Event $event, Entity $entity)
@@ -88,7 +89,7 @@ class CustomFieldsTable extends AppTable
         $this->request->query['field_type'] = $entity->field_type;
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -172,9 +173,9 @@ class CustomFieldsTable extends AppTable
 
     private function setupFields(Entity $entity)
     {
-        $this->ControllerAction->field('field_type');
-        $this->ControllerAction->field('is_mandatory');
-        $this->ControllerAction->field('is_unique');
+        $this->field('field_type');
+        $this->field('is_mandatory');
+        $this->field('is_unique');
 
         // trigger event to add required fields for different field type
         $fieldType = Inflector::camelize(strtolower($entity->field_type));
@@ -183,7 +184,7 @@ class CustomFieldsTable extends AppTable
             return $event->result;
         }
 
-        $this->ControllerAction->setFieldOrder(['field_type', 'name', 'is_mandatory', 'is_unique']);
+        $this->setFieldOrder(['field_type', 'name', 'is_mandatory', 'is_unique']);
     }
 
     public function setFieldTypes($type)
