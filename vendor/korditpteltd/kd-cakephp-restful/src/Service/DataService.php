@@ -1,7 +1,7 @@
 <?php
 namespace Restful\Service;
 
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 
 class DataService
 {

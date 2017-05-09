@@ -19,6 +19,8 @@ use Cake\Network\Exception\NotFoundException;
 
 /**
  * Provides access to panel data.
+ *
+ * @property \DebugKit\Model\Table\PanelsTable $Panels
  */
 class PanelsController extends Controller
 {
@@ -53,10 +55,10 @@ class PanelsController extends Controller
      */
     public function beforeRender(Event $event)
     {
-        $builder = $this->viewBuilder();
-        if (!$builder->className()) {
-            $builder->layout('DebugKit.panel')
-                ->className('DebugKit.Ajax');
+        $this->viewBuilder()->layout('DebugKit.toolbar');
+
+        if (!$this->request->is('json')) {
+            $this->viewBuilder()->className('DebugKit.Ajax');
         }
     }
 
@@ -93,6 +95,8 @@ class PanelsController extends Controller
         $panel = $this->Panels->get($id);
 
         $this->set('panel', $panel);
-        $this->set(unserialize($panel->content));
+        // @codingStandardsIgnoreStart
+        $this->set(@unserialize($panel->content));
+        // @codingStandardsIgnoreEnd
     }
 }
