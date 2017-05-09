@@ -8,7 +8,7 @@ angular.module('kd.data.svc', [])
         _className: '', // model classname
         _method: 'GET', // GET/POST/PUT/DELETE
         _controllerAction: null,
-        _id: 0, // model primary key
+        _id: null, // model primary key
         _select: [],
         _contain: [],
         _finder: [],
@@ -37,13 +37,8 @@ angular.module('kd.data.svc', [])
             return this;
         },
 
-        urlsafeB64Encode: function(textStr) {
-            let encoded = encodeURI(btoa(textStr)).replace(/=/gi, "");
-            return encoded;
-        },
-
         reset: function() {
-            this._id = 0;
+            this._id = null;
             this._select = [];
             this._contain = [];
             this._finder = [];
@@ -284,7 +279,7 @@ angular.module('kd.data.svc', [])
                 params.push('_search=' + this._search);
             }
 
-            if (this._id > 0) {
+            if (this._id != null) {
                 url += '/' + this._id;
             }
 
@@ -297,29 +292,29 @@ angular.module('kd.data.svc', [])
         },
 
         save: function(data) {
-            this._method = 'POST';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
-                data: data
+                data: data,
+                method: 'POST'
             };
             return this.ajax(settings);
         },
 
         edit: function(data) {
-            this._method = 'PATCH';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
-                data: data
+                data: data,
+                method: 'PATCH'
             };
             return this.ajax(settings);
         },
 
         translate: function(data, options = undefined) {
-            this._method = 'POST';
             this._className = 'translate';
             var settings = {
                 headers: {'Content-Type': 'application/json'},
-                data: data
+                data: data,
+                method: 'POST'
             };
             if (options != undefined) {
                 if (options.defer != undefined) {
@@ -337,8 +332,14 @@ angular.module('kd.data.svc', [])
         controllerAction: controllerAction,
         init: init,
         wildcard: wildcard,
-        customAjax: customAjax
+        customAjax: customAjax,
+        urlsafeB64Encode: urlsafeB64Encode
     };
+
+    function urlsafeB64Encode(textStr) {
+        let encoded = encodeURI(btoa(textStr)).replace(/=/gi, "");
+        return encoded;
+    }
 
     function customAjax (url, options, data) {
         if (!angular.isDefined(options)) {

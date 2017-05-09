@@ -69,6 +69,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index', 'add'],
             'ClassStudents' => ['view', 'edit'],
+            'StudentCompetencies' => ['view'],
             'OpenEMIS_Classroom' => ['index', 'view']
         ]);
         $this->setDeleteStrategy('restrict');
