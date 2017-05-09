@@ -1,4 +1,4 @@
-<?php if (!empty($typeOptions)) : ?>
+<?php if (!empty($periodOptions) || !empty($typeOptions) || !empty($statusOptions)) : ?>
 	<div class="toolbar-responsive panel-toolbar">
 		<div class="toolbar-wrapper">
 			<?php
@@ -14,7 +14,7 @@
 				$dataNamedGroup = [];
 				if (!empty($this->request->query)) {
 					foreach ($this->request->query as $key => $value) {
-						if ($key == 'type') continue;
+						if (in_array($key, ['period_id', 'type', 'status'])) continue;
 						echo $this->Form->hidden($key, [
 							'value' => $value,
 							'data-named-key' => $key
@@ -27,18 +27,52 @@
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
-				$inputOptions = [
-					'class' => 'form-control',
-					'label' => false,
-					'options' => $typeOptions,
-					'url' => $baseUrl,
-					'data-named-key' => 'type',
-					'escape' => false
-				];
-				if (!empty($dataNamedGroup)) {
-					$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+				if (!empty($periodOptions)) {
+					$inputOptions = [
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $periodOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'period_id',
+						'escape' => false
+					];
+					if (!empty($dataNamedGroup)) {
+						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+						$dataNamedGroup[] = 'period_id';
+					}
+					echo $this->Form->input('academic_period_id', $inputOptions);
 				}
-				echo $this->Form->input('infrastructure_type', $inputOptions);
+
+				if (!empty($typeOptions)) {
+					$inputOptions = [
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $typeOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'type',
+						'escape' => false
+					];
+					if (!empty($dataNamedGroup)) {
+						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+						$dataNamedGroup[] = 'type';
+					}
+					echo $this->Form->input('room_type', $inputOptions);
+				}
+
+				if (!empty($statusOptions)) {
+					$inputOptions = [
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $statusOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'status',
+						'escape' => false
+					];
+					if (!empty($dataNamedGroup)) {
+						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+					}
+					echo $this->Form->input('room_status', $inputOptions);
+				}
 			?>
 		</div>
 	</div>
