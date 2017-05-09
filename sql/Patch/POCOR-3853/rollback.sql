@@ -80,5 +80,13 @@ SET
   `_delete`='Fields.remove|Pages.remove|Types.remove|RoomPages.remove|RoomTypes.remove'
 WHERE `id`='5018';
 
+UPDATE `security_functions`
+SET
+  `_view`='Infrastructures.index|Infrastructures.view|Rooms.index|Rooms.view',
+  `_edit`='Infrastructures.edit|Rooms.edit',
+  `_add`='Infrastructures.add|Rooms.add',
+  `_delete`='Infrastructures.remove|Rooms.remove'
+WHERE `id`='1011';
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3853';

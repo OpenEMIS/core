@@ -9,10 +9,11 @@ use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
-use App\Model\Table\AppTable;
+
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class CustomFormsTable extends AppTable
+class CustomFormsTable extends ControllerActionTable
 {
     use OptionsTrait;
     const APPLY_TO_ALL_YES = 1;
@@ -150,7 +151,7 @@ class CustomFormsTable extends AppTable
             if (!is_null($entity->_matchingData['CustomModules']->filter)) {
                 if (sizeof($entity->custom_filters) > 0) {
                     $chosenSelectList = [];
-                    foreach ($entity->custom_filters as $key => $value) {
+                    foreach ($entity->custom_filters as $value) {
                         $chosenSelectList[] = $value;
                     }
                     return implode(', ', $chosenSelectList);
@@ -204,7 +205,7 @@ class CustomFormsTable extends AppTable
             ->toArray();
     }
 
-    public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetCustomOrderFieldElement(Event $event, $action, $entity, $attr, $options = [])
     {
         if ($action == 'index') {
             // No implementation yet
@@ -420,17 +421,17 @@ class CustomFormsTable extends AppTable
         return $event->subject()->renderElement('CustomField.form_fields', ['attr' => $attr]);
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->setFieldOrder(['custom_module_id', 'name', 'description']);
+        $this->setFieldOrder(['custom_module_id', 'name', 'description']);
 
         if ($this->hasFilter) {
-            $this->ControllerAction->field('apply_to_all', ['after' => 'custom_module_id']);
-            $this->ControllerAction->field('custom_filters', ['after' => 'apply_to_all']);
+            $this->field('apply_to_all', ['after' => 'custom_module_id']);
+            $this->field('custom_filters', ['after' => 'apply_to_all']);
         }
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $moduleQuery = $this->getModuleQuery();
         $moduleOptions = $moduleQuery->toArray();
@@ -457,7 +458,7 @@ class CustomFormsTable extends AppTable
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query)
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         if ($this->hasFilter) {
             $query->contain(['CustomFilters', 'CustomFields']);
@@ -466,7 +467,7 @@ class CustomFormsTable extends AppTable
         }
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->request->query['module'] = $entity->custom_module_id;
         $this->request->query['apply_all'] = $this->getApplyToAll($entity);
@@ -480,7 +481,7 @@ class CustomFormsTable extends AppTable
         $this->request->query['apply_all'] = $this->getApplyToAll($entity);
     }
 
-    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         // To handle when delete all subjects
         if (!array_key_exists('custom_fields', $data[$this->alias()])) {
@@ -500,7 +501,7 @@ class CustomFormsTable extends AppTable
         $options->exchangeArray($arrayOptions);
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
     }
@@ -628,8 +629,8 @@ class CustomFormsTable extends AppTable
         $selectedModule = $this->request->query('module');
         $customModule = $this->CustomModules->get($selectedModule);
 
-        $this->ControllerAction->setFieldOrder(['custom_module_id', 'name', 'description', 'custom_fields']);
-        $this->ControllerAction->field('custom_module_id');
+        $this->setFieldOrder(['custom_module_id', 'name', 'description', 'custom_fields']);
+        $this->field('custom_module_id');
 
         // for model that has filter:
         // If no pages is added before, show apply_to_all = Yes
@@ -675,8 +676,8 @@ class CustomFormsTable extends AppTable
                 $inputOptions['value'] = self::APPLY_TO_ALL_NO;
                 $inputOptions['attr']['value'] = $applyToAllOptions[self::APPLY_TO_ALL_NO];
 
-                $this->ControllerAction->field('apply_to_all', $inputOptions);
-                $this->ControllerAction->field('custom_filters', [
+                $this->field('apply_to_all', $inputOptions);
+                $this->field('custom_filters', [
                     'type' => 'chosenSelect',
                     'placeholder' => __('Select Filters'),
                     'attr' => ['customModule' => $customModule, 'entity' => $entity],
@@ -686,18 +687,18 @@ class CustomFormsTable extends AppTable
                 $inputOptions['value'] = self::APPLY_TO_ALL_YES;
                 $inputOptions['attr']['value'] = $applyToAllOptions[self::APPLY_TO_ALL_YES];
 
-                $this->ControllerAction->field('apply_to_all', $inputOptions);
+                $this->field('apply_to_all', $inputOptions);
             }
         }
 
-        $this->ControllerAction->field('custom_fields', [
+        $this->field('custom_fields', [
             'type' => 'custom_order_field',
             'valueClass' => 'table-full-width',
             'after' => 'description'
         ]);
     }
 
-    private function getFilterAlias($selectedModule=null)
+    private function getFilterAlias($selectedModule = null)
     {
         if (!is_null($selectedModule)) {
             $customModule = $this->CustomModules->get($selectedModule);

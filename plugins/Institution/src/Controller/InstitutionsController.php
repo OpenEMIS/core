@@ -31,11 +31,6 @@ class InstitutionsController extends AppController
             'History'           => ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
-            'Lands'             => ['className' => 'Institution.InstitutionLands'],
-            'Buildings'             => ['className' => 'Institution.InstitutionBuildings', 'options' => ['deleteStrategy' => 'restrict']],
-            'Floors'             => ['className' => 'Institution.InstitutionFloors', 'options' => ['deleteStrategy' => 'restrict']],
-            'Rooms'             => ['className' => 'Institution.InstitutionRooms', 'options' => ['deleteStrategy' => 'restrict']],
-
             'Staff'             => ['className' => 'Institution.Staff'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
@@ -89,6 +84,22 @@ class InstitutionsController extends AppController
     public function Fees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFees']);
+    }
+    public function Lands()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionLands']);
+    }
+    public function Buildings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuildings']);
+    }
+    public function Floors()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFloors']);
+    }
+    public function Rooms()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionRooms']);
     }
     public function StudentFees()
     {

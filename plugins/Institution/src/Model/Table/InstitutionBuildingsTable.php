@@ -11,10 +11,10 @@ use Cake\Event\Event;
 use Cake\Validation\Validator;
 use Cake\Utility\Inflector;
 use Cake\I18n\Date;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 
-class InstitutionBuildingsTable extends AppTable
+class InstitutionBuildingsTable extends ControllerActionTable
 {
     use OptionsTrait;
     const UPDATE_DETAILS = 1;    // In Use
@@ -60,6 +60,7 @@ class InstitutionBuildingsTable extends AppTable
 
         $this->Levels = TableRegistry::get('Infrastructure.InfrastructureLevels');
         $this->levelOptions = $this->Levels->find('list')->toArray();
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator)
@@ -183,22 +184,22 @@ class InstitutionBuildingsTable extends AppTable
     public function indexBeforeAction(Event $event)
     {
         $this->buildingLevel = $this->Levels->getFieldByCode('BUILDING', 'id');
-        $this->ControllerAction->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'building_type_id', 'building_status_id']);
+        $this->setFieldOrder(['code', 'name', 'institution_id', 'infrastructure_level', 'building_type_id', 'building_status_id']);
         $this->fields['area']['visible'] = false;
         $this->fields['comment']['visible'] = false;
         $this->fields['infrastructure_ownership_id']['visible'] = false;
         $this->fields['year_acquired']['visible'] = false;
         $this->fields['year_disposed']['visible'] = false;
-        $this->ControllerAction->field('institution_id');
-        $this->ControllerAction->field('infrastructure_level', ['after' => 'name']);
-        $this->ControllerAction->field('start_date', ['visible' => false]);
-        $this->ControllerAction->field('start_year', ['visible' => false]);
-        $this->ControllerAction->field('end_date', ['visible' => false]);
-        $this->ControllerAction->field('end_year', ['visible' => false]);
-        $this->ControllerAction->field('institution_land_id', ['visible' => false]);
-        $this->ControllerAction->field('academic_period_id', ['visible' => false]);
-        $this->ControllerAction->field('infrastructure_condition_id', ['visible' => false]);
-        $this->ControllerAction->field('previous_institution_building_id', ['visible' => false]);
+        $this->field('institution_id');
+        $this->field('infrastructure_level', ['after' => 'name']);
+        $this->field('start_date', ['visible' => false]);
+        $this->field('start_year', ['visible' => false]);
+        $this->field('end_date', ['visible' => false]);
+        $this->field('end_year', ['visible' => false]);
+        $this->field('institution_land_id', ['visible' => false]);
+        $this->field('academic_period_id', ['visible' => false]);
+        $this->field('infrastructure_condition_id', ['visible' => false]);
+        $this->field('previous_institution_building_id', ['visible' => false]);
 
         $toolbarElements = [];
         $toolbarElements = $this->addBreadcrumbElement($toolbarElements);
@@ -300,7 +301,7 @@ class InstitutionBuildingsTable extends AppTable
                 $session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
             }
 
-            $url = $this->ControllerAction->url('index');
+            $url = $this->url('index');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
@@ -313,7 +314,7 @@ class InstitutionBuildingsTable extends AppTable
                 if ($diff->days == 0) {
                     $session->write($sessionKey, $this->aliasField('change_in_building_type.restrictEdit'));
 
-                    $url = $this->ControllerAction->url('edit');
+                    $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
                     $event->stopPropagation();
                     return $this->controller->redirect($url);
@@ -338,7 +339,7 @@ class InstitutionBuildingsTable extends AppTable
                 $session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
             }
 
-            $url = $this->ControllerAction->url('index');
+            $url = $this->url('index');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
@@ -711,28 +712,28 @@ class InstitutionBuildingsTable extends AppTable
 
     private function setupFields(Entity $entity)
     {
-        $this->ControllerAction->setFieldOrder([
+        $this->setFieldOrder([
             'change_type', 'institution_land_id', 'academic_period_id', 'institution_id', 'code', 'name', 'building_type_id', 'area', 'building_status_id', 'infrastructure_ownership_id', 'year_acquired', 'year_disposed', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_building_id', 'new_building_type', 'new_start_date'
         ]);
 
-        $this->ControllerAction->field('change_type');
-        $this->ControllerAction->field('building_status_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('institution_land_id', ['entity' => $entity]);
-        $this->ControllerAction->field('academic_period_id', ['entity' => $entity]);
-        $this->ControllerAction->field('institution_id');
-        $this->ControllerAction->field('code');
-        $this->ControllerAction->field('name');
-        $this->ControllerAction->field('area');
-        $this->ControllerAction->field('year_acquired');
-        $this->ControllerAction->field('year_disposed');
-        $this->ControllerAction->field('building_type_id', ['type' => 'select', 'entity' => $entity]);
-        $this->ControllerAction->field('start_date', ['entity' => $entity]);
-        $this->ControllerAction->field('end_date', ['entity' => $entity]);
-        $this->ControllerAction->field('infrastructure_condition_id', ['type' => 'select']);
-        $this->ControllerAction->field('infrastructure_ownership_id', ['type' => 'select']);
-        $this->ControllerAction->field('previous_institution_building_id', ['type' => 'hidden']);
-        $this->ControllerAction->field('new_building_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
-        $this->ControllerAction->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
+        $this->field('change_type');
+        $this->field('building_status_id', ['type' => 'hidden']);
+        $this->field('institution_land_id', ['entity' => $entity]);
+        $this->field('academic_period_id', ['entity' => $entity]);
+        $this->field('institution_id');
+        $this->field('code');
+        $this->field('name');
+        $this->field('area');
+        $this->field('year_acquired');
+        $this->field('year_disposed');
+        $this->field('building_type_id', ['type' => 'select', 'entity' => $entity]);
+        $this->field('start_date', ['entity' => $entity]);
+        $this->field('end_date', ['entity' => $entity]);
+        $this->field('infrastructure_condition_id', ['type' => 'select']);
+        $this->field('infrastructure_ownership_id', ['type' => 'select']);
+        $this->field('previous_institution_building_id', ['type' => 'hidden']);
+        $this->field('new_building_type', ['type' => 'select', 'visible' => false, 'entity' => $entity]);
+        $this->field('new_start_date', ['type' => 'date', 'visible' => false, 'entity' => $entity]);
     }
 
     public function onUpdateFieldInstitutionLandId(Event $event, array $attr, $action, Request $request)
@@ -953,7 +954,7 @@ class InstitutionBuildingsTable extends AppTable
         $newEntity = $this->save($newEntity);
         // End
 
-        $url = $this->ControllerAction->url('edit');
+        $url = $this->url('edit');
         unset($url['type']);
         unset($url['edit_type']);
         $url[1] = $this->paramsEncode(['id' => $newEntity->id]);

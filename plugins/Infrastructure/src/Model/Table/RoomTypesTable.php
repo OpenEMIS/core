@@ -31,6 +31,7 @@ class RoomTypesTable extends ControllerActionTable
         $this->levelOptions = $InfrastructureLevels->find('list')->toArray();
         $this->roomLevel = $InfrastructureLevels->getFieldByCode('ROOM', 'id');
         $this->classificationOptions = $this->getSelectOptions($this->aliasField('classifications'));
+        $this->setDeleteStrategy('restrict');
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)
