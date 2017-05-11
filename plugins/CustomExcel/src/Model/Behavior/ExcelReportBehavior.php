@@ -802,6 +802,7 @@ class ExcelReportBehavior extends Behavior
         $rowData = $this->getPlaceholderData($matchFrom, $extra);
 
         $nestedRowsArray = isset($rowsArray['children']['rows']) ? $rowsArray['children']['rows'] : [];
+        $nestedfilter = array_key_exists('filter', $nestedRowsArray) ? $nestedRowsArray['filter'] : null;
         $nestedMatchFrom = array_key_exists('matchFrom', $nestedRowsArray) ? $nestedRowsArray['matchFrom'] : [];
         $nestedMatchTo = array_key_exists('matchTo', $nestedRowsArray) ? $nestedRowsArray['matchTo'] : [];
         $nestedRowData = !empty($nestedMatchFrom) ? $this->getPlaceholderData($nestedMatchFrom, $extra) : [];
@@ -820,6 +821,14 @@ class ExcelReportBehavior extends Behavior
                 $this->matchColumns($objPHPExcel, $objWorksheet, $objCell, $attr, $columnsArray, $columnIndex, $rowValue, $value, $extra);
             } else {
                 if (!empty($nestedRowsArray)) {
+                    if (!is_null($nestedfilter) && !empty($nestedMatchFrom)) {
+                        $nestedDataFilter = $this->formatFilter($nestedfilter);
+                        list($placeholderPrefix, $placeholderSuffix) = $this->splitDisplayValue($nestedMatchFrom);
+                        $dataPlaceholderFormat = $this->formatPlaceholder($placeholderPrefix).$nestedDataFilter.".".$placeholderSuffix;
+                        $dataPlaceholder = sprintf($dataPlaceholderFormat, $value);
+                        $nestedRowData = Hash::extract($extra['vars'], $dataPlaceholder);
+                    }
+
                     foreach ($nestedRowData as $nestedKey => $nestedValue) {
                         $placeholderFormat = $this->formatPlaceholder($attr['placeholderPrefix']).$attr['filterStr'].".".$attr['placeholderSuffix'];
                         $placeholder = sprintf($placeholderFormat, $value, $nestedValue);
