@@ -19,6 +19,7 @@ use PHPExcel_Cell;
 use PHPExcel_Cell_DataValidation;
 use PHPExcel_Style_Alignment;
 USE PHPExcel_Settings;
+use PHPExcel_Worksheet_MemoryDrawing;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -34,7 +35,8 @@ class ExcelReportBehavior extends Behavior
         'row' => 'repeatRows',
         'column' => 'repeatColumns',
         'match' => 'match',
-        'dropdown' => 'dropdown'
+        'dropdown' => 'dropdown',
+        'image' => 'image'
     ];
     private $suppressAutoInsertNewRow = false;
     private $suppressAutoInsertNewColumn = false;
@@ -241,6 +243,22 @@ class ExcelReportBehavior extends Behavior
 
         // set to empty to remove the placeholder
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
+    }
+
+    public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra)
+    {
+        $imageWidth = $attr['imageWidth'];
+
+        $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
+        $objDrawing->setImageResource($imageResource);
+        $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
+        $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+        $objDrawing->setWidth($imageWidth);
+        $objDrawing->setCoordinates($cellCoordinate);
+        $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
+
+        // set to empty to remove the placeholder
+        $objWorksheet->setCellValue($cellCoordinate, '');
     }
 
     public function saveExcel($objPHPExcel, $filepath)
@@ -935,6 +953,22 @@ class ExcelReportBehavior extends Behavior
         } else {
             $cellCoordinate = $attr['coordinate'];
             $this->renderDropdown($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
+        }
+    }
+
+    private function image($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    {
+        $columnValue = $attr['columnValue'];
+        $rowValue = $attr['rowValue'];
+        $cellCoordinate = $columnValue.$rowValue;
+        $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 72;
+
+        $data = Hash::extract($extra['vars'], $attr['displayValue']);
+        $blob = current($data);
+
+        if (is_resource($blob)) {
+            $imageResource = imagecreatefromstring(stream_get_contents($blob));
+            $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
         }
     }
 }
