@@ -36,7 +36,7 @@ foreach ($data as $entity) {
 		$buttons = $indexButtons->getArrayCopy();
 		$event = $this->ControllerAction->dispatchEvent($table, $eventKey, null, [$entity, $indexButtons->getArrayCopy()]);
 		$buttons = $event->result;
-		
+
 		if (empty($buttons)) {
 			$row[] = '';
 		} else {

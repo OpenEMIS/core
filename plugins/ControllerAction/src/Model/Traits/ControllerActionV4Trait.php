@@ -35,6 +35,7 @@ trait ControllerActionV4Trait {
 		} else {
 			$path = ROOT . DS . 'plugins' . DS . $plugin . DS . 'src' . DS . 'Template' . DS;
 		}
+		$this->ctpFolder = $model->alias();
 		$ctp = $this->ctpFolder . DS . $model->action;
 
 		if (file_exists($path . DS . $ctp . '.ctp')) {

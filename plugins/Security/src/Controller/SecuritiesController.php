@@ -6,59 +6,77 @@ use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\ORM\Table;
 
-class SecuritiesController extends AppController {
-	public function initialize() {
-		parent::initialize();
+class SecuritiesController extends AppController
+{
+    public function initialize()
+    {
+        parent::initialize();
 
-		$this->ControllerAction->models = [
-			'Accounts'		=> ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
-			'Users'			=> ['className' => 'Security.Users'],
-			'SystemGroups'	=> ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']],
-			'Roles'			=> ['className' => 'Security.SecurityRoles'],
-			'Permissions'	=> ['className' => 'Security.Permissions', 'actions' => ['index']]
-		];
-	}
+        $this->ControllerAction->models = [
+            'Accounts'      => ['className' => 'Security.Accounts', 'actions' => ['view', 'edit']],
+            'Users'             => ['className' => 'Security.Users'],
+            'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']],
+            'Roles'             => ['className' => 'Security.SecurityRoles']
+        ];
+    }
 
-	public function UserGroups()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroups']); }
+    public function Permissions()
+    {
+    	// $this->autoRender = false;
+    	// $this->render('Security.Permissions/index');
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
+    }
 
-	public function RefreshToken() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']); }
+    public function UserGroups()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.UserGroups']);
+    }
 
-	public function beforeFilter(Event $event) {
-		parent::beforeFilter($event);
-		$header = 'Security';
-		$this->Navigation->addCrumb($header, ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index']);
-		$this->Navigation->addCrumb($this->request->action);
+    public function RefreshToken()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']);
+    }
 
-		$this->set('contentHeader', __($header));
-	}
+    public function beforeFilter(Event $event)
+    {
+        parent::beforeFilter($event);
+        $header = 'Security';
+        $this->Navigation->addCrumb($header, ['plugin' => 'Security', 'controller' => 'Securities', 'action' => 'index']);
+        $this->Navigation->addCrumb($this->request->action);
 
-	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
-		$header = __('Security');
-		$header .= ' - ' . __($model->getHeader($model->alias));
-		$this->set('contentHeader', $header);
-	}
+        $this->set('contentHeader', __($header));
+    }
 
-	public function index() {
-		return $this->redirect(['action' => 'Users']);
-	}
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra)
+    {
+        $header = __('Security');
+        $header .= ' - ' . __($model->getHeader($model->alias));
+        $this->set('contentHeader', $header);
+    }
 
-	public function getUserTabElements($options = []) {
-		$plugin = $this->plugin;
-		$name = $this->name;
+    public function index()
+    {
+        return $this->redirect(['action' => 'Users']);
+    }
 
-		$id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
+    public function getUserTabElements($options = [])
+    {
+        $plugin = $this->plugin;
+        $name = $this->name;
 
-		$tabElements = [
-			$this->name => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
-				'text' => __('Details')
-			],
-			'Accounts' => [
-				'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
-				'text' => __('Account')
-			]
-		];
+        $id = (array_key_exists('id', $options))? $options['id']: $this->request->session()->read($name.'.id');
 
-		return $tabElements;
-	}
+        $tabElements = [
+            $this->name => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Users', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
+                'text' => __('Details')
+            ],
+            'Accounts' => [
+                'url' => ['plugin' => $plugin, 'controller' => $name, 'action' => 'Accounts', 'view', $this->ControllerAction->paramsEncode(['id' => $id])],
+                'text' => __('Account')
+            ]
+        ];
+
+        return $tabElements;
+    }
 }
