@@ -92,7 +92,13 @@ class ExcelReportBehavior extends Behavior
         $objPHPExcel = $this->loadExcelTemplate($extra);
         $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateBeforeGenerate', [$params, $extra], $this);
         $this->generateExcel($objPHPExcel, $extra);
-        $this->saveFile($objPHPExcel, $filepath);
+
+        if ($this->config('format') == 'xlsx') {
+            $this->saveExcel($objPHPExcel, $filepath);
+
+        } else if ($this->config('format') == 'pdf') {
+            $this->savePdf($objPHPExcel, $filepath);
+        }
 
         if ($extra->offsetExists('tmp_file_path')) {
             // delete temporary excel template file after save
@@ -237,19 +243,20 @@ class ExcelReportBehavior extends Behavior
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
     }
 
-    public function saveFile($objPHPExcel, $filepath)
+    public function saveExcel($objPHPExcel, $filepath)
     {
-        $writer = 'Excel2007';
+        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel2007');
+        $objWriter->save($filepath);
+    }
 
-        if ($this->config('format') == 'pdf') {
-            $rendererName = PHPExcel_Settings::PDF_RENDERER_DOMPDF;
-            $rendererLibrary = 'dompdf';
-            $rendererLibraryPath = ROOT . DS . 'vendor' . DS . $rendererLibrary;
-            PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath);
-            $writer = 'PDF';
-        }
+    public function savePdf($objPHPExcel, $filepath)
+    {
+        $rendererName = PHPExcel_Settings::PDF_RENDERER_DOMPDF;
+        $rendererLibrary = 'dompdf';
+        $rendererLibraryPath = ROOT . DS . 'vendor' . DS . $rendererLibrary;
+        PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath);
 
-        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, $writer);
+        $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'PDF');
         $objWriter->writeAllSheets();
         $objWriter->save($filepath);
     }
