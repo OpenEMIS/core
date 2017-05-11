@@ -49,6 +49,10 @@ DROP TABLE infrastructure_custom_forms_fields;
 ALTER TABLE `z_3853_infrastructure_custom_forms_fields`
 RENAME TO `infrastructure_custom_forms_fields`;
 
+-- infrastructure_custom_field_values
+ALTER TABLE `z_3853_infrastructure_custom_field_values`
+RENAME TO  `infrastructure_custom_field_values` ;
+
 -- institution_rooms
 ALTER TABLE `institution_rooms`
 CHANGE COLUMN `institution_floor_id` `institution_infrastructure_id` INT(11) NOT NULL,
