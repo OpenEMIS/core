@@ -18,6 +18,8 @@ class ExcelReportComponent extends Component
 
 	public function renderExcel($params=[])
 	{
+		$this->controller->autoRender = false;
+
 		$className = $params['className'];
 		$model = TableRegistry::get($className);
 
@@ -28,6 +30,8 @@ class ExcelReportComponent extends Component
 
 	public function viewVars($params=[])
 	{
+		$this->controller->autoRender = false;
+
 		$className = $params['className'];
 		$model = TableRegistry::get($className);
 
