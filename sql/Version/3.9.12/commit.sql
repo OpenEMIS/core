@@ -26,6 +26,23 @@ INSERT INTO `institution_genders` (`id`, `name`, `code`, `order`, `created_user_
 (2, 'Male', 'M', 2, 1, '2017-04-13 00:00:00'),
 (3, 'Female', 'F', 3, 1, '2017-04-13 00:00:00');
 
+UPDATE z_3271_institution_genders SET name = 'Female' WHERE name = 'Girls';
+UPDATE z_3271_institution_genders SET name = 'Male' WHERE name = 'Boys';
+
+UPDATE z_3271_institution_genders
+JOIN institution_genders ON institution_genders.name = z_3271_institution_genders.name
+SET `national_code` = institution_genders.id;
+
+UPDATE institutions
+JOIN z_3271_institution_genders
+    ON z_3271_institution_genders.id = institutions.institution_gender_id
+SET institutions.institution_gender_id = z_3271_institution_genders.`national_code`;
+
+UPDATE institutions
+SET institution_gender_id = 1
+WHERE NOT EXISTS (
+    SELECT 1 FROM institution_genders WHERE id = institution_gender_id
+);
 
 -- POCOR-3690
 INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3690', NOW());
