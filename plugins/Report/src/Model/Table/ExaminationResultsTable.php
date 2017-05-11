@@ -9,8 +9,8 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use App\Model\Table\AppTable;
 
-class ExaminationResultsTable extends AppTable  {
-
+class ExaminationResultsTable extends AppTable
+{
     private $examinationResults = [];
     private $itemWeightedMark = 0;
     private $totalMarks = 0;
@@ -18,17 +18,33 @@ class ExaminationResultsTable extends AppTable  {
 
     public function initialize(array $config)
     {
-        $this->table('examination_centre_students');
+        $this->table('examination_centres_examinations_students');
         parent::initialize($config);
-
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
+        $this->belongsTo('ExaminationCentresExaminations', [
+            'className' => 'Examination.ExaminationCentresExaminations',
+            'foreignKey' => ['examination_centre_id', 'examination_id']
+        ]);
+        $this->belongsToMany('ExaminationCentresExaminationsSubjects', [
+            'className' => 'Examination.ExaminationCentresExaminationsSubjects',
+            'joinTable' => 'examination_centres_examinations_subjects_students',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', [
+            'className' => 'Examination.ExaminationCentreRoomsExaminationsStudents',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'bindingKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->addBehavior('Excel', [
             'excludes' => ['id', 'total_mark'],
@@ -38,7 +54,8 @@ class ExaminationResultsTable extends AppTable  {
         $this->addBehavior('Report.ReportList');
     }
 
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
+    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets)
+    {
         $sheets[] = [
             'name' => $this->alias(),
             'table' => $this,
@@ -47,10 +64,11 @@ class ExaminationResultsTable extends AppTable  {
         ];
     }
 
-    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
         $requestData = json_decode($settings['process']['params']);
-        $selectedExam = !empty($requestData->examination_id) ? $requestData->examination_id : -1;
-        $selectedInstitution = !empty($requestData->institution_id) ? $requestData->institution_id : -1;
+        $selectedExam = $requestData->examination_id;
+        $selectedInstitution = $requestData->institution_id;
 
         $query
             ->contain(['Users', 'Institutions'])
@@ -59,8 +77,9 @@ class ExaminationResultsTable extends AppTable  {
             ->group($this->aliasField('student_id'))
             ->order($this->aliasField('institution_id'));
 
-        if ($selectedInstitution != -1) {
-            $query->where([$this->aliasField('institution_id') => $selectedInstitution]);
+        if (!empty($selectedInstitution)) {
+            $institutionId = ($selectedInstitution != '-1') ? $selectedInstitution : 0;
+            $query->where([$this->aliasField('institution_id') => $institutionId]);
         }
     }
 
@@ -182,27 +201,27 @@ class ExaminationResultsTable extends AppTable  {
         $fields->exchangeArray($newFields);
     }
 
-    public function onExcelGetExaminationId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetExaminationId(Event $event, Entity $entity)
     {
-        if ($entity->examination_id) {
+        if ($entity->has('examination')) {
             return $entity->examination->code_name;
         } else {
             return '';
         }
     }
 
-    public function onExcelGetExaminationCentreId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetExaminationCentreId(Event $event, Entity $entity)
     {
-        if ($entity->examination_centre_id) {
+        if ($entity->has('examination_centre')) {
             return $entity->examination_centre->code_name;
         } else {
             return '';
         }
     }
 
-    public function onExcelGetInstitutionId(Event $event, Entity $entity, array $attr)
+    public function onExcelGetInstitutionId(Event $event, Entity $entity)
     {
-        if ($entity->institution_id) {
+        if ($entity->has('institution')) {
             return $entity->institution->code_name;
         } else {
             return __('Private Candidate');
@@ -245,21 +264,22 @@ class ExaminationResultsTable extends AppTable  {
         return $printedResult;
     }
 
-    public function onExcelGetItemWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelGetItemWeightedMark(Event $event, Entity $entity)
     {
         $printedResult = $this->itemWeightedMark;
         $this->itemWeightedMark = 0;
         return ' '.$printedResult;
     }
 
-    public function onExcelGetTotalWeightedMark(Event $event, Entity $entity, array $attr)
+    public function onExcelGetTotalWeightedMark(Event $event, Entity $entity)
     {
         $printedResult = $this->totalWeightedMark;
         $this->totalWeightedMark = 0;
         return $printedResult;
     }
 
-    public function onExcelGetTotalMark(Event $event, Entity $entity, array $attr) {
+    public function onExcelGetTotalMark(Event $event, Entity $entity)
+    {
         $printedResult = $this->totalMarks;
         $this->totalMarks = 0;
         return $printedResult;

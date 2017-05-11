@@ -4,7 +4,11 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
+<<<<<<< HEAD
     "content-hash": "fca02272c966375aca57cf6a77574164",
+=======
+    "content-hash": "a7e489abcb9dc82710fceec5c3d20856",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -242,7 +246,11 @@
             "keywords": [
                 "framework"
             ],
+<<<<<<< HEAD
             "time": "2017-04-07T02:04:27+00:00"
+=======
+            "time": "2016-06-21T03:01:37+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "cakephp/chronos",
@@ -299,6 +307,7 @@
                 "datetime",
                 "time"
             ],
+<<<<<<< HEAD
             "time": "2017-04-27T01:27:49+00:00"
         },
         {
@@ -362,6 +371,9 @@
             "description": "DOMPDF is a CSS 2.1 compliant HTML to PDF converter",
             "homepage": "https://github.com/dompdf/dompdf",
             "time": "2017-02-16T02:40:40+00:00"
+=======
+            "time": "2016-06-15T06:26:37+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "firebase/php-jwt",
@@ -502,7 +514,11 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
+<<<<<<< HEAD
             "time": "2017-04-27 07:38:12"
+=======
+            "time": "2017-04-26T08:50:43+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
@@ -544,7 +560,11 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
             },
+<<<<<<< HEAD
             "time": "2017-04-27T07:04:39+00:00"
+=======
+            "time": "2017-03-20T09:46:41+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "korditpteltd/kd-cakephp-webhooks",
@@ -586,7 +606,7 @@
         },
         {
             "name": "mk-j/php_xlsxwriter",
-            "version": "dev-master",
+            "version": "0.32",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
@@ -624,7 +644,11 @@
                 "xls",
                 "xlsx"
             ],
+<<<<<<< HEAD
             "time": "2017-03-09 16:25:31"
+=======
+            "time": "2017-03-09T16:25:31+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "mobiledetect/mobiledetectlib",
@@ -676,7 +700,11 @@
                 "mobile detector",
                 "php mobile detect"
             ],
+<<<<<<< HEAD
             "time": "2017-03-29T13:59:30+00:00"
+=======
+            "time": "2016-04-24T09:47:16+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "onelogin/php-saml",
@@ -730,6 +758,7 @@
                 "onelogin",
                 "saml"
             ],
+<<<<<<< HEAD
             "time": "2017-03-13T09:56:49+00:00"
         },
         {
@@ -805,6 +834,9 @@
             "description": "A library to read, parse and export to PDF SVG files.",
             "homepage": "https://github.com/PhenX/php-svg-lib",
             "time": "2016-12-13T20:25:45+00:00"
+=======
+            "time": "2016-07-19T17:14:29+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpoffice/phpexcel",
@@ -954,6 +986,7 @@
                 "x509"
             ],
             "time": "2016-10-04T00:57:04+00:00"
+<<<<<<< HEAD
         },
         {
             "name": "psr/http-message",
@@ -1004,6 +1037,8 @@
                 "response"
             ],
             "time": "2016-08-06T14:39:51+00:00"
+=======
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "psr/log",
@@ -1050,6 +1085,7 @@
                 "psr",
                 "psr-3"
             ],
+<<<<<<< HEAD
             "time": "2016-10-10T12:19:37+00:00"
         },
         {
@@ -1144,6 +1180,9 @@
                 "psr-7"
             ],
             "time": "2017-04-06T16:18:34+00:00"
+=======
+            "time": "2012-12-21T11:40:51+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         }
     ],
     "packages-dev": [
@@ -1192,7 +1231,11 @@
                 "bake",
                 "cakephp"
             ],
+<<<<<<< HEAD
             "time": "2017-01-31T00:59:03+00:00"
+=======
+            "time": "2016-06-28T01:58:30+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "cakephp/debug_kit",
@@ -1250,7 +1293,11 @@
                 "debug",
                 "kit"
             ],
+<<<<<<< HEAD
             "time": "2017-03-16T01:28:35+00:00"
+=======
+            "time": "2016-05-28T15:47:46+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "cakephp/migrations",
@@ -1300,7 +1347,11 @@
                 "cakephp",
                 "migrations"
             ],
+<<<<<<< HEAD
             "time": "2017-01-07T16:45:31+00:00"
+=======
+            "time": "2016-06-14T21:01:47+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "cakephp/plugin-installer",
@@ -1341,7 +1392,11 @@
                 }
             ],
             "description": "A composer installer for CakePHP 3.0+ plugins.",
+<<<<<<< HEAD
             "time": "2017-03-21T13:48:47+00:00"
+=======
+            "time": "2016-04-28T03:01:34+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "composer/ca-bundle",
@@ -1385,6 +1440,7 @@
             "license": [
                 "MIT"
             ],
+<<<<<<< HEAD
             "authors": [
                 {
                     "name": "Jordi Boggiano",
@@ -1401,6 +1457,10 @@
                 "tls"
             ],
             "time": "2017-03-06T11:59:08+00:00"
+=======
+            "description": "implementation of xdg base directory specification for php",
+            "time": "2014-10-24T07:27:01+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "composer/composer",
@@ -1477,7 +1537,11 @@
                 "dependency",
                 "package"
             ],
+<<<<<<< HEAD
             "time": "2017-03-10T08:29:45+00:00"
+=======
+            "time": "2015-06-14T21:17:01+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "composer/semver",
@@ -1825,6 +1889,7 @@
                 "sql"
             ],
             "time": "2014-01-12T16:20:24+00:00"
+<<<<<<< HEAD
         },
         {
             "name": "justinrainbow/json-schema",
@@ -1892,6 +1957,8 @@
                 "schema"
             ],
             "time": "2017-03-22T22:43:35+00:00"
+=======
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "myclabs/deep-copy",
@@ -1933,7 +2000,11 @@
                 "object",
                 "object graph"
             ],
+<<<<<<< HEAD
             "time": "2017-04-12T18:52:22+00:00"
+=======
+            "time": "2015-11-20T12:04:31+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "nikic/php-parser",
@@ -1984,7 +2055,11 @@
                 "parser",
                 "php"
             ],
+<<<<<<< HEAD
             "time": "2017-03-05T18:23:57+00:00"
+=======
+            "time": "2016-04-19T13:41:41+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpdocumentor/reflection-common",
@@ -2083,7 +2158,11 @@
                 }
             ],
             "description": "With this component, a library can provide support for annotations via DocBlocks or otherwise retrieve information that is embedded in a DocBlock.",
+<<<<<<< HEAD
             "time": "2016-09-30T07:12:33+00:00"
+=======
+            "time": "2016-06-10T09:48:41+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpdocumentor/type-resolver",
@@ -2130,7 +2209,11 @@
                     "email": "me@mikevanriel.com"
                 }
             ],
+<<<<<<< HEAD
             "time": "2016-11-25T06:54:22+00:00"
+=======
+            "time": "2016-06-10T07:14:17+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpspec/prophecy",
@@ -2193,7 +2276,11 @@
                 "spy",
                 "stub"
             ],
+<<<<<<< HEAD
             "time": "2017-03-02T20:05:34+00:00"
+=======
+            "time": "2016-06-07T08:13:47+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -2256,7 +2343,11 @@
                 "testing",
                 "xunit"
             ],
+<<<<<<< HEAD
             "time": "2017-04-02T07:44:40+00:00"
+=======
+            "time": "2016-06-03T05:03:56+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpunit/php-file-iterator",
@@ -2303,7 +2394,11 @@
                 "filesystem",
                 "iterator"
             ],
+<<<<<<< HEAD
             "time": "2016-10-03T07:40:28+00:00"
+=======
+            "time": "2015-06-21T13:08:43+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpunit/php-text-template",
@@ -2393,7 +2488,11 @@
             "keywords": [
                 "timer"
             ],
+<<<<<<< HEAD
             "time": "2017-02-26T11:10:40+00:00"
+=======
+            "time": "2016-05-12T18:03:57+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpunit/php-token-stream",
@@ -2442,7 +2541,11 @@
             "keywords": [
                 "tokenizer"
             ],
+<<<<<<< HEAD
             "time": "2017-02-27T10:12:30+00:00"
+=======
+            "time": "2015-09-15T10:49:45+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpunit/phpunit",
@@ -2524,7 +2627,11 @@
                 "testing",
                 "xunit"
             ],
+<<<<<<< HEAD
             "time": "2017-04-03T02:22:27+00:00"
+=======
+            "time": "2016-06-16T06:01:15+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "phpunit/phpunit-mock-objects",
@@ -2583,7 +2690,11 @@
                 "mock",
                 "xunit"
             ],
+<<<<<<< HEAD
             "time": "2016-12-08T20:27:08+00:00"
+=======
+            "time": "2016-06-12T07:37:26+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "psy/psysh",
@@ -2656,7 +2767,11 @@
                 "interactive",
                 "shell"
             ],
+<<<<<<< HEAD
             "time": "2017-03-19T21:40:44+00:00"
+=======
+            "time": "2016-03-09T05:03:14+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "robmorgan/phinx",
@@ -2722,7 +2837,11 @@
                 "migrations",
                 "phinx"
             ],
+<<<<<<< HEAD
             "time": "2016-10-27T10:16:12+00:00"
+=======
+            "time": "2016-03-07T14:09:22+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -2767,7 +2886,11 @@
             ],
             "description": "Looks up which function or method a line of code belongs to",
             "homepage": "https://github.com/sebastianbergmann/code-unit-reverse-lookup/",
+<<<<<<< HEAD
             "time": "2017-03-04T06:30:41+00:00"
+=======
+            "time": "2016-02-13T06:45:14+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "sebastian/comparator",
@@ -2831,7 +2954,11 @@
                 "compare",
                 "equality"
             ],
+<<<<<<< HEAD
             "time": "2017-01-29T09:50:25+00:00"
+=======
+            "time": "2015-07-26T15:48:44+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "sebastian/diff",
@@ -2933,7 +3060,11 @@
                 "environment",
                 "hhvm"
             ],
+<<<<<<< HEAD
             "time": "2016-11-26T07:53:53+00:00"
+=======
+            "time": "2016-05-17T03:18:57+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "sebastian/exporter",
@@ -3000,7 +3131,11 @@
                 "export",
                 "exporter"
             ],
+<<<<<<< HEAD
             "time": "2016-11-19T08:54:04+00:00"
+=======
+            "time": "2016-06-17T09:04:28+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "sebastian/global-state",
@@ -3097,7 +3232,11 @@
             ],
             "description": "Traverses array structures and object graphs to enumerate all referenced objects",
             "homepage": "https://github.com/sebastianbergmann/object-enumerator/",
+<<<<<<< HEAD
             "time": "2017-02-18T15:18:39+00:00"
+=======
+            "time": "2016-01-28T13:25:10+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "sebastian/recursion-context",
@@ -3150,7 +3289,11 @@
             ],
             "description": "Provides functionality to recursively process PHP variables",
             "homepage": "http://www.github.com/sebastianbergmann/recursion-context",
+<<<<<<< HEAD
             "time": "2016-11-19T07:33:16+00:00"
+=======
+            "time": "2015-11-11T19:50:13+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "sebastian/resource-operations",
@@ -3235,6 +3378,7 @@
             ],
             "description": "Library that helps with managing the version number of Git-hosted PHP projects",
             "homepage": "https://github.com/sebastianbergmann/version",
+<<<<<<< HEAD
             "time": "2016-10-03T07:35:21+00:00"
         },
         {
@@ -3377,6 +3521,9 @@
                 "phra"
             ],
             "time": "2015-10-13T18:44:15+00:00"
+=======
+            "time": "2016-02-04T12:56:52+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "symfony/config",
@@ -3432,7 +3579,11 @@
             ],
             "description": "Symfony Config Component",
             "homepage": "https://symfony.com",
+<<<<<<< HEAD
             "time": "2017-04-04T15:30:56+00:00"
+=======
+            "time": "2016-05-20T11:48:17+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "symfony/console",
@@ -3495,6 +3646,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
+<<<<<<< HEAD
             "time": "2017-04-04T14:33:42+00:00"
         },
         {
@@ -3553,6 +3705,9 @@
             "description": "Symfony Debug Component",
             "homepage": "https://symfony.com",
             "time": "2017-03-28T21:38:24+00:00"
+=======
+            "time": "2016-06-14T11:18:07+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "symfony/filesystem",
@@ -3601,6 +3756,7 @@
             ],
             "description": "Symfony Filesystem Component",
             "homepage": "https://symfony.com",
+<<<<<<< HEAD
             "time": "2017-03-26T15:47:15+00:00"
         },
         {
@@ -3651,6 +3807,9 @@
             "description": "Symfony Finder Component",
             "homepage": "https://symfony.com",
             "time": "2017-03-20T09:32:19+00:00"
+=======
+            "time": "2016-04-12T18:27:47+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -3709,6 +3868,7 @@
                 "portable",
                 "shim"
             ],
+<<<<<<< HEAD
             "time": "2016-11-14T01:06:16+00:00"
         },
         {
@@ -3759,6 +3919,9 @@
             "description": "Symfony Process Component",
             "homepage": "https://symfony.com",
             "time": "2017-03-27T18:07:02+00:00"
+=======
+            "time": "2016-05-18T14:26:46+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "symfony/var-dumper",
@@ -3824,7 +3987,11 @@
                 "debug",
                 "dump"
             ],
+<<<<<<< HEAD
             "time": "2017-03-12T16:07:05+00:00"
+=======
+            "time": "2016-05-24T10:06:56+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "symfony/yaml",
@@ -3879,7 +4046,11 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
+<<<<<<< HEAD
             "time": "2017-03-20T09:45:15+00:00"
+=======
+            "time": "2016-06-14T11:18:07+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         {
             "name": "webmozart/assert",
@@ -3929,14 +4100,17 @@
                 "check",
                 "validate"
             ],
+<<<<<<< HEAD
             "time": "2016-11-23T20:04:58+00:00"
+=======
+            "time": "2015-08-24T13:29:44+00:00"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         }
     ],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
         "phpoffice/phpexcel": 20,
-        "mk-j/php_xlsxwriter": 20,
         "korditpteltd/kd-cakephp-restful": 20,
         "psy/psysh": 0
     },

@@ -27,7 +27,7 @@ $this->start('toolbar');
 $this->end();
 $this->start('panelBody');
 ?>
-<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionSubjectStudentsCtrl as InstitutionSubjectStudentsController">
+<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionSubjectStudentsCtrl as InstitutionSubjectStudentsController">
     <div class="alert {{InstitutionSubjectStudentsController.class}}" ng-hide="InstitutionSubjectStudentsController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionSubjectStudentsController.message}}
     </div>

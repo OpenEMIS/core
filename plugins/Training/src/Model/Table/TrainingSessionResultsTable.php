@@ -34,241 +34,267 @@ class TrainingSessionResultsTable extends ControllerActionTable
             'Dashboard' => ['index']
         ]);
         $this->toggle('add', false);
-    }
+	}
 
-    public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
-    {
-        $SessionResults = $this;
-        $TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+	public function editBeforeSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+	{
+        $process = function($model, $entity) use ($data) {
+        	$sessionId = $data[$model->alias()]['training_session_id'];
+			$resultTypeId = $data[$model->alias()]['result_type'];
+			$trainees = $data[$model->alias()]['trainees'];
 
-        $process = function ($model, $entity) use ($data, $SessionResults, $TraineeResults) {
-            $errors = $entity->errors();
+			$newEntities = [];
+			$deleteIds = [];
+			foreach ($trainees as $key => $trainee) {
+				if (strlen($trainee['result']) > 0) {
+					$resultData = [
+						'result' => $trainee['result'],
+						'training_result_type_id' => $resultTypeId,
+						'trainee_id' => $trainee['trainee_id'],
+						'training_session_id' => $sessionId,
+						'counterNo' => $key
+					];
 
-            if (empty($errors)) {
-                $sessionId = $data[$SessionResults->alias()]['training_session_id'];
-                $resultTypeId = $data[$SessionResults->alias()]['result_type'];
-                $trainees = $data[$SessionResults->alias()]['trainees'];
+					if (isset($trainee['id'])) {
+						$resultData['id'] = $trainee['id'];
+					}
 
-                foreach ($trainees as $key => $obj) {
-                    if (strlen($obj['result']) > 0) {
-                        $resultData = [
-                            'result' => $obj['result'],
-                            'training_result_type_id' => $resultTypeId,
-                            'trainee_id' => $obj['trainee_id'],
-                            'training_session_id' => $sessionId
-                        ];
+					$newEntities[] = $resultData;
+				} else {
+					if (isset($trainee['id'])) {
+						$deleteIds[$trainee['id']] = $trainee['id'];
+					}
+				}
+			}
 
-                        if (isset($obj['id'])) {
-                            $resultData['id'] = $obj['id'];
-                        }
+			$success = $this->connection()->transactional(function() use ($newEntities, $entity) {
+                $return = true;
+                foreach ($newEntities as $key => $newData) {
+                    $TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+                    $newEntity = $TraineeResults->newEntity($newData);
+                    if ($newEntity->errors('result')) {
+                        $counterNo = $newData['counterNo'];
+                        $entity->trainees[$counterNo]['errors'] = $newEntity->errors();
 
-                        $resultEntity = $TraineeResults->newEntity($resultData, ['validate' => false]);
-                        if ($TraineeResults->save($resultEntity)) {
-                        } else {
-                            $TraineeResults->log($resultEntity->errors(), 'debug');
-                        }
-                    } else {
-                        if (isset($obj['id'])) {
-                            $TraineeResults->deleteAll([
-                                $TraineeResults->aliasField('id') => $obj['id']
-                            ]);
-                        }
+                        $entity->errors('trainees', ['result' => $newEntity->errors('result')]);
+                    }
+                    if (!$TraineeResults->save($newEntity)) {
+                        $return = false;
                     }
                 }
 
-                return true;
+                return $return;
+            });
+
+            if ($success) {
+            	if (!empty($deleteIds)) {
+            		$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+            		$TraineeResults->deleteAll([
+						$TraineeResults->aliasField('id IN ') => $deleteIds
+					]);
+            	}
+
+				return true;
             } else {
-                return false;
+            	return false;
             }
         };
 
         return $process;
-    }
+	}
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $patchOptions, ArrayObject $extra)
-    {
-        // redirect back to edit page
-        return $this->controller->redirect($this->url('edit'));
-    }
+	public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
+	{
+		// To manually clear all records in training_session_trainee_results when delete
+		$TraineeResults = $this->Sessions->TraineeResults;
+		$TraineeResults->deleteAll([
+			$TraineeResults->aliasField('training_session_id') => $entity->training_session_id
+		]);
+		// End
 
-    public function onBeforeDelete(Event $event, Entity $entity, ArrayObject $extra)
-    {
-        // To manually clear all records in training_session_trainee_results when delete
-        $TraineeResults = $this->Sessions->TraineeResults;
-        $TraineeResults->deleteAll([
-            $TraineeResults->aliasField('training_session_id') => $entity->training_session_id
-        ]);
-        // End
+		// To manually delete from records and transitions table
+		$this->attachWorkflow = $this->controller->Workflow->attachWorkflow;
+		if ($this->attachWorkflow) {
+			$workflowRecord = $this->getRecord($this->registryAlias(), $entity);
+			if (!empty($workflowRecord)) {
+				$WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
+				$workflowRecord = $WorkflowRecords->get($workflowRecord->id);
+				$WorkflowRecords->delete($workflowRecord);
+			}
+		}
+		// End
 
-        // To manually delete from records and transitions table
-        $this->attachWorkflow = $this->controller->Workflow->attachWorkflow;
-        if ($this->attachWorkflow) {
-            $workflowRecord = $this->getRecord($this->registryAlias(), $entity);
-            if (!empty($workflowRecord)) {
-                $WorkflowRecords = TableRegistry::get('Workflow.WorkflowRecords');
-                $workflowRecord = $WorkflowRecords->get($workflowRecord->id);
-                $WorkflowRecords->delete($workflowRecord);
-            }
-        }
-        // End
+		$this->Alert->success('general.delete.success');
 
-        $this->Alert->success('general.delete.success');
+		$event->stopPropagation();
+		return $this->controller->redirect($this->url('index'));
+	}
 
-        $event->stopPropagation();
-        return $this->controller->redirect($this->url('index'));
-    }
+	public function onGetTrainingCourse(Event $event, Entity $entity)
+	{
+		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
+		return $trainingSession->course->name;
+	}
 
-    public function onGetTrainingCourse(Event $event, Entity $entity)
-    {
-        $trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
-        return $trainingSession->course->name;
-    }
+	public function onGetTrainingProvider(Event $event, Entity $entity)
+	{
+		$trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
+		return $trainingSession->_matchingData['TrainingProviders']->name;
+	}
 
-    public function onGetTrainingProvider(Event $event, Entity $entity)
-    {
-        $trainingSession = $this->Sessions->getTrainingSession($entity->training_session_id);
-        return $trainingSession->_matchingData['TrainingProviders']->name;
-    }
+	public function onGetResultType(Event $event, Entity $entity)
+	{
+		$html = '';
 
-    public function onGetResultType(Event $event, Entity $entity)
-    {
-        $html = '';
+		$Form = $event->subject()->Form;
+		$url = [
+			'plugin' => $this->request->params['plugin'],
+		    'controller' => $this->request->params['controller'],
+		    'action' => $this->request->params['action']
+		];
+		if (!empty($this->request->pass)) {
+			$url = array_merge($url, $this->request->pass);
+		}
+		$dataNamedGroup = [];
+		if (!empty($this->request->query)) {
+			foreach ($this->request->query as $key => $value) {
+				if (in_array($key, ['result_type'])) continue;
+				echo $Form->hidden($key, [
+					'value' => $value,
+					'data-named-key' => $key
+				]);
+				$dataNamedGroup[] = $key;
+			}
+		}
+		$baseUrl = $event->subject()->Url->build($url);
 
-        $Form = $event->subject()->Form;
-        $url = [
-            'plugin' => $this->request->params['plugin'],
-            'controller' => $this->request->params['controller'],
-            'action' => $this->request->params['action']
-        ];
-        if (!empty($this->request->pass)) {
-            $url = array_merge($url, $this->request->pass);
-        }
-        $dataNamedGroup = [];
-        if (!empty($this->request->query)) {
-            foreach ($this->request->query as $key => $value) {
-                if (in_array($key, ['result_type'])) {
-                    continue;
-                }
-                echo $Form->hidden($key, [
-                    'value' => $value,
-                    'data-named-key' => $key
-                ]);
-                $dataNamedGroup[] = $key;
-            }
-        }
-        $baseUrl = $event->subject()->Url->build($url);
+		$inputOptions = [
+			'class' => 'form-control',
+			'label' => false,
+			'options' => $this->resultTypeOptions,
+			'url' => $baseUrl,
+			'data-named-key' => 'result_type',
+			'escape' => false
+		];
+		if (!empty($dataNamedGroup)) {
+			$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+			$dataNamedGroup[] = 'result_type';
+		}
 
-        $inputOptions = [
-            'class' => 'form-control',
-            'label' => false,
-            'options' => $this->resultTypeOptions,
-            'url' => $baseUrl,
-            'data-named-key' => 'result_type',
-            'escape' => false
-        ];
-        if (!empty($dataNamedGroup)) {
-            $inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
-            $dataNamedGroup[] = 'result_type';
-        }
-
-        $fieldPrefix = $this->alias();
+		$fieldPrefix = $this->alias();
         $html = $Form->input($fieldPrefix.".result_type", $inputOptions);
 
-        return $html;
-    }
+		return $html;
+	}
 
-    public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options = [])
-    {
+	public function onGetTraineeTableElement(Event $event, $action, $entity, $attr, $options=[])
+	{
         $sessionId = $entity->training_session_id;
-        $selectedResultType = $this->request->query('result_type');
+		$selectedResultType = $this->request->query('result_type');
 
-        $tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result')];
-        $tableCells = [];
-        $alias = $this->alias();
-        $key = 'trainees';
+		$tableHeaders = [__('OpenEMIS No'), __('Name'), __('Result')];
+		$tableCells = [];
+		$alias = $this->alias();
+		$key = 'trainees';
 
-        $trainees = [];
-        if (!is_null($selectedResultType)) {
-            $SessionsTrainees = TableRegistry::get('Training.TrainingSessionsTrainees');
-            $TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
+		$trainees = [];
+		if (!is_null($selectedResultType)) {
+			$SessionsTrainees = TableRegistry::get('Training.TrainingSessionsTrainees');
+			$TraineeResults = TableRegistry::get('Training.TrainingSessionTraineeResults');
 
-            $query = $SessionsTrainees
-                ->find()
-                ->matching('Trainees')
-                ->select([
-                    $TraineeResults->aliasField('id'),
-                    $TraineeResults->aliasField('result'),
-                    $TraineeResults->aliasField('training_result_type_id')
-                ])
-                ->leftJoin(
-                    [$TraineeResults->alias() => $TraineeResults->table()],
-                    [
-                        $TraineeResults->aliasField('trainee_id = ') . $SessionsTrainees->aliasField('trainee_id'),
-                        $TraineeResults->aliasField('training_session_id') => $sessionId,
-                        $TraineeResults->aliasField('training_result_type_id') => $selectedResultType
-                    ]
-                )
-                ->where([
-                    $SessionsTrainees->aliasField('training_session_id') => $sessionId
-                ])
-                ->group([
-                    $SessionsTrainees->aliasField('trainee_id')
-                ])
-                ->autoFields(true);
+			$query = $SessionsTrainees
+				->find()
+				->matching('Trainees')
+				->select([
+					$TraineeResults->aliasField('id'),
+					$TraineeResults->aliasField('result'),
+					$TraineeResults->aliasField('training_result_type_id')
+				])
+				->leftJoin(
+					[$TraineeResults->alias() => $TraineeResults->table()],
+					[
+						$TraineeResults->aliasField('trainee_id = ') . $SessionsTrainees->aliasField('trainee_id'),
+						$TraineeResults->aliasField('training_session_id') => $sessionId,
+						$TraineeResults->aliasField('training_result_type_id') => $selectedResultType
+					]
+				)
+				->where([
+					$SessionsTrainees->aliasField('training_session_id') => $sessionId
+				])
+				->group([
+					$SessionsTrainees->aliasField('trainee_id')
+				])
+				->autoFields(true);
 
-            $trainees = $query->toArray();
+			$trainees = $query->toArray();
 
-            if (empty($trainees)) {
-                $this->Alert->warning($this->aliasField('noTrainees'));
-            }
-        }
+			if (empty($trainees)) {
+		  		$this->Alert->warning($this->aliasField('noTrainees'));
+		  	}
+		}
 
-        if ($action == 'view') {
-            foreach ($trainees as $i => $obj) {
-                $traineeObj = $obj->_matchingData['Trainees'];
-                $traineeResult = $obj->{$TraineeResults->alias()};
+		if ($action == 'view') {
+			foreach ($trainees as $i => $obj) {
+				$traineeObj = $obj->_matchingData['Trainees'];
+				$traineeResult = $obj->{$TraineeResults->alias()};
 
-                $rowData = [];
-                $rowData[] = $event->subject()->Html->link($traineeObj->openemis_no, [
-                    'plugin' => 'Directory',
+				$rowData = [];
+				$rowData[] = $event->subject()->Html->link($traineeObj->openemis_no , [
+					'plugin' => 'Directory',
                     'controller' => 'Directories',
                     'action' => 'Directories',
                     'view',
                     $this->paramsEncode(['id' => $traineeObj->id])
-                ]);
-                $rowData[] = $traineeObj->name;
-                $rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
-                $tableCells[] = $rowData;
-            }
-        } else {
-            $Form = $event->subject()->Form;
-            foreach ($trainees as $i => $obj) {
-                $fieldPrefix = $alias . '.' . $key . '.' . $i;
-                $traineeObj = $obj->_matchingData['Trainees'];
-                $traineeResult = $obj->{$TraineeResults->alias()};
+				]);
+				$rowData[] = $traineeObj->name;
+				$rowData[] = strlen($traineeResult['result']) ? $traineeResult['result'] : '';
+				$tableCells[] = $rowData;
+			}
+		} else {
+			$Form = $event->subject()->Form;
+			foreach ($trainees as $i => $obj) {
+				$fieldPrefix = $alias . '.' . $key . '.' . $i;
+				$traineeObj = $obj->_matchingData['Trainees'];
+				$traineeResult = $obj->{$TraineeResults->alias()};
 
-                $rowData = [];
-                $name = $traineeObj->name;
-                $name .= $Form->hidden("$fieldPrefix.trainee_id", ['value' => $traineeObj->id]);
-                $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $traineeResult['result']]);
-                if (isset($traineeResult['id'])) {
-                    $result .= $Form->hidden("$fieldPrefix.id", ['value' => $traineeResult['id']]);
+				$rowData = [];
+				$name = $traineeObj->name;
+				$name .= $Form->hidden("$fieldPrefix.trainee_id", ['value' => $traineeObj->id]);
+
+                if ($entity->submit == 'save') { //if come from save process.
+                    $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $entity->trainees[$i]['result']]);
+                    if (array_key_exists('errors', $entity->trainees[$i])) {
+                        $result .= "<div class='error-message'>";
+                        $errors = [];
+                        //flattern 2 dimensional array to cater more than one error returned
+                        array_walk_recursive($entity->trainees[$i]['errors'], function($v, $k) use (&$errors){ $errors[] = $v; });
+                        foreach ($errors as $value) {
+                            $result .= $value;
+                        }
+                        $result .= "</div>";
+                    }
+                } else {
+                    $result = $Form->input("$fieldPrefix.result", ['label' => false, 'value' => $traineeResult['result']]);
                 }
 
-                $rowData[] = $traineeObj->openemis_no;
-                $rowData[] = $name;
-                $rowData[] = $result;
-                $tableCells[] = $rowData;
-            }
-        }
+				if (isset($traineeResult['id'])) {
+					$result .= $Form->hidden("$fieldPrefix.id", ['value' => $traineeResult['id']]);
+				}
 
-        $attr['tableHeaders'] = $tableHeaders;
-        $attr['tableCells'] = $tableCells;
+				$rowData[] = $traineeObj->openemis_no;
+				$rowData[] = $name;
+				$rowData[] = $result;
+				$tableCells[] = $rowData;
+			}
+		}
 
-        return $event->subject()->renderElement('Training.Results/' . $key, ['attr' => $attr]);
-    }
+	  	$attr['tableHeaders'] = $tableHeaders;
+    	$attr['tableCells'] = $tableCells;
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+		return $event->subject()->renderElement('Training.Results/' . $key, ['attr' => $attr]);
+	}
+
+	public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->openStatusIds = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'OPEN');
         $this->approvedStatusIds = $this->Workflow->getStepsByModelCode($this->registryAlias(), 'APPROVED');

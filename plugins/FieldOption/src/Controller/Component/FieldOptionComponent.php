@@ -25,8 +25,7 @@ class FieldOptionComponent extends Component
 {
     private $controller;
     private $fieldOptions = [
-    // Institution 
-        'Genders' => ['className' => 'Institution.Genders', 'parent' => 'Institution'],
+    // Institution
         'NetworkConnectivities' => ['className' => 'Institution.NetworkConnectivities', 'parent' => 'Institution'],
         'Localities' => ['className' => 'Institution.Localities', 'parent' => 'Institution'],
         'Ownerships' => ['className' => 'Institution.Ownerships', 'parent' => 'Institution'],

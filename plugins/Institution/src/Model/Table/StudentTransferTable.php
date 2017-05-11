@@ -153,7 +153,7 @@ class StudentTransferTable extends AppTable {
 
 					$tranferCount = 0;
 					foreach ($data[$this->alias()]['students'] as $key => $studentObj) {
-						if ($studentObj['selected']) {
+						if (isset($studentObj['selected']) && $studentObj['selected']) {
 							unset($studentObj['selected']);
 							$studentObj['academic_period_id'] = $nextAcademicPeriodId;
 							$studentObj['education_grade_id'] = $currentEducationGradeId;
@@ -169,7 +169,6 @@ class StudentTransferTable extends AppTable {
 							$entity = $TransferRequests->newEntity($studentObj);
 							if ($TransferRequests->save($entity)) {
 								$tranferCount++;
-								$this->Alert->success($this->aliasField('success'), ['reset' => true]);
 							} else {
 								$this->log($this->alias() . $entity . print_r($entity->errors(), true), 'error');
 								$this->Alert->error('general.add.failed', ['reset' => true]);
@@ -179,12 +178,12 @@ class StudentTransferTable extends AppTable {
 
 					if ($tranferCount == 0) {
 						$this->Alert->error('general.notSelected');
-					}
-
-					$url = $this->ControllerAction->url('add');
-
-					$event->stopPropagation();
-					return $this->controller->redirect($url);
+					} else {
+                        $this->Alert->success($this->aliasField('success'), ['reset' => true]);
+                        $url = $this->ControllerAction->url('add');
+                        $event->stopPropagation();
+                        return $this->controller->redirect($url);
+                    }
 				}
 			}
 		}
@@ -457,6 +456,7 @@ class StudentTransferTable extends AppTable {
     	$attr['attr']['multiple'] = false;
     	$attr['select'] = true;
     	$attr['options'] = $institutionOptions;
+        $attr['onChangeReload'] = true;
 
     	return $attr;
     }
@@ -481,7 +481,7 @@ class StudentTransferTable extends AppTable {
 
 			$studentQuery = $this
 				->find()
-				->matching('Users');
+				->matching('Users.Genders');
 			$studentQuery
 				->find('byNoExistingTransferRequest')
 				->find('byNoEnrolledRecord')
@@ -502,11 +502,28 @@ class StudentTransferTable extends AppTable {
 			$studentQuery->group($this->aliasField('student_id'));
 
 	  		$students = $studentQuery->toArray();
+
+            if (empty($students)) {
+                $this->Alert->warning($this->aliasField('noData'));
+            }
 	  	}
 
-	  	if (empty($students)) {
-	  		$this->Alert->warning($this->aliasField('noData'));
-	  	}
+        if (!empty($request->data[$this->alias()]['next_institution_id'])) {
+            $nextInstitutionId = $request->data[$this->alias()]['next_institution_id'];
+            $institutionGender = $this->Institutions
+                                ->find()
+                                ->contain('Genders')
+                                ->where([
+                                    $this->Institutions->aliasField('id') => $nextInstitutionId
+                                ])
+                                ->select([
+                                    'Genders.code',
+                                    'Genders.name'
+                                ])
+                                ->first();
+            $attr['nextInstitutionGender'] = $institutionGender->Genders->name;
+            $attr['nextInstitutionGenderCode'] = $institutionGender->Genders->code;
+        }
 
 		$statusOptions = $this->StudentStatuses->find('list')->toArray();
     	$attr['type'] = 'element';
