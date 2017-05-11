@@ -445,10 +445,10 @@ class CustomFormsTable extends ControllerActionTable
             $query->where([$this->aliasField('custom_module_id') => $selectedModule]);
 
             //Add controls filter to index page
-            $toolbarElements = [
-                ['name' => 'CustomField.controls', 'data' => [], 'options' => []]
-            ];
-            $this->controller->set(compact('toolbarElements', 'moduleOptions'));
+            $toolbarElements = ['name' => 'CustomField.controls', 'data' => [], 'options' => [], 'order' => 1];
+
+            $extra['elements']['controls'] = $toolbarElements;
+            $this->controller->set(compact('moduleOptions'));
         }
 
         if ($this->hasFilter) {
