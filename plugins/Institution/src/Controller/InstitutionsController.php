@@ -565,6 +565,9 @@ class InstitutionsController extends AppController
                 $session->write('Institution.Institutions.id', $id);
             } elseif ($this->request->param('institutionId')) {
                 $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+
+                // Remove writing to session once model has been converted to institution plugin
+                $session->write('Institution.Institutions.id', $id);
             } elseif ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
             }
