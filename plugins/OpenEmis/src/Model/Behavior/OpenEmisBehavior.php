@@ -8,12 +8,15 @@ use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 
-class OpenEmisBehavior extends Behavior {
-    public function initialize(array $config) {
+class OpenEmisBehavior extends Behavior
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 4];
         $events['ControllerAction.Model.afterAction'] = ['callable' => 'afterAction', 'priority' => 100];
@@ -27,7 +30,8 @@ class OpenEmisBehavior extends Behavior {
         return $events;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra) {
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
         $action = $this->_table->action;
         switch ($action) {
             case 'index':
@@ -48,15 +52,17 @@ class OpenEmisBehavior extends Behavior {
                 break;
         }
         $form = false; // deprecated
-        if ($action == 'index') $form = true; // deprecated
+        if ($action == 'index') {
+            $form = true;
+        } // deprecated
         $this->_table->controller->set('form', $form); // deprecated
 
         $this->initializeButtons($extra);
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) {
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
         $model = $this->_table;
-
         if ($model->action == 'index' || $model->action == 'view') {
             $modal = [];
             $modal['title'] = $model->getHeader($model->alias()); //$modal['title'] = $model->alias();
@@ -86,7 +92,6 @@ class OpenEmisBehavior extends Behavior {
         $model->controller->set('action', $this->_table->action);
         $model->controller->set('indexElements', []);
         // end deprecated
-
         $this->attachEntityInfoToToolBar($extra);
 
         $access = $model->AccessControl;
@@ -123,7 +128,8 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    private function attachEntityInfoToToolBar($extra) {
+    private function attachEntityInfoToToolBar($extra)
+    {
         $model = $this->_table;
         // further modification on toolbar buttons attributes where entity information will be available
         if ($extra->offsetExists('toolbarButtons')) {
@@ -158,6 +164,7 @@ class OpenEmisBehavior extends Behavior {
 
                 $isDownloadButtonEnabled = $toolbarButtons->offsetExists('download');
                 if ($isDownloadButtonEnabled) {
+                    $model = $this->_table;
                     if ($download = $model->actions('download')) {
                         $determineShow = $download['show'];
                         if (is_callable($download['show'])) {
@@ -194,13 +201,15 @@ class OpenEmisBehavior extends Behavior {
         $extra['config']['form'] = ['class' => ''];
     }
 
-    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
         }
     }
 
-    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra) {
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $extra)
+    {
         $model = $this->_table;
         $errors = $entity->errors();
         if (empty($errors)) {
@@ -210,7 +219,8 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
         $model = $this->_table;
         $errors = $entity->errors();
         if (empty($errors)) {
@@ -220,13 +230,15 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
         if (!$entity) {
             $this->_table->Alert->warning('general.notExists');
         }
     }
 
-    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
         $model = $this->_table;
         if ($model->request->is('delete')) {
             if ($extra['result']) {
@@ -245,7 +257,8 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
+    public function transferAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
         $model = $this->_table;
         if ($model->request->is('delete')) {
             if ($extra['result']) {
@@ -261,7 +274,8 @@ class OpenEmisBehavior extends Behavior {
         }
     }
 
-    private function initializeButtons(ArrayObject $extra) {
+    private function initializeButtons(ArrayObject $extra)
+    {
         $model = $this->_table;
         $controller = $model->controller;
 
@@ -314,7 +328,7 @@ class OpenEmisBehavior extends Behavior {
                     'options' => []
                 ];
             }
-        } else if ($action == 'add' || $action == 'edit') {
+        } elseif ($action == 'add' || $action == 'edit') {
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
             if ($action == 'edit' && $model->actions('index')) {
                 $toolbarButtons['back']['url'] = $model->url($backAction);
@@ -324,7 +338,7 @@ class OpenEmisBehavior extends Behavior {
                 $toolbarButtons['list']['attr'] = $toolbarAttr;
                 $toolbarButtons['list']['attr']['title'] = __('List');
             }
-        } else if ($action == 'view') {
+        } elseif ($action == 'view') {
             // edit button
             $toolbarButtons['back']['url'] = $model->url($backAction, 'QUERY');
             if ($model->actions('edit')) {
@@ -358,9 +372,7 @@ class OpenEmisBehavior extends Behavior {
                     $toolbarButtons['download']['attr']['title'] = __('Download');
                 }
             }
-
-
-        } else if ($action == 'transfer' || ($action == 'remove' && $model->actions('remove') == 'restrict')) {
+        } elseif ($action == 'transfer' || ($action == 'remove' && $model->actions('remove') == 'restrict')) {
             $toolbarButtons['back']['url'] = $model->url('index', 'QUERY');
             $toolbarButtons['back']['type'] = 'button';
             $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
@@ -421,7 +433,8 @@ class OpenEmisBehavior extends Behavior {
         return $btnAttr;
     }
 
-    private function isCAv4() {
+    private function isCAv4()
+    {
         return isset($this->_table->CAVersion) && $this->_table->CAVersion=='4.0';
     }
 }
