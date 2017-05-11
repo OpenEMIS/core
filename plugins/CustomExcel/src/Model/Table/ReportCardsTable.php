@@ -275,10 +275,14 @@ class ReportCardsTable extends AppTable
         if (array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
             $CompetencyTemplates = TableRegistry::get('Competency.CompetencyTemplates');
             $entity = $CompetencyTemplates->find()
+                ->innerJoinWith('Periods')
                 ->where([
                     $CompetencyTemplates->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $CompetencyTemplates->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
-                ]);
+                    $CompetencyTemplates->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
+                    'Periods.start_date >=' => $extra['report_card_start_date'],
+                    'Periods.end_date <=' => $extra['report_card_end_date']
+                ])
+                ->group($CompetencyTemplates->aliasField('id'));
 
             $extra['competency_templates_ids'] = $entity->extract('id')->toArray();
             return $entity->toArray();
@@ -295,22 +299,26 @@ class ReportCardsTable extends AppTable
                     $CompetencyPeriods->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
                     $CompetencyPeriods->aliasField('start_date') . ' >=' => $extra['report_card_start_date'],
                     $CompetencyPeriods->aliasField('end_date') . ' <=' => $extra['report_card_end_date']
-                ])
-                ->toArray();
+                ]);
 
-            return $entity;
+            $extra['competency_periods_ids'] = $entity->extract('id')->toArray();
+            return $entity->toArray();
         }
     }
 
     public function onExcelTemplateInitialiseCompetencyItems(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('competency_periods_ids', $extra) && array_key_exists('academic_period_id', $params)) {
             $CompetencyItems = TableRegistry::get('Competency.CompetencyItems');
             $entity = $CompetencyItems->find()
+                ->select(['competency_period_id' => 'Periods.id'])
+                ->innerJoinWith('Periods')
                 ->where([
                     $CompetencyItems->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $CompetencyItems->aliasField('competency_template_id IN ') => $extra['competency_templates_ids']
+                    $CompetencyItems->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    'Periods.id IN' => $extra['competency_periods_ids']
                 ])
+                ->autoFields(true)
                 ->toArray();
 
             return $entity;
@@ -319,13 +327,17 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseCompetencyCriterias(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('competency_periods_ids', $extra) && array_key_exists('academic_period_id', $params)) {
             $CompetencyCriterias = TableRegistry::get('Competency.CompetencyCriterias');
             $entity = $CompetencyCriterias->find()
+                ->select(['competency_period_id' => 'Periods.id'])
+                ->innerJoinWith('Items.Periods')
                 ->where([
                     $CompetencyCriterias->aliasField('academic_period_id') => $params['academic_period_id'],
-                    $CompetencyCriterias->aliasField('competency_template_id IN ') => $extra['competency_templates_ids']
+                    $CompetencyCriterias->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    'Periods.id IN' => $extra['competency_periods_ids']
                 ])
+                ->autoFields(true)
                 ->toArray();
 
             return $entity;
@@ -334,12 +346,13 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentCompetencyResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('competency_templates_ids', $extra) && array_key_exists('competency_periods_ids', $extra)  && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params)) {
             $StudentCompetencyResults = TableRegistry::get('Institution.StudentCompetencyResults');
             $entity = $StudentCompetencyResults->find()
                 ->contain('CompetencyGradingOptions')
                 ->where([
                     $StudentCompetencyResults->aliasField('competency_template_id IN ') => $extra['competency_templates_ids'],
+                    $StudentCompetencyResults->aliasField('competency_period_id IN ') => $extra['competency_periods_ids'],
                     $StudentCompetencyResults->aliasField('student_id') => $params['student_id'],
                     $StudentCompetencyResults->aliasField('institution_id') => $params['institution_id'],
                     $StudentCompetencyResults->aliasField('academic_period_id') => $params['academic_period_id'],
