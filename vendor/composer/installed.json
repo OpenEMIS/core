@@ -43,6 +43,49 @@
         ]
     },
     {
+<<<<<<< HEAD
+=======
+        "name": "psr/log",
+        "version": "1.0.0",
+        "version_normalized": "1.0.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/php-fig/log.git",
+            "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/php-fig/log/zipball/fe0936ee26643249e916849d48e3a51d5f5e278b",
+            "reference": "fe0936ee26643249e916849d48e3a51d5f5e278b",
+            "shasum": ""
+        },
+        "time": "2012-12-21T11:40:51+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-0": {
+                "Psr\\Log\\": ""
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "PHP-FIG",
+                "homepage": "http://www.php-fig.org/"
+            }
+        ],
+        "description": "Common interface for logging libraries",
+        "keywords": [
+            "log",
+            "psr",
+            "psr-3"
+        ]
+    },
+    {
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "name": "aura/intl",
         "version": "1.1.1",
         "version_normalized": "1.1.1.0",
@@ -182,9 +225,15 @@
         ]
     },
     {
+<<<<<<< HEAD
         "name": "sebastian/resource-operations",
         "version": "1.0.0",
         "version_normalized": "1.0.0.0",
+=======
+        "name": "sebastian/version",
+        "version": "2.0.0",
+        "version_normalized": "2.0.0.0",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "source": {
             "type": "git",
             "url": "https://github.com/sebastianbergmann/resource-operations.git",
@@ -199,7 +248,11 @@
         "require": {
             "php": ">=5.6.0"
         },
+<<<<<<< HEAD
         "time": "2015-07-28T20:34:47+00:00",
+=======
+        "time": "2016-02-04T12:56:52+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -246,10 +299,14 @@
         "require-dev": {
             "phpunit/phpunit": "~4.2"
         },
+<<<<<<< HEAD
         "suggest": {
             "ext-uopz": "*"
         },
         "time": "2015-10-12T03:26:01+00:00",
+=======
+        "time": "2015-07-28T20:34:47+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -299,7 +356,11 @@
         "require-dev": {
             "phpunit/phpunit": "~4.8"
         },
+<<<<<<< HEAD
         "time": "2015-12-08T07:14:41+00:00",
+=======
+        "time": "2015-11-11T19:50:13+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -357,7 +418,11 @@
             "phpunit/phpunit": "~4.0",
             "squizlabs/php_codesniffer": "~2.0"
         },
+<<<<<<< HEAD
         "time": "2015-06-14T21:17:01+00:00",
+=======
+        "time": "2016-01-28T13:25:10+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -406,7 +471,17 @@
         "require": {
             "php": ">=5.3.3"
         },
+<<<<<<< HEAD
         "time": "2015-06-21T13:50:34+00:00",
+=======
+        "require-dev": {
+            "phpunit/phpunit": "~4.2"
+        },
+        "suggest": {
+            "ext-uopz": "*"
+        },
+        "time": "2015-10-12T03:26:01+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -452,7 +527,11 @@
         "require-dev": {
             "phpunit/phpunit": "3.7.*"
         },
+<<<<<<< HEAD
         "time": "2014-01-12T16:20:24+00:00",
+=======
+        "time": "2015-12-08T07:14:41+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -508,7 +587,11 @@
             "phpunit/phpunit": "3.7.*",
             "squizlabs/php_codesniffer": "1.*"
         },
+<<<<<<< HEAD
         "time": "2014-04-08T15:00:19+00:00",
+=======
+        "time": "2015-07-26T15:48:44+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -554,7 +637,11 @@
             "phpunit/phpunit": "~4.0",
             "squizlabs/php_codesniffer": "~1.5"
         },
+<<<<<<< HEAD
         "time": "2015-04-20T18:58:01+00:00",
+=======
+        "time": "2015-06-14T21:17:01+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -627,7 +714,11 @@
         "require": {
             "php": ">=5.3.0"
         },
+<<<<<<< HEAD
         "time": "2015-07-22T18:31:08+00:00",
+=======
+        "time": "2015-06-21T13:50:34+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -670,8 +761,23 @@
             "shasum": ""
         },
         "require": {
+<<<<<<< HEAD
             "cakephp/cakephp": "~3.1",
             "firebase/php-jwt": "~3.0"
+=======
+            "ext-tokenizer": "*",
+            "php": ">=5.3.3"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "~4.2"
+        },
+        "time": "2015-09-15T10:49:45+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "1.4-dev"
+            }
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         "time": "2016-04-02T19:34:30+00:00",
         "type": "cakephp-plugin",
@@ -722,7 +828,11 @@
         "require-dev": {
             "phpunit/phpunit": "^4.6"
         },
+<<<<<<< HEAD
         "time": "2015-12-27T11:43:31+00:00",
+=======
+        "time": "2016-02-13T06:45:14+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1346,6 +1456,7 @@
             "cakephp/cakephp-codesniffer": "~2.1",
             "phpunit/phpunit": "<6.0"
         },
+<<<<<<< HEAD
         "suggest": {
             "ext-openssl": "To use Security::encrypt() or have secure CSRF token generation."
         },
@@ -1405,6 +1516,9 @@
         "bin": [
             "bin/php-parse"
         ],
+=======
+        "time": "2015-06-21T13:08:43+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1453,7 +1567,11 @@
         "suggest": {
             "ext-mbstring": "For best performance"
         },
+<<<<<<< HEAD
         "time": "2016-11-14T01:06:16+00:00",
+=======
+        "time": "2014-01-12T16:20:24+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1518,10 +1636,14 @@
         "require-dev": {
             "twig/twig": "~1.20|~2.0"
         },
+<<<<<<< HEAD
         "suggest": {
             "ext-symfony_debug": ""
         },
         "time": "2017-03-12T16:07:05+00:00",
+=======
+        "time": "2014-04-08T15:00:19+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1587,7 +1709,11 @@
             "symfony/class-loader": "~2.8|~3.0",
             "symfony/http-kernel": "~2.8|~3.0"
         },
+<<<<<<< HEAD
         "time": "2017-03-28T21:38:24+00:00",
+=======
+        "time": "2015-04-20T18:58:01+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1659,6 +1785,11 @@
                 "dev-master": "3.2-dev"
             }
         },
+<<<<<<< HEAD
+=======
+        "time": "2014-10-24T07:27:01+00:00",
+        "type": "project",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
@@ -1721,7 +1852,11 @@
             "ext-readline": "Enables support for arrow-key history navigation, and showing and manipulating command history.",
             "hoa/console": "A pure PHP readline implementation. You'll want this if your PHP install doesn't already support readline or libedit."
         },
+<<<<<<< HEAD
         "time": "2017-03-19T21:40:44+00:00",
+=======
+        "time": "2016-03-09T05:03:14+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "bin": [
             "bin/psysh"
         ],
@@ -1784,7 +1919,11 @@
         "suggest": {
             "symfony/console": "For validating YAML files using the lint command"
         },
+<<<<<<< HEAD
         "time": "2017-03-20T09:45:15+00:00",
+=======
+        "time": "2015-07-22T18:31:08+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1833,10 +1972,65 @@
             "shasum": ""
         },
         "require": {
+<<<<<<< HEAD
             "php": ">=5.6"
         },
         "time": "2016-10-03T07:35:21+00:00",
         "type": "library",
+=======
+            "cakephp/cakephp": "~3.1",
+            "firebase/php-jwt": "~3.0"
+        },
+        "time": "2016-04-02T19:34:30+00:00",
+        "type": "cakephp-plugin",
+        "installation-source": "dist",
+        "autoload": {
+            "psr-4": {
+                "ADmad\\JwtAuth\\": "src"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "ADmad",
+                "homepage": "https://github.com/ADmad",
+                "role": "Author"
+            }
+        ],
+        "description": "CakePHP plugin for authenticating using JSON Web Tokens",
+        "homepage": "http://github.com/ADmad/cakephp-jwt-auth",
+        "keywords": [
+            "Authentication",
+            "authenticate",
+            "cakephp",
+            "jwt"
+        ]
+    },
+    {
+        "name": "cakephp/plugin-installer",
+        "version": "0.0.15",
+        "version_normalized": "0.0.15.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/cakephp/plugin-installer.git",
+            "reference": "8e84898b44df50e88b5109bb7d4d28de845e9bf8"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/cakephp/plugin-installer/zipball/8e84898b44df50e88b5109bb7d4d28de845e9bf8",
+            "reference": "8e84898b44df50e88b5109bb7d4d28de845e9bf8",
+            "shasum": ""
+        },
+        "require-dev": {
+            "cakephp/cakephp-codesniffer": "dev-master",
+            "composer/composer": "1.0.*@dev"
+        },
+        "time": "2016-04-28T03:01:34+00:00",
+        "type": "composer-installer",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "extra": {
             "branch-alias": {
                 "dev-master": "2.0.x-dev"
@@ -1883,7 +2077,11 @@
         "require-dev": {
             "phpunit/phpunit": "~4.4"
         },
+<<<<<<< HEAD
         "time": "2016-11-19T07:33:16+00:00",
+=======
+        "time": "2016-04-24T09:47:16+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1936,10 +2134,14 @@
             "php": ">=5.6",
             "sebastian/recursion-context": "~2.0"
         },
+<<<<<<< HEAD
         "require-dev": {
             "phpunit/phpunit": "~5"
         },
         "time": "2017-02-18T15:18:39+00:00",
+=======
+        "time": "2016-06-14T11:18:07+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1988,7 +2190,11 @@
             "ext-mbstring": "*",
             "phpunit/phpunit": "~4.4"
         },
+<<<<<<< HEAD
         "time": "2016-11-19T08:54:04+00:00",
+=======
+        "time": "2016-06-17T09:04:28+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2055,7 +2261,11 @@
         "require-dev": {
             "phpunit/phpunit": "^5.0"
         },
+<<<<<<< HEAD
         "time": "2016-11-26T07:53:53+00:00",
+=======
+        "time": "2016-05-17T03:18:57+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2182,7 +2392,11 @@
         "suggest": {
             "ext-soap": "*"
         },
+<<<<<<< HEAD
         "time": "2016-12-08T20:27:08+00:00",
+=======
+        "time": "2016-06-12T07:37:26+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2234,7 +2448,11 @@
         "require-dev": {
             "phpunit/phpunit": "^4.8.35 || ^5.7 || ^6.0"
         },
+<<<<<<< HEAD
         "time": "2017-02-26T11:10:40+00:00",
+=======
+        "time": "2016-05-12T18:03:57+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2282,7 +2500,11 @@
         "require": {
             "php": ">=5.3.3"
         },
+<<<<<<< HEAD
         "time": "2016-10-03T07:40:28+00:00",
+=======
+        "time": "2016-06-03T05:03:56+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2382,7 +2604,11 @@
         "require-dev": {
             "phpunit/phpunit": "~4.2"
         },
+<<<<<<< HEAD
         "time": "2017-02-27T10:12:30+00:00",
+=======
+        "time": "2015-08-24T13:29:44+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2498,7 +2724,11 @@
             "phpunit/phpunit": "^4.6",
             "sebastian/version": "^1.0.1"
         },
+<<<<<<< HEAD
         "time": "2016-11-23T20:04:58+00:00",
+=======
+        "time": "2015-12-27T11:43:31+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2551,7 +2781,11 @@
             "mockery/mockery": "^0.9.4",
             "phpunit/phpunit": "^5.2||^4.8.24"
         },
+<<<<<<< HEAD
         "time": "2016-11-25T06:54:22+00:00",
+=======
+        "time": "2016-06-10T07:14:17+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2602,7 +2836,11 @@
             "mockery/mockery": "^0.9.4",
             "phpunit/phpunit": "^4.4"
         },
+<<<<<<< HEAD
         "time": "2016-09-30T07:12:33+00:00",
+=======
+        "time": "2016-06-10T09:48:41+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2650,7 +2888,11 @@
             "phpspec/phpspec": "^2.5|^3.2",
             "phpunit/phpunit": "^4.8 || ^5.6.5"
         },
+<<<<<<< HEAD
         "time": "2017-03-02T20:05:34+00:00",
+=======
+        "time": "2016-06-07T08:13:47+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2711,7 +2953,11 @@
             "doctrine/collections": "1.*",
             "phpunit/phpunit": "~4.1"
         },
+<<<<<<< HEAD
         "time": "2017-04-12T18:52:22+00:00",
+=======
+        "time": "2015-11-20T12:04:31+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -2782,7 +3028,11 @@
             "ext-xdebug": "*",
             "phpunit/php-invoker": "~1.1"
         },
+<<<<<<< HEAD
         "time": "2017-04-03T02:22:27+00:00",
+=======
+        "time": "2016-06-16T06:01:15+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "bin": [
             "phpunit"
         ],
@@ -2835,7 +3085,16 @@
         "require": {
             "php": ">=5.5.9"
         },
+<<<<<<< HEAD
         "time": "2017-03-26T15:47:15+00:00",
+=======
+        "require-dev": {
+            "athletic/athletic": "~0.1",
+            "cakephp/cakephp-codesniffer": "dev-master",
+            "phpunit/phpunit": "*"
+        },
+        "time": "2016-06-15T06:26:37+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2893,7 +3152,11 @@
         "suggest": {
             "symfony/yaml": "To use the yaml reference dumper"
         },
+<<<<<<< HEAD
         "time": "2017-04-04T15:30:56+00:00",
+=======
+        "time": "2016-06-21T03:01:37+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -2950,10 +3213,14 @@
         "require-dev": {
             "phpunit/phpunit": "^4.8.26|^5.0"
         },
+<<<<<<< HEAD
         "time": "2016-10-27T10:16:12+00:00",
         "bin": [
             "bin/phinx"
         ],
+=======
+        "time": "2016-05-18T14:26:46+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "installation-source": "dist",
         "autoload": {
@@ -3064,7 +3331,11 @@
         "require": {
             "php": ">=5.5.9"
         },
+<<<<<<< HEAD
         "time": "2017-03-27T18:07:02+00:00",
+=======
+        "time": "2016-06-14T11:18:07+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3115,7 +3386,11 @@
         "require": {
             "php": ">=5.5.9"
         },
+<<<<<<< HEAD
         "time": "2017-03-20T09:32:19+00:00",
+=======
+        "time": "2016-04-12T18:27:47+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3166,7 +3441,11 @@
         "require": {
             "php": ">=5.3"
         },
+<<<<<<< HEAD
         "time": "2015-10-13T18:44:15+00:00",
+=======
+        "time": "2016-05-20T11:48:17+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3263,7 +3542,14 @@
         "require": {
             "php": ">=5.3"
         },
+<<<<<<< HEAD
         "time": "2017-03-18T11:32:45+00:00",
+=======
+        "time": "2016-03-07T14:09:22+00:00",
+        "bin": [
+            "bin/phinx"
+        ],
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3329,6 +3615,11 @@
                 "dev-master": "5.0.x-dev"
             }
         },
+<<<<<<< HEAD
+=======
+        "time": "2016-06-14T21:01:47+00:00",
+        "type": "cakephp-plugin",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
@@ -3393,6 +3684,11 @@
                 "dev-master": "1.x-dev"
             }
         },
+<<<<<<< HEAD
+=======
+        "time": "2016-05-28T15:47:46+00:00",
+        "type": "cakephp-plugin",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
@@ -3456,6 +3752,11 @@
                 "dev-master": "1.x-dev"
             }
         },
+<<<<<<< HEAD
+=======
+        "time": "2016-06-28T01:58:30+00:00",
+        "type": "cakephp-plugin",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
@@ -3516,10 +3817,17 @@
             "psr/log": "^1.0",
             "symfony/process": "^2.5 || ^3.0"
         },
+<<<<<<< HEAD
         "suggest": {
             "symfony/process": "This is necessary to reliably check whether openssl_x509_parse is vulnerable on older php versions, but can be ignored on PHP 5.5.6+"
         },
         "time": "2017-03-06T11:59:08+00:00",
+=======
+        "time": "2016-04-19T13:41:41+00:00",
+        "bin": [
+            "bin/php-parse"
+        ],
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3591,10 +3899,14 @@
             "ext-zip": "Enabling the zip extension allows you to unzip archives",
             "ext-zlib": "Allow gzip compression of HTTP requests"
         },
+<<<<<<< HEAD
         "time": "2017-03-10T08:29:45+00:00",
         "bin": [
             "bin/composer"
         ],
+=======
+        "time": "2016-05-24T10:06:56+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -3659,8 +3971,13 @@
         "suggest": {
             "ext-sqlite": "DebugKit needs to store panel data in a database. SQLite is simple and easy to use."
         },
+<<<<<<< HEAD
         "time": "2017-03-16T01:28:35+00:00",
         "type": "cakephp-plugin",
+=======
+        "time": "2016-07-19T17:14:29+00:00",
+        "type": "library",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
@@ -3712,8 +4029,20 @@
             "php": ">=5.5.9"
         },
         "require-dev": {
+<<<<<<< HEAD
             "cakephp/cakephp-codesniffer": "^2.1",
             "phpunit/phpunit": "*"
+=======
+            "phpunit/phpunit": "3.7.*",
+            "squizlabs/php_codesniffer": "~2.3"
+        },
+        "time": "2016-02-02T18:50:42+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "1.1.x-dev"
+            }
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         },
         "time": "2017-01-31T00:59:03+00:00",
         "type": "cakephp-plugin",
@@ -3762,9 +4091,15 @@
         "require-dev": {
             "phpunit/phpunit": "4.3.*"
         },
+<<<<<<< HEAD
         "time": "2017-03-09T16:25:31+00:00",
         "type": "project",
         "installation-source": "source",
+=======
+        "time": "2016-10-04T00:57:04+00:00",
+        "type": "library",
+        "installation-source": "dist",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "autoload": {
             "classmap": [
                 "xlsxwriter.class.php"
@@ -3800,7 +4135,11 @@
             "onelogin/php-saml": "^2.9",
             "phpseclib/phpseclib": "^2.0"
         },
+<<<<<<< HEAD
         "time": "2017-04-27T07:04:39+00:00",
+=======
+        "time": "2017-03-20T09:46:41+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "cakephp-plugin",
         "installation-source": "source",
         "autoload": {
@@ -3829,6 +4168,49 @@
         }
     },
     {
+<<<<<<< HEAD
+=======
+        "name": "korditpteltd/kd-cakephp-webhooks",
+        "version": "v1.0.8",
+        "version_normalized": "1.0.8.0",
+        "source": {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-webhooks.git",
+            "reference": "ccdc6b88ed7f4f4027499501587992e37cab8cd5"
+        },
+        "require": {
+            "cakephp/cakephp": ">3.1.0"
+        },
+        "time": "2017-03-21T08:52:27+00:00",
+        "type": "cakephp-plugin",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "Webhook\\": "src"
+            }
+        },
+        "license": [
+            "GPL-2.0"
+        ],
+        "authors": [
+            {
+                "name": "KORDIT PHP DEVELOPERS",
+                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+            }
+        ],
+        "description": "KORDIT CakePHP Webhook Plugin",
+        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks",
+        "keywords": [
+            "cakephp",
+            "kordit",
+            "webhook"
+        ],
+        "support": {
+            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-webhooks"
+        }
+    },
+    {
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "name": "korditpteltd/kd-cakephp-restful",
         "version": "1.1.x-dev",
         "version_normalized": "1.1.9999999.9999999-dev",
@@ -3845,7 +4227,11 @@
             "cakephp/cakephp-codesniffer": "^2.3",
             "phpunit/phpunit": "^5.7"
         },
+<<<<<<< HEAD
         "time": "2017-04-27T07:38:12+00:00",
+=======
+        "time": "2017-04-26T08:50:43+00:00",
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
         "type": "cakephp-plugin",
         "extra": {
             "branch-alias": {
@@ -3886,6 +4272,7 @@
         }
     },
     {
+<<<<<<< HEAD
         "name": "sabberworm/php-css-parser",
         "version": "6.0.1",
         "version_normalized": "6.0.1.0",
@@ -4047,10 +4434,40 @@
             },
             "classmap": [
                 "lib/"
+=======
+        "name": "mk-j/php_xlsxwriter",
+        "version": "0.32",
+        "version_normalized": "0.32.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
+            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/mk-j/PHP_XLSXWriter/zipball/94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
+            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
+            "shasum": ""
+        },
+        "require": {
+            "ext-zip": "*",
+            "php": ">=5.2.1"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "4.3.*"
+        },
+        "time": "2017-03-09T16:25:31+00:00",
+        "type": "project",
+        "installation-source": "source",
+        "autoload": {
+            "classmap": [
+                "xlsxwriter.class.php"
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
             ]
         },
         "notification-url": "https://packagist.org/downloads/",
         "license": [
+<<<<<<< HEAD
             "LGPL-2.1"
         ],
         "authors": [
@@ -4069,5 +4486,18 @@
         ],
         "description": "DOMPDF is a CSS 2.1 compliant HTML to PDF converter",
         "homepage": "https://github.com/dompdf/dompdf"
+=======
+            "MIT"
+        ],
+        "description": "PHP Library to write XLSX files",
+        "homepage": "https://github.com/mk-j/PHP_XLSXWriter",
+        "keywords": [
+            "excel",
+            "library",
+            "php",
+            "xls",
+            "xlsx"
+        ]
+>>>>>>> c1c90a53f7b3bdb55349874c44e4f3d278988d3c
     }
 ]
