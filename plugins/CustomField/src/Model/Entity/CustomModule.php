@@ -22,11 +22,6 @@ class CustomModule extends Entity
             'behavior' => 'Staff',
             'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES']
         ],
-        'Institution.InstitutionInfrastructures' => [
-            'filter' => 'Infrastructure.InfrastructureTypes',
-            'behavior' => null,
-            'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
-        ],
         'Student.StudentSurveys' => [
             'filter' => null,
             'behavior' => null,

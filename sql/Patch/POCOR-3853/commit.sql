@@ -905,6 +905,10 @@ ALTER TABLE `infrastructure_custom_forms`
 DROP COLUMN `original_id`,
 DROP COLUMN `original_module_id`;
 
+ALTER TABLE `infrastructure_custom_field_values`
+RENAME TO  `z_3853_infrastructure_custom_field_values` ;
+
+
 -- Patch security function
 UPDATE `security_functions`
 SET
