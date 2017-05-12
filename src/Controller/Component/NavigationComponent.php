@@ -663,7 +663,7 @@ class NavigationComponent extends Component
 				'title' => 'Finance',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
-				'selected' => ['Staff.BankAccounts', 'Staff.Salaries'],
+				'selected' => ['Staff.BankAccounts', 'Staff.Salaries', 'Staff.ImportSalaries'],
 			],
 			'Institutions.StaffTrainingNeeds' => [
 				'title' => 'Training',
@@ -728,7 +728,7 @@ class NavigationComponent extends Component
 					'title' => 'Finance',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory', 'type' => 'staff'],
-					'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries']
+					'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries', 'Directories.ImportSalaries']
 				],
 				'Directories.TrainingNeeds' => [
 					'title' => 'Training',
