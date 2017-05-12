@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,6 +13,7 @@ namespace Psy\Command;
 
 use Psy\Formatter\DocblockFormatter;
 use Psy\Formatter\SignatureFormatter;
+use Psy\Reflection\ReflectionLanguageConstruct;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -55,23 +56,32 @@ HELP
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        list($value, $reflector) = $this->getTargetAndReflector($input->getArgument('value'));
+        $value = $input->getArgument('value');
+        if (ReflectionLanguageConstruct::isLanguageConstruct($value)) {
+            $reflector = new ReflectionLanguageConstruct($value);
+            $doc = $this->getManualDocById($value);
+        } else {
+            list($target, $reflector) = $this->getTargetAndReflector($value);
+            $doc = $this->getManualDoc($reflector) ?: DocblockFormatter::format($reflector);
+        }
 
-        $doc = $this->getManualDoc($reflector) ?: DocblockFormatter::format($reflector);
-        $db  = $this->getApplication()->getManualDb();
+        $db = $this->getApplication()->getManualDb();
 
         $output->page(function ($output) use ($reflector, $doc, $db) {
             $output->writeln(SignatureFormatter::format($reflector));
+            $output->writeln('');
+
             if (empty($doc) && !$db) {
-                $output->writeln('');
                 $output->writeln('<warning>PHP manual not found</warning>');
                 $output->writeln('    To document core PHP functionality, download the PHP reference manual:');
                 $output->writeln('    https://github.com/bobthecow/psysh#downloading-the-manual');
             } else {
-                $output->writeln('');
                 $output->writeln($doc);
             }
         });
+
+        // Set some magic local variables
+        $this->setCommandScopeVariables($reflector);
     }
 
     private function getManualDoc($reflector)
@@ -89,6 +99,11 @@ HELP
                 return false;
         }
 
+        return $this->getManualDocById($id);
+    }
+
+    private function getManualDocById($id)
+    {
         if ($db = $this->getApplication()->getManualDb()) {
             return $db
                 ->query(sprintf('SELECT doc FROM php_manual WHERE id = %s', $db->quote($id)))
