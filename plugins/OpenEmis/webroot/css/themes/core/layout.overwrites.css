@@ -918,3 +918,32 @@ a,
 }
 
 /* End of fix for POCOR-3658 */
+
+/* Temp fix by KK POCOR-3880 */
+
+.ag-fresh .ag-pinned-left-header,
+.ag-fresh .ag-pinned-right-header {
+    background: none !important;
+    background-color: rgba(204, 204, 204, 0.2) !important;
+    -webkit-box-shadow: inset 0 1px 0 #FFF;
+    -moz-box-shadow: inset 0 1px 0 #FFF;
+    box-shadow: inset 0 1px 0 #FFF;
+    border-bottom: 1px solid #DDD !important;
+}
+
+.ag-fresh .ag-pinned-left-header .ag-header-cell:last-child {
+    border-right: 1px solid #DDD !important;
+}
+
+.ag-fresh .ag-header-icon#agMenu {
+    display: block !important;
+}
+
+.ag-menu input.ag-filter-filter {
+    width: 89% !important;
+}
+
+.ag-fresh .ag-menu {
+    border: none !important;
+}
+/* End of fix for POCOR-3880 */

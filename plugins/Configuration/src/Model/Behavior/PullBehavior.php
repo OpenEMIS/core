@@ -9,7 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\I18n\Time;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 use Cake\Network\Exception\NotFoundException;
 use Cake\Log\Log;
 use Cake\Utility\Hash;
@@ -295,7 +295,7 @@ class PullBehavior extends Behavior
                 $UserNationalitiesTable = TableRegistry::get('User.UserNationalities');
                 //unset all existing record
                 $UserNationalitiesTable->updateAll(
-                    ['preferred' => 0], 
+                    ['preferred' => 0],
                     ['security_user_id' => $entity->id]
                 );
 
@@ -341,7 +341,7 @@ class PullBehavior extends Behavior
 	            try {
 	                // Getting access token
 	                $response = $http->post($this->authEndpoint, $data);
-	                if ($response->statusCode() != '200') {
+	                if ($response->getStatusCode() != '200') {
 	                    throw new NotFoundException('Not a successful response');
 	                }
 	                $body = json_decode($response->body(), true);
@@ -358,7 +358,7 @@ class PullBehavior extends Behavior
 	                    'headers' => ['Authorization' => $body['token_type'].' '.$body['access_token']]
 	                ]);
 	                $response = $http->get($url);
-	                if ($response->statusCode() != '200') {
+	                if ($response->getStatusCode() != '200') {
 	                    throw new NotFoundException('Not a successful response');
 	                }
 	                $body = json_decode($response->body(), true);

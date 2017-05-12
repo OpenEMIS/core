@@ -23,7 +23,6 @@ use Cake\Routing\Router;
  *
  * Not normally created as a standalone. Use Router::connect() to create
  * Routes for your application.
- *
  */
 class Route
 {
@@ -102,19 +101,18 @@ class Route
     {
         $this->template = $template;
         $this->defaults = (array)$defaults;
-        $this->options = $options;
         if (isset($this->defaults['[method]'])) {
             $this->defaults['_method'] = $this->defaults['[method]'];
             unset($this->defaults['[method]']);
         }
-        if (isset($this->options['_ext'])) {
-            $this->_extensions = (array)$this->options['_ext'];
-        }
+        $this->options = $options + ['_ext' => []];
+        $this->setExtensions((array)$this->options['_ext']);
     }
 
     /**
      * Get/Set the supported extensions for this route.
      *
+     * @deprecated 3.3.9 Use getExtensions/setExtensions instead.
      * @param null|string|array $extensions The extensions to set. Use null to get.
      * @return array|null The extensions or null.
      */
@@ -124,6 +122,29 @@ class Route
             return $this->_extensions;
         }
         $this->_extensions = (array)$extensions;
+    }
+
+    /**
+     * Set the supported extensions for this route.
+     *
+     * @param array $extensions The extensions to set.
+     * @return $this
+     */
+    public function setExtensions(array $extensions)
+    {
+        $this->_extensions = array_map('strtolower', $extensions);
+
+        return $this;
+    }
+
+    /**
+     * Get the supported extensions for this route.
+     *
+     * @return array
+     */
+    public function getExtensions()
+    {
+        return $this->_extensions;
     }
 
     /**
@@ -150,6 +171,7 @@ class Route
             return $this->_compiledRoute;
         }
         $this->_writeRoute();
+
         return $this->_compiledRoute;
     }
 
@@ -166,13 +188,14 @@ class Route
         if (empty($this->template) || ($this->template === '/')) {
             $this->_compiledRoute = '#^/*$#';
             $this->keys = [];
+
             return;
         }
         $route = $this->template;
         $names = $routeParams = [];
         $parsed = preg_quote($this->template, '#');
 
-        preg_match_all('#:([A-Za-z0-9_-]+[A-Z0-9a-z])#', $route, $namedElements);
+        preg_match_all('/:([a-z0-9-_]+(?<![-_]))/i', $route, $namedElements);
         foreach ($namedElements[1] as $i => $name) {
             $search = '\\' . $namedElements[0][$i];
             if (isset($this->options[$name])) {
@@ -251,6 +274,7 @@ class Route
             }
             $name .= $value . $glue;
         }
+
         return $this->_name = strtolower($name);
     }
 
@@ -261,9 +285,10 @@ class Route
      * false will be returned. String URLs are parsed if they match a routes regular expression.
      *
      * @param string $url The URL to attempt to parse.
+     * @param string $method The HTTP method of the request being parsed.
      * @return array|false An array of request parameters, or false on failure.
      */
-    public function parse($url)
+    public function parse($url, $method = '')
     {
         if (empty($this->_compiledRoute)) {
             $this->compile();
@@ -275,8 +300,11 @@ class Route
         }
 
         if (isset($this->defaults['_method'])) {
-            $request = Router::getRequest(true) ?: Request::createFromGlobals();
-            $method = $request->env('REQUEST_METHOD');
+            if (empty($method)) {
+                // Deprecated reading the global state is deprecated and will be removed in 4.x
+                $request = Router::getRequest(true) ?: Request::createFromGlobals();
+                $method = $request->env('REQUEST_METHOD');
+            }
             if (!in_array($method, (array)$this->defaults['_method'], true)) {
                 return false;
             }
@@ -327,6 +355,7 @@ class Route
         }
 
         $route['_matchedRoute'] = $this->template;
+
         return $route;
     }
 
@@ -339,21 +368,15 @@ class Route
      */
     protected function _parseExtension($url)
     {
-        if (empty($this->_extensions)) {
-            return [$url, null];
-        }
-        preg_match('/\.([0-9a-z]*)$/', $url, $match);
-        if (empty($match[1])) {
-            return [$url, null];
-        }
-        $ext = strtolower($match[1]);
-        $len = strlen($match[1]);
-        foreach ($this->_extensions as $name) {
-            if (strtolower($name) === $ext) {
-                $url = substr($url, 0, ($len + 1) * -1);
-                return [$url, $ext];
+        if (count($this->_extensions) && strpos($url, '.') !== false) {
+            foreach ($this->_extensions as $ext) {
+                $len = strlen($ext) + 1;
+                if (substr($url, -$len) === '.' . $ext) {
+                    return [substr($url, 0, $len * -1), $ext];
+                }
             }
         }
+
         return [$url, null];
     }
 
@@ -378,6 +401,7 @@ class Route
             }
             $pass[] = rawurldecode($param);
         }
+
         return $pass;
     }
 
@@ -397,6 +421,7 @@ class Route
                 $url[$persistKey] = $params[$persistKey];
             }
         }
+
         return $url;
     }
 
@@ -532,6 +557,7 @@ class Route
             }
         }
         $url += $hostOptions;
+
         return $this->_writeUrl($url, $pass, $query);
     }
 
@@ -555,6 +581,7 @@ class Route
         if (!in_array(strtoupper($url['_method']), (array)$this->defaults['_method'])) {
             return false;
         }
+
         return true;
     }
 
@@ -623,6 +650,7 @@ class Route
         if (!empty($query)) {
             $out .= rtrim('?' . http_build_query($query), '?');
         }
+
         return $out;
     }
 
@@ -640,8 +668,10 @@ class Route
         $star = strpos($this->template, '*');
         if ($star !== false) {
             $path = rtrim(substr($this->template, 0, $star), '/');
+
             return $path === '' ? '/' : $path;
         }
+
         return $this->template;
     }
 
@@ -661,6 +691,7 @@ class Route
         foreach ($fields as $field => $value) {
             $obj->$field = $value;
         }
+
         return $obj;
     }
 }
