@@ -253,7 +253,7 @@ class EducationGradesTable extends ControllerActionTable
     {
         list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
 
-        if ($action == 'add') {
+        if ($action == 'add' && !empty($selectedProgramme)) {
             if (array_key_exists($this->alias(), $request->data) && array_key_exists('education_programme_id', $request->data[$this->alias()])) {
                 $educationProgrammeId = $request['data'][$this->alias()]['education_programme_id'];
             } else {
