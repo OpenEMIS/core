@@ -71,6 +71,12 @@ class ReportCardsTable extends ControllerActionTable
             ]);
     }
 
+    public function validationSubjects(Validator $validator) {
+        $validator = $this->validationDefault($validator);
+        $validator = $validator->requirePresence('subjects');
+        return $validator;
+    }
+
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->fields['excel_template_name']['visible'] = false;
@@ -342,8 +348,11 @@ class ReportCardsTable extends ControllerActionTable
             $teacherComments = $data[$this->alias()]['teacher_comments_required'];
 
             $subjects = [];
-            if ($teacherComments == self::SELECT_SUBJECTS && !empty($data[$this->alias()]['subjects'])) {
-                $subjects = $data[$this->alias()]['subjects'];
+            if ($teacherComments == self::SELECT_SUBJECTS) {
+                if (!empty($data[$this->alias()]['subjects'])) {
+                    $subjects = $data[$this->alias()]['subjects'];
+                }
+                $options['validate'] = 'subjects';
 
             } else if ($teacherComments == self::ALL_SUBJECTS) {
                 // option only available during add
@@ -353,7 +362,7 @@ class ReportCardsTable extends ControllerActionTable
                     ->innerJoinWith('EducationGrades')
                     ->where(['EducationGrades.id' => $selectedGrade])
                     ->order([$EducationSubjects->aliasField('order')])
-                    ->extract('education_subject_id');
+                    ->extract('id');
 
                 $data[$this->alias()]['teacher_comments_required'] = 1;
             }
