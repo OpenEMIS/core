@@ -22,8 +22,10 @@ class InstitutionStudentsReportCardsCommentsTable extends ControllerActionTable
         $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
         $this->belongsTo('CommentCodes', ['className' => 'ReportCard.ReportCardCommentCodes', 'foreignKey' => 'report_card_comment_code_id']);
         $this->belongsTo('Staff', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
-        $this->belongsTo('StudentsReportCards', ['className' => 'Institution.InstitutionStudentsReportCards']);
-        $this->belongsTo('ReportCardSubjects', ['className' => 'ReportCard.ReportCardSubjects']);
+        $this->belongsTo('StudentsReportCards', [
+            'className' => 'Institution.InstitutionStudentsReportCards',
+            'foreignKey' => ['report_card_id', 'student_id', 'institution_id', 'academic_period_id', 'education_grade_id']
+        ]);
 
         $this->addBehavior('CompositeKey');
         $this->addBehavior('Restful.RestfulAccessControl', [
