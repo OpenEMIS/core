@@ -8,13 +8,15 @@ use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
+use App\Model\Traits\OptionsTrait;
 use App\Model\Table\ControllerActionTable;
 
 class ReportCardsTable extends ControllerActionTable
 {
-    CONST PRINCIPAL_COMMENT = 1;
-    CONST HOMEROOM_TEACHER_COMMENT = 2;
-    CONST SUBJECT_TEACHER_COMMENT = 3;
+    use OptionsTrait;
+
+    CONST ALL_SUBJECTS = 2;
+    CONST SELECT_SUBJECTS = 1;
 
     private $roleOptions = [];
 
@@ -28,13 +30,10 @@ class ReportCardsTable extends ControllerActionTable
         $this->addBehavior('ControllerAction.FileUpload', [
             'name' => 'excel_template_name',
             'content' => 'excel_template',
-            'size' => '10MB',
+            'size' => '2MB',
             'contentEditable' => true,
             'allowable_file_types' => 'document',
             'useDefaultName' => true
-        ]);
-        $this->addBehavior('Restful.RestfulAccessControl', [
-            'ReportCardComments' => ['view']
         ]);
         $this->behaviors()->get('Download')->config(
             'name',
@@ -44,15 +43,11 @@ class ReportCardsTable extends ControllerActionTable
             'content',
             'excel_template'
         );
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'ReportCardComments' => ['view']
+        ]);
 
-        $this->toggle('edit', false);
         $this->setDeleteStrategy('restrict');
-
-        $this->roleOptions = [
-            self::PRINCIPAL_COMMENT => __('Principal'),
-            self::HOMEROOM_TEACHER_COMMENT => __('Homeroom Teacher'),
-            self::SUBJECT_TEACHER_COMMENT => __('Subject Teachers')
-        ];
     }
 
     public function validationDefault(Validator $validator) {
@@ -76,72 +71,59 @@ class ReportCardsTable extends ControllerActionTable
             ]);
     }
 
-    private function setupFields()
-    {
-        $this->field('code');
-        $this->field('name');
-        $this->field('description');
-        $this->field('academic_period_id', ['type' => 'select']);
-        $this->field('education_grade_id', ['type' => 'select']);
-        $this->field('subjects', ['type' => 'chosenSelect']);
-        $this->field('comments_required', ['type' => 'chosenSelect']);
-        $this->field('excel_template');
-    }
-
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        $this->fields['principal_comments_required']['visible'] = false;
-        $this->fields['homeroom_teacher_comments_required']['visible'] = false;
-        $this->fields['subject_teacher_comments_required']['visible'] = false;
         $this->fields['excel_template_name']['visible'] = false;
-
         $this->field('start_date', ['type' => 'date']);
         $this->field('end_date', ['type' => 'date']);
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->fields['description']['visible'] = false;
         $this->fields['academic_period_id']['visible'] = false;
+        $this->fields['description']['visible'] = false;
+        $this->fields['principal_comments_required']['visible'] = false;
+        $this->fields['homeroom_teacher_comments_required']['visible'] = false;
+        $this->fields['teacher_comments_required']['visible'] = false;
         $this->setFieldOrder(['code', 'name', 'start_date', 'end_date', 'education_grade_id', 'excel_template']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        // Academic Period filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
         $selectedAcademicPeriod = !is_null($this->request->query('academic_period_id')) ? $this->request->query('academic_period_id') : $this->AcademicPeriods->getCurrent();
         $this->controller->set(compact('academicPeriodOptions', 'selectedAcademicPeriod'));
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
+        //End
+
         $extra['elements']['controls'] = ['name' => 'ReportCard.controls', 'data' => [], 'options' => [], 'order' => 1];
         $query->where($where);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    private function setupFields($entity)
     {
-        $this->setupFields();
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_grade_id', 'subjects', 'comments_required', 'excel_template']);
+        $this->field('code');
+        $this->field('name');
+        $this->field('description');
+        $this->field('academic_period_id', ['entity' => $entity]);
+        $this->field('education_grade_id', ['entity' => $entity]);
+        $this->field('subjects', ['entity' => $entity]);
+        $this->field('principal_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('homeroom_teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('excel_template', ['type' => 'binary']);
     }
 
-    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+    }
+
+    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain('ReportCardSubjects.EducationSubjects');
-    }
-
-    public function onGetCommentsRequired(Event $event, Entity $entity)
-    {
-        $obj = [];
-        if ($entity->principal_comments_required) {
-            $obj[] = $this->roleOptions[self::PRINCIPAL_COMMENT];
-        }
-        if ($entity->homeroom_teacher_comments_required) {
-            $obj[] = $this->roleOptions[self::HOMEROOM_TEACHER_COMMENT];
-        }
-        if ($entity->subject_teacher_comments_required) {
-            $obj[] = $this->roleOptions[self::SUBJECT_TEACHER_COMMENT];
-        }
-
-        $values = implode(', ', $obj);
-        return $values;
     }
 
     public function onGetSubjects(Event $event, Entity $entity)
@@ -153,31 +135,38 @@ class ReportCardsTable extends ControllerActionTable
             }
         }
 
-        $values = implode(', ', $obj);
+        $values = !empty($obj) ? implode(', ', $obj) : __('No Subjects');
         return $values;
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->setupFields();
+        $this->setupFields($entity);
         $this->field('education_programme_id', ['type' => 'select']);
-        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_programme_id', 'education_grade_id', 'subjects', 'comments_required', 'excel_template']);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($entity);
+        $this->fields['code']['type'] = 'readonly';
+        $this->fields['name']['type'] = 'readonly';
+        $this->field('education_programme_id', ['entity' => $entity]);
+        $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
     {
-        // if ($action == 'add' || $action == 'edit') {
-            if ($action == 'add') {
-                $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
-                $attr['options'] = $periodOptions;
-            }
-            //  else {
+        if ($action == 'add') {
+            $periodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
+            $attr['type'] = 'select';
+            $attr['options'] = $periodOptions;
 
-            //     $attr['type'] = 'readonly';
-            //     $attr['value'] = $attr['entity']->academic_period_id;
-            //     $attr['attr']['value'] = $this->AcademicPeriods->get($attr['entity']->academic_period_id)->name;
-            // }
-        // }
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->academic_period_id;
+            $attr['attr']['value'] = $this->AcademicPeriods->get($attr['entity']->academic_period_id)->name;
+        }
         return $attr;
     }
 
@@ -192,33 +181,31 @@ class ReportCardsTable extends ControllerActionTable
                 ->contain(['EducationCycles'])
                 ->order(['EducationCycles.order', $EducationProgrammes->aliasField('order')])
                 ->toArray();
-
+            $attr['type'] = 'select';
             $attr['options'] = $programmeOptions;
             $attr['onChangeReload'] = 'changeEducationProgrammeId';
 
+        } else if ($action == 'edit') {
+            //since programme_id is not stored, then during edit need to get from grade
+            $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
         }
-        //  else {
-        //     //since programme_id is not stored, then during edit need to get from grade
-        //     $programmeId = $this->EducationGrades->get($attr['entity']->education_grade_id)->education_programme_id;
-        //     $attr['type'] = 'readonly';
-        //     $attr['value'] = $programmeId;
-        //     $attr['attr']['value'] = $EducationProgrammes->get($programmeId)->name;
-        // }
 
         return $attr;
     }
 
-    public function addEditOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    public function addOnChangeEducationProgrammeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $request = $this->request;
 
         if ($request->is(['post', 'put'])) {
             if (array_key_exists($this->alias(), $request->data)) {
-                if (array_key_exists('subjects', $request->data[$this->alias()])) {
-                    unset($data[$this->alias()]['subjects']);
-                }
                 if (array_key_exists('education_grade_id', $request->data[$this->alias()])) {
                     unset($data[$this->alias()]['education_grade_id']);
+                }
+                if (array_key_exists('subjects', $request->data[$this->alias()])) {
+                    unset($data[$this->alias()]['subjects']);
                 }
             }
         }
@@ -239,107 +226,172 @@ class ReportCardsTable extends ControllerActionTable
                     ->order(['EducationProgrammes.order', $this->EducationGrades->aliasField('order')])
                     ->toArray();
             }
-
+            $attr['type'] = 'select';
             $attr['options'] = $gradeOptions;
-            $attr['onChangeReload'] = 'changeEducationGrade';
-        }
-        // else {
+            $attr['onChangeReload'] = 'changeEducationGradeId';
 
-        //     $attr['type'] = 'readonly';
-        //     $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
-        // }
+        } else if ($action == 'edit') {
+            $attr['type'] = 'readonly';
+            $attr['value'] = $attr['entity']->education_grade_id;
+            $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
+        }
 
         return $attr;
+    }
+
+    public function addOnChangeEducationGradeId(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('subjects', $request->data[$this->alias()])) {
+                    unset($data[$this->alias()]['subjects']);
+                }
+            }
+        }
+    }
+
+    public function onUpdateFieldTeacherCommentsRequired(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
+                $options = [
+                    self::ALL_SUBJECTS => __('Yes') . ' - ' . __('All Subjects'),
+                    self::SELECT_SUBJECTS => __('Yes') . ' - ' . __('Select Subjects'),
+                    0 => __('No')
+                ];
+            } else if ($action == 'edit') {
+                $options = [
+                    self::SELECT_SUBJECTS => __('Yes'),
+                    0 => __('No')
+                ];
+            }
+
+            $attr['options'] = $options;
+            $attr['onChangeReload'] = 'changeTeacherCommentsRequired';
+        }
+        return $attr;
+    }
+
+    public function addEditOnChangeTeacherCommentsRequired(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        $request = $this->request;
+
+        if ($request->is(['post', 'put'])) {
+            if (array_key_exists($this->alias(), $request->data)) {
+                if (array_key_exists('subjects', $request->data[$this->alias()])) {
+                    unset($data[$this->alias()]['subjects']);
+                }
+            }
+        }
     }
 
     public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
     {
-        if ($action == 'add') {
-            $subjectOptions = [];
+        if ($action == 'add' || $action == 'edit') {
+            if ($action == 'add') {
+                $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : 0;
+                $selectedGrade = isset($request->data[$this->alias()]['education_grade_id']) ? $request->data[$this->alias()]['education_grade_id'] : null;
 
-            if (isset($request->data[$this->alias()]['education_grade_id']) && !empty($request->data[$this->alias()]['education_grade_id'])) {
-                $EducationGradesSubjects = TableRegistry::get('Education.EducationGradesSubjects');
-                $selectedGrade = $request->data[$this->alias()]['education_grade_id'];
+            } else if($action == 'edit') {
+                $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
+                $selectedGrade = $attr['entity']->education_grade_id;
 
-                $subjectOptions = $EducationGradesSubjects
-                    ->find('list', [
-                        'keyField' => 'education_subject.id',
-                        'valueField' => 'education_subject.code_name'
-                    ])
-                    ->find('visible')
-                    ->contain('EducationSubjects')
-                    ->where([$EducationGradesSubjects->aliasField('education_grade_id') => $selectedGrade])
-                    ->order(['EducationSubjects.order'])
-                    ->toArray();
-
-                if (!empty($subjectOptions)) {
-                    $subjectOptions = ['-1' => __('All Subjects')] + $subjectOptions;
+                if ($attr['entity']->has('report_card_subjects')) {
+                    $subjects = $attr['entity']->report_card_subjects;
+                    foreach ($subjects as $subject) {
+                        $request->data[$this->alias()]['subjects'][] = $subject->education_subject_id;
+                    }
                 }
             }
 
 
+            if (empty($teacherComments) || $teacherComments == self::ALL_SUBJECTS) {
+                $attr['type'] = 'hidden';
+                $attr['value'] = '';
 
-            $attr['options'] = $subjectOptions;
+            } else {
+                $subjectOptions = [];
+
+                if (!is_null($selectedGrade)) {
+                    $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                    $subjectOptions = $EducationSubjects
+                        ->find('list')
+                        ->find('visible')
+                        ->innerJoinWith('EducationGrades')
+                        ->where(['EducationGrades.id' => $selectedGrade])
+                        ->order([$EducationSubjects->aliasField('order')])
+                        ->toArray();
+                }
+
+                $attr['type'] = 'chosenSelect';
+                $attr['options'] = $subjectOptions;
+            }
+
+            $attr['fieldName'] = $this->alias().'.subjects';
         }
-        // else {
-
-        //     $attr['type'] = 'readonly';
-        //     $attr['attr']['value'] = $this->EducationGrades->get($attr['entity']->education_grade_id)->name;
-        // }
 
         return $attr;
     }
 
-    public function onUpdateFieldCommentsRequired(Event $event, array $attr, $action, Request $request)
+    public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
-        $attr['options'] = $this->roleOptions;
-        return $attr;
-    }
+        if (!empty($data[$this->alias()]['teacher_comments_required']) && !empty($data[$this->alias()]['education_grade_id'])) {
+            $selectedGrade = $data[$this->alias()]['education_grade_id'];
+            $teacherComments = $data[$this->alias()]['teacher_comments_required'];
 
-    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
-    {
-        if (isset($data['submit']) && $data['submit'] == 'save') {
-            if (!empty($data['subjects']['_ids']) && !empty($data['education_grade_id'])) {
-                $subjects = $data['subjects']['_ids'];
+            $subjects = [];
+            if ($teacherComments == self::SELECT_SUBJECTS && !empty($data[$this->alias()]['subjects'])) {
+                $subjects = $data[$this->alias()]['subjects'];
 
-                if (is_array($subjects)) {
-                    $obj = [];
-                    foreach ($subjects as $subject) {
-                        $obj[] = [
-                            'education_subject_id' => $subject,
-                            'education_grade_id' => $data['education_grade_id']
-                        ];
-                    }
-                    $data['report_card_subjects'] = $obj;
+            } else if ($teacherComments == self::ALL_SUBJECTS) {
+                // option only available during add
+                $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
+                $subjects = $EducationSubjects->find()
+                    ->find('visible')
+                    ->innerJoinWith('EducationGrades')
+                    ->where(['EducationGrades.id' => $selectedGrade])
+                    ->order([$EducationSubjects->aliasField('order')])
+                    ->extract('education_subject_id');
 
-                    // needed to save hasMany data
-                    $options['associated'] = [
-                         'ReportCardSubjects' => [
-                            'validate' => false
-                        ]
+                $data[$this->alias()]['teacher_comments_required'] = 1;
+            }
+
+            if (!empty($subjects)) {
+                foreach ($subjects as $subject) {
+                    $data[$this->alias()]['report_card_subjects'][] = [
+                        'education_subject_id' => $subject,
+                        'education_grade_id' => $selectedGrade
                     ];
                 }
+
+                // needed to save hasMany data
+                $options['associated'] = [
+                     'ReportCardSubjects' => [
+                        'validate' => false
+                    ]
+                ];
+            }
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        $errors = $entity->errors();
+        if (empty($errors)) {
+            // manually delete hasMany reportCardSubjects data
+            $fieldKey = 'report_card_subjects';
+            if (!array_key_exists($fieldKey, $data[$this->alias()])) {
+                $data[$this->alias()][$fieldKey] = [];
             }
 
-            if (!empty($data['comments_required']['_ids'])) {
-                $commentsRequired = $data['comments_required']['_ids'];
-
-                if (is_array($commentsRequired)) {
-                    foreach ($commentsRequired as $role) {
-                        switch ($role) {
-                            case self::PRINCIPAL_COMMENT:
-                                $data['principal_comments_required'] = 1;
-                                break;
-                            case self::HOMEROOM_TEACHER_COMMENT:
-                                $data['homeroom_teacher_comments_required'] = 1;
-                                break;
-                            case self::SUBJECT_TEACHER_COMMENT:
-                                $data['subject_teacher_comments_required'] = 1;
-                                break;
-                            default:
-                                break;
-                        }
-                    }
+            $subjectIds = array_column($data[$this->alias()][$fieldKey], 'education_subject_id');
+            $originalSubjects = $entity->extractOriginal([$fieldKey])[$fieldKey];
+            foreach ($originalSubjects as $key => $subject) {
+                if (!in_array($subject['education_subject_id'], $subjectIds)) {
+                    $this->ReportCardSubjects->delete($subject);
+                    unset($entity->report_card_subjects[$key]);
                 }
             }
         }
