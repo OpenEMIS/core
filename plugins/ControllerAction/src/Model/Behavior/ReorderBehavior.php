@@ -53,10 +53,18 @@ class ReorderBehavior extends Behavior {
 					->toArray();
 
 				$originalOrder = array_reverse($originalOrder);
-
+				$gradeIds = [];
 				foreach ($ids as $id) {
+					$gradeIds[] = $id['id'];
 					$orderValue = array_pop($originalOrder);
 					$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
+				}
+
+				if ($model->alias() == 'EducationGrades') {
+						$event = $model->dispatchEvent('ControllerAction.Behavior.reorder.updateAdmissionAge',
+						[$gradeIds],
+						$model
+					);
 				}
 			}
 		}
@@ -129,8 +137,17 @@ class ReorderBehavior extends Behavior {
 				->toArray();
 		}
 		$counter = 1;
+		$gradeIds = [];
 		foreach ($reorderItems as $key => $item) {
+			$gradeIds[] = $key; // for updateAdmissionAge function
 			$table->updateAll([$orderField => $counter++], [$table->primaryKey() => $key]);
+		}
+
+		if ($table->alias() == 'EducationGrades') {
+				$event = $table->dispatchEvent('ControllerAction.Behavior.reorder.updateAdmissionAge',
+				[$gradeIds],
+				$table
+			);
 		}
 	}
 
