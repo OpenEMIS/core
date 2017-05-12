@@ -34,11 +34,11 @@ class ReportCardCommentsTable extends ControllerActionTable
         $this->fields['institution_shift_id']['visible'] = false;
         $this->fields['staff_id']['visible'] = false;
 
+        $this->field('subjects', ['type' => 'integer']);
         $this->field('male_students', ['type' => 'integer']);
         $this->field('female_students', ['type' => 'integer']);
         $this->field('report_card');
         $this->field('education_grade');
-        $this->field('subjects');
         $this->setFieldOrder(['name', 'report_card', 'academic_period_id', 'education_grade', 'subjects', 'male_students', 'female_students']);
     }
 
@@ -54,29 +54,32 @@ class ReportCardCommentsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
 
-        // Report Cards filter
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $availableGrades = $InstitutionGrades->find()
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->extract('education_grade_id')
             ->toArray();
 
+        // Report Cards filter
         $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-        $reportCardOptions = $ReportCards->find('list')
-            ->where([
-                $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                $ReportCards->aliasField('education_grade_id IN ') => $availableGrades
-            ])
-            ->toArray();
-        $reportCardOptions = ['0' => __('All Report Cards')] + $reportCardOptions;
-        $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : 0;
-        $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
-        if ($selectedReportCard != 0) {
-             $where[$ReportCards->aliasField('id')] = $selectedReportCard;
+        if (!empty($availableGrades)) {
+            $reportCardOptions = $ReportCards->find('list')
+                ->where([
+                    $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $ReportCards->aliasField('education_grade_id IN ') => $availableGrades
+                ])
+                ->toArray();
+            $reportCardOptions = ['0' => __('All Report Cards')] + $reportCardOptions;
+            $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : 0;
+            $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
+            if (!empty($selectedReportCard)) {
+                 $where[$ReportCards->aliasField('id')] = $selectedReportCard;
+            }
+        } else {
+            $this->Alert->warning('ReportCardComments.noProgrammes');
         }
         //End
 
-        $Classes = TableRegistry::get('Institution.InstitutionClasses');
         $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
@@ -116,6 +119,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             )
             ->where([
                 $where,
+                // only show record if at least one comment type is needed
                 'OR' => [
                     $ReportCards->aliasField('principal_comments_required') => 1,
                     $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
@@ -149,7 +153,6 @@ class ReportCardCommentsTable extends ControllerActionTable
     {
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $grade = $EducationGrades->get($entity->education_grade_id);
-
         return $grade->programme_grade_name;
     }
 
@@ -208,8 +211,7 @@ class ReportCardCommentsTable extends ControllerActionTable
                 'action' => 'Comments',
                 'institution_class_id' => $entity->institution_class_id,
                 'report_card_id' => $entity->report_card_id,
-                'institution_id' => $entity->institution_id,
-                'academic_period_id' => $entity->academic_period_id
+                'institution_id' => $entity->institution_id
             ];
         }
 
