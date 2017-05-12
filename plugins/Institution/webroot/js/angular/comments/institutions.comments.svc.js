@@ -12,7 +12,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         ReportCardSubjectsTable: 'ReportCard.ReportCardSubjects',
         ReportCardCommentCodesTable: 'ReportCard.ReportCardCommentCodes',
         InstitutionStudentsReportCardsTable: 'Institution.InstitutionStudentsReportCards',
-        InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments'
+        InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments',
+        InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents'
     };
 
     var service = {
@@ -63,15 +64,16 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         }
         if (subjectTeacherCommentsRequired) {
             this.getSubjects(reportCardId, classId)
-            .then(function(subjects)
+            .then(function(response)
             {
+                subjects = response.data;
                 if (angular.isObject(subjects) && subjects.length > 0) {
-                    angular.forEach(subjects, function(subjects, key)
+                    angular.forEach(subjects, function(subject, key)
                     {
                         this.push({
-                            tabName: subjects.name + " Teacher",
+                            tabName: subject.name + " Teacher",
                             type: roles.TEACHER,
-                            education_subject_id: subjects.education_subject_id,
+                            education_subject_id: subject.education_subject_id,
                         });
                     }, tabs);
                 }
@@ -93,23 +95,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     };
 
     function getSubjects(reportCardId, classId) {
-        var success = function(response, deferred) {
-            var reportCardSubjects = response.data.data;
-
-            if (angular.isObject(reportCardSubjects) && reportCardSubjects.length > 0) {
-                deferred.resolve(reportCardSubjects);
-            } else {
-                deferred.reject('You have to configure the subjects for comments first');
-            }
-        };
-
         return ReportCardSubjectsTable
             .select()
             .find('MatchingClassSubjects', {
                 report_card_id: reportCardId,
                 institution_class_id: classId
             })
-            .ajax({success: success, defer: true});
+            .ajax({defer: true});
     };
 
     function getCommentCodeOptions() {
@@ -168,7 +160,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var headerIcons = allowEdit ? " <span class='divider'></span>  <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : '';
         var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
-
         if (isSubjectTab) {
             var selectOptions = {
                 0 : {
@@ -203,6 +194,14 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         };
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
+
+        if (isSubjectTab) {
+            columnDefs.push({
+                headerName: "Modified By",
+                field: "modified_by",
+                filterParams: filterParams
+            });
+        }
 
         var bodyDir = getComputedStyle(document.body).direction;
         if (bodyDir == 'rtl') {
@@ -332,12 +331,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                             }
 
                             studentsData = {
-                                openemis_id: reportCardStudent._matchingData.Students.openemis_no,
-                                name: reportCardStudent._matchingData.Students.name,
+                                openemis_id: reportCardStudent._matchingData.Users.openemis_no,
+                                name: reportCardStudent._matchingData.Users.name,
                                 student_id: reportCardStudent.student_id,
-                                student_status: reportCardStudent._matchingData.StudentStatuses.name,
+                                student_status: reportCardStudent.student_status.name,
                                 comments: '',
-                                comment_code: ''
+                                comment_code: '',
+                                modified_by: ''
                             };
 
                             if (reportCardStudent.comments != null) {
@@ -348,8 +348,12 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                                 if (reportCardStudent.comment_code != null) {
                                     studentsData['comment_code'] = reportCardStudent.comment_code;
                                 }
-                            }
 
+                                if (reportCardStudent.Staff.first_name != null && reportCardStudent.Staff.last_name != null) {
+                                    var staffName = reportCardStudent.Staff.first_name + ' ' + reportCardStudent.Staff.last_name;
+                                    studentsData['modified_by'] = staffName;
+                                }
+                            }
                             studentId = currentStudentId;
                         }
 
@@ -367,9 +371,9 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             }
         };
 
-        return InstitutionStudentsReportCardsTable
+        return InstitutionClassStudentsTable
             .select()
-            .find('Comments', {
+            .find('ReportCardComments', {
                 academic_period_id: academicPeriodId,
                 institution_id: institutionId,
                 institution_class_id: institutionClassId,
