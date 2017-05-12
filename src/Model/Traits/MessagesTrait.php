@@ -958,6 +958,11 @@ trait MessagesTrait {
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
             ],
+            'StaffBehaviours' => [
+                'date_of_behaviour' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ]
+            ],
             'TransferApprovals' => [
                 'start_date' => [
                     'ruleCheckProgrammeEndDateAgainstStudentStartDate' => 'This institution does not offer the selected Education Grade anymore.'
