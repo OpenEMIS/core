@@ -29,9 +29,11 @@
     "php": ">=5.5.9"
   },
   "require-dev": {
-    "phpunit/phpunit": "*",
+    "phpunit/phpunit": "<6.0",
     "athletic/athletic": "~0.1",
-    "cakephp/cakephp-codesniffer": "dev-master"
+    "cakephp/cakephp-codesniffer": "~2.3",
+    "phpbench/phpbench": "@dev",
+    "phpstan/phpstan": "^0.6.4"
   },
   "autoload": {
     "psr-4": {
@@ -42,6 +44,19 @@
   "autoload-dev": {
     "psr-4": {
       "Cake\\Chronos\\Test\\": "tests"
-    }
+    },
+    "files": ["tests/TestCase.php"]
+  },
+  "scripts": {
+    "check": [
+      "@test",
+      "@cs-check",
+      "@phpstan"
+    ],
+    "test": "phpunit",
+    "cs-check": "phpcs",
+    "cs-fix": "phpcbf",
+    "bench": "phpbench run",
+    "phpstan": "phpstan analyze -c phpstan.neon -l 3 src tests"
   }
 }
