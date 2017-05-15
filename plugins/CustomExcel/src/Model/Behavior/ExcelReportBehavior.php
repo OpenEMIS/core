@@ -626,6 +626,7 @@ class ExcelReportBehavior extends Behavior
                 if (!is_null($value)) {
                     $search = str_replace($replace, $value, $search);
                 } else {
+                    // replace placeholder as blank if data is empty
                     $search = '';
                 }
             }
