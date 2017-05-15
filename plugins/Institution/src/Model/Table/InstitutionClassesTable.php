@@ -335,16 +335,6 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
-            /**
-             * Added on PHPOE-1762 for PHPOE-1766
-             * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions()
-             * so as to avoid unadherence of User's Requirements.
-             */
-            // $gradeOptions[-1] = 'All Grades';
-            // sort options by key
-            // ksort($gradeOptions);
-            /**/
-
             $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
         }
 
@@ -395,8 +385,13 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $sortable = !is_null($this->request->query('sort')) ? true : false;
+
         $query
-            ->find('byGrades', ['education_grade_id' => $extra['selectedEducationGradeId']])
+            ->find('byGrades', [
+                'education_grade_id' => $extra['selectedEducationGradeId'],
+                'sort' => $sortable
+            ])
             ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
             ->order([$this->aliasField('name') => 'ASC'])
         ;
@@ -420,6 +415,8 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function findByGrades(Query $query, array $options)
     {
+        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+
         $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $gradeId = $options['education_grade_id'];
         $join = [
@@ -440,8 +437,7 @@ class InstitutionClassesTable extends ControllerActionTable
             ;
 
         // if no sorting, order by grade then class name
-        $requestQuery = $this->request->query;
-        if (!array_key_exists('sort', $requestQuery)) {
+        if (!$sortable) {
             $query = $query
                 ->innerJoin(
                     [$EducationGrades->alias() => $EducationGrades->table()],
