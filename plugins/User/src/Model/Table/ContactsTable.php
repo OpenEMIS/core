@@ -75,7 +75,7 @@ class ContactsTable extends ControllerActionTable {
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //if preferred set, then unset other preferred for the same contact option
-        if ($entity->dirty('preferred')) {
+        if ($entity->dirty('preferred') || $entity->preferred == 1) {
             if ($entity->preferred == 1) {
                 $contactOption = $entity->contact_option_id;
                 $contacts = $this->find()
