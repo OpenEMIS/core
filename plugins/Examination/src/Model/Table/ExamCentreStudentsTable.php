@@ -193,19 +193,30 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $searchableFields['Users'] = 'openemis_no';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity)
     {
         $this->field('identity_number');
         $this->field('room');
         $this->field('openemis_no');
-        $this->field('nationality');
-        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'nationality', 'identity_number', 'institution_id', 'examination_id', 'room']);
+
+        $this->field('nationalities', [
+            'type' => 'element',
+            'element' => 'nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
+
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'nationalities', 'identity_number', 'institution_id', 'examination_id', 'room']);
+
+        if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+            $this->identityType = $entity->user->identity_type->name;
+        }
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'Users.MainNationalities'
+            'Users.MainNationalities', 'Users.Nationalities.NationalitiesLookUp', 'Users.IdentityTypes'
         ]);
     }
 
@@ -216,7 +227,11 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+            if ($this->identityType) {
+                return __($this->identityType);
+            } else {
+                return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+            }
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
@@ -227,7 +242,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         if ($entity->has('user')) {
             $user = $entity->user;
             if ($user->has('main_nationality') && !empty($user->main_nationality)) {
-                return __($user->main_nationality->name);
+                return $user->main_nationality->name;
             }
         }
     }

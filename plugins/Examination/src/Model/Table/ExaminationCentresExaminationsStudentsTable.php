@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\I18n\Time;
@@ -125,6 +126,12 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getStudentsTab();
+
+        if ($this->action == 'index' || $this->action == 'view') {
+            $this->field('identity_number');
+            $this->field('repeated');
+            $this->field('transferred');
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -154,7 +161,8 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'Users.Nationalities.NationalitiesLookUp'
+            'Users.Nationalities.NationalitiesLookUp',
+            'Users.IdentityTypes'
         ]);
     }
 
@@ -166,27 +174,21 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             'visible' => ['view'=>true],
             'data' => $entity->user->nationalities
         ]);
+
+        $this->setFieldOrder(['registration_number', 'academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'nationalities', 'identity_type', 'identity_number', 'repeated', 'transferred']);
+    
+        if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+            $this->identityType = $entity->user->identity_type->name;
+        }
     }
 
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {   
+        $this->field('tooltip_column');
+        $this->field('nationality');
+        $this->field('identity_type');
 
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('identity_number');
-            $this->field('repeated');
-            $this->field('transferred');
-
-            if ($this->action == 'index') {
-                $this->field('tooltip_column', [
-                    'after' => 'transferred'
-                ]);
-                $this->field('nationality');
-
-                $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_number', 'institution_id', 'repeated', 'transferred']);
-            } else if ($this->action == 'view') {
-                $this->setFieldOrder(['registration_number', 'academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'special_needs', 'nationalities', 'identity_number', 'repeated', 'transferred']);
-            }
-        }
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_type', 'identity_number', 'repeated', 'transferred', 'tooltip_column', 'institution_id']);
     }
 
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -241,10 +243,19 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         }
     }
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
-        } else if ($field == 'tooltip_column') {
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+    {
+        if ($this->action == 'view') {
+            if ($field == 'identity_number') {
+                if ($this->identityType) {
+                    return __($this->identityType);
+                } else {
+                    return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+                }
+            }
+        }
+        
+        if ($field == 'tooltip_column') {
             return '';
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
@@ -254,31 +265,32 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     public function onGetNationality(Event $event, Entity $entity)
     {   
         if ($this->action == 'index') {
-            if ($entity) {
-                if ($entity->extractOriginal(['student_id'])) {
-                    $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+            if (!empty($entity)) {
+                if ($entity->user->has('main_nationality') && !empty($entity->user->main_nationality)) {
+                    return $entity->user->main_nationality->name;
                 }
+            }
+        }
+    }
 
-                $query = $this->Users
-                        ->find()
-                        ->contain('MainNationalities')
-                        ->where([
-                            $this->Users->aliasField('id') => $studentId
-                        ])
-                        ->first();
-
-                if (!empty($query)) {
-                    if ($query->has('main_nationality') && !empty($query->main_nationality)) {
-                        return $query->main_nationality->name;
-                    }
+    public function onGetIdentityType(Event $event, Entity $entity)
+    {   
+        if ($this->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+                    return $entity->user->identity_type->name;
                 }
             }
         }
     }
 
     public function onGetIdentityNumber(Event $event, Entity $entity)
-    {   
-        return $entity->user->identity_number;
+    {
+        if (!empty($entity)) {
+            if ($entity->user->has('identity_number') && !empty($entity->user->identity_number)) {
+                return $entity->user->identity_number;
+            }
+        }
     }
 
     public function onGetRepeated(Event $event, Entity $entity)

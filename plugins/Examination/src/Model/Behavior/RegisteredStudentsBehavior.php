@@ -213,11 +213,13 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->Users->aliasField('preferred_name'),
                 $model->Users->aliasField('date_of_birth'),
                 $model->Users->aliasField('identity_number'),
+                $model->Users->IdentityTypes->aliasField('name'),
                 $model->Users->Genders->aliasField('name'),
+                $model->Users->MainNationalities->aliasField('name'),
                 $model->Institutions->aliasField('code'),
                 $model->Institutions->aliasField('name')
             ])
-            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users.Genders'], true)
+            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users.Genders', 'Users.MainNationalities', 'Users.IdentityTypes'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
