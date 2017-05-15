@@ -567,6 +567,7 @@
             "type": "git",
             "url": "https://github.com/ADmad/cakephp-jwt-auth.git",
             "reference": "c62e76c2323013984dd93ac53ce71217d4643d15"
+<<<<<<< HEAD
         },
         "dist": {
             "type": "zip",
@@ -861,15 +862,34 @@
             "branch-alias": {
                 "dev-develop": "0.7-dev"
             }
+=======
         },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/ADmad/cakephp-jwt-auth/zipball/c62e76c2323013984dd93ac53ce71217d4643d15",
+            "reference": "c62e76c2323013984dd93ac53ce71217d4643d15",
+            "shasum": ""
+        },
+        "require": {
+            "cakephp/cakephp": "~3.1",
+            "firebase/php-jwt": "~3.0"
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
+        },
+        "time": "2016-04-02T19:34:30+00:00",
+        "type": "cakephp-plugin",
         "installation-source": "dist",
         "autoload": {
             "psr-4": {
+<<<<<<< HEAD
                 "Dompdf\\": "src/"
             },
             "classmap": [
                 "lib/"
             ]
+=======
+                "ADmad\\JwtAuth\\": "src"
+            }
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         },
         "notification-url": "https://packagist.org/downloads/",
         "license": [
@@ -877,6 +897,7 @@
         ],
         "authors": [
             {
+<<<<<<< HEAD
                 "name": "Fabien Ménager",
                 "email": "fabien.menager@gmail.com"
             },
@@ -979,6 +1000,212 @@
         "time": "2017-05-08T05:58:35+00:00",
         "type": "library",
         "installation-source": "dist",
+=======
+                "name": "ADmad",
+                "homepage": "https://github.com/ADmad",
+                "role": "Author"
+            }
+        ],
+        "description": "CakePHP plugin for authenticating using JSON Web Tokens",
+        "homepage": "http://github.com/ADmad/cakephp-jwt-auth",
+        "keywords": [
+            "Authentication",
+            "authenticate",
+            "cakephp",
+            "jwt"
+        ]
+    },
+    {
+        "name": "korditpteltd/kd-cakephp-restful",
+        "version": "1.1.x-dev",
+        "version_normalized": "1.1.9999999.9999999-dev",
+        "source": {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
+            "reference": "872ead27dc8916e1d4dac5463174820aea82c65a"
+        },
+        "require": {
+            "admad/cakephp-jwt-auth": "^2.0",
+            "cakephp/cakephp": ">=3.3.0 <3.4"
+        },
+        "require-dev": {
+            "cakephp/cakephp-codesniffer": "^2.3",
+            "phpunit/phpunit": "^5.7"
+        },
+        "time": "2017-05-05T09:12:09+00:00",
+        "type": "cakephp-plugin",
+        "extra": {
+            "branch-alias": {
+                "master": "1.0.2"
+            }
+        },
+        "installation-source": "source",
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
+        "autoload": {
+            "psr-4": {
+                "Restful\\": "src",
+                "Restful\\Test\\Fixture\\": "tests\\Fixture"
+            }
+<<<<<<< HEAD
+=======
+        },
+        "autoload-dev": {
+            "psr-4": {
+                "Cake\\Test\\": "vendor/cakephp/cakephp/tests",
+                "Restful\\Test\\": "tests"
+            }
+        },
+        "license": [
+            "GPL-2.0"
+        ],
+        "authors": [
+            {
+                "name": "KORDIT PHP DEVELOPERS",
+                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/commits/all"
+            }
+        ],
+        "description": "KORDIT CakePHP Restful Plugin",
+        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-restful",
+        "keywords": [
+            "cakephp",
+            "kordit",
+            "restful"
+        ],
+        "support": {
+            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
+        }
+    },
+    {
+        "name": "mk-j/php_xlsxwriter",
+        "version": "0.32",
+        "version_normalized": "0.32.0.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/mk-j/PHP_XLSXWriter.git",
+            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/mk-j/PHP_XLSXWriter/zipball/94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
+            "reference": "94d5bb017b7fd3f3334309fba84de9b04ff0e07d",
+            "shasum": ""
+        },
+        "require": {
+            "ext-zip": "*",
+            "php": ">=5.2.1"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "4.3.*"
+        },
+        "time": "2017-03-09T16:25:31+00:00",
+        "type": "project",
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "xlsxwriter.class.php"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "description": "PHP Library to write XLSX files",
+        "homepage": "https://github.com/mk-j/PHP_XLSXWriter",
+        "keywords": [
+            "excel",
+            "library",
+            "php",
+            "xls",
+            "xlsx"
+        ]
+    },
+    {
+        "name": "mobiledetect/mobiledetectlib",
+        "version": "2.8.25",
+        "version_normalized": "2.8.25.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/serbanghita/Mobile-Detect.git",
+            "reference": "f0896b5c7274d1450023b0b376240be902c3251c"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/serbanghita/Mobile-Detect/zipball/f0896b5c7274d1450023b0b376240be902c3251c",
+            "reference": "f0896b5c7274d1450023b0b376240be902c3251c",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.0.0"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "*"
+        },
+        "time": "2017-03-29T13:59:30+00:00",
+        "type": "library",
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "Mobile_Detect.php"
+            ],
+            "psr-0": {
+                "Detection": "namespaced/"
+            }
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Serban Ghita",
+                "email": "serbanghita@gmail.com",
+                "homepage": "http://mobiledetect.net",
+                "role": "Developer"
+            }
+        ],
+        "description": "Mobile_Detect is a lightweight PHP class for detecting mobile devices. It uses the User-Agent string combined with specific HTTP headers to detect the mobile environment.",
+        "homepage": "https://github.com/serbanghita/Mobile-Detect",
+        "keywords": [
+            "detect mobile devices",
+            "mobile",
+            "mobile detect",
+            "mobile detector",
+            "php mobile detect"
+        ]
+    },
+    {
+        "name": "phpseclib/phpseclib",
+        "version": "2.0.4",
+        "version_normalized": "2.0.4.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/phpseclib/phpseclib.git",
+            "reference": "ab8028c93c03cc8d9c824efa75dc94f1db2369bf"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/ab8028c93c03cc8d9c824efa75dc94f1db2369bf",
+            "reference": "ab8028c93c03cc8d9c824efa75dc94f1db2369bf",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.3"
+        },
+        "require-dev": {
+            "phing/phing": "~2.7",
+            "phpunit/phpunit": "~4.0",
+            "sami/sami": "~2.0",
+            "squizlabs/php_codesniffer": "~2.0"
+        },
+        "suggest": {
+            "ext-gmp": "Install the GMP (GNU Multiple Precision) extension in order to speed up arbitrary precision integer arithmetic operations.",
+            "ext-libsodium": "SSH2/SFTP can make use of some algorithms provided by the libsodium-php extension.",
+            "ext-mcrypt": "Install the Mcrypt extension in order to speed up a few other cryptographic operations.",
+            "ext-openssl": "Install the OpenSSL extension in order to speed up a wide variety of cryptographic operations."
+        },
+        "time": "2016-10-04T00:57:04+00:00",
+        "type": "library",
+        "installation-source": "dist",
         "autoload": {
             "files": [
                 "phpseclib/bootstrap.php"
@@ -1017,6 +1244,7 @@
                 "email": "graham@alt-three.com",
                 "role": "Developer"
             }
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         ],
         "description": "PHP Secure Communications Library - Pure-PHP implementations of RSA, AES, SSH2, SFTP, X.509 etc.",
         "homepage": "http://phpseclib.sourceforge.net",
@@ -1130,6 +1358,8 @@
             "classmap": [
                 "src/"
             ]
+<<<<<<< HEAD
+=======
         },
         "notification-url": "https://packagist.org/downloads/",
         "license": [
@@ -1140,6 +1370,61 @@
         "keywords": [
             "google"
         ]
+    },
+    {
+        "name": "korditpteltd/kd-cakephp-sso",
+        "version": "v1.1.2",
+        "version_normalized": "1.1.2.0",
+        "source": {
+            "type": "git",
+            "url": "git@bitbucket.org:korditpteltd/kd-cakephp-sso.git",
+            "reference": "48293cbfbb28b4d28efb46912e716a071c2e1e5e"
+        },
+        "require": {
+            "cakephp/cakephp": ">=3.3.0 <3.4",
+            "firebase/php-jwt": "~3.0",
+            "google/apiclient": "1.1.7",
+            "onelogin/php-saml": "^2.9",
+            "phpseclib/phpseclib": "^2.0"
+        },
+        "time": "2017-04-27T07:04:39+00:00",
+        "type": "cakephp-plugin",
+        "installation-source": "source",
+        "autoload": {
+            "psr-4": {
+                "SSO\\": "src"
+            }
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
+        },
+        "license": [
+<<<<<<< HEAD
+            "Apache-2.0"
+        ],
+        "description": "Client library for Google APIs",
+        "homepage": "http://developers.google.com/api-client-library/php",
+        "keywords": [
+            "google"
+        ]
+=======
+            "GPL-2.0"
+        ],
+        "authors": [
+            {
+                "name": "KORDIT PHP DEVELOPERS",
+                "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
+            }
+        ],
+        "description": "KORDIT CakePHP SSO Plugin",
+        "homepage": "https://bitbucket.org/korditpteltd/kd-cakephp-sso",
+        "keywords": [
+            "cakephp",
+            "kordit",
+            "sso"
+        ],
+        "support": {
+            "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
+        }
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
     },
     {
         "name": "korditpteltd/kd-cakephp-webhooks",
@@ -1651,7 +1936,11 @@
             "ext-readline": "Enables support for arrow-key history navigation, and showing and manipulating command history.",
             "hoa/console": "A pure PHP readline implementation. You'll want this if your PHP install doesn't already support readline or libedit."
         },
+<<<<<<< HEAD
         "time": "2017-05-12T15:41:55+00:00",
+=======
+        "time": "2017-03-19T21:40:44+00:00",
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         "bin": [
             "bin/psysh"
         ],
@@ -1913,7 +2202,11 @@
         "require-dev": {
             "phpunit/phpunit": "~5"
         },
+<<<<<<< HEAD
+        "time": "2016-11-19T07:33:16+00:00",
+=======
         "time": "2017-02-18T15:18:39+00:00",
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         "type": "library",
         "extra": {
             "branch-alias": {
@@ -1938,6 +2231,63 @@
         ],
         "description": "Traverses array structures and object graphs to enumerate all referenced objects",
         "homepage": "https://github.com/sebastianbergmann/object-enumerator/"
+    },
+    {
+        "name": "sebastian/global-state",
+        "version": "1.1.1",
+        "version_normalized": "1.1.1.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/sebastianbergmann/global-state.git",
+            "reference": "bc37d50fea7d017d3d340f230811c9f1d7280af4"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/sebastianbergmann/global-state/zipball/bc37d50fea7d017d3d340f230811c9f1d7280af4",
+            "reference": "bc37d50fea7d017d3d340f230811c9f1d7280af4",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.3.3"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "~4.2"
+        },
+        "suggest": {
+            "ext-uopz": "*"
+        },
+<<<<<<< HEAD
+        "time": "2017-02-18T15:18:39+00:00",
+=======
+        "time": "2015-10-12T03:26:01+00:00",
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "1.0-dev"
+            }
+        },
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "src/"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "BSD-3-Clause"
+        ],
+        "authors": [
+            {
+                "name": "Sebastian Bergmann",
+                "email": "sebastian@phpunit.de"
+            }
+        ],
+        "description": "Snapshotting of global state",
+        "homepage": "http://www.github.com/sebastianbergmann/global-state",
+        "keywords": [
+            "global state"
+        ]
     },
     {
         "name": "sebastian/global-state",
@@ -3303,6 +3653,65 @@
         "require-dev": {
             "phpunit/phpunit": "3.7.*"
         },
+<<<<<<< HEAD
+        "time": "2014-01-12T16:20:24+00:00",
+        "type": "library",
+        "extra": {
+            "branch-alias": {
+                "dev-master": "1.3.x-dev"
+            }
+        },
+=======
+        "time": "2017-01-07T16:45:31+00:00",
+        "type": "cakephp-plugin",
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
+        "installation-source": "dist",
+        "autoload": {
+            "classmap": [
+                "lib"
+            ]
+        },
+        "notification-url": "https://packagist.org/downloads/",
+        "license": [
+            "MIT"
+        ],
+        "authors": [
+            {
+                "name": "Jeremy Dorn",
+                "email": "jeremy@jeremydorn.com",
+                "homepage": "http://jeremydorn.com/"
+            }
+        ],
+<<<<<<< HEAD
+=======
+        "description": "Database Migration plugin for CakePHP 3.0 based on Phinx",
+        "homepage": "https://github.com/cakephp/migrations",
+        "keywords": [
+            "cakephp",
+            "migrations"
+        ]
+    },
+    {
+        "name": "jdorn/sql-formatter",
+        "version": "v1.2.17",
+        "version_normalized": "1.2.17.0",
+        "source": {
+            "type": "git",
+            "url": "https://github.com/jdorn/sql-formatter.git",
+            "reference": "64990d96e0959dff8e059dfcdc1af130728d92bc"
+        },
+        "dist": {
+            "type": "zip",
+            "url": "https://api.github.com/repos/jdorn/sql-formatter/zipball/64990d96e0959dff8e059dfcdc1af130728d92bc",
+            "reference": "64990d96e0959dff8e059dfcdc1af130728d92bc",
+            "shasum": ""
+        },
+        "require": {
+            "php": ">=5.2.4"
+        },
+        "require-dev": {
+            "phpunit/phpunit": "3.7.*"
+        },
         "time": "2014-01-12T16:20:24+00:00",
         "type": "library",
         "extra": {
@@ -3327,6 +3736,7 @@
                 "homepage": "http://jeremydorn.com/"
             }
         ],
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         "description": "a PHP SQL highlighting library",
         "homepage": "https://github.com/jdorn/sql-formatter/",
         "keywords": [
@@ -4028,6 +4438,7 @@
             "bake",
             "cakephp"
         ]
+<<<<<<< HEAD
     },
     {
         "name": "korditpteltd/kd-cakephp-sso",
@@ -4072,5 +4483,7 @@
         "support": {
             "source": "https://bitbucket.org/korditpteltd/kd-cakephp-sso"
         }
+=======
+>>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
     }
 ]

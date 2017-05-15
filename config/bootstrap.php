@@ -202,14 +202,15 @@ Request::addDetector('tablet', function ($request) {
  * locale specific date formats. For details see
  * @link http://book.cakephp.org/3.0/en/core-libraries/internationalization-and-localization.html#parsing-localized-datetime-data
  */
-Type::build('time')
-    ->useImmutable();
-Type::build('date')
-    ->useImmutable();
-Type::build('datetime')
-    ->useImmutable();
-Type::build('timestamp')
-    ->useImmutable();
+// Commented out as there is issue when saving RTL date
+// Type::build('time')
+//     ->useLocaleParser();
+// Type::build('date')
+//     ->useLocaleParser();
+// Type::build('datetime')
+//     ->useLocaleParser();
+// Type::build('timestamp')
+//     ->useLocaleParser();
 
 /**
  * Custom Inflector rules, can be set to correctly pluralize or singularize

@@ -24,59 +24,51 @@ $this->start('toolbar');
 $this->end();
 $this->start('panelBody');
 ?>
-<form method="post" accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" action="" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController">
+<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionStudentCompetenciesCtrl as InstitutionStudentCompetenciesController" ng-init="InstitutionStudentCompetenciesController.classId=<?= $classId ?>; InstitutionStudentCompetenciesController.competencyTemplateId=<?=$competencyTemplateId ?>;">
     <div class="alert {{InstitutionStudentCompetenciesController.class}}" ng-hide="InstitutionStudentCompetenciesController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionStudentCompetenciesController.message}}
+    </div>
+    <div class="input string required">
+        <label><?= __('Class Name') ?></label>
+        <input ng-model="InstitutionStudentCompetenciesController.className" type="text" ng-init="InstitutionStudentCompetenciesController.className='';" disabled="disabled">
     </div>
     <div class="input string required">
         <label><?= __('Academic Period') ?></label>
         <input ng-model="InstitutionStudentCompetenciesController.academicPeriodName" type="text" disabled="disabled">
     </div>
     <div class="input string required">
-        <label><?= __('Class Name') ?></label>
-        <input ng-model="InstitutionStudentCompetenciesController.className" type="string" ng-init="InstitutionStudentCompetenciesController.className='';">
-        <div ng-if="InstitutionStudentCompetenciesController.postError.name" class="error-message">
-            <p ng-repeat="error in InstitutionStudentCompetenciesController.postError.name">{{ error }}</p>
+        <label><?= __('Competency Template') ?></label>
+        <input ng-model="InstitutionStudentCompetenciesController.competencyTemplateName" type="text" disabled="disabled">
+    </div>
+    <div class="input">
+        <label><?= __('Competency Period') ?></label>
+        <input ng-hide="InstitutionStudentCompetenciesController.itemOptions.length > 0" value="<?= __('No Period') ?>" type="text" disabled="disabled">
+        <div class="input-selection" ng-show="InstitutionStudentCompetenciesController.periodOptions.length > 0">
+            <div class="input">
+                <div class="selection-wrapper">
+                    <input ng-repeat="period in InstitutionStudentCompetenciesController.periodOptions" ng-value="{{period.id}}" kd-checkbox-radio="{{period.name}}" type="radio" name="competency_period" ng-model="InstitutionStudentCompetenciesController.selectedPeriod" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(true);">
+                </div>
+            </div>
         </div>
     </div>
-    <div class="input select required error">
-        <label><?= __('Shift') ?></label>
-        <div class="input-select-wrapper">
-            <select name="InstitutionClasses[institution_shift_id]" id="institutionclasses-institution-shift-id"
-                ng-options="option.id as option.name for option in InstitutionStudentCompetenciesController.shiftOptions"
-                ng-model="InstitutionStudentCompetenciesController.selectedShift"
-                ng-init="InstitutionStudentCompetenciesController.selectedShift=null;"
-                >
-                <option value="" >-- <?= __('Select') ?> --</option>
-            </select>
-        </div>
-        <div ng-if="InstitutionStudentCompetenciesController.postError.institution_shift_id" class="error-message">
-            <p ng-repeat="error in InstitutionStudentCompetenciesController.postError.institution_shift_id">{{ error }}</p>
+    <div class="input">
+        <label><?= __('Competency Item') ?></label>
+        <input ng-hide="InstitutionStudentCompetenciesController.itemOptions.length > 0" value="<?= __('No Item') ?>" type="text" disabled="disabled">
+        <div class="input-selection" ng-show="InstitutionStudentCompetenciesController.itemOptions.length > 0">
+            <div class="input">
+                <div class="selection-wrapper">
+                    <input ng-repeat="item in InstitutionStudentCompetenciesController.itemOptions" ng-value="{{item.id}}" kd-checkbox-radio="{{item.name}}" type="radio" name="competency_item" ng-model="InstitutionStudentCompetenciesController.selectedItem" ng-change="InstitutionStudentCompetenciesController.changeCompetencyOptions(false);">
+                </div>
+            </div>
         </div>
     </div>
-    <div class="input select required error">
-        <label><?= __('Home Room Teacher') ?></label>
-        <div class="input-select-wrapper">
-            <select name="InstitutionClasses[staff_id]" id="institutionclasses-staff-id"
-                ng-options="option.id as option.name for option in InstitutionStudentCompetenciesController.teacherOptions"
-                ng-model="InstitutionStudentCompetenciesController.selectedTeacher"
-                ng-init="InstitutionStudentCompetenciesController.selectedTeacher=null;"
-                >
-                <option value="" >-- <?= __('Select Teacher or Leave Blank') ?> --</option>
-            </select>
-        </div>
-        <div ng-if="InstitutionStudentCompetenciesController.postError.staff_id" class="error-message">
-            <p ng-repeat="error in InstitutionStudentCompetenciesController.postError.staff_id">{{ error }}</p>
-        </div>
+    <div class="clearfix">
     </div>
-    <div class="form-buttons">
-            <div class="button-label"></div>
-            <button class="btn btn-default btn-save" type="button" ng-click="InstitutionStudentCompetenciesController.postForm();">
-                <i class="fa fa-check"></i> <?= __('Save') ?>
-            </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
-            <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
-        </div>
+    <hr>
+    <h3><?= __('Students') ?></h3>
+    <div id="institution-student-competency-table" class="table-wrapper">
+        <div ng-if="InstitutionStudentCompetenciesController.dataReady" ag-grid="InstitutionStudentCompetenciesController.gridOptions" class="ag-fresh ag-height-fixed"></div>
+    </div>
 </form>
 <?php
 $this->end();
