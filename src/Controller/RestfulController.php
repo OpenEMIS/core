@@ -16,9 +16,13 @@ use Restful\Controller\RestfulController as BaseController;
 
 class RestfulController extends BaseController
 {
-    public function initialize() {
+    public function initialize()
+    {
         parent::initialize();
         $this->loadComponent('Csrf');
+        $this->loadComponent('Localization.Localization', [
+            'productName' => 'OpenEMIS Core'
+        ]);
         $this->Auth->config('authenticate', [
             'Form' => [
                 'userModel' => 'User.Users',

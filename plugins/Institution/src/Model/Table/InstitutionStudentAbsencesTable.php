@@ -830,7 +830,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return $reference;
 	}
 
-	public function getUnexcusedAbsenceData($threshold)
+	public function getModelAlertData($threshold)
 	{
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$currentAcademicPeriodId = $AcademicPeriods->getCurrent();

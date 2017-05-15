@@ -108,9 +108,19 @@ Router::scope('/restful', [], function ($routes) {
 
         $routes->connect('/', ['action' => 'nothing']);
         $routes->connect('/token', ['action' => 'token', '_method' => 'GET']);
-        $routes->connect('/:version/ajax/:component/:method', 
-            ['action' => 'ajax', '_method' => 'GET'], 
+        $routes->connect('/:version/ajax/:component/:method',
+            ['action' => 'ajax', '_method' => 'GET'],
             ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)', 'pass' => ['component', 'method']]
+        );
+
+        // Translate
+        $routes->connect( '/:version/translate',
+            ['action' => 'translate', '_method' => 'POST'],
+            ['version' => '([v][\d+]|[v][\d+][.\d]+|latest)']
+        );
+
+        $routes->connect( '/translate',
+            ['action' => 'translate', '_method' => 'POST']
         );
 
         // Index

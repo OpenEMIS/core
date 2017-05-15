@@ -265,6 +265,14 @@ trait RestfulV1Trait {
                 $source = $entity->$property->source();
                 $entityTable = TableRegistry::get($source);
                 $this->convertBinaryToBase64($entityTable, $entity->$property);
+            } elseif (is_array($entity->$property)) {
+                foreach ($entity->$property as $propertyEntity) {
+                    if ($propertyEntity instanceof Entity) {
+                        $source = $propertyEntity->source();
+                        $entityTable = TableRegistry::get($source);
+                        $this->convertBinaryToBase64($entityTable, $propertyEntity);
+                    }
+                }
             } else {
                 if ($property == 'password') {
                     $entity->unsetProperty($property);

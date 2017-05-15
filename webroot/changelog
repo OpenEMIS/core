@@ -1,9 +1,38 @@
+v3.9.12
+- Implemented decimal type for custom fields
+- Redevelop add multiple students to classes and subjects page
+
+v3.9.11
+- Implemented alerts for Training Credits Hours that does not fulfil required amount in Staff > Training > Courses tab
+- Added a year filter for Reports > Institution with no Students
+- Added Multi-grade column in Institution > Academic > Classes page
+- Allows user to link specialisations to subjects in Staff > Professional Development > Qualifications page
+
+v3.9.9
+- Implemented Case management feature
+- New Behaviour records will have to go through a workflow
+- Implemented Staff Behaviour Report
+- Implemented page to configure alert threshold for Staff leave, Staff licenses and Staff employment
+
+v3.9.8
+- Implemented Staff Professional Development Report
+
+v3.9.7
+- System now allows user to attach files to Staff Employment records
+- Implemented Staff Salary Report in Reports> Staff> Salaries
+- Implemented Staff Employment report in Reports > Staff > Employment 
+- System now allows user to set category(Major,Minor) to each Behaviour record
+- Implemented a Staff Leave report in Reports > Institutions > Staff Leave
+- System will send out email alert once user is Assigned to a workflow
+- Implemented Staff License report in Reports > Staff > License
+- Implemented security in User> General> Attachment tab
+
 v3.9.6
 - System will only allow linking of Classrooms to a Subject
 - Included more information for Transfer/Dropout Student Reports
 - System allows user to configure validation on Areas when creating/editing an Institution
-- Students Nationality is included in Reports>Institution>Student Reports
-- System usage reports for Staff is implemented in Reports>Staff>System Usage Reports
+- Students Nationality is included in Reports > Institution > Student Reports
+- System usage reports for Staff is implemented in Reports > Staff > System Usage Reports
 
 v3.9.5
 - Applying Licenses for Staff has to go through a workflow
@@ -47,7 +76,7 @@ v3.8.4
 - Implemented version release management and approval feature
 
 v3.8.3
-- Implemented feature to allow user to create customised report in excel format in Institution>Student Results module
+- Implemented feature to allow user to create customised report in excel format in Institution > Student Results module
 
 v3.8.2
 - Added Education Grade column in Institution Staff Reports
