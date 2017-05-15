@@ -89,12 +89,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         // end
 
         // Download button
+        // status must be generated or published
         if ($entity->has('InstitutionStudentsReportCards') && in_array($entity->InstitutionStudentsReportCards['status'], [self::GENERATED, self::PUBLISHED])) {
             $downloadParams = $params;
             if (isset($downloadParams['institution_class_id'])) {
                 unset($downloadParams['institution_class_id']);
             }
-
             $downloadUrl = [
                 'plugin' => 'Institution',
                 'controller' => 'Institutions',
@@ -111,6 +111,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         // end
 
         // Publish button
+        // status must be generated
         if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::GENERATED) {
             $url = $this->url('publish');
             $publishUrl = $this->setQueryString($url, $params);
@@ -123,6 +124,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         // end
 
         // Unpublish button
+        // status must be published
         if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::PUBLISHED) {
             $url = $this->url('unpublish');
             $unpublishUrl = $this->setQueryString($url, $params);
@@ -183,7 +185,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $extra['toolbarButtons']['downloadAll'] = $downloadButton;
             // end
 
-            // publish all button
+            // Publish all button
             $url = $this->url('publish');
             $publishButton['url'] = $this->setQueryString($url, $params);
             $publishButton['type'] = 'button';
@@ -193,7 +195,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $extra['toolbarButtons']['publishAll'] = $publishButton;
             // end
 
-            // unpublish all button
+            // Unpublish all button
             $url = $this->url('unpublish');
             $unpublishButton['url'] = $this->setQueryString($url, $params);
             $unpublishButton['type'] = 'button';
@@ -220,18 +222,24 @@ class ReportCardStatusesTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
 
-        // Report Cards filter
         $availableGrades = $InstitutionGrades->find()
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->extract('education_grade_id')
             ->toArray();
 
-        $reportCardOptions = $ReportCards->find('list')
-            ->where([
-                $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                $ReportCards->aliasField('education_grade_id IN ') => $availableGrades
-            ])
-            ->toArray();
+        // Report Cards filter
+        $reportCardOptions = [];
+        if (!empty($availableGrades)) {
+            $reportCardOptions = $ReportCards->find('list')
+                ->where([
+                    $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $ReportCards->aliasField('education_grade_id IN ') => $availableGrades
+                ])
+                ->toArray();
+        } else {
+            $this->Alert->warning('ReportCardStatuses.noProgrammes');
+        }
+
         $reportCardOptions = ['-1' => '-- '.__('Select Report Card').' --'] + $reportCardOptions;
         $selectedReportCard = !is_null($this->request->query('report_card_id')) ? $this->request->query('report_card_id') : -1;
         $this->controller->set(compact('reportCardOptions', 'selectedReportCard'));
@@ -240,20 +248,19 @@ class ReportCardStatusesTable extends ControllerActionTable
         // Class filter
         $classOptions = [];
         if ($selectedReportCard != -1) {
-            $reportCardEntity = $ReportCards->get($selectedReportCard);
-
+            $reportCardEntity = $ReportCards->find()->where(['id' => $selectedReportCard])->first();
             if (!empty($reportCardEntity)) {
-                $educationGrade = $reportCardEntity->education_grade_id;
                 $classOptions = $Classes->find('list')
                     ->matching('ClassGrades')
                     ->where([
                         $Classes->aliasField('academic_period_id') => $selectedAcademicPeriod,
                         $Classes->aliasField('institution_id') => $institutionId,
-                        'ClassGrades.education_grade_id' => $educationGrade
+                        'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
                     ])
                     ->toArray();
             }
         }
+
         $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
         $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
         $this->controller->set(compact('classOptions', 'selectedClass'));
@@ -330,6 +337,8 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+
+        // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
         $files = $StudentReportCards->find()
@@ -347,10 +356,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'ReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
-            $zipFilePath = $path . $zipName;
+            $filePath = $path . $zipName;
 
             $zip = new ZipArchive;
-            $zip->open($zipFilePath, ZipArchive::CREATE);
+            $zip->open($filePath, ZipArchive::CREATE);
             $fileType = 'pdf';
             foreach ($files as $file) {
               $fileName = $file->report_card->code . '_' . $file->student->openemis_no . '_' . $file->student->name . '.' . $fileType;
@@ -363,9 +372,9 @@ class ReportCardStatusesTable extends ControllerActionTable
             header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
             header("Content-Type: application/force-download");
             header("Content-Type: application/zip");
-            header("Content-Length:" . filesize($zipFilePath));
-            header('Content-Disposition: attachment; filename="' . $zipName . '"');
-            readfile($zipFilePath);
+            header("Content-Length: ".filesize($filePath));
+            header("Content-Disposition: attachment; filename=".$zipName);
+            readfile($filePath);
 
         } else {
             $this->Alert->warning('general.notExists');
@@ -377,12 +386,12 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
 
+        // only publish report cards with generated status to published status
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $StudentsReportCards->updateAll(['status' => $StudentsReportCards::PUBLISHED], [
             $params,
             'status' => $StudentsReportCards::GENERATED
         ]);
-
         return $this->controller->redirect($this->url('index'));
     }
 
@@ -390,12 +399,12 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
 
+        // only unpublish report cards with published status to new status
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $StudentsReportCards->updateAll(['status' => $StudentsReportCards::NEW_REPORT], [
             $params,
             'status' => $StudentsReportCards::PUBLISHED
         ]);
-
         return $this->controller->redirect($this->url('index'));
     }
 

@@ -30,7 +30,7 @@ class InstitutionStudentsReportCardsTable extends ControllerActionTable
 
         $this->addBehavior('CompositeKey');
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'ReportCardComments' => ['add']
+            'ReportCardComments' => ['index', 'add']
         ]);
     }
 }
