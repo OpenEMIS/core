@@ -61,7 +61,9 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Tree');
 
@@ -109,23 +111,25 @@ class AcademicPeriodsTable extends AppTable
                     $academicPeriodId = $extra['primaryKey']['id'];
 
                     $weeks = $this->getAttendanceWeeks($academicPeriodId);
-                    $weekStr = 'Week %d (%s - %s)';
+                    $weekStr = __('Week') . ' %d (%s - %s)';
                     $currentWeek = null;
 
                     foreach ($weeks as $index => $dates) {
                         $startDay = $dates[0]->format('Y-m-d');
                         $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
                         if ($todayDate >= $startDay && $todayDate <= $endDay) {
                             $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            $weekAttr['current'] = true;
                             $currentWeek = $index;
                         } else {
-                            $weekStr = 'Week %d (%s - %s)';
+                            $weekStr = __('Week') . ' %d (%s - %s)';
                         }
-                        $weekOptions[$index] = [
-                            'name' => sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1])),
-                            'start_day' => $startDay,
-                            'end_day' => $endDay
-                        ];
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekOptions[$index] = $weekAttr;
                     }
                 }
 

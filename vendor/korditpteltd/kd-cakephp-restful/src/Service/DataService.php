@@ -12,6 +12,7 @@ class DataService
     private $responseType = 'json';
     private $method = 'GET';
     private $id = 0;
+    private $_schema = false;
     private $_action = null;
     private $_fields = [];
     private $_contain = [];
@@ -23,9 +24,11 @@ class DataService
     private $_order = [];
     private $_limit = 0;
     private $_page = 0;
+    private $_search = '';
     private $_wildcard = '_';
     private $_db = 'default';
-    private $schema = false;
+    private $_showBlobContent = null;
+    private $_querystring = '';
     private $header = [];
 
     /**
@@ -79,6 +82,11 @@ class DataService
         $this->_db = $db;
     }
 
+    public function urlsafeB64Encode($input)
+    {
+        return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
+    }
+
     public function setBase($base)
     {
         $this->base = $base;
@@ -94,9 +102,16 @@ class DataService
         $this->_action = $action;
     }
 
-    public function showSchema($bool)
+    public function schema($bool)
     {
-        $this->schema = $bool;
+        $this->_schema = $bool;
+        return $this;
+    }
+
+    public function querystring($params)
+    {
+        $json = json_encode($params);
+        $this->_querystring = $this->urlsafeB64Encode($json);
         return $this;
     }
 
@@ -137,7 +152,9 @@ class DataService
         $this->_group = [];
         $this->_order = [];
         $this->_page = 0;
-        $this->schema = false;
+        $this->_schema = false;
+        $this->_querystring = '';
+        $this->_search = '';
     }
 
     public function select($fields)
@@ -223,8 +240,19 @@ class DataService
         return $this;
     }
 
-    public function page($page) {
+    public function page($page)
+    {
         $this->_page = $page;
+        return $this;
+    }
+
+    public function search($searchText)
+    {
+        if ($searchText == '') {
+            $this->_search = $searchText;
+        } else {
+            $this->_search = $this->urlsafeB64Encode($searchText);
+        }
         return $this;
     }
 
@@ -282,8 +310,20 @@ class DataService
             $params[] = '_db=' . $this->_db;
         }
 
-        if ($this->schema) {
-            $params[] = '_schema='.$this->schema;
+        if (is_null($this->_showBlobContent)) {
+            $params[] = '_showBlobContent='.$this->_showBlobContent;
+        }
+
+        if ($this->_schema) {
+            $params[] = '_schema='.$this->_schema;
+        }
+
+        if ($this->_querystring) {
+            $params[] = '_querystring='.$this->_querystring;
+        }
+
+        if ($this->_search) {
+            $params[] = '_search='.$this->_search;
         }
 
         if ($this->id > 0 || (is_string($this->id) && $this->id == 'schema')) {
@@ -322,7 +362,8 @@ class DataService
         return $this->extractData($response);
     }
 
-    public function delete($data) {
+    public function delete($data)
+    {
         $headerOption =  !empty($this->getHeaders()) ? ['headers' => $this->getHeaders()] : [];
         $model = str_replace('.', '-', $this->className);
         $url = $this->toURL();
@@ -342,7 +383,8 @@ class DataService
         return $this->extractData($response);
     }
 
-    private function extractData($response) {
+    private function extractData($response)
+    {
         switch ($this->responseType) {
             case 'json':
                 return json_decode($response->body(), true);

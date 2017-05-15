@@ -14,6 +14,8 @@ use Cake\I18n\I18n;
 use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
 use Cake\Network\Session;
+use Cake\Log\Log;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -90,18 +92,18 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-		$this->belongsToMany('ExamCentres', [
-			'className' => 'Examination.ExaminationCentres',
-			'joinTable' => 'examination_centres_institutions',
-			'foreignKey' => 'institution_id',
-			'targetForeignKey' => 'examination_centre_id',
-			'through' => 'Examination.ExaminationCentresInstitutions',
-			'dependent' => true
-		]);
 		$this->hasMany('ExaminationCentres',				['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ExaminationItemResults', 			['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->belongsToMany('ExaminationCentresExaminations', [
+			'className' => 'Examination.ExaminationCentresExaminations',
+			'joinTable' => 'examination_centres_examinations_institutions',
+			'foreignKey' => 'institution_id',
+			'targetForeignKey' => ['examination_centre_id', 'examination_id'],
+			'through' => 'Examination.ExaminationCentresExaminationsInstitutions',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+		]);
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
 			'joinTable' => 'security_group_institutions',
@@ -360,6 +362,9 @@ class InstitutionsTable extends AppTable  {
 		if ($entity->isNew()) {
 			$entity->shift_type = 0;
 		}
+
+        // adding debug log to monitor when there was a different between date_opened's year and year_opened
+		$this->debugMonitorYearOpened($entity, $options);
 	}
 
 	public function beforeAction($event) {
@@ -940,6 +945,22 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
+	public function debugMonitorYearOpened($entity, $options)
+	{
+        $time = strtotime($entity->date_opened);
+        $yearDateOpened = date("Y",$time);
+        $yearOpened = $entity->year_opened;
+
+        if ($yearDateOpened != $yearOpened) {
+        	$debugInfo = $this->alias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
+
+            Log::write('debug',$debugInfo);
+            Log::write('debug',$entity);
+            Log::write('debug',$options);
+            Log::write('debug', 'End of monitoring year opened');
+        }
+	}
+
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
     	$extra['excludedModels'] = [
@@ -967,11 +988,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function findNotExamCentres(Query $query, array $options)
 	{
-		if (isset($options['examination_id'])) {
+		if (isset($options['academic_period_id'])) {
 			$query
 				->leftJoinWith('ExaminationCentres', function($q) use ($options) {
 					return $q
-						->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
+						->where(['ExaminationCentres.academic_period_id' => $options['academic_period_id']]);
 				})
 				->where([
 					'ExaminationCentres.institution_id IS NULL'

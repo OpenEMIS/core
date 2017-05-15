@@ -9,39 +9,63 @@ use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Controller\Component;
 use Cake\Utility\Text;
-use App\Model\Table\ControllerActionTable;
 use Cake\I18n\Time;
 use App\Model\Traits\OptionsTrait;
 use Cake\Validation\Validator;
-use Cake\Log\Log;
+use App\Model\Table\ControllerActionTable;
 
 class ExamCentreStudentsTable extends ControllerActionTable {
     use OptionsTrait;
 
+    private $queryString;
     private $examCentreId;
-    private $examCentreRoomStudents = [];
 
     public function initialize(array $config) {
-        $this->table('examination_centre_students');
+        $this->table('examination_centres_examinations_students');
         parent::initialize($config);
+        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
-        $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-        $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
-        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
-        $this->belongsTo('ExaminationItems', ['className' => 'Examination.ExaminationItems']);
+        $this->belongsTo('ExaminationCentresExaminations', [
+            'className' => 'Examination.ExaminationCentresExaminations',
+            'foreignKey' => ['examination_centre_id', 'examination_id']
+        ]);
+        $this->belongsToMany('ExaminationCentresExaminationsSubjects', [
+            'className' => 'Examination.ExaminationCentresExaminationsSubjects',
+            'joinTable' => 'examination_centres_examinations_subjects_students',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'targetForeignKey' => ['examination_centre_id', 'examination_item_id'],
+            'through' => 'Examination.ExaminationCentresExaminationsSubjectsStudents',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->hasMany('ExaminationCentreRoomsExaminationsStudents', [
+            'className' => 'Examination.ExaminationCentreRoomsExaminationsStudents',
+            'foreignKey' => ['examination_centre_id', 'examination_id', 'student_id'],
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
-        $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ExamResults' => ['index', 'add']
         ]);
         $this->addBehavior('CompositeKey');
+        $this->addBehavior('User.AdvancedNameSearch');
 
         $this->toggle('add', false);
-        $this->toggle('edit', false);
         $this->toggle('remove', false);
+    }
+
+    public function validationDefault(Validator $validator)
+    {
+        $validator = parent::validationDefault($validator);
+        return $validator
+            ->allowEmpty('examination_centre_room_id')
+            ->add('examination_centre_room_id', 'ruleExceedRoomCapacity', [
+                'rule' => 'validateRoomCapacity'
+            ]);
     }
 
     public function implementedEvents()
@@ -49,24 +73,15 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         return $events;
-    }
-
-    public function validationDefault(Validator $validator) {
-        $validator = parent::validationDefault($validator);
-        return $validator
-            ->allowEmpty('registration_number')
-            ->add('registration_number', 'ruleUnique', [
-                'rule' => ['validateUnique', ['scope' => ['examination_id', 'examination_item_id']]],
-                'provider' => 'table'
-            ]);
     }
 
     public function onGetBreadcrumb(Event $event, Request $request, Component $Navigation, $persona)
     {
-        $queryString = $request->query['queryString'];
+        $this->queryString = $request->query['queryString'];
         $indexUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres'];
-        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $queryString];
+        $overviewUrl = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'view', 'queryString' => $this->queryString];
 
         $Navigation->substituteCrumb('Examination', 'Examination', $indexUrl);
         $Navigation->substituteCrumb('Exam Centre Students', 'Exam Centres', $overviewUrl);
@@ -82,86 +97,110 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $examCentreName = $this->ExaminationCentres->get($this->examCentreId)->name;
         $this->controller->set('contentHeader', $examCentreName. ' - ' .__('Students'));
 
-        $this->fields['total_mark']['visible'] = false;
-        $this->fields['student_id']['visible'] = true;
-        $this->fields['education_grade_id']['visible'] = false;
-        $this->fields['academic_period_id']['visible'] = false;
-        $this->fields['examination_id']['visible'] = false;
-        $this->fields['education_subject_id']['visible'] = false;
+        $this->fields['examination_id']['type'] = 'string';
         $this->fields['student_id']['type'] = 'string';
+        $this->fields['academic_period_id']['visible'] = false;
     }
 
-    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    public function afterAction(Event $event, ArrayObject $extra)
     {
-        $examCentreId = $entity->examination_centre_id;
-        $studentId = $entity->student_id;
-        $this->deleteAll([
-            'examination_centre_id' => $examCentreId,
-            'student_id' => $studentId
-        ]);
-
-        TableRegistry::get('Examination.ExaminationCentreRoomStudents')->deleteAll([
-            'examination_centre_id' => $examCentreId,
-            'student_id' => $studentId
-        ]);
-
-        $studentCount = $this->find()
-            ->where([$this->aliasField('examination_centre_id') => $entity->examination_centre_id])
-            ->group([$this->aliasField('student_id')])
-            ->count();
-
-        $this->ExaminationCentres->updateAll(['total_registered' => $studentCount],['id' => $entity->examination_centre_id]);
+        if (is_null($this->examCentreId)) {
+            $event->stopPropagation();
+            $this->Alert->error('general.notExists', ['reset' => 'override']);
+            $this->controller->redirect(['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'ExamCentres', 'index']);
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
-        $toolbarAttr = [
-            'class' => 'btn btn-xs btn-default',
-            'data-toggle' => 'tooltip',
-            'data-placement' => 'bottom',
-            'escape' => false
-        ];
-        $button['url'] = ['plugin' => 'Examination', 'controller' => 'Examinations', 'action' => 'LinkedInstitutionAddStudents', 'add', 'queryString' => $this->request->query('queryString')];
-        $button['type'] = 'button';
-        $button['label'] = '<i class="fa kd-add-multiple"></i>';
-        $button['attr'] = $toolbarAttr;
-        $button['attr']['title'] = __('Bulk Register');
-        $extra['toolbarButtons']['bulkAdd'] = $button;
         $this->field('room');
-        $this->field('openemis_no');
-        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'institution_id', 'room']);
+        $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
+        $this->fields['student_id']['sort'] = ['field' => 'Users.first_name'];
+        $this->fields['examination_id']['sort'] = false;
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'institution_id', 'examination_id', 'room']);
+    }
+
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        // set queryString for page refresh
+        $this->controller->set('queryString', $this->queryString);
+
+        // Examination filter
+        $ExaminationCentresExaminations = $this->ExaminationCentresExaminations;
+        $examinationOptions = $this->ExaminationCentresExaminations
+            ->find('list', [
+                'keyField' => 'examination_id',
+                'valueField' => 'examination.code_name'
+            ])
+            ->contain('Examinations')
+            ->where([$ExaminationCentresExaminations->aliasField('examination_centre_id') => $this->examCentreId])
+            ->toArray();
+
+        $examinationOptions = ['-1' => '-- '.__('Select Examination').' --'] + $examinationOptions;
+        $selectedExamination = !is_null($this->request->query('examination_id')) ? $this->request->query('examination_id') : -1;
+        $this->controller->set(compact('examinationOptions', 'selectedExamination'));
+        if ($selectedExamination != -1) {
+           $where[$this->aliasField('examination_id')] = $selectedExamination;
+        }
+
+        // Room filter
+        $ExamCentreRooms = TableRegistry::get('Examination.ExaminationCentreRooms');
+        $roomOptions = $ExamCentreRooms->find('list')
+            ->where([$ExamCentreRooms->aliasField('examination_centre_id') => $this->examCentreId])
+            ->toArray();
+        $roomOptions = ['0' => __('All Rooms'), '-1' => __('Students without Room')] + $roomOptions;
+        $selectedRoom = !is_null($this->request->query('examination_centre_room_id')) ? $this->request->query('examination_centre_room_id') : 0;
+        $this->controller->set(compact('roomOptions', 'selectedRoom'));
+
+        if ($selectedRoom > 0) {
+            $query->matching('ExaminationCentreRoomsExaminationsStudents');
+            $where['ExaminationCentreRoomsExaminationsStudents.examination_centre_room_id'] = $selectedRoom;
+        } else if ($selectedRoom == -1) {
+            $query
+                ->leftJoinWith('ExaminationCentreRoomsExaminationsStudents')
+                ->where(['ExaminationCentreRoomsExaminationsStudents.examination_centre_room_id IS NULL']);
+        }
+
+        // exam centre controls
+        $extra['elements']['controls'] = ['name' => 'Examination.ExaminationCentres/controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        $where[$this->aliasField('examination_centre_id')] = $this->examCentreId;
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
+        $query->where([$where]);
+
+        // sort
+        $sortList = ['Users.openemis_no', 'Users.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
+        }
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'registration_number';
+        $searchableFields[] = 'student_id';
+        $searchableFields['Users'] = 'openemis_no';
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
+        $this->field('identity_number');
         $this->field('room');
         $this->field('openemis_no');
-        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'institution_id', 'room']);
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'identity_number', 'institution_id', 'examination_id', 'room']);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
     {
         return $entity->user->openemis_no;
-    }
-
-    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
-    {
-        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
-
-        $query
-            ->where([$this->aliasField('examination_centre_id').' = '.$this->examCentreId])
-            ->group([$this->aliasField('student_id')]);
-
-        $ExamCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
-
-        $this->examCentreRoomStudents = $ExamCentreRoomStudents->find('list', [
-                'keyField' => 'student_id',
-                'valueField' => 'room_name'
-            ])
-            ->innerJoinWith('ExaminationCentreRooms')
-            ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
-            ->where([$ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId])
-            ->toArray();
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
@@ -171,12 +210,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
         }
     }
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('identity_number');
-        }
-    }
+
     public function onGetIdentityNumber(Event $event, Entity $entity)
     {
         return $entity->user->identity_number;
@@ -184,24 +218,20 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onGetRoom(Event $event, Entity $entity)
     {
-
-        if ($this->action == 'index') {
-            return isset($this->examCentreRoomStudents[$entity->student_id]) ? $this->examCentreRoomStudents[$entity->student_id] : '';
-        } else if ($this->action == 'view') {
-            $ExamCentreRoomStudents = TableRegistry::get('Examination.ExaminationCentreRoomStudents');
-            $examCentreRoomStudents = $ExamCentreRoomStudents->find()
-                ->innerJoinWith('ExaminationCentreRooms')
-                ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
-                ->where([
-                    $ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId,
-                    $ExamCentreRoomStudents->aliasField('student_id') => $entity->student_id
-                ])
-                ->first();
-            if (!empty($examCentreRoomStudents)) {
-                return $examCentreRoomStudents->room_name;
-            } else {
-                return '';
-            }
+        $ExamCentreRoomStudents = $this->ExaminationCentreRoomsExaminationsStudents;
+        $examCentreRoomStudents = $ExamCentreRoomStudents->find()
+            ->innerJoinWith('ExaminationCentreRooms')
+            ->select([$ExamCentreRoomStudents->aliasField('student_id'), 'room_name' => 'ExaminationCentreRooms.name'])
+            ->where([
+                $ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId,
+                $ExamCentreRoomStudents->aliasField('examination_id') => $entity->examination_id,
+                $ExamCentreRoomStudents->aliasField('student_id') => $entity->student_id
+            ])
+            ->first();
+        if (!empty($examCentreRoomStudents)) {
+            return $examCentreRoomStudents->room_name;
+        } else {
+            return '';
         }
     }
 
@@ -214,13 +244,141 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         }
     }
 
+    public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain(['Examinations', 'Users', 'AcademicPeriods', 'ExaminationCentres', 'Institutions', 'ExaminationCentreRoomsExaminationsStudents']);
+    }
+
+    public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->field('academic_period_id', ['type' => 'readonly', 'visible' => true, 'entity' => $entity]);
+        $this->field('registration_number', ['type' => 'readonly']);
+        $this->field('openemis_no', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('student_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('institution_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('examination_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('examination_centre_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->field('examination_centre_room_id', ['type' => 'readonly', 'entity' => $entity]);
+        $this->setFieldOrder(['academic_period_id', 'registration_number', 'openemis_no', 'student_id', 'institution_id', 'examination_id', 'examination_centre_id', 'examination_centre_room_id']);
+    }
+
+
+    public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
+    {
+        $attr['value'] = $attr['entity']->academic_period_id;
+        $attr['attr']['value'] = $attr['entity']->academic_period->name;
+        return $attr;
+    }
+
+    public function onUpdateFieldOpenemisNo(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'edit') {
+            $openemisNo = $attr['entity']->user->openemis_no;
+            $attr['type'] = 'readonly';
+            $attr['attr']['value'] = $openemisNo;
+            return $attr;
+        }
+    }
+
+    public function onUpdateFieldStudentId(Event $event, array $attr, $action, Request $request)
+    {
+        $student = $attr['entity']->user->name;
+        $attr['value'] = $attr['entity']->student_id;
+        $attr['attr']['value'] = $student;
+        return $attr;
+    }
+
+    public function onUpdateFieldInstitutionId(Event $event, array $attr, $action, Request $request)
+    {
+        if ($attr['entity']->has('institution') && !empty($attr['entity']->institution)) {
+            $institution = $attr['entity']->institution->code_name;
+        } else {
+            $institution = '';
+        }
+
+        $attr['attr']['value'] = $institution;
+        return $attr;
+    }
+
+    public function onUpdateFieldExaminationId(Event $event, array $attr, $action, Request $request)
+    {
+        $examination = $attr['entity']->examination->code_name;
+        $attr['value'] = $attr['entity']->examination_id;
+        $attr['attr']['value'] = $examination;
+        return $attr;
+    }
+
+    public function onUpdateFieldExaminationCentreId(Event $event, array $attr, $action, Request $request)
+    {
+        $examinationCentre = $attr['entity']->examination_centre->code_name;
+        $attr['value'] = $attr['entity']->examination_centre_id;
+        $attr['attr']['value'] = $examinationCentre;
+        return $attr;
+    }
+
+    public function onUpdateFieldExaminationCentreRoomId(Event $event, array $attr, $action, Request $request)
+    {
+        $entity = $attr['entity'];
+
+        $ExamCentreRooms = TableRegistry::get('Examination.ExaminationCentreRooms');
+        $roomOptions = $ExamCentreRooms->find('list')
+            ->where([$ExamCentreRooms->aliasField('examination_centre_id') => $this->examCentreId])
+            ->toArray();
+
+        $ExamCentreRoomStudents = $this->ExaminationCentreRoomsExaminationsStudents;
+        $room = $ExamCentreRoomStudents->find()
+            ->where([
+                $ExamCentreRoomStudents->aliasField('examination_centre_id') => $this->examCentreId,
+                $ExamCentreRoomStudents->aliasField('examination_id') => $entity->examination_id,
+                $ExamCentreRoomStudents->aliasField('student_id') => $entity->student_id
+            ])
+            ->extract('examination_centre_room_id')
+            ->first();
+
+        $attr['type'] = 'select';
+        $attr['options'] = $roomOptions;
+        $attr['default'] = $room;
+        return $attr;
+    }
+
+    public function editBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
+    {
+        if (isset($data[$this->alias()]['examination_centre_room_id']) && !empty($data[$this->alias()]['examination_centre_room_id'])) {
+            $data[$this->alias()]['examination_centre_rooms_examinations_students'][] = [
+                'examination_centre_id' => $data[$this->alias()]['examination_centre_id'],
+                'student_id' => $data[$this->alias()]['student_id'],
+                'examination_id' => $data[$this->alias()]['examination_id'],
+                'examination_centre_room_id' => $data[$this->alias()]['examination_centre_room_id']
+            ];
+        }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
+    {
+        // manually delete hasMany roomStudents data
+        $fieldKey = 'examination_centre_rooms_examinations_students';
+        if (!array_key_exists($fieldKey, $data[$this->alias()])) {
+            $data[$this->alias()][$fieldKey] = [];
+        }
+
+        $currentRoomIds = array_column($data[$this->alias()][$fieldKey], 'examination_centre_room_id');
+        $originalRooms = $entity->extractOriginal([$fieldKey])[$fieldKey];
+
+        foreach ($originalRooms as $key => $room) {
+            if (!in_array($room['examination_centre_room_id'], $currentRoomIds)) {
+                $this->ExaminationCentreRoomsExaminationsStudents->delete($room);
+                unset($entity->examination_centre_rooms_examinations_students[$key]);
+            }
+        }
+    }
+
     public function findResults(Query $query, array $options) {
-        $academicPeriodId = $options['academic_period_id'];
         $examinationId = $options['examination_id'];
         $examinationCentreId = $options['examination_centre_id'];
         $examinationItemId = $options['examination_item_id'];
 
         $Users = $this->Users;
+        $SubjectStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsSubjectsStudents');
         $ItemResults = TableRegistry::get('Examination.ExaminationItemResults');
 
         return $query
@@ -232,8 +390,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 $this->aliasField('registration_number'),
                 $this->aliasField('student_id'),
                 $this->aliasField('institution_id'),
-                $this->aliasField('education_grade_id'),
-                $this->aliasField('total_mark'),
+                $SubjectStudents->aliasField('total_mark'),
                 $Users->aliasField('openemis_no'),
                 $Users->aliasField('first_name'),
                 $Users->aliasField('middle_name'),
@@ -242,25 +399,30 @@ class ExamCentreStudentsTable extends ControllerActionTable {
                 $Users->aliasField('preferred_name')
             ])
             ->matching('Users')
+            ->innerJoin(
+                [$SubjectStudents->alias() => $SubjectStudents->table()],
+                [
+                    $SubjectStudents->aliasField('examination_id = ') . $this->aliasField('examination_id'),
+                    $SubjectStudents->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
+                    $SubjectStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $SubjectStudents->aliasField('examination_item_id = ') . $examinationItemId
+                ]
+            )
             ->leftJoin(
                 [$ItemResults->alias() => $ItemResults->table()],
                 [
-                    $ItemResults->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $ItemResults->aliasField('examination_id = ') . $this->aliasField('examination_id'),
                     $ItemResults->aliasField('examination_centre_id = ') . $this->aliasField('examination_centre_id'),
-                    $ItemResults->aliasField('examination_item_id = ') . $this->aliasField('examination_item_id'),
+                    $ItemResults->aliasField('examination_item_id = ') . $SubjectStudents->aliasField('examination_item_id'),
                     $ItemResults->aliasField('student_id = ') . $this->aliasField('student_id')
                 ]
             )
             ->where([
-                $this->aliasField('academic_period_id') => $academicPeriodId,
                 $this->aliasField('examination_id') => $examinationId,
-                $this->aliasField('examination_centre_id') => $examinationCentreId,
-                $this->aliasField('examination_item_id') => $examinationItemId
+                $this->aliasField('examination_centre_id') => $examinationCentreId
             ])
             ->group([
                 $this->aliasField('student_id'),
-                $this->aliasField('academic_period_id'),
                 $this->aliasField('examination_id')
             ])
             ->order([

@@ -587,6 +587,12 @@ class NavigationComponent extends Component
 				'title' => 'Visits',
 				'parent' => 'Institutions.index',
 				'params' => ['plugin' => 'Institution']
+			],
+
+			'Institutions.Cases' => [
+				'title' => 'Cases',
+				'parent' => 'Institutions.index',
+				'params' => ['plugin' => 'Institution']
 			]
 		];
 
@@ -651,7 +657,7 @@ class NavigationComponent extends Component
 				'title' => 'Professional Development',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Staff'],
-				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Staff.Trainings', 'Institutions.StaffAppraisals'],
+				'selected' => ['Staff.Qualifications', 'Staff.Extracurriculars', 'Staff.Memberships', 'Staff.Licenses', 'Institutions.StaffAppraisals'],
 			],
 			'Staff.BankAccounts' => [
 				'title' => 'Finance',
@@ -659,11 +665,11 @@ class NavigationComponent extends Component
 				'params' => ['plugin' => 'Staff'],
 				'selected' => ['Staff.BankAccounts', 'Staff.Salaries'],
 			],
-			'Institutions.StaffTrainingResults' => [
+			'Institutions.StaffTrainingNeeds' => [
 				'title' => 'Training',
 				'parent' => 'Institutions.Staff.index',
 				'params' => ['plugin' => 'Institution'],
-				'selected' => ['Institutions.StaffTrainingResults', 'Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications'],
+				'selected' => ['Institutions.StaffTrainingNeeds', 'Institutions.StaffTrainingApplications', 'Institutions.StaffTrainingResults', 'Institutions.CourseCatalogue', 'Staff.Courses',],
 			],
 			'Staff.Healths' => [
 				'title' => 'Health',
@@ -716,7 +722,7 @@ class NavigationComponent extends Component
 					'title' => 'Professional Development',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffTrainings', 'Directories.StaffAppraisals']
+					'selected' => ['Directories.StaffQualifications', 'Directories.StaffExtracurriculars', 'Directories.StaffMemberships', 'Directories.StaffLicenses', 'Directories.StaffAppraisals']
 				],
 				'Directories.StaffBankAccounts' => [
 					'title' => 'Finance',
@@ -724,11 +730,11 @@ class NavigationComponent extends Component
 					'params' => ['plugin' => 'Directory', 'type' => 'staff'],
 					'selected' => ['Directories.StaffBankAccounts', 'Directories.StaffSalaries']
 				],
-				'Directories.TrainingResults' => [
+				'Directories.TrainingNeeds' => [
 					'title' => 'Training',
 					'parent' => 'Directories.Staff',
 					'params' => ['plugin' => 'Directory'],
-					'selected' => ['Directories.TrainingResults', 'Directories.TrainingNeeds']
+					'selected' => ['Directories.TrainingNeeds', 'Directories.TrainingResults', 'Directories.Courses']
 				],
 		];
 		return $navigation;
@@ -786,13 +792,18 @@ class NavigationComponent extends Component
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
 			],
-            'Reports.Textbooks' => [
-                'title' => 'Textbooks',
-                'parent' => 'Reports',
-                'params' => ['plugin' => 'Report'],
-            ],
+			'Reports.Textbooks' => [
+				'title' => 'Textbooks',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Report'],
+			],
 			'Reports.Examinations' => [
 				'title' => 'Examinations',
+				'parent' => 'Reports',
+				'params' => ['plugin' => 'Report'],
+			],
+			'Reports.ProfessionalDevelopment' => [
+				'title' => 'Professional Development',
 				'parent' => 'Reports',
 				'params' => ['plugin' => 'Report'],
 			],
@@ -1062,7 +1073,7 @@ class NavigationComponent extends Component
 						'title' => 'Centres',
 						'parent' => 'Administration.Examinations',
 						'params' => ['plugin' => 'Examination'],
-						'selected' => ['Examinations.ExamCentres', 'Examinations.ExamCentreStudents', 'Examinations.LinkedInstitutionAddStudents', 'Examinations.ExamCentreRooms', 'Examinations.ImportExaminationCentreRooms']
+						'selected' => ['Examinations.ExamCentres', 'Examinations.ExamCentreRooms', 'Examinations.ExamCentreExams', 'Examinations.ExamCentreSubjects', 'Examinations.ExamCentreStudents', 'Examinations.ExamCentreInvigilators', 'Examinations.ExamCentreLinkedInstitutions', 'Examinations.ImportExaminationCentreRooms']
 					],
 					'Examinations.RegisteredStudents' => [
 						'title' => 'Students',
@@ -1086,7 +1097,7 @@ class NavigationComponent extends Component
 				'title' => 'Workflow',
 				'parent' => 'Administration',
 				'params' => ['plugin' => 'Workflow'],
-				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Statuses']
+				'selected' => ['Workflows.Workflows', 'Workflows.Steps', 'Workflows.Actions', 'Workflows.Rules', 'Workflows.Statuses']
 			],
 			'Systems.Updates' => [
 				'title' => 'Updates',
