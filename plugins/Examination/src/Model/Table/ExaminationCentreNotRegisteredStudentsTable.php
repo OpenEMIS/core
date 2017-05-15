@@ -8,6 +8,7 @@ use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 
 class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable {
     use OptionsTrait;
@@ -28,30 +29,26 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
+    public function implementedEvents()
     {
-        if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('identity_number', ['after' => 'date_of_birth']);
-            $this->field('repeated');
-
-            if ($this->action == 'index') {
-                $this->field('nationality');
-
-                $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_number', 'institution_id', 'repeated', 'transferred']);
-                $this->setFieldOrder('openemis_no', 'student_id', 'date_of_birth', 'nationality', 'identity_number', 'gender_id', 'repeated');
-
-            } else if ($this->action == 'view') {
-                
-                $this->setFieldOrder('openemis_no', 'academic_period_id', 'examination_id', 'student_id', 'date_of_birth', 'nationalities', 'identity_number', 'gender_id', 'repeated');
-            }
-        }
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
+        return $events;
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'Users.Nationalities.NationalitiesLookUp'
+            'Users.Nationalities.NationalitiesLookUp',
+            'Users.IdentityTypes'
         ]);
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {   
+        $this->field('nationality');
+        $this->field('identity_type');
+        $this->setFieldOrder(['openemis_no', 'student_id', 'date_of_birth', 'nationality', 'identity_type', 'identity_number', 'gender_id', 'repeated', 'institution_id']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity)
@@ -62,43 +59,46 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
             'visible' => ['view'=>true],
             'data' => $entity->user->nationalities
         ]);
-    }
 
-    public function implementedEvents()
-    {
-        $events = parent::implementedEvents();
-        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
-        return $events;
-    }
+        $this->setFieldOrder(['openemis_no', 'academic_period_id', 'examination_id', 'student_id', 'date_of_birth', 'nationalities', 'identity_number', 'gender_id', 'repeated']);
 
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+            $this->identityType = $entity->user->identity_type->name;
         }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+    {
+        if ($this->action == 'view') {
+            if ($field == 'identity_number') {
+                if ($this->identityType) {
+                    return __($this->identityType);
+                } else {
+                    return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+                }
+            } 
+        }
+
+        return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
     }
 
     public function onGetNationality(Event $event, Entity $entity)
     {   
         if ($this->action == 'index') {
-            if ($entity) {
-                if ($entity->extractOriginal(['student_id'])) {
-                    $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+            if (!empty($entity)) {
+                if ($entity->user->has('main_nationality') && !empty($entity->user->main_nationality)) {
+                    return $entity->user->main_nationality->name;
                 }
+            }
+        }
+    }
 
-                $query = $this->Users
-                        ->find()
-                        ->contain('MainNationalities')
-                        ->where([
-                            $this->Users->aliasField('id') => $studentId
-                        ])
-                        ->first();
-
-                if (!empty($query)) {
-                    if ($query->has('main_nationality') && !empty($query->main_nationality)) {
-                        return $query->main_nationality->name;
-                    }
+    public function onGetIdentityType(Event $event, Entity $entity)
+    {   
+        if ($this->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+                    return $entity->user->identity_type->name;
                 }
             }
         }
@@ -106,7 +106,11 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
 
     public function onGetIdentityNumber(Event $event, Entity $entity)
     {
-        return $entity->user->identity_number;
+        if (!empty($entity)) {
+            if ($entity->user->has('identity_number') && !empty($entity->user->identity_number)) {
+                return $entity->user->identity_number;
+            }
+        }
     }
 
     public function onGetRepeated(Event $event, Entity $entity)
@@ -117,5 +121,10 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
     public function beforeAction(Event $event, ArrayObject $extra) {
         $extra['config']['selectedLink'] = ['controller' => 'Examinations', 'action' => 'RegisteredStudents'];
         $this->controller->getStudentsTab();
+
+        if ($this->action == 'index' || $this->action == 'view') {
+            $this->field('identity_number');
+            $this->field('repeated');
+        }
     }
 }
