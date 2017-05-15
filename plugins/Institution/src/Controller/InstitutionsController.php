@@ -294,9 +294,7 @@ class InstitutionsController extends AppController
 
     public function StudentCompetencies($subaction = 'index')
     {
-
-
-        if ($subaction == 'editStudents') {
+        if ($subaction == 'edit') {
             $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
             $session = $this->request->session();
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
@@ -307,7 +305,16 @@ class InstitutionsController extends AppController
                 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
             ];
             $this->Navigation->addCrumb($crumbTitle, $indexUrl);
-            $roles = [];
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                $action = 'edit';
+                if (!$AccessControl->check(['Institutions', 'StudentCompetencies', $action], $roles)) {
+                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
+                    return $this->redirect($url);
+                }
+            }
             $queryString = $this->ControllerAction->getQueryString();
             $viewUrl = $this->ControllerAction->url('view');
             $viewUrl['action'] = 'StudentCompetencies';
@@ -324,8 +331,6 @@ class InstitutionsController extends AppController
             $this->set('viewUrl', $viewUrl);
             $this->set('indexUrl', $indexUrl);
             $this->set('classId', $queryString['class_id']);
-            $this->set('institutionId', $queryString['institution_id']);
-            $this->set('academicPeriodId', $queryString['academic_period_id']);
             $this->set('competencyTemplateId', $queryString['competency_template_id']);
             $this->set('queryString', $queryString);
             $this->render('student_competency_edit');
@@ -703,7 +708,7 @@ class InstitutionsController extends AppController
                 break;
             case 'StudentCompetencies':
                 if (isset($this->request->pass[0])) {
-                    if ($this->request->param('pass')[0] == 'editStudents') {
+                    if ($this->request->param('pass')[0] == 'edit') {
                         $this->Angular->addModules([
                             'alert.svc',
                             'institution.student.competencies.ctrl',
