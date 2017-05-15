@@ -114,6 +114,12 @@ class InstitutionFloorsTable extends ControllerActionTable
         ;
     }
 
+    public function validationSavingByAssociation(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator;
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
