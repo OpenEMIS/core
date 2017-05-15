@@ -287,7 +287,13 @@ class RestfulV2Component extends Component implements RestfulInterface
         $controller = $this->controller;
         $extra = $this->extra;
         $serialize = $this->serialize;
+
         $table = $this->initTable($this->model);
+        $schemaTable = $table;
+
+        if ($extra->offsetExists('model')) {
+            $table = $this->initTable($extra->offsetGet('model')); // change main model dynamically
+        }
 
         $idKeys = $id;
         if (json_decode($this->urlsafeB64Decode($id), true)) {
@@ -299,6 +305,12 @@ class RestfulV2Component extends Component implements RestfulInterface
             // process the queries sent through the request url
             $this->processRequestQueries(null, $extra, 'view');
 
+            if ($extra->offsetExists('finder')) {
+                $finder = $extra->offsetGet('finder');
+                if (!$table->hasFinder($finder)) {
+                    $extra->offsetUnset('finder');
+                }
+            }
             $entity = $table->get($primaryKeyValues, $extra->getArrayCopy());
 
             $data = $this->formatResultSet($table, $entity, $extra);
@@ -307,13 +319,13 @@ class RestfulV2Component extends Component implements RestfulInterface
             }
             $serialize->offsetSet('data', $data);
 
-            if ($table instanceof RestfulAppTable) {
+            if ($schemaTable instanceof RestfulAppTable) {
                 $action = $extra['action'];
-                if ($action == 'view') {
-                    $table->dispatchEvent('Restful.Model.view.updateSchema', [$table->getSchema(), $entity, $extra], $controller);
-                } else {
-                    $table->dispatchEvent('Restful.Model.' . $action . '.updateSchema', [$table->getSchema(), $entity, $extra], $controller);
+                $eventKey = 'Restful.Model.view.updateSchema';
+                if ($action != 'view') {
+                    $eventKey = 'Restful.Model.' . $action . '.updateSchema';
                 }
+                $schemaTable->dispatchEvent($eventKey, [$schemaTable->getSchema(), $entity, $extra], $controller);
             }
         } else {
             $this->_outputError('Record does not exists');
@@ -416,9 +428,13 @@ class RestfulV2Component extends Component implements RestfulInterface
             }
         }
 
-        // may have problems with complicated conditions
-        if (!empty($OR)) {
-            $query->where(['OR' => $OR]);
+        if ($table->hasFinder('search')) {
+            $query->find('search', ['OR' => $OR]);
+        } else {
+            // may have problems with complicated conditions
+            if (!empty($OR)) {
+                $query->where(['OR' => $OR]);
+            }
         }
     }
 
@@ -461,7 +477,7 @@ class RestfulV2Component extends Component implements RestfulInterface
                     if (!is_null($query)) { // for index
                         $options['_controller'] = $this->controller;
                         $query->find($name, $options);
-                    } elseif (!array_key_exists('finder', $extra)) { // for view
+                    } elseif (!array_key_exists('finder', $extra)) { // for view／edit
                         $extra['_controller'] = $this->controller;
                         $extra['finder'] = $name;
                     }
@@ -483,6 +499,11 @@ class RestfulV2Component extends Component implements RestfulInterface
                 $innerJoinAssoc = explode(',', $value);
             }
 
+            if (!is_null($query)) {
+                foreach ($innerJoinAssoc as $assoc) {
+                    $query->innerJoinWith($assoc);
+                }
+            }
             $extra['innerJoinWith'] = $innerJoinAssoc;
         }
     }
@@ -659,6 +680,11 @@ class RestfulV2Component extends Component implements RestfulInterface
             $this->extra['querystring'] = json_decode($queryString, true);
         }
 
+        if (array_key_exists('_search', $requestQueries)) {
+            $search = $this->urlsafeB64Decode($requestQueries['_search']);
+            $this->extra['search'] = $search;
+        }
+
         if (array_key_exists('_schema', $requestQueries) && $requestQueries['_schema'] == 'true') {
             unset($this->request->query['_schema']);
             $this->schema = true;
@@ -687,6 +713,12 @@ class RestfulV2Component extends Component implements RestfulInterface
         $requestQueries = $this->request->query;
 
         $conditions = [];
+        foreach ($requestQueries as $key => $value) {
+            if (!$this->startsWith($key, '_')) {
+                $conditions[$key] = $value;
+                unset($requestQueries[$key]);
+            }
+        }
         if (!empty($conditions)) {
             $requestQueries['_conditions'] = $conditions;
             $extra['conditions'] = $conditions;
@@ -947,6 +979,11 @@ class RestfulV2Component extends Component implements RestfulInterface
         $idKeys = [];
         if (!empty($ids)) {
             if (is_array($primaryKey)) {
+                $count = count($primaryKey);
+                $keysPresent = array_intersect($primaryKey, array_keys($ids));
+                if (count($keysPresent) != $count) {
+                    throw new InvalidPrimaryKeyException('The following primary keys ['.implode(', ', array_diff($primaryKey, array_keys($ids))). '] are not found in the request.');
+                }
                 foreach ($primaryKey as $key) {
                     if ($addAlias) {
                         $idKeys[$model->aliasField($key)] = $ids[$key];
