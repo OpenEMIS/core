@@ -128,6 +128,11 @@ class InstitutionRoomsTable extends ControllerActionTable
         ;
     }
 
+    public function validationSavingByAssociation(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator;
+    }
 
     public function findSubjectRoomOptions(Query $query, array $options)
     {
