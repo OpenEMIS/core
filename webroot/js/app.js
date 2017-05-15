@@ -175,7 +175,11 @@ var jsAjax = {
 var jsForm = {
 	init: function() {
 		$('input[type="number"]').keypress(function(evt) {
-			return utility.integerCheck(evt);
+			if ($(this).attr("step") !== undefined) {
+				return utility.floatCheck(evt);
+			} else {
+				return utility.integerCheck(evt);
+			}
 		});
 		this.linkVoid();
 
