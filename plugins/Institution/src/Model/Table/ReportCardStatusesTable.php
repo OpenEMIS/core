@@ -388,9 +388,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // only publish report cards with generated status to published status
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $StudentsReportCards->updateAll(['status' => $StudentsReportCards::PUBLISHED], [
+        $StudentsReportCards->updateAll(['status' => self::PUBLISHED], [
             $params,
-            'status' => $StudentsReportCards::GENERATED
+            'status' => self::GENERATED
         ]);
         return $this->controller->redirect($this->url('index'));
     }
@@ -401,9 +401,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // only unpublish report cards with published status to new status
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $StudentsReportCards->updateAll(['status' => $StudentsReportCards::NEW_REPORT], [
+        $StudentsReportCards->updateAll(['status' => self::NEW_REPORT], [
             $params,
-            'status' => $StudentsReportCards::PUBLISHED
+            'status' => self::PUBLISHED
         ]);
         return $this->controller->redirect($this->url('index'));
     }
