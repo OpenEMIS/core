@@ -80,7 +80,13 @@ class ExcelReportBehavior extends Behavior
         ini_set('max_execution_time', 180);
 
         $model = $this->_table;
-        $params = $model->getQueryString();
+
+        if (array_key_exists('requestQuery', $extra)) {
+            $params = $extra['requestQuery'];
+        } else {
+            $params = $model->getQueryString();
+        }
+
         $extra['vars'] = $this->getVars($params, $extra);
 
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
