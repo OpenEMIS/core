@@ -676,6 +676,12 @@ trait MessagesTrait {
         'Reports' => [
             'noWorkflowStatus' => 'You need to configure Workflow Statuses for this Workflow'
         ],
+        'ReportCardComments' => [
+            'noProgrammes' => 'There is no programme set for this institution'
+        ],
+        'ReportCardStatuses' => [
+            'noProgrammes' => 'There is no programme set for this institution'
+        ],
         'AlertRules' => [
             'Attendance' => [
                 'threshold' => 'Days within 1 to 30'

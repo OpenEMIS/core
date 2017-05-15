@@ -45,7 +45,11 @@ class ReportCardCommentsTable extends ControllerActionTable
      public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
      {
         $institutionId = $this->Session->read('Institution.Institutions.id');
-        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
+        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
+        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
+        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
+        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
 
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -54,14 +58,12 @@ class ReportCardCommentsTable extends ControllerActionTable
         $where[$this->aliasField('academic_period_id')] = $selectedAcademicPeriod;
         //End
 
-        $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $availableGrades = $InstitutionGrades->find()
             ->where([$InstitutionGrades->aliasField('institution_id') => $institutionId])
             ->extract('education_grade_id')
             ->toArray();
 
         // Report Cards filter
-        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
         if (!empty($availableGrades)) {
             $reportCardOptions = $ReportCards->find('list')
                 ->where([
@@ -79,10 +81,6 @@ class ReportCardCommentsTable extends ControllerActionTable
             $this->Alert->warning('ReportCardComments.noProgrammes');
         }
         //End
-
-        $ClassGrades = TableRegistry::get('Institution.InstitutionClassGrades');
-        $EducationGrades = TableRegistry::get('Education.EducationGrades');
-        $EducationProgrammes = TableRegistry::get('Education.EducationProgrammes');
 
         $query
             ->select([
@@ -138,6 +136,7 @@ class ReportCardCommentsTable extends ControllerActionTable
             $ReportCards->aliasField('name') => 'asc',
             $this->aliasField('name') => 'asc'
         ];
+        $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true)

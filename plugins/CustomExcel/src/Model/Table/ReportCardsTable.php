@@ -174,7 +174,6 @@ class ReportCardsTable extends AppTable
                     $this->aliasField('institution_class_id') => $params['institution_class_id'],
                     $this->aliasField('student_id') => $params['student_id']
                 ])
-                ->hydrate(false)
                 ->first();
             return $entity;
         }
