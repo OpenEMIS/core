@@ -115,6 +115,12 @@ class InstitutionBuildingsTable extends ControllerActionTable
         ;
     }
 
+    public function validationSavingByAssociation(Validator $validator)
+    {
+        $validator = $this->validationDefault($validator);
+        return $validator;
+    }
+
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
@@ -820,7 +826,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
 
         if ($entity->building_status_id == $inUseId) {
-        // If is in use, not allow to delete if the buildings is appear in other academic period
+            // If is in use, not allow to delete if the buildings is appear in other academic period
             $count = $this
                 ->find()
                 ->where([

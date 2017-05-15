@@ -123,6 +123,10 @@ class InfrastructureShell extends Shell
         $pageCount = 1;
         $countRecords = 0;
 
+        $saveOptions = [
+            'validate' => 'savingByAssociation'
+        ];
+
         while (!is_null($query)) {
             $executedQuery = $query->page($pageCount++, $limit)->hydrate(false)->toArray();
             if (empty($executedQuery)) {
@@ -139,7 +143,14 @@ class InfrastructureShell extends Shell
                 $land['academic_period_id'] = $copyTo;
                 unset($land['id']);
                 if (isset($land['institution_buildings']) && !empty($land['institution_buildings'])) {
-                    $saveOptions = ['associated' => 'InstitutionBuildings'];
+                    $saveOptions = [
+                        'associated' => [
+                            'InstitutionBuildings' => [
+                                'validate' => 'savingByAssociation'
+                            ]
+                        ],
+                        'validate' => 'savingByAssociation'
+                    ];
                     foreach ($land['institution_buildings'] as &$building) {
                         $building['previous_institution_building_id'] = $building['id'];
                         $building['start_date'] = $startDate;
@@ -150,10 +161,20 @@ class InfrastructureShell extends Shell
                         unset($building['id']);
                         unset($building['institution_land_id']);
                         if (isset($building['institution_floors']) && !empty($building['institution_floors'])) {
-                            $saveOptions = ['associated' => [
-                                'InstitutionBuildings' =>
-                                    ['associated' => 'InstitutionFloors']
-                                ]
+                            $saveOptions = [
+
+                                'associated' => [
+                                    'InstitutionBuildings' =>
+                                        [
+                                            'associated' => [
+                                                'InstitutionFloors' => [
+                                                    'validate' => 'savingByAssociation'
+                                                ]
+                                            ],
+                                            'validate' => 'savingByAssociation'
+                                        ]
+                                    ],
+                                'validate' => 'savingByAssociation'
                             ];
                             foreach ($building['institution_floors'] as &$floor) {
                                 $floor['previous_institution_floor_id'] = $floor['id'];
@@ -165,15 +186,25 @@ class InfrastructureShell extends Shell
                                 unset($floor['id']);
                                 unset($floor['institution_building_id']);
                                 if (isset($floor['institution_rooms']) && !empty($floor['institution_rooms'])) {
-                                    $saveOptions = ['associated' => [
-                                        'InstitutionBuildings' =>
-                                            ['associated' => [
-                                                    'InstitutionFloors' => [
-                                                        'associated' => 'InstitutionRooms'
-                                                    ]
+                                    $saveOptions = [
+
+                                        'associated' => [
+                                            'InstitutionBuildings' =>
+                                                [
+                                                    'associated' => [
+                                                        'InstitutionFloors' => [
+                                                            'associated' => [
+                                                                'InstitutionRooms' => [
+                                                                    'validate' => 'savingByAssociation'
+                                                                ]
+                                                            ],
+                                                            'validate' => 'savingByAssociation'
+                                                        ]
+                                                    ],
+                                                    'validate' => 'savingByAssociation'
                                                 ]
-                                            ]
-                                        ]
+                                            ],
+                                        'validate' => 'savingByAssociation'
                                     ];
                                     foreach ($floor['institution_rooms'] as &$room) {
                                         $room['previous_room_id'] = $room['id'];
@@ -191,7 +222,12 @@ class InfrastructureShell extends Shell
                     }
                     $newEntity = $InstitutionLands->newEntity($land, $saveOptions);
                     $InstitutionLands->save($newEntity, $saveOptions);
-                    $this->out('Finish Processing Record '. $countRecords . ' of ' . $totalRecords);
+                    if ($newEntity->errors()) {
+                        $this->out('Error Processing Record '. $countRecords . ' of ' . $totalRecords);
+                        $this->out($newEntity);
+                    } else {
+                        $this->out('Finish Processing Record '. $countRecords . ' of ' . $totalRecords);
+                    }
                 }
             }
 
