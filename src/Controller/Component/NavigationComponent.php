@@ -916,7 +916,7 @@ class NavigationComponent extends Component
                         'title' => 'Infrastructure',
                         'parent' => 'SystemSetup.CustomField',
                         'params' => ['plugin' => 'Infrastructure'],
-                        'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages', 'Infrastructures.Types', 'Infrastructures.RoomPages', 'Infrastructures.RoomTypes']
+                        'selected' => ['Infrastructures.Fields', 'Infrastructures.Pages']
                     ],
                 'Labels.index' => [
                     'title' => 'Labels',
