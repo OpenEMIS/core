@@ -914,6 +914,8 @@ DROP COLUMN `original_module_id`;
 ALTER TABLE `infrastructure_custom_field_values`
 RENAME TO  `z_3853_infrastructure_custom_field_values` ;
 
+ALTER TABLE `infrastructure_types`
+RENAME TO  `z_3853_infrastructure_types` ;
 
 -- Patch security function
 UPDATE `security_functions`
