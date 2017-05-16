@@ -888,7 +888,7 @@ DROP COLUMN `original_id`;
 ALTER TABLE `institution_buildings`
 DROP COLUMN `original_parent_id`,
 DROP COLUMN `original_id`,
-CHANGE COLUMN `institution_land_id` `institution_land_id` INT(11) NOT NULL COMMENT 'links to institution_buildings.id';
+CHANGE COLUMN `institution_land_id` `institution_land_id` INT(11) NOT NULL COMMENT 'links to institution_lands.id';
 
 ALTER TABLE `institution_floors`
 DROP COLUMN `original_parent_id`,
