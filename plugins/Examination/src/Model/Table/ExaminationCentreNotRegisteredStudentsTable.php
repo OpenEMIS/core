@@ -7,9 +7,13 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 
 class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable {
     use OptionsTrait;
+
+    private $identityType;
 
     public function initialize(array $config)
     {
@@ -27,38 +31,11 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('identity_number', ['after' => 'date_of_birth']);
-            $this->field('repeated');
-            $this->setFieldOrder('openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number', 'repeated');
-        }
-    }
-
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
         return $events;
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
-    public function onGetIdentityNumber(Event $event, Entity $entity)
-    {
-        return $entity->user->identity_number;
-    }
-
-    public function onGetRepeated(Event $event, Entity $entity)
-    {
-        return $this->ExaminationCentreStudents->onGetRepeated($event, $entity);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {
