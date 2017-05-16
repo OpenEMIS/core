@@ -19,6 +19,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     private $queryString;
     private $examCentreId;
+    private $identityType;
 
     public function initialize(array $config) {
         $this->table('examination_centres_examinations_students');
@@ -193,7 +194,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $searchableFields['Users'] = 'openemis_no';
     }
 
-    public function viewAfterAction(Event $event, Entity $entity)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('identity_number');
         $this->field('room');
@@ -213,10 +214,10 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         }
     }
 
-    public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'Users.MainNationalities', 'Users.Nationalities.NationalitiesLookUp', 'Users.IdentityTypes'
+            'Users.Nationalities.NationalitiesLookUp', 'Users.IdentityTypes'
         ]);
     }
 
