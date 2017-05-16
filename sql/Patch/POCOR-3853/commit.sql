@@ -50,6 +50,7 @@ CREATE TABLE IF NOT EXISTS `institution_lands` (
   INDEX `institution_id` (`institution_id`),
   INDEX `academic_period_id` (`academic_period_id`),
   INDEX `land_type_id` (`land_type_id`),
+  INDEX `land_status_id` (`land_status_id`),
   INDEX `infrastructure_ownership_id` (`infrastructure_ownership_id`),
   INDEX `infrastructure_condition_id` (`infrastructure_condition_id`),
   INDEX `previous_institution_land_id` (`previous_institution_land_id`),
@@ -114,6 +115,7 @@ CREATE TABLE IF NOT EXISTS `institution_buildings` (
   INDEX `institution_id` (`institution_id`),
   INDEX `academic_period_id` (`academic_period_id`),
   INDEX `building_type_id` (`building_type_id`),
+  INDEX `building_status_id` (`building_status_id`),
   INDEX `infrastructure_ownership_id` (`infrastructure_ownership_id`),
   INDEX `infrastructure_condition_id` (`infrastructure_condition_id`),
   INDEX `previous_institution_building_id` (`previous_institution_building_id`),
@@ -175,6 +177,7 @@ CREATE TABLE IF NOT EXISTS `institution_floors` (
   INDEX `institution_id` (`institution_id`),
   INDEX `academic_period_id` (`academic_period_id`),
   INDEX `floor_type_id` (`floor_type_id`),
+  INDEX `floor_status_id` (`floor_status_id`),
   INDEX `infrastructure_condition_id` (`infrastructure_condition_id`),
   INDEX `previous_institution_floor_id` (`previous_institution_floor_id`),
   INDEX `modified_user_id` (`modified_user_id`),
@@ -502,6 +505,7 @@ CREATE TABLE `land_custom_field_values` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `infrastructure_custom_field_id` (`infrastructure_custom_field_id`),
+  KEY `number_value` (`number_value`),
   KEY `institution_land_id` (`institution_land_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`))
@@ -557,6 +561,7 @@ CREATE TABLE `building_custom_field_values` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `infrastructure_custom_field_id` (`infrastructure_custom_field_id`),
+  KEY `number_value` (`number_value`),
   KEY `institution_building_id` (`institution_building_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`))
@@ -612,6 +617,7 @@ CREATE TABLE `floor_custom_field_values` (
   `created` datetime NOT NULL,
   PRIMARY KEY (`id`),
   KEY `infrastructure_custom_field_id` (`infrastructure_custom_field_id`),
+  KEY `number_value` (`number_value`),
   KEY `institution_floor_id` (`institution_floor_id`),
   KEY `modified_user_id` (`modified_user_id`),
   KEY `created_user_id` (`created_user_id`))
