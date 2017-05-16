@@ -324,16 +324,17 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $value;
     }
 
-    public function generateAll()
+    public function generateAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
 
-        $this->Alert->warning('general.notExists');
+        $event->stopPropagation();
+        $this->Alert->warning('ReportCardStatuses.generateAll');
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function downloadAll()
+    public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
         $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
@@ -377,34 +378,51 @@ class ReportCardStatusesTable extends ControllerActionTable
             readfile($filePath);
 
         } else {
-            $this->Alert->warning('general.notExists');
+            $event->stopPropagation();
+            $this->Alert->error('ReportCardStatuses.noFilesToDownload');
             return $this->controller->redirect($this->url('index'));
         }
     }
 
-    public function publish()
+    public function publish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
         // only publish report cards with generated status to published status
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $StudentsReportCards->updateAll(['status' => self::PUBLISHED], [
+        $result = $StudentsReportCards->updateAll(['status' => self::PUBLISHED], [
             $params,
             'status' => self::GENERATED
         ]);
+
+        if ($result) {
+            $this->Alert->success('ReportCardStatuses.publishAll');
+        } else {
+            $this->Alert->error('ReportCardStatuses.noFilesToPublish');
+        }
+
+        $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
 
-    public function unpublish()
+    public function unpublish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
 
         // only unpublish report cards with published status to new status
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $StudentsReportCards->updateAll(['status' => self::NEW_REPORT], [
+        $result = $StudentsReportCards->updateAll(['status' => self::NEW_REPORT], [
             $params,
             'status' => self::PUBLISHED
         ]);
+
+        if ($result) {
+            $this->Alert->success('ReportCardStatuses.unpublishAll');
+        } else {
+            $this->Alert->error('ReportCardStatuses.noFilesToUnpublish');
+        }
+
+        $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
 

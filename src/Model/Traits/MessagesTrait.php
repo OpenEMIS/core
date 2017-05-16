@@ -680,7 +680,13 @@ trait MessagesTrait {
             'noProgrammes' => 'There is no programme set for this institution'
         ],
         'ReportCardStatuses' => [
-            'noProgrammes' => 'There is no programme set for this institution'
+            'noProgrammes' => 'There is no programme set for this institution',
+            'noFilesToDownload' => 'There are no generated Report Cards to download',
+            'noFilesToPublish' => 'There are no generated Report Cards to publish',
+            'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
+            'generateAll' => 'All Report Cards will be generated in the background',
+            'publishAll' => 'All generated Report Cards have been published successfully',
+            'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
         'AlertRules' => [
             'Attendance' => [
