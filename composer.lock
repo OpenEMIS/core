@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
     "content-hash": "46950ee59cd777978845e65a8bbee6f0",
-=======
-    "content-hash": "70ef7304c36673e7719408977a5025ca",
->>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
     "packages": [
         {
             "name": "admad/cakephp-jwt-auth",
@@ -304,7 +300,6 @@
                 "time"
             ],
             "time": "2017-04-27T01:27:49+00:00"
-<<<<<<< HEAD
         },
         {
             "name": "dompdf/dompdf",
@@ -367,8 +362,6 @@
             "description": "DOMPDF is a CSS 2.1 compliant HTML to PDF converter",
             "homepage": "https://github.com/dompdf/dompdf",
             "time": "2017-02-16T02:40:40+00:00"
-=======
->>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         },
         {
             "name": "firebase/php-jwt",
@@ -462,11 +455,7 @@
             "source": {
                 "type": "git",
                 "url": "git@bitbucket.org:korditpteltd/kd-cakephp-restful.git",
-<<<<<<< HEAD
                 "reference": "d28f7fcc527597cd1c163f34a5078048082e4b62"
-=======
-                "reference": "872ead27dc8916e1d4dac5463174820aea82c65a"
->>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
             },
             "require": {
                 "admad/cakephp-jwt-auth": "^2.0",
@@ -513,11 +502,7 @@
             "support": {
                 "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
             },
-<<<<<<< HEAD
             "time": "2017-05-12 02:37:19"
-=======
-            "time": "2017-05-05 09:12:09"
->>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         },
         {
             "name": "korditpteltd/kd-cakephp-sso",
@@ -746,7 +731,6 @@
                 "saml"
             ],
             "time": "2017-03-13T09:56:49+00:00"
-<<<<<<< HEAD
         },
         {
             "name": "phenx/php-font-lib",
@@ -821,8 +805,6 @@
             "description": "A library to read, parse and export to PDF SVG files.",
             "homepage": "https://github.com/PhenX/php-svg-lib",
             "time": "2016-12-13T20:25:45+00:00"
-=======
->>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         },
         {
             "name": "phpoffice/phpexcel",
@@ -1069,7 +1051,6 @@
                 "psr-3"
             ],
             "time": "2016-10-10T12:19:37+00:00"
-<<<<<<< HEAD
         },
         {
             "name": "sabberworm/php-css-parser",
@@ -1111,8 +1092,6 @@
                 "stylesheet"
             ],
             "time": "2015-08-24T08:48:52+00:00"
-=======
->>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         },
         {
             "name": "zendframework/zend-diactoros",
@@ -2678,11 +2657,7 @@
                 "interactive",
                 "shell"
             ],
-<<<<<<< HEAD
             "time": "2017-05-12T15:41:55+00:00"
-=======
-            "time": "2017-03-19T21:40:44+00:00"
->>>>>>> cb75b26cca73c6b895c200bbe361c72df2866692
         },
         {
             "name": "robmorgan/phinx",
