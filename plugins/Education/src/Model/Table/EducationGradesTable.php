@@ -62,7 +62,7 @@ class EducationGradesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Behavior.reorder.updateAdmissionAge'] = 'updateAdmissionAge';
+        $events['ControllerAction.Model.afterReorder'] = 'afterReorder';
 
         return $events;
     }
@@ -78,6 +78,24 @@ class EducationGradesTable extends ControllerActionTable
                 // );
             }
         }
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $educationProgrammeId = $entity->education_programme_id;
+        $records = $this->find()
+            ->where([$this->aliasField('education_programme_id') => $educationProgrammeId])
+            ->order([$this->aliasField('order')])
+            ->all();
+
+        $gradeIds = [];
+        if (!$records->isEmpty()) {
+            foreach ($records as $recordsObj) {
+                $gradeIds[] = $recordsObj->id;
+            }
+        }
+
+        $this->updateAdmissionAge($gradeIds);
     }
 
      /**
@@ -260,6 +278,7 @@ class EducationGradesTable extends ControllerActionTable
                 $educationProgrammeId = $selectedProgramme;
             }
 
+            $value = 0;
             if ($educationProgrammeId > 0) {
                 $educationCycleId = $this->EducationProgrammes->get($educationProgrammeId)->education_cycle_id;
                 $admissionAge = $this->EducationProgrammes->EducationCycles->get($educationCycleId)->admission_age;
@@ -388,7 +407,17 @@ class EducationGradesTable extends ControllerActionTable
         return $admissionAge;
     }
 
-    public function updateAdmissionAge(Event $event, $gradeIds)
+    public function afterReorder(Event $event, $ids = [])
+    {
+        $gradeIds = [];
+        foreach ($ids as $id) {
+            $gradeIds[] = $id['id'];
+        }
+
+        $this->updateAdmissionAge($gradeIds);
+    }
+
+    public function updateAdmissionAge($gradeIds)
     {
         foreach ($gradeIds as $idKey => $id) {
             $entity = $this->get($id, ['contain' => ['EducationProgrammes.EducationCycles']]);

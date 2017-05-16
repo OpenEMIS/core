@@ -21,7 +21,7 @@ class ReorderBehavior extends Behavior {
 		return $events;
 	}
 
-	public function reorder(Event $event, ArrayObject $extra) {
+	public function reorder(Event $mainEvent, ArrayObject $extra) {
 		$model = $this->_table;
 		$controller = $model->controller;
 		$request = $model->request;
@@ -53,22 +53,16 @@ class ReorderBehavior extends Behavior {
 					->toArray();
 
 				$originalOrder = array_reverse($originalOrder);
-				$gradeIds = [];
 				foreach ($ids as $id) {
-					$gradeIds[] = $id['id'];
 					$orderValue = array_pop($originalOrder);
 					$model->updateAll([$orderField => $orderValue[$orderField]], [$id]);
 				}
 
-				if ($model->alias() == 'EducationGrades') {
-						$event = $model->dispatchEvent('ControllerAction.Behavior.reorder.updateAdmissionAge',
-						[$gradeIds],
-						$model
-					);
-				}
+				$event = $model->dispatchEvent('ControllerAction.Model.afterReorder', [$ids], $model);
+				if ($event->isStopped()) { return $event->result; }
 			}
 		}
-		$event->stopPropagation();
+		$mainEvent->stopPropagation();
 		return true;
 	}
 
@@ -137,17 +131,8 @@ class ReorderBehavior extends Behavior {
 				->toArray();
 		}
 		$counter = 1;
-		$gradeIds = [];
 		foreach ($reorderItems as $key => $item) {
-			$gradeIds[] = $key; // for updateAdmissionAge function
 			$table->updateAll([$orderField => $counter++], [$table->primaryKey() => $key]);
-		}
-
-		if ($table->alias() == 'EducationGrades') {
-				$event = $table->dispatchEvent('ControllerAction.Behavior.reorder.updateAdmissionAge',
-				[$gradeIds],
-				$table
-			);
 		}
 	}
 
@@ -157,7 +142,6 @@ class ReorderBehavior extends Behavior {
 		$filterValues = $this->config('filterValues');
 		$this->updateOrder($entity, $orderField, $filter, $filterValues);
 	}
-
 
 	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
 		$orderField = $this->config('orderField');
