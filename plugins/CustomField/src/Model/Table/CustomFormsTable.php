@@ -440,6 +440,7 @@ class CustomFormsTable extends ControllerActionTable
 
         if (!empty($moduleOptions)) {
             $selectedModule = $this->queryString('module', $moduleOptions);
+            $extra['toolbarButtons']['add']['url']['module'] = $selectedModule;
             $this->advancedSelectOptions($moduleOptions, $selectedModule);
 
             $query->where([$this->aliasField('custom_module_id') => $selectedModule]);
