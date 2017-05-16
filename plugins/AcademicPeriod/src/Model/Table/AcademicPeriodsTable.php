@@ -215,6 +215,9 @@ class AcademicPeriodsTable extends AppTable
 
         $broadcaster = $this;
         $listeners = [];
+        $listeners[] = TableRegistry::get('Institution.InstitutionLands');
+        $listeners[] = TableRegistry::get('Institution.InstitutionBuildings');
+        $listeners[] = TableRegistry::get('Institution.InstitutionFloors');
         $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
 
         if (!empty($listeners)) {
