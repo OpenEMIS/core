@@ -19,6 +19,7 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     private $queryString;
     private $examCentreId;
+    private $identityType;
 
     public function initialize(array $config) {
         $this->table('examination_centres_examinations_students');
@@ -117,13 +118,16 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $this->field('openemis_no', ['sort' => ['field' => 'Users.openemis_no']]);
         $this->fields['student_id']['sort'] = ['field' => 'Users.first_name'];
         $this->fields['examination_id']['sort'] = false;
-        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'institution_id', 'examination_id', 'room']);
+        $this->field('nationality');
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'nationality', 'institution_id', 'examination_id', 'room']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // set queryString for page refresh
         $this->controller->set('queryString', $this->queryString);
+
+        $query->contain(['Users.MainNationalities']);
 
         // Examination filter
         $ExaminationCentresExaminations = $this->ExaminationCentresExaminations;
@@ -190,12 +194,31 @@ class ExamCentreStudentsTable extends ControllerActionTable {
         $searchableFields['Users'] = 'openemis_no';
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->field('identity_number');
         $this->field('room');
         $this->field('openemis_no');
-        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'identity_number', 'institution_id', 'examination_id', 'room']);
+
+        $this->field('nationalities', [
+            'type' => 'element',
+            'element' => 'nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
+
+        $this->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'nationalities', 'identity_number', 'institution_id', 'examination_id', 'room']);
+
+        if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+            $this->identityType = $entity->user->identity_type->name;
+        }
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query->contain([
+            'Users.Nationalities.NationalitiesLookUp', 'Users.IdentityTypes'
+        ]);
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -205,9 +228,23 @@ class ExamCentreStudentsTable extends ControllerActionTable {
 
     public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
         if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+            if ($this->identityType) {
+                return __($this->identityType);
+            } else {
+                return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+            }
         } else {
             return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
+        }
+    }
+
+    public function onGetNationality(Event $event, Entity $entity)
+    {   
+        if ($entity->has('user')) {
+            $user = $entity->user;
+            if ($user->has('main_nationality') && !empty($user->main_nationality)) {
+                return $user->main_nationality->name;
+            }
         }
     }
 
