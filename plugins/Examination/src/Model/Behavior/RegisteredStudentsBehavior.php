@@ -14,6 +14,9 @@ use Cake\Log\Log;
 use Cake\I18n\Time;
 
 class RegisteredStudentsBehavior extends Behavior {
+
+    private $identityType;
+
 	public function initialize(array $config) {
 		parent::initialize($config);
         $model = $this->_table;
@@ -36,6 +39,7 @@ class RegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
         $events['ControllerAction.Model.unregister'] = 'unregister';
         $events['ControllerAction.Model.onGetFormButtons'] = 'onGetFormButtons';
+        $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 20];
         $events['ControllerAction.Model.onUpdateFieldAcademicPeriodId'] = 'onUpdateFieldAcademicPeriodId';
         $events['ControllerAction.Model.onUpdateFieldExaminationId'] = 'onUpdateFieldExaminationId';
         $events['ControllerAction.Model.onUpdateFieldOpenemisNo'] = 'onUpdateFieldOpenemisNo';
@@ -157,6 +161,10 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('gender_id');
         $model->field('academic_period_id', ['visible' => false]);
         $model->field('examination_id', ['visible' => false]);
+
+        $model->field('identity_number');
+        $model->field('repeated');
+        $model->field('transferred');
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -213,13 +221,13 @@ class RegisteredStudentsBehavior extends Behavior {
                 $model->Users->aliasField('preferred_name'),
                 $model->Users->aliasField('date_of_birth'),
                 $model->Users->aliasField('identity_number'),
-                $model->Users->IdentityTypes->aliasField('name'),
+                $model->Users->MainIdentityTypes->aliasField('name'),
                 $model->Users->Genders->aliasField('name'),
                 $model->Users->MainNationalities->aliasField('name'),
                 $model->Institutions->aliasField('code'),
                 $model->Institutions->aliasField('name')
             ])
-            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users.Genders', 'Users.MainNationalities', 'Users.IdentityTypes'], true)
+            ->contain(['AcademicPeriods', 'Examinations', 'Institutions', 'Users.Genders', 'Users.MainNationalities', 'Users.MainIdentityTypes'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
@@ -257,13 +265,25 @@ class RegisteredStudentsBehavior extends Behavior {
         $session->delete($successSessionKey);
         $session->delete($errorSessionKey);
         $session->delete($warningSessionKey);
+
+        $model->field('tooltip_column');
+        $model->field('nationality');
+        $model->field('identity_type');
+
+        $model->setFieldOrder(['registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'nationality', 'identity_type', 'identity_number', 'repeated', 'transferred', 'tooltip_column', 'institution_id']);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $model = $this->_table;
 
         $query
-            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders', 'Institutions'])
+            ->contain([
+                'Users.SpecialNeeds.SpecialNeedTypes', 
+                'Users.Genders', 
+                'Institutions', 
+                'Users.Nationalities.NationalitiesLookUp',
+                'Users.MainIdentityTypes'
+            ])
             ->matching('AcademicPeriods')
             ->matching('Examinations');
     }
@@ -298,8 +318,164 @@ class RegisteredStudentsBehavior extends Behavior {
             $extra['toolbarButtons']->exchangeArray($toolbarButtonsArray);
         }
 
-
         $this->setupFields($entity, $extra);
+
+        if ($entity->user->has('main_identity_type') && !empty($entity->user->main_identity_type)) {
+            $this->identityType = $entity->user->main_identity_type->name;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+    {
+        if ($this->_table->action == 'view') {
+            if ($field == 'identity_number') {
+                if ($this->identityType) {
+                    return __($this->identityType);
+                } else {
+                    return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+                }
+            }
+        }
+        
+        if ($field == 'tooltip_column') {
+            return '';
+        }
+    }
+
+    public function onGetRepeated(Event $event, Entity $entity)
+    {  
+        $InstitutionStudents = TableRegistry::get('Institution.Students');
+        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
+
+        $statuses = $StudentStatuses->findCodeList();
+        $repeatedStatus = $statuses['REPEATED'];
+
+        if ($entity) {
+            if ($entity->extractOriginal(['student_id'])) {
+                $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+            }
+
+            if ($entity->academic_period_id) {
+                $academicPeriod = $entity->academic_period_id;
+            }
+            
+            $institutionId = '';
+            if ($entity->institution) {
+                $institutionId = $entity->institution->id;
+            }
+
+            $educationGrade = '';
+            if ($entity->education_grade) {
+                $educationGrade = $entity->education_grade->id;
+            }
+        }
+
+        $repeatStudent = '';
+        if ($studentId && $educationGrade && $repeatedStatus) {
+
+            //check whether there is any repeat status on student history for the same grade.
+            $repeatStudent = $InstitutionStudents
+                            ->find()
+                            ->where([
+                                $InstitutionStudents->aliasField('student_id') => $studentId,
+                                $InstitutionStudents->aliasField('education_grade_id') => $educationGrade,
+                                $InstitutionStudents->aliasField('student_status_id') => $repeatedStatus //repeated
+                            ])
+                            ->count();
+        }
+
+        if ($repeatStudent) {
+            return __('Yes');
+        } else {
+            return __('No');
+        }
+    }
+
+    public function onGetTransferred(Event $event, Entity $entity)
+    {
+        //check whether there is transfer record for the current academic year that already approved.
+        $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
+        
+        if ($entity) {
+            if ($entity->extractOriginal(['student_id'])) {
+                $studentId = $entity->extractOriginal(['student_id'])['student_id'];
+            }
+
+            if ($entity->academic_period_id) {
+                $academicPeriod = $entity->academic_period_id;
+            }
+            
+            $institutionId = '';
+            if ($entity->institution) {
+                $institutionId = $entity->institution->id;
+            }
+        }
+
+        $Admission = '';
+        if ($studentId && $academicPeriod && $institutionId) {
+
+            $Admission = $StudentAdmission
+                        ->find()
+                        ->where([
+                            $StudentAdmission->aliasField('student_id') => $studentId,
+                            $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
+                            $StudentAdmission->aliasField('academic_period_id') => $academicPeriod,
+                            $StudentAdmission->aliasField('type') => 2, //transfer type
+                            $StudentAdmission->aliasField('status') => 1 //status is approved
+                        ])
+                        ->contain('Institutions')
+                        ->order($StudentAdmission->aliasField('created DESC'))
+                        ->first();
+        }
+
+        $this->transferred = [];
+        if (!empty($Admission)) {
+            $this->transferred = [true, $Admission->institution->code_name];
+            return  __('Yes');
+        } else {
+            return __('No');
+        }
+    }
+
+    public function onGetTooltipColumn(Event $event, Entity $entity)
+    {
+        if (!empty($this->transferred)) {
+            $tooltipMessage = __('Student has been transferred to') . ' (' . $this->transferred[1] . ') ' . __('after registration');
+            return  "<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='left' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>";
+        } else {
+            return '-';
+        }
+    }
+
+    public function onGetNationality(Event $event, Entity $entity)
+    {   
+        if ($this->_table->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('main_nationality') && !empty($entity->user->main_nationality)) {
+                    return $entity->user->main_nationality->name;
+                }
+            }
+        }
+    }
+
+    public function onGetIdentityType(Event $event, Entity $entity)
+    {   
+        if ($this->_table->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('main_identity_type') && !empty($entity->user->main_identity_type)) {
+                    return $entity->user->main_identity_type->name;
+                }
+            }
+        }
+    }
+
+    public function onGetIdentityNumber(Event $event, Entity $entity)
+    {
+        if (!empty($entity)) {
+            if ($entity->user->has('identity_number') && !empty($entity->user->identity_number)) {
+                return $entity->user->identity_number;
+            }
+        }
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity)
@@ -522,7 +698,18 @@ class RegisteredStudentsBehavior extends Behavior {
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
         $model->field('registration_number', ['type' => 'string', 'entity' => $entity]);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'registration_number']);
+        $model->field('identity_number');
+        $model->field('repeated');
+        $model->field('transferred');
+
+        $model->field('nationalities', [
+            'type' => 'element',
+            'element' => 'Examination.nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
+
+        $model->setFieldOrder(['registration_number', 'academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'special_needs', 'nationalities', 'identity_number', 'repeated', 'transferred']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {
