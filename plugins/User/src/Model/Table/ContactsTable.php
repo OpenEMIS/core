@@ -75,32 +75,30 @@ class ContactsTable extends ControllerActionTable {
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //if preferred set, then unset other preferred for the same contact option
-        if ($entity->dirty('preferred') || $entity->preferred == 1) {
-            if ($entity->preferred == 1) {
-                $contactOption = $entity->contact_option_id;
-                $contacts = $this->find()
-                            ->matching('ContactTypes', function ($q) use ($contactOption) {
-                                return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                            })
-                            ->where([
-                                $this->aliasField('id !=') => $entity->id,
-                                $this->aliasField('security_user_id') => $entity->security_user_id
-                            ]);
+        if (($entity->dirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
+            $contactOption = $entity->contact_option_id;
+            $contacts = $this->find()
+                        ->matching('ContactTypes', function ($q) use ($contactOption) {
+                            return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                        })
+                        ->where([
+                            $this->aliasField('id !=') => $entity->id,
+                            $this->aliasField('security_user_id') => $entity->security_user_id
+                        ]);
 
-                if (!empty($contacts->toArray())) {
-                    foreach ($contacts->toArray() as $key => $value) {
-                        $value->preferred = 0;
-                        $this->save($value);
-                    }
+            if (!empty($contacts->toArray())) {
+                foreach ($contacts->toArray() as $key => $value) {
+                    $value->preferred = 0;
+                    $this->save($value);
                 }
+            }
 
-                if ($contactOption == 4) { //if updating preferred email
-                    //update information on security user table
-                    $listeners = [
-                        TableRegistry::get('User.Users')
-                    ];
-                    $this->dispatchEventToModels('Model.UserContacts.onChange', [$entity], $this, $listeners);
-                }
+            if ($contactOption == 4) { //if updating preferred email
+                //update information on security user table
+                $listeners = [
+                    TableRegistry::get('User.Users')
+                ];
+                $this->dispatchEventToModels('Model.UserContacts.onChange', [$entity], $this, $listeners);
             }
         }
     }
