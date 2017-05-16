@@ -114,7 +114,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         if ($extra['save']) {
-            $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSave', [$params, $extra], $this);
+            $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSaveFile', [$params, $extra], $this);
         }
 
         if ($extra['download']) {
