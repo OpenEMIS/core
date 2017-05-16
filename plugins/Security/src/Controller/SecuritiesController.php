@@ -18,13 +18,22 @@ class SecuritiesController extends AppController
             'SystemGroups'  => ['className' => 'Security.SystemGroups', 'actions' => ['!add', '!edit', '!remove']],
             'Roles'             => ['className' => 'Security.SecurityRoles']
         ];
+        $this->attachAngularModules();
     }
 
-    public function Permissions()
+    public function Permissions($subaction = 'index', $roleId = null)
     {
-    	// $this->autoRender = false;
-    	// $this->render('Security.Permissions/index');
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
+        if ($subaction == 'edit') {
+            $indexUrl = [
+                'plugin' => 'Security',
+                'controller' => 'Securities',
+                'action' => 'Permissions'
+            ];
+            $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
+            $this->set('indexUrl', $indexUrl);
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
+        }
     }
 
     public function UserGroups()
@@ -35,6 +44,25 @@ class SecuritiesController extends AppController
     public function RefreshToken()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.RefreshTokens']);
+    }
+
+    private function attachAngularModules()
+    {
+        $action = $this->request->action;
+
+        switch ($action) {
+            case 'Permissions':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'security.permission.edit.ctrl',
+                            'security.permission.edit.svc'
+                        ]);
+                    }
+                }
+                break;
+        }
     }
 
     public function beforeFilter(Event $event)

@@ -185,11 +185,16 @@ class PermissionsTable extends ControllerActionTable
         return (($roleOrder > $userRole['security_role']['order']) ||  ($roleEntity->created_user_id == $userId));
     }
 
-    public function edit($roleId = 0)
+    public function edit(Event $event, ArrayObject $extra)
     {
+        $roleId = $this->paramsPass(0);
         $roleId = $this->paramsDecode($roleId)['id'];
         $request = $this->request;
         $params = $this->paramsQuery();
+
+        $toolbarButtons = $extra['toolbarButtons'];
+        $toolbarButtons['back']['url']['action'] = 'Permissions';
+        $toolbarButtons['back']['url'][0] = 'index';
 
         if (! $this->checkRolesHierarchy($roleId)) {
             $action = array_merge(['plugin' => 'Security', 'controller' => 'Securities', 'action' => $this->alias(), '0' => 'index']);
@@ -237,34 +242,8 @@ class PermissionsTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+        $events['ControllerAction.Model.edit'] = 'edit';
         return $events;
-    }
-
-    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
-    {
-        $id = $this->request->pass[1];
-
-        if ($action == 'index') {
-            $toolbarButtons['back'] = $buttons['back'];
-            $toolbarButtons['back']['type'] = 'button';
-            $toolbarButtons['back']['label'] = '<i class="fa kd-back"></i>';
-            $toolbarButtons['back']['attr'] = $attr;
-            $toolbarButtons['back']['attr']['title'] = __('Back');
-            $toolbarButtons['back']['url']['action'] = 'Roles';
-
-            $toolbarButtons['edit'] = $buttons['index'];
-            $toolbarButtons['edit']['url'][0] = 'edit';
-            $toolbarButtons['edit']['url'][] = $id;
-            $toolbarButtons['edit']['type'] = 'button';
-            $toolbarButtons['edit']['label'] = '<i class="fa kd-edit"></i>';
-            $toolbarButtons['edit']['attr'] = $attr;
-            $toolbarButtons['edit']['attr']['title'] = __('Edit');
-        } else if ($action == 'edit') {
-            $toolbarButtons['back']['url']['action'] = 'Permissions';
-            $toolbarButtons['back']['url'][0] = 'index';
-            unset($toolbarButtons['list']);
-        }
     }
 
     private function setupTabElements($modules)
