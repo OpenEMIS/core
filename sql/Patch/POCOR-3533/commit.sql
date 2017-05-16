@@ -1,11 +1,6 @@
 -- system_patches
 INSERT INTO `system_patches` (`issue`, `created`) VALUES ('POCOR-3533', NOW());
 
--- institutions
-ALTER TABLE `institutions`
- ADD `photo_name` varchar(250) COLLATE utf8mb4_unicode_ci AFTER `security_group_id`,
- ADD `photo_content` longblob AFTER `photo_name`;
-
 -- report_cards
 DROP TABLE IF EXISTS `report_cards`;
 CREATE TABLE IF NOT EXISTS `report_cards` (
