@@ -82,20 +82,7 @@ class EducationGradesTable extends ControllerActionTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
-        $educationProgrammeId = $entity->education_programme_id;
-        $records = $this->find()
-            ->where([$this->aliasField('education_programme_id') => $educationProgrammeId])
-            ->order([$this->aliasField('order')])
-            ->all();
-
-        $gradeIds = [];
-        if (!$records->isEmpty()) {
-            foreach ($records as $recordsObj) {
-                $gradeIds[] = $recordsObj->id;
-            }
-        }
-
-        $this->updateAdmissionAge($gradeIds);
+        $this->updateAdmissionAgeAfterDelete($entity);
     }
 
      /**
@@ -409,22 +396,36 @@ class EducationGradesTable extends ControllerActionTable
 
     public function afterReorder(Event $event, $ids = [])
     {
-        $gradeIds = [];
-        foreach ($ids as $id) {
-            $gradeIds[] = $id['id'];
-        }
+        $gradeIds = array_column($ids, 'id');
 
         $this->updateAdmissionAge($gradeIds);
     }
 
-    public function updateAdmissionAge($gradeIds)
+    private function updateAdmissionAgeAfterDelete(Entity $entity)
     {
-        foreach ($gradeIds as $idKey => $id) {
-            $entity = $this->get($id, ['contain' => ['EducationProgrammes.EducationCycles']]);
-            $admissionAge = $entity->education_programme->education_cycle->admission_age + $idKey;
+        $educationProgrammeId = $entity->education_programme_id;
+        $gradeIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+            ->where([$this->aliasField('education_programme_id') => $educationProgrammeId])
+            ->order([$this->aliasField('order')])
+            ->toArray();
+
+        $this->updateAdmissionAge($gradeIds);
+    }
+
+    private function updateAdmissionAge($gradeIds = [])
+    {
+        $admissionAge = null;
+        $count = 0;
+        foreach ($gradeIds as $id) {
+            if (is_null($admissionAge)) {
+                $entity = $this->get($id, ['contain' => ['EducationProgrammes.EducationCycles']]);
+                $admissionAge = $entity->education_programme->education_cycle->admission_age;
+            }
+
+            $gradeAdmissionAge = $admissionAge + $count++;
 
             $this->updateAll(
-                ['admission_age' => $admissionAge],
+                ['admission_age' => $gradeAdmissionAge],
                 ['id' => $id]
             );
         }
