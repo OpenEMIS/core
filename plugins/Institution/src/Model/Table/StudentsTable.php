@@ -92,6 +92,7 @@ class StudentsTable extends ControllerActionTable
                 'education_grade_id',
                 'academic_period_id',
                 'student_status_id',
+                'previous_institution_student_id'
             ],
             'order' => $advancedSearchFieldOrder
         ]);
@@ -109,6 +110,21 @@ class StudentsTable extends ControllerActionTable
          * End Advance Search Types
          */
         $this->addBehavior('ControllerAction.Image'); // To be verified
+
+        $this->addBehavior('Indexes.Indexes');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
+        return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'student_id';
+        $searchableFields[] = 'openemis_no';
     }
 
     public function validationDefault(Validator $validator)
@@ -124,8 +140,6 @@ class StudentsTable extends ControllerActionTable
             ->add('student_status_id', [
             ])
             ->add('academic_period_id', [
-            ])
-            ->add('education_grade_id', [
             ])
             ->allowEmpty('student_name')
             ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
@@ -145,6 +159,17 @@ class StudentsTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
+                'on' => 'create'
+            ])
+            ->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
+                'on' => 'create'
+            ])
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date'],
                 'on' => 'create'
             ])
             ;
@@ -578,11 +603,11 @@ class StudentsTable extends ControllerActionTable
 
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
 
-        $sortList = ['openemis_no', 'first_name', 'InstitutionClasses.name'];
-        if (array_key_exists('sortWhitelist', $extra)) {
-            $sortList = array_merge($extra['sortWhitelist'], $sortList);
+        $sortList = ['InstitutionClasses.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
-        $extra['sortWhitelist'] = $sortList;
+        $extra['options']['sortWhitelist'] = $sortList;
         // End
 
         $search = $this->getSearchKey();
@@ -745,6 +770,7 @@ class StudentsTable extends ControllerActionTable
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
+            TableRegistry::get('Institution.StudentUser'),
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
@@ -1116,6 +1142,7 @@ class StudentsTable extends ControllerActionTable
         foreach ($genderOptions as $key => $value) {
             $dataSet[$value] = ['name' => __($value), 'data' => []];
         }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         $academicPeriodList = [];
         $found = false;
@@ -1134,6 +1161,12 @@ class StudentsTable extends ControllerActionTable
         $academicPeriodList = array_reverse($academicPeriodList, true);
 
         foreach ($academicPeriodList as $periodId => $periodName) {
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$periodName] = 0;
+                }
+            }
+
             foreach ($genderOptions as $genderId => $genderName) {
                 $queryCondition = array_merge(['Genders.id' => $genderId, 'AcademicPeriods.id' => $periodId], $_conditions);
 
@@ -1157,7 +1190,10 @@ class StudentsTable extends ControllerActionTable
                 ->toArray()
                 ;
 
-                $dataSet[$genderName]['data'][$periodName] = !empty($studentsByYear) ? $studentsByYear[$genderName][$periodName] : 0;
+                if (!empty($studentsByYear)) {
+                    $dataSet[$genderName]['data'][$periodName] = $studentsByYear[$genderName][$periodName];
+                    $dataSet['Total']['data'][$periodName] += $studentsByYear[$genderName][$periodName];
+                }
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();
@@ -1222,6 +1258,7 @@ class StudentsTable extends ControllerActionTable
         foreach ($genderOptions as $key => $value) {
             $dataSet[$value] = array('name' => __($value), 'data' => array());
         }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         foreach ($studentByGrades as $key => $studentByGrade) {
             $gradeId = $studentByGrade->education_grade_id;
@@ -1237,6 +1274,7 @@ class StudentsTable extends ControllerActionTable
                 }
             }
             $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+            $dataSet['Total']['data'][$gradeId] += $gradeTotal;
         }
 
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
@@ -1258,10 +1296,219 @@ class StudentsTable extends ControllerActionTable
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('student_status_id').' IN ' => [$statuses['GRADUATED'], $statuses['PROMOTED']]
             ])
-            // ;pr($completedGradeCount->toArray());die;
             ->count()
             ;
 
         return !($completedGradeCount == 0);
+    }
+
+    public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+    {
+        $institutionId = $params['institution_id'];
+        $studentId = $params['student_id'];
+        $academicPeriodId = $params['academic_period_id'];
+        $criteriaName = $params['criteria_name'];
+
+        $valueIndex = $this->getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName);
+
+        return $valueIndex;
+    }
+
+    public function getValueIndex($institutionId, $studentId, $academicPeriodId, $criteriaName)
+    {
+        switch ($criteriaName) {
+            case 'StatusRepeated':
+                $statusRepeatedResults = $this->find()
+                    ->where([
+                        'student_id' => $studentId
+                    ])
+                    ->all();
+
+                $getValueIndex = [];
+                foreach ($statusRepeatedResults as $obj) {
+                    $statusId = $obj->student_status_id;
+
+                    // for '=' the value index will be in array (valueIndex[threshold] = value)
+                    $getValueIndex[$statusId] = !empty($getValueIndex[$statusId]) ? $getValueIndex[$statusId] : 0;
+                    $getValueIndex[$statusId] = $getValueIndex[$statusId] + 1;
+                }
+
+                return $getValueIndex;
+                break;
+
+            case 'Overage':
+                $getValueIndex = 0;
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+
+                    $educationGradeId = $results->education_grade_id;
+                    $educationProgrammeId = $this->EducationGrades->get($educationGradeId)->education_programme_id;
+                    $admissionAge = $this->EducationGrades->getAdmissionAge($educationGradeId);
+                    $schoolStartYear = $results->start_year;
+                    $birthdayYear = $results->user->date_of_birth->format('Y');
+
+                    $getValueIndex = ($schoolStartYear - $birthdayYear) - $admissionAge;
+                }
+
+                return $getValueIndex;
+                break;
+
+            case 'Genders':
+                $getValueIndex = [];
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+                    // for '=' the value index will be in array (valueIndex[threshold] = value)
+                    $getValueIndex[$results->user->gender_id] = 1;
+                }
+
+                return $getValueIndex;
+                break;
+
+            case 'Guardians':
+                $getValueIndex = 0;
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1,  // student status current
+                    ])
+                    ->first();
+
+                if (!empty($results)) {
+                    $Guardians = TableRegistry::get('Student.Guardians');
+
+                    $guardiansData = $Guardians->find()
+                        ->where(['student_id' => $results->student_id])
+                        ->all()->toArray();
+
+                    $getValueIndex = count($guardiansData);
+                }
+
+                return $getValueIndex;
+                break;
+        }
+
+    }
+
+    public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+    {
+        $referenceDetails = [];
+
+        switch ($criteriaName) {
+            case 'StatusRepeated':
+                $statusId = $threshold; // it will classified by the status Id
+                $results = $this->find()
+                    ->contain(['StudentStatuses', 'AcademicPeriods'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => $statusId
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $title = $obj->student_status->name;
+                    $date = $obj->academic_period->name;
+
+                    $referenceDetails[$obj->id] = __($title) . ' (' . $date . ')';
+                }
+
+                break;
+
+            case 'Overage':
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1 // status enrolled
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $title = $obj->education_grade->name;
+                    $date = $obj->user->date_of_birth->format('d/m/Y');
+
+                    $referenceDetails[$obj->id] = __($title) . ' (' . __('Born on') . ': ' . $date . ')';
+                }
+
+                break;
+
+            case 'Genders':
+                $Genders = TableRegistry::get('User.Genders');
+
+                $results = $this->find()
+                    ->contain(['Users', 'EducationGrades'])
+                    ->where([
+                        'student_id' => $studentId,
+                        'student_status_id' => 1 // status enrolled
+                    ])
+                    ->all();
+
+                foreach ($results as $key => $obj) {
+                    $referenceDetails[$obj->id] = __($Genders->get($obj->user->gender_id)->name);
+                }
+
+                break;
+
+            case 'Guardians':
+                $Guardians = TableRegistry::get('Student.Guardians');
+
+                $results = $Guardians->find()
+                    ->contain(['Users', 'GuardianRelations'])
+                    ->where(['student_id' => $studentId])
+                    ->all();
+
+                if (!$results->isEmpty()) {
+                    foreach ($results as $key => $obj) {
+                        $guardianName = $obj->user->first_name . ' ' . $obj->user->last_name;
+                        $guardianRelation = $obj->guardian_relation->name;
+
+                        $referenceDetails[$obj->guardian_id] = $guardianName . ' (' . __($guardianRelation) . ')';
+                    }
+                } else {
+                    $referenceDetails[] =  __('No Guardian');
+                }
+
+                break;
+        }
+
+        // tooltip only receieved string to be display
+        $reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . '<br/>';
+        }
+
+        return $reference;
+    }
+
+    public function getInstitutionIdByUser($studentId, $academicPeriodId)
+    {
+        $institutionId = null;
+        $record = $this->find()
+            ->where([
+                $this->aliasField('student_id') => $studentId,
+                $this->aliasField('academic_period_id') => $academicPeriodId
+            ])
+            ->order([$this->aliasField('start_date') => 'DESC'])
+            ->all();
+
+        if (!$record->isEmpty()) {
+            $institutionId = $record->first()->institution_id;
+        }
+
+        return $institutionId;
     }
 }

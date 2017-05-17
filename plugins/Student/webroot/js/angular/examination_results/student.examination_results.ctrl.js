@@ -1,10 +1,10 @@
 angular
-    .module('student.examination_results.ctrl', ['utils.svc', 'alert.svc', 'student.examination_results.svc'])
+    .module('student.examination_results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'student.examination_results.svc'])
     .controller('StudentExaminationResultsCtrl', StudentExaminationResultsController);
 
-StudentExaminationResultsController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'StudentExaminationResultsSvc'];
+StudentExaminationResultsController.$inject = ['$scope', '$location', '$filter', '$q', 'UtilsSvc', 'AlertSvc', 'AggridLocaleSvc', 'StudentExaminationResultsSvc'];
 
-function StudentExaminationResultsController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, StudentExaminationResultsSvc) {
+function StudentExaminationResultsController($scope, $location, $filter, $q, UtilsSvc, AlertSvc, AggridLocaleSvc, StudentExaminationResultsSvc) {
 	var vm = this;
 
     // Variables
@@ -85,23 +85,45 @@ function StudentExaminationResultsController($scope, $location, $filter, $q, Uti
     });
 
     function initGrid(sectionId, academicPeriodId, examinationId, examinationResults) {
-        vm.gridOptions[sectionId] = {
-            columnDefs: [],
-            rowData: [],
-            headerHeight: 38,
-            rowHeight: 38,
-            minColWidth: 200,
-            enableColResize: false,
-            enableSorting: true,
-            unSortIcon: true,
-            enableFilter: true,
-            suppressMenuHide: true,
-            suppressCellSelection: true,
-            suppressMovableColumns: true,
-            onGridReady: function() {
-                vm.setGrid(sectionId, academicPeriodId, examinationId, examinationResults);
-            }
-        };
+        AggridLocaleSvc.getTranslatedGridLocale()
+        .then(function(localeText){
+            vm.gridOptions[sectionId] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                localeText: localeText,
+                onGridReady: function() {
+                    vm.setGrid(sectionId, academicPeriodId, examinationId, examinationResults);
+                }
+            };
+        }, function (error) {
+            vm.gridOptions[sectionId] = {
+                columnDefs: [],
+                rowData: [],
+                headerHeight: 38,
+                rowHeight: 38,
+                minColWidth: 200,
+                enableColResize: false,
+                enableSorting: true,
+                unSortIcon: true,
+                enableFilter: true,
+                suppressMenuHide: true,
+                suppressCellSelection: true,
+                suppressMovableColumns: true,
+                onGridReady: function() {
+                    vm.setGrid(sectionId, academicPeriodId, examinationId, examinationResults);
+                }
+            };
+        });
     }
 
     function setGrid(sectionId, academicPeriodId, examinationId, examinationResults) {
@@ -131,9 +153,23 @@ function StudentExaminationResultsController($scope, $location, $filter, $q, Uti
             return false;
         } else {
             var columnDefs = response.data;
-            if (vm.gridOptions[sectionId] != null) {
-                vm.gridOptions[sectionId].api.setColumnDefs(columnDefs);
-            }
+
+            var textToTranslate = [];
+            angular.forEach(columnDefs, function(value, key) {
+                textToTranslate.push(value.headerName);
+            });
+            StudentExaminationResultsSvc.translate(textToTranslate)
+            .then(function(res){
+                angular.forEach(res, function(value, key) {
+                    columnDefs[key]['headerName'] = value;
+                });
+                if (vm.gridOptions[sectionId] != null) {
+                    vm.gridOptions[sectionId].api.setColumnDefs(columnDefs);
+                }
+            }, function(error){
+                console.log(error);
+            });
+
 
             return true;
         }

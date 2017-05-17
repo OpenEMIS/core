@@ -48,13 +48,12 @@ class ProgrammesTable extends ControllerActionTable
 	public function indexBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->fields['student_id']['visible'] = 'false';
-		$this->fields['academic_period_id']['visible'] = 'false';
 		$this->fields['start_year']['visible'] = 'false';
 		$this->fields['end_year']['visible'] = 'false';
 		$this->fields['institution_id']['type'] = 'integer';
 
 		$this->setFieldOrder([
-			'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
+			'academic_period_id', 'institution_id', 'education_grade_id', 'start_date', 'end_date', 'student_status_id'
 		]);
 	}
 

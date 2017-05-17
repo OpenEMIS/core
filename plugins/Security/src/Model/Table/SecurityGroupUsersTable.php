@@ -27,12 +27,25 @@ class SecurityGroupUsersTable extends AppTable {
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
         // only update workflow assignee if the user is added to the group or the role of the user has changed
-        if ($entity->isNew() || $entity->dirty('security_role_id')) {
+        if ($entity->isNew()) {
+            $model = 0;
+            $id = 0;
+            $statusId = 0;
+            $groupId = $entity->security_group_id;
+            $userId = 0;
+
+            if ($entity->has('updateWorkflowAssignee') && $entity->updateWorkflowAssignee == false) {
+                // don't trigger shell
+            } else {
+                $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
+            }
+        } else if ($entity->dirty('security_role_id')) {
             $model = 0;
             $id = 0;
             $statusId = 0;
             $groupId = $entity->security_group_id;
             $userId = $entity->security_user_id;
+
             $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
         }
 	}
@@ -43,7 +56,12 @@ class SecurityGroupUsersTable extends AppTable {
         $statusId = 0;
         $groupId = 0;
         $userId = $entity->security_user_id;
-        $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
+
+        if ($entity->has('updateWorkflowAssignee') && $entity->updateWorkflowAssignee == false) {
+            // don't trigger shell
+        } else {
+            $this->triggerUpdateAssigneeShell($model, $id, $statusId, $groupId, $userId);
+        }
 	}
 
     private function triggerUpdateAssigneeShell($registryAlias, $id=null, $statusId=null, $groupId=null, $userId=null, $roleId=null) {
@@ -419,10 +437,15 @@ class SecurityGroupUsersTable extends AppTable {
 
     public function findEmailList(Query $query, array $options)
     {
+        $Institutions = TableRegistry::get('Institution.Institutions');
+        $securityGroupId = $Institutions->get($options['institutionId'])->security_group_id;
+
         return $query
-            ->contain('Users')
+            ->matching('Users', function ($q) {
+                return $q->where(['email' . ' IS NOT NULL']);
+            })
             ->where([
-                'security_group_id' => $options['institutionId'],
+                'security_group_id' => $securityGroupId,
                 'security_role_id' => $options['securityRoleId']
             ]);
     }

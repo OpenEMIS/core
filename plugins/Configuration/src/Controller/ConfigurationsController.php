@@ -21,17 +21,34 @@ class ConfigurationsController extends AppController
         $header = 'System Configurations';
 
         $this->Navigation->addCrumb($header, ['plugin' => null, 'controller' => $this->name, 'action' => 'index']);
-        $session = $this->request->session();
-        $action = $this->request->params['action'];
 
         $this->set('contentHeader', __($header));
     }
 
-    public function ProductLists()              { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']); }
-    public function Authentication()            { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAuthentication']); }
-    public function ExternalDataSource()        { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']); }
-    public function CustomValidation()          { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigCustomValidation']); }
-    public function AdministrativeBoundaries()  { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']); }
+    public function Webhooks()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigWebhooks']);
+    }
+    public function ProductLists()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigProductLists']);
+    }
+    public function Authentication()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAuthentication']);
+    }
+    public function ExternalDataSource()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigExternalDataSource']);
+    }
+    public function CustomValidation()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigCustomValidation']);
+    }
+    public function AdministrativeBoundaries()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Configuration.ConfigAdministrativeBoundaries']);
+    }
 
     public function implementedEvents()
     {
@@ -43,23 +60,28 @@ class ConfigurationsController extends AppController
     public function getExternalUsers()
     {
         $this->autoRender = false;
-        $ExternalDataSourceAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
-        $attributes = $ExternalDataSourceAttributes
+        $ExternalAttributes = TableRegistry::get('Configuration.ExternalDataSourceAttributes');
+        $attributes = $ExternalAttributes
             ->find('list', [
                 'keyField' => 'attribute_field',
                 'valueField' => 'value'
             ])
             ->innerJoin(['ConfigItems' => 'config_items'], [
                 'ConfigItems.code' => 'external_data_source_type',
-                $ExternalDataSourceAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
+                $ExternalAttributes->aliasField('external_data_source_type').' = ConfigItems.value'
             ])
             ->toArray();
 
-        $serverAuthorisationToken = $ExternalDataSourceAttributes->generateServerAuthorisationToken($attributes['client_id'], $attributes['scope'], $attributes['token_uri'], $attributes['private_key']);
+        $clientId = $attributes['client_id'];
+        $scope = $attributes['scope'];
+        $tokenUri = $attributes['token_uri'];
+        $privateKey = $attributes['private_key'];
+
+        $token = $ExternalAttributes->generateServerAuthorisationToken($clientId, $scope, $tokenUri, $privateKey);
 
         $data = [
             'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-            'assertion' => $serverAuthorisationToken
+            'assertion' => $token
         ];
 
         $fieldMapping = [
@@ -95,7 +117,6 @@ class ConfigurationsController extends AppController
         } else {
             echo $noData;
         }
-
     }
 
     public function isActionIgnored(Event $event, $action)
