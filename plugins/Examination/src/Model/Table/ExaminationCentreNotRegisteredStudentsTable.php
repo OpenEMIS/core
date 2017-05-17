@@ -7,13 +7,9 @@ use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\ORM\Query;
-use Cake\ORM\ResultSet;
 
 class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable {
     use OptionsTrait;
-
-    private $identityType;
 
     public function initialize(array $config)
     {
