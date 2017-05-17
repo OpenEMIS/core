@@ -13,6 +13,8 @@ use Cake\Log\Log;
 
 class NotRegisteredStudentsBehavior extends Behavior {
 
+    private $identityType;
+
     public function initialize(array $config) {
 		parent::initialize($config);
 

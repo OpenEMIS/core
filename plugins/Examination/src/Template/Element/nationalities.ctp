@@ -8,7 +8,7 @@
             <tbody>
                 <?php foreach($attr['data'] as $index) { ?>
                 <tr>
-                    <td><?= __($index->nationalities_look_up->name); ?></td>
+                    <td><?=$index->nationalities_look_up->name;?></td>
                     <td>
                         <?php
                             if ($index->preferred) {
