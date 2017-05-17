@@ -5,7 +5,6 @@ use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
-use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\Utility\Text;
 use Cake\I18n\Time;
@@ -18,8 +17,6 @@ use Cake\Utility\Security;
 
 class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable {
     use OptionsTrait;
-
-    private $identityType;
 
     public function initialize(array $config)
     {
@@ -78,7 +75,6 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-        // $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
         $events['Model.Examinations.afterUnregister'] = 'examinationsAfterUnregister';
         return $events;
     }
