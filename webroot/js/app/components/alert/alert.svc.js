@@ -2,7 +2,6 @@ angular.module('alert.svc', [])
 .service('AlertSvc', function($http) {
     return {
         getMessage: function(scope, message, args) {
-            console.log(message);
             var url = angular.baseUrl + '/Translations/translate';
             if (args == undefined) {
                 args = [];
