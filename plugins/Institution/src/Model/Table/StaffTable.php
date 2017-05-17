@@ -1389,6 +1389,7 @@ class StaffTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
+        $todayDate = Time::now();
 
         return $query
                 ->find('withBelongsTo')
@@ -1398,9 +1399,9 @@ class StaffTable extends ControllerActionTable
                 ->find('byInstitution', ['Institutions.id' => $institutionId])
                 ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
                 ->where([
-                    $this->aliasField('start_date <= ') => new Date(),
+                    $this->aliasField('start_date <= ') => $todayDate,
                     'OR' => [
-                        [$this->aliasField('end_date > ') => Time::now()],
+                        [$this->aliasField('end_date >= ') => $todayDate],
                         [$this->aliasField('end_date IS NULL')]
                     ]
                 ])
