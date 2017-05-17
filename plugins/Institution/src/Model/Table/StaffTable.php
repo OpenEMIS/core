@@ -1397,6 +1397,13 @@ class StaffTable extends ControllerActionTable
                 })
                 ->find('byInstitution', ['Institutions.id' => $institutionId])
                 ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+                ->where([
+                    $this->aliasField('start_date <= ') => new Date(),
+                    'OR' => [
+                        [$this->aliasField('end_date > ') => Time::now()],
+                        [$this->aliasField('end_date IS NULL')]
+                    ]
+                ])
                 ->formatResults(function ($results) {
                     $returnArr = [];
                     foreach ($results as $result) {
