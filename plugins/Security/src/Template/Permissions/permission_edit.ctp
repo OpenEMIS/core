@@ -28,60 +28,17 @@ $this->start('panelBody');
     <div class="alert {{SecurityPermissionEditController.class}}" ng-hide="SecurityPermissionEditController.message == null">
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{SecurityPermissionEditController.message}}
     </div>
-    <div class="input string required">
-        <label><?= __('Academic Period') ?></label>
-        <input ng-model="InstitutionClassStudentsController.academicPeriodName" type="text" disabled="disabled">
-    </div>
-    <div class="input string required">
-        <label><?= __('Class Name') ?></label>
-        <input ng-model="InstitutionClassStudentsController.className" type="string" ng-init="InstitutionClassStudentsController.className='';">
-        <div ng-if="InstitutionClassStudentsController.postError.name" clx`x`ass="error-message">
-            <p ng-repeat="error in InstitutionClassStudentsController.postError.name">{{ error }}</p>
-        </div>
-    </div>
-    <div class="input select required error">
-        <label><?= __('Shift') ?></label>
-        <div class="input-select-wrapper">
-            <select name="InstitutionClasses[institution_shift_id]" id="institutionclasses-institution-shift-id"
-                ng-options="option.id as option.name for option in InstitutionClassStudentsController.shiftOptions"
-                ng-model="InstitutionClassStudentsController.selectedShift"
-                ng-init="InstitutionClassStudentsController.selectedShift=null;"
-                >
-                <option value="" >-- <?= __('Select') ?> --</option>
-            </select>
-        </div>
-        <div ng-if="InstitutionClassStudentsController.postError.institution_shift_id" class="error-message">
-            <p ng-repeat="error in InstitutionClassStudentsController.postError.institution_shift_id">{{ error }}</p>
-        </div>
-    </div>
-    <div class="input select required error">
-        <label><?= __('Home Room Teacher') ?></label>
-        <div class="input-select-wrapper">
-            <select name="InstitutionClasses[staff_id]" id="institutionclasses-staff-id"
-                ng-options="option.id as option.name for option in InstitutionClassStudentsController.teacherOptions"
-                ng-model="InstitutionClassStudentsController.selectedTeacher"
-                ng-init="InstitutionClassStudentsController.selectedTeacher=null;"
-                >
-                <option value="" >-- <?= __('Select Teacher or Leave Blank') ?> --</option>
-            </select>
-        </div>
-        <div ng-if="InstitutionClassStudentsController.postError.staff_id" class="error-message">
-            <p ng-repeat="error in InstitutionClassStudentsController.postError.staff_id">{{ error }}</p>
-        </div>
-    </div>
-	<div class="input select">
-        <label><?= __('Add Student') ?></label>
-        <div class="input-form-wrapper" ng-init="InstitutionClassStudentsController.classId='<?= $classId ?>'; InstitutionClassStudentsController.redirectUrl='<?= $this->Url->build($viewUrl) ?>'; InstitutionClassStudentsController.alertUrl='<?= $this->Url->build($alertUrl) ?>';">
-    		<kd-multi-select ng-if="InstitutionClassStudentsController.dataReady" grid-options-top="InstitutionClassStudentsController.gridOptionsTop" grid-options-bottom="InstitutionClassStudentsController.gridOptionsBottom"></kd-multi-select>
-    	</div>
+    <div ng-init="SecurityPermissionEditController.roleId=<?=$roleId; ?>">
+        <div class="scrolltabs sticky-content">
+            <scrollable-tabset show-tooltips="false" show-drop-down="false">
+                <uib-tabset justified="true">
+                    <uib-tab heading="{{module.name}}" ng-repeat="module in SecurityPermissionEditController.modules" ng-click="SecurityPermissionEditController.changeModule(module)">
+                    </uib-tab>
+                </uib-tabset>
+                <div class="tabs-divider"></div>
+            </scrollable-tabset>
 
-        <div class="form-buttons">
-            <div class="button-label"></div>
-            <button class="btn btn-default btn-save" type="button" ng-click="InstitutionClassStudentsController.postForm();">
-                <i class="fa fa-check"></i> <?= __('Save') ?>
-            </button>
-            <?= $this->Html->link('<i class="fa fa-close"></i> '.__('Cancel'), $viewUrl, ['class' => 'btn btn-outline btn-cancel', 'escapeTitle' => false]) ?>
-            <button id="reload" type="submit" name="submit" value="reload" class="hidden">reload</button>
+
         </div>
     </div>
 </form>
