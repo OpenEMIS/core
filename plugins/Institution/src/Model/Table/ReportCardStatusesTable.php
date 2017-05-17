@@ -38,6 +38,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         // $this->toggle('view', false);
         $this->toggle('remove', false);
 
+        $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+
         $this->statusOptions = [
             self::NEW_REPORT => __('New'),
             self::IN_PROGRESS => __('In Progress'),
@@ -46,10 +48,13 @@ class ReportCardStatusesTable extends ControllerActionTable
         ];
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
+        $events['ControllerAction.Model.publishAll'] = 'publishAll';
+        $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
         return $events;
@@ -186,7 +191,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             // end
 
             // Publish all button
-            $url = $this->url('publish');
+            $url = $this->url('publishAll');
             $publishButton['url'] = $this->setQueryString($url, $params);
             $publishButton['type'] = 'button';
             $publishButton['label'] = '<i class="fa fa-share-square-o"></i>';
@@ -196,7 +201,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             // end
 
             // Unpublish all button
-            $url = $this->url('unpublish');
+            $url = $this->url('unpublishAll');
             $unpublishButton['url'] = $this->setQueryString($url, $params);
             $unpublishButton['type'] = 'button';
             $unpublishButton['label'] = '<i class="fa fa-lock"></i>';
@@ -211,7 +216,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $Classes = $this->InstitutionClasses;
-        $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
         $ReportCards = TableRegistry::get('ReportCard.ReportCards');
 
@@ -269,19 +273,19 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $query
             ->select([
-                $StudentReportCards->aliasField('id'),
-                $StudentReportCards->aliasField('report_card_id'),
-                $StudentReportCards->aliasField('status')
+                $this->StudentsReportCards->aliasField('id'),
+                $this->StudentsReportCards->aliasField('report_card_id'),
+                $this->StudentsReportCards->aliasField('status')
             ])
             ->contain('Users')
-            ->leftJoin([$StudentReportCards->alias() => $StudentReportCards->table()],
+            ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
-                    $StudentReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
-                    $StudentReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
-                    $StudentReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
-                    $StudentReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
-                    $StudentReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
-                    $StudentReportCards->aliasField('report_card_id = ') . $selectedReportCard
+                    $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
+                    $this->StudentsReportCards->aliasField('report_card_id = ') . $selectedReportCard
                 ]
             )
             ->autoFields(true)
@@ -337,20 +341,19 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function downloadAll(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
-        $StudentReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
 
         // only download report cards with generated or published status
         $statusArray = [self::GENERATED, self::PUBLISHED];
 
-        $files = $StudentReportCards->find()
+        $files = $this->StudentsReportCards->find()
             ->contain(['Students', 'ReportCards'])
             ->where([
-                $StudentReportCards->aliasField('institution_id') => $params['institution_id'],
-                $StudentReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
-                $StudentReportCards->aliasField('report_card_id') => $params['report_card_id'],
-                $StudentReportCards->aliasField('status IN ') => $statusArray,
-                $StudentReportCards->aliasField('file_name IS NOT NULL'),
-                $StudentReportCards->aliasField('file_content IS NOT NULL')
+                $this->StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $this->StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $this->StudentsReportCards->aliasField('report_card_id') => $params['report_card_id'],
+                $this->StudentsReportCards->aliasField('status IN ') => $statusArray,
+                $this->StudentsReportCards->aliasField('file_name IS NOT NULL'),
+                $this->StudentsReportCards->aliasField('file_content IS NOT NULL')
             ])
             ->toArray();
 
@@ -387,10 +390,17 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function publish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+        $result = $this->StudentsReportCards->updateAll(['status' => self::PUBLISHED], $params);
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    public function publishAll(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
 
         // only publish report cards with generated status to published status
-        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $result = $StudentsReportCards->updateAll(['status' => self::PUBLISHED], [
+        $result = $this->StudentsReportCards->updateAll(['status' => self::PUBLISHED], [
             $params,
             'status' => self::GENERATED
         ]);
@@ -408,10 +418,17 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function unpublish(Event $event, ArrayObject $extra)
     {
         $params = $this->getQueryString();
+        $result = $this->StudentsReportCards->updateAll(['status' => self::NEW_REPORT], $params);
+        $event->stopPropagation();
+        return $this->controller->redirect($this->url('index'));
+    }
+
+    public function unpublishAll(Event $event, ArrayObject $extra)
+    {
+        $params = $this->getQueryString();
 
         // only unpublish report cards with published status to new status
-        $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
-        $result = $StudentsReportCards->updateAll(['status' => self::NEW_REPORT], [
+        $result = $this->StudentsReportCards->updateAll(['status' => self::NEW_REPORT], [
             $params,
             'status' => self::PUBLISHED
         ]);
