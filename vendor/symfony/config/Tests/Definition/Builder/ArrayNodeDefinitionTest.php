@@ -11,12 +11,13 @@
 
 namespace Symfony\Component\Config\Tests\Definition\Builder;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\Definition\Builder\ScalarNodeDefinition;
 use Symfony\Component\Config\Definition\Exception\InvalidDefinitionException;
 
-class ArrayNodeDefinitionTest extends \PHPUnit_Framework_TestCase
+class ArrayNodeDefinitionTest extends TestCase
 {
     public function testAppendingSomeNode()
     {
@@ -144,13 +145,16 @@ class ArrayNodeDefinitionTest extends \PHPUnit_Framework_TestCase
 
     public function testNestedPrototypedArrayNodes()
     {
-        $node = new ArrayNodeDefinition('root');
-        $node
+        $nodeDefinition = new ArrayNodeDefinition('root');
+        $nodeDefinition
             ->addDefaultChildrenIfNoneSet()
             ->prototype('array')
                   ->prototype('array')
         ;
-        $node->getNode();
+        $node = $nodeDefinition->getNode();
+
+        $this->assertInstanceOf('Symfony\Component\Config\Definition\PrototypedArrayNode', $node);
+        $this->assertInstanceOf('Symfony\Component\Config\Definition\PrototypedArrayNode', $node->getPrototype());
     }
 
     public function testEnabledNodeDefaults()
@@ -183,6 +187,48 @@ class ArrayNodeDefinitionTest extends \PHPUnit_Framework_TestCase
             $processor->process($node->getNode(), $config),
             $message
         );
+    }
+
+    public function testCanBeDisabled()
+    {
+        $node = new ArrayNodeDefinition('root');
+        $node->canBeDisabled();
+
+        $this->assertTrue($this->getField($node, 'addDefaults'));
+        $this->assertEquals(array('enabled' => false), $this->getField($node, 'falseEquivalent'));
+        $this->assertEquals(array('enabled' => true), $this->getField($node, 'trueEquivalent'));
+        $this->assertEquals(array('enabled' => true), $this->getField($node, 'nullEquivalent'));
+
+        $nodeChildren = $this->getField($node, 'children');
+        $this->assertArrayHasKey('enabled', $nodeChildren);
+
+        $enabledNode = $nodeChildren['enabled'];
+        $this->assertTrue($this->getField($enabledNode, 'default'));
+        $this->assertTrue($this->getField($enabledNode, 'defaultValue'));
+    }
+
+    public function testIgnoreExtraKeys()
+    {
+        $node = new ArrayNodeDefinition('root');
+
+        $this->assertFalse($this->getField($node, 'ignoreExtraKeys'));
+
+        $result = $node->ignoreExtraKeys();
+
+        $this->assertEquals($node, $result);
+        $this->assertTrue($this->getField($node, 'ignoreExtraKeys'));
+    }
+
+    public function testNormalizeKeys()
+    {
+        $node = new ArrayNodeDefinition('root');
+
+        $this->assertTrue($this->getField($node, 'normalizeKeys'));
+
+        $result = $node->normalizeKeys(false);
+
+        $this->assertEquals($node, $result);
+        $this->assertFalse($this->getField($node, 'normalizeKeys'));
     }
 
     public function getEnableableNodeFixtures()
