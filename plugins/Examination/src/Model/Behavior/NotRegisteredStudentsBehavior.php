@@ -23,6 +23,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
     public function implementedEvents() {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         $events['ControllerAction.Model.index.beforeAction'] = 'indexBeforeAction';
         $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
         $events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
@@ -88,7 +89,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
             $where[$model->aliasField('student_id')] = '-1';
         } else {
             $Examinations = TableRegistry::get('Examination.Examinations');
-            $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
+            $ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
             $examination = $Examinations->find()->where([$Examinations->aliasField('id') => $selectedExamination])->first();
 
             $where[$model->aliasField('education_grade_id')] = $examination->education_grade_id;
@@ -99,7 +100,6 @@ class NotRegisteredStudentsBehavior extends Behavior {
                     [
                         $ExaminationCentreStudents->aliasField('student_id = ') . $model->aliasField('student_id'),
                         $ExaminationCentreStudents->aliasField('academic_period_id = ') . $model->aliasField('academic_period_id'),
-                        $ExaminationCentreStudents->aliasField('education_grade_id = ') . $model->aliasField('education_grade_id'),
                         $ExaminationCentreStudents->aliasField('examination_id') => $selectedExamination
                     ]
                 );
@@ -131,9 +131,14 @@ class NotRegisteredStudentsBehavior extends Behavior {
             ->group([
                 $model->aliasField('student_id'),
                 $model->aliasField('academic_period_id'),
-                $model->aliasField('education_grade_id')
             ])
             ->order([$model->Institutions->aliasField('name') => 'asc']);
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'openemis_no';
+        $searchableFields[] = 'student_id';
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
