@@ -2,7 +2,7 @@
 PHPUnit_Framework_MockObject_Generator::generate('Foo', array(), 'MockFoo', true, true)
 --SKIPIF--
 <?php
-if (!method_exists('ReflectionMethod', 'getReturnType')) print 'skip: PHP >= 7.0.0 required';
+if (!version_compare(PHP_VERSION, '7.0', '>=')) print 'skip: PHP >= 7.0 required';
 ?>
 --FILE--
 <?php
@@ -42,7 +42,7 @@ class MockFoo extends Foo implements PHPUnit_Framework_MockObject_MockObject
 
     public static function bar(string $baz): Bar
     {
-        throw new PHPUnit_Framework_MockObject_BadMethodCallException;
+        throw new PHPUnit_Framework_MockObject_BadMethodCallException('Static method "bar" cannot be invoked on mock object');
     }
 
     public function expects(PHPUnit_Framework_MockObject_Matcher_Invocation $matcher)

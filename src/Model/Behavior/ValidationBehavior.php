@@ -664,13 +664,16 @@ class ValidationBehavior extends Behavior {
 	}
 
     public static function compareStudentGenderWithInstitution($field, array $globalData)
-    {
+    {	
     	$model = $globalData['providers']['table'];
     	$registryAlias = $model->registryAlias();
 
+		$institutionId = null;
         if (!empty($globalData)) {
         	$fieldType = $globalData['field']; //enable many models field use this same function
-        	$institutionId = $globalData['data']['institution_id'];
+        	if (array_key_exists('data', $globalData) && array_key_exists('institution_id', $globalData['data'])) {
+        		$institutionId = $globalData['data']['institution_id'];
+        	}
         }
 
         if (!empty($institutionId)) {
@@ -725,6 +728,9 @@ class ValidationBehavior extends Behavior {
 					return true;
                 }
             }
+        } else {
+        	$model->log("[$registryAlias - compareStudentGenderWithInstitution - No Active Institution]" , 'debug');
+        	return false;
         }
 	}
 

@@ -8,7 +8,7 @@
  *
  * @copyright     Copyright (c) Cake Software Foundation, Inc. (http://cakefoundation.org)
  * @link          http://cakephp.org CakePHP(tm) Project
- * @since         v 1.0 (22-Jun-2009)
+ * @since         1.0.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 namespace DebugKit\View\Helper;
@@ -16,7 +16,6 @@ namespace DebugKit\View\Helper;
 use Cake\Core\Configure;
 use Cake\Error\Debugger;
 use Cake\Filesystem\File;
-use Cake\Log\Log;
 use Cake\View\Helper;
 
 /**
@@ -26,6 +25,8 @@ use Cake\View\Helper;
  *
  * @uses          AppHelper
  * @since         v 1.0 (22-Jun-2009)
+ *
+ * @property ToolbarHelper $Toolbar
  */
 class TidyHelper extends Helper
 {
@@ -85,6 +86,7 @@ class TidyHelper extends Helper
             }
         }
         $this->results = $result;
+
         return $result;
     }
 
@@ -114,6 +116,7 @@ class TidyHelper extends Helper
                 }
             }
         }
+
         return $this->Toolbar->makeNeatArray(array_filter($this->results), 0, 0, false);
     }
 
@@ -134,6 +137,7 @@ class TidyHelper extends Helper
             $tidy = tidy_parse_string($out, [], 'UTF8');
             $tidy->cleanRepair();
             $errors = $tidy->errorBuffer . "\n";
+
             return $errors;
         }
 
@@ -151,6 +155,7 @@ class TidyHelper extends Helper
         $Error = new File($errors);
         $errors = $Error->read();
         $Error->delete();
+
         return $errors;
     }
 
@@ -177,6 +182,7 @@ class TidyHelper extends Helper
         if ($return) {
             return false;
         }
+
         return $_out ? $_out : true;
     }
 }
