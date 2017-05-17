@@ -14,6 +14,10 @@ class SecurityFunctionsTable extends AppTable
             'className' => 'Security.SecurityRoles',
             'through' => 'Security.SecurityRoleFunctions'
         ]);
+
+        $this->addBehavior('Restful.RestfulAccessControl', [
+            'Permissions' => ['index', 'add']
+        ]);
     }
 
     public function findPermissions(Query $query, $options)
