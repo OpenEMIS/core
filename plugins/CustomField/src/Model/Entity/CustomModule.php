@@ -32,6 +32,9 @@ class CustomModule extends Entity
             'behavior' => null,
             'supported_field_types' => ['TEXT','NUMBER','DECIMAL','DROPDOWN']
         ],
+
+        // Infrastructure modules will share the same supported field types, if there is changes, please modify all the types of the infrastructure modules
+        // Start Infrastructure Modules
         'Institution.InstitutionLands' => [
             'filter' => 'Infrastructure.LandTypes',
             'behavior' => null,
@@ -52,6 +55,7 @@ class CustomModule extends Entity
             'behavior' => null,
             'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
         ]
+        // End infrastructure modules
     ];
 
     protected function _getFilter()
