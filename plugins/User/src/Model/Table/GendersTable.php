@@ -22,6 +22,7 @@ class GendersTable extends AppTable {
 		$this->addBehavior('Restful.RestfulAccessControl', [
         	'Students' => ['index', 'add'],
         	'Staff' => ['index', 'add'],
+        	'OpenEMIS_Classroom' => ['index']
         ]);
 	}
 
@@ -30,4 +31,15 @@ class GendersTable extends AppTable {
 		return $validator;
 	}
 
+	public function getThresholdOptions()
+    {
+        // options only female
+        $options = ['F'];
+
+        return $this
+            ->find('list')
+            ->where([$this->aliasField('code') . ' IN ' => $options])
+            ->toArray()
+        ;
+    }
 }

@@ -1,28 +1,46 @@
 angular.module('alert.svc', [])
-.service('AlertSvc', function() {
+.service('AlertSvc', function($http) {
     return {
-        getMessage: function(message) {
-            return message;
+        getMessage: function(scope, message, args) {
+            console.log(message);
+            var url = angular.baseUrl + '/Translations/translate';
+            if (args == undefined) {
+                args = [];
+            }
+            $http.post(url, {text: message})
+            .then(function(response, message){
+                var message = response.data.translated_text;
+                for (var i=0; i < args.length; i++ ) {
+                    message = message.replace( /%s/, args[i] );
+                }
+                scope.message = message;
+            }, function(error) {
+                var message = response.data.translated_text;
+                for (var i=0; i < args.length; i++ ) {
+                    message = message.replace( /%s/, args[i] );
+                }
+                scope.message = message;
+            });
         },
 
-        success: function(scope, message) {
+        success: function(scope, message, args) {
             scope.class = 'alert-success';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message, args);
         },
 
-        error: function(scope, message) {
+        error: function(scope, message, args) {
             scope.class = 'alert-danger';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message, args);
         },
 
-        warning: function(scope, message) {
+        warning: function(scope, message, args) {
             scope.class = 'alert-warning';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message, args);
         },
 
-        info: function(scope, message) {
+        info: function(scope, message, args) {
             scope.class = 'alert-info';
-            scope.message = this.getMessage(message);
+            this.getMessage(scope, message, args);
         },
 
         reset: function(scope) {

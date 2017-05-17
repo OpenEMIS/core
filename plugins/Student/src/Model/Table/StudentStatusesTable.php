@@ -24,11 +24,23 @@ class StudentStatusesTable extends AppTable {
 		$entity = $this->find()
 		->where([$this->aliasField('code') => $code])
 		->first();
-		
+
 		if ($entity) {
 			return $entity->id;
 		} else {
 			return '';
 		}
 	}
+
+	public function getThresholdOptions()
+    {
+    	// options only dropout and repeated
+    	$options = ['REPEATED'];
+
+        return $this
+            ->find('list')
+            ->where([$this->aliasField('code') . ' IN ' => $options])
+            ->toArray()
+        ;
+    }
 }

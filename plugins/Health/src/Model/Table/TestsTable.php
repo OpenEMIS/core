@@ -1,21 +1,27 @@
 <?php
 namespace Health\Model\Table;
 
+use ArrayObject;
+
 use Cake\Event\Event;
-use App\Model\Table\AppTable;
 
-class TestsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('user_health_tests');
-		parent::initialize($config);
+use App\Model\Table\ControllerActionTable;
 
-		$this->belongsTo('TestTypes', ['className' => 'Health.TestTypes', 'foreignKey' => 'health_test_type_id']);
-		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
+class TestsTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
+        $this->table('user_health_tests');
+        parent::initialize($config);
 
-		$this->addBehavior('Health.Health');
-	}
+        $this->belongsTo('TestTypes', ['className' => 'Health.TestTypes', 'foreignKey' => 'health_test_type_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 
-	public function addEditBeforeAction(Event $event) {
-		$this->ControllerAction->field('health_test_type_id', ['type' => 'select']);
-	}
+        $this->addBehavior('Health.Health');
+    }
+
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('health_test_type_id', ['type' => 'select', 'after' => 'comment']);
+    }
 }

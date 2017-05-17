@@ -111,16 +111,14 @@ class AuthenticationBehavior extends Behavior {
                 $data['AuthenticationTypeAttributes'] = [];
             }
             foreach ($data['AuthenticationTypeAttributes'] as $key => $value) {
-                if ($key != 'allow_create_user_text') {
-                    $entityData = [
-                        'authentication_type' => $authenticationType,
-                        'attribute_field' => $key,
-                        'attribute_name' => $value['name'],
-                        'value' => trim($value['value'])
-                    ];
-                    $entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
-                    $AuthenticationTypeAttributesTable->save($entity);
-                }
+                $entityData = [
+                    'authentication_type' => $authenticationType,
+                    'attribute_field' => $key,
+                    'attribute_name' => $value['name'],
+                    'value' => trim($value['value'])
+                ];
+                $entity = $AuthenticationTypeAttributesTable->newEntity($entityData);
+                $AuthenticationTypeAttributesTable->save($entity);
             }
 
             if (method_exists($this, strtolower($authenticationType).'AfterSave')) {
@@ -194,7 +192,7 @@ class AuthenticationBehavior extends Behavior {
     	$this->saml2Authentication($attribute);
     	foreach ($attribute as $key => $values) {
     		if (!isset($values['required'])) {
-    			if (empty($authenticationAttributes[$key]['value'])) {
+    			if (empty($authenticationAttributes[$key]['value']) && $values['type'] != 'select') {
     				return false;
     			}
     		}
@@ -207,7 +205,7 @@ class AuthenticationBehavior extends Behavior {
     	$this->googleAuthentication($attribute);
     	foreach ($attribute as $key => $values) {
     		if (!isset($values['required'])) {
-    			if (empty($authenticationAttributes[$key]['value'])) {
+    			if (empty($authenticationAttributes[$key]['value']) && $values['type'] != 'select') {
     				return false;
     			}
     		}
@@ -220,7 +218,7 @@ class AuthenticationBehavior extends Behavior {
         $this->oAuth2OpenIDConnectAuthentication($attribute);
         foreach ($attribute as $key => $values) {
             if (!isset($values['required'])) {
-                if (empty($authenticationAttributes[$key]['value'])) {
+                if (empty($authenticationAttributes[$key]['value']) && $values['type'] != 'select') {
                     return false;
                 }
             }
@@ -243,8 +241,7 @@ class AuthenticationBehavior extends Behavior {
         $attribute['sp_name_id_format'] = ['label' => 'Service Provider - Name ID Format', 'type' => 'text', 'required' => false];
         $attribute['sp_privateKey'] = ['label' => 'Service Provider - Private Key', 'type' => 'textarea', 'maxlength' => 1500, 'required' => false];
         $attribute['saml_username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
-        $attribute['allow_create_user_text'] = ['label' => 'Allow User Creation', 'type' => 'text', 'readonly' => true];
-        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'hidden', 'value' => 0, 'required' => false];
+        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'select', 'options' => $this->_table->getSelectOptions('Authentication.yesno')];
         $attribute['saml_first_name_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['saml_last_name_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['saml_gender_mapping'] = ['label' => 'Gender Mapping', 'type' => 'text', 'required' => false];
@@ -263,9 +260,7 @@ class AuthenticationBehavior extends Behavior {
 			return \OneLogin_Saml2_Constants::BINDING_HTTP_REDIRECT;
 		} else if ($key == 'sp_acs') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-		} else if ($key == 'allow_create_user_text') {
-            return __('No');
-        }
+		}
 		return false;
 	}
 
@@ -274,8 +269,7 @@ class AuthenticationBehavior extends Behavior {
         $attribute['client_secret'] = ['label' => 'Client Secret', 'type' => 'text'];
         $attribute['redirect_uri'] = ['label' => 'Redirect URI', 'type' => 'text', 'readonly' => true];
         $attribute['hd'] = ['label' => 'Hosted Domain', 'type' => 'text', 'required' => false];
-        $attribute['allow_create_user_text'] = ['label' => 'Allow User Creation', 'type' => 'text', 'readonly' => true];
-        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'hidden', 'value' => 0, 'required' => false];
+        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'select', 'options' => $this->_table->getSelectOptions('Authentication.yesno')];
 	}
 
     public function oAuth2OpenIDConnectAuthentication(&$attribute) {
@@ -289,8 +283,7 @@ class AuthenticationBehavior extends Behavior {
         $attribute['issuer'] = ['label' => 'Issuer', 'type' => 'text', 'id' => 'issuer'];
         $attribute['jwk_uri'] = ['label' => 'Public Key URI', 'type' => 'text', 'id' => 'jwksUri'];
         $attribute['username_mapping'] = ['label' => 'Username Mapping', 'type' => 'text'];
-        $attribute['allow_create_user_text'] = ['label' => 'Allow User Creation', 'type' => 'text', 'readonly' => true];
-        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'hidden', 'value' => 0, 'required' => false];
+        $attribute['allow_create_user'] = ['label' => 'Allow User Creation', 'type' => 'select', 'options' => $this->_table->getSelectOptions('Authentication.yesno')];
         $attribute['firstName_mapping'] = ['label' => 'First Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['lastName_mapping'] = ['label' => 'Last Name Mapping', 'type' => 'text', 'required' => false];
         $attribute['dob_mapping'] = ['label' => 'Date of Birth Mapping', 'type' => 'text', 'required' => false];
@@ -300,17 +293,13 @@ class AuthenticationBehavior extends Behavior {
 	public function googleModifyValue($key, $attributeValue) {
 		if ($key == 'redirect_uri') {
 			return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-		} else if ($key == 'allow_create_user_text') {
-            return __('No');
-        }
+		}
 		return false;
 	}
 
     public function oAuth2OpenIDConnectModifyValue($key, $attributeValue) {
         if ($key == 'redirect_uri') {
             return Router::url(['plugin' => null, 'controller' => 'Users', 'action' => 'postLogin'],true);
-        } else if ($key == 'allow_create_user_text') {
-            return __('No');
         }
         return false;
     }
@@ -329,12 +318,13 @@ class AuthenticationBehavior extends Behavior {
 				$tableHeaders = [__('Attribute Name'), __('Value')];
 				$tableCells = [];
 				foreach ($attribute as $key => $value) {
-                    if ($key != 'allow_create_user') {
-                        $row = [];
-                        $row[] = $value['label'];
-                        $row[] = $value['value'];
-                        $tableCells[] = $row;
+                    $row = [];
+                    $row[] = $value['label'];
+                    if ($value['label'] == 'Allow User Creation') {
+                        $value['value'] = __($this->_table->getSelectOptions('Authentication.yesno')[$value['value']]);
                     }
+                    $row[] = $value['value'];
+                    $tableCells[] = $row;
 				}
 				$attr['tableHeaders'] = $tableHeaders;
 		    	$attr['tableCells'] = $tableCells;

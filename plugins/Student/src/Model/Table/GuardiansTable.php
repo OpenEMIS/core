@@ -19,7 +19,7 @@ class GuardiansTable extends ControllerActionTable {
         $this->table('student_guardians');
         parent::initialize($config);
 
-        $this->belongsTo('Students',            ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
+        $this->belongsTo('StudentUser',            ['className' => 'Institution.StudentUser', 'foreignKey' => 'student_id']);
         $this->belongsTo('Users',               ['className' => 'Security.Users', 'foreignKey' => 'guardian_id']);
         $this->belongsTo('GuardianRelations',   ['className' => 'Student.GuardianRelations', 'foreignKey' => 'guardian_relation_id']);
 
@@ -27,7 +27,7 @@ class GuardiansTable extends ControllerActionTable {
         $this->addBehavior('OpenEmis.Autocomplete');
         $this->addBehavior('User.User');
         $this->addBehavior('User.AdvancedNameSearch');
-
+        $this->addBehavior('Indexes.Indexes');
         $this->addBehavior('ControllerAction.Image');
     }
 
@@ -138,7 +138,7 @@ class GuardiansTable extends ControllerActionTable {
     }
 
     public function editBeforeQuery(Event $event, Query $query) {
-        $query->contain(['Students', 'Users']);
+        $query->contain(['StudentUser', 'Users']);
     }
 
     public function editAfterAction(Event $event, Entity $entity) {

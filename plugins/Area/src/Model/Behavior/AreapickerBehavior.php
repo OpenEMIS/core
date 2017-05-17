@@ -71,11 +71,12 @@ class AreapickerBehavior extends Behavior {
 			// If there is a restriction on the area administrative's main country to display (Use in Institution only)
 			else if ($targetModel == 'Area.AreaAdministratives' && isset($attr['displayCountry']) && !$attr['displayCountry']) {
 				$options['display-country'] = 0;
-				if ($this->_table->action == 'add') {
-					$areaOptions = $areaOptions
-						->where([$targetTable->aliasField('is_main_country') => 1])
-						->order([$targetTable->aliasField('order')]);
-				}
+				//this part cause problem during add process which cause options can retain its selection.
+				// if ($this->_table->action == 'add') {
+					// $areaOptions = $areaOptions
+					// 	->where([$targetTable->aliasField('is_main_country') => 1])
+					// 	->order([$targetTable->aliasField('order')]);
+				// }
 			}
 
 			$areaOptions = $areaOptions->toArray();

@@ -23,6 +23,10 @@ class WorkflowsController extends AppController
 		$this->loadComponent('Paginator');
     }
 
+    // CAv4
+    public function Rules() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Workflow.WorkflowRules']); }
+    // End
+
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
@@ -30,6 +34,7 @@ class WorkflowsController extends AppController
         $hasWorkflowsAccess = $this->AccessControl->check([$this->name, 'Workflows', 'view']);
         $hasStepsAccess = $this->AccessControl->check([$this->name, 'Steps', 'view']);
         $hasActionsAccess = $this->AccessControl->check([$this->name, 'Actions', 'view']);
+        $hasRulesAccess = $this->AccessControl->check([$this->name, 'Rules', 'view']);
         $hasStatusesAccess = $this->AccessControl->check([$this->name, 'Statuses', 'view']);
 
         $tabElements = [];
@@ -63,6 +68,17 @@ class WorkflowsController extends AppController
             $tabElements['Actions'] = [
                 'url' => $url,
                 'text' => __('Actions')
+            ];
+        }
+
+        if ($hasRulesAccess) {
+            $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Rules'];
+            $paramsQuery = $this->paramsQuery();
+            $url = array_merge($url, $paramsQuery);
+
+            $tabElements['Rules'] = [
+                'url' => $url,
+                'text' => __('Rules')
             ];
         }
 

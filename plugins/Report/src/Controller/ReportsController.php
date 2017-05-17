@@ -15,12 +15,14 @@ class ReportsController extends AppController {
 			'Students'	 	=> ['className' => 'Report.Students', 'actions' => ['index', 'add']],
 			'Staff'	 		=> ['className' => 'Report.Staff', 'actions' => ['index', 'add']],
             'Textbooks'     => ['className' => 'Report.Textbooks', 'actions' => ['index', 'add']],
+            'ProfessionalDevelopment' => ['className' => 'Report.ProfessionalDevelopment', 'actions' => ['index', 'add']],
 			'Examinations'	=> ['className' => 'Report.Examinations', 'actions' => ['index', 'add']],
 			'Surveys'	 	=> ['className' => 'Report.Surveys', 'actions' => ['index', 'add']],
 			'InstitutionRubrics' => ['className' => 'Report.InstitutionRubrics', 'actions' => ['index', 'add']],
 			'DataQuality' => ['className' => 'Report.DataQuality', 'actions' => ['index', 'add']],
 			'Audit' => ['className' => 'Report.Audit', 'actions' => ['index', 'add']],
 		];
+		$this->loadComponent('Training.Training');
 	}
 
 	public function beforeFilter(Event $event) {
@@ -47,11 +49,12 @@ class ReportsController extends AppController {
 				'Report.InstitutionStudents' => __('Students'),
 				// 'Report.InstitutionStudentEnrollments' => __('Students Enrolments'),
 				'Report.InstitutionStaff' => __('Staff'),
-				// 'Report.InstitutionStaffOnLeave' => __('StaffOnLeave')
 				'Report.StudentAbsences' => __('Student Absence'),
 				'Report.StaffAbsences' => __('Staff Absence'),
+				'Report.StaffLeave' => __('Staff Leave'),
 				'Report.InstitutionStudentTeacherRatio' => __('Student Teacher Ratio'),
 				'Report.InstitutionStudentClassroomRatio' => __('Student Classroom Ratio'),
+				'Report.InstitutionCases' => __('Cases')
 			];
 		} else if ($module == 'Students') {
 			$options = [
@@ -65,13 +68,23 @@ class ReportsController extends AppController {
 				'Report.Staff' => __('Staff'),
 				'Report.StaffIdentities' => __('Identities'),
 				'Report.StaffContacts' => __('Contacts'),
-				'Report.StaffQualifications' => __('Qualifications')
+				'Report.StaffQualifications' => __('Qualifications'),
+				'Report.StaffLicenses' => __('Licenses'),
+				'Report.StaffEmployments' => __('Employments'),
+				'Report.StaffSalaries' => __('Salaries'),
+				'Report.StaffSystemUsage' => __('System Usage')
 			];
-        } else if ($module == 'Textbooks') {
-            $options = [
-                'Report.Textbooks' => __('Textbooks'),
-                'Report.InstitutionTextbooks' => __('Institution Textbooks')
-            ];
+		} else if ($module == 'Textbooks') {
+			$options = [
+				'Report.Textbooks' => __('Textbooks'),
+				'Report.InstitutionTextbooks' => __('Institution Textbooks')
+			];
+		} else if ($module == 'ProfessionalDevelopment') {
+			$options = [
+				'Report.TrainingCourses' => __('Courses'),
+				'Report.TrainingSessions' => __('Sessions'),
+				'Report.TrainingResults' => __('Results')
+			];
 		} else if ($module == 'Surveys') {
 			$options = [
 				'Report.Surveys' => __('Institutions')
@@ -107,38 +120,51 @@ class ReportsController extends AppController {
 		$this->autoRender = false;
 
 		$userId = $this->Auth->user('id');
-		$id = $this->request->query['id'];
+		$dataSet = [];
 
-		$fields = array(
-			'ReportProgress.status',
-			'ReportProgress.modified',
-			'ReportProgress.current_records',
-			'ReportProgress.total_records'
-		);
-		$ReportProgress = TableRegistry::get('Report.ReportProgress');
-		$entity = $ReportProgress->find()->where(['id' => $id])->first();
-		$data = [];
+		if (isset($this->request->query['ids'])) {
+			$ids = $this->request->query['ids'];
 
-		if ($entity) {
-			if ($entity->total_records > 0) {
-				$data['percent'] = intval($entity->current_records / $entity->total_records * 100);
-			} else {
-				$data['percent'] = 0;
-			}
-			if (is_null($entity->modified)) {
-				$data['modified'] = $ReportProgress->formatDateTime($entity->created);
-			} else {
-				$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
-			}
+			$fields = array(
+				'ReportProgress.status',
+				'ReportProgress.modified',
+				'ReportProgress.current_records',
+				'ReportProgress.total_records'
+			);
+			$ReportProgress = TableRegistry::get('Report.ReportProgress');
+			if (!empty($ids)) {
+				$results = $ReportProgress
+					->find()
+					->where([$ReportProgress->aliasField('id IN ') => $ids])
+					->all();
 
-			if (!is_null($entity->expiry_date)) {
-				$data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
-			} else {
-				$data['expiry_date'] = null;
+				if (!$results->isEmpty()) {
+					foreach ($results as $key => $entity) {
+						if ($entity->total_records > 0) {
+							$data['percent'] = intval($entity->current_records / $entity->total_records * 100);
+						} else {
+							$data['percent'] = 0;
+						}
+						if (is_null($entity->modified)) {
+							$data['modified'] = $ReportProgress->formatDateTime($entity->created);
+						} else {
+							$data['modified'] = $ReportProgress->formatDateTime($entity->modified);
+						}
+
+						if (!is_null($entity->expiry_date)) {
+							$data['expiry_date'] = $ReportProgress->formatDateTime($entity->expiry_date);
+						} else {
+							$data['expiry_date'] = null;
+						}
+						$data['status'] = $entity->status;
+
+						$dataSet[$entity->id] = $data;
+					}
+				}
 			}
-			$data['status'] = $entity->status;
 		}
-		echo json_encode($data);
+
+		echo json_encode($dataSet);
 		die;
 	}
 }

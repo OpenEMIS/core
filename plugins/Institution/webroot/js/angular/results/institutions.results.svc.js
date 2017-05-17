@@ -23,6 +23,15 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             });
         },
 
+        translate: function(data) {
+            KdOrmSvc.init({translation: 'translate'});
+            var success = function(response, deferred) {
+                var translated = response.data.translated;
+                deferred.resolve(translated);
+            };
+            return translation.translate(data, {success:success, defer: true});
+        },
+
         getAssessment: function(assessmentId) {
             return AssessmentsTable.get(assessmentId).ajax({defer: true});
         },
@@ -42,7 +51,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var deferred = $q.defer();
             var isSuperAdmin = 0;
             var securityUserId = 0;
-            
+
             var allSubjectRoles = [];
             var subjectRoles = [];
             var subjects = [];
@@ -280,7 +289,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             minMark: 0,
                             passMark: subject.grading_type.pass_mark,
                             maxMark: subject.grading_type.max,
-                            enrolledStatus: enrolledStatus
+                            enrolledStatus: enrolledStatus,
+                            subject: subject,
+                            gradingTypes: gradingTypes
                         };
                     }
 
@@ -301,7 +312,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                         extra = {
                             gradingOptions: gradingOptions,
-                            enrolledStatus: enrolledStatus
+                            enrolledStatus: enrolledStatus,
+                            subject: subject,
+                            gradingTypes: gradingTypes
                         };
                     }
 
@@ -313,7 +326,9 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             minMark: 0,
                             passMark: subject.grading_type.pass_mark,
                             maxMark: subject.grading_type.max,
-                            enrolledStatus: enrolledStatus
+                            enrolledStatus: enrolledStatus,
+                            subject: subject,
+                            gradingTypes: gradingTypes
                         };
                     }
 
@@ -412,6 +427,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var gradingOptions = extra.gradingOptions;
             var period = extra.period;
             var enrolledStatus = extra.enrolledStatus;
+            var vm = this;
 
             if (allowEdit) {
                 cols = angular.merge(cols, {
@@ -456,8 +472,12 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                                 if (angular.isUndefined(_results[studentId][periodId])) {
                                     _results[studentId][periodId] = {gradingOptionId: ''};
                                 }
-
                                 _results[studentId][periodId]['gradingOptionId'] = newValue;
+                                vm.saveSingleRecordData(params, extra)
+                                .then(function(response) {
+                                }, function(error) {
+                                    console.log(error);
+                                });
                             });
 
                             eCell.appendChild(eSelect);
@@ -512,6 +532,7 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             var maxMark = extra.maxMark;
             var periodId = extra.period.id;
             var enrolledStatus = extra.enrolledStatus;
+            var vm = this;
 
             cols = angular.merge(cols, {
                 cellStyle: function(params) {
@@ -589,7 +610,6 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                             eCell.addEventListener('change', function() {
                                 var minuteInt = parseInt(minuteInput.value);
                                 var secondInt = parseInt(secondInput.value);
-
                                 // Minute Input
                                 if (minuteInput.value.length > 0) {
                                     if (isNaN(minuteInt) || (minuteInt < 0 || minuteInt > 999)) {
@@ -631,6 +651,11 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
                                 params.data[params.colDef.field] = durationAsFloat;
                                 _results[studentId][periodId]['duration'] = durationAsFloat;
+                                vm.saveSingleRecordData(params, extra)
+                                .then(function(response) {
+                                }, function(error) {
+                                    console.log(error);
+                                });
                             });
                             return eCell;
 
@@ -803,54 +828,58 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             }
         },
 
-        saveRowData: function(subject, gradingTypes, results, assessmentId, educationSubjectId, educationGradeId, institutionId, academicPeriodId) {
-            var promises = [];
+        saveSingleRecordData: function(params, extra) {
+            var assessmentId = params.context.assessment_id;
+            var educationSubjectId = params.context.education_subject_id;
+            var educationGradeId = params.context.education_grade_id;
+            var institutionId = params.context.institution_id;
+            var academicPeriodId = params.context.academic_period_id;
+            var classId = params.context.class_id;
+            var studentId = params.data.student_id;
+            var field = params.colDef.field;
+            var result = params.data[field];
+            var assessmentPeriodId = field.replace('period_', '');
+            var subject = extra.subject;
+            var gradingTypes = extra.gradingTypes;
 
-            angular.forEach(results, function(result, studentId) {
-                angular.forEach(result, function(obj, assessmentPeriodId) {
-                    subject.grading_type = gradingTypes[assessmentPeriodId].assessment_grading_type;
-                    var resultType = subject.grading_type.result_type;
+            subject.grading_type = gradingTypes[assessmentPeriodId].assessment_grading_type;
+            var resultType = subject.grading_type.result_type;
 
-                    var marks = null;
-                    var gradingOptionId = null;
+            var marks = null;
+            var gradingOptionId = null;
 
-                    if (resultType == resultTypes.MARKS) {
-                        if (!isNaN(parseFloat(obj.marks))) {
-                            marks = $filter('number')(obj.marks, 2);
-                            var gradingObj = this.getGrading(subject, marks);
-                            gradingOptionId = gradingObj.id;
-                        }
-                    } else if (resultType == resultTypes.GRADES) {
-                        if (obj.gradingOptionId != 0) {
-                            gradingOptionId = obj.gradingOptionId;
-                        }
-                    } else if (resultType == resultTypes.DURATION) {
-                        if (!isNaN(parseFloat(obj.duration))) {
-                            marks = $filter('number')(obj.duration, 2);
+            if (resultType == resultTypes.MARKS) {
+                if (!isNaN(parseFloat(result))) {
+                    marks = $filter('number')(result, 2);
+                    var gradingObj = this.getGrading(subject, marks);
+                    gradingOptionId = gradingObj.id;
+                }
+            } else if (resultType == resultTypes.GRADES) {
+                if (result != 0) {
+                    gradingOptionId = result;
+                }
+            } else if (resultType == resultTypes.DURATION) {
+                if (!isNaN(parseFloat(result))) {
+                    marks = $filter('number')(result, 2);
 
-                            durationInSeconds = parseFloat(obj.duration) * 60;
-                            var gradingObj = this.getGrading(subject, durationInSeconds);
-                            gradingOptionId = gradingObj.id;
-                        }
-                    }
+                    durationInSeconds = parseFloat(result) * 60;
+                    var gradingObj = this.getGrading(subject, durationInSeconds);
+                    gradingOptionId = gradingObj.id;
+                }
+            }
 
-                    var data = {
-                        "marks" : marks,
-                        "assessment_grading_option_id" : gradingOptionId,
-                        "assessment_id" : assessmentId,
-                        "education_subject_id" : educationSubjectId,
-                        "education_grade_id" : educationGradeId,
-                        "institution_id" : institutionId,
-                        "academic_period_id" : academicPeriodId,
-                        "student_id" : parseInt(studentId),
-                        "assessment_period_id" : parseInt(assessmentPeriodId)
-                    };
-
-                    promises.push(AssessmentItemResultsTable.save(data));
-                }, this);
-            }, this);
-
-            return $q.all(promises);
+            var data = {
+                "marks" : marks,
+                "assessment_grading_option_id" : gradingOptionId,
+                "assessment_id" : assessmentId,
+                "education_subject_id" : educationSubjectId,
+                "education_grade_id" : educationGradeId,
+                "institution_id" : institutionId,
+                "academic_period_id" : academicPeriodId,
+                "student_id" : parseInt(studentId),
+                "assessment_period_id" : parseInt(assessmentPeriodId)
+            };
+            return AssessmentItemResultsTable.save(data);
         }
     }
 });

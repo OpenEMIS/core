@@ -18,17 +18,18 @@ class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
 
-	public function initialize(array $config) 
+	public function initialize(array $config)
     {
         parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 
         $this->securityUserId = $this->getQueryString('security_user_id');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add']
+            'Students' => ['index', 'add'],
+            'Staff' => ['index', 'add']
         ]);
 
         $this->addBehavior('CompositeKey');
@@ -111,7 +112,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         if ($entity->dirty('preferred')) {
             if ($entity->preferred == 1) { //if set as preferred
                 // update the rest of user nationality to not preferred
-                $this->updateAll( 
+                $this->updateAll(
                     ['preferred' => 0],
                     [
                         'security_user_id' => $entity->security_user_id,
@@ -174,7 +175,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            
+
             if ($action == 'add') {
                 $currentNationalities = $this
                                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -222,7 +223,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     private function setupFields(Entity $entity)
     {
         $this->field('nationality_id', [
-            'type' => 'select', 
+            'type' => 'select',
             'entity' => $entity
         ]);
 

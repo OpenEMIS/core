@@ -1,9 +1,9 @@
 <?php
 namespace Institution\Model\Table;
 
-use App\Model\Table\ControllerActionTable;
+use App\Model\Table\AppTable;
 
-class GendersTable extends ControllerActionTable
+class GendersTable extends AppTable
 {
     public function initialize(array $config)
     {
@@ -11,7 +11,5 @@ class GendersTable extends ControllerActionTable
         parent::initialize($config);
 
         $this->hasMany('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_gender_id']);
-
-        $this->addBehavior('FieldOption.FieldOption');
-    }
+	}
 }

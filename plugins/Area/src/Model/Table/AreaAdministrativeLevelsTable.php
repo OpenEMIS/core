@@ -6,6 +6,8 @@ use App\Model\Table\AppTable;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
+use Cake\ORM\Entity;
 use App\Model\Table\ControllerActionTable;
 
 class AreaAdministrativeLevelsTable extends ControllerActionTable
@@ -76,6 +78,16 @@ class AreaAdministrativeLevelsTable extends ControllerActionTable
 
 		return $attr;
 	}
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+	{
+		//check config
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $validateAreaAdministrativeLevel = $ConfigItems->value('institution_validate_area_administrative_level_id');
+        if ($validateAreaAdministrativeLevel == $entity->id) {
+        	$extra['associatedRecords'][] = ['model' => 'System Configurations - Institution', 'count' => 1];
+        }
+    }
 
 	public function getSelectOptions()
 	{

@@ -89,6 +89,15 @@ class SystemUpdatesTable extends ControllerActionTable {
                 }
             }
         }
+
+        $changelogUrl = $domain . '/changelog';
+        $changelogBtn = $this->getButtonTemplate();
+        $changelogBtn['attr']['title'] = __('Changelog');
+        $changelogBtn['attr']['target'] = '_blank';
+        $changelogBtn['label'] = '<i class="fa fa-list"></i>';
+        $changelogBtn['url'] = $changelogUrl;
+
+        $extra['toolbarButtons']['changelog'] = $changelogBtn;
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -99,18 +108,13 @@ class SystemUpdatesTable extends ControllerActionTable {
         }
 
         if ($this->exists(['status' => 1])) {
-            $extra['toolbarButtons']['update'] = [
-                'type' => 'button',
-                'attr' => [
-                    'class' => 'btn btn-xs btn-default',
-                    'data-toggle' => 'tooltip',
-                    'data-placement' => 'bottom',
-                    'escape' => false,
-                    'title' => __('Update')
-                ],
-                'label' => '<i class="fa fa-refresh"></i>',
-                'url' => ['controller' => $this->controller->name, 'action' => 'Updates', 'updates']
-            ];
+            $updateBtn = $this->getButtonTemplate();
+
+            $updateBtn['attr']['title'] = __('Update');
+            $updateBtn['label'] = '<i class="fa fa-refresh"></i>';
+            $updateBtn['url'] = ['controller' => $this->controller->name, 'action' => 'Updates', 'updates'];
+
+            $extra['toolbarButtons']['update'] = $updateBtn;
         }
     }
 
