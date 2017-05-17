@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -25,7 +25,7 @@ class AbstractClassPass extends CodeCleanerPass
     private $abstractMethods;
 
     /**
-     * @throws RuntimeException if the node is an abstract function with a body.
+     * @throws RuntimeException if the node is an abstract function with a body
      *
      * @param Node $node
      */
@@ -47,7 +47,7 @@ class AbstractClassPass extends CodeCleanerPass
     }
 
     /**
-     * @throws RuntimeException if the node is a non-abstract class with abstract methods.
+     * @throws RuntimeException if the node is a non-abstract class with abstract methods
      *
      * @param Node $node
      */

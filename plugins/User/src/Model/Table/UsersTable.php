@@ -790,6 +790,17 @@ class UsersTable extends AppTable
                 }
             }
         }
+
+        // This logic is meant for Import
+        if ($entity->has('record_source')) {
+            if ($entity->record_source == 'import_user') {
+                $listeners = [
+                    TableRegistry::get('User.UserNationalities'),
+                    TableRegistry::get('User.Identities')
+                ];
+                $this->dispatchEventToModels('Model.Users.afterSave', [$entity], $this, $listeners);
+            }
+        }
     }
 
     public function onChangeUserNationalities(Event $event, Entity $entity)
