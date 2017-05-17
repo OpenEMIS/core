@@ -822,6 +822,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $academicPeriodObj = $this->AcademicPeriods->get($academicPeriodId);
             $startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
             $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
+            $todayDate = new Date();
 
             $Staff = $this->Institutions->Staff;
             $query = $Staff->find('all')
@@ -831,11 +832,11 @@ class InstitutionClassesTable extends ControllerActionTable
                             })
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
-                            ->where([ //check the staff start and end date.
-                                $Staff->aliasField('start_date <=') => new Date(),
+                            ->where([
+                                $Staff->aliasField('start_date <= ') => $todayDate,
                                 'OR' => [
-                                    [$Staff->aliasField('end_date').' > ' => new Date()],
-                                    [$Staff->aliasField('end_date').' IS NULL']
+                                    [$Staff->aliasField('end_date >= ') => $todayDate],
+                                    [$Staff->aliasField('end_date IS NULL')]
                                 ]
                             ])
                             ;
