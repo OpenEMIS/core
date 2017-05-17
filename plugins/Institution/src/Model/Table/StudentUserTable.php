@@ -172,7 +172,8 @@ class StudentUserTable extends ControllerActionTable
                 'on' => 'create'
             ])
             ->add('gender_id', 'ruleCompareStudentGenderWithInstitution', [
-                'rule' => ['compareStudentGenderWithInstitution']
+                'rule' => ['compareStudentGenderWithInstitution'],
+                'on' => 'create'
             ])
             ->requirePresence('start_date', 'create')
             ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
@@ -262,7 +263,7 @@ class StudentUserTable extends ControllerActionTable
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->contain([
-            'MainNationalities', 'MainIdentityTypes'
+            'MainNationalities', 'MainIdentityTypes', 'Genders'
         ]);
     }
 
@@ -301,6 +302,10 @@ class StudentUserTable extends ControllerActionTable
 
         $this->fields['identity_type_id']['type'] = 'readonly';
         $this->fields['identity_type_id']['attr']['value'] = $entity->has('main_identity_type') ? $entity->main_identity_type->name : '';
+        
+        $this->fields['gender_id']['type'] = 'readonly';
+        $this->fields['gender_id']['attr']['value'] = $entity->has('gender') ? $entity->gender->name : '';
+        $this->fields['gender_id']['value'] = $entity->has('gender') ? $entity->gender->id : '';
     }
 
     private function setupToolbarButtons(Entity $entity, ArrayObject $extra)
