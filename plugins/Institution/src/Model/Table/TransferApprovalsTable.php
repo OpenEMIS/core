@@ -59,6 +59,9 @@ class TransferApprovalsTable extends AppTable
             ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
                 'rule' => ['checkProgrammeEndDate', 'education_grade_id']
             ])
+            ->add('institution_id', 'ruleCompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
         ;
     }
 

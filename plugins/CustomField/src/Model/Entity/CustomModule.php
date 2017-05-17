@@ -10,37 +10,37 @@ class CustomModule extends Entity
 		'Institution.Institutions' => [
 			'filter' => 'Institution.Types',
 			'behavior' => null,
-			'supported_field_types' => ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER']
+			'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','STUDENT_LIST','FILE','COORDINATES','REPEATER']
 		],
 		'Student.Students' => [
 			'filter' => null,
 			'behavior' => 'Student',
-			'supported_field_types' => ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES']
+			'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES']
 		],
 		'Staff.Staff' => [
 			'filter' => null,
 			'behavior' => 'Staff',
-			'supported_field_types' => ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES']
+			'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','TABLE','DATE','TIME','FILE','COORDINATES']
 		],
 		'Institution.InstitutionInfrastructures' => [
 			'filter' => 'Infrastructure.InfrastructureTypes',
 			'behavior' => null,
-			'supported_field_types' => ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
+			'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
 		],
 		'Student.StudentSurveys' => [
 			'filter' => null,
 			'behavior' => null,
-			'supported_field_types' => ['TEXT','NUMBER','DROPDOWN']
+			'supported_field_types' => ['TEXT','NUMBER','DECIMAL','DROPDOWN']
 		],
 		'InstitutionRepeater.RepeaterSurveys' => [
 			'filter' => null,
 			'behavior' => null,
-			'supported_field_types' => ['TEXT','NUMBER','DROPDOWN']
+			'supported_field_types' => ['TEXT','NUMBER','DECIMAL','DROPDOWN']
 		],
 		'Institution.InstitutionRooms' => [
 			'filter' => 'Infrastructure.RoomTypes',
 			'behavior' => null,
-			'supported_field_types' => ['TEXT','NUMBER','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
+			'supported_field_types' => ['TEXT','NUMBER','DECIMAL','TEXTAREA','DROPDOWN','CHECKBOX','DATE','TIME','FILE','COORDINATES']
 		]
 	];
 

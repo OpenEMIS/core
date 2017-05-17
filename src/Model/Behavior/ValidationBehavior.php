@@ -106,21 +106,16 @@ class ValidationBehavior extends Behavior {
 	public static function checkNotInvigilator($check, array $globalData) {
 		$data = $globalData['data'];
 
-        $Table = TableRegistry::get('Examination.ExaminationCentresInvigilators');
+        $Table = TableRegistry::get('Examination.ExaminationCentresExaminationsInvigilators');
         $record = $Table
         	->find()
         	->where([
         		$Table->aliasField('examination_id') => $data['examination_id'],
-        		$Table->aliasField('invigilator_id') => $check,
-        		$Table->aliasField('academic_period_id') => $data['academic_period_id']
+        		$Table->aliasField('invigilator_id') => $check
         	])
         	->first();
 
-        if (!empty($record)) {
-        	return false;
-        } else {
-        	return true;
-        }
+        return empty($record);
     }
 
     public static function checkAuthorisedArea($check, array $globalData)
@@ -666,6 +661,71 @@ class ValidationBehavior extends Behavior {
 		$educationGradeField = isset($options['educationGradeField']) ? $options['educationGradeField'] : 'education_grade_id';
 		$studentIdField = isset($options['studentIdField']) ? $options['studentIdField'] : 'student_id';
 		return !$Students->completedGrade($globalData['data'][$educationGradeField], $globalData['data'][$studentIdField]);
+	}
+
+    public static function compareStudentGenderWithInstitution($field, array $globalData)
+    {
+    	$model = $globalData['providers']['table'];
+    	$registryAlias = $model->registryAlias();
+
+        if (!empty($globalData)) {
+        	$fieldType = $globalData['field']; //enable many models field use this same function
+        	$institutionId = $globalData['data']['institution_id'];
+        }
+
+        if (!empty($institutionId)) {
+            //get institution gender
+            $Institutions = TableRegistry::get('Institution.Institutions');
+
+            $query = $Institutions->find()
+                    ->contain('Genders')
+                    ->where([
+                        $Institutions->aliasField('id') => $institutionId
+                    ])
+                    ->select([
+                        'Genders.code', 'Genders.name'
+                    ])
+                    ->first();
+            $institutionGender = $query->Genders->name;
+            $institutionGenderCode = $query->Genders->code;
+
+            if ($institutionGenderCode == 'X') { //if mixed then always true
+                return true;
+            } else {
+                //get user gender
+                $userGender = '';
+                $Users = TableRegistry::get('User.Users');
+                $UserGenders = TableRegistry::get('User.Genders');
+                if ($fieldType == 'institution_id') { 
+
+                	if (array_key_exists('student_id', $globalData['data'])) {
+                		$studentId = $globalData['data']['student_id'];
+                	}
+
+                	if (!empty($studentId)) {
+                		$query = $Users->find()
+                            ->contain('Genders')
+                            ->where([
+                                $Users->aliasField('id') => $studentId
+                            ])
+                            ->select([
+                                'Genders.code'
+                            ])
+                            ->first();
+                    	$userGender = $query->Genders->code;
+                	}
+                    
+                } else if ($fieldType == 'gender_id') { //if validate gender, then can straight away get its code.
+                    $userGender = $UserGenders->get($globalData['data'][$fieldType])->code;
+                }
+                
+                if ($userGender != $institutionGenderCode) {
+                	return $model->getMessage("$registryAlias.$fieldType.compareStudentGenderWithInstitution", ['sprintf' => [$institutionGender]]);
+                } else {
+					return true;
+                }
+            }
+        }
 	}
 
     public static function institutionStaffId($field, array $globalData) {
@@ -1432,6 +1492,31 @@ class ValidationBehavior extends Behavior {
 		}
 	}
 
+    public static function validateCustomDecimal($field, array $globalData)
+    {
+        if (array_key_exists('params', $globalData['data']) && !empty($globalData['data']['params'])) {
+            $model = $globalData['providers']['table'];
+            $params = json_decode($globalData['data']['params'], true);
+
+            $length = $params['length'];
+            $precision = $params['precision'];
+
+            if ($precision == 0) {
+                $pattern = '/^[0-9]{1,'.$length.'}$/';
+                if (!preg_match($pattern, $field)) {
+                    return $model->getMessage('CustomField.decimal.length', ['sprintf' => [$length]]);
+                }
+            } else {
+                $pattern = '/^[0-9]{1,'.$length.'}+(\.[0-9]{1,'.$precision.'})?$/';
+                if (!preg_match($pattern, $field)) {
+                    return $model->getMessage('CustomField.decimal.precision', ['sprintf' => [$length, $precision]]);
+                }
+            }
+
+            return true;
+        }
+    }
+
 	public static function checkCriteriaThresholdRange($field, $globalData)
 	{
 		$model = $globalData['providers']['table'];
@@ -1570,8 +1655,9 @@ class ValidationBehavior extends Behavior {
         if (is_array($field)) {
             $latitude = $field['latitude'];
             $longitude = $field['longitude'];
-            if (!empty($latitude) || !empty($longitude)) {
-                if (empty($latitude)) {
+
+            if (strlen($latitude) > 0 || strlen($longitude) > 0) {
+                if (strlen($latitude) == 0) {
                     $error = __('Latitude cannot be empty');
                 } else {
                     $latIsValid = Validation::latitude($latitude);
@@ -1580,9 +1666,9 @@ class ValidationBehavior extends Behavior {
                     }
                 }
             } elseif ($isRequired) {
-	            $error = __('Latitude value is required');
+                $error = __('Latitude value is required');
             }
-        } elseif ($isRequired) {
+        } else if ($isRequired) {
             $error = __('Required data is not available');
         }
         return (!$error) ? true : $error;
@@ -1594,17 +1680,18 @@ class ValidationBehavior extends Behavior {
         if (is_array($field)) {
             $latitude = $field['latitude'];
             $longitude = $field['longitude'];
-            if (!empty($latitude) || !empty($longitude)) {
-                if (empty($longitude)) {
+
+            if (strlen($latitude) > 0 || strlen($longitude) > 0) {
+                if (strlen($longitude) == 0) {
                     $error = __('Longitude cannot be empty');
                 } else {
-                    $latIsValid = Validation::longitude($longitude);
-                    if (!$latIsValid) {
+                    $lngIsValid = Validation::longitude($longitude);
+                    if (!$lngIsValid) {
                         $error = __('Longitude value is invalid');
                     }
                 }
-            } elseif ($isRequired) {
-	            $error = __('Longitude value is required');
+            } else if ($isRequired) {
+                $error = __('Longitude value is required');
             }
         } elseif ($isRequired) {
             $error = __('Required data is not available');
@@ -1777,15 +1864,40 @@ class ValidationBehavior extends Behavior {
 		return true;
 	}
 
-	public static function validateRoomCapacity($field, array $globalData)
+	public static function checkRoomCapacityMoreThanStudents($field, array $globalData)
 	{
-		if (array_key_exists('students', $globalData)) {
-			$totalSeats = $globalData['data']['number_of_seats'];
-			$currentSeats = count($globalData['data']['students']);
-			return $totalSeats >= $currentSeats;
+		$ExamRoomsStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
+		$query = $ExamRoomsStudents->find();
+		$studentCount = $query
+			->select(['count' => $query->func()->count('student_id')])
+			->where([$ExamRoomsStudents->aliasField('examination_centre_room_id') => $globalData['data']['id']])
+			->group([$ExamRoomsStudents->aliasField('examination_id')])
+			->toArray();
+
+		foreach ($studentCount as $obj) {
+			if ($field < $obj->count) {
+				return false;
+			}
 		}
 
 		return true;
+	}
+
+	public static function validateRoomCapacity($field, array $globalData)
+	{
+		$ExamRoomsStudents = TableRegistry::get('Examination.ExaminationCentreRoomsExaminationsStudents');
+		$studentCount = $ExamRoomsStudents->find()
+			->where([
+				$ExamRoomsStudents->aliasField('examination_centre_room_id') => $field,
+				$ExamRoomsStudents->aliasField('examination_id') => $globalData['data']['examination_id'],
+				$ExamRoomsStudents->aliasField('student_id <> ') => $globalData['data']['student_id']
+			])
+			->count();
+
+		$ExamRooms = TableRegistry::get('Examination.ExaminationCentreRooms');
+		$numberOfSeats = $ExamRooms->get($field)->number_of_seats;
+
+		return $numberOfSeats > $studentCount;
 	}
 
 	public static function checkNoRunningSystemProcess($check, $processName, array $globalData)
@@ -1993,7 +2105,7 @@ class ValidationBehavior extends Behavior {
             if (!empty($programmeEndDate)) {
                 $programmeEndDate = new DateTime($programmeEndDate);
                 $studentStartDate = new DateTime($data['start_date']);
-                
+
                 if ($programmeEndDate < $studentStartDate) {
                     return false;
                 }
