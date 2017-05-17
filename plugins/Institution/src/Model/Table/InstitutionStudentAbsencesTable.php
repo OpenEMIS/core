@@ -45,10 +45,47 @@ class InstitutionStudentAbsencesTable extends AppTable {
 			],
 			'pages' => ['index']
 		]);
+		$this->addBehavior('Restful.RestfulAccessControl', [
+            'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
+        ]);
+
+		$this->addBehavior('Indexes.Indexes');
 
 		$this->absenceList = $this->AbsenceTypes->getAbsenceTypeList();
 		$this->absenceCodeList = $this->AbsenceTypes->getCodeList();
 	}
+
+	public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        return $events;
+    }
+
+	public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+    	if (array_key_exists('absence_type_id', $data) && !empty($data['absence_type_id'])) {
+			$absenceTypeId = $data['absence_type_id'];
+			$absenceTypeCode = $this->absenceCodeList[$absenceTypeId];
+			switch ($absenceTypeCode) {
+				case 'UNEXCUSED':
+					$data['student_absence_reason_id'] = 0;
+					break;
+
+				case 'LATE':
+					$data['full_day'] = 0;
+					break;
+			}
+    	}
+
+    	if (array_key_exists('full_day', $data) && !empty($data['full_day'])) {
+    		$fullDay = $data['full_day'];
+    		if ($fullDay == 1) {
+				$data['start_time'] = null;
+				$data['end_time'] = null;
+    		}
+    	}
+    }
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$institutionId = $this->Session->read('Institution.Institutions.id');
@@ -119,7 +156,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'on' => 'create'
 				]
 			])
-
+			->allowEmpty('start_time', function ($context) {
+			    if (array_key_exists('full_day', $context['data'])) {
+			        return $context['data']['full_day'];
+			    }
+			    return false;
+			})
 			->requirePresence('start_time', function ($context) {
 			    if (array_key_exists('full_day', $context['data'])) {
 			        return !$context['data']['full_day'];
@@ -132,6 +174,12 @@ class InstitutionStudentAbsencesTable extends AppTable {
 					'on' => 'create'
 				]
 			])
+			->allowEmpty('end_time', function ($context) {
+			    if (array_key_exists('full_day', $context['data'])) {
+			        return $context['data']['full_day'];
+			    }
+			    return false;
+			})
 			->requirePresence('end_time', function ($context) {
 			    if (array_key_exists('full_day', $context['data'])) {
 			        return !$context['data']['full_day'];
@@ -699,7 +747,90 @@ class InstitutionStudentAbsencesTable extends AppTable {
 		return compact('periodOptions', 'selectedPeriod', 'classOptions', 'selectedClass', 'studentOptions', 'selectedStudent');
 	}
 
-	public function getUnexcusedAbsenceData($threshold)
+	public function institutionStudentIndexCalculateIndexValue(Event $event, ArrayObject $params)
+	{
+		$institutionId = $params['institution_id'];
+		$studentId = $params['student_id'];
+		$academicPeriodId = $params['academic_period_id'];
+
+		$Indexes = TableRegistry::get('Indexes.Indexes');
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
+		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+
+		$absenceTypeId = $Indexes->getCriteriasDetails($params['criteria_name'])['absence_type_id'];
+
+		$absenceResults = $this
+			->find()
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('absence_type_id') => $absenceTypeId,
+				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate,
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate
+			])
+			->all();
+
+		$absenceDay = 0;
+		foreach ($absenceResults as $key => $obj) {
+			$endDate = $obj->end_date;
+			$startDate = $obj->start_date;
+			$interval = $endDate->diff($startDate);
+			$absenceDay = $absenceDay + $interval->days + 1;
+		}
+
+		return $absenceDay;
+	}
+
+	public function getReferenceDetails($institutionId, $studentId, $academicPeriodId, $threshold, $criteriaName)
+	{
+		$Indexes = TableRegistry::get('Indexes.Indexes');
+		$ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+		$dateFormat = $ConfigItems->value('date_format');
+		$AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+		$academicPeriodStartDate = $AcademicPeriod->get($academicPeriodId)->start_date;
+		$academicPeriodEndDate = $AcademicPeriod->get($academicPeriodId)->end_date;
+		$absenceTypeId = $Indexes->getCriteriasDetails($criteriaName)['absence_type_id'];
+
+		$absenceResults = $this
+			->find()
+			->contain(['AbsenceTypes', 'StudentAbsenceReasons'])
+			->where([
+				$this->aliasField('institution_id') => $institutionId,
+				$this->aliasField('student_id') => $studentId,
+				$this->aliasField('absence_type_id') => $absenceTypeId,
+				$this->aliasField('start_date') . ' >='  => $academicPeriodStartDate,
+				$this->aliasField('end_date') . ' <='  => $academicPeriodEndDate
+			])
+			->all();
+
+		$referenceDetails = [];
+		foreach ($absenceResults as $key => $obj) {
+			$reason = 'Unexcused';
+			if (isset($obj->student_absence_reason->name)) {
+				$reason = $obj->student_absence_reason->name;
+			}
+
+			$startDate = $obj->start_date;
+			$endDate = $obj->end_date;
+
+			if ($startDate == $endDate) {
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format($dateFormat) . ')';
+			} else {
+				$referenceDetails[$obj->id] = __($reason) . ' (' . $startDate->format($dateFormat) . ' - ' . $endDate->format($dateFormat) . ')';
+			}
+		}
+
+		// tooltip only receieved string to be display
+		$reference = '';
+        foreach ($referenceDetails as $key => $referenceDetailsObj) {
+            $reference = $reference . $referenceDetailsObj . ' <br/>';
+        }
+
+		return $reference;
+	}
+
+	public function getModelAlertData($threshold)
 	{
 		$AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 		$currentAcademicPeriodId = $AcademicPeriods->getCurrent();

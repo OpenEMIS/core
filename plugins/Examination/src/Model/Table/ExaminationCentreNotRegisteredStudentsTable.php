@@ -24,7 +24,7 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.NotRegisteredStudents');
 
-        $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
+        $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
     }
 
     public function afterAction(Event $event, ArrayObject $extra)

@@ -11,8 +11,11 @@ use Cake\Network\Request;
 use Cake\Validation\Validator;
 use Cake\Datasource\Exception\InvalidPrimaryKeyException;
 use Cake\I18n\I18n;
+use Cake\I18n\Date;
 use Cake\ORM\ResultSet;
 use Cake\Network\Session;
+use Cake\Log\Log;
+
 use App\Model\Table\AppTable;
 use App\Model\Traits\OptionsTrait;
 
@@ -89,18 +92,18 @@ class InstitutionsTable extends AppTable  {
 		$this->hasMany('InstitutionQualityVisits', 			['className' => 'Institution.InstitutionQualityVisits', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('StudentSurveys', 					['className' => 'Student.StudentSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('InstitutionSurveys', 				['className' => 'Institution.InstitutionSurveys', 'dependent' => true, 'cascadeCallbacks' => true]);
-
-		$this->belongsToMany('ExamCentres', [
-			'className' => 'Examination.ExaminationCentres',
-			'joinTable' => 'examination_centres_institutions',
-			'foreignKey' => 'institution_id',
-			'targetForeignKey' => 'examination_centre_id',
-			'through' => 'Examination.ExaminationCentresInstitutions',
-			'dependent' => true
-		]);
 		$this->hasMany('ExaminationCentres',				['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-		$this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+		$this->hasMany('ExaminationItemResults', 			['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
 
+		$this->belongsToMany('ExaminationCentresExaminations', [
+			'className' => 'Examination.ExaminationCentresExaminations',
+			'joinTable' => 'examination_centres_examinations_institutions',
+			'foreignKey' => 'institution_id',
+			'targetForeignKey' => ['examination_centre_id', 'examination_id'],
+			'through' => 'Examination.ExaminationCentresExaminationsInstitutions',
+			'dependent' => true,
+			'cascadeCallbacks' => true
+		]);
 		$this->belongsToMany('SecurityGroups', [
 			'className' => 'Security.SystemGroups',
 			'joinTable' => 'security_group_institutions',
@@ -161,10 +164,12 @@ class InstitutionsTable extends AppTable  {
 				])
 
 	        ->allowEmpty('date_closed')
+	        ->add('date_opened', 'ruleLessThanToday', [
+				'rule' => ['lessThanToday', true]
+				])
  	        ->add('date_closed', 'ruleCompareDateReverse', [
-		            'rule' => ['compareDateReverse', 'date_opened', false]
+		            'rule' => ['compareDateReverse', 'date_opened', true]
 	    	    ])
-
 	        ->allowEmpty('longitude')
 			->add('longitude', 'ruleLongitude', [
 					'rule' => 'checkLongitude'
@@ -224,6 +229,12 @@ class InstitutionsTable extends AppTable  {
 			->add('area_id', 'ruleAuthorisedArea', [
 					'rule' => ['checkAuthorisedArea']
 				])
+			->add('area_id', 'ruleConfiguredArea', [
+                    'rule' => ['checkConfiguredArea']
+                ])
+            ->add('area_administrative_id', 'ruleConfiguredAreaAdministrative', [
+                    'rule' => ['checkConfiguredArea']
+                ])
 			->add('institution_provider_id', 'ruleLinkedSector', [
 						'rule' => 'checkLinkedSector',
 						'provider' => 'table'
@@ -295,7 +306,7 @@ class InstitutionsTable extends AppTable  {
 
 	public function onGetShiftType(Event $event, Entity $entity)
 	{
-		$type = '-';
+		$type = ' ';
 		if (array_key_exists($entity->shift_type, $this->shiftTypes)) {
 			$type = $this->shiftTypes[$entity->shift_type];
 		}
@@ -334,6 +345,13 @@ class InstitutionsTable extends AppTable  {
 		return ['downloadFile'];
 	}
 
+	public function onUpdateFieldDateOpened(Event $event, array $attr, $action, Request $request)
+	{
+		$today = new Date();
+		$attr['date_options']['endDate'] = $today->format('d-m-Y');
+		return $attr;
+	}
+
 	public function onUpdateFieldDateClosed(Event $event, array $attr, $action, Request $request)
 	{
 		$attr['default_date'] = false;
@@ -344,11 +362,15 @@ class InstitutionsTable extends AppTable  {
 		if ($entity->isNew()) {
 			$entity->shift_type = 0;
 		}
+
+        // adding debug log to monitor when there was a different between date_opened's year and year_opened
+		$this->debugMonitorYearOpened($entity, $options);
 	}
 
 	public function beforeAction($event) {
 		$this->ControllerAction->field('security_group_id', ['visible' => false]);
 		// $this->ControllerAction->field('institution_site_area_id', ['visible' => false]);
+		$this->ControllerAction->field('date_opened');
 		$this->ControllerAction->field('date_closed');
 		$this->ControllerAction->field('modified', ['visible' => false]);
 		$this->ControllerAction->field('modified_user_id', ['visible' => false]);
@@ -388,7 +410,8 @@ class InstitutionsTable extends AppTable  {
 		$field = 'area_administrative_id';
 		$areaAdministrativesLabel = $this->onGetFieldLabel($event, $this->alias(), $field, $language, true);
 		$this->ControllerAction->field('area_administrative_section', ['type' => 'section', 'title' => $areaAdministrativesLabel]);
-		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact')]);
+		$this->ControllerAction->field('contact_section', ['type' => 'section', 'title' => __('Contact'), 'after' => $field]);
+		$this->ControllerAction->field('other_information_section', ['type' => 'section', 'title' => __('Other Information'), 'after' => 'website', 'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]]);
 		$this->ControllerAction->field('map_section', ['type' => 'section', 'title' => __('Map'), 'visible' => ['view'=>true]]);
 		$this->ControllerAction->field('map', ['type' => 'map', 'visible' => ['view'=>true]]);
 
@@ -396,7 +419,7 @@ class InstitutionsTable extends AppTable  {
 			$this->Navigation->addCrumb($this->getHeader($this->action));
 		}
 
-		if ($this->action == 'view' || $this->action == 'edit') {
+		if ($this->action == 'edit') {
 			// Moved to InstitutionContacts
 			$this->ControllerAction->field('contact_section', ['visible' => false]);
 			$this->ControllerAction->field('contact_person', ['visible' => false]);
@@ -644,6 +667,9 @@ class InstitutionsTable extends AppTable  {
 
 			'area_administrative_section',
 			'area_administrative_id',
+
+			'contact_section',
+			'contact_person', 'telephone', 'fax', 'email', 'website',
 
 			'map_section',
 			'map',
@@ -919,6 +945,22 @@ class InstitutionsTable extends AppTable  {
 		return $SecurityGroupUsers->getRolesByUserAndGroup($groupIds, $userId);
 	}
 
+	public function debugMonitorYearOpened($entity, $options)
+	{
+        $time = strtotime($entity->date_opened);
+        $yearDateOpened = date("Y",$time);
+        $yearOpened = $entity->year_opened;
+
+        if ($yearDateOpened != $yearOpened) {
+        	$debugInfo = $this->alias() . ' (Institution Name: ' . $entity->name . ', Date_Opened: ' . $entity->date_opened . ', year_opened: ' . $yearOpened . ')';
+
+            Log::write('debug',$debugInfo);
+            Log::write('debug',$entity);
+            Log::write('debug',$options);
+            Log::write('debug', 'End of monitoring year opened');
+        }
+	}
+
 	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
     	$extra['excludedModels'] = [
@@ -946,11 +988,11 @@ class InstitutionsTable extends AppTable  {
 
 	public function findNotExamCentres(Query $query, array $options)
 	{
-		if (isset($options['examination_id'])) {
+		if (isset($options['academic_period_id'])) {
 			$query
 				->leftJoinWith('ExaminationCentres', function($q) use ($options) {
 					return $q
-						->where(['ExaminationCentres.examination_id' => $options['examination_id']]);
+						->where(['ExaminationCentres.academic_period_id' => $options['academic_period_id']]);
 				})
 				->where([
 					'ExaminationCentres.institution_id IS NULL'

@@ -15,11 +15,12 @@
         "source": "https://bitbucket.org/korditpteltd/kd-cakephp-restful/src"
     },
     "require": {
-        "cakephp/cakephp": ">3.0.9"
+        "cakephp/cakephp": ">=3.2",
+        "admad/cakephp-jwt-auth": "^2.0"
     },
     "require-dev": {
-        "cakephp/cakephp-codesniffer": "dev-master",
-        "phpunit/phpunit": "4.1.*"
+        "cakephp/cakephp-codesniffer": "^2.3",
+        "phpunit/phpunit": "^5.7"
     },
     "autoload": {
         "psr-4": {
