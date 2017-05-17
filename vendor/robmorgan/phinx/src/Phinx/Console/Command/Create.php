@@ -133,19 +133,24 @@ class Create extends AbstractCommand
             ));
         }
 
-        // Get the alternative template and static class options, but only allow one of them.
+        // Get the alternative template and static class options from the config, but only allow one of them.
+        $defaultAltTemplate = $this->getConfig()->getTemplateFile();
+        $defaultCreationClassName = $this->getConfig()->getTemplateClass();
+        if ($defaultAltTemplate && $defaultCreationClassName){
+            throw new \InvalidArgumentException('Cannot define template:class and template:file at the same time');
+        }
+
+        // Get the alternative template and static class options from the command line, but only allow one of them.
         $altTemplate = $input->getOption('template');
-        if (!$altTemplate) {
-            $altTemplate = $this->getConfig()->getTemplateFile();
-        }
-
         $creationClassName = $input->getOption('class');
-        if (!$creationClassName) {
-            $creationClassName = $this->getConfig()->getTemplateClass();
-        }
-
         if ($altTemplate && $creationClassName) {
             throw new \InvalidArgumentException('Cannot use --template and --class at the same time');
+        }
+
+        // If no commandline options then use the defaults.
+        if (!$altTemplate && !$creationClassName){
+            $altTemplate = $defaultAltTemplate;
+            $creationClassName = $defaultCreationClassName;
         }
 
         // Verify the alternative template file's existence.
@@ -199,7 +204,7 @@ class Create extends AbstractCommand
         // Determine the appropriate mechanism to get the template
         if ($creationClassName) {
             // Get the template from the creation class
-            $creationClass = new $creationClassName();
+            $creationClass = new $creationClassName($input, $output);
             $contents = $creationClass->getMigrationTemplate();
         } else {
             // Load the alternative template if it is defined.
@@ -237,6 +242,6 @@ class Create extends AbstractCommand
             $output->writeln('<info>using default template</info>');
         }
 
-        $output->writeln('<info>created</info> .' . str_replace(getcwd(), '', $filePath));
+        $output->writeln('<info>created</info> ' . str_replace(getcwd(), '', $filePath));
     }
 }

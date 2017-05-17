@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -113,7 +113,7 @@ HELP
             $code = '<?php ' . $code;
         }
 
-        $parserKind = $input->getOption('kind');
+        $parserKind = $this->parserFactory->hasKindsSupport() ? $input->getOption('kind') : null;
         $depth      = $input->getOption('depth');
         $nodes      = $this->parse($this->getParser($parserKind), $code);
         $output->page($this->presenter->present($nodes, $depth));
@@ -144,7 +144,7 @@ HELP
     /**
      * Get (or create) the Parser instance.
      *
-     * @param string|null $kind One of Psy\ParserFactory constants (only for PHP parser 2.0 and above).
+     * @param string|null $kind One of Psy\ParserFactory constants (only for PHP parser 2.0 and above)
      *
      * @return Parser
      */

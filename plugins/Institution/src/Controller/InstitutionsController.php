@@ -213,10 +213,6 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionTextbooks']);
     }
-    public function StudentCompetencies()
-    {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']);
-    }
     public function StudentCompetencyResults()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']);
@@ -293,6 +289,53 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
     // End
+
+    public function StudentCompetencies($subaction = 'index')
+    {
+        if ($subaction == 'edit') {
+            $crumbTitle = __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
+            $session = $this->request->session();
+            $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
+            $indexUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'StudentCompetencies',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+            $this->Navigation->addCrumb($crumbTitle, $indexUrl);
+            if (!$this->AccessControl->isAdmin() && $institutionId) {
+                $userId = $this->Auth->user('id');
+                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $AccessControl = $this->AccessControl;
+                $action = 'edit';
+                if (!$AccessControl->check(['Institutions', 'StudentCompetencies', $action], $roles)) {
+                    $url = ['plugin' => $this->plugin, 'controller' => $this->name, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId]), 'action' => 'StudentCompetencies'];
+                    return $this->redirect($url);
+                }
+            }
+            $queryString = $this->ControllerAction->getQueryString();
+            $viewUrl = $this->ControllerAction->url('view');
+            $viewUrl['action'] = 'StudentCompetencies';
+            $viewUrl[0] = 'view';
+
+            $alertUrl = [
+                'plugin' => 'Institution',
+                'controller' => 'Institutions',
+                'action' => 'setAlert',
+                'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])
+            ];
+
+            $this->set('alertUrl', $alertUrl);
+            $this->set('viewUrl', $viewUrl);
+            $this->set('indexUrl', $indexUrl);
+            $this->set('classId', $queryString['class_id']);
+            $this->set('competencyTemplateId', $queryString['competency_template_id']);
+            $this->set('queryString', $queryString);
+            $this->render('student_competency_edit');
+        } else {
+            $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencies']);
+        }
+    }
 
     public function Classes($subaction = 'index', $classId = null)
     {
@@ -580,14 +623,13 @@ class InstitutionsController extends AppController
                 } elseif ($action == 'Results') {
                     $header = $name .' - '.__('Assessments');
                 } else {
-                    $header = $name .' - '.__(Inflector::humanize($action));
+                    $header = $name .' - '.__(Inflector::humanize(Inflector::underscore($action)));
                 }
                 $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $id]), $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
                 return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
             }
         }
-
         $this->set('contentHeader', $header);
     }
 
@@ -657,6 +699,17 @@ class InstitutionsController extends AppController
                             'kd-angular-multi-select',
                             'institution.subject.students.ctrl',
                             'institution.subject.students.svc'
+                        ]);
+                    }
+                }
+                break;
+            case 'StudentCompetencies':
+                if (isset($this->request->pass[0])) {
+                    if ($this->request->param('pass')[0] == 'edit') {
+                        $this->Angular->addModules([
+                            'alert.svc',
+                            'institution.student.competencies.ctrl',
+                            'institution.student.competencies.svc'
                         ]);
                     }
                 }
@@ -966,11 +1019,13 @@ class InstitutionsController extends AppController
             'Attachments' => ['text' => __('Attachments')],
             'Comments' => ['text' => __('Comments')],
             'History' => ['text' => __('History')],
+            'StudentSurveys' => ['text' => __('Surveys')]
         ];
 
         if ($type == 'Staff') {
             $studentUrl = ['plugin' => 'Staff', 'controller' => 'Staff'];
             unset($studentTabElements['Guardians']);
+            unset($studentTabElements['StudentSurveys']);   // Only Student has Survey tab
         }
 
         $tabElements = array_merge($tabElements, $studentTabElements);
@@ -986,12 +1041,6 @@ class InstitutionsController extends AppController
             $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
 
             // $tabElements[$userRole.'Account']['url'] = array_merge($url, ['action' => $userRole.'Account', 'view']);
-
-            // Only Student has Survey tab
-            if ($userRole == 'Student') {
-                $tabElements[$userRole.'Surveys'] = ['text' => __('Survey')];
-                $tabElements[$userRole.'Surveys']['url'] = array_merge($url, ['action' => $userRole.'Surveys', 'index']);
-            }
 
             $securityUserId = $this->ControllerAction->paramsDecode($encodedParam)['id'];
 
@@ -1016,13 +1065,10 @@ class InstitutionsController extends AppController
             $params = [];
             switch ($key) {
                 case $userRole.'User':
-                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
+                    $params = [$this->ControllerAction->paramsEncode(['id' => $userId]), 'id' => $id];
                     break;
                 case $userRole.'Account':
-                    $params = [$this->ControllerAction->paramsEncode(['id' =>$userId]), 'id' => $id];
-                    break;
-                case $userRole.'Surveys':
-                    $params = ['user_id' => $userId];
+                    $params = [$this->ControllerAction->paramsEncode(['id' => $userId]), 'id' => $id];
                     break;
             }
             $tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);

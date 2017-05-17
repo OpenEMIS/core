@@ -619,7 +619,12 @@ trait MessagesTrait
             'survey_not_found' => 'No identifiable survey found',
             'no_answers' => 'No record were found in the file imported',
             'institution_network_connectivity_id' => 'code',
-            'exam_centre_dont_match' => 'Examination centre cannot be found in the selected academic period.'
+            'exam_centre_dont_match' => 'Examination and centre combination cannot be found.',
+            'identity_type_doesnt_match' => 'Identity type selected must be %s.',
+            'identity_number_exist' => 'Identity Number for %s already exists.',
+            'identity_type_required' => 'Identity Type cant be empty if Identity Number is specified.',
+            'identity_number_required' => 'Identity Number cant be empty if Identity Type is specified.',
+            'identity_number_invalid_pattern' => 'Invalid Identity Number pattern.'
         ],
         'TrainingSessions' => [
             'trainer_type' => 'Type',
@@ -1001,6 +1006,11 @@ trait MessagesTrait
                 'education_grade_id' => [
                     'checkProgrammeEndDate' => 'The institution only offers the selected education grade until %s'
                 ],
+            ],
+            'StaffBehaviours' => [
+                'date_of_behaviour' => [
+                    'ruleInAcademicPeriod' => 'Date is not within the academic period.'
+                ]
             ],
             'TransferApprovals' => [
                 'start_date' => [
