@@ -31,6 +31,7 @@ class SecuritiesController extends AppController
             ];
             $this->set('roleId', $this->ControllerAction->paramsDecode($roleId)['id']);
             $this->set('indexUrl', $indexUrl);
+            $this->render('Permissions/permission_edit');
         } else {
             $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Security.Permissions']);
         }
