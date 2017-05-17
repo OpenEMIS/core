@@ -1,6 +1,6 @@
 <?= $this->Html->script('app/components/alert/alert.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/institutionclasses/institution.class.students.svc', ['block' => true]); ?>
-<?= $this->Html->script('Institution.angular/institutionclasses/institution.class.students.ctrl', ['block' => true]); ?>
+<?= $this->Html->script('Security.angular/permission/security.permission.edit.svc', ['block' => true]); ?>
+<?= $this->Html->script('Security.angular/permission/security.permission.edit.ctrl', ['block' => true]); ?>
 <?php
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('toolbar');
@@ -24,9 +24,9 @@ $this->start('toolbar');
 $this->end();
 $this->start('panelBody');
 ?>
-<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="InstitutionClassStudentsCtrl as InstitutionClassStudentsController">
-    <div class="alert {{InstitutionClassStudentsController.class}}" ng-hide="InstitutionClassStudentsController.message == null">
-        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{InstitutionClassStudentsController.message}}
+<form accept-charset="utf-8" id="content-main-form" class="form-horizontal ng-pristine ng-valid" novalidate="novalidate" ng-controller="SecurityPermissionEditCtrl as SecurityPermissionEditController">
+    <div class="alert {{SecurityPermissionEditController.class}}" ng-hide="SecurityPermissionEditController.message == null">
+        <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{SecurityPermissionEditController.message}}
     </div>
     <div class="input string required">
         <label><?= __('Academic Period') ?></label>
@@ -35,7 +35,7 @@ $this->start('panelBody');
     <div class="input string required">
         <label><?= __('Class Name') ?></label>
         <input ng-model="InstitutionClassStudentsController.className" type="string" ng-init="InstitutionClassStudentsController.className='';">
-        <div ng-if="InstitutionClassStudentsController.postError.name" class="error-message">
+        <div ng-if="InstitutionClassStudentsController.postError.name" clx`x`ass="error-message">
             <p ng-repeat="error in InstitutionClassStudentsController.postError.name">{{ error }}</p>
         </div>
     </div>
