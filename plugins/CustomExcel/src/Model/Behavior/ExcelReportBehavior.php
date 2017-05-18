@@ -20,6 +20,7 @@ use PHPExcel_Cell_DataValidation;
 use PHPExcel_Style_Alignment;
 USE PHPExcel_Settings;
 use PHPExcel_Worksheet_MemoryDrawing;
+use PHPExcel_Worksheet_Drawing;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -113,6 +114,11 @@ class ExcelReportBehavior extends Behavior
             $this->deleteFile($extra['tmp_file_path']);
         }
 
+        if ($extra->offsetExists('tmp_image_folder')) {
+            // delete temporary image folder after save
+            $this->deleteFolder($extra['tmp_image_folder']);
+        }
+
         if ($extra['save']) {
             $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSaveFile', [$params, $extra], $this);
         }
@@ -192,7 +198,12 @@ class ExcelReportBehavior extends Behavior
                     $cellStyle->getNumberFormat()->setFormatCode($formatting);
                 }
                 break;
+
             case 'date':
+                $cellValue = !is_null($format) ? $cellValue->format($format) : $cellValue;
+                break;
+
+            case 'time':
                 $cellValue = !is_null($format) ? $cellValue->format($format) : $cellValue;
                 break;
         }
@@ -281,6 +292,8 @@ class ExcelReportBehavior extends Behavior
         PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath);
 
         $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'PDF');
+        // set image paths to root folder
+        $objWriter->setImagesRoot('');
         $objWriter->writeAllSheets();
         $objWriter->save($filepath);
     }
@@ -305,6 +318,12 @@ class ExcelReportBehavior extends Behavior
     {
         $file = new File($filepath);
         $file->delete();
+    }
+
+    public function deleteFolder($filepath)
+    {
+        $folder = new Folder($filepath);
+        $folder->delete();
     }
 
     public function getParams($controller)
@@ -489,6 +508,7 @@ class ExcelReportBehavior extends Behavior
         }
 
         if ($this->config('format') == 'pdf') {
+            $this->processImages($objPHPExcel, $objWorksheet, $extra);
             $objWorksheet->setShowGridlines(false);
         }
     }
@@ -995,6 +1015,30 @@ class ExcelReportBehavior extends Behavior
         if (is_resource($blob)) {
             $imageResource = imagecreatefromstring(stream_get_contents($blob));
             $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
+        }
+    }
+
+    private function processImages($objPHPExcel, $objWorksheet, $extra)
+    {
+        $drawingCollection = $objWorksheet->getDrawingCollection();
+
+        if (!empty($drawingCollection)) {
+            $tmpImageFolder = $extra['path'] . 'images' . '_' . date('Ymd') . 'T' . date('His');
+            $extra['tmp_image_folder'] = $tmpImageFolder;
+            new Folder($tmpImageFolder, true, 0777);
+
+            foreach ($drawingCollection as $drawing) {
+                if ($drawing instanceof PHPExcel_Worksheet_Drawing) {
+                    $fileName = $drawing->getFilename();
+                    $filePath = $drawing->getPath();
+                    $image = file_get_contents($filePath);
+
+                    // save images to temp image folder
+                    $newFilePath = $tmpImageFolder . DS . $fileName;
+                    file_put_contents($newFilePath, $image);
+                    $drawing->setPath($newFilePath);
+                }
+            }
         }
     }
 }

@@ -141,7 +141,6 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StudentsReportCards->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
-                ->hydrate(false)
                 ->first();
             return $entity;
         }
