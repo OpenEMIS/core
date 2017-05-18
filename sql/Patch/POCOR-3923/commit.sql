@@ -45,5 +45,5 @@ SET `email` = NULL;
 UPDATE `security_users` `SU`
 INNER JOIN `user_contacts` `UC` ON `UC`.`security_user_id` = `SU`.`id`
 INNER JOIN `contact_types` `CT` ON `UC`.`contact_type_id` = `CT`.`id`
-INNER JOIN `contact_options` `CO` ON (`CO`.`id` = `CT`.`contact_option_id` AND `CO`.`id` = 4)
+INNER JOIN `contact_options` `CO` ON (`CO`.`id` = `CT`.`contact_option_id` AND `CO`.`code` = 'EMAIL')
 SET `SU`.`email` = `UC`.`value`;

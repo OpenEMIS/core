@@ -481,7 +481,7 @@ class ValidationBehavior extends Behavior {
     public static function validateContact($field, array $globalData)
     {
         $ContactOptionsTable = TableRegistry::get('User.ContactOptions');
-        $contactOptionOthers = $ContactOptionsTable->getIdByCode('OTHERS');
+        $contactOptionOther = $ContactOptionsTable->getIdByCode('OTHER');
 
     	$flag = false;
         $contactOption = $globalData['data']['contact_option_id'];
@@ -505,7 +505,7 @@ class ValidationBehavior extends Behavior {
         if ($currentField == 'preferred') {
         	$preferred = $field;
 
-        	if ($preferred == "0" && $contactOption != $contactOptionOthers) { //during not preferred set ot contact type is 'others'
+        	if ($preferred == "0" && $contactOption != $contactOptionOther) { //during not preferred set ot contact type is 'others'
 
 	            $query->where([$Contacts->aliasField('preferred') => 1]);
 	            $count = $query->count();

@@ -27,4 +27,8 @@ class ContactOptionsTable extends AppTable {
             return '';
         }
     }
+
+    public function findCodeList() {
+        return $this->find('list', ['keyField' => 'code', 'valueField' => 'id'])->toArray();
+    }
 }
