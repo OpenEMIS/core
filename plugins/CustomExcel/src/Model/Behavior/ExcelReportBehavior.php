@@ -20,7 +20,6 @@ use PHPExcel_Cell_DataValidation;
 use PHPExcel_Style_Alignment;
 USE PHPExcel_Settings;
 use PHPExcel_Worksheet_MemoryDrawing;
-use PHPExcel_Worksheet_Drawing;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -28,7 +27,9 @@ class ExcelReportBehavior extends Behavior
         'folder' => 'export',
         'subfolder' => 'customexcel',
         'format' => 'xlsx',
-        'download' => true
+        'download' => true,
+        'save' => false,
+        'lock' => false
     ];
 
     // function name and keyword pairs
@@ -94,6 +95,7 @@ class ExcelReportBehavior extends Behavior
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
         $extra['download'] = $this->config('download');
         $extra['save'] = $this->config('save');
+        $extra['lock'] = $this->config('lock');
 
         $filepath = $extra['path'] . $extra['file'];
         $extra['file_path'] = $extra['path'] . $extra['file'];
@@ -104,7 +106,6 @@ class ExcelReportBehavior extends Behavior
 
         if ($this->config('format') == 'xlsx') {
             $this->saveExcel($objPHPExcel, $filepath);
-
         }
 
         // comment out pdf code as not being used for now
@@ -179,6 +180,17 @@ class ExcelReportBehavior extends Behavior
     {
         foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
             $this->processWorksheet($objPHPExcel, $objWorksheet, $extra);
+
+            // auto size columns
+            foreach($objWorksheet->getColumnDimensions() as $col) {
+                $col->setAutoSize(true);
+            }
+            $objWorksheet->calculateColumnWidths();
+
+            // lock all sheets
+            if ($extra['lock']) {
+                $objWorksheet->getProtection()->setSheet(true);
+            }
         }
 
         // to force the first sheet active
