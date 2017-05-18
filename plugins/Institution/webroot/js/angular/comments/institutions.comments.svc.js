@@ -26,6 +26,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         renderText: renderText,
         renderSelect: renderSelect,
         getRowData: getRowData,
+        checkStudentReportCardExists: checkStudentReportCardExists,
         saveRowData: saveRowData
     };
 
@@ -387,6 +388,20 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({success: success, defer: true});
     };
 
+    function checkStudentReportCardExists(studentId, institutionId, classId, educationGradeId, academicPeriodId, reportCardId) {
+        return InstitutionStudentsReportCardsTable
+            .select()
+            .where({
+                report_card_id: reportCardId,
+                student_id : parseInt(studentId),
+                institution_id : institutionId,
+                academic_period_id : academicPeriodId,
+                education_grade_id : educationGradeId,
+                institution_class_id: classId
+            })
+            .ajax({defer: true});
+    };
+
     function saveRowData(comments, tab, institutionId, classId, educationGradeId, academicPeriodId, reportCardId) {
         var promises = [];
 
@@ -394,29 +409,50 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
                 var data = {
-                    "report_card_id": reportCardId,
-                    "student_id" : parseInt(studentId),
-                    "institution_id" : institutionId,
-                    "academic_period_id" : academicPeriodId,
-                    "education_grade_id" : educationGradeId
+                    report_card_id: reportCardId,
+                    student_id: parseInt(studentId),
+                    institution_id: institutionId,
+                    academic_period_id: academicPeriodId,
+                    education_grade_id: educationGradeId,
+                    institution_class_id: classId
                 };
 
                 if (isSubjectTab) {
-                    data["education_subject_id"] = tab.education_subject_id;
-                    data["comments"] = obj.comments;
-                    data["report_card_comment_code_id"] = obj.comment_code;
+                    commentsData = data;
+                    commentsData["comments"] = obj.comments;
+                    commentsData["report_card_comment_code_id"] = obj.comment_code;
+                    commentsData["education_subject_id"] = tab.education_subject_id;
 
+                    // get id of current user
                     KdSessionSvc.read('Auth.User.id')
                     .then(function(response) {
-                        data["staff_id"] = response;
-                        promises.push(InstitutionStudentsReportCardsCommentsTable.save(data));
+                        commentsData["staff_id"] = response;
+
+                        // check if main student report card record exists
+                        return checkStudentReportCardExists(studentId, institutionId, classId, educationGradeId, academicPeriodId, reportCardId);
+
+                    }, function(error) {
+                        console.log(error);
+                    })
+                    // checkStudentReportCardExists
+                    .then(function(response) {
+                        var studentReportcard = response.data;
+
+                        if (studentReportcard.length == 0) {
+                            // save to both tables
+                            promises.push(InstitutionStudentsReportCardsTable.save(data));
+                            promises.push(InstitutionStudentsReportCardsCommentsTable.save(commentsData));
+
+                        } else {
+                            // save only to comments table
+                            promises.push(InstitutionStudentsReportCardsCommentsTable.save(commentsData));
+                        }
+
                     }, function(error) {
                         console.log(error);
                     });
 
                 } else {
-                    data["institution_class_id"] = classId;
-
                     if (tab.type == roles.PRINCIPAL) {
                         data["principal_comments"] = obj.comments;
                     } else if (tab.type == roles.HOMEROOM_TEACHER) {
