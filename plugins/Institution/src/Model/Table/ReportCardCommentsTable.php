@@ -127,6 +127,10 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
                 $ReportCards->aliasField('id')
+            ])
+            ->order([
+                $this->aliasField('name'),
+                $ReportCards->aliasField('name')
             ]);
 
         $extra['options']['order'] = [

@@ -68,9 +68,18 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         {
             vm.commentCodeOptions = response.data;
 
+            return InstitutionsCommentsSvc.getModifiedUser();
         }, function(error)
         {
             // No Comment Codes
+            console.log(error);
+            AlertSvc.warning(vm, error);
+        })
+        // set modified user
+        .then(function(response) {
+            vm.modifiedUser = response;
+
+        }, function(error) {
             console.log(error);
             AlertSvc.warning(vm, error);
         })
@@ -115,6 +124,8 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 }
 
                 vm.comments[params.data.student_id][params.colDef.field] = params.newValue;
+
+                params.data.modified_by = vm.modifiedUser;
 
                 // Important: to refresh the grid after data is modified
                 vm.gridOptions.api.refreshView();
@@ -171,7 +182,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     function onChangeColumnDefs(action, tab) {
         var deferred = $q.defer();
 
-        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.comments, vm.commentCodeOptions)
+        InstitutionsCommentsSvc.getColumnDefs(action, tab, vm.modifiedUser, vm.comments, vm.commentCodeOptions)
         .then(function(cols)
         {
             if (vm.gridOptions != null) {
