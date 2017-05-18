@@ -52,7 +52,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             'fieldClass' => ['className' => 'Infrastructure.BuildingCustomFields'],
             'formKey' => 'infrastructure_custom_form_id',
             'filterKey' => 'infrastructure_custom_filter_id',
-            'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
+            'formFieldClass' => ['className' => 'Infrastructure.BuildingCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.BuildingCustomFormsFilters'],
             'recordKey' => 'institution_building_id',
             'fieldValueClass' => ['className' => 'Infrastructure.BuildingCustomFieldValues', 'foreignKey' => 'institution_building_id', 'dependent' => true, 'cascadeCallbacks' => true],

@@ -245,16 +245,16 @@ class NavigationComponent extends Component
         $institutionActions = array_merge($institutionStudentActions, $institutionStaffActions);
 
         if ($controller->name == 'Institutions' && $action != 'index' && (!in_array($action, $institutionActions))) {
-            $navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
+            $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
             $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
             $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
             $this->checkClassification($navigations);
         } elseif (($controller->name == 'Students' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStudentActions))) {
-            $navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
+            $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
             $navigations = $this->appendNavigation('Institutions.Students.index', $navigations, $this->getInstitutionStudentNavigation());
             $this->checkClassification($navigations);
         } elseif (($controller->name == 'Staff' && $action != 'index') || ($controller->name == 'Institutions' && in_array($action, $institutionStaffActions))) {
-            $navigations = $this->appendNavigation('Institutions.index', $navigations, $this->getInstitutionNavigation());
+            $navigations = $this->appendNavigation('Institutions.Institutions.index', $navigations, $this->getInstitutionNavigation());
             $navigations = $this->appendNavigation('Institutions.Staff.index', $navigations, $this->getInstitutionStaffNavigation());
             $this->checkClassification($navigations);
         } elseif ($controller->name == 'Directories' && $action != 'index') {
@@ -304,7 +304,7 @@ class NavigationComponent extends Component
     public function getMainNavigation()
     {
         $navigation = [
-            'Institutions.index' => [
+            'Institutions.Institutions.index' => [
                 'title' => 'Institutions',
                 'icon' => '<span><i class="fa kd-institutions"></i></span>',
                 'params' => ['plugin' => 'Institution'],
@@ -342,14 +342,14 @@ class NavigationComponent extends Component
         $navigation = [
             'Institutions.dashboard' => [
                 'title' => 'Dashboard',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.dashboard'],
                 'params' => ['plugin' => 'Institution', 0 => $institutionId]
             ],
 
             'Institution.General' => [
                 'title' => 'General',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
 
@@ -383,7 +383,7 @@ class NavigationComponent extends Component
 
             'Institution.Academic' => [
                 'title' => 'Academic',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
 
@@ -424,7 +424,7 @@ class NavigationComponent extends Component
 
             'Institutions.Students.index' => [
                 'title' => 'Students',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Students.add', 'Institutions.Students.addExisting', 'Institutions.TransferRequests', 'Institutions.Promotion', 'Institutions.Transfer', 'Institutions.Undo',
                     'Institutions.StudentAdmission', 'Institutions.TransferApprovals', 'Institutions.StudentWithdraw', 'Institutions.WithdrawRequests', 'Institutions.StudentUser.add',
                     'Institutions.ImportStudents', 'Institutions.Students'],
@@ -433,14 +433,14 @@ class NavigationComponent extends Component
 
             'Institutions.Staff.index' => [
                 'title' => 'Staff',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.Staff.add', 'Institutions.StaffUser.add', 'Institutions.StaffUser.pull', 'Institutions.ImportStaff', 'Institutions.Staff', 'Institutions.StaffTransferRequests']
             ],
 
             'Institution.Attendance' => [
                 'title' => 'Attendance',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
 
@@ -460,7 +460,7 @@ class NavigationComponent extends Component
 
             'Institution.Behaviour' => [
                 'title' => 'Behaviour',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
 
@@ -480,28 +480,28 @@ class NavigationComponent extends Component
 
             'Institutions.StudentCompetencies' => [
                 'title' => 'Competencies',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.StudentCompetencies', 'Institutions.StudentCompetencyResults'],
                 'params' => ['plugin' => 'Institution']
             ],
 
             'Institutions.Assessments.index' => [
                 'title' => 'Assessments',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Assessments', 'Institutions.Results'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
             'Institutions.Indexes.index' => [
                 'title' => 'Indexes',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'selected' => ['Institutions.Indexes','Institutions.InstitutionStudentIndexes'],
                 'params' => ['plugin' => 'Institution'],
             ],
 
                 'Institutions.Examinations' => [
                     'title' => 'Examinations',
-                    'parent' => 'Institutions.index',
+                    'parent' => 'Institutions.Institutions.index',
                     'link' => false,
                 ],
 
@@ -525,14 +525,14 @@ class NavigationComponent extends Component
 
             'Institutions.Positions' => [
                 'title' => 'Positions',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.Positions'],
             ],
 
             'Institution.Finance' => [
                 'title' => 'Finance',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
 
@@ -559,14 +559,14 @@ class NavigationComponent extends Component
 
             'Institutions.Lands' => [
                 'title' => 'Infrastructures',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
                 'selected' => ['Institutions.Lands', 'Institutions.Buildings', 'Institutions.Floors', 'Institutions.Rooms']
             ],
 
             'Survey' => [
                 'title' => 'Survey',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'link' => false
             ],
                 'Institutions.Surveys' => [
@@ -585,13 +585,13 @@ class NavigationComponent extends Component
 
             'Institutions.VisitRequests' => [
                 'title' => 'Visits',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution']
             ],
 
             'Institutions.Cases' => [
                 'title' => 'Cases',
-                'parent' => 'Institutions.index',
+                'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution']
             ]
         ];

@@ -51,7 +51,7 @@ class InstitutionLandsTable extends ControllerActionTable
             'fieldClass' => ['className' => 'Infrastructure.LandCustomFields'],
             'formKey' => 'infrastructure_custom_form_id',
             'filterKey' => 'infrastructure_custom_filter_id',
-            'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
+            'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
             'recordKey' => 'institution_land_id',
             'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true, 'cascadeCallbacks' => true],
