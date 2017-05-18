@@ -33,8 +33,7 @@ class ReportCardsTable extends AppTable
             'templateTable' => 'ReportCard.ReportCards',
             'templateTableKey' => 'report_card_id',
             'format' => 'xlsx',
-            'locked' => true,
-            'download' => false,
+            'lock' => true,
             'save' => true,
             'variables' => [
                 'ReportCards',
