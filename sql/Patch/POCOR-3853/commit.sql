@@ -934,3 +934,11 @@ SET
   `_delete`='Lands.remove|Buildings.remove|Floors.remove|Rooms.remove'
 WHERE `id`='1011';
 
+UPDATE `security_functions`
+SET
+  `_view`='Institutions.index|Institutions.view|dashboard',
+  `_edit`='Institutions.edit',
+  `_add`='Institutions.add',
+  `_delete`='Institutions.remove',
+  `_execute`='Institutions.excel'
+WHERE `id`='1000';

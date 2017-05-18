@@ -96,5 +96,14 @@ SET
   `_delete`='Infrastructures.remove|Rooms.remove'
 WHERE `id`='1011';
 
+UPDATE `security_functions`
+SET
+  `_view`='index|view|dashboard',
+  `_edit`='edit',
+  `_add`='add',
+  `_delete`='remove',
+  `_execute`='excel'
+WHERE `id`='1000';
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3853';

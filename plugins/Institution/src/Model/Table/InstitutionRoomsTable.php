@@ -60,7 +60,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'fieldClass' => ['className' => 'Infrastructure.RoomCustomFields'],
             'formKey' => 'infrastructure_custom_form_id',
             'filterKey' => 'infrastructure_custom_filter_id',
-            'formFieldClass' => ['className' => 'Infrastructure.InfrastructureCustomFormsFields'],
+            'formFieldClass' => ['className' => 'Infrastructure.RoomCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
             'recordKey' => 'institution_room_id',
             'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
