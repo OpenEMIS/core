@@ -15,12 +15,8 @@ use App\Model\Table\ControllerActionTable;
 class ContactsTable extends ControllerActionTable {
 	use OptionsTrait;
 
-	private $ContactOptions;
-	private $contactOptionMobile;
-	private $contactOptionPhone;
-	private $contactOptionFax;
-	private $contactOptionEmail;
-	private $contactOptionOther;
+	private $ContactOptionsTable;
+	private $contactOptionsArray;
 
 	public function initialize(array $config) {
 		$this->table('user_contacts');
@@ -30,11 +26,7 @@ class ContactsTable extends ControllerActionTable {
 		$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
 
 		$this->ContactOptionsTable = TableRegistry::get('User.ContactOptions');
-		$this->contactOptionMobile = $this->ContactOptionsTable->getIdByCode('MOBILE');
-		$this->contactOptionPhone = $this->ContactOptionsTable->getIdByCode('PHONE');
-		$this->contactOptionFax = $this->ContactOptionsTable->getIdByCode('FAX');
-		$this->contactOptionEmail = $this->ContactOptionsTable->getIdByCode('EMAIL');
-		$this->contactOptionEmergency = $this->ContactOptionsTable->getIdByCode('EMERGENCY');
+		$this->contactOptionsArray = $this->ContactOptionsTable->findCodeList();
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -108,7 +100,7 @@ class ContactsTable extends ControllerActionTable {
                 }
             }
 
-			if ($contactOption == $this->contactOptionEmail) { //if updating preferred email
+			if ($contactOption == $this->contactOptionsArray['EMAIL']) { //if updating preferred email
                 //update information on security user table
                 $listeners = [
                     TableRegistry::get('User.Users')
@@ -124,7 +116,7 @@ class ContactsTable extends ControllerActionTable {
         $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
         $extra['contactOption'] = $contactOption;//to be passed to afterDelete
         
-        if ($contactOption == $this->contactOptionEmail) {
+        if ($contactOption == $this->contactOptionsArray['EMAIL']) {
             $query = $this
                 ->find()
                 ->matching('ContactTypes', function ($q) use ($contactOption) {
@@ -165,7 +157,7 @@ class ContactsTable extends ControllerActionTable {
                     ['id' => $query->id]
                 );
 
-                if ($contactOption == $this->contactOptionEmail) { //if the deleted contact option is email
+                if ($contactOption == $this->contactOptionsArray['EMAIL']) { //if the deleted contact option is email
                     //update information on security user table
                     $listeners = [
                         TableRegistry::get('User.Users')
@@ -216,7 +208,7 @@ class ContactsTable extends ControllerActionTable {
 							}
 						}
 					}
-					return in_array($contactOptionId, [$this->contactOptionMobile, $this->contactOptionPhone, $this->contactOptionFax]);
+					return in_array($contactOptionId, [$this->contactOptionsArray['MOBILE'], $this->contactOptionsArray['PHONE'], $this->contactOptionsArray['FAX']]);
 				},
 			])
 			->add('value', 'ruleValidateEmail',  [
@@ -236,7 +228,7 @@ class ContactsTable extends ControllerActionTable {
 							}
 						}
 					}
-					return ($contactOptionId == $this->contactOptionEmail);
+					return ($contactOptionId == $this->contactOptionsArray['EMAIL']);
 				},
 			])
 			->add('value', 'ruleValidateEmergency',  [
@@ -256,7 +248,7 @@ class ContactsTable extends ControllerActionTable {
 							}
 						}
 					}
-					return ($contactOptionId == $this->contactOptionEmergency);
+					return ($contactOptionId == $this->contactOptionsArray['EMERGENCY']);
 				},
 			])
 			//validate at least one preferred on each contact type
