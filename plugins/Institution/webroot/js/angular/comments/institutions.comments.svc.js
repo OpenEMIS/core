@@ -13,7 +13,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         ReportCardCommentCodesTable: 'ReportCard.ReportCardCommentCodes',
         InstitutionStudentsReportCardsTable: 'Institution.InstitutionStudentsReportCards',
         InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments',
-        InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents'
+        InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents',
+        StaffUserTable: 'Institution.StaffUser'
     };
 
     var service = {
@@ -22,6 +23,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         getTabs: getTabs,
         getSubjects: getSubjects,
         getCommentCodeOptions: getCommentCodeOptions,
+        getModifiedUser: getModifiedUser,
         getColumnDefs: getColumnDefs,
         renderText: renderText,
         renderSelect: renderSelect,
@@ -113,7 +115,34 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({defer: true});
     };
 
-    function getColumnDefs(action, tab, _comments, commentCodeOptions) {
+    function getModifiedUser() {
+        var deferred = $q.defer();
+
+        KdSessionSvc.read('Auth.User.id')
+        .then(function(response) {
+            var staffId = response;
+            return StaffUserTable
+                .get(staffId)
+                .ajax({defer: true});
+
+        }, function(error) {
+            console.log(error);
+            deferred.reject(error);
+        })
+        // get staff data
+        .then(function(response) {
+            staffData = response.data;
+            deferred.resolve(staffData.name);
+
+        }, function(error) {
+            console.log(error);
+            deferred.reject(error);
+        })
+
+        return deferred.promise;
+    };
+
+    function getColumnDefs(action, tab, modifiedUser, _comments, commentCodeOptions) {
         var deferred = $q.defer();
 
         var filterParams = {
@@ -176,7 +205,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             });
 
             extra = {
-                selectOptions: selectOptions
+                selectOptions: selectOptions,
+                modifiedUser: modifiedUser
             };
             var columnDef = {
                 headerName: "Comment Code" + headerIcons,
@@ -230,6 +260,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
     function renderSelect(allowEdit, cols, extra, _comments) {
         var options = extra.selectOptions;
+        var modifiedUser = extra.modifiedUser;
 
         if (allowEdit) {
             cols = angular.merge(cols, {
@@ -267,6 +298,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     eSelect.addEventListener('change', function () {
                         var newValue = eSelect.value;
                         params.data[params.colDef.field] = newValue;
+                        params.data.modified_by = modifiedUser;
 
                         if (angular.isUndefined(_comments[studentId])) {
                             _comments[studentId] = {};
