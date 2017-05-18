@@ -14,12 +14,19 @@ use App\Model\Table\ControllerActionTable;
 
 class ContactsTable extends ControllerActionTable {
 	use OptionsTrait;
+
+	private $ContactOptionsTable;
+	private $contactOptionsArray;
+
 	public function initialize(array $config) {
 		$this->table('user_contacts');
 		parent::initialize($config);
 
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
 		$this->belongsTo('ContactTypes', ['className' => 'User.ContactTypes']);
+
+		$this->ContactOptionsTable = TableRegistry::get('User.ContactOptions');
+		$this->contactOptionsArray = $this->ContactOptionsTable->findCodeList();
 	}
 
 	public function indexBeforeAction(Event $event, ArrayObject $extra) {
@@ -75,32 +82,30 @@ class ContactsTable extends ControllerActionTable {
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
     {
         //if preferred set, then unset other preferred for the same contact option
-        if ($entity->dirty('preferred')) {
-            if ($entity->preferred == 1) {
-                $contactOption = $entity->contact_option_id;
-                $contacts = $this->find()
-                            ->matching('ContactTypes', function ($q) use ($contactOption) {
-                                return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
-                            })
-                            ->where([
-                                $this->aliasField('id !=') => $entity->id,
-                                $this->aliasField('security_user_id') => $entity->security_user_id
-                            ]);
+        if (($entity->dirty('preferred') && $entity->preferred == 1) || $entity->preferred == 1) {
+            $contactOption = $entity->contact_option_id;
+            $contacts = $this->find()
+                        ->matching('ContactTypes', function ($q) use ($contactOption) {
+                            return $q->where(['ContactTypes.contact_option_id' => $contactOption]);
+                        })
+                        ->where([
+                            $this->aliasField('id !=') => $entity->id,
+                            $this->aliasField('security_user_id') => $entity->security_user_id
+                        ]);
 
-                if (!empty($contacts->toArray())) {
-                    foreach ($contacts->toArray() as $key => $value) {
-                        $value->preferred = 0;
-                        $this->save($value);
-                    }
+            if (!empty($contacts->toArray())) {
+                foreach ($contacts->toArray() as $key => $value) {
+                    $value->preferred = 0;
+                    $this->save($value);
                 }
+            }
 
-                if ($contactOption == 4) { //if updating preferred email
-                    //update information on security user table
-                    $listeners = [
-                        TableRegistry::get('User.Users')
-                    ];
-                    $this->dispatchEventToModels('Model.UserContacts.onChange', [$entity], $this, $listeners);
-                }
+			if ($contactOption == $this->contactOptionsArray['EMAIL']) { //if updating preferred email
+                //update information on security user table
+                $listeners = [
+                    TableRegistry::get('User.Users')
+                ];
+                $this->dispatchEventToModels('Model.UserContacts.onChange', [$entity], $this, $listeners);
             }
         }
     }
@@ -111,7 +116,7 @@ class ContactsTable extends ControllerActionTable {
         $contactOption = $this->ContactTypes->get($entity->contact_type_id)->contact_option_id;
         $extra['contactOption'] = $contactOption;//to be passed to afterDelete
         
-        if ($contactOption == 4) {
+        if ($contactOption == $this->contactOptionsArray['EMAIL']) {
             $query = $this
                 ->find()
                 ->matching('ContactTypes', function ($q) use ($contactOption) {
@@ -152,7 +157,7 @@ class ContactsTable extends ControllerActionTable {
                     ['id' => $query->id]
                 );
 
-                if ($contactOption == 4) { //if the deleted contact option is email
+                if ($contactOption == $this->contactOptionsArray['EMAIL']) { //if the deleted contact option is email
                     //update information on security user table
                     $listeners = [
                         TableRegistry::get('User.Users')
@@ -203,7 +208,7 @@ class ContactsTable extends ControllerActionTable {
 							}
 						}
 					}
-					return in_array($contactOptionId, [1,2,3]);
+					return in_array($contactOptionId, [$this->contactOptionsArray['MOBILE'], $this->contactOptionsArray['PHONE'], $this->contactOptionsArray['FAX']]);
 				},
 			])
 			->add('value', 'ruleValidateEmail',  [
@@ -223,7 +228,7 @@ class ContactsTable extends ControllerActionTable {
 							}
 						}
 					}
-					return ($contactOptionId == 4);
+					return ($contactOptionId == $this->contactOptionsArray['EMAIL']);
 				},
 			])
 			->add('value', 'ruleValidateEmergency',  [
@@ -243,7 +248,7 @@ class ContactsTable extends ControllerActionTable {
 							}
 						}
 					}
-					return ($contactOptionId == 5);
+					return ($contactOptionId == $this->contactOptionsArray['EMERGENCY']);
 				},
 			])
 			//validate at least one preferred on each contact type
@@ -272,10 +277,10 @@ class ContactsTable extends ControllerActionTable {
 
 	public function onUpdateFieldContactOptionId(Event $event, array $attr, $action, Request $request) {
 		if ($action == 'add' || $action == 'edit') {
-			$contactOptions = TableRegistry::get('User.ContactOptions')
-			->find('list')
-			->find('order')
-			->toArray();
+			$contactOptions = $this->ContactOptionsTable
+								->find('list')
+								->find('order')
+								->toArray();
 
 			$attr['options'] = $contactOptions;
 			$attr['onChangeReload'] = 'changeContactOption';
