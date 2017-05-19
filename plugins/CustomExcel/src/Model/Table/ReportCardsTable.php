@@ -35,6 +35,7 @@ class ReportCardsTable extends AppTable
             'format' => 'xlsx',
             'lockSheets' => true,
             'save' => true,
+            'autosizeColumns' => true,
             'variables' => [
                 'ReportCards',
                 'InstitutionStudentsReportCards',
