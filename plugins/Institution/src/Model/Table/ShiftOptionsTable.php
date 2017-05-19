@@ -13,13 +13,10 @@ class ShiftOptionsTable extends ControllerActionTable
     {
         $this->table('shift_options');
         parent::initialize($config);
-
-        $this->behaviors()->get('ControllerAction')->config('actions.remove', false);
-        $this->behaviors()->get('ControllerAction')->config('actions.add', false);
-
         $this->hasMany('Shifts', ['className' => 'Institution.InstitutionShifts', 'foreignKey' => 'shift_option_id']);
-
         $this->addBehavior('FieldOption.FieldOption');
+        $this->toggle('add', false);
+        $this->toggle('remove', false);
     }
 
     public function beforeAction(Event $event)
