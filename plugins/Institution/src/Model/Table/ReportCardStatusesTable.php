@@ -364,7 +364,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
             $zip = new ZipArchive;
             $zip->open($filePath, ZipArchive::CREATE);
-            $fileType = 'pdf';
+            $fileType = 'xlsx';
             foreach ($files as $file) {
               $fileName = $file->report_card->code . '_' . $file->student->openemis_no . '_' . $file->student->name . '.' . $fileType;
               $zip->addFromString($fileName,  $this->getFile($file->file_content));
