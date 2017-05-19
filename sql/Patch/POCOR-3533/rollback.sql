@@ -1,8 +1,3 @@
--- institutions
-ALTER TABLE `institutions`
- DROP `photo_name`,
- DROP `photo_content`;
-
 -- report_cards
 DROP TABLE IF EXISTS `report_cards`;
 
