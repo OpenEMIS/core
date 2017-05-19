@@ -10,7 +10,6 @@ use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\TableRegistry;
 use Cake\Network\Session;
-use Cake\Utility\Security;
 
 class TrackDeleteBehavior extends Behavior
 {
@@ -46,7 +45,7 @@ class TrackDeleteBehavior extends Behavior
             if (!is_array($entityTable->primaryKey())) { // single primary key
                 $referenceKey = $entity->{$entityTable->primaryKey()};
             } else { // composite primary keys
-                $referenceKey = Security::hash(implode(',', $DeletedRecords->getIdKeys($entityTable, $entityData, false)), 'sha256');
+                $referenceKey = json_encode($DeletedRecords->getIdKeys($entityTable, $entityData, false));
             }
             // catering for 'binary' field type start
             $binaryDataFieldNames = [];
