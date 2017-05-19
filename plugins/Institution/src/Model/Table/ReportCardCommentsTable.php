@@ -68,7 +68,12 @@ class ReportCardCommentsTable extends ControllerActionTable
             $reportCardOptions = $ReportCards->find('list')
                 ->where([
                     $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                    $ReportCards->aliasField('education_grade_id IN ') => $availableGrades
+                    $ReportCards->aliasField('education_grade_id IN ') => $availableGrades,
+                    'OR' => [
+                        $ReportCards->aliasField('principal_comments_required') => 1,
+                        $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
+                        $ReportCards->aliasField('teacher_comments_required') => 1
+                    ]
                 ])
                 ->toArray();
             $reportCardOptions = ['0' => __('All Report Cards')] + $reportCardOptions;
