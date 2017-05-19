@@ -110,8 +110,7 @@ if (Configure::read('debug')) {
     } catch (\Exception $e) {
         // do nothing if test_datasource.php is not found
     }
-    $errorHandler = new AppError();
-    $errorHandler->register();
+
 }
 
 /**
@@ -135,11 +134,27 @@ ini_set('intl.default_locale', Configure::read('App.defaultLocale'));
 /**
  * Register application error and exception handlers.
  */
+
+$defaultErrorConfig = [
+        'errorLevel' => E_ALL,
+        'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
+        'skipLog' => [],
+        'log' => true,
+        'trace' => true,
+    ];
 $isCli = PHP_SAPI === 'cli';
 if ($isCli) {
-    (new ConsoleErrorHandler(Configure::read('Error')))->register();
+    (new ConsoleErrorHandler($defaultErrorConfig))->register();
 } else {
-    (new ErrorHandler(Configure::read('Error')))->register();
+
+    if (Configure::read('debug')) {
+        (new ErrorHandler($defaultErrorConfig))->register();
+    } else {
+        $defaultErrorConfig['exceptionRenderer'] = 'App\Error\AppExceptionRenderer';
+        $errorHandler = new AppError(Configure::read('Error'));
+        $errorHandler->register();
+    }
+
 }
 
 // Include the CLI bootstrap overrides.
