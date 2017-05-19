@@ -88,6 +88,9 @@ class ProfessionalDevelopmentTable extends AppTable {
                     case 'Report.TrainingResults':
                         $modelAlias = 'Training.TrainingSessionResults';
                         break;
+                    case 'Report.StaffTrainingApplications':
+                        $modelAlias = 'Training.TrainingApplications';
+                        break;
                 }
 
                 $workflowStatuses = $this->Workflow->getWorkflowStatuses($modelAlias);
