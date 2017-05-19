@@ -40,8 +40,6 @@ class ExcelReportBehavior extends Behavior
         'dropdown' => 'dropdown',
         'image' => 'image'
     ];
-    private $suppressAutoInsertNewRow = false;
-    private $suppressAutoInsertNewColumn = false;
 
 	public function initialize(array $config)
 	{
@@ -139,7 +137,12 @@ class ExcelReportBehavior extends Behavior
     {
         $model = $this->_table;
 
-        $recordId = $model->getQueryString($this->config('templateTableKey'));
+        if (array_key_exists('requestQuery', $extra) && array_key_exists($this->config('templateTableKey'), $extra['requestQuery'])) {
+            $recordId = $extra['requestQuery'][$this->config('templateTableKey')];
+        } else {
+            $recordId = $model->getQueryString($this->config('templateTableKey'));
+        }
+
         $Table = TableRegistry::get($this->config('templateTable'));
 
         if (empty($recordId)) {
@@ -215,11 +218,15 @@ class ExcelReportBehavior extends Behavior
                 break;
 
             case 'date':
-                $cellValue = !is_null($format) ? $cellValue->format($format) : $cellValue;
+                if (!is_null($format) && !empty($cellValue)) {
+                    $cellValue = $cellValue->format($format);
+                }
                 break;
 
             case 'time':
-                $cellValue = !is_null($format) ? $cellValue->format($format) : $cellValue;
+                if (!is_null($format) && !empty($cellValue)) {
+                    $cellValue = $cellValue->format($format);
+                }
                 break;
         }
 
@@ -682,7 +689,7 @@ class ExcelReportBehavior extends Behavior
         if (!empty($attr['data'])) {
             foreach ($attr['data'] as $key => $value) {
                 // skip first row don't need to auto insert new row
-                if (!$this->suppressAutoInsertNewRow && $rowValue != $attr['rowValue']) {
+                if ($rowValue != $attr['rowValue']) {
                     $objWorksheet->insertNewRowBefore($rowValue);
                     $this->updatePlaceholderCoordinate(null, $rowValue, $extra);
                 }
@@ -782,7 +789,7 @@ class ExcelReportBehavior extends Behavior
             foreach ($attr['data'] as $key => $value) {
                 // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
                 $columnValue = $objCell->stringFromColumnIndex($columnIndex-1);
-                if (!$this->suppressAutoInsertNewColumn && $columnIndex != $attr['columnIndex']) {
+                if ($columnIndex != $attr['columnIndex']) {
                     $objWorksheet->insertNewColumnBefore($columnValue);
                     $this->updatePlaceholderCoordinate($columnValue, null, $extra);
                 }
@@ -799,7 +806,7 @@ class ExcelReportBehavior extends Behavior
                     foreach ($nestedAttr['data'] as $nestedKey => $nestedValue) {
                         // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
                         $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
-                        if (!$this->suppressAutoInsertNewColumn && $nestedColumnIndex != $columnIndex) {
+                        if ($nestedColumnIndex != $columnIndex) {
                             $objWorksheet->insertNewColumnBefore($nestedColumnValue);
                             $this->updatePlaceholderCoordinate($nestedColumnValue, null, $extra);
                         }
@@ -835,10 +842,6 @@ class ExcelReportBehavior extends Behavior
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, "", $attr, $extra);
         }
 
-        // only insert new row for the first column which have repeat-rows
-        if ($this->suppressAutoInsertNewColumn == false) {
-            $this->suppressAutoInsertNewColumn = true;
-        }
     }
 
     private function match($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
