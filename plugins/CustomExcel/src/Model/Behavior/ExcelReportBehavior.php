@@ -411,7 +411,16 @@ class ExcelReportBehavior extends Behavior
             $placeholderId = $this->splitDisplayValue($placeholder)[0].'.id';
             $formattedPlaceholderId = $this->formatPlaceholder($placeholderId);
 
-            $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
+            // check if data has id
+            $idData = !is_null($placeholderId) ? Hash::extract($extra['vars'], $formattedPlaceholderId) : [];
+
+            if (!empty($idData)) {
+                // get id and value as key-value pair
+                $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
+            } else {
+                // only get value
+                $placeholderData = !is_null($placeholder) ? Hash::extract($extra['vars'], $formattedPlaceholder) : [];
+            }
         }
 
         return $placeholderData;
