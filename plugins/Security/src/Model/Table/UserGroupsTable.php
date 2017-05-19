@@ -687,12 +687,12 @@ class UserGroupsTable extends ControllerActionTable
         if (!array_key_exists('areas', $data[$this->alias()])) {
             $data[$this->alias()]['areas'] = [];
         } else {
-        	$areas = [];
-        	foreach ($data[$this->alias()]['areas'] as $area) {
-        		$areas[] = $area['id'];
-        	}
-        	$data[$this->alias()]['areas'] = [];
-        	$data[$this->alias()]['areas']['_ids'] = $areas;
+            $areas = [];
+            foreach ($data[$this->alias()]['areas'] as $area) {
+                $areas[] = $area['id'];
+            }
+            $data[$this->alias()]['areas'] = [];
+            $data[$this->alias()]['areas']['_ids'] = $areas;
         }
 
         if (!array_key_exists('institutions', $data[$this->alias()])) {
