@@ -18,7 +18,7 @@ use PHPExcel_Worksheet;
 use PHPExcel_Cell;
 use PHPExcel_Cell_DataValidation;
 use PHPExcel_Style_Alignment;
-USE PHPExcel_Settings;
+// use PHPExcel_Settings;
 use PHPExcel_Worksheet_MemoryDrawing;
 
 class ExcelReportBehavior extends Behavior
@@ -29,7 +29,8 @@ class ExcelReportBehavior extends Behavior
         'format' => 'xlsx',
         'download' => true,
         'save' => false,
-        'lock' => false
+        'lockSheets' => false,
+        'autosizeColumns' => false
     ];
 
     // function name and keyword pairs
@@ -91,9 +92,6 @@ class ExcelReportBehavior extends Behavior
 
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
         $extra['path'] = WWW_ROOT . $this->config('folder') . DS . $this->config('subfolder') . DS;
-        $extra['download'] = $this->config('download');
-        $extra['save'] = $this->config('save');
-        $extra['lock'] = $this->config('lock');
 
         $filepath = $extra['path'] . $extra['file'];
         $extra['file_path'] = $extra['path'] . $extra['file'];
@@ -121,11 +119,11 @@ class ExcelReportBehavior extends Behavior
         //     $this->deleteFolder($extra['tmp_image_folder']);
         // }
 
-        if ($extra['save']) {
+        if ($this->config('save')) {
             $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSaveFile', [$params, $extra], $this);
         }
 
-        if ($extra['download']) {
+        if ($this->config('download')) {
             $this->downloadFile($filepath);
         }
 
@@ -184,14 +182,16 @@ class ExcelReportBehavior extends Behavior
         foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
             $this->processWorksheet($objPHPExcel, $objWorksheet, $extra);
 
-            // auto size columns
-            foreach($objWorksheet->getColumnDimensions() as $col) {
-                $col->setAutoSize(true);
+            if ($this->config('autosizeColumns')) {
+                // auto size columns
+                foreach($objWorksheet->getColumnDimensions() as $col) {
+                    $col->setAutoSize(true);
+                }
+                $objWorksheet->calculateColumnWidths();
             }
-            $objWorksheet->calculateColumnWidths();
 
             // lock all sheets
-            if ($extra['lock']) {
+            if ($this->config('lockSheets')) {
                 $objWorksheet->getProtection()->setSheet(true);
             }
         }
@@ -343,11 +343,11 @@ class ExcelReportBehavior extends Behavior
         $file->delete();
     }
 
-    public function deleteFolder($filepath)
-    {
-        $folder = new Folder($filepath);
-        $folder->delete();
-    }
+    // public function deleteFolder($filepath)
+    // {
+    //     $folder = new Folder($filepath);
+    //     $folder->delete();
+    // }
 
     public function getParams($controller)
     {
@@ -453,7 +453,6 @@ class ExcelReportBehavior extends Behavior
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
         $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : null;
-        $attr['mergeColumns'] = array_key_exists('mergeColumns', $settings) ? $settings['mergeColumns'] : null;
 
         // Start attributes  for dropdown
         $dropdownAttrs = ['source', 'promptTitle', 'prompt', 'errorTitle', 'error'];
@@ -744,14 +743,6 @@ class ExcelReportBehavior extends Behavior
 
             $nestedCellCoordinate = $nestedColumnValue.$nestedRowValue;
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
-
-            $mergeColumns = array_key_exists('mergeColumns', $nestedAttr) ? $nestedAttr['mergeColumns'] : null;
-            if (!is_null($mergeColumns)) {
-                $rangeColumnIndex = ($nestedColumnIndex + $mergeColumns);
-                $rangeColumnValue = $objCell->stringFromColumnIndex($rangeColumnIndex-1);
-                $mergeRange = $nestedColumnValue.$nestedRowValue.":".$rangeColumnValue.$nestedRowValue;
-                $objWorksheet->mergeCells($mergeRange);
-            }
 
             if (!empty($secondNestedRow)) {
                 $secondNestedColumnIndex = isset($rangeColumnIndex) ? $rangeColumnIndex : $nestedColumnIndex;
