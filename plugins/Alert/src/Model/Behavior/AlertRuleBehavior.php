@@ -78,7 +78,7 @@ class AlertRuleBehavior extends Behavior
 
                 if (array_key_exists('tooltip', $attr)) {
                     $sprintf = $attr['tooltip']['sprintf'];
-                    $message = $model->getMessage($model->alias().".".($entity->feature.'.'.$field), ['sprintf' => $sprintf]);
+                    $message = $model->getMessage($model->alias().".".$entity->feature.'.'.$field, ['sprintf' => $sprintf]);
 
                     $label = $attr['tooltip']['label'];
                     $attr['attr']['label']['escape'] = false;
