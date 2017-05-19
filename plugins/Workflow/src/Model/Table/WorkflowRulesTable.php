@@ -169,7 +169,7 @@ class WorkflowRulesTable extends ControllerActionTable
     {
         $options = [];
         if (array_key_exists('options', $attr) && !empty($attr['options'])) {
-            $options = $this->getSelectOptions($this->aliasField($attr['options']));
+            $options = $this->getSelectOptions($this->alias().".".$attr['options']);
         } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
             $modelTable = TableRegistry::get($attr['lookupModel']);
             $options = $modelTable->getList()->toArray();
@@ -227,7 +227,7 @@ class WorkflowRulesTable extends ControllerActionTable
             $selectedFeature = $entity->feature;
 
             $workflowOptions = $this->getWorkflowOptions($selectedFeature);
-            
+
             $attr['type'] = 'readonly';
             $attr['value'] = $entity->workflow_id;
             $attr['attr']['value'] = $workflowOptions[$entity->workflow_id];
