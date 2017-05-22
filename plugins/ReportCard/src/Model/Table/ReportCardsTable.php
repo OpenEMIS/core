@@ -339,6 +339,7 @@ class ReportCardsTable extends ControllerActionTable
                 $teacherComments = isset($request->data[$this->alias()]['teacher_comments_required']) ? $request->data[$this->alias()]['teacher_comments_required'] : $attr['entity']->teacher_comments_required;
                 $selectedGrade = $attr['entity']->education_grade_id;
 
+                // populate chosenSelect data
                 if ($attr['entity']->has('report_card_subjects')) {
                     $subjects = $attr['entity']->report_card_subjects;
                     foreach ($subjects as $subject) {
@@ -398,8 +399,6 @@ class ReportCardsTable extends ControllerActionTable
                     ->where(['EducationGrades.id' => $selectedGrade])
                     ->order([$EducationSubjects->aliasField('order')])
                     ->extract('id');
-
-                $data[$this->alias()]['teacher_comments_required'] = 1;
             }
 
             if (!empty($subjects)) {
@@ -420,10 +419,18 @@ class ReportCardsTable extends ControllerActionTable
         }
     }
 
+    public function addBeforeSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
+    {
+        if (empty($entity->errors())) {
+            if ($entity->teacher_comments_required == self::ALL_SUBJECTS) {
+                $entity->teacher_comments_required = 1;
+            }
+        }
+    }
+
     public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options)
     {
-        $errors = $entity->errors();
-        if (empty($errors)) {
+        if (empty($entity->errors())) {
             // manually delete hasMany reportCardSubjects data
             $fieldKey = 'report_card_subjects';
             if (!array_key_exists($fieldKey, $data[$this->alias()])) {
