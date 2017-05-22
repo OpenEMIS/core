@@ -9,7 +9,7 @@ class ReportCardCommentCodesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        $this->hasMany('StudentsReportCardsComments', ['className' => 'Institution.InstitutionStudentsReportCardsCommentsTable', 'foreignKey' => 'report_card_comment_code_id']);
+        $this->hasMany('StudentsReportCardsComments', ['className' => 'Institution.InstitutionStudentsReportCardsComments', 'foreignKey' => 'report_card_comment_code_id']);
 
         $this->addBehavior('FieldOption.FieldOption');
         $this->addBehavior('Restful.RestfulAccessControl', [
