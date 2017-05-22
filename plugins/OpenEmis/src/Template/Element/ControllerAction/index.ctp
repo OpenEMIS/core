@@ -36,7 +36,7 @@ foreach ($data as $entity) {
 		$buttons = $indexButtons->getArrayCopy();
 		$event = $this->ControllerAction->dispatchEvent($table, $eventKey, null, [$entity, $indexButtons->getArrayCopy()]);
 		$buttons = $event->result;
-		
+
 		if (empty($buttons)) {
 			$row[] = '';
 		} else {
@@ -69,7 +69,7 @@ if ($this->request->params['action'] == 'index') {
 	$url[] = 'reorder';
 }
 
-$this->ControllerAction->HtmlField->includes($table, 'index');
+$this->ControllerAction->HtmlField->includes('index', $table);
 
 $baseUrl = $this->Url->build($url);
 ?>
