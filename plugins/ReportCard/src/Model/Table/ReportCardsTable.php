@@ -44,6 +44,10 @@ class ReportCardsTable extends ControllerActionTable
             'content',
             'excel_template'
         );
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            true
+        );
         $this->addBehavior('Restful.RestfulAccessControl', [
             'ReportCardComments' => ['view']
         ]);
@@ -69,7 +73,8 @@ class ReportCardsTable extends ControllerActionTable
                 'ruleCompareDateReverse' => [
                     'rule' => ['compareDateReverse', 'start_date', false]
                 ]
-            ]);
+            ])
+            ->allowEmpty('excel_template');
     }
 
     public function validationSubjects(Validator $validator) {
@@ -83,6 +88,7 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['excel_template_name']['visible'] = false;
         $this->field('start_date', ['type' => 'date']);
         $this->field('end_date', ['type' => 'date']);
+        $this->field('excel_template');
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -119,11 +125,21 @@ class ReportCardsTable extends ControllerActionTable
         $this->field('principal_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('homeroom_teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
         $this->field('teacher_comments_required', ['options' => $this->getSelectOptions('general.yesno')]);
-        $this->field('excel_template', ['type' => 'binary']);
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        // determine if download button is shown
+        $showFunc = function() use ($entity) {
+            $filename = $entity->excel_template;
+            return !empty($filename);
+        };
+        $this->behaviors()->get('ControllerAction')->config(
+            'actions.download.show',
+            $showFunc
+        );
+        // End
+
         $this->setupFields($entity);
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
     }
@@ -146,6 +162,13 @@ class ReportCardsTable extends ControllerActionTable
         return $values;
     }
 
+    public function onGetExcelTemplate(Event $event, Entity $entity)
+    {
+        if ($entity->has('excel_template_name')) {
+            return $entity->excel_template_name;
+        }
+    }
+
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
@@ -160,6 +183,17 @@ class ReportCardsTable extends ControllerActionTable
         $this->fields['name']['type'] = 'readonly';
         $this->field('education_programme_id', ['entity' => $entity]);
         $this->setFieldOrder(['code', 'name', 'description', 'academic_period_id', 'start_date', 'end_date', 'education_programme_id', 'education_grade_id', 'principal_comments_required', 'homeroom_teacher_comments_required', 'teacher_comments_required', 'subjects', 'excel_template']);
+    }
+
+    public function onUpdateFieldExcelTemplate(Event $event, array $attr, $action, Request $request)
+    {
+        if ($action == 'index' || $action == 'view') {
+            $attr['type'] = 'string';
+        } else {
+            $attr['type'] = 'binary';
+        }
+
+        return $attr;
     }
 
     public function onUpdateFieldAcademicPeriodId(Event $event, array $attr, $action, Request $request)
@@ -410,5 +444,17 @@ class ReportCardsTable extends ControllerActionTable
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [$this->ReportCardSubjects->alias()];
+    }
+
+    public function checkIfHasTemplate($reportCardId=0)
+    {
+        $hasTemplate = false;
+
+        if (!empty($reportCardId)) {
+            $entity = $this->get($reportCardId);
+            $hasTemplate = !empty($entity->excel_template) ? true : false;
+        }
+
+        return $hasTemplate;
     }
 }

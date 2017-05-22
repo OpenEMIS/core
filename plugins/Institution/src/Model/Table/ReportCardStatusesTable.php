@@ -54,6 +54,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
         $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
+        $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.publish'] = 'publish';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
         return $events;
@@ -75,13 +76,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // Generate button
         if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
-            $url = [
-                'plugin' => 'CustomExcel',
-                'controller' => 'CustomExcels',
-                'action' => 'export',
-                'ReportCards'
-            ];
-            $generateUrl = $this->setQueryString($url, $params);
+            $generateUrl = $this->setQueryString($this->url('generate'), $params);
             $buttons['generate'] = [
                 'label' => '<i class="fa fa-tasks"></i>'.__('Generate'),
                 'attr' => $indexAttr,
@@ -331,22 +326,49 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         if (!empty($reportCardId)) {
             $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-            $entity = $ReportCards->get($reportCardId);
-
-            if (!empty($entity)) {
-                $value = $entity->code_name;
-            }
+            $value = $ReportCards->get($reportCardId)->code_name;
         }
         return $value;
     }
 
-    public function generateAll(Event $event, ArrayObject $extra)
+    public function generate(Event $event, ArrayObject $extra)
     {
+        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $params = $this->getQueryString();
-        $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+        $hasTemplate = $ReportCards->checkIfHasTemplate($params['report_card_id']);
+
+        if ($hasTemplate) {
+            $url = [
+                'plugin' => 'CustomExcel',
+                'controller' => 'CustomExcels',
+                'action' => 'export',
+                'ReportCards'
+            ];
+            $url = $this->setQueryString($url, $params);
+        } else {
+            $url = $this->url('index');
+            $this->Alert->error('ReportCardStatuses.noTemplate');
+        }
 
         $event->stopPropagation();
-        $this->Alert->warning('ReportCardStatuses.generateAll');
+        return $this->controller->redirect($url);
+    }
+
+    public function generateAll(Event $event, ArrayObject $extra)
+    {
+        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
+        $params = $this->getQueryString();
+        $hasTemplate = $ReportCards->checkIfHasTemplate($params['report_card_id']);
+
+        if ($hasTemplate) {
+            $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);
+            $this->Alert->warning('ReportCardStatuses.generateAll');
+
+        } else {
+            $this->Alert->error('ReportCardStatuses.noTemplate');
+        }
+
+        $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
 
