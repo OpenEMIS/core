@@ -1,3 +1,6 @@
+v3.9.13
+- Implemented freezing of header and column panes in Institution > Competencies edit page for easier transaction
+
 v3.9.12
 - Implemented decimal type for custom fields
 - Redevelop add multiple students to classes and subjects page

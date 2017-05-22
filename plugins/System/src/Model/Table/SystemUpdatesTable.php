@@ -10,7 +10,7 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Mailer\Email;
 use Cake\I18n\Time;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -73,7 +73,7 @@ class SystemUpdatesTable extends ControllerActionTable {
         $http = new Client();
         $response = $http->get($api);
 
-        if ($response->statusCode() == 200) {
+        if ($response->getStatusCode() == 200) {
             $data = array_reverse(json_decode($response->body(), true)['data']);
 
             foreach ($data as $item) {

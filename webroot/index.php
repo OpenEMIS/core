@@ -24,21 +24,20 @@ if (php_sapi_name() === 'cli-server') {
         return false;
     }
 }
-require dirname(__DIR__) . '/config/bootstrap.php';
+require dirname(__DIR__) . '/vendor/autoload.php';
 
-use Cake\Network\Request;
-use Cake\Network\Response;
-use Cake\Routing\DispatcherFactory;
-use Cake\Log\Log;
+use App\Application;
+use Cake\Http\Server;
 use Cake\ORM\TableRegistry;
+use Cake\Log\Log;
 
-$dispatcher = DispatcherFactory::create();
+// Bind your application to the server.
+$server = new Server(new Application(dirname(__DIR__) . '/config'));
 
+// Run the request/response through the application
+// and emit the response.
 try {
-	$dispatcher->dispatch(
-	    Request::createFromGlobals(),
-	    new Response()
-	);
+    $server->emit($server->run());
 } catch (Exception $ex) {
     $ErrorTable = TableRegistry::get('System.SystemErrors');
     $ErrorTable->insertError($ex);
