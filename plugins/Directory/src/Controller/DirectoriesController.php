@@ -29,7 +29,6 @@ class DirectoriesController extends AppController {
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
 			'StaffQualifications'	=> ['className' => 'Staff.Qualifications'],
 			'StaffAbsences'			=> ['className' => 'Staff.Absences', 'actions' => ['index', 'view']],
-			'StaffBehaviours'		=> ['className' => 'Staff.StaffBehaviours', 'actions' => ['index', 'view']],
 			'StaffExtracurriculars'	=> ['className' => 'Staff.Extracurriculars'],
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
@@ -77,6 +76,7 @@ class DirectoriesController extends AppController {
 	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
     public function Courses() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
     public function StaffSalaries() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
+    public function StaffBehaviours() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
 
 	// health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }

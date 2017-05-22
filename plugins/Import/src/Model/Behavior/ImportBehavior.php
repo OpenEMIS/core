@@ -943,6 +943,12 @@ class ImportBehavior extends Behavior {
                     $label = '';
                 }
 
+                // POCOR-3916 directories > import user showed 2 area administrative code, due to showing the lookup model.
+                if ($value->lookup_model == 'AreaAdministratives') {
+                    $label = $this->getExcelLabel($value->model, $column);
+                }
+                // end POCOR-3916
+
                 if (!empty($value->description)) {
                     $label .= ' ' . __($value->description);
                 }
@@ -1241,8 +1247,10 @@ class ImportBehavior extends Behavior {
                         $rowInvalidCodeCols[$columnName] = $this->getExcelLabel('Import', 'value_not_in_list');
                     }
                 } else { // if cell is empty
-                    $rowPass = false;
-                    $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                    if (!$isOptional) {
+                        $rowPass = false;
+                        $rowInvalidCodeCols[$columnName] = __('This field cannot be left empty');
+                    }
                 }
             } else if ($foreignKey == self::DIRECT_TABLE) {
                 $registryAlias = $lookupPlugin . '.' . $lookupModel;

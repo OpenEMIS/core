@@ -223,7 +223,11 @@ function InstitutionClassStudentsController($scope, $q, $window, $http, UtilsSvc
         postData.classStudents = classStudents;
         postData.institution_id = Controller.institutionId;
         postData.academic_period_id = Controller.academicPeriodId;
-        postData.subjects = UtilsSvc.urlsafeBase64Encode(JSON.stringify(Controller.institutionSubjects));
+        var subjects = angular.copy(Controller.institutionSubjects);
+        angular.forEach(subjects, function(value, key) {
+            delete value.name;
+        });
+        postData.subjects = UtilsSvc.urlsafeBase64Encode(JSON.stringify(subjects));
         InstitutionClassStudentsSvc.saveClass(postData)
         .then(function(response) {
             var error = response.data.error;

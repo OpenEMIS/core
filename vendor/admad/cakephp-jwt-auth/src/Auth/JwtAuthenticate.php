@@ -97,6 +97,7 @@ class JwtAuthenticate extends BaseAuthenticate
             'unauthenticatedException' => '\Cake\Network\Exception\UnauthorizedException',
             'key' => null,
         ]);
+
         parent::__construct($registry, $config);
     }
 
@@ -127,6 +128,7 @@ class JwtAuthenticate extends BaseAuthenticate
         if (empty($payload)) {
             return false;
         }
+
         if (!$this->_config['queryDatasource']) {
             return json_decode(json_encode($payload), true);
         }
@@ -164,6 +166,7 @@ class JwtAuthenticate extends BaseAuthenticate
         if ($token) {
             $payload = $this->_decode($token);
         }
+
         return $this->_payload = $payload;
     }
 
@@ -177,6 +180,7 @@ class JwtAuthenticate extends BaseAuthenticate
     public function getToken($request = null)
     {
         $config = $this->_config;
+
         if (!$request) {
             return $this->_token;
         }
