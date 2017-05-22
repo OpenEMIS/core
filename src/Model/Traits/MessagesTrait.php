@@ -1505,11 +1505,6 @@ trait MessagesTrait {
                 ]
             ]
         ],
-        'Report' => [
-            'InstitutionStudentsOutOfSchool' => [
-                'reportName' => 'Students Out of School'
-            ]
-        ],
         'CustomField' => [
             'text' => [
                 'minLength' => 'Text should be at least %d characters',
