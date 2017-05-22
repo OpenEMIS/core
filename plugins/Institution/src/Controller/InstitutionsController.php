@@ -1131,6 +1131,8 @@ class InstitutionsController extends AppController
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
         $positionTable = TableRegistry::get('Institution.InstitutionPositions');
+        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
+
         $userId = $this->Auth->user('id');
 
         $selectedFTE = empty($fte) ? 0 : $fte;
@@ -1207,8 +1209,11 @@ class InstitutionsController extends AppController
         $options = [];
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
         foreach ($staffPositionsOptions as $position) {
+            $staffPositionGradeId = $position->staff_position_grade_id;
+            $staffPositionGradeName = $StaffPositionGrades->get($staffPositionGradeId)->name;
+
             $type = __($types[$position->type]);
-            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name, 'disabled' => in_array($position->id, $excludePositions)];
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name . ' - ' . __($staffPositionGradeName), 'disabled' => in_array($position->id, $excludePositions)];
         }
 
         echo json_encode($options);
