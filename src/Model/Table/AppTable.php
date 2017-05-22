@@ -76,7 +76,7 @@ class AppTable extends Table
         foreach ($columns as $column) {
             if ($schema->columnType($column) == 'date') {
                 $dateFields[] = $column;
-            } else if ($schema->columnType($column) == 'time') {
+            } elseif ($schema->columnType($column) == 'time') {
                 $timeFields[] = $column;
             }
         }
@@ -118,7 +118,7 @@ class AppTable extends Table
     {
         if ($entity->has($propertyName)) {
             return $entity->get($propertyName);
-        } else if (array_key_exists($propertyName, $entity->invalid())) {
+        } elseif (array_key_exists($propertyName, $entity->invalid())) {
             return $entity->invalid($propertyName);
         } else {
             return null;
@@ -356,7 +356,7 @@ class AppTable extends Table
                     'options' => []
                 ];
             }
-        } else if ($action == 'add' || $action == 'edit') {
+        } elseif ($action == 'add' || $action == 'edit') {
             if ($action == 'edit' && $buttons->offsetExists('index')) {
                 $toolbarButtons['list'] = $buttons['index'];
                 $toolbarButtons['list']['type'] = 'button';
@@ -364,7 +364,7 @@ class AppTable extends Table
                 $toolbarButtons['list']['attr'] = $toolbarAttr;
                 $toolbarButtons['list']['attr']['title'] = __('List');
             }
-        } else if ($action == 'view') {
+        } elseif ($action == 'view') {
             // edit button
             if ($buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
                 $toolbarButtons['edit'] = $buttons['edit'];
@@ -414,7 +414,7 @@ class AppTable extends Table
         }
 
         if ($buttons->offsetExists('reorder') && $buttons->offsetExists('edit') && $access->check($buttons['edit']['url'], $roles)) {
-        // if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
+            // if ($buttons->offsetExists('reorder') && $access->check($buttons['edit']['url'])) {
             $controller->set('reorder', true);
         }
 
@@ -432,10 +432,10 @@ class AppTable extends Table
         $id = $this->getEncodedKeys($entity);
 
         if (array_key_exists('view', $buttons)) {
-            $buttons['view']['url'][1] = $id;
+            $buttons['view']['url'][] = $id;
         }
         if (array_key_exists('edit', $buttons)) {
-            $buttons['edit']['url'][1] = $id;
+            $buttons['edit']['url'][] = $id;
         }
         if (array_key_exists('remove', $buttons)) {
             if (in_array($buttons['remove']['strategy'], ['cascade'])) {
@@ -445,7 +445,7 @@ class AppTable extends Table
                 $buttons['remove']['attr']['field-value'] = $id;
                 $buttons['remove']['attr']['onclick'] = 'ControllerAction.fieldMapping(this)';
             } else {
-                $buttons['remove']['url'][1] = $id;
+                $buttons['remove']['url'][] = $id;
             }
         }
         return $buttons;
