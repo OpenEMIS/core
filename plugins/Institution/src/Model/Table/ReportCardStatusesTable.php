@@ -74,23 +74,23 @@ class ReportCardStatusesTable extends ControllerActionTable
         ];
 
         // Generate button
-        $url = [
-            'plugin' => 'CustomExcel',
-            'controller' => 'CustomExcels',
-            'action' => 'export',
-            'ReportCards'
-        ];
-        $generateUrl = $this->setQueryString($url, $params);
-        $buttons['generate'] = [
-            'label' => '<i class="fa fa-tasks"></i>'.__('Generate'),
-            'attr' => $indexAttr,
-            'url' => $generateUrl
-        ];
-        // end
+        if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
+            $url = [
+                'plugin' => 'CustomExcel',
+                'controller' => 'CustomExcels',
+                'action' => 'export',
+                'ReportCards'
+            ];
+            $generateUrl = $this->setQueryString($url, $params);
+            $buttons['generate'] = [
+                'label' => '<i class="fa fa-tasks"></i>'.__('Generate'),
+                'attr' => $indexAttr,
+                'url' => $generateUrl
+            ];
+        }
 
-        // Download button
-        // status must be generated or published
-        if ($entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+        // Download button, status must be generated or published
+        if ($this->AccessControl->check(['Institutions', 'InstitutionStudentsReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
             $downloadParams = $params;
             if (isset($downloadParams['institution_class_id'])) {
                 unset($downloadParams['institution_class_id']);
@@ -108,33 +108,26 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'url' => $downloadUrl
             ];
         }
-        // end
 
-        // Publish button
-        // status must be generated
-        if ($entity->has('report_card_status') && $entity->report_card_status == self::GENERATED) {
-            $url = $this->url('publish');
-            $publishUrl = $this->setQueryString($url, $params);
+        // Publish button, status must be generated
+        if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') && $entity->report_card_status == self::GENERATED) {
+            $publishUrl = $this->setQueryString($this->url('publish'), $params);
             $buttons['publish'] = [
                 'label' => '<i class="fa fa-share-square-o"></i>'.__('Publish'),
                 'attr' => $indexAttr,
                 'url' => $publishUrl
             ];
         }
-        // end
 
-        // Unpublish button
-        // status must be published
-        if ($entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
-            $url = $this->url('unpublish');
-            $unpublishUrl = $this->setQueryString($url, $params);
+        // Unpublish button, status must be published
+        if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'unpublish']) && $entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
+            $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
             $buttons['unpublish'] = [
                 'label' => '<i class="fa fa-lock"></i>'.__('Unpublish'),
                 'attr' => $indexAttr,
                 'url' => $unpublishUrl
             ];
         }
-        // end
 
         return $buttons;
     }
@@ -170,44 +163,36 @@ class ReportCardStatusesTable extends ControllerActionTable
             ];
 
             // Generate all button
-            $url = $this->url('generateAll');
-            $generateButton['url'] = $this->setQueryString($url, $params);
+            $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
             $generateButton['type'] = 'button';
             $generateButton['label'] = '<i class="fa fa-tasks"></i>';
             $generateButton['attr'] = $toolbarAttr;
             $generateButton['attr']['title'] = __('Generate All');
             $extra['toolbarButtons']['generateAll'] = $generateButton;
-            // end
 
             // Download all button
-            $url = $this->url('downloadAll');
-            $downloadButton['url'] = $this->setQueryString($url, $params);
+            $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
             $downloadButton['type'] = 'button';
             $downloadButton['label'] = '<i class="fa kd-download"></i>';
             $downloadButton['attr'] = $toolbarAttr;
             $downloadButton['attr']['title'] = __('Download All');
             $extra['toolbarButtons']['downloadAll'] = $downloadButton;
-            // end
 
             // Publish all button
-            $url = $this->url('publishAll');
-            $publishButton['url'] = $this->setQueryString($url, $params);
+            $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
             $publishButton['type'] = 'button';
             $publishButton['label'] = '<i class="fa fa-share-square-o"></i>';
             $publishButton['attr'] = $toolbarAttr;
             $publishButton['attr']['title'] = __('Publish All');
             $extra['toolbarButtons']['publishAll'] = $publishButton;
-            // end
 
             // Unpublish all button
-            $url = $this->url('unpublishAll');
-            $unpublishButton['url'] = $this->setQueryString($url, $params);
+            $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
             $unpublishButton['type'] = 'button';
             $unpublishButton['label'] = '<i class="fa fa-lock"></i>';
             $unpublishButton['attr'] = $toolbarAttr;
             $unpublishButton['attr']['title'] = __('Unpublish All');
             $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
-            // end
         }
     }
 
