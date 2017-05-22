@@ -23,9 +23,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     var service = {
         init: init,
         getReportCard: getReportCard,
-        getPrincipalEditPermissions: getPrincipalEditPermissions,
-        getHomeroomTeacherEditPermissions: getHomeroomTeacherEditPermissions,
-        getTeacherEditPermissions: getTeacherEditPermissions,
+        getEditPermissions: getEditPermissions,
         getTabs: getTabs,
         getSubjects: getSubjects,
         getCommentCodeOptions: getCommentCodeOptions,
@@ -53,49 +51,54 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({defer: true});
     };
 
-    function getPrincipalEditPermissions(institutionId, currentUserId) {
-        return StaffTable
+    function getEditPermissions(reportCardId, institutionId, classId, currentUserId) {
+        var promises = [];
+
+        var principalPermission = StaffTable
             .select()
             .find('PrincipalEditPermissions', {
                 institution_id: institutionId,
                 staff_id: currentUserId
-            })
-            .ajax({defer: true});
-    };
+            });
 
-    function getHomeroomTeacherEditPermissions(classId, currentUserId) {
-        return InstitutionClassesTable
+        var homeroomTeacherPermission = InstitutionClassesTable
             .select()
             .where({
                 id: classId,
                 staff_id: currentUserId
-            })
-            .ajax({defer: true});
-    };
+            });
 
-    function getTeacherEditPermissions(reportCardId, institutionId, classId, currentUserId) {
-        return InstitutionSubjectStaffTable
+        var teacherPermission = InstitutionSubjectStaffTable
             .select()
             .find('TeacherEditPermissions', {
                 report_card_id: reportCardId,
                 institution_id: institutionId,
                 institution_class_id: classId,
                 staff_id: currentUserId
-            })
-            .ajax({defer: true});
+            });
+
+        promises.push(KdSessionSvc.read('Auth.User.super_admin'));
+        promises.push(principalPermission.ajax({defer: true}));
+        promises.push(homeroomTeacherPermission.ajax({defer: true}));
+        promises.push(teacherPermission.ajax({defer: true}));
+
+        return $q.all(promises);
     };
 
     function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, homeroomTeacherCommentsRequired, teacherCommentsRequired) {
         var deferred = $q.defer();
         var tabs = [];
 
-        this.getPrincipalEditPermissions(institutionId, currentUserId)
+        this.getEditPermissions(reportCardId, institutionId, classId, currentUserId)
         .then(function(response)
         {
-            data = response.data;
+            var isSuperAdmin = response[0];
+            var principalPermission = response[1].data;
+            var homeroomTeacherPermission = response[2].data;
+            var teacherPermission = response[3].data;
 
             if (principalCommentsRequired) {
-                editable = (angular.isObject(data) && data.length > 0) ? true : false;
+                editable = (angular.isObject(principalPermission) && principalPermission.length > 0) || isSuperAdmin;
                 tabs.push({
                     tabName: "Principal",
                     type: roles.PRINCIPAL,
@@ -104,17 +107,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 });
             }
 
-            return getHomeroomTeacherEditPermissions(classId, currentUserId);
-        }, function(error)
-        {
-            console.log(error);
-        })
-        .then(function(response)
-        {
-            data = response.data;
-
             if (homeroomTeacherCommentsRequired) {
-                editable = (angular.isObject(data) && data.length > 0) ? true : false;
+                editable = (angular.isObject(homeroomTeacherPermission) && homeroomTeacherPermission.length > 0) || isSuperAdmin;
                 tabs.push({
                     tabName: "Homeroom Teacher",
                     type: roles.HOMEROOM_TEACHER,
@@ -122,15 +116,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     editable: editable
                 });
             }
-
-            return getTeacherEditPermissions(reportCardId, institutionId, classId, currentUserId);
-        }, function(error)
-        {
-            console.log(error);
-        })
-        .then(function(response)
-        {
-            subjectPermissions = response.data;
 
             if (teacherCommentsRequired) {
                 getSubjects(reportCardId, classId)
@@ -140,8 +125,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     if (angular.isObject(subjects) && subjects.length > 0) {
                         angular.forEach(subjects, function(subject, key)
                         {
-                            editable = (angular.isObject(subjectPermissions) && subjectPermissions.hasOwnProperty(subject.education_subject_id)) ? true : false;
-
+                            editable = (angular.isObject(teacherPermission) && teacherPermission.hasOwnProperty(subject.education_subject_id)) || isSuperAdmin;
                             this.push({
                                 tabName: subject.name + " Teacher",
                                 type: roles.TEACHER,
