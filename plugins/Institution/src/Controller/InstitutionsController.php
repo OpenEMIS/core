@@ -286,8 +286,9 @@ class InstitutionsController extends AppController
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
 
-    public function Comments() {
-        $this->set('_edit', $this->AccessControl->check(['Institution', 'Comments', 'edit']));
+    public function Comments()
+    {
+        $this->set('_edit', $this->AccessControl->check(['Institutions', 'Comments', 'edit']));
         $this->set('ngController', 'InstitutionCommentsCtrl as InstitutionCommentsController');
     }
     // End
