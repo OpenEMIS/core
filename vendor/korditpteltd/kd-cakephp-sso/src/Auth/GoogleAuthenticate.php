@@ -49,6 +49,7 @@ class GoogleAuthenticate extends BaseAuthenticate
                             'locale' => $me->getLocale(),
                             'link' => $me->getLink(),
                             'picture' => $me->getPicture(),
+                            'role' => ''
                         ];
 
                         $User = TableRegistry::get($this->_config['userModel']);

@@ -56,21 +56,6 @@ class RestfulV1Component extends Component implements RestfulInterface
         }
     }
 
-    // Is called after the controller executes the requested action’s logic, but before the controller renders views and layout.
-
-    public function beforeRender(Event $event)
-    {
-        $controller = $this->controller;
-        if ($controller->isDebugMode()) {
-            $serialize = array_merge(['request_method', 'action'], $controller->viewVars['_serialize']);
-            $controller->set([
-                'request_method' => $this->request->method(),
-                'action' => $this->request->params['action'],
-                '_serialize' => $serialize
-            ]);
-        }
-    }
-
     public function isAuthorized($user = null)
     {
         $allowedActions = ['translate'];
@@ -113,7 +98,7 @@ class RestfulV1Component extends Component implements RestfulInterface
     {
         $supportedMethods = ['GET', 'POST', 'PATCH', 'DELETE'];
         $allowedHeaders = ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization', 'ControllerAction'];
-        $header = $this->response->header();
+        $header = $this->response->getHeaderLine();
         $origin = isset($header['Origin']) ? $header['Origin'] : [];
 
         $this->response->cors($this->request, $origin, $supportedMethods, $allowedHeaders);
@@ -122,7 +107,7 @@ class RestfulV1Component extends Component implements RestfulInterface
         $this->response->charset('UTF-8');
         $this->response->type('html');
 
-        Log::write('debug', $this->response->header());
+        Log::write('debug', $this->response->getHeaderLine());
 
         /*
         OPTIONS /cors HTTP/1.1

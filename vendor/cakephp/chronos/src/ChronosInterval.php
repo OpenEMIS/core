@@ -93,7 +93,7 @@ class ChronosInterval extends DateInterval
     /**
      * Determine if the interval was created via DateTime:diff() or not.
      *
-     * @param DateInterval $interval The interval to check.
+     * @param \DateInterval $interval The interval to check.
      * @return bool
      */
     protected static function wasCreatedFromDiff(DateInterval $interval)
@@ -217,8 +217,8 @@ class ChronosInterval extends DateInterval
      * DateInterval objects created from DateTime::diff() as you can't externally
      * set the $days field.
      *
-     * @param DateInterval $di The DateInterval instance to copy.
-     * @throws InvalidArgumentException
+     * @param \DateInterval $di The DateInterval instance to copy.
+     * @throws \InvalidArgumentException
      * @return static
      */
     public static function instance(DateInterval $di)
@@ -232,6 +232,7 @@ class ChronosInterval extends DateInterval
         $instance = new static($di->y, $di->m, 0, $di->d, $di->h, $di->i, $di->s);
         $instance->invert = $di->invert;
         $instance->days = $di->days;
+
         return $instance;
     }
 
@@ -239,7 +240,7 @@ class ChronosInterval extends DateInterval
      * Get a part of the ChronosInterval object
      *
      * @param string $name The property to read.
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      * @return int
      */
     public function __get($name)
@@ -290,7 +291,7 @@ class ChronosInterval extends DateInterval
      * @param string $name The property to augment.
      * @param int $val The value to change.
      * @return void
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     public function __set($name, $val)
     {
@@ -344,6 +345,7 @@ class ChronosInterval extends DateInterval
     public function weeksAndDays($weeks, $days)
     {
         $this->dayz = ($weeks * ChronosInterface::DAYS_PER_WEEK) + $days;
+
         return $this;
     }
 
@@ -406,7 +408,7 @@ class ChronosInterval extends DateInterval
     /**
      * Add the passed interval to the current instance
      *
-     * @param DateInterval $interval The interval to add.
+     * @param \DateInterval $interval The interval to add.
      * @return static
      */
     public function add(DateInterval $interval)
@@ -459,6 +461,10 @@ class ChronosInterval extends DateInterval
             }
         }
 
-        return $specString === static::PERIOD_PREFIX ? 'PT0S' : $specString;
+        if ($specString === static::PERIOD_PREFIX) {
+            return 'PT0S';
+        }
+
+        return $this->invert === 1 ? '-' . $specString : $specString;
     }
 }
