@@ -40,13 +40,13 @@ class ReportCardSubjectsTable extends ControllerActionTable
                 $this->EducationSubjects->aliasField('order')
             ])
             ->innerJoinWith('EducationSubjects')
+            ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
+                $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
+            ])
             ->innerJoin([$InstitutionClassSubjects->alias() => $InstitutionClassSubjects->table()], [
+                $InstitutionClassSubjects->aliasField('institution_subject_id = ') . $InstitutionSubjects->aliasField('id'),
                 $InstitutionClassSubjects->aliasField('institution_class_id = ') . $classId,
                 $InstitutionClassSubjects->aliasField('status > 0 ')
-            ])
-            ->innerJoin([$InstitutionSubjects->alias() => $InstitutionSubjects->table()], [
-                $InstitutionSubjects->aliasField('id = ') . $InstitutionClassSubjects->aliasField('institution_subject_id'),
-                $InstitutionSubjects->aliasField('education_subject_id = ') . $this->aliasField('education_subject_id')
             ])
             ->where([$this->aliasField('report_card_id') => $reportCardId])
             ->order([$this->EducationSubjects->aliasField('order')]);
