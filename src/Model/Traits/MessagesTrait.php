@@ -681,6 +681,7 @@ trait MessagesTrait {
         ],
         'ReportCardStatuses' => [
             'noProgrammes' => 'There is no programme set for this institution',
+            'noTemplate' => 'There is no excel template for this Report Card',
             'noFilesToDownload' => 'There are no generated Report Cards to download',
             'noFilesToPublish' => 'There are no generated Report Cards to publish',
             'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
