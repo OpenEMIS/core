@@ -25,17 +25,23 @@ class RoomTypesTable extends ControllerActionTable
         $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('FieldOption.FieldOption');
-        $this->addBehavior('Infrastructure.Types', ['code' => 'ROOM']);
+        $this->addBehavior('Infrastructure.Types');
 
         $InfrastructureLevels = TableRegistry::get('Infrastructure.InfrastructureLevels');
-        $this->levelOptions = $InfrastructureLevels->getOptions(['keyField' => 'id', 'valueField' => 'name']);
+        $this->levelOptions = $InfrastructureLevels->find('list')->toArray();
         $this->roomLevel = $InfrastructureLevels->getFieldByCode('ROOM', 'id');
         $this->classificationOptions = $this->getSelectOptions($this->aliasField('classifications'));
+        $this->setDeleteStrategy('restrict');
     }
 
     public function onGetInfrastructureLevel(Event $event, Entity $entity)
     {
         return $this->levelOptions[$this->roomLevel];
+    }
+
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $extra['config']['selectedLink'] = ['controller' => 'Infrastructures', 'action' => 'Fields'];
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
@@ -68,7 +74,7 @@ class RoomTypesTable extends ControllerActionTable
     {
         if ($action == 'add') {
             $attr['options'] = $this->classificationOptions;
-        } else if ($action == 'edit') {
+        } elseif ($action == 'edit') {
             $entity = $attr['entity'];
 
             $attr['type'] = 'readonly';
