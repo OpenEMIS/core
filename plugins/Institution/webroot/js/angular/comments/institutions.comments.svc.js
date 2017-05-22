@@ -13,17 +13,23 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         ReportCardCommentCodesTable: 'ReportCard.ReportCardCommentCodes',
         InstitutionStudentsReportCardsTable: 'Institution.InstitutionStudentsReportCards',
         InstitutionStudentsReportCardsCommentsTable: 'Institution.InstitutionStudentsReportCardsComments',
+        InstitutionClassesTable: 'Institution.InstitutionClasses',
         InstitutionClassStudentsTable: 'Institution.InstitutionClassStudents',
-        StaffUserTable: 'Institution.StaffUser'
+        StaffUserTable: 'Institution.StaffUser',
+        StaffTable: 'Institution.Staff',
+        InstitutionSubjectStaffTable: 'Institution.InstitutionSubjectStaff'
     };
 
     var service = {
         init: init,
         getReportCard: getReportCard,
+        getPrincipalEditPermissions: getPrincipalEditPermissions,
+        getHomeroomTeacherEditPermissions: getHomeroomTeacherEditPermissions,
+        getTeacherEditPermissions: getTeacherEditPermissions,
         getTabs: getTabs,
         getSubjects: getSubjects,
         getCommentCodeOptions: getCommentCodeOptions,
-        getModifiedUser: getModifiedUser,
+        getCurrentUser: getCurrentUser,
         getColumnDefs: getColumnDefs,
         renderText: renderText,
         renderSelect: renderSelect,
@@ -47,52 +53,122 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({defer: true});
     };
 
-    function getTabs(reportCardId, classId, principalCommentsRequired, homeroomTeacherCommentsRequired, subjectTeacherCommentsRequired) {
+    function getPrincipalEditPermissions(institutionId, currentUserId) {
+        return StaffTable
+            .select()
+            .find('PrincipalEditPermissions', {
+                institution_id: institutionId,
+                staff_id: currentUserId
+            })
+            .ajax({defer: true});
+    };
+
+    function getHomeroomTeacherEditPermissions(classId, currentUserId) {
+        return InstitutionClassesTable
+            .select()
+            .where({
+                id: classId,
+                staff_id: currentUserId
+            })
+            .ajax({defer: true});
+    };
+
+    function getTeacherEditPermissions(reportCardId, institutionId, classId, currentUserId) {
+        return InstitutionSubjectStaffTable
+            .select()
+            .find('TeacherEditPermissions', {
+                report_card_id: reportCardId,
+                institution_id: institutionId,
+                institution_class_id: classId,
+                staff_id: currentUserId
+            })
+            .ajax({defer: true});
+    };
+
+    function getTabs(reportCardId, classId, institutionId, currentUserId, principalCommentsRequired, homeroomTeacherCommentsRequired, teacherCommentsRequired) {
         var deferred = $q.defer();
         var tabs = [];
 
-        if (principalCommentsRequired) {
-            tabs.push({
-                tabName: "Principal",
-                type: roles.PRINCIPAL,
-                education_subject_id: 0
-            });
-        }
-        if (homeroomTeacherCommentsRequired) {
-            tabs.push({
-                tabName: "Homeroom Teacher",
-                type: roles.HOMEROOM_TEACHER,
-                education_subject_id: 0
-            });
-        }
-        if (subjectTeacherCommentsRequired) {
-            this.getSubjects(reportCardId, classId)
-            .then(function(response)
-            {
-                subjects = response.data;
-                if (angular.isObject(subjects) && subjects.length > 0) {
-                    angular.forEach(subjects, function(subject, key)
-                    {
-                        this.push({
-                            tabName: subject.name + " Teacher",
-                            type: roles.TEACHER,
-                            education_subject_id: subject.education_subject_id,
-                        });
-                    }, tabs);
-                }
-            }, function(error)
-            {
-                // No Subjects
-                console.log(error);
-                deferred.reject(error);
-            });
-        }
+        this.getPrincipalEditPermissions(institutionId, currentUserId)
+        .then(function(response)
+        {
+            data = response.data;
 
-        if (tabs.length > 0) {
-            deferred.resolve(tabs);
-        } else {
-            deferred.reject('You have to configure the comments required first');
-        }
+            if (principalCommentsRequired) {
+                editable = (angular.isObject(data) && data.length > 0) ? true : false;
+                tabs.push({
+                    tabName: "Principal",
+                    type: roles.PRINCIPAL,
+                    education_subject_id: 0,
+                    editable: editable
+                });
+            }
+
+            return getHomeroomTeacherEditPermissions(classId, currentUserId);
+        }, function(error)
+        {
+            console.log(error);
+        })
+        .then(function(response)
+        {
+            data = response.data;
+
+            if (homeroomTeacherCommentsRequired) {
+                editable = (angular.isObject(data) && data.length > 0) ? true : false;
+                tabs.push({
+                    tabName: "Homeroom Teacher",
+                    type: roles.HOMEROOM_TEACHER,
+                    education_subject_id: 0,
+                    editable: editable
+                });
+            }
+
+            return getTeacherEditPermissions(reportCardId, institutionId, classId, currentUserId);
+        }, function(error)
+        {
+            console.log(error);
+        })
+        .then(function(response)
+        {
+            subjectPermissions = response.data;
+
+            if (teacherCommentsRequired) {
+                getSubjects(reportCardId, classId)
+                .then(function(response)
+                {
+                    subjects = response.data;
+                    if (angular.isObject(subjects) && subjects.length > 0) {
+                        angular.forEach(subjects, function(subject, key)
+                        {
+                            editable = (angular.isObject(subjectPermissions) && subjectPermissions.hasOwnProperty(subject.education_subject_id)) ? true : false;
+
+                            this.push({
+                                tabName: subject.name + " Teacher",
+                                type: roles.TEACHER,
+                                education_subject_id: subject.education_subject_id,
+                                editable: editable
+                            });
+                        }, tabs);
+                    }
+                }, function(error)
+                {
+                    // No Subjects
+                    console.log(error);
+                });
+            }
+
+        }, function(error)
+        {
+            console.log(error);
+        })
+        .finally(function()
+        {
+            if (tabs.length > 0) {
+                deferred.resolve(tabs);
+            } else {
+                deferred.reject('You have to configure the comments required first');
+            }
+        });
 
         return deferred.promise;
     };
@@ -115,7 +191,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({defer: true});
     };
 
-    function getModifiedUser() {
+    function getCurrentUser() {
         var deferred = $q.defer();
 
         KdSessionSvc.read('Auth.User.id')
@@ -132,17 +208,17 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         // get staff data
         .then(function(response) {
             staffData = response.data;
-            deferred.resolve(staffData.name);
+            deferred.resolve(staffData);
 
         }, function(error) {
             console.log(error);
             deferred.reject(error);
-        })
+        });
 
         return deferred.promise;
     };
 
-    function getColumnDefs(action, tab, modifiedUser, _comments, commentCodeOptions) {
+    function getColumnDefs(action, tab, currentUserName, _comments, commentCodeOptions) {
         var deferred = $q.defer();
 
         var filterParams = {
@@ -190,6 +266,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var headerIcons = allowEdit ? " <span class='divider'></span>  <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : '';
         var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
+        var extra = {};
         if (isSubjectTab) {
             var selectOptions = {
                 0 : {
@@ -206,7 +283,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
             extra = {
                 selectOptions: selectOptions,
-                modifiedUser: modifiedUser
+                currentUserName: currentUserName,
+                editPermission: tab.editable
             };
             var columnDef = {
                 headerName: "Comment Code" + headerIcons,
@@ -217,7 +295,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             columnDefs.push(columnDef);
         }
 
-        var extra = {};
+        extra = {editPermission: tab.editable};
         var columnDef = {
             headerName: "Comments" + headerIcons,
             field: "comments",
@@ -244,11 +322,13 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
     };
 
     function renderText(allowEdit, cols, extra, _comments) {
+        var editPermission = extra.editPermission;
+
         cols = angular.merge(cols, {
             filter: 'text'
         });
 
-        if (allowEdit) {
+        if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
                 editable: true,
                 cellClass: 'oe-cell-highlight'
@@ -260,9 +340,10 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
 
     function renderSelect(allowEdit, cols, extra, _comments) {
         var options = extra.selectOptions;
-        var modifiedUser = extra.modifiedUser;
+        var currentUserName = extra.currentUserName;
+        var editPermission = extra.editPermission;
 
-        if (allowEdit) {
+        if (allowEdit && editPermission) {
             cols = angular.merge(cols, {
                 cellClass: 'oe-cell-highlight',
                 cellRenderer: function(params) {
@@ -298,7 +379,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     eSelect.addEventListener('change', function () {
                         var newValue = eSelect.value;
                         params.data[params.colDef.field] = newValue;
-                        params.data.modified_by = modifiedUser;
+                        params.data.modified_by = currentUserName;
 
                         if (angular.isUndefined(_comments[studentId])) {
                             _comments[studentId] = {};
@@ -434,7 +515,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({defer: true});
     };
 
-    function saveRowData(comments, tab, institutionId, classId, educationGradeId, academicPeriodId, reportCardId) {
+    function saveRowData(comments, tab, institutionId, classId, educationGradeId, academicPeriodId, reportCardId, currentUserId) {
         var promises = [];
 
         angular.forEach(comments, function(obj, studentId) {
@@ -454,19 +535,10 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     commentsData["comments"] = obj.comments;
                     commentsData["report_card_comment_code_id"] = obj.comment_code;
                     commentsData["education_subject_id"] = tab.education_subject_id;
+                    commentsData["staff_id"] = currentUserId;
 
-                    // get id of current user
-                    KdSessionSvc.read('Auth.User.id')
-                    .then(function(response) {
-                        commentsData["staff_id"] = response;
-
-                        // check if main student report card record exists
-                        return checkStudentReportCardExists(studentId, institutionId, classId, educationGradeId, academicPeriodId, reportCardId);
-
-                    }, function(error) {
-                        console.log(error);
-                    })
-                    // checkStudentReportCardExists
+                    // check if main student report card record exists
+                    this.checkStudentReportCardExists(studentId, institutionId, classId, educationGradeId, academicPeriodId, reportCardId)
                     .then(function(response) {
                         var studentReportcard = response.data;
 
