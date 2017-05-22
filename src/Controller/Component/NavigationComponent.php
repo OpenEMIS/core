@@ -782,7 +782,7 @@ class NavigationComponent extends Component
 					'parent' => 'Directories.Student',
 					'params' => ['plugin' => 'Directory'],
 					'selected' => ['Directories.StudentProgrammes.index', 'Directories.StudentSubjects', 'Directories.StudentClasses', 'Directories.StudentAbsences', 'Directories.StudentBehaviours',
-						'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
+						'Directories.StudentResults', 'Directories.StudentExaminationResults', 'Directories.StudentReportCards', 'Directories.StudentAwards', 'Directories.StudentExtracurriculars', 'Directories.StudentTextbooks']
 				],
 				'Directories.StudentBankAccounts' => [
 					'title' => 'Finance',
