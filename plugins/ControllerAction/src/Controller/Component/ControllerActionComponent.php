@@ -104,6 +104,17 @@ class ControllerActionComponent extends Component
 
     public $components = ['ControllerAction.Alert', 'Paginator'];
 
+    private $cakephpReservedPassKeys = [
+            'controller',
+            'action',
+            'plugin',
+            'pass',
+            '_matchedRoute',
+            '_Token',
+            '_csrfToken',
+            'paging'
+        ];
+
     // Is called before the controller's beforeFilter method.
     public function initialize(array $config)
     {
@@ -419,6 +430,17 @@ class ControllerActionComponent extends Component
         return array_merge($params, $this->paramsQuery());
     }
 
+    private function mergeRequestParams(array &$url)
+    {
+        $requestParams = $this->request->params;
+        foreach ($requestParams as $key => $value) {
+            if (is_numeric($key) || in_array($key, $this->cakephpReservedPassKeys)) {
+                unset($requestParams[$key]);
+            }
+        }
+        $url = array_merge($url, $requestParams);
+    }
+
     public function url($action, $params = true /* 'PASS' | 'QUERY' | false */)
     {
         $controller = $this->controller;
@@ -430,6 +452,8 @@ class ControllerActionComponent extends Component
         } else {
             $url['action'] = $action;
         }
+
+        $this->mergeRequestParams($url);
 
         if ($params === true) {
             $url = array_merge($url, $this->params());
@@ -536,6 +560,7 @@ class ControllerActionComponent extends Component
             unset($pass[0]);
         }
         $defaultUrl = ['plugin' => $controller->plugin, 'controller' => $controller->name];
+        $this->mergeRequestParams($defaultUrl);
 
         $buttons = new ArrayObject([]);
 
