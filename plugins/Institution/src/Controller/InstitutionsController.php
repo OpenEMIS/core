@@ -1131,7 +1131,6 @@ class InstitutionsController extends AppController
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
         $positionTable = TableRegistry::get('Institution.InstitutionPositions');
-        $StaffPositionGrades = TableRegistry::get('Institution.StaffPositionGrades');
 
         $userId = $this->Auth->user('id');
 
@@ -1188,8 +1187,9 @@ class InstitutionsController extends AppController
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
                 ->innerJoinWith('StaffPositionTitles.SecurityRoles')
+                ->innerJoinWith('StaffPositionGrades')
                 ->where($positionConditions)
-                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type', 'grade_name' => 'StaffPositionGrades.name'])
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
                 ->autoFields(true)
                 ->toArray();
@@ -1209,11 +1209,10 @@ class InstitutionsController extends AppController
         $options = [];
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
         foreach ($staffPositionsOptions as $position) {
-            $staffPositionGradeId = $position->staff_position_grade_id;
-            $staffPositionGradeName = $StaffPositionGrades->get($staffPositionGradeId)->name;
+            $name = $position->name . ' - ' . $position->grade_name;
 
             $type = __($types[$position->type]);
-            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name . ' - ' . __($staffPositionGradeName), 'disabled' => in_array($position->id, $excludePositions)];
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
 
         echo json_encode($options);
