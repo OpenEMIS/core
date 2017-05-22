@@ -12,7 +12,10 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 
 class NotRegisteredStudentsBehavior extends Behavior {
-	public function initialize(array $config) {
+
+    private $identityType;
+
+    public function initialize(array $config) {
 		parent::initialize($config);
 
         $model = $this->_table;
@@ -28,6 +31,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $events['ControllerAction.Model.index.beforeQuery'] = 'indexBeforeQuery';
         $events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
         $events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
+        $events['ControllerAction.Model.onGetFieldLabel'] = ['callable' => 'onGetFieldLabel', 'priority' => 20];
         return $events;
     }
 
@@ -51,6 +55,12 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->field('end_date', ['visible' => false]);
         $model->field('end_year', ['visible' => false]);
         $model->field('previous_institution_student_id', ['visible' => false]);
+
+        $model->field('nationality');
+        $model->field('identity_type');
+        $model->field('identity_number');
+        $model->field('repeated');
+        $model->setFieldOrder(['openemis_no', 'student_id', 'date_of_birth', 'nationality', 'identity_type', 'identity_number', 'gender_id', 'repeated', 'institution_id']);
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
@@ -67,7 +77,10 @@ class NotRegisteredStudentsBehavior extends Behavior {
             $model->Users->aliasField('last_name'),
             $model->Users->aliasField('preferred_name'),
             $model->Users->aliasField('date_of_birth'),
+            $model->Users->aliasField('identity_number'),
             $model->Users->Genders->aliasField('name'),
+            $model->Users->IdentityTypes->aliasField('name'),
+            $model->Users->MainNationalities->aliasField('name'),
             $model->Institutions->aliasField('code'),
             $model->Institutions->aliasField('name')
         ];
@@ -126,7 +139,7 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
         $query
             ->select($select)
-            ->contain(['AcademicPeriods', 'Institutions', 'Users.Genders'], true)
+            ->contain(['AcademicPeriods', 'Institutions', 'Users.Genders', 'Users.MainNationalities', 'Users.IdentityTypes'], true)
             ->where($where)
             ->group([
                 $model->aliasField('student_id'),
@@ -143,7 +156,12 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query
-            ->contain(['Users.SpecialNeeds.SpecialNeedTypes', 'Users.Genders'])
+            ->contain([
+                'Users.SpecialNeeds.SpecialNeedTypes', 
+                'Users.Genders', 
+                'Users.Nationalities.NationalitiesLookUp', 
+                'Users.IdentityTypes'
+            ])
             ->matching('AcademicPeriods')
             ->matching('EducationGrades')
             ->matching('Institutions');
@@ -151,6 +169,59 @@ class NotRegisteredStudentsBehavior extends Behavior {
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra) {
         $this->setupFields($entity, $extra);
+
+        if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+            $this->identityType = $entity->user->identity_type->name;
+        }
+    }
+
+    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) 
+    {
+        if ($this->_table->action == 'view') {
+            if ($field == 'identity_number') {
+                if ($this->identityType) {
+                    return __($this->identityType);
+                } else {
+                    return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
+                }
+            } 
+        }
+    }
+
+    public function onGetRepeated(Event $event, Entity $entity)
+    {
+        return $this->_table->ExaminationCentreStudents->onGetRepeated($event, $entity);
+    }
+
+    public function onGetNationality(Event $event, Entity $entity)
+    {   
+        if ($this->_table->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('main_nationality') && !empty($entity->user->main_nationality)) {
+                    return $entity->user->main_nationality->name;
+                }
+            }
+        }
+    }
+
+    public function onGetIdentityType(Event $event, Entity $entity)
+    {   
+        if ($this->_table->action == 'index') {
+            if (!empty($entity)) {
+                if ($entity->user->has('identity_type') && !empty($entity->user->identity_type)) {
+                    return $entity->user->identity_type->name;
+                }
+            }
+        }
+    }
+
+    public function onGetIdentityNumber(Event $event, Entity $entity)
+    {
+        if (!empty($entity)) {
+            if ($entity->user->has('identity_number') && !empty($entity->user->identity_number)) {
+                return $entity->user->identity_number;
+            }
+        }
     }
 
     public function onGetOpenemisNo(Event $event, Entity $entity) {
@@ -262,7 +333,17 @@ class NotRegisteredStudentsBehavior extends Behavior {
         $model->field('email');
         $model->field('special_needs', ['type' => 'string', 'entity' => $entity]);
 
-        $model->setFieldOrder(['academic_period_id', 'examination_id', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'institution_id', 'contact_person', 'telephone', 'fax', 'email', 'special_needs']);
+        $model->field('identity_number');
+        $model->field('repeated');
+
+        $model->field('nationalities', [
+            'type' => 'element',
+            'element' => 'nationalities',
+            'visible' => ['view'=>true],
+            'data' => $entity->user->nationalities
+        ]);
+
+        $model->setFieldOrder(['openemis_no', 'academic_period_id', 'examination_id', 'student_id', 'date_of_birth', 'nationalities', 'identity_number', 'gender_id', 'institution_id', 'repeated', 'contact_person', 'telephone', 'fax', 'email', 'special_needs']);
     }
 
     public function extractSpecialNeeds(Entity $entity) {
