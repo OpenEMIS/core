@@ -196,13 +196,12 @@ class AcademicPeriodsTable extends AppTable
     {
         $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Room', 'Shift'];
+        $shells = ['Infrastructure', 'Shift'];
         if ($canCopy) {
             // only trigger shell to copy data if is not empty
             if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
                 $copyFrom = $entity->copy_data_from;
                 $copyTo = $entity->id;
-
                 foreach ($shells as $shell) {
                     $this->triggerCopyShell($shell, $copyFrom, $copyTo);
                 }
@@ -217,6 +216,9 @@ class AcademicPeriodsTable extends AppTable
 
         $broadcaster = $this;
         $listeners = [];
+        $listeners[] = TableRegistry::get('Institution.InstitutionLands');
+        $listeners[] = TableRegistry::get('Institution.InstitutionBuildings');
+        $listeners[] = TableRegistry::get('Institution.InstitutionFloors');
         $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
 
         if (!empty($listeners)) {
