@@ -35,7 +35,6 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $this->toggle('add', false);
         $this->toggle('edit', false);
-        // $this->toggle('view', false);
         $this->toggle('remove', false);
 
         $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
@@ -64,10 +63,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        if (isset($buttons['view'])) {
-            unset($buttons['view']);
-        }
-
         $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
         $params = [
             'report_card_id' => $this->request->query('report_card_id'),
@@ -95,7 +90,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // Download button
         // status must be generated or published
-        if ($entity->has('InstitutionStudentsReportCards') && in_array($entity->InstitutionStudentsReportCards['status'], [self::GENERATED, self::PUBLISHED])) {
+        if ($entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
             $downloadParams = $params;
             if (isset($downloadParams['institution_class_id'])) {
                 unset($downloadParams['institution_class_id']);
@@ -117,7 +112,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // Publish button
         // status must be generated
-        if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::GENERATED) {
+        if ($entity->has('report_card_status') && $entity->report_card_status == self::GENERATED) {
             $url = $this->url('publish');
             $publishUrl = $this->setQueryString($url, $params);
             $buttons['publish'] = [
@@ -130,7 +125,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // Unpublish button
         // status must be published
-        if ($entity->has('InstitutionStudentsReportCards') && $entity->InstitutionStudentsReportCards['status'] == self::PUBLISHED) {
+        if ($entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
             $url = $this->url('unpublish');
             $unpublishUrl = $this->setQueryString($url, $params);
             $buttons['unpublish'] = [
@@ -144,13 +139,17 @@ class ReportCardStatusesTable extends ControllerActionTable
         return $buttons;
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    public function beforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('status');
         $this->field('openemis_no');
         $this->field('student_id', ['type' => 'integer']);
         $this->field('report_card');
         $this->fields['student_status_id']['visible'] = false;
+    }
+
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
         $this->setFieldOrder(['status', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
 
         $reportCardId = $this->request->query('report_card_id');
@@ -273,11 +272,9 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         $query
             ->select([
-                $this->StudentsReportCards->aliasField('id'),
-                $this->StudentsReportCards->aliasField('report_card_id'),
-                $this->StudentsReportCards->aliasField('status')
+                'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
+                'report_card_status' => $this->StudentsReportCards->aliasField('status')
             ])
-            ->contain('Users')
             ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
                 [
                     $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
@@ -294,11 +291,35 @@ class ReportCardStatusesTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('institution_class_id', ['type' => 'integer']);
+        $this->setFieldOrder(['academic_period_id', 'status', 'openemis_no', 'student_id',  'report_card', 'institution_class_id']);
+    }
+
+    public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $query
+            ->select([
+                'report_card_id' => $this->StudentsReportCards->aliasField('report_card_id'),
+                'report_card_status' => $this->StudentsReportCards->aliasField('status')
+            ])
+            ->leftJoin([$this->StudentsReportCards->alias() => $this->StudentsReportCards->table()],
+                [
+                    $this->StudentsReportCards->aliasField('student_id = ') . $this->aliasField('student_id'),
+                    $this->StudentsReportCards->aliasField('institution_id = ') . $this->aliasField('institution_id'),
+                    $this->StudentsReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
+                    $this->StudentsReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
+                    $this->StudentsReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id')
+                ]
+            )
+            ->autoFields(true);
+    }
+
     public function onGetStatus(Event $event, Entity $entity)
     {
-        if ($entity->has('InstitutionStudentsReportCards') && !empty($entity->InstitutionStudentsReportCards['status'])) {
-            $status = $entity->InstitutionStudentsReportCards['status'];
-            $value = $this->statusOptions[$status];
+        if ($entity->has('report_card_status')) {
+            $value = $this->statusOptions[$entity->report_card_status];
         } else {
             $value = $this->statusOptions[self::NEW_REPORT];
         }
@@ -317,9 +338,15 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function onGetReportCard(Event $event, Entity $entity)
     {
         $value = '';
-        if (!is_null($this->request->query('report_card_id'))) {
+        if ($entity->has('report_card_id')) {
+            $reportCardId = $entity->report_card_id;
+        } else if (!is_null($this->request->query('report_card_id'))) {
+            $reportCardId = $this->request->query('report_card_id');
+        }
+
+        if (!empty($reportCardId)) {
             $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-            $entity = $ReportCards->get($this->request->query('report_card_id'));
+            $entity = $ReportCards->get($reportCardId);
 
             if (!empty($entity)) {
                 $value = $entity->code_name;
