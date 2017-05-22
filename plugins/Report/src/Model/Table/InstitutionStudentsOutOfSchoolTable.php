@@ -116,16 +116,6 @@ class InstitutionStudentsOutOfSchoolTable extends AppTable  {
         return (!$entity->has('StudentStatus') || empty($entity->StudentStatus))? $this->getMessage('Institution.InstitutionStudents.notInSchool'): $entity->StudentStatus;
     }
 
-
-    public function onExcelBeforeStart (Event $event, ArrayObject $settings, ArrayObject $sheets) {
-        $sheets[] = [
-            'name' => $this->getMessage('Report.InstitutionStudentsOutOfSchool.reportName'),
-            'table' => $this,
-            'query' => $this->find(),
-            'orientation' => 'landscape'
-        ];
-    }
-
     public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields) {
         $IdentityType = TableRegistry::get('FieldOption.IdentityTypes');
         $identity = $IdentityType->getDefaultEntity();
