@@ -11,8 +11,10 @@ use Cake\Log\Log;
 
 use App\Model\Table\AppTable;
 
-class SystemErrorsTable extends AppTable {
-    public function initialize(array $config) {
+class SystemErrorsTable extends AppTable
+{
+    public function initialize(array $config)
+    {
         parent::initialize($config);
 
         $this->belongsTo('CreatedUser', ['className' => 'Security.Users', 'foreignKey' => 'created_user_id']);

@@ -22,7 +22,7 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     {
         parent::initialize($config);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'student_id']);
+        $this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'student_id']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('Examinations', ['className' => 'Examination.Examinations']);
         $this->belongsTo('ExaminationCentres', ['className' => 'Examination.ExaminationCentres']);
@@ -75,7 +75,6 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
     public function implementedEvents() {
         $events = parent::implementedEvents();
         $events['Model.Navigation.breadcrumb'] = 'onGetBreadcrumb';
-        $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
         $events['Model.Examinations.afterUnregister'] = 'examinationsAfterUnregister';
         return $events;
     }
@@ -151,23 +150,6 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
         }
     }
 
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('identity_number');
-            $this->field('repeated');
-            $this->field('transferred');
-
-            if ($this->action == 'index') {
-                $this->field('tooltip_column', [
-                    'after' => 'transferred'
-                ]);
-            }
-
-            $this->setFieldOrder('registration_number', 'openemis_no', 'student_id', 'date_of_birth', 'gender_id', 'identity_number', 'institution_id', 'repeated', 'transferred');
-        }
-    }
-
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         // Set the header of the page
@@ -217,126 +199,6 @@ class ExaminationCentresExaminationsStudentsTable extends ControllerActionTable 
             $url = $this->url('index');
             $event->stopPropagation();
             return $this->controller->redirect($url);
-        }
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
-        } else if ($field == 'tooltip_column') {
-            return '';
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
-    public function onGetIdentityNumber(Event $event, Entity $entity)
-    {   
-        return $entity->user->identity_number;
-    }
-
-    public function onGetRepeated(Event $event, Entity $entity)
-    {  
-        $InstitutionStudents = TableRegistry::get('Institution.Students');
-        $StudentStatuses = TableRegistry::get('Student.StudentStatuses');
-
-        $statuses = $StudentStatuses->findCodeList();
-        $repeatedStatus = $statuses['REPEATED'];
-
-        if ($entity) {
-            if ($entity->extractOriginal(['student_id'])) {
-                $studentId = $entity->extractOriginal(['student_id'])['student_id'];
-            }
-
-            if ($entity->academic_period_id) {
-                $academicPeriod = $entity->academic_period_id;
-            }
-            
-            $institutionId = '';
-            if ($entity->institution) {
-                $institutionId = $entity->institution->id;
-            }
-
-            $educationGrade = '';
-            if ($entity->education_grade) {
-                $educationGrade = $entity->education_grade->id;
-            }
-        }
-
-        $repeatStudent = '';
-        if ($studentId && $educationGrade && $repeatedStatus) {
-
-            //check whether there is any repeat status on student history for the same grade.
-            $repeatStudent = $InstitutionStudents
-                            ->find()
-                            ->where([
-                                $InstitutionStudents->aliasField('student_id') => $studentId,
-                                $InstitutionStudents->aliasField('education_grade_id') => $educationGrade,
-                                $InstitutionStudents->aliasField('student_status_id') => $repeatedStatus //repeated
-                            ])
-                            ->count();
-        }
-
-        if ($repeatStudent) {
-            return __('Yes');
-        } else {
-            return __('No');
-        }
-    }
-
-    public function onGetTransferred(Event $event, Entity $entity)
-    {
-        //check whether there is transfer record for the current academic year that already approved.
-        $StudentAdmission = TableRegistry::get('Institution.StudentAdmission');
-        
-        if ($entity) {
-            if ($entity->extractOriginal(['student_id'])) {
-                $studentId = $entity->extractOriginal(['student_id'])['student_id'];
-            }
-
-            if ($entity->academic_period_id) {
-                $academicPeriod = $entity->academic_period_id;
-            }
-            
-            $institutionId = '';
-            if ($entity->institution) {
-                $institutionId = $entity->institution->id;
-            }
-        }
-
-        $Admission = '';
-        if ($studentId && $academicPeriod && $institutionId) {
-
-            $Admission = $StudentAdmission
-                        ->find()
-                        ->where([
-                            $StudentAdmission->aliasField('student_id') => $studentId,
-                            $StudentAdmission->aliasField('previous_institution_id') => $institutionId,
-                            $StudentAdmission->aliasField('academic_period_id') => $academicPeriod,
-                            $StudentAdmission->aliasField('type') => 2, //transfer type
-                            $StudentAdmission->aliasField('status') => 1 //status is approved
-                        ])
-                        ->contain('Institutions')
-                        ->order($StudentAdmission->aliasField('created DESC'))
-                        ->first();
-        }
-
-        $this->transferred = [];
-        if (!empty($Admission)) {
-            $this->transferred = [true, $Admission->institution->code_name];
-            return  __('Yes');
-        } else {
-            return __('No');
-        }
-    }
-
-    public function onGetTooltipColumn(Event $event, Entity $entity)
-    {
-        if (!empty($this->transferred)) {
-            $tooltipMessage = __('Student has been transferred to') . ' (' . $this->transferred[1] . ') ' . __('after registration');
-            return  "<i class='fa fa-info-circle fa-lg table-tooltip icon-blue' tooltip-placement='left' uib-tooltip='" . $tooltipMessage . "' tooltip-append-to-body='true' tooltip-class='tooltip-blue'></i>";
-        } else {
-            return '-';
         }
     }
 

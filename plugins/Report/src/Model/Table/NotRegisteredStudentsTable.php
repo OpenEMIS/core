@@ -57,7 +57,7 @@ class NotRegisteredStudentsTable extends AppTable
         $currentStatus = $this->StudentStatuses->getIdByCode('CURRENT');
 
         $query
-            ->contain(['Users.Genders', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions'])
+            ->contain(['Users.Genders', 'Users.MainNationalities', 'Users.BirthplaceAreas', 'Users.AddressAreas', 'Users.SpecialNeeds.SpecialNeedTypes', 'Institutions'])
             ->leftJoin([$ExamCentreStudents->alias() => $ExamCentreStudents->table()], [
                 $ExamCentreStudents->aliasField('student_id = ') . $this->aliasField('student_id'),
                 $ExamCentreStudents->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
@@ -72,7 +72,7 @@ class NotRegisteredStudentsTable extends AppTable
             ->leftJoin([$Class->alias() => $Class->table()], [
                 $Class->aliasField('id = ') . $ClassStudents->aliasField('institution_class_id'),
             ])
-            ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name'])
+            ->select(['openemis_no' => 'Users.openemis_no', 'first_name' => 'Users.first_name', 'middle_name' => 'Users.middle_name','last_name' => 'Users.last_name', 'gender_name' => 'Genders.name', 'nationality_name' => 'MainNationalities.name', 'dob' => 'Users.date_of_birth', 'birthplace_area' => 'BirthplaceAreas.name', 'address_area' => 'AddressAreas.name', 'class_name' => 'InstitutionClasses.name'])
             ->where([
                 $this->aliasField('academic_period_id') => $selectedPeriod,
                 $this->aliasField('education_grade_id') => $selectedGrade,
@@ -157,6 +157,13 @@ class NotRegisteredStudentsTable extends AppTable
             'key' => 'Users.date_of_birth',
             'field' => 'dob',
             'type' => 'date',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.nationality_id',
+            'field' => 'nationality_name',
+            'type' => 'string',
             'label' => '',
         ];
 
