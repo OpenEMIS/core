@@ -383,6 +383,7 @@ class InstitutionsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
+        $extra['config']['selectedLink'] = ['controller' => 'Institutions', 'action' => 'Institutions', 'index'];
         $this->field('security_group_id', ['visible' => false]);
         // $this->field('institution_site_area_id', ['visible' => false]);
         $this->field('date_opened');
