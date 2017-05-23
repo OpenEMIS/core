@@ -47,7 +47,11 @@ class StudentsController extends AppController {
     public function Guardians() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
     public function GuardianUser() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
     public function Attachments() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+<<<<<<< HEAD
     public function ReportCards() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
+=======
+    public function StudentSurveys() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
+>>>>>>> efb480710d02901e2ce94d76cb62d00f7bba419d
 
     // health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
@@ -128,7 +132,7 @@ class StudentsController extends AppController {
 		$action = $this->request->params['action'];
 		$institutionName = $session->read('Institution.Institutions.name');
 		$institutionId = $session->read('Institution.Institutions.id');
-		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $institutionId]);
+		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
 		$this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
 		$header = __('Students');
 
@@ -311,9 +315,6 @@ class StudentsController extends AppController {
 	}
 
 	public function getFinanceTabElements($options = []) {
-		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
-		$id = (array_key_exists('id', $options))? $options['id']: 0;
-
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
@@ -325,8 +326,6 @@ class StudentsController extends AppController {
 
 		foreach ($studentTabElements as $key => $tab) {
 			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-			$params = [$id];
-			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
 		return $tabElements;
 	}
