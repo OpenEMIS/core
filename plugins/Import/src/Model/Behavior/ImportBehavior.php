@@ -647,7 +647,8 @@ class ImportBehavior extends Behavior {
             __('Date Opened') . $description,
             __('Start Date') . $description,
             __('End Date') . $description,
-            __('Date Of Birth') . $description
+            __('Date Of Birth') . $description,
+            __('Salary Date') . $description,
         ];
 
         $this->beginExcelHeaderStyling( $objPHPExcel, $dataSheetName, 2, __(Inflector::humanize(Inflector::tableize($this->_table->alias()))) .' '. $dataSheetName );
@@ -749,9 +750,12 @@ class ImportBehavior extends Behavior {
                 $objPHPExcel->setActiveSheetIndex(1);
             }
         }
-        $headerLastAlpha = $this->getExcelColumnAlpha( $lastColumn );
-        $objPHPExcel->getActiveSheet()->getStyle( "A2:" . $headerLastAlpha . "2" )->getFont()->setBold(true)->setSize(12);
-        $this->endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
+
+        if ($lastColumn > -1) { //if got no reference data.
+            $headerLastAlpha = $this->getExcelColumnAlpha( $lastColumn );
+            $objPHPExcel->getActiveSheet()->getStyle( "A2:" . $headerLastAlpha . "2" )->getFont()->setBold(true)->setSize(12);
+            $this->endExcelHeaderStyling( $objPHPExcel, $headerLastAlpha, ['s'=>3, 'e'=>3], ['s'=>2, 'e'=>3] );
+        }
     }
 
     /**
