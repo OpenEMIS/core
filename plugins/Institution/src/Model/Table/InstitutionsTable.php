@@ -153,6 +153,8 @@ class InstitutionsTable extends ControllerActionTable
             self::ACADEMIC => 'Academic Institution',
             self::NON_ACADEMIC => 'Non-Academic Institution'
         ];
+
+        $this->setDeleteStrategy('restrict');
     }
 
     public function validationDefault(Validator $validator)
@@ -643,7 +645,7 @@ class InstitutionsTable extends ControllerActionTable
         $query->join($extra['query']['join']);
 
         $queryParams = $this->request->query;
-        $extra['order'] = [$this->aliasField('name') => 'asc'];
+        $extra['options']['order'] = [$this->aliasField('name') => 'asc'];
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
