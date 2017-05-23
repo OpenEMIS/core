@@ -33,7 +33,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         renderSelect: renderSelect,
         getRowData: getRowData,
         checkStudentReportCardExists: checkStudentReportCardExists,
-        saveRowData: saveRowData
+        saveSingleRecordData: saveSingleRecordData
     };
 
     return service;
@@ -233,18 +233,6 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             hide: true,
             filterParams: filterParams
         });
-        columnDefs.push({
-            headerName: "institution id",
-            field: "institution_id",
-            hide: true,
-            filterParams: filterParams
-        });
-        columnDefs.push({
-            headerName: "education grade id",
-            field: "education_grade_id",
-            hide: true,
-            filterParams: filterParams
-        });
 
         var allowEdit = action == 'edit';
         var headerIcons = allowEdit ? " <span class='divider'></span>  <i class='fa fa-pencil-square-o fa-lg header-icon'></i>" : '';
@@ -268,7 +256,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             extra = {
                 selectOptions: selectOptions,
                 currentUserName: currentUserName,
-                editPermission: tab.editable
+                editPermission: tab.editable,
+                tab: tab
             };
             var columnDef = {
                 headerName: "Comment Code" + headerIcons,
@@ -374,6 +363,15 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                         }
 
                         _comments[params.data.student_id][params.colDef.field] = newValue;
+
+                        saveSingleRecordData(params, extra.tab)
+                        .then(function(response) {
+                        }, function(error) {
+                            console.log(error);
+                        });
+
+                        // Important: to refresh the grid after data is modified
+                        params.api.refreshView();
                     });
 
                     eCell.appendChild(eSelect);
@@ -485,71 +483,79 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             .ajax({success: success, defer: true});
     };
 
-    function checkStudentReportCardExists(studentId, institutionId, classId, educationGradeId, academicPeriodId, reportCardId) {
+    function checkStudentReportCardExists(data) {
         return InstitutionStudentsReportCardsTable
             .select()
             .where({
-                report_card_id: reportCardId,
-                student_id : parseInt(studentId),
-                institution_id : institutionId,
-                academic_period_id : academicPeriodId,
-                education_grade_id : educationGradeId,
-                institution_class_id: classId
+                report_card_id: data.report_card_id,
+                student_id : data.student_id,
+                institution_id : data.institution_id,
+                academic_period_id : data.academic_period_id,
+                education_grade_id : data.education_grade_id,
+                institution_class_id: data.institution_class_id
             })
             .ajax({defer: true});
     };
 
-    function saveRowData(comments, tab, institutionId, classId, educationGradeId, academicPeriodId, reportCardId, currentUserId) {
+    function saveSingleRecordData(params, tab) {
         var promises = [];
+        var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
-        angular.forEach(comments, function(obj, studentId) {
-                var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
+        var studentReportCardData = {
+            report_card_id: params.context.report_card_id,
+            student_id: params.data.student_id,
+            institution_id: params.context.institution_id,
+            academic_period_id: params.context.academic_period_id,
+            education_grade_id: params.context.education_grade_id,
+            institution_class_id: params.context.class_id
+        };
 
-                var data = {
-                    report_card_id: reportCardId,
-                    student_id: parseInt(studentId),
-                    institution_id: institutionId,
-                    academic_period_id: academicPeriodId,
-                    education_grade_id: educationGradeId,
-                    institution_class_id: classId
-                };
+        if (isSubjectTab) {
+            var comments = null;
+            var commentCode = null;
 
-                if (isSubjectTab) {
-                    commentsData = data;
-                    commentsData["comments"] = obj.comments;
-                    commentsData["report_card_comment_code_id"] = obj.comment_code;
-                    commentsData["education_subject_id"] = tab.education_subject_id;
-                    commentsData["staff_id"] = currentUserId;
+            if (params.data.comments.length > 0) {
+                comments = params.data.comments;
+            }
 
-                    // check if main student report card record exists
-                    this.checkStudentReportCardExists(studentId, institutionId, classId, educationGradeId, academicPeriodId, reportCardId)
-                    .then(function(response) {
-                        var studentReportcard = response.data;
+            if (params.data.comment_code != 0) {
+                commentCode = params.data.comment_code;
+            }
 
-                        if (studentReportcard.length == 0) {
-                            // save to both tables
-                            promises.push(InstitutionStudentsReportCardsTable.save(data));
-                            promises.push(InstitutionStudentsReportCardsCommentsTable.save(commentsData));
+            var subjectCommentsData = Object.assign({}, studentReportCardData);
+            subjectCommentsData["comments"] = comments;
+            subjectCommentsData["report_card_comment_code_id"] = commentCode;
+            subjectCommentsData["education_subject_id"] = tab.education_subject_id;
+            subjectCommentsData["staff_id"] = params.context.current_user_id;
 
-                        } else {
-                            // save only to comments table
-                            promises.push(InstitutionStudentsReportCardsCommentsTable.save(commentsData));
-                        }
+            // check if main student report card record exists
+            checkStudentReportCardExists(studentReportCardData)
+            .then(function(response) {
+                var studentReportcard = response.data;
 
-                    }, function(error) {
-                        console.log(error);
-                    });
+                if (studentReportcard.length == 0) {
+                    // save to both tables
+                    promises.push(InstitutionStudentsReportCardsTable.save(studentReportCardData));
+                    promises.push(InstitutionStudentsReportCardsCommentsTable.save(subjectCommentsData));
 
                 } else {
-                    if (tab.type == roles.PRINCIPAL) {
-                        data["principal_comments"] = obj.comments;
-                    } else if (tab.type == roles.HOMEROOM_TEACHER) {
-                        data["homeroom_teacher_comments"] = obj.comments;
-                    }
-
-                    promises.push(InstitutionStudentsReportCardsTable.save(data));
+                    // save only to comments table
+                    promises.push(InstitutionStudentsReportCardsCommentsTable.save(subjectCommentsData));
                 }
-        }, this);
+
+            }, function(error) {
+                console.log(error);
+            });
+
+        } else {
+            if (tab.type == roles.PRINCIPAL) {
+                studentReportCardData["principal_comments"] = params.data.comments;
+            } else if (tab.type == roles.HOMEROOM_TEACHER) {
+                studentReportCardData["homeroom_teacher_comments"] = params.data.comments;
+            }
+
+            promises.push(InstitutionStudentsReportCardsTable.save(studentReportCardData));
+        }
 
         return $q.all(promises);
     };

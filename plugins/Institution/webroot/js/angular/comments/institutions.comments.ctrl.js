@@ -17,16 +17,16 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     vm.onChangeColumnDefs = onChangeColumnDefs;
     vm.onEditClick = onEditClick;
     vm.onBackClick = onBackClick;
-    vm.onSaveClick = onSaveClick;
 
     // Initialisation
     angular.element(document).ready(function() {
         vm.institutionId = UtilsSvc.requestQuery('institution_id');
         vm.classId = UtilsSvc.requestQuery('institution_class_id');
         vm.reportCardId = UtilsSvc.requestQuery('report_card_id');
-        InstitutionsCommentsSvc.init(angular.baseUrl);
 
+        InstitutionsCommentsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
+
         InstitutionsCommentsSvc.getReportCard(vm.reportCardId)
         // getReportCard
         .then(function(response)
@@ -70,7 +70,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
             if (angular.isObject(tabs) && tabs.length > 0) {
                 var tab = tabs[0];
-                vm.initGrid(vm.classId, vm.educationGradeId, tab);
+                vm.initGrid(tab);
             }
 
             return InstitutionsCommentsSvc.getCommentCodeOptions();
@@ -102,9 +102,16 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         }
     });
 
-    function initGrid(classId, educationGradeId, tab) {
+    function initGrid(tab) {
         vm.gridOptions = {
-            context: {},
+            context: {
+                institution_id: vm.institutionId,
+                class_id: vm.classId,
+                report_card_id: vm.reportCardId,
+                academic_period_id: vm.academicPeriodId,
+                education_grade_id: vm.educationGradeId,
+                current_user_id: vm.currentUserId
+            },
             columnDefs: [],
             rowData: [],
             headerHeight: 38,
@@ -133,6 +140,12 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.comments[params.data.student_id][params.colDef.field] = params.newValue;
 
                 params.data.modified_by = vm.currentUserName;
+
+                InstitutionsCommentsSvc.saveSingleRecordData(params, vm.currentTab)
+                .then(function(response) {
+                }, function(error) {
+                    console.log(error);
+                });
 
                 // Important: to refresh the grid after data is modified
                 vm.gridOptions.api.refreshView();
@@ -211,28 +224,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
     function onEditClick() {
         $scope.action = 'edit';
+        AlertSvc.info(vm, 'Student comment will be save after the comment has been entered.');
     }
 
     function onBackClick() {
         $scope.action = 'view';
-    }
-
-    function onSaveClick() {
-        if (vm.gridOptions != null) {
-            UtilsSvc.isAppendSpinner(true, 'institution-comment-table');
-            InstitutionsCommentsSvc.saveRowData(vm.comments, vm.currentTab, vm.institutionId, vm.classId, vm.educationGradeId, vm.academicPeriodId, vm.reportCardId, vm.currentUserId)
-            .then(function(response) {
-            }, function(error) {
-                console.log(error);
-            })
-            .finally(function() {
-                $scope.action = 'view';
-                // reset comments object
-                vm.comments = {};
-                UtilsSvc.isAppendSpinner(false, 'institution-comment-table');
-            });
-        } else {
-            $scope.action = 'view';
-        }
     }
 }

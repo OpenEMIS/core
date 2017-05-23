@@ -26,9 +26,6 @@ $this->start('toolbar');
         <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Back');?>" ng-show="action == 'edit'" ng-click="InstitutionCommentsController.onBackClick()">
             <i class="fa kd-back"></i>
         </button>
-        <button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Save');?>" ng-show="action == 'edit'" ng-click="InstitutionCommentsController.onSaveClick()">
-            <i class="fa fa-save"></i>
-        </button>
         <!-- End -->
     <?php endif; ?>
 <?php

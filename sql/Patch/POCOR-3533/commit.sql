@@ -79,7 +79,7 @@ DROP TABLE IF EXISTS `institution_students_report_cards_comments`;
 CREATE TABLE IF NOT EXISTS `institution_students_report_cards_comments` (
  `id` char(64) COLLATE utf8mb4_unicode_ci NOT NULL,
  `comments` text COLLATE utf8mb4_unicode_ci,
- `report_card_comment_code_id` int(11) NOT NULL COMMENT 'links to report_card_comment_codes.id',
+ `report_card_comment_code_id` int(11) COMMENT 'links to report_card_comment_codes.id',
  `report_card_id` int(11) NOT NULL COMMENT 'links to report_cards.id',
  `student_id` int(11) NOT NULL COMMENT 'links to security_users.id',
  `institution_id` int(11) NOT NULL COMMENT 'links to institutions.id',
