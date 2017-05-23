@@ -104,20 +104,10 @@ class ExcelReportBehavior extends Behavior
             $this->saveExcel($objPHPExcel, $filepath);
         }
 
-        // comment out pdf code as not being used for now
-        // else if ($this->config('format') == 'pdf') {
-        //     $this->savePdf($objPHPExcel, $filepath);
-        // }
-
         if ($extra->offsetExists('tmp_file_path')) {
             // delete temporary excel template file after save
             $this->deleteFile($extra['tmp_file_path']);
         }
-
-        // if ($extra->offsetExists('tmp_image_folder')) {
-        //     // delete temporary image folder after save
-        //     $this->deleteFolder($extra['tmp_image_folder']);
-        // }
 
         if ($this->config('save')) {
             $model->dispatchEvent('ExcelTemplates.Model.onExcelTemplateSaveFile', [$params, $extra], $this);
@@ -302,21 +292,6 @@ class ExcelReportBehavior extends Behavior
         $objWriter->save($filepath);
     }
 
-    // public function savePdf($objPHPExcel, $filepath)
-    // {
-    //     $rendererName = PHPExcel_Settings::PDF_RENDERER_DOMPDF;
-    //     $rendererLibrary = 'dompdf';
-    //     $rendererLibraryPath = ROOT . DS . 'vendor' . DS . $rendererLibrary;
-    //     PHPExcel_Settings::setPdfRenderer($rendererName, $rendererLibraryPath);
-
-    //     $objWriter = PHPExcel_IOFactory::createWriter($objPHPExcel, 'PDF');
-    //     // $objWriter->dompDF->Options->setIsRemoteEnabled(true);
-    //     // set image paths to root folder
-    //     $objWriter->setImagesRoot('');
-    //     $objWriter->writeAllSheets();
-    //     $objWriter->save($filepath);
-    // }
-
     public function downloadFile($filepath)
     {
         $filename = basename($filepath);
@@ -338,12 +313,6 @@ class ExcelReportBehavior extends Behavior
         $file = new File($filepath);
         $file->delete();
     }
-
-    // public function deleteFolder($filepath)
-    // {
-    //     $folder = new Folder($filepath);
-    //     $folder->delete();
-    // }
 
     public function getParams($controller)
     {
@@ -533,11 +502,6 @@ class ExcelReportBehavior extends Behavior
         if (!empty($extra['placeholders'])) {
             $this->processAdvancedPlaceholder($objPHPExcel, $objWorksheet, $extra);
         }
-
-        // if ($this->config('format') == 'pdf') {
-        //     $this->processImages($objPHPExcel, $objWorksheet, $extra);
-        //     $objWorksheet->setShowGridlines(false);
-        // }
     }
 
     private function processBasicPlaceholder($objPHPExcel, $objWorksheet, $extra)
@@ -1032,28 +996,4 @@ class ExcelReportBehavior extends Behavior
             $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
         }
     }
-
-    // private function processImages($objPHPExcel, $objWorksheet, $extra)
-    // {
-    //     $drawingCollection = $objWorksheet->getDrawingCollection();
-
-    //     if (!empty($drawingCollection)) {
-    //         $tmpImageFolder = $extra['path'] . 'images' . '_' . date('Ymd') . 'T' . date('His');
-    //         $extra['tmp_image_folder'] = $tmpImageFolder;
-    //         new Folder($tmpImageFolder, true, 0777);
-
-    //         foreach ($drawingCollection as $drawing) {
-    //             if ($drawing instanceof PHPExcel_Worksheet_Drawing) {
-    //                 $fileName = $drawing->getFilename();
-    //                 $filePath = $drawing->getPath();
-    //                 $image = file_get_contents($filePath);
-
-    //                 // save images to temp image folder
-    //                 $newFilePath = $tmpImageFolder . DS . $fileName;
-    //                 file_put_contents($newFilePath, $image);
-    //                 $drawing->setPath($newFilePath);
-    //             }
-    //         }
-    //     }
-    // }
 }
