@@ -38,7 +38,15 @@ $this->start('panelBody');
                 <div class="tabs-divider"></div>
             </scrollable-tabset>
 
-
+            <div class="section-header security-permission-checkbox">
+                <input
+                class="no-selection-label"
+                kd-checkbox-radio="General"
+                type="checkbox"
+                ng-true-value="1"
+                ng-false-value="0"
+                ng-model="SecurityPermissionEditController.enabled">
+            </div>
         </div>
     </div>
 </form>
