@@ -406,6 +406,18 @@ class InstitutionClassesTable extends ControllerActionTable
     public function findTranslateItem(Query $query, array $options)
     {
         return $query
+            // POCOR-2547 sort list of staff and student by name
+            // move the contain from institution.class.student.ctrl.js since its using finder method
+            ->contain([
+                'ClassStudents' => [
+                    'sort' => ['Users.first_name', 'Users.last_name']
+                ],
+                'ClassStudents.Users.Genders',
+                'ClassStudents.StudentStatuses',
+                'ClassStudents.EducationGrades',
+                'AcademicPeriods',
+                'InstitutionSubjects'
+            ])
             ->formatResults(function ($results) {
                 $arrResults = $results->toArray();
                 foreach ($arrResults as &$value) {

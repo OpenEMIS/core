@@ -167,7 +167,14 @@ class DirectoriesTable extends ControllerActionTable {
 			$this->aliasField('super_admin') => 0
 		];
 		$conditions = array_merge($conditions, $notSuperAdminCondition);
-		$query->where($conditions);
+
+        // POCOR-2547 sort list of staff and student by name
+		$query->where($conditions)
+            ->order([
+                $this->aliasField('first_name'),
+                $this->aliasField('last_name')
+            ])
+        ;
 
         $options['auto_search'] = true;
 
@@ -322,7 +329,7 @@ class DirectoriesTable extends ControllerActionTable {
         }
     }
 
-	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
@@ -583,7 +590,7 @@ class DirectoriesTable extends ControllerActionTable {
         ]);
     }
 
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $isSet = $this->setSessionAfterAction($event, $entity);
 
@@ -622,7 +629,7 @@ class DirectoriesTable extends ControllerActionTable {
 				return $this->controller->redirect($urlParams);
 			}
 		}
-        
+
         $this->setupTabElements($entity);
 	}
 
