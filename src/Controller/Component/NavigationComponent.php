@@ -353,10 +353,10 @@ class NavigationComponent extends Component
                 'link' => false
             ],
 
-                'Institutions.view' => [
+                'Institutions.Institutions.view' => [
                     'title' => 'Overview',
                     'parent' => 'Institution.General',
-                    'selected' => ['Institutions.view', 'Institutions.edit'],
+                    'selected' => [],
                     'params' => ['plugin' => 'Institution', 0 => $institutionId]
                 ],
 
