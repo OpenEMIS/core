@@ -47,11 +47,8 @@ class StudentsController extends AppController {
     public function Guardians() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
     public function GuardianUser() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
     public function Attachments() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
-<<<<<<< HEAD
     public function ReportCards() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
-=======
     public function StudentSurveys() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
->>>>>>> efb480710d02901e2ce94d76cb62d00f7bba419d
 
     // health
 	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
