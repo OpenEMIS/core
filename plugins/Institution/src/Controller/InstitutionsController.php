@@ -255,18 +255,16 @@ class InstitutionsController extends AppController
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
 
         if ($hasTemplate) {
-            $url['plugin'] = 'CustomExcel';
-            $url['controller'] = 'CustomExcels';
-            $url['action'] = 'export';
-            $url[0] = 'AssessmentResults';
-        } else {
-            $url['plugin'] = 'Institution';
-            $url['controller'] = 'Institutions';
-            $url['action'] = 'ClassStudents';
-            $url[0] = 'excel';
+            $customUrl = $this->ControllerAction->url('index');
+            $customUrl['plugin'] = 'CustomExcel';
+            $customUrl['controller'] = 'CustomExcels';
+            $customUrl['action'] = 'export';
+            $customUrl[0] = 'AssessmentResults';
+            $this->set('customExcel', Router::url($customUrl));
         }
 
         $this->set('excelUrl', Router::url($url));
+
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
     // End

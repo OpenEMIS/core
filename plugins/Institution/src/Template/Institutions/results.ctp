@@ -42,9 +42,9 @@ $this->start('toolbar');
         </button>
         <!-- End -->
     <?php endif; ?>
-
-        <a><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-table"></i></button></a>
-
+    <?php if (isset($customExcel)) : ?>
+        <a href="<?=$customExcel ?>><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Report') ?>" ><i class="fa kd-table"></i></button></a>
+    <?php endif;?>
     <?php if ($_excel) : ?>
         <a href="<?=$excelUrl ?>"><button class="btn btn-xs btn-default" data-toggle="tooltip" data-placement="bottom" data-container="body" title="<?= __('Export') ?>" ><i class="fa kd-export"></i></button></a>
     <?php endif; ?>
