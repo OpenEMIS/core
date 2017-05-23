@@ -51,7 +51,7 @@ $this->start('panelBody');
             </scrollable-tabset>
 
             <div id="institution-comment-table" class="table-wrapper">
-                <div ng-if="InstitutionCommentsController.gridOptions" ag-grid="InstitutionCommentsController.gridOptions" class="ag-fresh"></div>
+                <div ng-if="InstitutionCommentsController.gridOptions" ag-grid="InstitutionCommentsController.gridOptions" class="sg-theme"></div>
             </div>
         </div>
     </div>
