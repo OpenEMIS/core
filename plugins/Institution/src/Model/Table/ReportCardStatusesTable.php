@@ -6,6 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\Entity;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
+use Cake\ORM\ResultSet;
 use Cake\Event\Event;
 use Cake\Log\Log;
 use ZipArchive;
@@ -78,7 +79,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
             $generateUrl = $this->setQueryString($this->url('generate'), $params);
             $buttons['generate'] = [
-                'label' => '<i class="fa fa-tasks"></i>'.__('Generate'),
+                'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
                 'attr' => $indexAttr,
                 'url' => $generateUrl
             ];
@@ -139,56 +140,6 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->setFieldOrder(['status', 'openemis_no', 'student_id', 'academic_period_id', 'report_card']);
-
-        $reportCardId = $this->request->query('report_card_id');
-        $classId = $this->request->query('class_id');
-
-        if (!is_null($reportCardId) && !is_null($classId)) {
-            $toolbarAttr = [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false
-            ];
-
-            $params = [
-                'institution_id' => $this->Session->read('Institution.Institutions.id'),
-                'institution_class_id' => $classId,
-                'report_card_id' => $reportCardId
-            ];
-
-            // Generate all button
-            $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-            $generateButton['type'] = 'button';
-            $generateButton['label'] = '<i class="fa fa-tasks"></i>';
-            $generateButton['attr'] = $toolbarAttr;
-            $generateButton['attr']['title'] = __('Generate All');
-            $extra['toolbarButtons']['generateAll'] = $generateButton;
-
-            // Download all button
-            $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
-            $downloadButton['type'] = 'button';
-            $downloadButton['label'] = '<i class="fa kd-download"></i>';
-            $downloadButton['attr'] = $toolbarAttr;
-            $downloadButton['attr']['title'] = __('Download All');
-            $extra['toolbarButtons']['downloadAll'] = $downloadButton;
-
-            // Publish all button
-            $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
-            $publishButton['type'] = 'button';
-            $publishButton['label'] = '<i class="fa fa-share-square-o"></i>';
-            $publishButton['attr'] = $toolbarAttr;
-            $publishButton['attr']['title'] = __('Publish All');
-            $extra['toolbarButtons']['publishAll'] = $publishButton;
-
-            // Unpublish all button
-            $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
-            $unpublishButton['type'] = 'button';
-            $unpublishButton['label'] = '<i class="fa fa-lock"></i>';
-            $unpublishButton['attr'] = $toolbarAttr;
-            $unpublishButton['attr']['title'] = __('Unpublish All');
-            $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
-        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -271,6 +222,78 @@ class ReportCardStatusesTable extends ControllerActionTable
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
     }
 
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $reportCardId = $this->request->query('report_card_id');
+        $classId = $this->request->query('class_id');
+
+        if (!is_null($reportCardId) && !is_null($classId)) {
+            $generatedCount = 0;
+            $publishedCount = 0;
+
+            foreach($data as $student) {
+                if ($student->has('report_card_status')) {
+                    if ($student->report_card_status == self::GENERATED) {
+                        $generatedCount += 1;
+                    } else if ($student->report_card_status == self::PUBLISHED) {
+                        $publishedCount += 1;
+                    }
+                }
+            }
+
+            $toolbarAttr = [
+                'class' => 'btn btn-xs btn-default',
+                'data-toggle' => 'tooltip',
+                'data-placement' => 'bottom',
+                'escape' => false
+            ];
+
+            $params = [
+                'institution_id' => $this->Session->read('Institution.Institutions.id'),
+                'institution_class_id' => $classId,
+                'report_card_id' => $reportCardId
+            ];
+
+            // Generate all button
+            $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+            $generateButton['type'] = 'button';
+            $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+            $generateButton['attr'] = $toolbarAttr;
+            $generateButton['attr']['title'] = __('Generate All');
+            $extra['toolbarButtons']['generateAll'] = $generateButton;
+
+            if ($generatedCount > 0 || $publishedCount > 0) {
+                // Download all button
+                $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
+                $downloadButton['type'] = 'button';
+                $downloadButton['label'] = '<i class="fa kd-download"></i>';
+                $downloadButton['attr'] = $toolbarAttr;
+                $downloadButton['attr']['title'] = __('Download All');
+                $extra['toolbarButtons']['downloadAll'] = $downloadButton;
+            }
+
+            if ($generatedCount > 0) {
+                // Publish all button
+                $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
+                $publishButton['type'] = 'button';
+                $publishButton['label'] = '<i class="fa fa-share-square-o"></i>';
+                $publishButton['attr'] = $toolbarAttr;
+                $publishButton['attr']['title'] = __('Publish All');
+                $extra['toolbarButtons']['publishAll'] = $publishButton;
+            }
+
+            if ($publishedCount > 0) {
+                // Unpublish all button
+                $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
+                $unpublishButton['type'] = 'button';
+                $unpublishButton['label'] = '<i class="fa fa-lock"></i>';
+                $unpublishButton['attr'] = $toolbarAttr;
+                $unpublishButton['attr']['title'] = __('Unpublish All');
+                $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
+            }
+        }
+    }
+
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('institution_class_id', ['type' => 'integer']);
@@ -347,7 +370,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $url = $this->setQueryString($url, $params);
         } else {
             $url = $this->url('index');
-            $this->Alert->error('ReportCardStatuses.noTemplate');
+            $this->Alert->warning('ReportCardStatuses.noTemplate');
         }
 
         $event->stopPropagation();
@@ -365,7 +388,7 @@ class ReportCardStatusesTable extends ControllerActionTable
             $this->Alert->warning('ReportCardStatuses.generateAll');
 
         } else {
-            $this->Alert->error('ReportCardStatuses.noTemplate');
+            $this->Alert->warning('ReportCardStatuses.noTemplate');
         }
 
         $event->stopPropagation();
@@ -416,7 +439,7 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         } else {
             $event->stopPropagation();
-            $this->Alert->error('ReportCardStatuses.noFilesToDownload');
+            $this->Alert->warning('ReportCardStatuses.noFilesToDownload');
             return $this->controller->redirect($this->url('index'));
         }
     }
@@ -442,7 +465,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($result) {
             $this->Alert->success('ReportCardStatuses.publishAll');
         } else {
-            $this->Alert->error('ReportCardStatuses.noFilesToPublish');
+            $this->Alert->warning('ReportCardStatuses.noFilesToPublish');
         }
 
         $event->stopPropagation();
@@ -470,7 +493,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($result) {
             $this->Alert->success('ReportCardStatuses.unpublishAll');
         } else {
-            $this->Alert->error('ReportCardStatuses.noFilesToUnpublish');
+            $this->Alert->warning('ReportCardStatuses.noFilesToUnpublish');
         }
 
         $event->stopPropagation();
