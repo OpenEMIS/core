@@ -32,5 +32,8 @@ UPDATE `security_functions`
 SET `order` = `order` - 1
 WHERE `order` >= 7018 AND `order` <= 7052;
 
+-- labels
+DELETE FROM `labels` WHERE `id` = '1ef9db3d-3f7f-11e7-9c23-525400b263eb';
+
 -- system_patches
 DELETE FROM `system_patches` WHERE `issue` = 'POCOR-3533';

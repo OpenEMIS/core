@@ -147,3 +147,7 @@ INSERT INTO `security_functions` (`id`, `name`, `controller`, `module`, `categor
 (2033, 'Report Cards', 'Students', 'Institutions', 'Students - Academic', 1000, 'ReportCards.index|ReportCards.view', NULL, NULL, NULL, 'ReportCards.download', 2018, 1, NULL, NULL, NULL, 1, NOW()),
 (5072, 'Templates', 'ReportCards', 'Administration', 'Report Cards', 5000, 'Templates.index|Templates.view', 'Templates.edit', 'Templates.add', 'Templates.remove', 'Templates.download', 5067, 1, NULL, NULL, NULL, 1, NOW()),
 (7052, 'Report Cards', 'Directories', 'Directory', 'Students - Academic', 7000, 'StudentReportCards.index|StudentReportCards.view', NULL, NULL, NULL, 'StudentReportCards.download', 7017, 1, NULL, NULL, NULL, 1, NOW());
+
+-- labels
+INSERT INTO `labels` (`id`, `module`, `field`, `module_name`, `field_name`, `visible`, `created_user_id`, `created`) VALUES
+('1ef9db3d-3f7f-11e7-9c23-525400b263eb', 'ReportCardStatuses', 'openemis_no', 'Institutions -> Report Cards -> Statuses', 'OpenEMIS ID', 1, 1, NOW());
