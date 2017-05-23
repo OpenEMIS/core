@@ -455,6 +455,10 @@ class StaffTable extends ControllerActionTable
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         $request->query['staff_status_id'] = $selectedStatus;
         $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+
+        // POCOR-2547 sort list of staff and student by name
+        $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
     }
 
