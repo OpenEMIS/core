@@ -28,6 +28,7 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
     ];
     Controller.selectedModule = 'Institutions';
     Controller.roleId = 0;
+    Controller.pageSections = {};
 
     // function
     Controller.changeModule = changeModule;
@@ -37,7 +38,14 @@ function SecurityPermissionEditController($scope, $q, $window, $http, UtilsSvc, 
         var module = Controller.modules[0].key;
         SecurityPermissionEditSvc.getPermissions(Controller.roleId, module)
         .then(function(permissions) {
-            console.log(permissions);
+            var sections = {};
+            angular.forEach(permissions, function(value, key) {
+                if (sections[value.module] == undefined) {
+                    sections[value.module] = [];
+                }
+                sections[value.module].push(value);
+            });
+            console.log(sections);
         }, function(error) {
 
         });
