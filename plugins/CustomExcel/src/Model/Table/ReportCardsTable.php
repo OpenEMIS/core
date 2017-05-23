@@ -10,8 +10,6 @@ use App\Model\Table\AppTable;
 
 class ReportCardsTable extends AppTable
 {
-    private $groupAssessmentPeriodCount = 0;
-
     public function initialize(array $config)
     {
         $this->table('institution_class_students');
@@ -32,10 +30,9 @@ class ReportCardsTable extends AppTable
         $this->addBehavior('CustomExcel.ExcelReport', [
             'templateTable' => 'ReportCard.ReportCards',
             'templateTableKey' => 'report_card_id',
-            'format' => 'xlsx',
-            'lockSheets' => true,
             'save' => true,
-            'autosizeColumns' => true,
+            'wrapText' => true,
+            'lockSheets' => true,
             'variables' => [
                 'ReportCards',
                 'InstitutionStudentsReportCards',

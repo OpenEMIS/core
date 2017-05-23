@@ -29,8 +29,8 @@ class ExcelReportBehavior extends Behavior
         'format' => 'xlsx',
         'download' => true,
         'save' => false,
-        'lockSheets' => false,
-        'autosizeColumns' => false
+        'wrapText' => false,
+        'lockSheets' => false
     ];
 
     // function name and keyword pairs
@@ -182,14 +182,6 @@ class ExcelReportBehavior extends Behavior
         foreach ($objPHPExcel->getWorksheetIterator() as $objWorksheet) {
             $this->processWorksheet($objPHPExcel, $objWorksheet, $extra);
 
-            if ($this->config('autosizeColumns')) {
-                // auto size columns
-                foreach($objWorksheet->getColumnDimensions() as $col) {
-                    $col->setAutoSize(true);
-                }
-                $objWorksheet->calculateColumnWidths();
-            }
-
             // lock all sheets
             if ($this->config('lockSheets')) {
                 $objWorksheet->getProtection()->setSheet(true);
@@ -228,6 +220,10 @@ class ExcelReportBehavior extends Behavior
                     $cellValue = $cellValue->format($format);
                 }
                 break;
+        }
+
+        if ($this->config('wrapText')) {
+            $cellStyle->getAlignment()->setWrapText(true);
         }
 
         // set cell style to follow placeholder
