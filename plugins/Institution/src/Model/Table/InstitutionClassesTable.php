@@ -700,19 +700,18 @@ class InstitutionClassesTable extends ControllerActionTable
 ** essential functions
 **
 ******************************************************************************************************************/
-    public function getClassGradeOptions($entity)
+    public function getClassGradeOptions($institutionClassId)
     {
         $Grade = $this->ClassGrades;
         $gradeOptions = $Grade->find()
                             ->contain('EducationGrades')
                             ->where([
-                                $Grade->aliasField('institution_class_id') => $entity->id,
-                                $Grade->aliasField('status') => 1
+                                $Grade->aliasField('institution_class_id') => $institutionClassId
                             ])
                             ->toArray();
         $options = [];
         foreach ($gradeOptions as $value) {
-            $options[$value->education_grade->id] = $value->education_grade->name;
+            $options[] = $value->education_grade->id;
         }
         return $options;
     }
