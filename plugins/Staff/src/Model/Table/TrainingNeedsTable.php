@@ -432,8 +432,8 @@ class TrainingNeedsTable extends ControllerActionTable
             ->select([
                 $this->aliasField('id'),
                 $this->aliasField('status_id'),
-                $this->aliasField('course_code'),
-                $this->aliasField('course_name'),
+                // $this->aliasField('course_code'),
+                // $this->aliasField('course_name'),
                 $this->aliasField('course_id'),
                 $this->aliasField('training_need_category_id'),
                 $this->aliasField('modified'),
