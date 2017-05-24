@@ -175,9 +175,9 @@ class ReportCardsTable extends ControllerActionTable
         }
     }
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditBeforeAction(Event $event, ArrayObject $extra)
     {
-        // to set template download button (only in add)
+        // to set template download button
         $downloadUrl = $this->url('downloadTemplate');
         $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
     }
@@ -202,11 +202,9 @@ class ReportCardsTable extends ControllerActionTable
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
-        } else if ($action == 'add') {
+        } else {
             // attr for template download button
             $attr['startWithOneLeftButton'] = 'download';
-            $attr['type'] = 'binary';
-        } else {
             $attr['type'] = 'binary';
         }
 
