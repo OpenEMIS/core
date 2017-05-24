@@ -9,7 +9,7 @@ class TrainingNeedCompetenciesTable extends ControllerActionTable
     {
         parent::initialize($config);
 
-        // $this->hasMany('TrainingNeeds', ['className' => 'Staff.TrainingNeeds', 'foreignKey' => 'training_need_competency_id']);
+        $this->hasMany('TrainingNeeds', ['className' => 'Staff.StaffTrainingNeeds']);
 
         $this->addBehavior('FieldOption.FieldOption');
     }
