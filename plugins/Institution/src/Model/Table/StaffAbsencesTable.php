@@ -528,6 +528,7 @@ class StaffAbsencesTable extends ControllerActionTable {
 				])
 				->find('InDateRange', ['start_date' => $startDate, 'end_date' => $endDate])
 				->contain(['Users'])
+				->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
 				->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name']);
 
 			$activeStaffOptionsClone = clone $activeStaffOptions;
@@ -536,6 +537,7 @@ class StaffAbsencesTable extends ControllerActionTable {
 				->where([$Staff->aliasField('id').' NOT IN ' => $activeStaffOptionsClone->select(['id'])])
 				->contain(['Users'])
 				->find('list', ['keyField' => 'staff_id', 'valueField' => 'staff_name'])
+				->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
 				->toArray();
 
 			$activeStaffOptions = $activeStaffOptions->toArray();

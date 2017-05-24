@@ -415,6 +415,24 @@ class InstitutionClassesTable extends ControllerActionTable
             });
     }
 
+    public function findClassDetails(Query $query, array $options)
+    {
+        // POCOR-2547 sort list of staff and student by name
+        // move the contain from institution.class.student.ctrl.js since its using finder method
+        return $query
+            ->find('translateItem')
+            ->contain([
+                'ClassStudents' => [
+                    'sort' => ['Users.first_name', 'Users.last_name']
+                ],
+                'ClassStudents.Users.Genders',
+                'ClassStudents.StudentStatuses',
+                'ClassStudents.EducationGrades',
+                'AcademicPeriods',
+                'InstitutionSubjects'
+            ]);
+    }
+
     public function findByGrades(Query $query, array $options)
     {
         $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
@@ -496,7 +514,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'ClassStudents' => [
                 'Users.Genders',
                 'EducationGrades',
-                'StudentStatuses'
+                'StudentStatuses',
+                'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
             ],
         ]);
     }

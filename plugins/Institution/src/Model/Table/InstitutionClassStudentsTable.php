@@ -619,6 +619,7 @@ class InstitutionClassStudentsTable extends AppTable
                 $this->aliasField('academic_period_id') => $academicPeriodId,
                 'SubjectStudents.student_id IS NULL'
             ])
+            ->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) {
                 $resultArr = [];
                 foreach ($results as $result) {
