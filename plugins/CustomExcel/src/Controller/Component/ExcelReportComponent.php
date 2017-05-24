@@ -26,6 +26,9 @@ class ExcelReportComponent extends Component
 		$extra = new ArrayObject($params);
 		$event = $model->dispatchEvent('ExcelTemplates.Model.onRenderExcelTemplate', [$extra], $this->controller);
 		if ($event->isStopped()) { return $event->result; }
+
+		$event = $model->dispatchEvent('ExcelTemplates.Model.afterRenderExcelTemplate', [$extra, $this->controller], $this->controller);
+		if ($event->isStopped()) { return $event->result; }
 	}
 
 	public function viewVars($params=[])
