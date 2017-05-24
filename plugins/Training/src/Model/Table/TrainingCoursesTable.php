@@ -213,7 +213,7 @@ class TrainingCoursesTable extends ControllerActionTable
             }
         }
 
-        $newOptions = ['associated' => ['TargetPopulations' ,'TrainingProviders', 'ResultTypes']]; //so during patch entity, it can get the necessary datas
+        $newOptions = ['associated' => ['TargetPopulations' ,'TrainingProviders', 'ResultTypes', 'CoursePrerequisites', 'Specialisations']]; //so during patch entity, it can get the necessary datas
         $arrayOptions = $patchOptions->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $patchOptions->exchangeArray($arrayOptions);
