@@ -21,13 +21,13 @@ class RestfulV1Component extends Component implements RestfulInterface
     use RestfulTrait;
     private $model = null;
     private $controller = null;
-    private $Auth = null;
+
+    public $components = ['Auth'];
 
     public function initialize(array $config)
     {
         parent::initialize($config);
         $this->controller = $this->_registry->getController();
-        $this->Auth = $this->controller->Auth;
         $this->model = $this->config('model');
     }
 
@@ -49,6 +49,7 @@ class RestfulV1Component extends Component implements RestfulInterface
                 $this->model = $model;
                 // Event to get allowed action and allowed table to be accessible via restful
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
+
                 if (is_array($event->result)) {
                     $this->Auth->allow($event->result);
                 }
