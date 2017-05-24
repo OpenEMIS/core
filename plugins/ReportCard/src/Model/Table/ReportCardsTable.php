@@ -5,6 +5,7 @@ use ArrayObject;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
+use Cake\Routing\Router;
 use Cake\Event\Event;
 use Cake\Network\Request;
 use Cake\Validation\Validator;
@@ -17,8 +18,6 @@ class ReportCardsTable extends ControllerActionTable
 
     CONST ALL_SUBJECTS = 2;
     CONST SELECT_SUBJECTS = 1;
-
-    private $roleOptions = [];
 
     public function initialize(array $config)
     {
@@ -53,6 +52,13 @@ class ReportCardsTable extends ControllerActionTable
         ]);
 
         $this->setDeleteStrategy('restrict');
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.downloadTemplate'] = 'downloadTemplate';
+        return $events;
     }
 
     public function validationDefault(Validator $validator) {
@@ -169,6 +175,13 @@ class ReportCardsTable extends ControllerActionTable
         }
     }
 
+    public function addBeforeAction(Event $event, ArrayObject $extra)
+    {
+        // to set template download button (only in add)
+        $downloadUrl = $this->url('downloadTemplate');
+        $this->controller->set('downloadOnClick', "javascript:window.location.href='". Router::url($downloadUrl) ."'");
+    }
+
     public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($entity);
@@ -189,6 +202,10 @@ class ReportCardsTable extends ControllerActionTable
     {
         if ($action == 'index' || $action == 'view') {
             $attr['type'] = 'string';
+        } else if ($action == 'add') {
+            // attr for template download button
+            $attr['startWithOneLeftButton'] = 'download';
+            $attr['type'] = 'binary';
         } else {
             $attr['type'] = 'binary';
         }
@@ -463,5 +480,23 @@ class ReportCardsTable extends ControllerActionTable
         }
 
         return $hasTemplate;
+    }
+
+    public function downloadTemplate()
+    {
+        $filename = 'report_card_template';
+        $fileType = 'xlsx';
+        $filepath = WWW_ROOT . 'export' . DS . 'customexcel'. DS . 'default_templates'. DS . $filename . '.' . $fileType;
+
+        header("Pragma: public", true);
+        header("Expires: 0"); // set expiration time
+        header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+        header("Content-Type: application/force-download");
+        header("Content-Type: application/octet-stream");
+        header("Content-Type: application/download");
+        header("Content-Disposition: attachment; filename=".basename($filepath));
+        header("Content-Transfer-Encoding: binary");
+        header("Content-Length: ".filesize($filepath));
+        echo file_get_contents($filepath);
     }
 }
