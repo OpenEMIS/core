@@ -740,6 +740,7 @@ class InstitutionStudentAbsencesTable extends AppTable {
 				$Students->aliasField('institution_class_id') => $selectedClass
 			])
 			->contain(['Users'])
+			->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
 			->toArray();
 		$selectedStudent = !is_null($this->request->query('student')) ? $this->request->query('student') : key($studentOptions);
 		// End
