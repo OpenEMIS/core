@@ -368,6 +368,7 @@ class ReportCardStatusesTable extends ControllerActionTable
                 'ReportCards'
             ];
             $url = $this->setQueryString($url, $params);
+            $this->Alert->success('ReportCardStatuses.generate');
         } else {
             $url = $this->url('index');
             $this->Alert->warning('ReportCardStatuses.noTemplate');
@@ -448,6 +449,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $result = $this->StudentsReportCards->updateAll(['status' => self::PUBLISHED], $params);
+        $this->Alert->success('ReportCardStatuses.publish');
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }
@@ -476,6 +478,7 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $params = $this->getQueryString();
         $result = $this->StudentsReportCards->updateAll(['status' => self::NEW_REPORT], $params);
+        $this->Alert->success('ReportCardStatuses.unpublish');
         $event->stopPropagation();
         return $this->controller->redirect($this->url('index'));
     }

@@ -690,8 +690,11 @@ trait MessagesTrait {
             'noFilesToDownload' => 'There are no generated Report Cards to download',
             'noFilesToPublish' => 'There are no generated Report Cards to publish',
             'noFilesToUnpublish' => 'There are no published Report Cards to unpublish',
+            'generate' => 'The Report Card has been successfully generated',
             'generateAll' => 'All Report Cards will be generated in the background',
+            'publish' => 'The Report Card has been successfully published',
             'publishAll' => 'All generated Report Cards have been published successfully',
+            'unpublish' => 'The Report Card has been successfully unpublished',
             'unpublishAll' => 'All published Report Cards have been unpublished successfully'
         ],
         'AlertRules' => [
