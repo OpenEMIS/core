@@ -337,15 +337,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
-            /**
-             * Added on PHPOE-1762 for PHPOE-1766
-             * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions()
-             * so as to avoid unadherence of User's Requirements.
-             */
-            $gradeOptions[-1] = 'All Grades';
-            // sort options by key
-            ksort($gradeOptions);
-            /**/
+            $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
         }
 
         $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
@@ -395,13 +387,16 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $sortable = !is_null($this->request->query('sort')) ? true : false;
+
         $query
-        ->find('byGrades', ['education_grade_id' => $extra['selectedEducationGradeId']])
-        ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+            ->find('byGrades', [
+                'education_grade_id' => $extra['selectedEducationGradeId'],
+                'sort' => $sortable
+            ])
+            ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+            ->order([$this->aliasField('name') => 'ASC'])
         ;
-        $extra['options']['order'] = [
-            $this->aliasField('name') => 'asc'
-        ];
     }
 
     public function findTranslateItem(Query $query, array $options)
@@ -422,6 +417,9 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function findByGrades(Query $query, array $options)
     {
+        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $gradeId = $options['education_grade_id'];
         $join = [
             'table' => 'institution_class_grades',
@@ -434,7 +432,24 @@ class InstitutionClassesTable extends ControllerActionTable
         if ($gradeId > 0) {
             $join['conditions']['InstitutionClassGrades.education_grade_id'] = $gradeId;
         }
-        return $query->join([$join])->group(['InstitutionClassGrades.institution_class_id']);
+
+        $query = $query
+            ->join([$join])
+            ->group(['InstitutionClassGrades.institution_class_id'])
+            ;
+
+        // if no sorting, order by grade then class name
+        if (!$sortable) {
+            $query = $query
+                ->innerJoin(
+                    [$EducationGrades->alias() => $EducationGrades->table()],
+                    [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
+                )
+                ->order(['EducationGrades.order' => 'ASC'])
+            ;
+        }
+
+        return $query;
     }
 
 
