@@ -213,14 +213,19 @@ class ReportCardCommentsTable extends ControllerActionTable
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
         if (isset($buttons['view']['url'])) {
-            $buttons['view']['url'] = [
+            $url = [
                 'plugin' => $this->controller->plugin,
                 'controller' => $this->controller->name,
-                'action' => 'Comments',
+                'action' => 'Comments'
+            ];
+
+            $params = [
                 'institution_class_id' => $entity->institution_class_id,
                 'report_card_id' => $entity->report_card_id,
                 'institution_id' => $entity->institution_id
             ];
+
+            $buttons['view']['url'] = $this->setQueryString($url, $params);
         }
 
         return $buttons;

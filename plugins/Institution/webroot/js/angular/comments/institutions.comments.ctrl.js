@@ -20,14 +20,10 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
 
     // Initialisation
     angular.element(document).ready(function() {
-        vm.institutionId = UtilsSvc.requestQuery('institution_id');
-        vm.classId = UtilsSvc.requestQuery('institution_class_id');
-        vm.reportCardId = UtilsSvc.requestQuery('report_card_id');
-
         InstitutionsCommentsSvc.init(angular.baseUrl);
         UtilsSvc.isAppendLoader(true);
 
-        InstitutionsCommentsSvc.getReportCard(vm.reportCardId)
+        InstitutionsCommentsSvc.getReportCard($scope.reportCardId)
         // getReportCard
         .then(function(response)
         {
@@ -56,10 +52,11 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 vm.currentUserName = userData.name;
                 vm.currentUserId = userData.id
 
-                return InstitutionsCommentsSvc.getTabs(vm.reportCardId, vm.classId, vm.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired);
+                return InstitutionsCommentsSvc.getTabs($scope.reportCardId, $scope.classId, $scope.institutionId, vm.currentUserId, vm.principalCommentsRequired, vm.homeroomTeacherCommentsRequired, vm.teacherCommentsRequired);
             }
         }, function(error)
         {
+            // No current user
             console.log(error);
             AlertSvc.warning(vm, error);
         })
@@ -88,7 +85,6 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
         {
             // No Comment Codes
             console.log(error);
-            AlertSvc.warning(vm, error);
         })
         .finally(function(){
             UtilsSvc.isAppendLoader(false);
@@ -105,9 +101,9 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
     function initGrid(tab) {
         vm.gridOptions = {
             context: {
-                institution_id: vm.institutionId,
-                class_id: vm.classId,
-                report_card_id: vm.reportCardId,
+                institution_id: $scope.institutionId,
+                class_id: $scope.classId,
+                report_card_id: $scope.reportCardId,
                 academic_period_id: vm.academicPeriodId,
                 education_grade_id: vm.educationGradeId,
                 current_user_id: vm.currentUserId
@@ -176,7 +172,7 @@ function InstitutionCommentsController($scope, $anchorScroll, $filter, $q, Utils
                 var page = parseInt(params.startRow / limit) + 1;
 
                 UtilsSvc.isAppendSpinner(true, 'institution-comment-table');
-                InstitutionsCommentsSvc.getRowData(vm.academicPeriodId, vm.institutionId, vm.classId, vm.educationGradeId, vm.reportCardId, vm.commentCodeOptions, tab, limit, page)
+                InstitutionsCommentsSvc.getRowData(vm.academicPeriodId, $scope.institutionId, $scope.classId, vm.educationGradeId, $scope.reportCardId, vm.commentCodeOptions, tab, limit, page)
                 .then(function(response) {
                     var lastRowIndex = response.data.total;
 
