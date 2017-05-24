@@ -468,6 +468,16 @@ class InstitutionClassStudentsTable extends AppTable
         return ' '.$totalMark;
     }
 
+    public function getStudentCountByClass($classId)
+    {
+        $count = $this
+            ->find()
+            ->where([$this->aliasField('institution_class_id') => $classId])
+            ->count()
+        ;
+        return $count;
+    }
+
     public function getMaleCountByClass($classId)
     {
         $gender_id = 1; // male
