@@ -169,12 +169,17 @@ class DirectoriesTable extends ControllerActionTable {
 		$conditions = array_merge($conditions, $notSuperAdminCondition);
 
         // POCOR-2547 sort list of staff and student by name
-		$query->where($conditions)
-            ->order([
+        $orders = [];
+
+        if (!isset($this->request->query['sort'])) {
+            $orders = [
                 $this->aliasField('first_name'),
                 $this->aliasField('last_name')
-            ])
-        ;
+            ];
+        }
+
+		$query->where($conditions)
+            ->order($orders);
 
         $options['auto_search'] = true;
 
