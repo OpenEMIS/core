@@ -62,6 +62,19 @@ $roles = '[' . implode(",", $_roles) . ']';
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
 
+    <div class="toolbar-responsive panel-toolbar">
+        <div class="toolbar-wrapper">
+            <div class="input select">
+                <div class="input-select-wrapper" ng-init="selectedAcademicTermId=<?= $this->request->query('term_id') ?>">
+                    <select ng-options="option.id as option.name for option in academicTermOptions"
+                            ng-model="selectedAcademicTermId"
+                            >
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div ng-init="class_id=<?= $classId; ?>;assessment_id=<?= $assessmentId; ?>;institution_id=<?= $institutionId; ?>;roles=<?=$roles; ?>">
         <div class="scrolltabs sticky-content">
             <scrollable-tabset show-tooltips="false" show-drop-down="false">
