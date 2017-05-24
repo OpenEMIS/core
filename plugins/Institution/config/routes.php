@@ -7,15 +7,15 @@ Router::scope('/Institutions', ['plugin' => 'Institution', 'controller' => 'Inst
         ['action' => 'Institutions']
     );
 
+    // For the main model's action
+    $routes->connect('/:indexAction',
+        ['action' => 'Institutions'],
+        ['indexAction' => 'index','pass' => [0 => 'indexAction']]
+    );
+
     $routes->connect('/:institutionId/:action/*',
         ['plugin' => 'Institution', 'controller' => 'Institutions'],
         ['institutionId' => '([\w]+[\.][\w]+)', 'action' => '[a-zA-Z]+']
-    );
-
-    // For the main model's action
-    $routes->connect('/:subaction',
-        ['action' => 'Institutions'],
-        ['subaction' => '[a-zA-Z]+', 'pass' => [0 => 'subaction']]
     );
 
     // For controller action version 3
