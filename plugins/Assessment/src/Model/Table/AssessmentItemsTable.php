@@ -8,17 +8,39 @@ use Cake\ORM\Query;
 
 use App\Model\Table\AppTable;
 
-class AssessmentItemsTable extends AppTable {
+class AssessmentItemsTable extends AppTable
+{
 
-	public function initialize(array $config)
-	{
-		parent::initialize($config);
-		$this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
-		$this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+        $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
+        $this->belongsTo('EducationSubjects', ['className' => 'Education.EducationSubjects']);
+        $this->belongsToMany('AssessmentPeriods', [
+            'className' => 'Assessment.AssessmentPeriods',
+            'joinTable' => 'assessment_items_grading_types',
+            'foreignKey' => ['assessment_id', 'education_subject_id'],
+            'bindingKey' => ['assessment_id', 'education_subject_id']
+            'targetForeignKey' => 'assessment_period_id',
+            'through' => 'Assessment.AssessmentItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+
+        $this->belongsToMany('AssessmentGradingTypes', [
+            'className' => 'Assessment.AssessmentGradingTypes',
+            'joinTable' => 'assessment_items_grading_types',
+            'foreignKey' => ['assessment_id', 'education_subject_id'],
+            'bindingKey' => ['assessment_id', 'education_subject_id']
+            'targetForeignKey' => 'assessment_grading_type_id',
+            'through' => 'Assessment.AssessmentItemsGradingTypes',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Results' => ['index']
         ]);
-	}
+    }
 
     public function validationDefault(Validator $validator)
     {
@@ -60,8 +82,7 @@ class AssessmentItemsTable extends AppTable {
 
     public function findStaffSubjects(Query $query, array $options)
     {
-        if (isset($options['class_id']) && isset($options['staff_id']))
-        {
+        if (isset($options['class_id']) && isset($options['staff_id'])) {
             $classId = $options['class_id'];
             $staffId = $options['staff_id'];
             $query->where([
@@ -100,29 +121,29 @@ class AssessmentItemsTable extends AppTable {
         return $subjectList;
     }
 
-	public function getAssessmentItemSubjects($assessmentId)
-	{
-		$subjectList = $this
-			->find()
-			->matching('EducationSubjects')
-			->where([$this->aliasField('assessment_id') => $assessmentId])
-			->select([
-				'assessment_item_id' => $this->aliasField('id'),
-				'education_subject_id' => 'EducationSubjects.id',
-				'education_subject_name' => $this->find()->func()->concat([
-					'EducationSubjects.code' => 'literal',
-					" - ",
-					'EducationSubjects.name' => 'literal'
-				])
-			])
-			->order(['EducationSubjects.order'])
-			->hydrate(false)
-			->toArray();
-		return $subjectList;
-	}
+    public function getAssessmentItemSubjects($assessmentId)
+    {
+        $subjectList = $this
+            ->find()
+            ->matching('EducationSubjects')
+            ->where([$this->aliasField('assessment_id') => $assessmentId])
+            ->select([
+                'assessment_item_id' => $this->aliasField('id'),
+                'education_subject_id' => 'EducationSubjects.id',
+                'education_subject_name' => $this->find()->func()->concat([
+                    'EducationSubjects.code' => 'literal',
+                    " - ",
+                    'EducationSubjects.name' => 'literal'
+                ])
+            ])
+            ->order(['EducationSubjects.order'])
+            ->hydrate(false)
+            ->toArray();
+        return $subjectList;
+    }
 
-	public function afterDelete()
-	{
-		// delete all AssessmentItemsGradingTypes by education_subject_id and assessment_id
-	}
+    public function afterDelete()
+    {
+        // delete all AssessmentItemsGradingTypes by education_subject_id and assessment_id
+    }
 }
