@@ -638,7 +638,9 @@ class StudentsTable extends ControllerActionTable
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
 
         // POCOR-2547 sort list of staff and student by name
-        $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        if (!isset($request->query['sort'])) {
+            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        }
 
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
     }
