@@ -50,7 +50,7 @@ class RestfulV1Component extends Component implements RestfulInterface
                 // Event to get allowed action and allowed table to be accessible via restful
                 $event = $model->dispatchEvent('Restful.Model.onGetAllowedActions', null, $this);
                 if (is_array($event->result)) {
-                    $this->Auth->allow(true);
+                    $this->Auth->allow($event->result);
                 }
             }
         }
