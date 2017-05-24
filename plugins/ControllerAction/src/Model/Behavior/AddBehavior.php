@@ -65,8 +65,7 @@ class AddBehavior extends Behavior {
                     $mainEvent->stopPropagation();
                     return $event->result;
                 }
-                pr($requestData);
-                pr($entity);die;
+                
                 $event = $model->dispatchEvent('ControllerAction.Model.add.beforePatch', $params, $this);
                 if ($event->isStopped()) {
                     $mainEvent->stopPropagation();
