@@ -35,7 +35,8 @@ class InstitutionUserBreadcrumbsBehavior extends Behavior {
 		$crumbTitle = Inflector::humanize(Inflector::underscore($this->_table->alias()));
 		$splitTitle = explode(' ', $crumbTitle);
 		$newCrumbTitle = Inflector::pluralize($splitTitle[0]);
-		$Navigation->substituteCrumb($crumbTitle, __($newCrumbTitle), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $newCrumbTitle]);
+		$institutionId = $request->param('institutionId') ? $this->_table->paramsDecode($request->param('institutionId'))['id'] : $request->session()->read('Institution.Institutions.id');
+		$Navigation->substituteCrumb($crumbTitle, __($newCrumbTitle), ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $newCrumbTitle, 'institutionId' => $this->_table->paramsEncode(['id' => $institutionId])]);
 		$model = $this->_table;
 		if ($this->_table->alias() == $splitTitle[0].'User') {
 			$Navigation->addCrumb($persona->name);
