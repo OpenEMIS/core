@@ -417,14 +417,12 @@ class ReportCardStatusesTable extends ControllerActionTable
         if (!empty($files)) {
             $path = WWW_ROOT . 'export' . DS . 'customexcel' . DS;
             $zipName = 'ReportCards' . '_' . date('Ymd') . 'T' . date('His') . '.zip';
-            $filePath = $path . $zipName;
+            $filepath = $path . $zipName;
 
             $zip = new ZipArchive;
-            $zip->open($filePath, ZipArchive::CREATE);
-            $fileType = 'xlsx';
+            $zip->open($filepath, ZipArchive::CREATE);
             foreach ($files as $file) {
-              $fileName = $file->report_card->code . '_' . $file->student->openemis_no . '_' . $file->student->name . '.' . $fileType;
-              $zip->addFromString($fileName,  $this->getFile($file->file_content));
+              $zip->addFromString($file->file_name,  $this->getFile($file->file_content));
             }
             $zip->close();
 
@@ -433,10 +431,12 @@ class ReportCardStatusesTable extends ControllerActionTable
             header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
             header("Content-Type: application/force-download");
             header("Content-Type: application/zip");
-            header("Content-Length: ".filesize($filePath));
+            header("Content-Length: ".filesize($filepath));
             header("Content-Disposition: attachment; filename=".$zipName);
-            readfile($filePath);
+            readfile($filepath);
 
+            // delete file after download
+            unlink($filepath);
         } else {
             $event->stopPropagation();
             $this->Alert->warning('ReportCardStatuses.noFilesToDownload');

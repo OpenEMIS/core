@@ -87,6 +87,7 @@ class ExcelReportBehavior extends Behavior
         } else {
             $params = $model->getQueryString();
         }
+        $extra['params'] = $params;
 
         $extra['vars'] = $this->getVars($params, $extra);
 
@@ -690,6 +691,9 @@ class ExcelReportBehavior extends Behavior
         $nestedColumnIndex = $columnIndex + 1;
         // stringFromColumnIndex(): Column index start from 0, therefore need to minus 1
         $nestedColumnValue = $objCell->stringFromColumnIndex($nestedColumnIndex-1);
+
+        // set column width to width of next column
+        $attr['columnWidth'] = $objWorksheet->getColumnDimension($nestedColumnValue)->getWidth();
 
         $filter = array_key_exists('filter', $nestedAttr) ? $nestedAttr['filter'] : null;
         if (!is_null($filter)) {

@@ -10,6 +10,8 @@ use App\Model\Table\AppTable;
 
 class ReportCardsTable extends AppTable
 {
+    private $fileType = 'xlsx';
+
     public function initialize(array $config)
     {
         $this->table('institution_class_students');
@@ -30,6 +32,8 @@ class ReportCardsTable extends AppTable
         $this->addBehavior('CustomExcel.ExcelReport', [
             'templateTable' => 'ReportCard.ReportCards',
             'templateTableKey' => 'report_card_id',
+            'format' => $this->fileType,
+            'download' => false,
             'save' => true,
             'wrapText' => true,
             'lockSheets' => true,
@@ -77,6 +81,7 @@ class ReportCardsTable extends AppTable
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentPeriods'] = 'onExcelTemplateInitialiseAssessmentPeriods';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItems'] = 'onExcelTemplateInitialiseAssessmentItems';
         $events['ExcelTemplates.Model.onExcelTemplateInitialiseAssessmentItemResults'] = 'onExcelTemplateInitialiseAssessmentItemResults';
+        $events['ExcelTemplates.Model.afterRenderExcelTemplate'] = 'afterRenderExcelTemplate';
         return $events;
     }
 
@@ -97,9 +102,20 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateSaveFile(Event $event, array $params, ArrayObject $extra)
     {
         $StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
+        $studentReportCardData = $StudentsReportCards->find()
+            ->contain(['Institutions', 'ReportCards', 'Students'])
+            ->where([
+                $StudentsReportCards->aliasField('academic_period_id') => $params['academic_period_id'],
+                $StudentsReportCards->aliasField('institution_id') => $params['institution_id'],
+                $StudentsReportCards->aliasField('institution_class_id') => $params['institution_class_id'],
+                $StudentsReportCards->aliasField('student_id') => $params['student_id'],
+                $StudentsReportCards->aliasField('report_card_id') => $params['report_card_id']
+            ])
+            ->first();
+
+        $fileName = $studentReportCardData->institution->code . '_' . $studentReportCardData->report_card->code. '_' . $studentReportCardData->student->openemis_no . '_' . $studentReportCardData->student->name . '.' . $this->fileType;
         $status = $StudentsReportCards::GENERATED;
         $filepath = $extra['file_path'];
-        $fileName = basename($filepath);
         $fileContent = file_get_contents($filepath);
 
         $StudentsReportCards->updateAll([
@@ -107,6 +123,22 @@ class ReportCardsTable extends AppTable
             'file_name' => $fileName,
             'file_content' => $fileContent
         ], $params);
+    }
+
+    public function afterRenderExcelTemplate(Event $event, ArrayObject $extra, $controller)
+    {
+        $params = $extra['params'];
+        $url = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'ReportCardStatuses',
+            'index',
+            'class_id' => $params['institution_class_id'],
+            'report_card_id' => $params['report_card_id']
+        ];
+
+        $event->stopPropagation();
+        return $controller->redirect($url);
     }
 
     public function onExcelTemplateInitialiseReportCards(Event $event, array $params, ArrayObject $extra)
