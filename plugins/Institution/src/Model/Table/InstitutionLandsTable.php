@@ -166,7 +166,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $url = [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
-            'action' => 'Buildings',
+            'action' => 'InstitutionBuildings',
             'institutionId' => $institutionId,
             'index'
         ];
