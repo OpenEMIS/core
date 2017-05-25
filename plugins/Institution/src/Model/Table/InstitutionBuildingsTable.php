@@ -128,6 +128,11 @@ class InstitutionBuildingsTable extends ControllerActionTable
         return $events;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->Navigation->substituteCrumb(__('Institution Buildings'), __('Institution Buildings'));
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->has('change_type')) {

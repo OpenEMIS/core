@@ -127,6 +127,11 @@ class InstitutionFloorsTable extends ControllerActionTable
         return $events;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->Navigation->substituteCrumb(__('Institution Floors'), __('Institution Floors'));
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->has('change_type')) {
