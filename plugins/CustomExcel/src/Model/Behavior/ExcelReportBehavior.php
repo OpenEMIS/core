@@ -18,8 +18,7 @@ use PHPExcel_Worksheet;
 use PHPExcel_Cell;
 use PHPExcel_Cell_DataValidation;
 use PHPExcel_Style_Alignment;
-// use PHPExcel_Settings;
-use PHPExcel_Worksheet_MemoryDrawing;
+// use PHPExcel_Worksheet_MemoryDrawing;
 
 class ExcelReportBehavior extends Behavior
 {
@@ -39,7 +38,7 @@ class ExcelReportBehavior extends Behavior
         'column' => 'repeatColumns',
         'match' => 'match',
         'dropdown' => 'dropdown',
-        'image' => 'image'
+        // 'image' => 'image'
     ];
 
 	public function initialize(array $config)
@@ -87,8 +86,8 @@ class ExcelReportBehavior extends Behavior
         } else {
             $params = $model->getQueryString();
         }
-        $extra['params'] = $params;
 
+        $extra['params'] = $params;
         $extra['vars'] = $this->getVars($params, $extra);
 
         $extra['file'] = $this->config('filename') . '_' . date('Ymd') . 'T' . date('His') . '.' . $this->config('format');
@@ -271,21 +270,21 @@ class ExcelReportBehavior extends Behavior
         $objWorksheet->setCellValue($cellCoordinate, $cellValue);
     }
 
-    public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra)
-    {
-        $imageWidth = $attr['imageWidth'];
+    // public function renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra)
+    // {
+    //     $imageWidth = $attr['imageWidth'];
 
-        $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
-        $objDrawing->setImageResource($imageResource);
-        $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
-        $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
-        $objDrawing->setWidth($imageWidth);
-        $objDrawing->setCoordinates($cellCoordinate);
-        $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
+    //     $objDrawing = new PHPExcel_Worksheet_MemoryDrawing();
+    //     $objDrawing->setImageResource($imageResource);
+    //     $objDrawing->setRenderingFunction(PHPExcel_Worksheet_MemoryDrawing::RENDERING_DEFAULT);
+    //     $objDrawing->setMimeType(PHPExcel_Worksheet_MemoryDrawing::MIMETYPE_DEFAULT);
+    //     $objDrawing->setWidth($imageWidth);
+    //     $objDrawing->setCoordinates($cellCoordinate);
+    //     $objDrawing->setWorksheet($objPHPExcel->getActiveSheet());
 
-        // set to empty to remove the placeholder
-        $objWorksheet->setCellValue($cellCoordinate, '');
-    }
+    //     // set to empty to remove the placeholder
+    //     $objWorksheet->setCellValue($cellCoordinate, '');
+    // }
 
     public function saveExcel($objPHPExcel, $filepath)
     {
@@ -382,6 +381,7 @@ class ExcelReportBehavior extends Behavior
 
             if (!empty($idData)) {
                 // get id and value as key-value pair
+                // selected field needs to be present in vars if not there will be a key-value number mismatch (be careful of using contain)
                 $placeholderData = !is_null($placeholder) ? Hash::combine($extra['vars'], $formattedPlaceholderId, $formattedPlaceholder) : [];
             } else {
                 // only get value
@@ -428,6 +428,7 @@ class ExcelReportBehavior extends Behavior
         $attr['rows'] = array_key_exists('rows', $settings) ? $settings['rows'] : [];
         $attr['columns'] = array_key_exists('columns', $settings) ? $settings['columns'] : [];
         $attr['filter'] = array_key_exists('filter', $settings) ? $settings['filter'] : null;
+        // $attr['imageWidth'] = array_key_exists('imageWidth', $settings) ? $settings['imageWidth'] : null;
 
         // Start attributes  for dropdown
         $dropdownAttrs = ['source', 'promptTitle', 'prompt', 'errorTitle', 'error'];
@@ -985,19 +986,19 @@ class ExcelReportBehavior extends Behavior
         }
     }
 
-    private function image($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
-    {
-        $columnValue = $attr['columnValue'];
-        $rowValue = $attr['rowValue'];
-        $cellCoordinate = $columnValue.$rowValue;
-        $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 72;
+    // private function image($objPHPExcel, $objWorksheet, $objCell, $attr, $extra)
+    // {
+    //     $columnValue = $attr['columnValue'];
+    //     $rowValue = $attr['rowValue'];
+    //     $cellCoordinate = $columnValue.$rowValue;
+    //     $attr['imageWidth'] = array_key_exists('imageWidth', $attr) ? $attr['imageWidth'] : 72;
 
-        $data = Hash::extract($extra['vars'], $attr['displayValue']);
-        $blob = current($data);
+    //     $data = Hash::extract($extra['vars'], $attr['displayValue']);
+    //     $blob = current($data);
 
-        if (is_resource($blob)) {
-            $imageResource = imagecreatefromstring(stream_get_contents($blob));
-            $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
-        }
-    }
+    //     if (is_resource($blob)) {
+    //         $imageResource = imagecreatefromstring(stream_get_contents($blob));
+    //         $this->renderImage($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $imageResource, $attr, $extra);
+    //     }
+    // }
 }
