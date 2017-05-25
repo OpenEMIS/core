@@ -68,7 +68,8 @@ class StaffTable extends ControllerActionTable
             'StaffRoom' => ['index', 'add'],
             'Staff' => ['index', 'add'],
             'ClassStudents' => ['index'],
-            'SubjectStudents' => ['index']
+            'SubjectStudents' => ['index'],
+            'ReportCardComments' => ['index']
         ]);
 
         $this->addBehavior('HighChart', [
@@ -1434,6 +1435,22 @@ class StaffTable extends ControllerActionTable
                     }
                     return $returnArr;
                 });
+    }
+
+    public function findPrincipalEditPermissions(Query $query, array $options)
+    {
+        $institutionId = $options['institution_id'];
+        $staffId = $options['staff_id'];
+
+        return $query
+            ->innerJoinWith('Positions.StaffPositionTitles.SecurityRoles')
+            ->innerJoinWith('StaffStatuses')
+            ->where([
+                $this->aliasField('institution_id') => $institutionId,
+                $this->aliasField('staff_id') => $staffId,
+                'StaffStatuses.code' => 'ASSIGNED',
+                'SecurityRoles.code' => 'PRINCIPAL'
+            ]);
     }
 
     public function removeInactiveStaffSecurityRole()
