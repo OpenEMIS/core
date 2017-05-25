@@ -1927,6 +1927,7 @@ trait MessagesTrait
                         return false;
                     }
                     $message = '[Message Not Found]';
+                    Log::write('error', 'MessagesTrait Message Not Found: '. $code);
                     break;
                 }
             }
