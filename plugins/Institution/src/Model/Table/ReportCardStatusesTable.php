@@ -38,6 +38,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->toggle('edit', false);
         $this->toggle('remove', false);
 
+        $this->ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $this->StudentsReportCards = TableRegistry::get('Institution.InstitutionStudentsReportCards');
 
         $this->statusOptions = [
@@ -51,13 +52,13 @@ class ReportCardStatusesTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
+        $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.generateAll'] = 'generateAll';
         $events['ControllerAction.Model.downloadAll'] = 'downloadAll';
-        $events['ControllerAction.Model.publishAll'] = 'publishAll';
-        $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
-        $events['ControllerAction.Model.generate'] = 'generate';
         $events['ControllerAction.Model.publish'] = 'publish';
+        $events['ControllerAction.Model.publishAll'] = 'publishAll';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
+        $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
         return $events;
     }
 
@@ -65,66 +66,67 @@ class ReportCardStatusesTable extends ControllerActionTable
     {
         $buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
 
-        $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
-        $params = [
-            'report_card_id' => $this->request->query('report_card_id'),
-            'student_id' => $entity->student_id,
-            'institution_id' => $entity->institution_id,
-            'academic_period_id' => $entity->academic_period_id,
-            'education_grade_id' => $entity->education_grade_id,
-            'institution_class_id' => $entity->institution_class_id
-        ];
+        // check if report card request is valid
+        $reportCardId = $this->request->query('report_card_id');
+        if (!is_null($reportCardId) && $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId])) {
 
-        // Generate button
-        if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
-            $generateUrl = $this->setQueryString($this->url('generate'), $params);
-            $buttons['generate'] = [
-                'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
-                'attr' => $indexAttr,
-                'url' => $generateUrl
+            $indexAttr = ['role' => 'menuitem', 'tabindex' => '-1', 'escape' => false];
+            $params = [
+                'report_card_id' => $reportCardId,
+                'student_id' => $entity->student_id,
+                'institution_id' => $entity->institution_id,
+                'academic_period_id' => $entity->academic_period_id,
+                'education_grade_id' => $entity->education_grade_id,
             ];
-        }
 
-        // Download button, status must be generated or published
-        if ($this->AccessControl->check(['Institutions', 'InstitutionStudentsReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
-            $downloadParams = $params;
-            if (isset($downloadParams['institution_class_id'])) {
-                unset($downloadParams['institution_class_id']);
+            // Download button, status must be generated or published
+            if ($this->AccessControl->check(['Institutions', 'InstitutionStudentsReportCards', 'download']) && $entity->has('report_card_status') && in_array($entity->report_card_status, [self::GENERATED, self::PUBLISHED])) {
+                $downloadUrl = [
+                    'plugin' => 'Institution',
+                    'controller' => 'Institutions',
+                    'action' => 'InstitutionStudentsReportCards',
+                    '0' => 'download',
+                    '1' => $this->paramsEncode($params)
+                ];
+                $buttons['download'] = [
+                    'label' => '<i class="fa kd-download"></i>'.__('Download'),
+                    'attr' => $indexAttr,
+                    'url' => $downloadUrl
+                ];
             }
-            $downloadUrl = [
-                'plugin' => 'Institution',
-                'controller' => 'Institutions',
-                'action' => 'InstitutionStudentsReportCards',
-                '0' => 'download',
-                '1' => $this->paramsEncode($downloadParams)
-            ];
-            $buttons['download'] = [
-                'label' => '<i class="fa kd-download"></i>'.__('Download'),
-                'attr' => $indexAttr,
-                'url' => $downloadUrl
-            ];
-        }
 
-        // Publish button, status must be generated
-        if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') && $entity->report_card_status == self::GENERATED) {
-            $publishUrl = $this->setQueryString($this->url('publish'), $params);
-            $buttons['publish'] = [
-                'label' => '<i class="fa fa-share-square-o"></i>'.__('Publish'),
-                'attr' => $indexAttr,
-                'url' => $publishUrl
-            ];
-        }
+            $params['institution_class_id'] = $entity->institution_class_id;
 
-        // Unpublish button, status must be published
-        if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'unpublish']) && $entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
-            $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
-            $buttons['unpublish'] = [
-                'label' => '<i class="fa fa-lock"></i>'.__('Unpublish'),
-                'attr' => $indexAttr,
-                'url' => $unpublishUrl
-            ];
-        }
+            // Generate button, all statuses
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'generate'])) {
+                $generateUrl = $this->setQueryString($this->url('generate'), $params);
+                $buttons['generate'] = [
+                    'label' => '<i class="fa fa-refresh"></i>'.__('Generate'),
+                    'attr' => $indexAttr,
+                    'url' => $generateUrl
+                ];
+            }
 
+            // Publish button, status must be generated
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'publish']) && $entity->has('report_card_status') && $entity->report_card_status == self::GENERATED) {
+                $publishUrl = $this->setQueryString($this->url('publish'), $params);
+                $buttons['publish'] = [
+                    'label' => '<i class="fa kd-publish"></i>'.__('Publish'),
+                    'attr' => $indexAttr,
+                    'url' => $publishUrl
+                ];
+            }
+
+            // Unpublish button, status must be published
+            if ($this->AccessControl->check(['Institutions', 'ReportCardStatuses', 'unpublish']) && $entity->has('report_card_status') && $entity->report_card_status == self::PUBLISHED) {
+                $unpublishUrl = $this->setQueryString($this->url('unpublish'), $params);
+                $buttons['unpublish'] = [
+                    'label' => '<i class="fa kd-unpublish"></i>'.__('Unpublish'),
+                    'attr' => $indexAttr,
+                    'url' => $unpublishUrl
+                ];
+            }
+        }
         return $buttons;
     }
 
@@ -147,7 +149,6 @@ class ReportCardStatusesTable extends ControllerActionTable
         $institutionId = $this->Session->read('Institution.Institutions.id');
         $Classes = $this->InstitutionClasses;
         $InstitutionGrades = TableRegistry::get('Institution.InstitutionGrades');
-        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
 
         // Academic Periods filter
         $academicPeriodOptions = $this->AcademicPeriods->getYearList(['isEditable' => true]);
@@ -164,10 +165,10 @@ class ReportCardStatusesTable extends ControllerActionTable
         // Report Cards filter
         $reportCardOptions = [];
         if (!empty($availableGrades)) {
-            $reportCardOptions = $ReportCards->find('list')
+            $reportCardOptions = $this->ReportCards->find('list')
                 ->where([
-                    $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
-                    $ReportCards->aliasField('education_grade_id IN ') => $availableGrades
+                    $this->ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
+                    $this->ReportCards->aliasField('education_grade_id IN ') => $availableGrades
                 ])
                 ->toArray();
         } else {
@@ -181,8 +182,10 @@ class ReportCardStatusesTable extends ControllerActionTable
 
         // Class filter
         $classOptions = [];
+        $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
+
         if ($selectedReportCard != -1) {
-            $reportCardEntity = $ReportCards->find()->where(['id' => $selectedReportCard])->first();
+            $reportCardEntity = $this->ReportCards->find()->where(['id' => $selectedReportCard])->first();
             if (!empty($reportCardEntity)) {
                 $classOptions = $Classes->find('list')
                     ->matching('ClassGrades')
@@ -192,11 +195,13 @@ class ReportCardStatusesTable extends ControllerActionTable
                         'ClassGrades.education_grade_id' => $reportCardEntity->education_grade_id
                     ])
                     ->toArray();
+            } else {
+                // if selected report card is not valid, do not show any students
+                $selectedClass = -1;
             }
         }
 
         $classOptions = ['-1' => '-- '.__('Select Class').' --'] + $classOptions;
-        $selectedClass = !is_null($this->request->query('class_id')) ? $this->request->query('class_id') : -1;
         $this->controller->set(compact('classOptions', 'selectedClass'));
         $where[$this->aliasField('institution_class_id')] = $selectedClass;
         //End
@@ -228,68 +233,75 @@ class ReportCardStatusesTable extends ControllerActionTable
         $classId = $this->request->query('class_id');
 
         if (!is_null($reportCardId) && !is_null($classId)) {
-            $generatedCount = 0;
-            $publishedCount = 0;
+            $existingReportCard = $this->ReportCards->exists([$this->ReportCards->primaryKey() => $reportCardId]);
+            $existingClass = $this->InstitutionClasses->exists([$this->InstitutionClasses->primaryKey() => $classId]);
 
-            foreach($data as $student) {
-                if ($student->has('report_card_status')) {
-                    if ($student->report_card_status == self::GENERATED) {
-                        $generatedCount += 1;
-                    } else if ($student->report_card_status == self::PUBLISHED) {
-                        $publishedCount += 1;
+            // only show toolbar buttons if request for report card and class is valid
+            if ($existingReportCard && $existingClass) {
+                $generatedCount = 0;
+                $publishedCount = 0;
+
+                // count statuses to determine which buttons are shown
+                foreach($data as $student) {
+                    if ($student->has('report_card_status')) {
+                        if ($student->report_card_status == self::GENERATED) {
+                            $generatedCount += 1;
+                        } else if ($student->report_card_status == self::PUBLISHED) {
+                            $publishedCount += 1;
+                        }
                     }
                 }
-            }
 
-            $toolbarAttr = [
-                'class' => 'btn btn-xs btn-default',
-                'data-toggle' => 'tooltip',
-                'data-placement' => 'bottom',
-                'escape' => false
-            ];
+                $toolbarAttr = [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false
+                ];
 
-            $params = [
-                'institution_id' => $this->Session->read('Institution.Institutions.id'),
-                'institution_class_id' => $classId,
-                'report_card_id' => $reportCardId
-            ];
+                $params = [
+                    'institution_id' => $this->Session->read('Institution.Institutions.id'),
+                    'institution_class_id' => $classId,
+                    'report_card_id' => $reportCardId
+                ];
 
-            // Generate all button
-            $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
-            $generateButton['type'] = 'button';
-            $generateButton['label'] = '<i class="fa fa-refresh"></i>';
-            $generateButton['attr'] = $toolbarAttr;
-            $generateButton['attr']['title'] = __('Generate All');
-            $extra['toolbarButtons']['generateAll'] = $generateButton;
-
-            if ($generatedCount > 0 || $publishedCount > 0) {
                 // Download all button
-                $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
-                $downloadButton['type'] = 'button';
-                $downloadButton['label'] = '<i class="fa kd-download"></i>';
-                $downloadButton['attr'] = $toolbarAttr;
-                $downloadButton['attr']['title'] = __('Download All');
-                $extra['toolbarButtons']['downloadAll'] = $downloadButton;
-            }
+                if ($generatedCount > 0 || $publishedCount > 0) {
+                    $downloadButton['url'] = $this->setQueryString($this->url('downloadAll'), $params);
+                    $downloadButton['type'] = 'button';
+                    $downloadButton['label'] = '<i class="fa kd-download"></i>';
+                    $downloadButton['attr'] = $toolbarAttr;
+                    $downloadButton['attr']['title'] = __('Download All');
+                    $extra['toolbarButtons']['downloadAll'] = $downloadButton;
+                }
 
-            if ($generatedCount > 0) {
+                // Generate all button
+                $generateButton['url'] = $this->setQueryString($this->url('generateAll'), $params);
+                $generateButton['type'] = 'button';
+                $generateButton['label'] = '<i class="fa fa-refresh"></i>';
+                $generateButton['attr'] = $toolbarAttr;
+                $generateButton['attr']['title'] = __('Generate All');
+                $extra['toolbarButtons']['generateAll'] = $generateButton;
+
                 // Publish all button
-                $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
-                $publishButton['type'] = 'button';
-                $publishButton['label'] = '<i class="fa fa-share-square-o"></i>';
-                $publishButton['attr'] = $toolbarAttr;
-                $publishButton['attr']['title'] = __('Publish All');
-                $extra['toolbarButtons']['publishAll'] = $publishButton;
-            }
+                if ($generatedCount > 0) {
+                    $publishButton['url'] = $this->setQueryString($this->url('publishAll'), $params);
+                    $publishButton['type'] = 'button';
+                    $publishButton['label'] = '<i class="fa kd-publish"></i>';
+                    $publishButton['attr'] = $toolbarAttr;
+                    $publishButton['attr']['title'] = __('Publish All');
+                    $extra['toolbarButtons']['publishAll'] = $publishButton;
+                }
 
-            if ($publishedCount > 0) {
                 // Unpublish all button
-                $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
-                $unpublishButton['type'] = 'button';
-                $unpublishButton['label'] = '<i class="fa fa-lock"></i>';
-                $unpublishButton['attr'] = $toolbarAttr;
-                $unpublishButton['attr']['title'] = __('Unpublish All');
-                $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
+                if ($publishedCount > 0) {
+                    $unpublishButton['url'] = $this->setQueryString($this->url('unpublishAll'), $params);
+                    $unpublishButton['type'] = 'button';
+                    $unpublishButton['label'] = '<i class="fa kd-unpublish"></i>';
+                    $unpublishButton['attr'] = $toolbarAttr;
+                    $unpublishButton['attr']['title'] = __('Unpublish All');
+                    $extra['toolbarButtons']['unpublishAll'] = $unpublishButton;
+                }
             }
         }
     }
@@ -344,21 +356,23 @@ class ReportCardStatusesTable extends ControllerActionTable
         if ($entity->has('report_card_id')) {
             $reportCardId = $entity->report_card_id;
         } else if (!is_null($this->request->query('report_card_id'))) {
+            // used if student report card record has not been created yet
             $reportCardId = $this->request->query('report_card_id');
         }
 
         if (!empty($reportCardId)) {
-            $ReportCards = TableRegistry::get('ReportCard.ReportCards');
-            $value = $ReportCards->get($reportCardId)->code_name;
+            $reportCardEntity = $this->ReportCards->find()->where(['id' => $reportCardId])->first();
+            if (!empty($reportCardEntity)) {
+                $value = $reportCardEntity->code_name;
+            }
         }
         return $value;
     }
 
     public function generate(Event $event, ArrayObject $extra)
     {
-        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $params = $this->getQueryString();
-        $hasTemplate = $ReportCards->checkIfHasTemplate($params['report_card_id']);
+        $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
             $url = [
@@ -380,9 +394,8 @@ class ReportCardStatusesTable extends ControllerActionTable
 
     public function generateAll(Event $event, ArrayObject $extra)
     {
-        $ReportCards = TableRegistry::get('ReportCard.ReportCards');
         $params = $this->getQueryString();
-        $hasTemplate = $ReportCards->checkIfHasTemplate($params['report_card_id']);
+        $hasTemplate = $this->ReportCards->checkIfHasTemplate($params['report_card_id']);
 
         if ($hasTemplate) {
             $this->triggerGenerateAllReportCardsShell($params['institution_id'], $params['institution_class_id'], $params['report_card_id']);

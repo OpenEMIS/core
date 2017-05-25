@@ -44,7 +44,7 @@
                         'default' => $selectedClass,
                         'url' => $baseUrl,
                         'data-named-key' => 'class_id',
-                        'data-named-group' => 'report_card_id'
+                        'data-named-group' => 'academic_period_id,report_card_id'
                     ));
                 }
             ?>
