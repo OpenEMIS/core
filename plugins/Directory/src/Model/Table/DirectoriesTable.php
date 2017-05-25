@@ -415,6 +415,10 @@ class DirectoriesTable extends ControllerActionTable {
 				}
 			}
 
+            if (isset($data[$this->alias()]['custom_field_values'])) {
+                unset($data[$this->alias()]['custom_field_values']);
+            }
+
             //Validation is disabled by default when onReload, however immediate line below will not work and have to disabled validation for associated model like the following lines
             $options['associated'] = [
                 'Identities' => ['validate' => false],
