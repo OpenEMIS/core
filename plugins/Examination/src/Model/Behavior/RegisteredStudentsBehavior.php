@@ -126,6 +126,10 @@ class RegisteredStudentsBehavior extends Behavior {
 
         $this->setupFields($entity, $extra);
 
+        $model->field('repeated', ['visible' => false]);
+        $model->field('transferred', ['visible' => false]);
+        $model->field('identity_number', ['visible' => false]);
+
         if (!$entity) {
             $event->stopPropagation();
             return $model->controller->redirect($model->url('index', 'QUERY'));
