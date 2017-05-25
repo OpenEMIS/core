@@ -4,7 +4,7 @@ DELETE FROM `system_patches` WHERE `issue`='POCOR-3937';
 
 -- import_mapping
 DELETE FROM `import_mapping`
-WHERE `id` IN (109, 110, 111, 112, 113);
+WHERE `id` IN (112, 113, 114, 115, 116);
 
 -- security_functions
 UPDATE `security_functions` SET `_execute` = NULL WHERE `security_functions`.`id` = 3020;
