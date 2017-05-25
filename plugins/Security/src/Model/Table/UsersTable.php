@@ -151,7 +151,9 @@ class UsersTable extends AppTable
 		$options['auto_search'] = false;
 
         // POCOR-2547 sort list of staff and student by name
-		$query->find('notSuperAdmin')->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
+        if (!isset($this->request->query['sort'])) {
+			$query->find('notSuperAdmin')->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
+		}
 
 		$search = $this->ControllerAction->getSearchKey();
 
