@@ -23,11 +23,6 @@ class ReportCardsTable extends AppTable
         $this->belongsTo('StudentStatuses', ['className' => 'Student.StudentStatuses']);
         $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
-        $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
-        $this->hasMany('SubjectStudents', [
-            'className' => 'Institution.InstitutionSubjectStudents',
-            'foreignKey' => ['institution_class_id', 'student_id']
-        ]);
 
         $this->addBehavior('CustomExcel.ExcelReport', [
             'templateTable' => 'ReportCard.ReportCards',
@@ -113,11 +108,13 @@ class ReportCardsTable extends AppTable
             ])
             ->first();
 
+        // set filename
         $fileName = $studentReportCardData->institution->code . '_' . $studentReportCardData->report_card->code. '_' . $studentReportCardData->student->openemis_no . '_' . $studentReportCardData->student->name . '.' . $this->fileType;
-        $status = $StudentsReportCards::GENERATED;
         $filepath = $extra['file_path'];
         $fileContent = file_get_contents($filepath);
+        $status = $StudentsReportCards::GENERATED;
 
+        // save file
         $StudentsReportCards->updateAll([
             'status' => $status,
             'file_name' => $fileName,
@@ -183,7 +180,8 @@ class ReportCardsTable extends AppTable
             $StudentsReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
 
             $entity = $StudentsReportCardsComments->find()
-                ->contain(['CommentCodes'])
+                ->select(['comment_code_name' => 'CommentCodes.name'])
+                ->leftJoinWith('CommentCodes')
                 ->where([
                     $StudentsReportCardsComments->aliasField('report_card_id') => $params['report_card_id'],
                     $StudentsReportCardsComments->aliasField('student_id') => $params['student_id'],
@@ -191,6 +189,7 @@ class ReportCardsTable extends AppTable
                     $StudentsReportCardsComments->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StudentsReportCardsComments->aliasField('education_grade_id') => $extra['report_card_education_grade_id']
                 ])
+                ->autoFields(true)
                 ->toArray();
             return $entity;
         }
@@ -235,7 +234,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseStudentBehaviours(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
+        if (array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
             $StudentBehaviours = TableRegistry::get('Institution.StudentBehaviours');
 
             $entity = $StudentBehaviours->find()
@@ -243,7 +242,6 @@ class ReportCardsTable extends AppTable
                 ->where([
                     $StudentBehaviours->aliasField('student_id') => $params['student_id'],
                     $StudentBehaviours->aliasField('institution_id') => $params['institution_id'],
-                    $StudentBehaviours->aliasField('academic_period_id') => $params['academic_period_id'],
                     $StudentBehaviours->aliasField('date_of_behaviour >= ') => $extra['report_card_start_date'],
                     $StudentBehaviours->aliasField('date_of_behaviour <= ') => $extra['report_card_end_date']
                 ])
@@ -255,8 +253,6 @@ class ReportCardsTable extends AppTable
     public function onExcelTemplateInitialiseInstitutionStudentAbsences(Event $event, array $params, ArrayObject $extra)
     {
         if (array_key_exists('institution_class_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
-            $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
-            $absenceTypes = $AbsenceTypes->getCodeList();
 
             $InstitutionStudentAbsences = TableRegistry::get('Institution.InstitutionStudentAbsences');
             $studentAbsenceResults = $InstitutionStudentAbsences
@@ -286,9 +282,12 @@ class ReportCardsTable extends AppTable
                 ->hydrate(false)
                 ->all();
 
+            $AbsenceTypes = TableRegistry::get('Institution.AbsenceTypes');
+            $absenceTypes = $AbsenceTypes->getCodeList();
+
              $results = [];
              foreach($absenceTypes as $key => $code) {
-                // initialize all as 0
+                // initialize all types as 0
                 $results[$code]['number_of_days'] = 0;
              }
 
@@ -421,7 +420,7 @@ class ReportCardsTable extends AppTable
 
     public function onExcelTemplateInitialiseAssessmentPeriods(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('assessment_id', $extra)) {
+        if (array_key_exists('assessment_id', $extra) && array_key_exists('report_card_start_date', $extra) && array_key_exists('report_card_end_date', $extra)) {
             $AssessmentPeriods = TableRegistry::get('Assessment.AssessmentPeriods');
 
             $entity = $AssessmentPeriods->find()
@@ -447,16 +446,14 @@ class ReportCardsTable extends AppTable
                 ->contain(['EducationSubjects'])
                 ->where([$AssessmentItems->aliasField('assessment_id') => $extra['assessment_id']])
                 ->order(['EducationSubjects.order'])
-                ->all();
-
-            $extra['assessment_period_subjects'] = $entity->extract('education_subject_id')->toArray();
-            return $entity->toArray();
+                ->toArray();
+            return $entity;
         }
     }
 
     public function onExcelTemplateInitialiseAssessmentItemResults(Event $event, array $params, ArrayObject $extra)
     {
-        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
+        if (array_key_exists('institution_class_id', $params) && array_key_exists('assessment_id', $extra) && array_key_exists('assessment_period_ids', $extra) && !empty($extra['assessment_period_ids']) && array_key_exists('institution_id', $params) && array_key_exists('student_id', $params) && array_key_exists('report_card_education_grade_id', $extra) && array_key_exists('academic_period_id', $params)) {
             $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
 
             $entity = $AssessmentItemResults->find()
@@ -473,6 +470,7 @@ class ReportCardsTable extends AppTable
                 ->contain(['AssessmentGradingOptions.AssessmentGradingTypes'])
                 ->where([
                     $AssessmentItemResults->aliasField('assessment_id') => $extra['assessment_id'],
+                    $AssessmentItemResults->aliasField('assessment_period_id IN ') => $extra['assessment_period_ids'],
                     $AssessmentItemResults->aliasField('institution_id') => $params['institution_id'],
                     $AssessmentItemResults->aliasField('student_id') => $params['student_id'],
                     $AssessmentItemResults->aliasField('education_grade_id') => $extra['report_card_education_grade_id'],
