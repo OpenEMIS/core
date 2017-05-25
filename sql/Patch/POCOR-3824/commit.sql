@@ -80,7 +80,6 @@ CREATE TABLE IF NOT EXISTS `staff_training_needs` (
   `reason` text COLLATE utf8mb4_unicode_ci,
   `course_id` int(11) NOT NULL COMMENT 'links to training_courses.id',
   `training_need_category_id` int(11) NOT NULL COMMENT 'links to training_need_categories.id',
-  `training_requirement_id` int(11) NOT NULL COMMENT 'links to training_requirements.id',
   `training_priority_id` int(11) NOT NULL COMMENT 'links to training_priorities.id',
   `training_need_competency_id` int(11) NULL COMMENT 'links to training_need_competencies.id',
   `training_need_sub_standard_id` int(11) NULL COMMENT 'links to training_need_sub_standards.id',
@@ -97,7 +96,6 @@ ALTER TABLE `staff_training_needs`
   ADD PRIMARY KEY (`id`),
   ADD KEY `course_id` (`course_id`),
   ADD KEY `training_need_category_id` (`training_need_category_id`),
-  ADD KEY `training_requirement_id` (`training_requirement_id`),
   ADD KEY `training_priority_id` (`training_priority_id`),
   ADD KEY `training_need_competency_id` (`training_need_competency_id`),
   ADD KEY `training_need_sub_standard_id` (`training_need_sub_standard_id`),
@@ -111,6 +109,6 @@ ALTER TABLE `staff_training_needs`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 INSERT INTO `staff_training_needs`
-SELECT `id`, `comments`, `course_id`, `training_need_category_id`, `training_requirement_id`, `training_priority_id`, NULL, NULL, `staff_id`, `assignee_id`, `status_id`,
+SELECT `id`, `comments`, `course_id`, `training_need_category_id`, `training_priority_id`, NULL, NULL, `staff_id`, `assignee_id`, `status_id`,
  `modified_user_id`, `modified`, `created_user_id`, `created`
 FROM `z_3824_staff_training_needs`;
