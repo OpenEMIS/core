@@ -317,7 +317,7 @@ class InstitutionLandsTable extends ControllerActionTable
             $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->land_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
             } elseif ($entity->land_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
@@ -357,9 +357,9 @@ class InstitutionLandsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->land_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
             } elseif ($entity->land_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index');
