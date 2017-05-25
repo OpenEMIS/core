@@ -920,10 +920,10 @@ RENAME TO  `z_3853_infrastructure_types` ;
 -- Patch security function
 UPDATE `security_functions`
 SET
-  `_view`='Fields.index|Fields.view|Pages.index|Pages.view|LandTypes.index|LandTypes.view|BuildingTypes.index|BuildingTypes.view|FloorTypes.index|FloorTypes.view|RoomTypes.index|RoomTypes.view',
-  `_edit`='Fields.edit|Pages.edit|LandTypes.edit|BuildingTypes.edit|FloorTypes.edit|RoomTypes.edit',
-  `_add`='Fields.add|Pages.add|LandTypes.add|BuildingTypes.add|FloorTypes.add|RoomTypes.add',
-  `_delete`='Fields.remove|Pages.remove|LandTypes.remove|BuildingTypes.remove|FloorTypes.remove|RoomTypes.remove'
+  `_view`='Fields.index|Fields.view|LandPages.index|LandPages.view|BuildingPages.index|BuildingPages.view|FloorPages.index|FloorPages.view|RoomPages.index|RoomPages.view|LandTypes.index|LandTypes.view|BuildingTypes.index|BuildingTypes.view|FloorTypes.index|FloorTypes.view|RoomTypes.index|RoomTypes.view',
+  `_edit`='Fields.edit|LandPages.edit|BuildingPages.edit|FloorPages.edit|RoomPages.edit|LandTypes.edit|BuildingTypes.edit|FloorTypes.edit|RoomTypes.edit',
+  `_add`='Fields.add|LandPages.add|BuildingPages.add|FloorPages.add|RoomPages.add|LandTypes.add|BuildingTypes.add|FloorTypes.add|RoomTypes.add',
+  `_delete`='Fields.remove|LandPages.remove|BuildingPages.remove|FloorPages.remove|RoomPages.remove|LandTypes.remove|BuildingTypes.remove|FloorTypes.remove|RoomTypes.remove'
 WHERE `id`='5018';
 
 UPDATE `security_functions`
