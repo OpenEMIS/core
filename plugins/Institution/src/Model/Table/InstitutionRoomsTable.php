@@ -280,6 +280,8 @@ class InstitutionRoomsTable extends ControllerActionTable
             $query->where($conditions, [], true);
         }
 
+        // $floorRecord = $this->InstitutionFloors
+
         $parentId = $this->getQueryString('institution_floor_id');
         if (!is_null($parentId)) {
             $query->where([$this->aliasField('institution_floor_id') => $parentId]);
@@ -369,7 +371,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             if ($entity->room_status_id == $inUseId) {
                 $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
             } elseif ($entity->room_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
+                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index');
@@ -883,17 +885,17 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         $entity = $this->InstitutionFloors->get($this->getQueryString('institution_floor_id'), ['contain' => ['InstitutionBuildings.InstitutionLands']]);
         $buildingUrl = $this->url('index');
-        $buildingUrl['action'] = 'Buildings';
+        $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_building->institution_land->id,
             'institution_land_name' => $entity->institution_building->institution_land->name
         ]);
 
         $floorUrl = $this->url('index');
-        $floorUrl['action'] = 'Buildings';
+        $floorUrl['action'] = 'InstitutionFloors';
         $floorUrl = $this->setQueryString($floorUrl, [
-            'institution_land_id' => $entity->institution_building->id,
-            'institution_land_name' => $entity->institution_building->name
+            'institution_building_id' => $entity->institution_building->id,
+            'institution_building_name' => $entity->institution_building->name
         ]);
 
         $crumbs[] = [
