@@ -220,14 +220,14 @@ class InfrastructureShell extends Shell
                             }
                         }
                     }
-                    $newEntity = $InstitutionLands->newEntity($land, $saveOptions);
-                    $InstitutionLands->save($newEntity, $saveOptions);
-                    if ($newEntity->errors()) {
-                        $this->out('Error Processing Record '. $countRecords . ' of ' . $totalRecords);
-                        $this->out($newEntity);
-                    } else {
-                        $this->out('Finish Processing Record '. $countRecords . ' of ' . $totalRecords);
-                    }
+                }
+                $newEntity = $InstitutionLands->newEntity($land, $saveOptions);
+                $InstitutionLands->save($newEntity, $saveOptions);
+                if ($newEntity->errors()) {
+                    $this->out('Error Processing Record '. $countRecords . ' of ' . $totalRecords);
+                    $this->out($newEntity);
+                } else {
+                    $this->out('Finish Processing Record '. $countRecords . ' of ' . $totalRecords);
                 }
             }
 
