@@ -299,7 +299,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             if ($entity->floor_status_id == $inUseId) {
                 $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
             } elseif ($entity->floor_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
+                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index');
@@ -740,7 +740,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $crumbs = [];
         $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
         $buildingUrl = $this->url('index');
-        $buildingUrl['action'] = 'Buildings';
+        $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_land->id,
             'institution_land_name' => $entity->institution_land->name

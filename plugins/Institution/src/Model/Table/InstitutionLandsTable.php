@@ -319,7 +319,7 @@ class InstitutionLandsTable extends ControllerActionTable
             if ($entity->land_status_id == $inUseId) {
                 $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
             } elseif ($entity->land_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->aliasField('end_of_usage.restrictEdit'));
+                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
 
             $url = $this->url('index');
