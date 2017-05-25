@@ -691,7 +691,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $url = [
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
-            'action' => 'Rooms',
+            'action' => 'InstitutionRooms',
             'institutionId' => $institutionId,
             'index'
         ];
