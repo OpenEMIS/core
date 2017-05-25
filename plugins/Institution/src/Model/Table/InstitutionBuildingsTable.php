@@ -135,7 +135,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
             $statuses = $this->BuildingStatuses->find('list', ['keyField' => 'id', 'valueField' => 'code'])->toArray();
             $functionKey = Inflector::camelize(strtolower($statuses[$editType]));
             $functionName = "process$functionKey";
-
             if (method_exists($this, $functionName)) {
                 $this->$functionName($entity);
             }
@@ -244,7 +243,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         // Building Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
             ],
             'withAll' => true
         ]));
@@ -254,7 +253,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('BuildingStatuses', function ($q) {
                 return $q->where([
-                    'BuildingStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+                    'BuildingStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
                 ]);
             });
         }
@@ -916,7 +915,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
             $previousEntity = $this->get($copyFrom);
             $changeInTypeId = $this->BuildingStatuses->getIdByCode('CHANGE_IN_TYPE');
-
             if ($previousEntity->building_status_id == $changeInTypeId) {
                 // third parameters set to true means copy general only
                 $this->copyCustomFields($copyFrom, $copyTo, true);
@@ -950,7 +948,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
         $where = ['id' => $oldEntity->id];
         $this->updateStatus('CHANGE_IN_TYPE', $where);
-        $this->save($oldEntity);
         // End
 
         // Update new entity
@@ -962,7 +959,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $newRequestData['building_type_id'] = $newBuildingTypeId;
         $newRequestData['previous_institution_building_id'] = $oldEntity->id;
         $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
-        $newEntity = $this->save($newEntity);
+        $newEntity = $this->save($newEntity, ['checkExisting' => false]);
         // End
 
         $url = $this->url('edit');
