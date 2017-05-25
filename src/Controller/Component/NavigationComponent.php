@@ -557,11 +557,11 @@ class NavigationComponent extends Component
                     'selected' => ['Institutions.StudentFees'],
                 ],
 
-            'Institutions.Lands' => [
+            'Institutions.InstitutionLands' => [
                 'title' => 'Infrastructures',
                 'parent' => 'Institutions.Institutions.index',
                 'params' => ['plugin' => 'Institution'],
-                'selected' => ['Institutions.Lands', 'Institutions.Buildings', 'Institutions.Floors', 'Institutions.Rooms']
+                'selected' => ['Institutions.InstitutionLands', 'Institutions.InstitutionBuildings', 'Institutions.InstitutionFloors', 'Institutions.InstitutionRooms']
             ],
 
             'Survey' => [
