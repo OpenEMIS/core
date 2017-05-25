@@ -239,6 +239,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         var isSubjectTab = (tab.type == roles.TEACHER) ? true : false;
 
         var extra = {};
+
+        // comment code column
         if (isSubjectTab) {
             var selectOptions = {
                 0 : {
@@ -247,10 +249,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 }
             };
             angular.forEach(commentCodeOptions, function(obj, key) {
-                selectOptions[obj.id] = {
-                    id: obj.id,
-                    name: obj.name
-                }
+                selectOptions[obj.id] = obj
             });
 
             extra = {
@@ -268,6 +267,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
             columnDefs.push(columnDef);
         }
 
+        // comment column
         extra = {editPermission: tab.editable};
         var columnDef = {
             headerName: "Comments" + headerIcons,
@@ -277,6 +277,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
         columnDef = this.renderText(allowEdit, columnDef, extra, _comments);
         columnDefs.push(columnDef);
 
+        // modified by column
         if (isSubjectTab) {
             columnDefs.push({
                 headerName: "Modified By",
@@ -321,6 +322,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 cellClass: 'oe-cell-highlight',
                 cellRenderer: function(params) {
                     if (params.value.length == 0) {
+                        // set to default select
                         params.value = 0;
                     }
 
@@ -352,6 +354,8 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                     eSelect.addEventListener('change', function () {
                         var newValue = eSelect.value;
                         params.data[params.colDef.field] = newValue;
+
+                        // set last modified user name
                         params.data.modified_by = currentUserName;
 
                         if (angular.isUndefined(_comments[studentId])) {
@@ -518,7 +522,7 @@ function InstitutionsCommentsSvc($filter, $q, KdDataSvc, KdSessionSvc) {
                 comments = params.data.comments;
             }
 
-            if (params.data.comment_code != 0) {
+            if (params.data.comment_code.length > 0 && params.data.comment_code != 0) {
                 commentCode = params.data.comment_code;
             }
 

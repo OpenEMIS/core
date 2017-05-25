@@ -747,7 +747,7 @@ class InstitutionClassStudentsTable extends AppTable
                     $StudentReportCards->aliasField('academic_period_id = ') . $this->aliasField('academic_period_id'),
                     $StudentReportCards->aliasField('education_grade_id = ') . $this->aliasField('education_grade_id'),
                     $StudentReportCards->aliasField('institution_class_id = ') . $this->aliasField('institution_class_id'),
-                    $StudentReportCards->aliasField('report_card_id = ') . $reportCardId
+                    $StudentReportCards->aliasField('report_card_id') => $reportCardId
                 ]
             )
             ->where([
@@ -757,9 +757,7 @@ class InstitutionClassStudentsTable extends AppTable
                 $this->aliasField('education_grade_id') => $educationGradeId
             ])
             ->group([
-                $this->aliasField('student_id'),
-                $this->aliasField('academic_period_id'),
-                $StudentReportCards->aliasField('report_card_id')
+                $this->aliasField('student_id')
             ])
             ->order([
                 $Users->aliasField('first_name'), $Users->aliasField('last_name')
