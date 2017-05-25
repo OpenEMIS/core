@@ -21,9 +21,24 @@ class InfrastructuresController extends AppController
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.LandCustomFields']);
     }
 
-    public function Pages()
+    public function LandPages()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.LandCustomForms']);
+    }
+
+    public function BuildingPages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.BuildingCustomForms']);
+    }
+
+    public function FloorPages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.FloorCustomForms']);
+    }
+
+    public function RoomPages()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.RoomCustomForms']);
     }
 
     // CAv4
@@ -55,7 +70,7 @@ class InfrastructuresController extends AppController
                 'text' => __('Fields')
             ],
             'Pages' => [
-                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'Pages'],
+                'url' => ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => 'LandPages'],
                 'text' => __('Pages')
             ],
             'Types' => [
