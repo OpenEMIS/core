@@ -947,3 +947,15 @@ a,
     border: none !important;
 }
 /* End of fix for POCOR-3880 */
+
+/* Fix for normal table sorting issue in POCOR-2547 */
+
+.rtl .table-sortable th > a.asc:after {
+    content: "\f0dd";
+}
+
+.rtl .table-sortable th > a.desc:after {
+    content: "\f0de";
+}
+
+/* End of fix for normal table sorting */
