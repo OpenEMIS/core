@@ -69,6 +69,7 @@ class ReportCardCommentsTable extends ControllerActionTable
                 ->where([
                     $ReportCards->aliasField('academic_period_id') => $selectedAcademicPeriod,
                     $ReportCards->aliasField('education_grade_id IN ') => $availableGrades,
+                    // only show record if at least one comment type is needed
                     'OR' => [
                         $ReportCards->aliasField('principal_comments_required') => 1,
                         $ReportCards->aliasField('homeroom_teacher_comments_required') => 1,
@@ -132,10 +133,6 @@ class ReportCardCommentsTable extends ControllerActionTable
             ->group([
                 $ClassGrades->aliasField('institution_class_id'),
                 $ReportCards->aliasField('id')
-            ])
-            ->order([
-                $this->aliasField('name'),
-                $ReportCards->aliasField('name')
             ]);
 
         $extra['options']['order'] = [
