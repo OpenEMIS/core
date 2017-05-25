@@ -140,6 +140,11 @@ class TrainingNeedsTable extends ControllerActionTable
         return $entity->course->description;
     }
 
+    public function onGetTrainingRequirementId(Event $event, Entity $entity)
+    {
+        return $entity->course->training_requirement->name;
+    }
+
     public function onGetTrainingNeedCategoryId(Event $event, Entity $entity)
     {
         $entity = $this->setupValues($entity);
@@ -191,7 +196,8 @@ class TrainingNeedsTable extends ControllerActionTable
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
         $query->contain([
-            'TrainingNeedSubStandards.TrainingNeedStandards'
+            'TrainingNeedSubStandards.TrainingNeedStandards',
+            'Courses.TrainingRequirements'
         ]);
     }
 
@@ -205,6 +211,7 @@ class TrainingNeedsTable extends ControllerActionTable
             $this->field('course_code', ['visible' => false]);
             $this->field('course_name', ['visible' => false]);
             $this->field('course_description', ['visible' => false]);
+            $this->field('training_requirement_id', ['visible' => false]);
         } else if ($entity->type == self::CATALOGUE) {
             $this->field('training_need_competency_id', ['visible' => false]);
             $this->field('training_need_standard_id', ['visible' => false]);
