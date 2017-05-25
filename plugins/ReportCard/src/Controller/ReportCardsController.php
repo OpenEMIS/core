@@ -24,8 +24,6 @@ class ReportCardsController extends AppController
         $header = __('Report Cards');
         $header .= ' - ' . $model->getHeader($model->alias);
         $this->Navigation->addCrumb('Report Cards', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
-
         $this->set('contentHeader', $header);
     }
 }
