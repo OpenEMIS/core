@@ -36,7 +36,6 @@ class TrainingNeedsTable extends ControllerActionTable
         $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
         $this->belongsTo('Courses', ['className' => 'Training.TrainingCourses', 'foreignKey' => 'course_id']);
         $this->belongsTo('TrainingNeedCategories', ['className' => 'Training.TrainingNeedCategories', 'foreignKey' => 'training_need_category_id']);
-        $this->belongsTo('TrainingRequirements', ['className' => 'Training.TrainingRequirements', 'foreignKey' => 'training_requirement_id']);
         $this->belongsTo('TrainingPriorities', ['className' => 'Training.TrainingPriorities', 'foreignKey' => 'training_priority_id']);
         $this->belongsTo('TrainingNeedCompetencies', ['className' => 'Training.TrainingNeedCompetencies', 'foreignKey' => 'training_need_competency_id']);
         $this->belongsTo('TrainingNeedSubStandards', ['className' => 'Training.TrainingNeedSubStandards', 'foreignKey' => 'training_need_sub_standard_id']);
@@ -182,7 +181,6 @@ class TrainingNeedsTable extends ControllerActionTable
         $this->field('type');
         $this->field('course');
         $this->field('course_id', ['visible' => false]);
-        $this->field('training_requirement_id', ['visible' => false]);
         $this->field('training_need_competency_id', ['visible' => false]);
         $this->field('training_need_sub_standard_id', ['visible' => false]);
         $this->field('reason', ['visible' => false]);
@@ -397,6 +395,8 @@ class TrainingNeedsTable extends ControllerActionTable
                 if (!is_null($this->course)) {
                     $attr['attr']['value'] = $this->course->_matchingData['TrainingRequirements']->name;
                 }
+            } else {
+                $attr['visible'] = false;
             }
         }
 
