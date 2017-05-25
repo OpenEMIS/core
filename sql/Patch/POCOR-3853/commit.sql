@@ -928,10 +928,10 @@ WHERE `id`='5018';
 
 UPDATE `security_functions`
 SET
-  `_view`='Lands.index|Lands.view|Buildings.index|Buildings.view|Floors.index|Floors.view|Rooms.index|Rooms.view',
-  `_edit`='Lands.edit|Buildings.edit|Floors.edit|Rooms.edit',
-  `_add`='Lands.add|Buildings.add|Floors.add|Rooms.add',
-  `_delete`='Lands.remove|Buildings.remove|Floors.remove|Rooms.remove'
+  `_view`='InstitutionLands.index|InstitutionLands.view|InstitutionBuildings.index|InstitutionBuildings.view|InstitutionFloors.index|InstitutionFloors.view|InstitutionRooms.index|InstitutionRooms.view',
+  `_edit`='InstitutionLands.edit|InstitutionBuildings.edit|InstitutionFloors.edit|InstitutionRooms.edit',
+  `_add`='InstitutionLands.add|InstitutionBuildings.add|InstitutionFloors.add|InstitutionRooms.add',
+  `_delete`='InstitutionLands.remove|InstitutionBuildings.remove|InstitutionFloors.remove|InstitutionRooms.remove'
 WHERE `id`='1011';
 
 UPDATE `security_functions`
