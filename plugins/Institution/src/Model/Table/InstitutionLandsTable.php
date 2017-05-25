@@ -128,6 +128,11 @@ class InstitutionLandsTable extends ControllerActionTable
         return $events;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->Navigation->substituteCrumb(__('Institution Lands'), __('Institution Lands'));
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->has('change_type')) {
@@ -201,15 +206,6 @@ class InstitutionLandsTable extends ControllerActionTable
         }
 
         return $buttons;
-    }
-
-    public function beforeAction(Event $event, ArrayObject $extra)
-    {
-        // For breadcrumb to build the baseUrl
-        $this->controller->set('breadcrumbPlugin', 'Institution');
-        $this->controller->set('breadcrumbController', 'Institutions');
-        $this->controller->set('breadcrumbAction', 'Infrastructures');
-        // End
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)

@@ -234,11 +234,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        // For breadcrumb to build the baseUrl
-        $this->controller->set('breadcrumbPlugin', 'Institution');
-        $this->controller->set('breadcrumbController', 'Institutions');
-        $this->controller->set('breadcrumbAction', 'Infrastructures');
-        // End
+        $this->Navigation->substituteCrumb(__('Institution Rooms'), __('Institution Rooms'));
     }
 
     public function onUpdateFieldInstitutionFloorId(Event $event, array $attr, $action, Request $request)
