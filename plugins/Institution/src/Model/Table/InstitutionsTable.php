@@ -667,6 +667,16 @@ class InstitutionsTable extends ControllerActionTable
         }
     }
 
+    public function deleteAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $extra['redirect'] = [
+            'plugin' => 'Institution',
+            'controller' => 'Institutions',
+            'action' => 'Institutions',
+            'index'
+        ];
+    }
+
 
 /******************************************************************************************************************
 **
@@ -718,27 +728,6 @@ class InstitutionsTable extends ControllerActionTable
 **
 ******************************************************************************************************************/
 
-    public function addBeforeAction(Event $event, ArrayObject $extra)
-    {
-        $this->setFieldOrder([
-            'information_section',
-            'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
-            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
-
-            'location_section',
-            'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
-
-            'area_section',
-            'area_id',
-
-            'area_administrative_section',
-            'area_administrative_id',
-
-            'contact_section',
-            'contact_person', 'telephone', 'fax', 'email', 'website',
-        ]);
-    }
-
     public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
     {
         $userId = $this->Session->read('Auth.User.id');
@@ -771,6 +760,24 @@ class InstitutionsTable extends ControllerActionTable
         $this->field('institution_type_id', ['type' => 'select']);
         $this->field('institution_provider_id', ['type' => 'select', 'sectorId' => $entity->institution_sector_id]);
         $this->field('classification', ['type' => 'select', 'options' => [], 'entity' => $entity, 'after' => 'code']);
+
+        $this->setFieldOrder([
+            'information_section',
+            'name', 'alternative_name', 'code', 'classification', 'institution_sector_id', 'institution_provider_id', 'institution_type_id',
+            'institution_ownership_id', 'institution_gender_id', 'institution_network_connectivity_id', 'institution_status_id', 'date_opened', 'date_closed',
+
+            'location_section',
+            'address', 'postal_code', 'institution_locality_id', 'latitude', 'longitude',
+
+            'area_section',
+            'area_id',
+
+            'area_administrative_section',
+            'area_administrative_id',
+
+            'contact_section',
+            'contact_person', 'telephone', 'fax', 'email', 'website',
+        ]);
     }
 
     public function onUpdateFieldInstitutionProviderId(Event $event, array $attr, $action, Request $request)
