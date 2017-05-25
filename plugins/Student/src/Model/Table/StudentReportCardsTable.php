@@ -56,7 +56,7 @@ class StudentReportCardsTable extends ControllerActionTable
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->setFieldOrder(['academic_period_id', 'status', 'report_card_id', 'institution_id', 'institution_class_id', 'education_grade_id']);
+        $this->setFieldOrder(['academic_period_id', 'report_card_id', 'institution_id', 'institution_class_id', 'education_grade_id']);
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
