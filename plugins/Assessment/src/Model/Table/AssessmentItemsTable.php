@@ -20,7 +20,7 @@ class AssessmentItemsTable extends AppTable
             'className' => 'Assessment.AssessmentPeriods',
             'joinTable' => 'assessment_items_grading_types',
             'foreignKey' => ['assessment_id', 'education_subject_id'],
-            'bindingKey' => ['assessment_id', 'education_subject_id']
+            'bindingKey' => ['assessment_id', 'education_subject_id'],
             'targetForeignKey' => 'assessment_period_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
@@ -31,7 +31,7 @@ class AssessmentItemsTable extends AppTable
             'className' => 'Assessment.AssessmentGradingTypes',
             'joinTable' => 'assessment_items_grading_types',
             'foreignKey' => ['assessment_id', 'education_subject_id'],
-            'bindingKey' => ['assessment_id', 'education_subject_id']
+            'bindingKey' => ['assessment_id', 'education_subject_id'],
             'targetForeignKey' => 'assessment_grading_type_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
