@@ -215,6 +215,12 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $parentId = $this->getQueryString('institution_land_id');
+        $parentRecord = $this->InstitutionLands->get($parentId)->toArray();
+        if (isset($extra['toolbarButtons']['add'])) {
+            if ($parentRecord['land_status_id'] == SELF::END_OF_USAGE) {
+                unset($extra['toolbarButtons']['add']);
+            }
+        }
         if (!is_null($parentId)) {
             $query->where([$this->aliasField('institution_land_id') => $parentId]);
         } else {
