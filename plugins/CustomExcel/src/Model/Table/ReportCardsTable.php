@@ -178,10 +178,16 @@ class ReportCardsTable extends AppTable
     {
         if (array_key_exists('report_card_id', $params) && array_key_exists('student_id', $params) && array_key_exists('institution_id', $params) && array_key_exists('academic_period_id', $params) && array_key_exists('report_card_education_grade_id', $extra)) {
             $StudentsReportCardsComments = TableRegistry::get('Institution.InstitutionStudentsReportCardsComments');
+            $ReportCardSubjects = TableRegistry::get('ReportCard.ReportCardSubjects');
 
             $entity = $StudentsReportCardsComments->find()
                 ->select(['comment_code_name' => 'CommentCodes.name'])
                 ->leftJoinWith('CommentCodes')
+                ->innerJoin([$ReportCardSubjects->alias() => $ReportCardSubjects->table()], [
+                    $ReportCardSubjects->aliasField('report_card_id = ') .  $StudentsReportCardsComments->aliasField('report_card_id'),
+                    $ReportCardSubjects->aliasField('education_grade_id = ') .  $StudentsReportCardsComments->aliasField('education_grade_id'),
+                    $ReportCardSubjects->aliasField('education_subject_id = ') .  $StudentsReportCardsComments->aliasField('education_subject_id'),
+                ])
                 ->where([
                     $StudentsReportCardsComments->aliasField('report_card_id') => $params['report_card_id'],
                     $StudentsReportCardsComments->aliasField('student_id') => $params['student_id'],
