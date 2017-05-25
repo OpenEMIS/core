@@ -5,6 +5,7 @@ use ArrayObject;
 use App\Controller\AppController;
 use Cake\ORM\Table;
 use Cake\Event\Event;
+use Cake\Utility\Inflector;
 
 class InfrastructuresController extends AppController
 {
@@ -17,7 +18,7 @@ class InfrastructuresController extends AppController
 
     public function Fields()
     {
-        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.InfrastructureCustomFields']);
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Infrastructure.LandCustomFields']);
     }
 
     public function Pages()
@@ -88,10 +89,9 @@ class InfrastructuresController extends AppController
     public function onInitialize(Event $event, Table $model, ArrayObject $extra)
     {
         $header = __('Infrastructure');
-
-        $header .= ' - ' . $model->getHeader($model->alias);
+        $header .= ' - ' . __(Inflector::humanize(Inflector::underscore($this->request->param('action'))));
         $this->Navigation->addCrumb('Infrastructure', ['plugin' => $this->plugin, 'controller' => $this->name, 'action' => $model->alias]);
-        $this->Navigation->addCrumb($model->getHeader($model->alias));
+        $this->Navigation->addCrumb(__(Inflector::humanize(Inflector::underscore($this->request->param('action')))));
 
         $this->set('contentHeader', $header);
     }
