@@ -303,7 +303,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->floor_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
             } elseif ($entity->floor_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
@@ -341,9 +341,9 @@ class InstitutionFloorsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->floor_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
             } elseif ($entity->floor_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index');
