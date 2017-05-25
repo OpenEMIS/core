@@ -3,11 +3,11 @@ INSERT INTO `system_patches` (`issue`, `created`) VALUES('POCOR-3937', NOW());
 
 -- import_mapping
 INSERT INTO `import_mapping` (`id`, `model`, `column_name`, `description`, `order`, `foreign_key`, `lookup_plugin`, `lookup_model`, `lookup_column`) VALUES
-(109, 'Staff.Salaries', 'salary_date', '( DD/MM/YYYY )', 1, 0, NULL, NULL, NULL),
-(110, 'Staff.Salaries', 'comment', '(Optional)', 2, 0, NULL, NULL, NULL),
-(111, 'Staff.Salaries', 'gross_salary', NULL, 3, 0, NULL, NULL, NULL),
-(112, 'Staff.Salaries', 'additions', NULL, 4, 0, NULL, NULL, NULL),
-(113, 'Staff.Salaries', 'deductions', NULL, 5, 0, NULL, NULL, NULL);
+(112, 'Staff.Salaries', 'salary_date', '( DD/MM/YYYY )', 1, 0, NULL, NULL, NULL),
+(113, 'Staff.Salaries', 'comment', '(Optional)', 2, 0, NULL, NULL, NULL),
+(114, 'Staff.Salaries', 'gross_salary', NULL, 3, 0, NULL, NULL, NULL),
+(115, 'Staff.Salaries', 'additions', NULL, 4, 0, NULL, NULL, NULL),
+(116, 'Staff.Salaries', 'deductions', NULL, 5, 0, NULL, NULL, NULL);
 
 -- security_functions
 UPDATE `security_functions`
