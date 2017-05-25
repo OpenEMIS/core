@@ -34,6 +34,8 @@ class ReportCardStatusesTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->hasMany('InstitutionClassGrades', ['className' => 'Institution.InstitutionClassGrades']);
 
+        $this->addBehavior('User.AdvancedNameSearch');
+
         $this->toggle('add', false);
         $this->toggle('edit', false);
         $this->toggle('remove', false);
@@ -59,6 +61,7 @@ class ReportCardStatusesTable extends ControllerActionTable
         $events['ControllerAction.Model.publishAll'] = 'publishAll';
         $events['ControllerAction.Model.unpublish'] = 'unpublish';
         $events['ControllerAction.Model.unpublishAll'] = 'unpublishAll';
+        $events['ControllerAction.Model.getSearchableFields'] = 'getSearchableFields';
         return $events;
     }
 
@@ -225,6 +228,13 @@ class ReportCardStatusesTable extends ControllerActionTable
             ->where($where);
 
         $extra['elements']['controls'] = ['name' => 'Institution.ReportCards/controls', 'data' => [], 'options' => [], 'order' => 1];
+
+        // search
+        $search = $this->getSearchKey();
+        if (!empty($search)) {
+            $nameConditions = $this->getNameSearchConditions(['alias' => 'Users', 'searchTerm' => $search]);
+            $extra['OR'] = $nameConditions; // to be merged with auto_search 'OR' conditions
+        }
     }
 
     public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
@@ -304,6 +314,12 @@ class ReportCardStatusesTable extends ControllerActionTable
                 }
             }
         }
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields)
+    {
+        $searchableFields[] = 'student_id';
+        $searchableFields[] = 'openemis_no';
     }
 
     public function viewBeforeAction(Event $event, ArrayObject $extra)
