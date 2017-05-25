@@ -254,7 +254,7 @@ class InstitutionLandsTable extends ControllerActionTable
         // Land Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
             ],
             'withAll' => true
         ]));
@@ -264,7 +264,7 @@ class InstitutionLandsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('LandStatuses', function ($q) {
                 return $q->where([
-                    'LandStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+                    'LandStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
                 ]);
             });
         }
@@ -950,7 +950,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $newRequestData['land_type_id'] = $newLandTypeId;
         $newRequestData['previous_institution_land_id'] = $oldEntity->id;
         $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
-        $newEntity = $this->save($newEntity);
+        $newEntity = $this->save($newEntity, ['checkExisting' => false]);
         // End
 
         $url = $this->url('edit');

@@ -313,7 +313,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         // Room Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
             ],
             'withAll' => true
         ]));
@@ -323,7 +323,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('RoomStatuses', function ($q) {
                 return $q->where([
-                    'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+                    'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
                 ]);
             });
         }
@@ -1008,7 +1008,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $newRequestData['room_type_id'] = $newRoomTypeId;
         $newRequestData['previous_room_id'] = $oldEntity->id;
         $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
-        $newEntity = $this->save($newEntity);
+        $newEntity = $this->save($newEntity, ['checkExisting' => false]);
         // End
 
         $url = $this->url('edit');
