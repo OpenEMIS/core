@@ -956,6 +956,7 @@ class ExcelReportBehavior extends Behavior
                     $cellCoordinate = $columnValue.$rowValue;
 
                     $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $cellCoordinate, $matchValue, $attr, $extra);
+                    $columnIndex++;
                 }
             }
 
