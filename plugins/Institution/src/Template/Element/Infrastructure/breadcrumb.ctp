@@ -6,7 +6,7 @@
 			'url' => [
 	                'plugin' => 'Institution',
 	                'controller' => 'Institutions',
-	                'action' => 'Lands',
+	                'action' => 'InstitutionLands',
 	                'institutionId' => $this->request->param('institutionId'),
 	                'index'
 	            ]
