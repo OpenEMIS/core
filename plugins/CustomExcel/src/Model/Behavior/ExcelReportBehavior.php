@@ -719,8 +719,7 @@ class ExcelReportBehavior extends Behavior
             $this->renderCell($objPHPExcel, $objWorksheet, $objCell, $nestedCellCoordinate, $nestedValue, $attr, $extra);
 
             if (!empty($secondNestedRow)) {
-                $secondNestedColumnIndex = isset($rangeColumnIndex) ? $rangeColumnIndex : $nestedColumnIndex;
-                $nestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $secondNestedColumnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
+                $nestedRowValue = $this->nestedRow($secondNestedRow, $nestedKey, $nestedRowValue, $nestedColumnIndex, $objPHPExcel, $objWorksheet, $objCell, $attr, $extra);
             }
 
             $nestedRowValue++;
