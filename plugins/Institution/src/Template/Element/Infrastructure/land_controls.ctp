@@ -27,6 +27,23 @@
 				$template = $this->ControllerAction->getFormTemplate();
 				$this->Form->templates($template);
 
+				if (!empty($periodOptions)) {
+					$inputOptions = [
+						'class' => 'form-control',
+						'label' => false,
+						'options' => $periodOptions,
+						'url' => $baseUrl,
+						'data-named-key' => 'period_id',
+						'data-named-group' => 'type, status',
+						'escape' => false
+					];
+					if (!empty($dataNamedGroup)) {
+						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
+						$dataNamedGroup[] = 'period_id';
+					}
+					echo $this->Form->input('period_id', $inputOptions);
+				}
+
 				if (!empty($typeOptions)) {
 					$inputOptions = [
 						'class' => 'form-control',
@@ -34,7 +51,7 @@
 						'options' => $typeOptions,
 						'url' => $baseUrl,
 						'data-named-key' => 'type',
-						'data-named-group' => 'status',
+						'data-named-group' => 'period_id, status',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
@@ -51,7 +68,7 @@
 						'options' => $statusOptions,
 						'url' => $baseUrl,
 						'data-named-key' => 'status',
-						'data-named-group' => 'type',
+						'data-named-group' => 'type, period_id',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
