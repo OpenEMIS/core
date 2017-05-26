@@ -919,13 +919,11 @@ class InstitutionLandsTable extends ControllerActionTable
     public function processCopy(Entity $entity)
     {
         // if is new and land status of previous land usage is change in land type then copy all general custom fields
-        if ($entity->has('previous_institution_land_id') && is_null($entity->previous_institution_land_id)) {
+        if ($entity->has('previous_institution_land_id') && !is_null($entity->previous_institution_land_id)) {
             $copyFrom = $entity->previous_institution_land_id;
             $copyTo = $entity->id;
-
             $previousEntity = $this->get($copyFrom);
             $changeInTypeId = $this->LandStatuses->getIdByCode('CHANGE_IN_TYPE');
-
             if ($previousEntity->land_status_id == $changeInTypeId) {
                 // third parameters set to true means copy general only
                 $this->copyCustomFields($copyFrom, $copyTo, true);

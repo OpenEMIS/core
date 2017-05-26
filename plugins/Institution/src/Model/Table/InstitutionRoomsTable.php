@@ -1121,7 +1121,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         // if is new and room status of previous room usage is change in room type then copy all general custom fields
         if ($entity->isNew()) {
-            if ($entity->has('previous_room_id') && $entity->previous_room_id != 0) {
+            if ($entity->has('previous_room_id') && !is_null($entity->previous_room_id)) {
                 $copyFrom = $entity->previous_room_id;
                 $copyTo = $entity->id;
 
