@@ -706,9 +706,8 @@ class InstitutionFloorsTable extends ControllerActionTable
             'action' => 'InstitutionRooms',
             'institutionId' => $institutionId
         ];
+        $url = array_merge($url, $this->request->query);
         $url = $this->setQueryString($url, ['institution_floor_id' => $entity->id, 'institution_floor_name' => $entity->name]);
-        $newUrl = $this->url('index');
-        $url = array_merge($newUrl, $url);
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
 
@@ -805,7 +804,6 @@ class InstitutionFloorsTable extends ControllerActionTable
                 ->find()
                 ->where([$this->aliasField('code') => $entity->code])
                 ->count();
-                pr($entity->code);
 
             if ($count > 1) {
                 $isDeletable = false;
