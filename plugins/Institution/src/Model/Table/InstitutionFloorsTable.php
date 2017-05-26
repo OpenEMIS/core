@@ -127,6 +127,11 @@ class InstitutionFloorsTable extends ControllerActionTable
         return $events;
     }
 
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->Navigation->substituteCrumb(__('Institution Floors'), __('Institution Floors'));
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
     {
         if (!$entity->isNew() && $entity->has('change_type')) {
@@ -240,7 +245,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         // Floor Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
             ],
             'withAll' => true
         ]));
@@ -250,7 +255,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('FloorStatuses', function ($q) {
                 return $q->where([
-                    'FloorStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+                    'FloorStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
                 ]);
             });
         }
@@ -303,7 +308,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->floor_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
             } elseif ($entity->floor_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
@@ -341,9 +346,9 @@ class InstitutionFloorsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->floor_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
             } elseif ($entity->floor_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index');
@@ -878,7 +883,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             if ($previousEntity->floor_status_id == $changeInTypeId) {
                 // third parameters set to true means copy general only
                 $this->copyCustomFields($copyFrom, $copyTo, true);
-                $this->InstitutionFloors->updateAll([
+                $this->InstitutionRooms->updateAll([
                     'institution_floor_id' => $copyTo
                 ], [
                     'institution_floor_id' => $copyFrom
@@ -920,7 +925,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $newRequestData['floor_type_id'] = $newFloorTypeId;
         $newRequestData['previous_institution_floor_id'] = $oldEntity->id;
         $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
-        $newEntity = $this->save($newEntity);
+        $newEntity = $this->save($newEntity, ['checkExisting' => false]);
         // End
 
         $url = $this->url('edit');
