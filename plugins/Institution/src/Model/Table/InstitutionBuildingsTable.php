@@ -248,7 +248,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         // Building Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE']
             ],
             'withAll' => true
         ]));
@@ -258,7 +258,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('BuildingStatuses', function ($q) {
                 return $q->where([
-                    'BuildingStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                    'BuildingStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
                 ]);
             });
         }

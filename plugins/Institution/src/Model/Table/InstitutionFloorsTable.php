@@ -245,7 +245,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         // Floor Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE']
             ],
             'withAll' => true
         ]));
@@ -255,7 +255,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('FloorStatuses', function ($q) {
                 return $q->where([
-                    'FloorStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                    'FloorStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
                 ]);
             });
         }
