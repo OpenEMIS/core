@@ -112,6 +112,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
                 return false;
             })
+            ->notEmpty('building_type_id');
         ;
     }
 
