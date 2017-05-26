@@ -41,7 +41,7 @@ class InstitutionLandsTable extends ControllerActionTable
         $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('PreviousLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'previous_institution_land_id']);
-        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -55,7 +55,7 @@ class InstitutionLandsTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Infrastructure.LandCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.LandCustomFormsFilters'],
             'recordKey' => 'institution_land_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'fieldValueClass' => ['className' => 'Infrastructure.LandCustomFieldValues', 'foreignKey' => 'institution_land_id', 'dependent' => true],
             'tableCellClass' => null
         ]);
 
@@ -919,13 +919,11 @@ class InstitutionLandsTable extends ControllerActionTable
     public function processCopy(Entity $entity)
     {
         // if is new and land status of previous land usage is change in land type then copy all general custom fields
-        if ($entity->has('previous_institution_land_id') && is_null($entity->previous_institution_land_id)) {
+        if ($entity->has('previous_institution_land_id') && !is_null($entity->previous_institution_land_id)) {
             $copyFrom = $entity->previous_institution_land_id;
             $copyTo = $entity->id;
-
             $previousEntity = $this->get($copyFrom);
             $changeInTypeId = $this->LandStatuses->getIdByCode('CHANGE_IN_TYPE');
-
             if ($previousEntity->land_status_id == $changeInTypeId) {
                 // third parameters set to true means copy general only
                 $this->copyCustomFields($copyFrom, $copyTo, true);
