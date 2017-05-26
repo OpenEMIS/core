@@ -172,10 +172,12 @@ class InstitutionLandsTable extends ControllerActionTable
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'InstitutionBuildings',
-            'institutionId' => $institutionId,
-            'index'
+            'institutionId' => $institutionId
         ];
         $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->name]);
+
+        $newUrl = $this->url('index');
+        $url = array_merge($newUrl, $url);
 
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
