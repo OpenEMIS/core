@@ -18,6 +18,7 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionRoomsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const IN_USE = 1;
     const UPDATE_DETAILS = 1;    // In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
