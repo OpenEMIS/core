@@ -940,7 +940,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
     public function processCopy(Entity $entity)
     {
         // if is new and building status of previous building usage is change in building type then copy all general custom fields
-        if ($entity->has('previous_institution_building_id') && $entity->previous_institution_building_id != 0) {
+        if ($entity->has('previous_institution_building_id') && !is_null($entity->previous_institution_building_id)) {
             $copyFrom = $entity->previous_institution_building_id;
             $copyTo = $entity->id;
 
