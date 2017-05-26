@@ -802,7 +802,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
     private function addControlFilterElement()
     {
-        $toolbarElements = ['name' => 'Institution.Infrastructure/controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => [], 'order' => 2];
+        $toolbarElements = ['name' => 'Institution.Infrastructure/land_controls', 'data' => compact('typeOptions', 'selectedType'), 'options' => [], 'order' => 2];
 
         return $toolbarElements;
     }
