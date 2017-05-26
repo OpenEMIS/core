@@ -111,6 +111,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
                 return false;
             })
+            ->notEmpty('floor_type_id');
         ;
     }
 
@@ -800,6 +801,7 @@ class InstitutionFloorsTable extends ControllerActionTable
                 ->find()
                 ->where([$this->aliasField('code') => $entity->code])
                 ->count();
+                pr($entity->code);
 
             if ($count > 1) {
                 $isDeletable = false;
