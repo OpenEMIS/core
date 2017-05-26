@@ -410,7 +410,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->room_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
+                $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
             } elseif ($entity->room_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
@@ -421,6 +421,35 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
 
         $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+
+        // check if the same room is copy from / copy to other academic period, then not allow user to delete
+        $resultQuery = $this->find();
+        $results = $resultQuery
+            ->select([
+                'academic_period_name' => 'AcademicPeriods.name',
+                'count' => $resultQuery->func()->count($this->aliasField('id'))
+            ])
+            ->contain(['AcademicPeriods'])
+            ->where([
+                $this->aliasField('code') => $entity->code,
+                $this->aliasField('id <> ') => $entity->id
+            ])
+            ->group($this->aliasField('academic_period_id'))
+            ->order([$this->aliasField('start_date')])
+            ->all();
+
+        if (!$results->isEmpty()) {
+            $extra['excludedModels'][] = $this->Subjects->alias();
+
+            foreach ($results as $obj) {
+                $title = $this->alias() . ' - ' . $obj->academic_period_name;
+                $extra['associatedRecords'][] = [
+                    'model' => $title,
+                    'count' => $obj->count
+                ];
+            }
+        }
+        // end
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -943,15 +972,6 @@ class InstitutionRoomsTable extends ControllerActionTable
 
             if ($count > 0) {
                 $isEditable = false;
-            }
-
-            $count = $this
-                ->find()
-                ->where([$this->aliasField('code') => $entity->code])
-                ->count();
-
-            if ($count > 1) {
-                $isDeletable = false;
             }
         } elseif ($entity->room_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
             $isEditable = false;

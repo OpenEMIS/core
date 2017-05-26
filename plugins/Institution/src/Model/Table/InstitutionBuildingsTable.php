@@ -360,6 +360,35 @@ class InstitutionBuildingsTable extends ControllerActionTable
         }
 
         $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+
+        // check if the same building is copy from / copy to other academic period, then not allow user to delete
+        $resultQuery = $this->find();
+        $results = $resultQuery
+            ->select([
+                'academic_period_name' => 'AcademicPeriods.name',
+                'count' => $resultQuery->func()->count($this->aliasField('id'))
+            ])
+            ->contain(['AcademicPeriods'])
+            ->where([
+                $this->aliasField('code') => $entity->code,
+                $this->aliasField('id <> ') => $entity->id
+            ])
+            ->group($this->aliasField('academic_period_id'))
+            ->order([$this->aliasField('start_date')])
+            ->all();
+
+        if (!$results->isEmpty()) {
+            $extra['excludedModels'][] = $this->InstitutionFloors->alias();
+
+            foreach ($results as $obj) {
+                $title = $this->alias() . ' - ' . $obj->academic_period_name;
+                $extra['associatedRecords'][] = [
+                    'model' => $title,
+                    'count' => $obj->count
+                ];
+            }
+        }
+        // end
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -846,15 +875,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
             if ($count > 0) {
                 $isEditable = false;
-            }
-
-            $count = $this
-                ->find()
-                ->where([$this->aliasField('code') => $entity->code])
-                ->count();
-
-            if ($count > 1) {
-                $isDeletable = false;
             }
         } elseif ($entity->building_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
             $isEditable = false;
