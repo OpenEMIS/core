@@ -752,7 +752,11 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         $crumbs = [];
         $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
-        $buildingUrl = $this->url('index');
+        $url = $this->url('index');
+        if (isset($url[1])) {
+            unset($url[1]);
+        }
+        $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_land->id,
