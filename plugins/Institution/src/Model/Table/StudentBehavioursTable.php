@@ -106,10 +106,13 @@ class StudentBehavioursTable extends AppTable
 		$this->ControllerAction->field('time_of_behaviour', ['visible' => false]);
 		$this->ControllerAction->field('academic_period_id', ['visible' => false]);
 
+		$this->fields['student_id']['sort'] = ['field' => 'Students.first_name']; // POCOR-2547 adding sort
+
 		$this->ControllerAction->setFieldOrder(['openemis_no', 'student_id', 'date_of_behaviour', 'title', 'student_behaviour_category_id']);
 	}
 
-	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+	{
 		$toolbarElements = [
 			['name' => 'Institution.Behaviours/controls', 'data' => [], 'options' => []]
 		];
@@ -170,6 +173,19 @@ class StudentBehavioursTable extends AppTable
 		}
 
 		// will need to check for search by name: AdvancedNameSearchBehavior
+
+		// POCOR-2547 Adding sortWhiteList to $options
+		$sortList = ['Students.first_name'];
+		if (array_key_exists('sortWhitelist', $options)) {
+			$sortList = array_merge($options['sortWhitelist'], $sortList);
+		}
+		$options['sortWhitelist'] = $sortList;
+
+		// POCOR-2547 sort list of staff and student by name
+        if (!isset($this->request->query['sort'])) {
+            $query->order([$this->Students->aliasField('first_name'), $this->Students->aliasField('last_name')]);
+        }
+        // end POCOR-2547
 	}
 
 	public function addAfterAction(Event $event, Entity $entity) {
