@@ -321,7 +321,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
 
-            $url = $this->url('index');
+            $url = $this->url('index', 'QUERY');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
@@ -359,7 +359,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
 
-            $url = $this->url('index');
+            $url = $this->url('index', 'QUERY');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
