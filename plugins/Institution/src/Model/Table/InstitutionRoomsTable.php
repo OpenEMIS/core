@@ -64,7 +64,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Infrastructure.RoomCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.RoomCustomFormsFilters'],
             'recordKey' => 'institution_room_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'fieldValueClass' => ['className' => 'Infrastructure.RoomCustomFieldValues', 'foreignKey' => 'institution_room_id', 'dependent' => true],
             'tableCellClass' => null
         ]);
         $this->addBehavior('Institution.InfrastructureShift');
