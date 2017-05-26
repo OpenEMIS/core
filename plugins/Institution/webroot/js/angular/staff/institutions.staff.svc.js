@@ -50,7 +50,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         getPositionList: getPositionList,
         getStaffTypes: getStaffTypes,
         getInstitution: getInstitution,
-        addStaffTransferRequest: addStaffTransferRequest
+        addStaffTransferRequest: addStaffTransferRequest,
+        translate: translate
     };
 
     var models = {
@@ -86,6 +87,15 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
         KdOrmSvc.controllerAction('ExternalAPI');
         KdOrmSvc.init(externalModels);
     };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
+    }
 
     function resetExternalVariable()
     {
@@ -358,10 +368,11 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
                         userData = response.data[0];
                         modifiedUser = userData;
                         delete modifiedUser['openemis_no'];
-                        console.log(modifiedUser);
+                        delete modifiedUser['created'];
+                        delete modifiedUser['modified'];
                         modifiedUser['is_staff'] = 1;
                         modifiedUser['start_date'] = userRecord['start_date'];
-                        StaffUser.save(modifiedUser)
+                        StaffUser.edit(modifiedUser)
                         .then(function(response) {
                             deferred.resolve([response.data, userData]);
                         }, function(error) {
@@ -374,6 +385,8 @@ function InstitutionsStaffSvc($http, $q, $filter, KdOrmSvc) {
 
                         vm.importMappingObj(genderName, nationality, identityType)
                         .then(function(promiseArr) {
+                            delete newUserRecord['nationality_id'];
+                            delete newUserRecord['identity_type_id'];
                             newUserRecord['gender_id'] = promiseArr[0];
                             newUserRecord['nationality_id'] = promiseArr[1];
                             newUserRecord['identity_type_id'] = promiseArr[2];

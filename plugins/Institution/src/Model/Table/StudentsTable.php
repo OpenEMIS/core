@@ -92,6 +92,7 @@ class StudentsTable extends ControllerActionTable
                 'education_grade_id',
                 'academic_period_id',
                 'student_status_id',
+                'previous_institution_student_id'
             ],
             'order' => $advancedSearchFieldOrder
         ]);
@@ -117,7 +118,13 @@ class StudentsTable extends ControllerActionTable
     {
         $events = parent::implementedEvents();
         $events['Model.InstitutionStudentIndexes.calculateIndexValue'] = 'institutionStudentIndexCalculateIndexValue';
+        $events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
         return $events;
+    }
+
+    public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+        $searchableFields[] = 'student_id';
+        $searchableFields[] = 'openemis_no';
     }
 
     public function validationDefault(Validator $validator)
@@ -133,8 +140,6 @@ class StudentsTable extends ControllerActionTable
             ->add('student_status_id', [
             ])
             ->add('academic_period_id', [
-            ])
-            ->add('education_grade_id', [
             ])
             ->allowEmpty('student_name')
             ->add('student_name', 'ruleStudentNotEnrolledInAnyInstitutionAndSameEducationSystem', [
@@ -154,6 +159,17 @@ class StudentsTable extends ControllerActionTable
             ->allowEmpty('class')
             ->add('class', 'ruleClassMaxLimit', [
                 'rule' => ['checkInstitutionClassMaxLimit'],
+                'on' => 'create'
+            ])
+            ->add('gender_id', 'rulecompareStudentGenderWithInstitution', [
+                'rule' => ['compareStudentGenderWithInstitution']
+            ])
+            ->add('education_grade_id', 'ruleCheckProgrammeEndDate', [
+                'rule' => ['checkProgrammeEndDate', 'education_grade_id'],
+                'on' => 'create'
+            ])
+            ->add('start_date', 'ruleCheckProgrammeEndDateAgainstStudentStartDate', [
+                'rule' => ['checkProgrammeEndDateAgainstStudentStartDate', 'start_date'],
                 'on' => 'create'
             ])
             ;
@@ -587,11 +603,11 @@ class StudentsTable extends ControllerActionTable
 
         $query->find('withClass', ['institution_id' => $institutionId, 'period_id' => $selectedAcademicPeriod]);
 
-        $sortList = ['openemis_no', 'first_name', 'InstitutionClasses.name'];
-        if (array_key_exists('sortWhitelist', $extra)) {
-            $sortList = array_merge($extra['sortWhitelist'], $sortList);
+        $sortList = ['InstitutionClasses.name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
         }
-        $extra['sortWhitelist'] = $sortList;
+        $extra['options']['sortWhitelist'] = $sortList;
         // End
 
         $search = $this->getSearchKey();
@@ -620,6 +636,12 @@ class StudentsTable extends ControllerActionTable
 
         // POCOR-2869 implemented to hide the retrieval of records from another school resulting in duplication - proper fix will be done in SOJOR-437
         $query->group([$this->aliasField('student_id'), $this->aliasField('academic_period_id'), $this->aliasField('institution_id'), $this->aliasField('education_grade_id'), $this->aliasField('student_status_id')]);
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($request->query['sort'])) {
+            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        }
+
         $this->controller->set(compact('statusOptions', 'academicPeriodOptions', 'educationGradesOptions'));
     }
 
@@ -754,6 +776,7 @@ class StudentsTable extends ControllerActionTable
             TableRegistry::get('Institution.StudentAdmission'),
             TableRegistry::get('Institution.InstitutionClassStudents'),
             TableRegistry::get('Institution.InstitutionSubjectStudents'),
+            TableRegistry::get('Institution.StudentUser'),
             $this->Users
         ];
         $this->dispatchEventToModels('Model.Students.afterSave', [$entity], $this, $listeners);
@@ -1125,6 +1148,7 @@ class StudentsTable extends ControllerActionTable
         foreach ($genderOptions as $key => $value) {
             $dataSet[$value] = ['name' => __($value), 'data' => []];
         }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         $academicPeriodList = [];
         $found = false;
@@ -1143,6 +1167,12 @@ class StudentsTable extends ControllerActionTable
         $academicPeriodList = array_reverse($academicPeriodList, true);
 
         foreach ($academicPeriodList as $periodId => $periodName) {
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$periodName] = 0;
+                }
+            }
+
             foreach ($genderOptions as $genderId => $genderName) {
                 $queryCondition = array_merge(['Genders.id' => $genderId, 'AcademicPeriods.id' => $periodId], $_conditions);
 
@@ -1166,7 +1196,10 @@ class StudentsTable extends ControllerActionTable
                 ->toArray()
                 ;
 
-                $dataSet[$genderName]['data'][$periodName] = !empty($studentsByYear) ? $studentsByYear[$genderName][$periodName] : 0;
+                if (!empty($studentsByYear)) {
+                    $dataSet[$genderName]['data'][$periodName] = $studentsByYear[$genderName][$periodName];
+                    $dataSet['Total']['data'][$periodName] += $studentsByYear[$genderName][$periodName];
+                }
             }
         }
         $params['dataSet'] = $dataSet->getArrayCopy();
@@ -1231,6 +1264,7 @@ class StudentsTable extends ControllerActionTable
         foreach ($genderOptions as $key => $value) {
             $dataSet[$value] = array('name' => __($value), 'data' => array());
         }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
 
         foreach ($studentByGrades as $key => $studentByGrade) {
             $gradeId = $studentByGrade->education_grade_id;
@@ -1246,6 +1280,7 @@ class StudentsTable extends ControllerActionTable
                 }
             }
             $dataSet[$gradeGender]['data'][$gradeId] = $gradeTotal;
+            $dataSet['Total']['data'][$gradeId] += $gradeTotal;
         }
 
         // $params['options']['subtitle'] = array('text' => 'For Year '. $currentYear);
@@ -1467,12 +1502,19 @@ class StudentsTable extends ControllerActionTable
 
     public function getInstitutionIdByUser($studentId, $academicPeriodId)
     {
-        return $institutionId = $this->find()
+        $institutionId = null;
+        $record = $this->find()
             ->where([
                 $this->aliasField('student_id') => $studentId,
                 $this->aliasField('academic_period_id') => $academicPeriodId
             ])
-            ->order(['start_date DESC'])
-            ->first()->institution_id;
+            ->order([$this->aliasField('start_date') => 'DESC'])
+            ->all();
+
+        if (!$record->isEmpty()) {
+            $institutionId = $record->first()->institution_id;
+        }
+
+        return $institutionId;
     }
 }

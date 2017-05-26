@@ -67,7 +67,20 @@ class QueryLogger
             if (is_bool($p)) {
                 return $p ? '1' : '0';
             }
-            return is_string($p) ? "'$p'" : $p;
+
+            if (is_string($p)) {
+                $replacements = [
+                    '$' => '\\$',
+                    '\\' => '\\\\\\\\',
+                    "'" => "''",
+                ];
+
+                $p = strtr($p, $replacements);
+
+                return "'$p'";
+            }
+
+            return $p;
         }, $query->params);
 
         $keys = [];

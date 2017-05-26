@@ -18,8 +18,24 @@ class ExaminationsTable extends ControllerActionTable {
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
         $this->hasMany('ExaminationItems', ['className' => 'Examination.ExaminationItems', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->belongsToMany('ExaminationCentres', [
+            'className' => 'Examination.ExaminationCentres',
+            'joinTable' => 'examination_centres_examinations',
+            'foreignKey' => 'examination_id',
+            'targetForeignKey' => 'examination_centre_id',
+            'through' => 'Examination.ExaminationCentresExaminations',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
+        $this->belongsToMany('ExaminationCentreRooms', [
+            'className' => 'Examination.ExaminationCentreRooms',
+            'joinTable' => 'examination_centre_rooms_examinations',
+            'foreignKey' => 'examination_id',
+            'targetForeignKey' => 'examination_centre_room_id',
+            'through' => 'Examination.ExaminationCentreRoomsExaminations',
+            'dependent' => true,
+            'cascadeCallbacks' => true
+        ]);
 
         $this->setDeleteStrategy('restrict');
     }
@@ -34,8 +50,16 @@ class ExaminationsTable extends ControllerActionTable {
                     'provider' => 'table'
                 ]
             ])
-            ->add('registration_start_date', 'ruleCompareDate', [
-                'rule' => ['compareDate', 'registration_end_date', false]
+            ->add('registration_start_date', [
+                'ruleInAcademicPeriod' => [
+                    'rule' => ['inAcademicPeriod', 'academic_period_id', []]
+                ],
+                'ruleCompareDate' => [
+                    'rule' => ['compareDate', 'registration_end_date', false]
+                ]
+            ])
+            ->add('registration_end_date', 'ruleInAcademicPeriod', [
+                'rule' => ['inAcademicPeriod', 'academic_period_id', []]
             ])
             ->requirePresence('examination_items');
     }
@@ -62,7 +86,6 @@ class ExaminationsTable extends ControllerActionTable {
     public function afterAction(Event $event, ArrayObject $extra)
     {
         $this->controller->getExamsTab();
-
     }
 
     public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
@@ -85,7 +108,6 @@ class ExaminationsTable extends ControllerActionTable {
         if (!empty($this->request->data[$this->alias()]['education_grade_id'])) {
             $selectedGrade = $this->request->data[$this->alias()]['education_grade_id'];
             $EducationSubjects = TableRegistry::get('Education.EducationSubjects');
-
             $subjects = $EducationSubjects->getEducationSubjectsByGrades($selectedGrade);
         }
 
@@ -97,6 +119,17 @@ class ExaminationsTable extends ControllerActionTable {
     {
         if (!isset($data[$this->alias()]['examination_items']) || empty($data[$this->alias()]['examination_items'])) {
             $this->Alert->warning($this->aliasField('noExaminationItems'));
+        }
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        // used to do validation for examination item date
+        if (array_key_exists('examination_items', $data)) {
+            $registrationEndDate = $data['registration_end_date'];
+            foreach ($data['examination_items'] as $key => $value) {
+                $data['examination_items'][$key]['registration_end_date'] = $registrationEndDate;
+            }
         }
     }
 
@@ -301,6 +334,16 @@ class ExaminationsTable extends ControllerActionTable {
         return compact('periodOptions', 'selectedPeriod');
     }
 
+    public function getExaminationOptions($selectedAcademicPeriod)
+    {
+        $examinationOptions = $this
+            ->find('list')
+            ->where([$this->aliasField('academic_period_id') => $selectedAcademicPeriod])
+            ->toArray();
+
+        return $examinationOptions;
+    }
+
     public function getGradingTypeOptions()
     {
         $examinationGradingType = TableRegistry::get('Examination.ExaminationGradingTypes');
@@ -311,7 +354,7 @@ class ExaminationsTable extends ControllerActionTable {
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
     {
         $extra['excludedModels'] = [
-            $this->ExaminationItems->alias()
+            $this->ExaminationItems->alias(), $this->ExaminationCentreRooms->alias()
         ];
     }
 }

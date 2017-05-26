@@ -78,20 +78,17 @@ class Dump extends AbstractCommand
         $collection = $connection->schemaCollection();
 
         $options = [
-            'require-table' => true,
+            'require-table' => false,
             'plugin' => $this->getPlugin($input)
         ];
         $tables = $this->getTablesToBake($collection, $options);
 
         $dump = [];
-        if (empty($tables)) {
-            $this->output()->writeln('<info>No tables were found : the dump file was not created</info>');
-            return false;
-        }
-
-        foreach ($tables as $table) {
-            $schema = $collection->describe($table);
-            $dump[$table] = $schema;
+        if ($tables) {
+            foreach ($tables as $table) {
+                $schema = $collection->describe($table);
+                $dump[$table] = $schema;
+            }
         }
 
         $filePath = $path . DS . 'schema-dump-' . $connectionName . '.lock';

@@ -6,12 +6,13 @@ use Cake\ORM\TableRegistry;
 use Cake\Controller\Component;
 use Cake\Event\Event;
 use Cake\Utility\Security;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 
 require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
 require_once(dirname(__FILE__) . '/../../OAuth/Client.php');
 
-class OAuth2OpenIDConnectAuthComponent extends Component {
+class OAuth2OpenIDConnectAuthComponent extends Component
+{
 
     private $clientId;
     private $clientSecret;
@@ -24,7 +25,8 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
 
     public $components = ['Auth'];
 
-    public function initialize(array $config) {
+    public function initialize(array $config)
+    {
         $AuthenticationTypeAttributesTable = TableRegistry::get('SSO.AuthenticationTypeAttributes');
         $oAuthAttributes = $AuthenticationTypeAttributesTable->getTypeAttributeValues('OAuth2OpenIDConnect');
         $this->clientId = $oAuthAttributes['client_id'];
@@ -34,10 +36,12 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         if (!$this->controller->Auth->user()) {
             $http = new Client();
             $responseBody = [];
-            $responseBody[] = $http->get($oAuthAttributes['openid_configuration'], [], ['redirect' => 3]);
+            if (isset($oAuthAttributes['openid_configuration']) && !empty($oAuthAttributes['openid_configuration'])) {
+                $responseBody[] = $http->get($oAuthAttributes['openid_configuration'], [], ['redirect' => 3]);
+            }
 
             foreach ($responseBody as $response) {
-                if ($response->statusCode() == 200) {
+                if ($response->getStatusCode() == 200) {
                     // Caching of openid configuration
                     if (!empty($response->body())) {
                         $body = json_decode($response->body(), true);
@@ -46,7 +50,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                                 $oAuthAttributes['issuer'] = $body['issuer'];
                                 $AuthenticationTypeAttributesTable->updateAll([
                                     'value' => $body['issuer']
-                                ],[
+                                ], [
                                     'authentication_type' => 'OAuth2OpenIDConnect',
                                     'attribute_field' => 'issuer'
                                 ]);
@@ -57,7 +61,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                                 $oAuthAttributes['auth_uri'] = $body['authorization_endpoint'];
                                 $AuthenticationTypeAttributesTable->updateAll([
                                     'value' => $body['authorization_endpoint']
-                                ],[
+                                ], [
                                     'authentication_type' => 'OAuth2OpenIDConnect',
                                     'attribute_field' => 'auth_uri'
                                 ]);
@@ -68,7 +72,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                                 $oAuthAttributes['token_uri'] = $body['token_endpoint'];
                                 $AuthenticationTypeAttributesTable->updateAll([
                                     'value' => $body['token_endpoint']
-                                ],[
+                                ], [
                                     'authentication_type' => 'OAuth2OpenIDConnect',
                                     'attribute_field' => 'token_uri'
                                 ]);
@@ -79,7 +83,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                                 $oAuthAttributes['userInfo_uri'] = $body['userinfo_endpoint'];
                                 $AuthenticationTypeAttributesTable->updateAll([
                                     'value' => $body['userinfo_endpoint']
-                                ],[
+                                ], [
                                     'authentication_type' => 'OAuth2OpenIDConnect',
                                     'attribute_field' => 'userInfo_uri'
                                 ]);
@@ -90,7 +94,7 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
                                 $oAuthAttributes['jwk_uri'] = $body['jwks_uri'];
                                 $AuthenticationTypeAttributesTable->updateAll([
                                     'value' => $body['jwks_uri']
-                                ],[
+                                ], [
                                     'authentication_type' => 'OAuth2OpenIDConnect',
                                     'attribute_field' => 'jwk_uri'
                                 ]);
@@ -128,13 +132,15 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         $this->retryMessage = 'Remote authentication failed. <br>Please try local login or <a href="'.$this->redirectUri.'?submit=retry">Click here</a> to try again';
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $events['Controller.Auth.authenticate'] = 'authenticate';
         return $events;
     }
 
-    public function beforeFilter(Event $event) {
+    public function beforeFilter(Event $event)
+    {
         if (!$this->session->read('OAuth2OpenIDconnect.remoteFail') && !$this->session->read('Auth.fallback')) {
             $this->controller->Auth->config('authenticate', [
                 'Form' => [
@@ -154,16 +160,19 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         }
     }
 
-    public function startup(Event $event) {
+    public function startup(Event $event)
+    {
         if (!$this->controller->Auth->user()) {
             $action = $this->request->params['action'];
             if ($action == $this->config('loginAction') && !$this->session->read('OAuth2OpenIDConnect.remoteFail') && !$this->session->read('Auth.fallback')) {
+                $this->session->delete('OAuth2OpenIDConnect.accessToken');
                 $this->idpLogin();
             }
         }
     }
 
-    private function idpLogin() {
+    private function idpLogin()
+    {
         $client = $this->client;
         /************************************************************************************************
           If we have a code back from the OAuth 2.0 flow, we need to exchange that with the authenticate()
@@ -237,17 +246,19 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
         }
     }
 
-    public function authenticate(Event $event, ArrayObject $extra) {
+    public function authenticate(Event $event, ArrayObject $extra)
+    {
         $extra['authType'] = $this->authType;
         if ($this->request->is('get')) {
             if ($this->request->query('submit') == 'retry') {
                 $this->session->delete('OAuth2OpenIDConnect.remoteFail');
+                $this->session->delete('Auth.fallback');
                 $this->session->write('OAuth2OpenIDConnect.reLogin', true);
                 return $this->controller->redirect($this->redirectUri);
             }
             $username = 'Not Google Authenticated';
             if (!$this->controller->Auth->user() && !$this->session->read('OAuth2OpenIDConnect.remoteFail') && !$this->session->read('Auth.fallback')) {
-               $this->idpLogin();
+                $this->idpLogin();
             } else {
                 return $this->checkLogin();
             }
@@ -271,7 +282,6 @@ class OAuth2OpenIDConnectAuthComponent extends Component {
             }
             return false;
         }
-
     }
 
     private function checkLogin($username = null, $extra = [])

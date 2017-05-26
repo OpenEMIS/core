@@ -165,6 +165,7 @@ class Debugger
         if (!$instance) {
             $instance[0] = new Debugger();
         }
+
         return $instance[0];
     }
 
@@ -305,6 +306,7 @@ class Debugger
         if ($options['format'] === 'array' || $options['format'] === 'points') {
             return $back;
         }
+
         return implode("\n", $back);
     }
 
@@ -317,17 +319,13 @@ class Debugger
      */
     public static function trimPath($path)
     {
-        if (!defined('CAKE_CORE_INCLUDE_PATH') || !defined('APP')) {
-            return $path;
-        }
-
-        if (strpos($path, APP) === 0) {
+        if (defined('APP') && strpos($path, APP) === 0) {
             return str_replace(APP, 'APP/', $path);
         }
-        if (strpos($path, CAKE_CORE_INCLUDE_PATH) === 0) {
+        if (defined('CAKE_CORE_INCLUDE_PATH') && strpos($path, CAKE_CORE_INCLUDE_PATH) === 0) {
             return str_replace(CAKE_CORE_INCLUDE_PATH, 'CORE', $path);
         }
-        if (strpos($path, ROOT) === 0) {
+        if (defined('ROOT') && strpos($path, ROOT) === 0) {
             return str_replace(ROOT, 'ROOT', $path);
         }
 
@@ -383,6 +381,7 @@ class Debugger
                 $lines[] = $string;
             }
         }
+
         return $lines;
     }
 
@@ -411,6 +410,7 @@ class Debugger
                 $highlight
             );
         }
+
         return $highlight;
     }
 
@@ -461,6 +461,7 @@ class Debugger
                 if (trim($var) === '') {
                     return "''";
                 }
+
                 return "'" . $var . "'";
             case 'array':
                 return static::_array($var, $depth - 1, $indent + 1);
@@ -518,6 +519,7 @@ class Debugger
         } else {
             $vars[] = $break . '[maximum depth reached]';
         }
+
         return $out . implode(',', $vars) . $end . ']';
     }
 
@@ -547,6 +549,7 @@ class Debugger
                     $end . '}';
             } catch (Exception $e) {
                 $message = $e->getMessage();
+
                 return $out . "\n(unable to export object: $message)\n }";
             }
         }
@@ -579,6 +582,7 @@ class Debugger
             $out .= $break . implode($break, $props) . $end;
         }
         $out .= '}';
+
         return $out;
     }
 
@@ -661,6 +665,7 @@ class Debugger
         } else {
             $self->_templates[$format] = $strings;
         }
+
         return $self->_templates[$format];
     }
 
@@ -708,9 +713,11 @@ class Debugger
         switch ($this->_outputFormat) {
             case false:
                 $this->_data[] = compact('context', 'trace') + $data;
+
                 return;
             case 'log':
                 $this->log(compact('context', 'trace') + $data);
+
                 return;
         }
 
@@ -726,6 +733,7 @@ class Debugger
 
         if (!empty($tpl['escapeContext'])) {
             $context = h($context);
+            $data['description'] = h($data['description']);
         }
 
         $infoData = compact('code', 'context', 'trace');
@@ -779,7 +787,70 @@ class Debugger
         if (is_resource($var)) {
             return 'resource';
         }
+
         return 'unknown';
+    }
+
+    /**
+     * Prints out debug information about given variable.
+     *
+     * @param mixed $var Variable to show debug information for.
+     * @param array $location If contains keys "file" and "line" their values will
+     *    be used to show location info.
+     * @param bool|null $showHtml If set to true, the method prints the debug
+     *    data in a browser-friendly way.
+     * @return void
+     */
+    public static function printVar($var, $location = [], $showHtml = null)
+    {
+        $location += ['file' => null, 'line' => null];
+        $file = $location['file'];
+        $line = $location['line'];
+        $lineInfo = '';
+        if ($file) {
+            $search = [];
+            if (defined('ROOT')) {
+                $search = [ROOT];
+            }
+            if (defined('CAKE_CORE_INCLUDE_PATH')) {
+                array_unshift($search, CAKE_CORE_INCLUDE_PATH);
+            }
+            $file = str_replace($search, '', $file);
+        }
+        $html = <<<HTML
+<div class="cake-debug-output">
+%s
+<pre class="cake-debug">
+%s
+</pre>
+</div>
+HTML;
+        $text = <<<TEXT
+%s
+########## DEBUG ##########
+%s
+###########################
+
+TEXT;
+        $template = $html;
+        if ((PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg') || $showHtml === false) {
+            $template = $text;
+            if ($file && $line) {
+                $lineInfo = sprintf('%s (line %s)', $file, $line);
+            }
+        }
+        if ($showHtml === null && $template !== $text) {
+            $showHtml = true;
+        }
+        $var = Debugger::exportVar($var, 25);
+        if ($showHtml) {
+            $template = $html;
+            $var = h($var);
+            if ($file && $line) {
+                $lineInfo = sprintf('<span><strong>%s</strong> (line <strong>%s</strong>)</span>', $file, $line);
+            }
+        }
+        printf($template, $lineInfo, $var);
     }
 
     /**
