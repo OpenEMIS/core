@@ -416,6 +416,7 @@ class StudentBehavioursTable extends AppTable
 				->find('list', ['keyField' => 'student_id', 'valueField' => 'student_name'])
 				->contain(['Users'])
 				->where([$Students->aliasField('institution_class_id') => $selectedClass])
+				->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
 				->toArray();
 			}
 

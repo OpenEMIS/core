@@ -240,6 +240,7 @@ class StaffBehavioursTable extends ControllerActionTable
 				->matching('Users')
 				->find('academicPeriod', ['academic_period_id' => $selectedPeriod])
 				->where([$Staff->aliasField('institution_id') => $institutionId])
+				->order(['Users.first_name', 'Users.last_name']) // POCOR-2547 sort list of staff and student by name
 				->toArray();
 			}
 
