@@ -325,7 +325,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
                 // Not allowed to change floor type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->aliasField('change_in_floor_type.restrictEdit'));
+                    $session->write($sessionKey, $this->alias().'.change_in_floor_type.restrictEdit');
 
                     $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
