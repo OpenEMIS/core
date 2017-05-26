@@ -5,7 +5,9 @@
 				$url = [
 					'plugin' => $this->request->params['plugin'],
 				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
+				    'action' => $this->request->params['action'],
+				    'institutionId' => $this->request->param('institutionId'),
+				    'queryString' => $this->request->query('queryString')
 				];
 				if (!empty($this->request->pass)) {
 					$url = array_merge($url, $this->request->pass);
@@ -14,12 +16,14 @@
 				$dataNamedGroup = [];
 				if (!empty($this->request->query)) {
 					foreach ($this->request->query as $key => $value) {
-						if (in_array($key, ['period_id', 'type', 'status'])) continue;
-						echo $this->Form->hidden($key, [
-							'value' => $value,
-							'data-named-key' => $key
-						]);
-						$dataNamedGroup[] = $key;
+						if (in_array($key, ['period_id'])) {
+							echo $this->Form->hidden($key, [
+								'value' => $value,
+								'data-named-key' => $key,
+								'data-named-group' => 'type, status'
+							]);
+							$dataNamedGroup[] = $key;
+						}
 					}
 				}
 
@@ -34,7 +38,7 @@
 						'options' => $typeOptions,
 						'url' => $baseUrl,
 						'data-named-key' => 'type',
-						'data-named-group' => 'status',
+						'data-named-group' => 'period_id, status',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
@@ -51,7 +55,7 @@
 						'options' => $statusOptions,
 						'url' => $baseUrl,
 						'data-named-key' => 'status',
-						'data-named-group' => 'type',
+						'data-named-group' => 'type, period_id',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
