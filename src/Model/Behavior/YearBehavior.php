@@ -17,7 +17,7 @@ class YearBehavior extends Behavior {
 		$config = $this->config();
 		foreach ($config as $date => $year) {
 			if ($entity->has($date) && !empty($entity->$date)) {
-				$entity->$year = date('Y', strtotime($entity->$date));
+				$entity->$year = $entity->$date->year;
 			} else {
 				$entity->$year = null;
 			}
