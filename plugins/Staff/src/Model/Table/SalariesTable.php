@@ -182,6 +182,11 @@ class SalariesTable extends ControllerActionTable {
 		$this->setFieldOrder(['salary_date', 'gross_salary', 'additions', 'deductions', 'net_salary']);
 	}
 
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$query->order($this->aliasField('salary_date DESC'));
+	}
+
 	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'SalaryAdditions',
