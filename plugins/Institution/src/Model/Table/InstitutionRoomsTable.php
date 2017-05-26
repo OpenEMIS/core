@@ -125,6 +125,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
+            ->notEmpty('room_type_id');
         ;
     }
 
