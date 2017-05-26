@@ -902,7 +902,7 @@ class InstitutionFloorsTable extends ControllerActionTable
     public function processCopy(Entity $entity)
     {
         // if is new and floor status of previous floor usage is change in floor type then copy all general custom fields
-        if ($entity->has('previous_institution_floor_id') && $entity->previous_institution_floor_id != 0) {
+        if ($entity->has('previous_institution_floor_id') && !is_null($entity->previous_institution_floor_id)) {
             $copyFrom = $entity->previous_institution_floor_id;
             $copyTo = $entity->id;
 
