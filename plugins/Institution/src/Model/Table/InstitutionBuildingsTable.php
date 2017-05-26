@@ -42,7 +42,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
         $this->belongsTo('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'foreignKey' => 'institution_land_id']);
         $this->belongsTo('PreviousBuildings', ['className' => 'Institution.InstitutionBuildings', 'foreignKey' => 'previous_institution_building_id']);
         $this->belongsTo('InfrastructureOwnership', ['className' => 'FieldOption.InfrastructureOwnerships']);
-        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors']);
+        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
