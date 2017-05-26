@@ -69,7 +69,7 @@ class RenderFileBehavior extends RenderBehavior {
             if (!is_null($savedValue)) {
                 $value = $savedValue;
                 $url = $model->url('view');
-                $url['action'] = $model->alias();
+                $url['action'] = $model->request->param('action');
                 $url[0] = 'downloadFile';
                 $url[1] = $model->paramsEncode(['id' => $savedId]);
 
