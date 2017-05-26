@@ -234,11 +234,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
-        // For breadcrumb to build the baseUrl
-        $this->controller->set('breadcrumbPlugin', 'Institution');
-        $this->controller->set('breadcrumbController', 'Institutions');
-        $this->controller->set('breadcrumbAction', 'Infrastructures');
-        // End
+        $this->Navigation->substituteCrumb(__('Institution Rooms'), __('Institution Rooms'));
     }
 
     public function onUpdateFieldInstitutionFloorId(Event $event, array $attr, $action, Request $request)
@@ -313,7 +309,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         // Room Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
             ],
             'withAll' => true
         ]));
@@ -323,7 +319,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('RoomStatuses', function ($q) {
                 return $q->where([
-                    'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
+                    'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
                 ]);
             });
         }
@@ -376,7 +372,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
             if ($entity->room_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictEdit'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
             } elseif ($entity->room_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
@@ -414,9 +410,9 @@ class InstitutionRoomsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->room_status_id == $inUseId) {
-                $session->write($sessionKey, $this->aliasField('in_use.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
             } elseif ($entity->room_status_id == $endOfUsageId) {
-                $session->write($sessionKey, $this->aliasField('end_of_usage.restrictDelete'));
+                $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
 
             $url = $this->url('index');
@@ -1008,7 +1004,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $newRequestData['room_type_id'] = $newRoomTypeId;
         $newRequestData['previous_room_id'] = $oldEntity->id;
         $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
-        $newEntity = $this->save($newEntity);
+        $newEntity = $this->save($newEntity, ['checkExisting' => false]);
         // End
 
         $url = $this->url('edit');
