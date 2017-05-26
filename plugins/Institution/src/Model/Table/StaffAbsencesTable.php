@@ -296,6 +296,7 @@ class StaffAbsencesTable extends ControllerActionTable {
 			'options' => $this->absenceList
 		]);
 
+		$this->fields['staff_id']['sort'] = ['field' => 'Users.first_name']; // POCOR-2547 adding sort
 		$this->fields['full_day']['visible'] = false;
 		$this->fields['start_date']['visible'] = false;
 		$this->fields['end_date']['visible'] = false;
@@ -317,6 +318,19 @@ class StaffAbsencesTable extends ControllerActionTable {
             // function from AdvancedNameSearchBehavior
             $query = $this->addSearchConditions($query, ['alias' => 'Users', 'searchTerm' => $search]);
         }
+
+        // POCOR-2547 Adding sortWhiteList to $extra
+        $sortList = ['Users.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($this->request->query['sort'])) {
+            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        }
+        // end POCOR-2547
     }
 
     public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
