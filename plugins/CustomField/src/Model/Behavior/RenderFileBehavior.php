@@ -259,7 +259,7 @@ class RenderFileBehavior extends RenderBehavior {
     }
 
     public function downloadFile(Event $mainEvent, ArrayObject $extra) {
-        $model = $this->_table->CustomFieldValues;
+        $model = $this->_table->CustomFieldValues->target();
         $ids = $model->paramsDecode($this->_table->paramsPass(0));
         $idKey = $model->getIdKeys($model, $ids);
 
