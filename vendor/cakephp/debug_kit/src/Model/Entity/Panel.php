@@ -15,6 +15,12 @@ use Cake\ORM\Entity;
 
 /**
  * Panel entity class.
+ *
+ * @property int $id
+ * @property int $request_id
+ * @property string $title
+ * @property string $element
+ * @property string $content
  */
 class Panel extends Entity
 {
@@ -39,6 +45,7 @@ class Panel extends Entity
         if (is_resource($content)) {
             return stream_get_contents($content);
         }
+
         return $content;
     }
 }

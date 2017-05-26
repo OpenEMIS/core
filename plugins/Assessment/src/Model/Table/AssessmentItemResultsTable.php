@@ -21,7 +21,8 @@ class AssessmentItemResultsTable extends AppTable {
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods']);
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Results' => ['index', 'add']
+            'Results' => ['index', 'add'],
+            'OpenEMIS_Classroom' => ['add', 'edit', 'delete']
         ]);
         $this->addBehavior('Indexes.Indexes');
     }

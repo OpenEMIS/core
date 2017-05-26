@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2015 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -66,6 +66,8 @@ class ListCommand extends ReflectingCommand implements PresenterAware
                 new InputOption('classes',     'k', InputOption::VALUE_NONE,     'Display declared classes.'),
                 new InputOption('interfaces',  'I', InputOption::VALUE_NONE,     'Display declared interfaces.'),
                 new InputOption('traits',      't', InputOption::VALUE_NONE,     'Display declared traits.'),
+
+                new InputOption('no-inherit',  '',  InputOption::VALUE_NONE,     'Exclude inherited methods, properties and constants.'),
 
                 new InputOption('properties',  'p', InputOption::VALUE_NONE,     'Display class or object properties (public properties by default).'),
                 new InputOption('methods',     'm', InputOption::VALUE_NONE,     'Display class or object methods (public methods by default).'),
@@ -133,6 +135,11 @@ HELP
         if ($input->getOption('long')) {
             $output->stopPaging();
         }
+
+        // Set some magic local variables
+        if ($reflector !== null) {
+            $this->setCommandScopeVariables($reflector);
+        }
     }
 
     /**
@@ -162,7 +169,7 @@ HELP
      * Write the list items to $output.
      *
      * @param OutputInterface $output
-     * @param null|array      $result List of enumerated items.
+     * @param null|array      $result List of enumerated items
      */
     protected function write(OutputInterface $output, array $result = null)
     {
@@ -182,7 +189,7 @@ HELP
      * Items are listed one per line, and include the item signature.
      *
      * @param OutputInterface $output
-     * @param null|array      $result List of enumerated items.
+     * @param null|array      $result List of enumerated items
      */
     protected function writeLong(OutputInterface $output, array $result = null)
     {
@@ -224,7 +231,7 @@ HELP
     /**
      * Validate that input options make sense, provide defaults when called without options.
      *
-     * @throws RuntimeException if options are inconsistent.
+     * @throws RuntimeException if options are inconsistent
      *
      * @param InputInterface $input
      */
@@ -241,7 +248,7 @@ HELP
 
         if (!$input->getArgument('target')) {
             // if no target is passed, there can be no properties or methods
-            foreach (array('properties', 'methods') as $option) {
+            foreach (array('properties', 'methods', 'no-inherit') as $option) {
                 if ($input->getOption($option)) {
                     throw new RuntimeException('--' . $option . ' does not make sense without a specified target.');
                 }

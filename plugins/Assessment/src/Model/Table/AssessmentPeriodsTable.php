@@ -19,6 +19,7 @@ class AssessmentPeriodsTable extends ControllerActionTable {
         parent::initialize($config);
 
         $this->hasMany('AssessmentItemResults', ['className' => 'Assessment.AssessmentItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('AssessmentItemsGradingTypes', ['className' => 'Assessment.AssessmentItemsGradingTypes', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->belongsTo('Assessments', ['className' => 'Assessment.Assessments']);
 
         $this->belongsToMany('GradingTypes', [

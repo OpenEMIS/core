@@ -137,7 +137,7 @@ trait ControllerActionV4Trait {
 						}
 
 						if (!empty($defaultValue) && !(is_bool($attr['default']) && !$attr['default'])) {
-							$this->model->fields[$key]['default'] = $defaultValue;
+							$model->fields[$key]['default'] = $defaultValue;
 						}
 						if ($attr['type'] != 'chosenSelect') {
                             if (in_array($model->action, ['edit', 'add'])) {

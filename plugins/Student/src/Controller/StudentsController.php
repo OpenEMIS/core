@@ -18,22 +18,11 @@ class StudentsController extends AppController {
 		$this->ControllerAction->models = [
 			'Accounts' 			=> ['className' => 'Student.Accounts', 'actions' => ['view', 'edit']],
 			'Nationalities' 	=> ['className' => 'User.Nationalities'],
-			'Attachments' 		=> ['className' => 'User.Attachments'],
 			'Absences' 			=> ['className' => 'Student.Absences', 'actions' => ['index', 'view']],
 			'Behaviours' 		=> ['className' => 'Student.StudentBehaviours', 'actions' => ['index', 'view']],
 			'Extracurriculars' 	=> ['className' => 'Student.Extracurriculars'],
 			'History' 			=> ['className' => 'User.UserActivities', 'actions' => ['index']],
 			'ImportStudents' 	=> ['className' => 'Student.ImportStudents', 'actions' => ['index', 'add']],
-
-			// Healths
-			'Healths' 				=> ['className' => 'Health.Healths'],
-			'HealthAllergies' 		=> ['className' => 'Health.Allergies'],
-			'HealthConsultations' 	=> ['className' => 'Health.Consultations'],
-			'HealthFamilies' 		=> ['className' => 'Health.Families'],
-			'HealthHistories' 		=> ['className' => 'Health.Histories'],
-			'HealthImmunizations' 	=> ['className' => 'Health.Immunizations'],
-			'HealthMedications' 	=> ['className' => 'Health.Medications'],
-			'HealthTests' 			=> ['className' => 'Health.Tests']
 		];
 
 		$this->loadComponent('User.Image');
@@ -57,6 +46,19 @@ class StudentsController extends AppController {
     public function Awards() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Awards']); }
     public function Guardians() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Guardians']); }
     public function GuardianUser() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.GuardianUser']); }
+    public function Attachments() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
+    public function StudentSurveys() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']); }
+
+    // health
+	public function Healths()				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Healths']); }
+	public function HealthAllergies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Allergies']); }
+	public function HealthConsultations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Consultations']); }
+	public function HealthFamilies()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Families']); }
+	public function HealthHistories()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Histories']); }
+	public function HealthImmunizations()	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Immunizations']); }
+	public function HealthMedications()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Medications']); }
+	public function HealthTests()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Health.Tests']); }
+	// End Health
 	// End
 
 	// AngularJS
@@ -126,7 +128,7 @@ class StudentsController extends AppController {
 		$action = $this->request->params['action'];
 		$institutionName = $session->read('Institution.Institutions.name');
 		$institutionId = $session->read('Institution.Institutions.id');
-		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $institutionId]);
+		$this->Navigation->addCrumb($institutionName, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
 		$this->Navigation->addCrumb('Students', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Students']);
 		$header = __('Students');
 
@@ -309,9 +311,6 @@ class StudentsController extends AppController {
 	}
 
 	public function getFinanceTabElements($options = []) {
-		// $action = (array_key_exists('action', $options))? $options['action']: 'add';
-		$id = (array_key_exists('id', $options))? $options['id']: 0;
-
 		$tabElements = [];
 		$studentUrl = ['plugin' => 'Student', 'controller' => 'Students'];
 		$studentTabElements = [
@@ -323,8 +322,6 @@ class StudentsController extends AppController {
 
 		foreach ($studentTabElements as $key => $tab) {
 			$tabElements[$key]['url'] = array_merge($studentUrl, ['action' =>$key, 'index']);
-			$params = [$id];
-			$tabElements[$key]['url'] = array_merge($tabElements[$key]['url'], $params);
 		}
 		return $tabElements;
 	}

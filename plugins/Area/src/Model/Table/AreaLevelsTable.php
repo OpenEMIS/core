@@ -58,15 +58,14 @@ class AreaLevelsTable extends ControllerActionTable
 		return $attr;
 	}
 
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
-	{
-		// cannot delete area level 1
-		$areaLevel = $entity->level;
-		if ($areaLevel == 1) {
-			$event->stopPropagation();
-			$this->Alert->warning('general.delete.restrictDelete');
-			return $this->controller->redirect($this->url('index'));
-		}
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
+        //check config
+        $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+        $validateAreaLevel = $ConfigItems->value('institution_validate_area_level_id');
+        if ($validateAreaLevel == $entity->level) {
+            $extra['associatedRecords'][] = ['model' => 'System Configurations - Institution', 'count' => 1];
+        }
     }
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)

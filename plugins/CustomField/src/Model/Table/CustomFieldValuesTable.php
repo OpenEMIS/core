@@ -75,6 +75,23 @@ class CustomFieldValuesTable extends AppTable {
 					}
 			    }
 			])
+			// DECIMAL validation
+			->allowEmpty('decimal_value', function ($context) {
+				if (array_key_exists('mandatory', $context['data'])) {
+					return !$context['data']['mandatory'];
+				}
+
+				return true;
+			})
+			->add('decimal_value', 'ruleCustomDecimal', [
+				'rule' => ['validateCustomDecimal'],
+				'provider' => 'table',
+				'on' => function ($context) {
+					if (array_key_exists('params', $context['data'])) {
+						return !empty($context['data']['params']);
+					}
+			    }
+			])
 			// TEXTAREA validation
 			->allowEmpty('textarea_value', function ($context) {
 				if (array_key_exists('mandatory', $context['data'])) {

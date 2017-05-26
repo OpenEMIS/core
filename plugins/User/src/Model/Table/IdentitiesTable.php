@@ -10,6 +10,7 @@ use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\I18n\Time;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -28,6 +29,29 @@ class IdentitiesTable extends ControllerActionTable
         ]);
 		$this->excludeDefaultValidations(['security_user_id']);
 	}
+
+	public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.Users.afterSave' => 'afterSaveUsers'
+        ];
+
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
+
+    public function afterSaveUsers(Event $event, Entity $entity)
+    {
+        //whichever identity type and number that came from import user, will be treat as new identity user record.
+        $userIdentityEntity = $this->newEntity([
+            'identity_type_id' => $entity->identity_type_id,
+            'number' => $entity->identity_number,
+            'security_user_id' => $entity->id,
+            'created_user_id' => 1,
+            'created' => new Time()
+        ]);
+        $this->save($userIdentityEntity);
+    }
 
 	public function beforeAction($event, ArrayObject $extra)
 	{

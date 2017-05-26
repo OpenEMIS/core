@@ -59,17 +59,25 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings']);
+        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors']);
+        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms']);
+
         $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('ExaminationCentreStudents', ['className' => 'Examination.ExaminationCentreStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('ExaminationCentresExaminationsStudents', ['className' => 'Examination.ExaminationCentresExaminationsStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationItemResults', ['className' => 'Examination.ExaminationItemResults', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('StaffBehaviours', ['className' => 'Institution.StaffBehaviours', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->addBehavior('Tree');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
             'Students' => ['index'],
             'Staff' => ['index'],
             'Results' => ['index'],
-            'StudentExaminationResults' => ['index']
+            'StudentExaminationResults' => ['index'],
+            'OpenEMIS_Classroom' => ['index', 'view']
         ]);
     }
 
@@ -87,6 +95,59 @@ class AcademicPeriodsTable extends AppTable
                 'rule' => ['validateNeeded', 'current', $additionalParameters],
             ])
             ;
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Restful.Model.onBeforeGetData'] = 'onBeforeGetData';
+        $events['Restful.Model.onBeforeFormatResult'] = 'onBeforeFormatResult';
+        return $events;
+    }
+
+    public function onBeforeGetData(Event $event, $action, ArrayObject $extra)
+    {
+        switch ($action) {
+            case 'weeklist':
+                $todayDate = date("Y-m-d");
+                $weekOptions = [];
+
+                if (isset($extra['primaryKey']) && is_array($extra['primaryKey']) && isset($extra['primaryKey']['id'])) {
+                    $academicPeriodId = $extra['primaryKey']['id'];
+
+                    $weeks = $this->getAttendanceWeeks($academicPeriodId);
+                    $weekStr = __('Week') . ' %d (%s - %s)';
+                    $currentWeek = null;
+
+                    foreach ($weeks as $index => $dates) {
+                        $startDay = $dates[0]->format('Y-m-d');
+                        $endDay = $dates[1]->format('Y-m-d');
+                        $weekAttr = [];
+                        if ($todayDate >= $startDay && $todayDate <= $endDay) {
+                            $weekStr = __('Current Week') . ' %d (%s - %s)';
+                            $weekAttr['current'] = true;
+                            $currentWeek = $index;
+                        } else {
+                            $weekStr = __('Week') . ' %d (%s - %s)';
+                        }
+
+                        $weekAttr['name'] = sprintf($weekStr, $index, $this->formatDate($dates[0]), $this->formatDate($dates[1]));
+                        $weekAttr['start_day'] = $startDay;
+                        $weekAttr['end_day'] = $endDay;
+                        $weekOptions[$index] = $weekAttr;
+                    }
+                }
+
+                return $weekOptions;
+                break;
+            default:
+                break;
+        }
+    }
+
+    public function onBeforeFormatResult(Event $event, $data, ArrayObject $extra)
+    {
+        return $data;
     }
 
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options)
@@ -139,13 +200,12 @@ class AcademicPeriodsTable extends AppTable
     {
         $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Room', 'Shift'];
+        $shells = ['Infrastructure', 'Shift'];
         if ($canCopy) {
             // only trigger shell to copy data if is not empty
             if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
                 $copyFrom = $entity->copy_data_from;
                 $copyTo = $entity->id;
-
                 foreach ($shells as $shell) {
                     $this->triggerCopyShell($shell, $copyFrom, $copyTo);
                 }
@@ -160,6 +220,9 @@ class AcademicPeriodsTable extends AppTable
 
         $broadcaster = $this;
         $listeners = [];
+        $listeners[] = TableRegistry::get('Institution.InstitutionLands');
+        $listeners[] = TableRegistry::get('Institution.InstitutionBuildings');
+        $listeners[] = TableRegistry::get('Institution.InstitutionFloors');
         $listeners[] = TableRegistry::get('Institution.InstitutionRooms');
 
         if (!empty($listeners)) {

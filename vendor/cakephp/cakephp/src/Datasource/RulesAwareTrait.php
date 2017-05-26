@@ -49,7 +49,7 @@ trait RulesAwareTrait
     public function checkRules(EntityInterface $entity, $operation = RulesChecker::CREATE, $options = null)
     {
         $rules = $this->rulesChecker();
-        $options = $options ?: new ArrayObject;
+        $options = $options ?: new ArrayObject();
         $options = is_array($options) ? new ArrayObject($options) : $options;
         $hasEvents = ($this instanceof EventDispatcherInterface);
 
@@ -75,6 +75,7 @@ trait RulesAwareTrait
                 return $event->result;
             }
         }
+
         return $result;
     }
 
@@ -96,6 +97,7 @@ trait RulesAwareTrait
         $class = defined('static::RULES_CLASS') ? static::RULES_CLASS : 'Cake\Datasource\RulesChecker';
         $this->_rulesChecker = $this->buildRules(new $class(['repository' => $this]));
         $this->dispatchEvent('Model.buildRules', ['rules' => $this->_rulesChecker]);
+
         return $this->_rulesChecker;
     }
 

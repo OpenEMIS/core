@@ -18,6 +18,7 @@ use Cake\Database\Exception;
 use Cake\Database\ExpressionInterface;
 use Cake\Database\Query;
 use Cake\Database\TypeMapTrait;
+use Cake\Database\Type\ExpressionTypeCasterTrait;
 use Cake\Database\ValueBinder;
 
 /**
@@ -31,6 +32,7 @@ use Cake\Database\ValueBinder;
 class ValuesExpression implements ExpressionInterface
 {
 
+    use ExpressionTypeCasterTrait;
     use TypeMapTrait;
 
     /**
@@ -50,9 +52,17 @@ class ValuesExpression implements ExpressionInterface
     /**
      * The Query object to use as a values expression
      *
-     * @var \Cake\Database\Query
+     * @var \Cake\Database\Query|null
      */
-    protected $_query = false;
+    protected $_query = null;
+
+    /**
+     * Whether or not values have been casted to expressions
+     * already.
+     *
+     * @var string
+     */
+    protected $_castedExpressions = false;
 
     /**
      * Constructor
@@ -85,9 +95,11 @@ class ValuesExpression implements ExpressionInterface
         }
         if ($data instanceof Query) {
             $this->query($data);
+
             return;
         }
         $this->_values[] = $data;
+        $this->_castedExpressions = false;
     }
 
     /**
@@ -103,7 +115,30 @@ class ValuesExpression implements ExpressionInterface
             return $this->_columns;
         }
         $this->_columns = $cols;
+        $this->_castedExpressions = false;
+
         return $this;
+    }
+
+    /**
+     * Get the bare column names.
+     *
+     * Because column names could be identifier quoted, we
+     * need to strip the identifiers off of the columns.
+     *
+     * @return array
+     */
+    protected function _columnNames()
+    {
+        $columns = [];
+        foreach ($this->_columns as $col) {
+            if (is_string($col)) {
+                $col = trim($col, '`[]"');
+            }
+            $columns[] = $col;
+        }
+
+        return $columns;
     }
 
     /**
@@ -116,9 +151,15 @@ class ValuesExpression implements ExpressionInterface
     public function values($values = null)
     {
         if ($values === null) {
+            if (!$this->_castedExpressions) {
+                $this->_processExpressions();
+            }
+
             return $this->_values;
         }
         $this->_values = $values;
+        $this->_castedExpressions = false;
+
         return $this;
     }
 
@@ -128,7 +169,7 @@ class ValuesExpression implements ExpressionInterface
      * the currently stored query
      *
      * @param \Cake\Database\Query|null $query The query to set/get
-     * @return \Cake\Database\Query
+     * @return \Cake\Database\Query|null
      */
     public function query(Query $query = null)
     {
@@ -150,35 +191,44 @@ class ValuesExpression implements ExpressionInterface
             return '';
         }
 
-        $i = 0;
-        $columns = [];
-
-        // Remove identifier quoting so column names match keys.
-        foreach ($this->_columns as $col) {
-            $columns[] = trim($col, '`[]"');
+        if (!$this->_castedExpressions) {
+            $this->_processExpressions();
         }
+
+        $columns = $this->_columnNames();
         $defaults = array_fill_keys($columns, null);
         $placeholders = [];
 
+        $types = [];
+        $typeMap = $this->typeMap();
+        foreach ($defaults as $col => $v) {
+            $types[$col] = $typeMap->type($col);
+        }
+
         foreach ($this->_values as $row) {
-            $row = array_merge($defaults, $row);
+            $row += $defaults;
             $rowPlaceholders = [];
-            foreach ($row as $column => $value) {
+
+            foreach ($columns as $column) {
+                $value = $row[$column];
+
                 if ($value instanceof ExpressionInterface) {
                     $rowPlaceholders[] = '(' . $value->sql($generator) . ')';
                     continue;
                 }
-                $type = $this->typeMap()->type($column);
-                $placeholder = $generator->placeholder($i);
+
+                $placeholder = $generator->placeholder('c');
                 $rowPlaceholders[] = $placeholder;
-                $generator->bind($placeholder, $value, $type);
+                $generator->bind($placeholder, $value, $types[$column]);
             }
+
             $placeholders[] = implode(', ', $rowPlaceholders);
         }
 
         if ($this->query()) {
             return ' ' . $this->query()->sql($generator);
         }
+
         return sprintf(' VALUES (%s)', implode('), (', $placeholders));
     }
 
@@ -197,6 +247,10 @@ class ValuesExpression implements ExpressionInterface
             return;
         }
 
+        if (!$this->_castedExpressions) {
+            $this->_processExpressions();
+        }
+
         foreach ($this->_values as $v) {
             if ($v instanceof ExpressionInterface) {
                 $v->traverse($visitor);
@@ -206,9 +260,43 @@ class ValuesExpression implements ExpressionInterface
             }
             foreach ($v as $column => $field) {
                 if ($field instanceof ExpressionInterface) {
+                    $visitor($field);
                     $field->traverse($visitor);
                 }
             }
         }
+    }
+
+    /**
+     * Converts values that need to be casted to expressions
+     *
+     * @return void
+     */
+    protected function _processExpressions()
+    {
+        $types = [];
+        $typeMap = $this->typeMap();
+
+        $columns = $this->_columnNames();
+        foreach ($columns as $c) {
+            if (!is_scalar($c)) {
+                continue;
+            }
+            $types[$c] = $typeMap->type($c);
+        }
+
+        $types = $this->_requiresToExpressionCasting($types);
+
+        if (empty($types)) {
+            return;
+        }
+
+        foreach ($this->_values as $row => $values) {
+            foreach ($types as $col => $type) {
+                /* @var \Cake\Database\Type\ExpressionTypeInterface $type */
+                $this->_values[$row][$col] = $type->toExpression($values[$col]);
+            }
+        }
+        $this->_castedExpressions = true;
     }
 }

@@ -124,6 +124,7 @@ class ShellDispatcher
     public static function run($argv, $extra = [])
     {
         $dispatcher = new ShellDispatcher($argv);
+
         return $dispatcher->dispatch($extra);
     }
 
@@ -183,9 +184,10 @@ class ShellDispatcher
             return $e->getCode();
         }
         if ($result === null || $result === true) {
-            return 0;
+            return Shell::CODE_SUCCESS;
         }
-        return 1;
+
+        return Shell::CODE_ERROR;
     }
 
     /**
@@ -204,20 +206,24 @@ class ShellDispatcher
 
         if (!$shell) {
             $this->help();
+
             return false;
         }
         if (in_array($shell, ['help', '--help', '-h'])) {
             $this->help();
+
             return true;
         }
         if (in_array($shell, ['version', '--version'])) {
             $this->version();
+
             return true;
         }
 
         $Shell = $this->findShell($shell);
 
         $Shell->initialize();
+
         return $Shell->runCommand($this->args, true, $extra);
     }
 
@@ -238,7 +244,7 @@ class ShellDispatcher
         $io->setLoggers(false);
         $list = $task->getShellList() + ['app' => []];
         $fixed = array_flip($list['app']) + array_flip($list['CORE']);
-        $aliases = [];
+        $aliases = $others = [];
 
         foreach ($plugins as $plugin) {
             if (!isset($list[$plugin])) {
@@ -247,6 +253,11 @@ class ShellDispatcher
 
             foreach ($list[$plugin] as $shell) {
                 $aliases += [$shell => $plugin];
+                if (!isset($others[$shell])) {
+                    $others[$shell] = [$plugin];
+                } else {
+                    $others[$shell] = array_merge($others[$shell], [$plugin]);
+                }
             }
         }
 
@@ -263,12 +274,26 @@ class ShellDispatcher
             $other = static::alias($shell);
             if ($other) {
                 $other = $aliases[$shell];
-                Log::write(
-                    'debug',
-                    "command '$shell' in plugin '$plugin' was not aliased, conflicts with '$other'",
-                    ['shell-dispatcher']
-                );
+                if ($other !== $plugin) {
+                    Log::write(
+                        'debug',
+                        "command '$shell' in plugin '$plugin' was not aliased, conflicts with '$other'",
+                        ['shell-dispatcher']
+                    );
+                }
                 continue;
+            }
+
+            if (isset($others[$shell])) {
+                $conflicts = array_diff($others[$shell], [$plugin]);
+                if (count($conflicts) > 0) {
+                    $conflictList = implode("', '", $conflicts);
+                    Log::write(
+                        'debug',
+                        "command '$shell' in plugin '$plugin' was not aliased, conflicts with '$conflictList'",
+                        ['shell-dispatcher']
+                    );
+                }
             }
 
             static::alias($shell, "$plugin.$shell");
@@ -318,6 +343,7 @@ class ShellDispatcher
         }
 
         $class = array_map('Cake\Utility\Inflector::camelize', explode('.', $shell));
+
         return implode('.', $class);
     }
 
@@ -333,6 +359,7 @@ class ShellDispatcher
         if (class_exists($class)) {
             return $class;
         }
+
         return false;
     }
 
@@ -348,6 +375,7 @@ class ShellDispatcher
         list($plugin) = pluginSplit($shortName);
         $instance = new $className();
         $instance->plugin = trim($plugin, '.');
+
         return $instance;
     }
 

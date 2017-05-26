@@ -9,6 +9,7 @@ use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\I18n\Time;
 
 use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\MessagesTrait;
@@ -18,21 +19,59 @@ class UserNationalitiesTable extends ControllerActionTable {
     use OptionsTrait;
     use MessagesTrait;
 
-	public function initialize(array $config) 
+	public function initialize(array $config)
     {
         parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'security_user_id']);
         $this->belongsTo('NationalitiesLookUp', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 
         $this->securityUserId = $this->getQueryString('security_user_id');
 
         $this->addBehavior('Restful.RestfulAccessControl', [
-            'Students' => ['index', 'add']
+            'Students' => ['index', 'add'],
+            'Staff' => ['index', 'add']
         ]);
 
         $this->addBehavior('CompositeKey');
 	}
+
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        $newEvent = [
+            'Model.Users.afterSave' => 'afterSaveUsers'
+        ];
+
+        $events = array_merge($events, $newEvent);
+        return $events;
+    }
+
+    public function afterSaveUsers(Event $event, Entity $entity)
+    {
+        //check whether the combination user and nationality exist
+        $query = $this->find()
+                ->where([
+                    $this->aliasField('security_user_id') => $entity->id,
+                    $this->aliasField('nationality_id') => $entity->nationality_id
+                ]);
+
+        if ($query->count()) { //if exist then set as preferred.
+
+            //use save instead of update to trigger after save events
+            $userNationalityEntity = $this->patchEntity($query->first(), ['preferred' => 1], ['validate' =>false]);
+            $this->save($userNationalityEntity);
+            
+        } else { //not exist then add new record and set as preferred.
+            $userNationalityEntity = $this->newEntity([
+                'preferred' => 1,
+                'nationality_id' => $entity->nationality_id,
+                'security_user_id' => $entity->id,
+                'created_user_id' => 1,
+                'created' => new Time()
+            ]);
+            $this->save($userNationalityEntity);
+        }
+    }
 
 	public function beforeAction(Event $event) {
 		$this->fields['nationality_id']['type'] = 'select';
@@ -111,7 +150,7 @@ class UserNationalitiesTable extends ControllerActionTable {
         if ($entity->dirty('preferred')) {
             if ($entity->preferred == 1) { //if set as preferred
                 // update the rest of user nationality to not preferred
-                $this->updateAll( 
+                $this->updateAll(
                     ['preferred' => 0],
                     [
                         'security_user_id' => $entity->security_user_id,
@@ -174,7 +213,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     public function onUpdateFieldNationalityId(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add' || $action == 'edit') {
-            
+
             if ($action == 'add') {
                 $currentNationalities = $this
                                         ->find('list', ['keyField' => 'id', 'valueField' => 'id'])
@@ -222,7 +261,7 @@ class UserNationalitiesTable extends ControllerActionTable {
     private function setupFields(Entity $entity)
     {
         $this->field('nationality_id', [
-            'type' => 'select', 
+            'type' => 'select',
             'entity' => $entity
         ]);
 

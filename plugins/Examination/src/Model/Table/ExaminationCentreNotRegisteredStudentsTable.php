@@ -24,16 +24,7 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         $this->addBehavior('User.AdvancedNameSearch');
         $this->addBehavior('Examination.NotRegisteredStudents');
 
-        $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentreStudents');
-    }
-
-    public function afterAction(Event $event, ArrayObject $extra)
-    {
-        if ($this->action == 'index' || $this->action == 'view') {
-            $this->field('identity_number', ['after' => 'date_of_birth']);
-            $this->field('repeated');
-            $this->setFieldOrder('openemis_no', 'student_id', 'gender_id', 'date_of_birth', 'identity_number', 'repeated');
-        }
+        $this->ExaminationCentreStudents = TableRegistry::get('Examination.ExaminationCentresExaminationsStudents');
     }
 
     public function implementedEvents()
@@ -41,24 +32,6 @@ class ExaminationCentreNotRegisteredStudentsTable extends ControllerActionTable 
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.onGetFieldLabel'] = 'onGetFieldLabel';
         return $events;
-    }
-
-    public function onGetFieldLabel(Event $event, $module, $field, $language, $autoHumanize=true) {
-        if ($field == 'identity_number') {
-            return __(TableRegistry::get('FieldOption.IdentityTypes')->find()->find('DefaultIdentityType')->first()->name);
-        } else {
-            return parent::onGetFieldLabel($event, $module, $field, $language, $autoHumanize);
-        }
-    }
-
-    public function onGetIdentityNumber(Event $event, Entity $entity)
-    {
-        return $entity->user->identity_number;
-    }
-
-    public function onGetRepeated(Event $event, Entity $entity)
-    {
-        return $this->ExaminationCentreStudents->onGetRepeated($event, $entity);
     }
 
     public function beforeAction(Event $event, ArrayObject $extra) {

@@ -17,8 +17,27 @@ class LoginController extends Controller {
 		if ($this->request->is('post')) {
 			$username = $this->request->data('username');
             $sessionId = $this->request->data('session_id');
-            $this->request->session()->id($sessionId);
-            $this->request->session()->destroy();
+            // Commit session
+            if (session_id()) {
+                // Same as session_write_close()
+                session_commit();
+            }
+
+            // Store current session id
+            session_start();
+            $currentSessionId = session_id();
+            session_commit();
+
+            // Hijack and destroy specified session id
+            session_id($sessionId);
+            session_start();
+            session_destroy();
+            session_commit();
+
+            // Restore existing session id
+            session_id($currentSessionId);
+            session_start();
+            session_commit();
 			if (!empty($username)) {
 				$SingleLogoutTable = TableRegistry::get('SSO.SingleLogout');
 				$SingleLogoutTable->removeLogoutRecord($username);
