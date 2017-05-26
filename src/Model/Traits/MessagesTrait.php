@@ -647,6 +647,9 @@ trait MessagesTrait {
         'UserNationalities' => [
             'noRecordRemain' => 'There should be at least one Nationality record'
         ],
+        'EducationStructure' => [
+            'noGradesSetup' => 'Please set up Education Grades before adding Grade Subjects'
+        ],
 
         // Validation Messages
         'Institution' => [

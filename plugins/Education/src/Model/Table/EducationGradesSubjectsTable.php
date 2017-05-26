@@ -53,6 +53,13 @@ class EducationGradesSubjectsTable extends ControllerActionTable {
         $this->field('code');
         $this->field('education_grade_id', ['visible' => 'hidden']);
         $this->setFieldOrder(['code', 'education_subject_id', 'hours_required']);
+
+        //check for grades setup, if nothing is set, then hide the add button to prevent error
+        $query = $this->EducationGrades->find('visible')->count();
+        if ($query < 1) {
+            $this->Alert->warning('EducationStructure.noGradesSetup');
+            unset($extra['toolbarButtons']['add']);
+        }
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
