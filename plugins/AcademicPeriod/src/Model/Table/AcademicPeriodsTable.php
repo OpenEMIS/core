@@ -59,10 +59,11 @@ class AcademicPeriodsTable extends AppTable
         $this->hasMany('StudentExtracurriculars', ['className' => 'Student.Extracurriculars', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('SurveyStatusPeriods', ['className' => 'Survey.SurveyStatusPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('InstitutionSubjectStudents', ['className' => 'Institution.InstitutionSubjectStudents', 'dependent' => true, 'cascadeCallbacks' => true]);
-        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true]);
-        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'dependent' => true]);
-        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors', 'dependent' => true]);
-        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true]);
+        $this->hasMany('InstitutionLands', ['className' => 'Institution.InstitutionLands', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings']);
+        $this->hasMany('InstitutionFloors', ['className' => 'Institution.InstitutionFloors']);
+        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms']);
+
         $this->hasMany('Examinations', ['className' => 'Examination.Examinations', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentres', ['className' => 'Examination.ExaminationCentres', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('ExaminationCentresExaminations', ['className' => 'Examination.ExaminationCentresExaminations', 'dependent' => true, 'cascadeCallbacks' => true]);
