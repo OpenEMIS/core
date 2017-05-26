@@ -5,7 +5,8 @@
 				$url = [
 					'plugin' => $this->request->params['plugin'],
 				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
+				    'action' => $this->request->params['action'],
+				    'institutionId' => $this->request->param('institutionId')
 				];
 				if (!empty($this->request->pass)) {
 					$url = array_merge($url, $this->request->pass);
