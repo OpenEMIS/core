@@ -18,6 +18,7 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionBuildingsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const IN_USE = 1;
     const UPDATE_DETAILS = 1;    // In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
@@ -155,7 +156,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($entity->building_status_id == $this->BuildingStatuses->getIdByCode('END_OF_USAGE')) {
             $floorEntities = $this->InstitutionFloors
                 ->find()
-                ->where([$this->InstitutionFloors->aliasField('institution_building_id') => $entity->id])
+                ->where([
+                    $this->InstitutionFloors->aliasField('institution_building_id') => $entity->id,
+                    $this->InstitutionFloors->aliasField('floor_status_id') => SELF::IN_USE
+                ])
                 ->toArray();
             foreach ($floorEntities as $floorEntity) {
                 $floorEntity->change_type = SELF::END_OF_USAGE;

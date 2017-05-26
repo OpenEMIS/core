@@ -18,6 +18,7 @@ use DateTime;
 class InstitutionLandsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const IN_USE = 1;
     const UPDATE_DETAILS = 1;// In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
@@ -156,7 +157,10 @@ class InstitutionLandsTable extends ControllerActionTable
         } elseif ($entity->land_status_id == $this->LandStatuses->getIdByCode('END_OF_USAGE')) {
             $buildingEntities = $this->InstitutionBuildings
                 ->find()
-                ->where([$this->InstitutionBuildings->aliasField('institution_land_id') => $entity->id])
+                ->where([
+                    $this->InstitutionBuildings->aliasField('institution_land_id') => $entity->id,
+                    $this->InstitutionBuildings->aliasField('building_status_id') => SELF::IN_USE
+                ])
                 ->toArray();
             foreach ($buildingEntities as $buildingEntity) {
                 $buildingEntity->change_type = SELF::END_OF_USAGE;
