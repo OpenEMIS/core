@@ -111,7 +111,8 @@ class InstitutionLandsTable extends ControllerActionTable
                 }
 
                 return false;
-            });
+            })
+            ->notEmpty('land_type_id');
     }
 
     public function validationSavingByAssociation(Validator $validator)
