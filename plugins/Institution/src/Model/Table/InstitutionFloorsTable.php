@@ -41,7 +41,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
         $this->belongsTo('InstitutionBuildings', ['className' => 'Institution.InstitutionBuildings', 'foreignKey' => 'institution_building_id']);
         $this->belongsTo('PreviousFloors', ['className' => 'Institution.InstitutionFloors', 'foreignKey' => 'previous_institution_floor_id']);
-        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true, 'cascadeCallbacks' => true]);
+        $this->hasMany('InstitutionRooms', ['className' => 'Institution.InstitutionRooms', 'dependent' => true]);
 
         $this->addBehavior('AcademicPeriod.AcademicPeriod');
         $this->addBehavior('Year', ['start_date' => 'start_year', 'end_date' => 'end_year']);
@@ -55,7 +55,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             'formFieldClass' => ['className' => 'Infrastructure.FloorCustomFormsFields'],
             'formFilterClass' => ['className' => 'Infrastructure.FloorCustomFormsFilters'],
             'recordKey' => 'institution_floor_id',
-            'fieldValueClass' => ['className' => 'Infrastructure.FloorCustomFieldValues', 'foreignKey' => 'institution_floor_id', 'dependent' => true, 'cascadeCallbacks' => true],
+            'fieldValueClass' => ['className' => 'Infrastructure.FloorCustomFieldValues', 'foreignKey' => 'institution_floor_id', 'dependent' => true],
             'tableCellClass' => null
         ]);
 
@@ -902,7 +902,7 @@ class InstitutionFloorsTable extends ControllerActionTable
     public function processCopy(Entity $entity)
     {
         // if is new and floor status of previous floor usage is change in floor type then copy all general custom fields
-        if ($entity->has('previous_institution_floor_id') && $entity->previous_institution_floor_id != 0) {
+        if ($entity->has('previous_institution_floor_id') && !is_null($entity->previous_institution_floor_id)) {
             $copyFrom = $entity->previous_institution_floor_id;
             $copyTo = $entity->id;
 
