@@ -68,40 +68,38 @@ class UsersTable extends AppTable
 	}
 
 	// autocomplete used for UserGroups
+	// the same function is found in User.Users
 	public function autocomplete($search)
 	{
-		$search = sprintf('%s%%', $search);
+		$data = [];
+		if (!empty($search)) {
+			$query = $this
+				->find()
+				->select([
+					$this->aliasField('openemis_no'),
+					$this->aliasField('first_name'),
+					$this->aliasField('middle_name'),
+					$this->aliasField('third_name'),
+					$this->aliasField('last_name'),
+					$this->aliasField('preferred_name'),
+					$this->aliasField('id')
+				])
+				->order([
+					$this->aliasField('first_name'),
+					$this->aliasField('last_name')
+				])
+				->limit(100);
 
-		$list = $this
-			->find()
-			->select([
-				$this->aliasField('openemis_no'),
-				$this->aliasField('first_name'),
-				$this->aliasField('middle_name'),
-				$this->aliasField('third_name'),
-				$this->aliasField('last_name'),
-				$this->aliasField('preferred_name'),
-				$this->aliasField('id')
-			])
-			->where([
-				'OR' => [
-					$this->aliasField('openemis_no') . ' LIKE' => $search,
-					$this->aliasField('first_name') . ' LIKE' => $search,
-					$this->aliasField('middle_name') . ' LIKE' => $search,
-					$this->aliasField('third_name') . ' LIKE' => $search,
-					$this->aliasField('last_name') . ' LIKE' => $search
-				]
-			])
-			->order([$this->aliasField('first_name')])
-			->limit(100)
-			->all();
+			// function from AdvancedNameSearchBehavior
+			$query = $this->addSearchConditions($query, ['searchTerm' => $search]);
+			$list = $query->toArray();
 
-		$data = array();
-		foreach($list as $obj) {
-			$data[] = [
-				'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
-				'value' => $obj->id
-			];
+			foreach($list as $obj) {
+				$data[] = [
+					'label' => sprintf('%s - %s', $obj->openemis_no, $obj->name),
+					'value' => $obj->id
+				];
+			}
 		}
 		return $data;
 	}
@@ -151,7 +149,11 @@ class UsersTable extends AppTable
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
 	{
 		$options['auto_search'] = false;
-		$query->find('notSuperAdmin');
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($this->request->query['sort'])) {
+			$query->find('notSuperAdmin')->order([$this->aliasField('first_name'), $this->aliasField('last_name')]);
+		}
 
 		$search = $this->ControllerAction->getSearchKey();
 
@@ -278,5 +280,40 @@ class UsersTable extends AppTable
 	public function isAdmin($userId)
 	{
 		return $this->get($userId)->super_admin;
+	}
+
+	public function getModelAlertData($threshold)
+	{
+		$thresholdArray = json_decode($threshold, true);
+
+		$conditions = [
+			// only cater for age is more than and equal to threshold value.
+			2 => ('TIMESTAMPDIFF(YEAR, ' . $this->aliasField('date_of_birth') . ', NOW())' . ' >= ' . $thresholdArray['value']), // after
+		];
+
+		// will do the comparison with threshold when retrieving the absence data
+		$licenseData = $this->find()
+			->select([
+				'id',
+				'openemis_no',
+				'first_name',
+				'middle_name',
+				'third_name',
+				'last_name',
+				'preferred_name',
+				'email',
+				'address',
+				'postal_code',
+				'date_of_birth',
+			])
+			->where([
+				$this->aliasField('date_of_birth') . ' IS NOT NULL',
+				$conditions[$thresholdArray['condition']]
+			])
+
+			->hydrate(false)
+			;
+
+		return $licenseData->toArray();
 	}
 }

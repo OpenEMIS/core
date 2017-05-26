@@ -325,111 +325,130 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
             $institutionId = $this->getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId);
         }
 
-        $criteriaRecord = $this->Indexes->getCriteriaByModel($criteriaModel, $institutionId);
+        if (!empty($institutionId)) {
+            $criteriaRecord = $this->Indexes->getCriteriaByModel($criteriaModel, $institutionId);
 
-        foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
-            // to get the indexes criteria to get the value on the student_indexes_criterias
-            $indexesCriteriaResults = $IndexesCriterias->find('ActiveIndexesCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
+            foreach ($criteriaRecord as $criteriaDataKey => $criteriaDataObj) {
+                // to get the indexes criteria to get the value on the student_indexes_criterias
+                $indexesCriteriaResults = $IndexesCriterias->find('ActiveIndexesCriteria', ['criteria_key' => $criteriaDataKey, 'institution_id' => $institutionId]);
 
-            if (!$indexesCriteriaResults->isEmpty()) {
-                foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
-                    $indexId = $indexesCriteriaData->index_id;
-                    $threshold = $indexesCriteriaData->threshold;
-                    $operator = $indexesCriteriaData->operator;
-                    $criteria = $indexesCriteriaData->criteria;
+                if (!$indexesCriteriaResults->isEmpty()) {
+                    foreach ($indexesCriteriaResults as $key => $indexesCriteriaData) {
+                        $indexId = $indexesCriteriaData->index_id;
+                        $threshold = $indexesCriteriaData->threshold;
+                        $operator = $indexesCriteriaData->operator;
+                        $criteria = $indexesCriteriaData->criteria;
 
-                    $params = new ArrayObject([
-                        'institution_id' => $institutionId,
-                        'student_id' => $studentId,
-                        'academic_period_id' => $academicPeriodId,
-                        'criteria_name' => $criteriaDataKey
-                    ]);
+                        $params = new ArrayObject([
+                            'institution_id' => $institutionId,
+                            'student_id' => $studentId,
+                            'academic_period_id' => $academicPeriodId,
+                            'criteria_name' => $criteriaDataKey
+                        ]);
 
-                    $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentIndexes.calculateIndexValue', [$params], $this);
+                        $event = $criteriaTable->dispatchEvent('Model.InstitutionStudentIndexes.calculateIndexValue', [$params], $this);
 
-                    if ($event->isStopped()) {
-                        $mainEvent->stopPropagation();
-                        return $event->result;
-                    }
-
-                    $valueIndexData = $event->result;
-
-
-                    // if the condition fulfilled then the value will be saved as its value, if not saved as null
-                    switch ($operator) {
-                        case 1: // '<='
-                            if($valueIndexData <= $threshold){
-                                $valueIndex = $valueIndexData;
-                            } else {
-                                $valueIndex = null;
-                            }
-                            break;
-
-                        case 2: // '>='
-                            if($valueIndexData >= $threshold){
-                                $valueIndex = $valueIndexData;
-                            } else {
-                                $valueIndex = null;
-                            }
-                            break;
-
-                        case 3: // '='
-                        case 11: // for status Repeated
-                            // value index is an array (valueIndex[threshold] = value)
-                            if (array_key_exists($threshold, $valueIndexData)) {
-                                $valueIndex = 'True';
-                            } else {
-                                $valueIndex = null;
-                            }
-                            break;
-                    }
-
-                    // saving association to student_indexes_criterias
-                    $criteriaData = [
-                        'value' => $valueIndex,
-                        'indexes_criteria_id' => $indexesCriteriaData->id
-                    ];
-
-                    $conditions = [
-                        $this->aliasField('academic_period_id') => $academicPeriodId,
-                        $this->aliasField('institution_id') => $institutionId,
-                        $this->aliasField('student_id') => $studentId,
-                        $this->aliasField('index_id') => $indexId
-                    ];
-
-                    if ($criteria == 'SpecialNeeds') {
-                        if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
-                        } else {
-                            $conditions = [
-                                $this->aliasField('academic_period_id') => $academicPeriodId,
-                                $this->aliasField('student_id') => $studentId,
-                                $this->aliasField('index_id') => $indexId
-                            ];
+                        if ($event->isStopped()) {
+                            $mainEvent->stopPropagation();
+                            return $event->result;
                         }
-                    }
 
-                    $institutionStudentIndexesResults = $this->find()
-                        ->where([$conditions])
-                        ->all();
+                        $valueIndexData = $event->result;
 
-                    // to update and add new records into the institution_student_indexes
-                    if (!$institutionStudentIndexesResults->isEmpty()) {
-                        // $entity = $institutionStudentIndexesResults->first();
-                        foreach ($institutionStudentIndexesResults as $institutionStudentIndexesResultsObj) {
-                            $entity = $institutionStudentIndexesResultsObj;
 
-                            $studentIndexesCriteriaResults = $this->StudentIndexesCriterias->find()
-                                ->where([
-                                    $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $entity->id,
-                                    $this->StudentIndexesCriterias->aliasField('indexes_criteria_id') => $indexesCriteriaData->id
-                                ])
-                                ->all();
+                        // if the condition fulfilled then the value will be saved as its value, if not saved as null
+                        switch ($operator) {
+                            case 1: // '<='
+                                if($valueIndexData <= $threshold){
+                                    $valueIndex = $valueIndexData;
+                                } else {
+                                    $valueIndex = null;
+                                }
+                                break;
 
-                            // find id from db
-                            if (!$studentIndexesCriteriaResults->isEmpty()) {
-                                $criteriaEntity = $studentIndexesCriteriaResults->first();
-                                $criteriaData['id'] = $criteriaEntity->id;
+                            case 2: // '>='
+                                if($valueIndexData >= $threshold){
+                                    $valueIndex = $valueIndexData;
+                                } else {
+                                    $valueIndex = null;
+                                }
+                                break;
+
+                            case 3: // '='
+                            case 11: // for status Repeated
+                                // value index is an array (valueIndex[threshold] = value)
+                                if (array_key_exists($threshold, $valueIndexData)) {
+                                    $valueIndex = 'True';
+                                } else {
+                                    $valueIndex = null;
+                                }
+                                break;
+                        }
+
+                        // saving association to student_indexes_criterias
+                        $criteriaData = [
+                            'value' => $valueIndex,
+                            'indexes_criteria_id' => $indexesCriteriaData->id
+                        ];
+
+                        $conditions = [
+                            $this->aliasField('academic_period_id') => $academicPeriodId,
+                            $this->aliasField('institution_id') => $institutionId,
+                            $this->aliasField('student_id') => $studentId,
+                            $this->aliasField('index_id') => $indexId
+                        ];
+
+                        if ($criteria == 'SpecialNeeds') {
+                            if (isset($afterSaveOrDeleteEntity->trigger_from) && $afterSaveOrDeleteEntity->trigger_from == 'shell') {
+                            } else {
+                                $conditions = [
+                                    $this->aliasField('academic_period_id') => $academicPeriodId,
+                                    $this->aliasField('student_id') => $studentId,
+                                    $this->aliasField('index_id') => $indexId
+                                ];
                             }
+                        }
+
+                        $institutionStudentIndexesResults = $this->find()
+                            ->where([$conditions])
+                            ->all();
+
+                        // to update and add new records into the institution_student_indexes
+                        if (!$institutionStudentIndexesResults->isEmpty()) {
+                            // $entity = $institutionStudentIndexesResults->first();
+                            foreach ($institutionStudentIndexesResults as $institutionStudentIndexesResultsObj) {
+                                $entity = $institutionStudentIndexesResultsObj;
+
+                                $studentIndexesCriteriaResults = $this->StudentIndexesCriterias->find()
+                                    ->where([
+                                        $this->StudentIndexesCriterias->aliasField('institution_student_index_id') => $entity->id,
+                                        $this->StudentIndexesCriterias->aliasField('indexes_criteria_id') => $indexesCriteriaData->id
+                                    ])
+                                    ->all();
+
+                                // find id from db
+                                if (!$studentIndexesCriteriaResults->isEmpty()) {
+                                    $criteriaEntity = $studentIndexesCriteriaResults->first();
+                                    $criteriaData['id'] = $criteriaEntity->id;
+                                }
+
+                                $data = [];
+                                $data['student_indexes_criterias'][] = $criteriaData;
+
+                                $patchOptions = ['validate' => false];
+                                $entity = $this->patchEntity($entity, $data, $patchOptions);
+
+                                $this->save($entity);
+                            }
+                        } else {
+                            $entity = $this->newEntity([
+                                'average_index' => 0,
+                                'total_index' => 0,
+                                'academic_period_id' => $academicPeriodId,
+                                'institution_id' => $institutionId,
+                                'student_id' => $studentId,
+                                'index_id' => $indexId
+                            ]);
 
                             $data = [];
                             $data['student_indexes_criterias'][] = $criteriaData;
@@ -439,23 +458,6 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
                             $this->save($entity);
                         }
-                    } else {
-                        $entity = $this->newEntity([
-                            'average_index' => 0,
-                            'total_index' => 0,
-                            'academic_period_id' => $academicPeriodId,
-                            'institution_id' => $institutionId,
-                            'student_id' => $studentId,
-                            'index_id' => $indexId
-                        ]);
-
-                        $data = [];
-                        $data['student_indexes_criterias'][] = $criteriaData;
-
-                        $patchOptions = ['validate' => false];
-                        $entity = $this->patchEntity($entity, $data, $patchOptions);
-
-                        $this->save($entity);
                     }
                 }
             }
@@ -660,6 +662,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
 
     public function getInstitutionId($criteriaTable, $afterSaveOrDeleteEntity, $academicPeriodId)
     {
+        $institutionId = null;
         switch ($criteriaTable->alias()) {
             case 'Students':
                 // guardian will have student_id, while gender only have id
@@ -674,6 +677,7 @@ class InstitutionStudentIndexesTable extends ControllerActionTable
                 $studentId = $afterSaveOrDeleteEntity->security_user_id;
                 $Students = TableRegistry::get('Institution.Students');
                 $institutionId = $Students->getInstitutionIdByUser($studentId, $academicPeriodId);
+
                 break;
         }
 

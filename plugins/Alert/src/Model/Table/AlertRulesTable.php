@@ -5,8 +5,10 @@ use ArrayObject;
 
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
+use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\Network\Request;
+use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 use Cake\Log\Log;
 
@@ -17,43 +19,7 @@ class AlertRulesTable extends ControllerActionTable
 {
     use OptionsTrait;
 
-    private $alertTypeFeatures = [
-        'InstitutionStudentAbsences' => [
-            'feature' => 'Attendance',
-            'name' => 'Student Absent',
-            'method' => 'Email',
-            'threshold' => ['type' => 'integer'],
-            'placeholder' => [
-                '${total_days}' => 'Total number of unexcused absence.',
-                '${threshold}' => 'Threshold value.',
-                '${user.openemis_no}' => 'Student OpenEMIS number.',
-                '${user.first_name}' => 'Student first name.',
-                '${user.middle_name}' => 'Student middle name.',
-                '${user.third_name}' => 'Student third name.',
-                '${user.last_name}' => 'Student last name.',
-                '${user.preferred_name}' => 'Student preferred name.',
-                '${user.email}' => 'Student email.',
-                '${user.address}' => 'Student address.',
-                '${user.postal_code}' => 'Student postal code.',
-                '${user.date_of_birth}' => 'Student date of birth.',
-                '${user.identity_number}' => 'Student identity number.',
-                // '${user.photo_name}' => 'Student photo name.',
-                // '${user.photo_content}' => 'Student photo content.',
-                '${user.main_identity_type.name}' => 'Student identity type.',
-                '${user.main_nationality.name}' => 'Student nationality.',
-                '${user.gender.name}' => 'Student gender.',
-                '${institution.name}' => 'Institution name.',
-                '${institution.code}' => 'Institution code.',
-                '${institution.address}' => 'Institution address.',
-                '${institution.postal_code}' => 'Institution postal code.',
-                '${institution.contact_person}' => 'Institution contact person.',
-                '${institution.telephone}' => 'Institution telephone number.',
-                '${institution.fax}' => 'Institution fax number.',
-                '${institution.email}' => 'Institution email.',
-                '${institution.website}' => 'Institution website.',
-            ]
-        ],
-    ];
+    private $alertTypeFeatures = [];
 
     public function initialize(array $config)
     {
@@ -68,6 +34,15 @@ class AlertRulesTable extends ControllerActionTable
             'dependent' => true,
             'cascadeCallbacks' => true
         ]);
+
+        $this->addBehavior('OpenEmis.Section');
+        $this->addBehavior('Alert.AlertRuleAttendance');
+        $this->addBehavior('Alert.AlertRuleLicenseRenewal');
+        $this->addBehavior('Alert.AlertRuleLicenseValidity');
+        $this->addBehavior('Alert.AlertRuleRetirementWarning');
+        $this->addBehavior('Alert.AlertRuleStaffEmployment');
+        $this->addBehavior('Alert.AlertRuleStaffLeave');
+        $this->addBehavior('Alert.AlertRuleStaffType');
     }
 
     public function validationDefault(Validator $validator)
@@ -77,23 +52,41 @@ class AlertRulesTable extends ControllerActionTable
             ->add('name', 'ruleUnique', [
                 'rule' => 'validateUnique',
                 'provider' => 'table'
-            ]);
+            ])
+            ;
     }
 
-    public function beforeAction(Event $event, ArrayObject $extra)
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
     {
-        $this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
-        $this->field('security_roles', ['after' => 'method']);
+        if (isset($data['submit']) && $data['submit'] == 'save') {
+            if (isset($data['feature']) && !empty($data['feature'])) {
+                $alertRuleTypes = $this->getAlertRuleTypes();
+                $thresholdConfig = $alertRuleTypes[$data['feature']]['threshold'];
+                if (!empty($thresholdConfig)) {
+                    $thresholdArray = [];
+                    foreach ($thresholdConfig as $field => $attr) {
+                        if (array_key_exists('type', $attr) && $attr['type'] == 'chosenSelect') {
+                            $thresholdArray[$field] = $data[$field]['_ids'];
+                        } else {
+                            $thresholdArray[$field] = $data[$field];
+                        }
+                    }
+                    $data['threshold'] = !empty($thresholdArray) ? json_encode($thresholdArray, JSON_UNESCAPED_UNICODE) : '';
+                }
+            }
+        }
     }
 
     public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         $this->field('message', ['visible' => false]);
+        $this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
+        $this->field('security_roles', ['after' => 'method']);
 
         // element control
         $featureOptions = $this->getFeatureOptions();
         if (!empty($featureOptions)) {
-            $featureOptions = [0 => 'All Features'] + $featureOptions;
+            $featureOptions = ['-1' => __('All Features')] + $featureOptions;
         }
 
         $selectedFeature = $this->queryString('feature', $featureOptions);
@@ -115,22 +108,25 @@ class AlertRulesTable extends ControllerActionTable
     {
         $selectedFeature = $extra['selectedFeature'];
 
-        if ($selectedFeature != 0) {
+        if ($selectedFeature != -1) {
             $query->where(['feature' => $selectedFeature]);
         }
+    }
+
+    public function editOnInitialize(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->extractThresholdValuesFromEntity($entity);
     }
 
     public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $this->setupFields($event, $entity);
-        $this->field('alert_features', ['type' => 'custom_criterias', 'after' => 'message']);
+    }
 
-        if ($this->action == 'add') {
-            $this->field('enabled', ['visible' => false]);
-        } else if ($this->action == 'edit') {
-            $this->field('enabled', ['select' => false]);
-            $this->field('feature', ['type' => 'readOnly']);
-        }
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
+    {
+        $this->setupFields($event, $entity);
+        $this->field('alert_features', ['visible' => false]);
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query)
@@ -144,7 +140,6 @@ class AlertRulesTable extends ControllerActionTable
         foreach ($this->alertTypeFeatures as $key => $obj) {
             if ($obj['feature'] == $feature) {
                 $alertTypeDetails[$obj['feature']] = $obj;
-                $alertTypeDetails[$obj['feature']]['model'] = $key;
             }
         }
 
@@ -160,8 +155,10 @@ class AlertRulesTable extends ControllerActionTable
     {
         $featureOptions = [];
         foreach ($this->alertTypeFeatures as $key => $obj) {
-            $featureOptions[$obj['feature']] = __($obj['feature']);
+            $featureOptions[$obj['feature']] = __(Inflector::humanize(Inflector::underscore($obj['feature'])));
         }
+
+        ksort($featureOptions);
 
         return $featureOptions;
     }
@@ -182,21 +179,49 @@ class AlertRulesTable extends ControllerActionTable
         $type = '';
         if (!empty($feature)) {
             $alertTypeDetails = $this->getAlertTypeDetailsByFeature($feature);
-            $type = $alertTypeDetails[$feature]['threshold']['type'];
+            if (isset($alertTypeDetails[$feature]['threshold']['type'])) {
+                $type = $alertTypeDetails[$feature]['threshold']['type'];
+            }
         }
 
         return $type;
     }
 
-    public function onGetEnabled(Event $event, Entity $entity) {
+    public function onGetFeature(Event $event, Entity $entity)
+    {
+        return Inflector::humanize(Inflector::underscore($entity->feature));
+    }
+
+    public function onGetEnabled(Event $event, Entity $entity)
+    {
         return $entity->enabled == 1 ? '<i class="fa fa-check"></i>' : '<i class="fa fa-close"></i>';
+    }
+
+    public function onGetThreshold(Event $event, Entity $entity)
+    {
+        // temporary solution
+        $origEntity = $this->get($entity->id);
+        if ($origEntity->has('feature') && !empty($origEntity->feature)) {
+            $event = $this->dispatchEvent('AlertRule.onGet.'.$origEntity->feature.'.Threshold', [$origEntity], $this);
+            if ($event->isStopped()) { return $event->result; }
+            if (!empty($event->result)) {
+                return $event->result;
+            }
+        }
     }
 
     public function onUpdateFieldFeature(Event $event, array $attr, $action, Request $request)
     {
+        $featureOptions = $this->getFeatureOptions();
         if ($action == 'add') {
-            $attr['options'] = $this->getFeatureOptions();
+            $attr['options'] = $featureOptions;
             $attr['onChangeReload'] = 'changeFeature';
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->feature;
+            $attr['attr']['value'] = $featureOptions[$entity->feature];
         }
 
         return $attr;
@@ -210,22 +235,13 @@ class AlertRulesTable extends ControllerActionTable
         }
     }
 
-    public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
+    public function onUpdateFieldEnabled(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'add') {
-            if (isset($request->data[$this->alias()]['feature'])) {
-                $feature = $request->data[$this->alias()]['feature'];
-                $type = $this->getThresholdType($feature);
-                if ($type == 'integer') {
-                    $attr['attr']['min'] = 0;
-                }
-            } else {
-                $type = 'hidden';
-            }
-
-            $attr['type'] = $type;
+            $attr['visible'] = false;
         } else if ($action == 'edit') {
-            $attr['type'] = 'readOnly';
+            $attr['select'] = false;
+            $attr['options'] = $this->getSelectOptions('general.yesno');
         }
 
         return $attr;
@@ -246,6 +262,27 @@ class AlertRulesTable extends ControllerActionTable
                 $attr['type'] = 'chosenSelect';
                 $attr['options'] = $roleOptions;
                 break;
+        }
+
+        return $attr;
+    }
+
+    public function onUpdateFieldThreshold(Event $event, array $attr, $action, Request $request)
+    {
+        $entity = $attr['entity'];
+        if ($action == 'add') {
+            $attr['type'] = 'hidden';
+        } else if ($action == 'view' || $action == 'edit') {
+            $attr['visible'] = false;
+        }
+
+        if ($entity->has('feature') && !empty($entity->feature)) {
+            $event = $this->dispatchEvent('AlertRule.UpdateField.'.$entity->feature.'.Threshold', [$attr, $action, $request], $this);
+            if ($event->isStopped()) { return $event->result; }
+            if (!empty($event->result)) {
+                $attr = $event->result;
+
+            }
         }
 
         return $attr;
@@ -275,40 +312,88 @@ class AlertRulesTable extends ControllerActionTable
 
     public function setupFields(Event $event, Entity $entity)
     {
-        $this->field('feature', ['type' => 'select']);
-        $this->field('enabled', ['options' => $this->getSelectOptions('general.yesno')]);
+        // Rule setting section
+        $this->field('rule_setup', ['type' => 'section']);
+        $this->field('feature', ['type' => 'select', 'entity' => $entity]);
+        $this->field('enabled', ['type' => 'select']);
         $this->field('method', ['type' => 'readOnly', 'after' => 'threshold']);
-        $this->field('threshold', ['after' => 'name']);
         $this->field('security_roles', ['after' => 'method']);
+        $this->field('threshold', ['after' => 'security_roles', 'entity' => $entity]);
 
-        $this->setFieldOrder('enabled', 'feature', 'name', 'subject', 'message');
+        // Alert section
+        $this->field('alert_content', ['type' => 'section', 'after' => 'threshold']);
+        $this->field('alert_features', ['type' => 'custom_criterias', 'after' => 'message']);
+
+        if ($entity->has('feature') && !empty($entity->feature)) {
+            $event = $this->dispatchEvent('AlertRule.'.$entity->feature.'.SetupFields', [$entity], $this);
+            if ($event->isStopped()) { return $event->result; }
+        }
     }
 
     public function onGetCustomCriteriasElement(Event $event, $action, $entity, $attr, $options=[])
     {
-        $tableHeaders =['Keyword', 'Remarks'];
-        $tableCells = [];
-        $fieldKey = 'alert_features';
+        if ($action == 'add' || $action == 'edit') {
+            $tableHeaders =[__('Keywords'), __('Remarks')];
+            $tableCells = [];
+            $fieldKey = 'alert_features';
 
-        if (!empty($entity->feature)) {
-            $featureKey = $entity->feature;
-            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($featureKey);
-            $placeholder = $alertTypeDetails[$featureKey]['placeholder'];
+            if (!empty($entity->feature)) {
+                $featureKey = $entity->feature;
+                $alertTypeDetails = $this->getAlertTypeDetailsByFeature($featureKey);
+                $placeholder = $alertTypeDetails[$featureKey]['placeholder'];
 
-            if (!empty($placeholder)) {
-                foreach ($placeholder as $placeholderKey => $placeholderObj) {
-                    $rowData = [];
-                    $rowData[] = __($placeholderKey);
-                    $rowData[] = __($placeholderObj);
+                if (!empty($placeholder)) {
+                    foreach ($placeholder as $placeholderKey => $placeholderObj) {
+                        $rowData = [];
+                        $rowData[] = __($placeholderKey);
+                        $rowData[] = __($placeholderObj);
 
-                    $tableCells[] = $rowData;
+                        $tableCells[] = $rowData;
+                    }
                 }
+
+                $attr['tableHeaders'] = $tableHeaders;
+                $attr['tableCells'] = $tableCells;
             }
 
-            $attr['tableHeaders'] = $tableHeaders;
-            $attr['tableCells'] = $tableCells;
+            return $event->subject()->renderElement('Alert/' . $fieldKey, ['attr' => $attr]);
         }
+    }
 
-        return $event->subject()->renderElement('Alert/' . $fieldKey, ['attr' => $attr]);
+    public function getAlertRuleTypes() {
+        return $this->alertTypeFeatures;
+    }
+
+    public function addAlertRuleType($newAlertRuleType, $_config) {
+        $this->alertTypeFeatures[$newAlertRuleType] = $_config;
+    }
+
+    public function extractThresholdValuesFromEntity(Entity $entity)
+    {
+        $thresholdArray = json_decode($entity->threshold, true);
+
+        if (is_array($thresholdArray)) {
+            $alertTypeDetails = $this->getAlertTypeDetailsByFeature($entity->feature);
+            $thresholdConfig = $alertTypeDetails[$entity->feature]['threshold'];
+
+            foreach ($thresholdArray as $field => $value) {
+                $entity->{$field} = $value;
+
+                if (array_key_exists($field, $thresholdConfig) && array_key_exists('type', $thresholdConfig[$field])) {
+                    $fieldType = $thresholdConfig[$field]['type'];
+                    // for threshold with type chosenSelect type
+                    if ($fieldType == 'chosenSelect') {
+                        $lookupModel = $thresholdConfig[$field]['lookupModel'];
+                        $Model = TableRegistry::get($lookupModel);
+                        if (is_array($value)) {
+                            $entity->{$field} = [];
+                            foreach ($value as $modelId) {
+                                $entity->{$field}[] = $Model->get($modelId);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

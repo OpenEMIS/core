@@ -310,6 +310,7 @@ class Session
 
         if ($this->_isCLI) {
             $_SESSION = [];
+
             return $this->_started = true;
         }
 
@@ -329,6 +330,7 @@ class Session
 
         if ($this->_timedOut()) {
             $this->destroy();
+
             return $this->start();
         }
 
@@ -353,10 +355,6 @@ class Session
      */
     public function check($name = null)
     {
-        if (empty($name)) {
-            return false;
-        }
-
         if ($this->_hasSession() && !$this->started()) {
             $this->start();
         }
@@ -377,10 +375,6 @@ class Session
      */
     public function read($name = null)
     {
-        if (empty($name) && $name !== null) {
-            return null;
-        }
-
         if ($this->_hasSession() && !$this->started()) {
             $this->start();
         }
@@ -412,6 +406,7 @@ class Session
         if ($value !== null) {
             $this->_overwrite($_SESSION, Hash::remove($_SESSION, $name));
         }
+
         return $value;
     }
 
@@ -419,15 +414,11 @@ class Session
      * Writes value to given session variable name.
      *
      * @param string|array $name Name of variable
-     * @param string|null $value Value to write
+     * @param mixed $value Value to write
      * @return void
      */
     public function write($name, $value = null)
     {
-        if (empty($name)) {
-            return;
-        }
-
         if (!$this->started()) {
             $this->start();
         }
@@ -594,6 +585,7 @@ class Session
         }
 
         $this->write('Config.time', time());
+
         return $result;
     }
 }

@@ -6,7 +6,7 @@ use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Auth\BaseAuthenticate;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
 use Cake\Log\Log;
 
 require_once(ROOT . DS . 'vendor' . DS  . 'google' . DS . 'apiclient' . DS . 'src' . DS . 'Google' . DS . 'autoload.php');
@@ -38,7 +38,7 @@ class OAuth2OpenIDConnectAuthenticate extends BaseAuthenticate
                 $responseBody[] = $http->get($this->config('userInfoUri'), [], ['headers' => ['authorization' => $accessToken['token_type'].' '.$accessToken['access_token']], 'redirect' => 3]);
 
                 foreach ($responseBody as $response) {
-                    if ($response->statusCode() == 200) {
+                    if ($response->getStatusCode() == 200) {
                         $body = $response->body();
                         if (!empty($body)) {
                             $userInfo = array_merge(json_decode($body, true), $userInfo);
@@ -66,7 +66,8 @@ class OAuth2OpenIDConnectAuthenticate extends BaseAuthenticate
                         'firstName' => $this->getUserInfo($userInfo, $mapping['firstName']),
                         'lastName' => $this->getUserInfo($userInfo, $mapping['lastName']),
                         'gender' => $this->getUserInfo($userInfo, $mapping['gender']),
-                        'dateOfBirth' => $this->getUserInfo($userInfo, $mapping['dob'])
+                        'dateOfBirth' => $this->getUserInfo($userInfo, $mapping['dob']),
+                        'role' => $this->getUserInfo($userInfo, $mapping['role'])
                     ];
 
                     $User = TableRegistry::get($this->_config['userModel']);

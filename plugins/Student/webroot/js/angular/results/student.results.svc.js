@@ -33,7 +33,8 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         getAssessmentPeriods: getAssessmentPeriods,
         getColumnDefs: getColumnDefs,
         getRowData: getRowData,
-        calculateTotal: calculateTotal
+        calculateTotal: calculateTotal,
+        translate: translate
     };
 
     return service;
@@ -43,6 +44,15 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
         KdOrmSvc.controllerAction('Results');
         KdSessionSvc.base(baseUrl);
         KdOrmSvc.init(models);
+    };
+
+    function translate(data) {
+        KdOrmSvc.init({translation: 'translate'});
+        var success = function(response, deferred) {
+            var translated = response.data.translated;
+            deferred.resolve(translated);
+        };
+        return translation.translate(data, {success:success, defer: true});
     };
 
     function getAssessment(id) {
@@ -157,7 +167,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 deferred.resolve(assessmentPeriods);
             } else {
                 deferred.reject('You need to configure Assessment Periods first');
-            }   
+            }
         };
 
         return AssessmentPeriodsTable
@@ -296,7 +306,7 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 if (angular.isUndefined(properties.subjects[subjectId][assessmentPeriodId])) {
                     properties.subjects[subjectId][assessmentPeriodId] = {assessment_grading_type: gradingType};
                 }
-                
+
                 var result = '';
                 var weight = '';
                 switch (resultType) {

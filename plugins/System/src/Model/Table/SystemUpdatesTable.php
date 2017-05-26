@@ -10,7 +10,8 @@ use Cake\ORM\Query;
 use Cake\ORM\TableRegistry;
 use Cake\Mailer\Email;
 use Cake\I18n\Time;
-use Cake\Network\Http\Client;
+use Cake\Http\Client;
+use Cake\Log\Log;
 
 use App\Model\Table\ControllerActionTable;
 
@@ -68,12 +69,12 @@ class SystemUpdatesTable extends ControllerActionTable {
 
         $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
         $domain = $ConfigItems->value('version_api_domain');
-        $api = $domain . '/restful/v1/System-SystemUpdates.json?_fields=id,version,date_released&_limit=0';
+        $api = $domain . '/restful/v2/System-SystemUpdates.json?_fields=id,version,date_released&_limit=50&_order=-date_released';
 
         $http = new Client();
         $response = $http->get($api);
 
-        if ($response->statusCode() == 200) {
+        if ($response->getStatusCode() == 200) {
             $data = array_reverse(json_decode($response->body(), true)['data']);
 
             foreach ($data as $item) {
@@ -88,6 +89,17 @@ class SystemUpdatesTable extends ControllerActionTable {
                     $this->save($entity);
                 }
             }
+        } else {
+            $ConfigItems = TableRegistry::get('Configuration.ConfigItems');
+            $supportEmails = $ConfigItems->value('version_support_emails');
+            $emails = explode(',', $supportEmails);
+
+            $host = $this->request->env('HTTP_HOST');
+            $subject = 'Core Upgrade Request Failed - ' . $host;
+
+            $email = new Email('openemis');
+            $email->to($emails)->subject($subject)->send('Unable to retrieve system versions.');
+            Log::write('error', 'Unable to retrieve system versions (Status Code: ' . $response->getStatusCode() . ')');
         }
 
         $changelogUrl = $domain . '/changelog';

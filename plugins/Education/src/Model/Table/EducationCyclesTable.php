@@ -5,6 +5,7 @@ use ArrayObject;
 
 use Cake\ORM\Entity;
 use Cake\ORM\Query;
+use Cake\ORM\TableRegistry;
 use Cake\Network\Request;
 use Cake\Event\Event;
 use Cake\Validation\Validator;
@@ -41,6 +42,13 @@ class EducationCyclesTable extends ControllerActionTable
 	public function validationDefault(Validator $validator)
 	{
 		$validator = parent::validationDefault($validator);
+		$validator
+	        ->add('admission_age', [
+                'ruleRange' => [
+                    'rule' => ['range', 0, 99]
+                ]
+            ])
+	    ;
 		return $validator;
 	}
 
@@ -55,6 +63,48 @@ class EducationCyclesTable extends ControllerActionTable
 	public function addEditBeforeAction(Event $event, ArrayObject $extra)
 	{
 		$this->field('education_level_id');
+		$this->field('admission_age', ['after' => 'name', 'attr' => ['min' => 0, 'max' => 99]]);
+	}
+
+	public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+	{
+		// update the admission age in education grade if there is changes on the admission age
+		if (!$entity->isNew()) {
+			$originalEntity = $entity->extractOriginal(['admission_age']);
+			$originalAdmissionAge = $originalEntity['admission_age'];
+			$admissionAge = $entity->admission_age;
+
+			if ($originalAdmissionAge != $admissionAge) {
+				$educationCycleId = $entity->id;
+
+				$educationProgrammeRecords = $this->EducationProgrammes->find()
+					->where([$this->EducationProgrammes->aliasField('education_cycle_id') => $entity->id])
+					->all()
+				;
+
+				if (!$educationProgrammeRecords->isEmpty()) {
+					$EducationGrades = TableRegistry::get('Education.EducationGrades');
+					foreach ($educationProgrammeRecords as $programmeKey => $programmeObj) {
+						$educationProgrammeId = $programmeObj->id;
+
+						$educationGradeRecords = $EducationGrades->find()
+							->where([$EducationGrades->aliasField('education_programme_id') => $educationProgrammeId])
+							->order([$EducationGrades->aliasField('order')])
+							->all()
+						;
+
+						if (!$educationGradeRecords->isEmpty()) {
+							foreach ($educationGradeRecords as $gradeKey => $gradeObj) {
+								$EducationGrades->updateAll(
+									['admission_age' => $admissionAge + $gradeKey],
+									['id' => $gradeObj->id] // condition
+								);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	public function onUpdateFieldEducationLevelId(Event $event, array $attr, $action, Request $request)

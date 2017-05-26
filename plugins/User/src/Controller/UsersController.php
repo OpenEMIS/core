@@ -8,6 +8,7 @@ use Cake\Routing\Router;
 use Firebase\JWT\JWT;
 use Cake\Utility\Security;
 use Cake\Core\Configure;
+use Cake\Network\Exception\ForbiddenException;
 
 class UsersController extends AppController
 {
@@ -96,16 +97,19 @@ class UsersController extends AppController
         $this->SSO->doAuthentication();
     }
 
-    public function logout($sessionId = null)
+    public function logout($username = null)
     {
-        return $this->redirect($this->Auth->logout());
-    }
-
-    public function afterLogout(Event $event, $user)
-    {
-        if ($this->SSO->getAuthenticationType() != 'Local') {
-            $autoLogoutUrl = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_logout_url'])->toArray();
-            TableRegistry::get('SSO.SingleLogout')->afterLogout($user, $autoLogoutUrl);
+        if ($this->request->is('get')) {
+            $username = empty($username) ? $this->Auth->user()['username'] : $username;
+            $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+            $SecurityUserSessions->deleteEntries($username);
+            $Webhooks = TableRegistry::get('Webhook.Webhooks');
+            if ($this->Auth->user()) {
+                $Webhooks->triggerShell('logout', ['username' => $username]);
+            }
+            return $this->redirect($this->Auth->logout());
+        } else {
+            throw new ForbiddenException();
         }
     }
 
@@ -113,7 +117,6 @@ class UsersController extends AppController
     {
         $events = parent::implementedEvents();
         $events['Auth.afterIdentify'] = 'afterIdentify';
-        $events['Auth.logout'] = 'afterLogout';
         $events['Controller.Auth.afterAuthenticate'] = 'afterAuthenticate';
         $events['Controller.Auth.afterCheckLogin'] = 'afterCheckLogin';
         $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
@@ -153,15 +156,15 @@ class UsersController extends AppController
             $user = $this->Auth->user();
 
             if (!empty($user)) {
-                if ($this->SSO->getAuthenticationType() != 'Local') {
-                    $productList = TableRegistry::get('Configuration.ConfigProductLists')->find('list', ['keyField' => 'id', 'valueField' => 'auto_login_url'])->toArray();
-                    TableRegistry::get('SSO.SingleLogout')->afterLogin($user, $productList, $this->request);
-                }
                 $listeners = [
                     TableRegistry::get('Security.SecurityUserLogins'),
                     $this->Users
                 ];
                 $this->Users->dispatchEventToModels('Model.Users.afterLogin', [$user], $this, $listeners);
+
+                $SecurityUserSessions = TableRegistry::get('SSO.SecurityUserSessions');
+
+                $SecurityUserSessions->addEntry($user['username'], $this->request->session()->id());
 
                 // Labels
                 $labels = TableRegistry::get('Labels');

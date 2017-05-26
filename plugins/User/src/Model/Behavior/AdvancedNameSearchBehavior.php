@@ -58,7 +58,7 @@ class AdvancedNameSearchBehavior extends Behavior {
                     ]
                 ];
                 if ($searchByUserName) {
-                    $conditions['OR'][$alias . '.`username` LIKE'] = $searchString;
+                    $conditions['OR'][$alias . '.`username` LIKE '] = $searchString;
                 }
                 break;
 
@@ -69,7 +69,7 @@ class AdvancedNameSearchBehavior extends Behavior {
                 $concatCondition = [];
                 foreach ($searchParams as $key => $param) {
                     $nameAlias[$key] = '`'.$nameAlias[$key].'`';
-                    $concatCondition[0][] = "$alias.$nameAlias[$key]".' LIKE \''.$param.'%\'';
+                    $concatCondition[0]["$alias.$nameAlias[$key]".' LIKE '] = $param . '%';
                 }
                 $conditions = [];
                 $conditions['OR'] = [];
@@ -82,7 +82,7 @@ class AdvancedNameSearchBehavior extends Behavior {
                 $concatCondition = [];
                 foreach ($searchParams as $key => $param) {
                     $nameAlias[$key] = '`'.$nameAlias[$key].'`';
-                    $concatCondition[0][] = "$alias.$nameAlias[$key]".' LIKE \''.$param.'%\'';
+                    $concatCondition[0]["$alias.$nameAlias[$key]".' LIKE '] = $param . '%';
                 }
 
                 $concatCondition[1] = [
@@ -110,7 +110,7 @@ class AdvancedNameSearchBehavior extends Behavior {
                 $concatCondition = [];
                 foreach ($searchParams as $key => $param) {
                     $nameAlias[$key] = '`'.$nameAlias[$key].'`';
-                    $concatCondition[0][] = "$alias.$nameAlias[$key]".' LIKE \''.$param.'%\'';
+                    $concatCondition[0][]["$alias.$nameAlias[$key]".' LIKE '] = $param . '%';
                 }
 
                 $concatCondition[1] = [

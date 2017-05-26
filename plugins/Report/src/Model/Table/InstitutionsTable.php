@@ -12,7 +12,7 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 
-class InstitutionsTable extends AppTable  
+class InstitutionsTable extends AppTable
 {
     use OptionsTrait;
     private $classificationOptions = [];
@@ -40,7 +40,7 @@ class InstitutionsTable extends AppTable
 		$this->belongsTo('Areas', 				['className' => 'Area.Areas']);
 		$this->belongsTo('AreaAdministratives', ['className' => 'Area.AreaAdministratives']);
         $this->belongsTo('NetworkConnectivities', [
-            'className' => 'Institution.NetworkConnectivities', 
+            'className' => 'Institution.NetworkConnectivities',
             'foreignKey' => 'institution_network_connectivity_id'
         ]);
 
@@ -90,8 +90,8 @@ class InstitutionsTable extends AppTable
 		$this->ControllerAction->field('academic_period_id', ['type' => 'hidden']);
 		$this->ControllerAction->field('status', ['type' => 'hidden']);
 		$this->ControllerAction->field('type', ['type' => 'hidden']);
+		$this->ControllerAction->field('module', ['type' => 'hidden']);
 		// $this->ControllerAction->field('license', ['type' => 'hidden']);
-		$this->ControllerAction->field('leaveDate', ['type' => 'hidden']);
 	}
 
 	public function onExcelBeforeStart(Event $event, ArrayObject $settings, ArrayObject $sheets) {
@@ -165,24 +165,12 @@ class InstitutionsTable extends AppTable
 				$option[self::NO_STAFF] = __('Institutions with No Staff');
 				$attr['type'] = 'select';
 				$attr['options'] = $option;
+				$attr['onChangeReload'] = true;
 				return $attr;
 			} else {
 				$attr['value'] = self::NO_FILTER;
 			}
 		}
-	}
-
-	public function onUpdateFieldLeaveDate(Event $event, array $attr, $action, Request $request) {
-		if (isset($this->request->data[$this->alias()]['feature'])) {
-			$feature = $this->request->data[$this->alias()]['feature'];
-			if (in_array($feature, ['Report.InstitutionStaffOnLeave'])) {
-				$attr['type'] = 'date';
-				return $attr;
-			}
-		} else {
-			$attr['value'] = self::NO_FILTER;
-		}
-
 	}
 
 	public function onUpdateFieldLicense(Event $event, array $attr, $action, Request $request) {
@@ -201,6 +189,23 @@ class InstitutionsTable extends AppTable
 
 				$attr['type'] = 'select';
 				$attr['options'] = $typeOptions;
+				return $attr;
+			} else {
+				$attr['value'] = self::NO_FILTER;
+			}
+		}
+	}
+
+	public function onUpdateFieldModule(Event $event, array $attr, $action, Request $request) {
+		if (isset($this->request->data[$this->alias()]['feature'])) {
+			$feature = $this->request->data[$this->alias()]['feature'];
+			if (in_array($feature, ['Report.InstitutionCases'])) {
+				$WorkflowRules = TableRegistry::get('Workflow.WorkflowRules');
+                $featureOptions = $WorkflowRules->getFeatureOptions();
+
+				$attr['type'] = 'select';
+				$attr['options'] = $featureOptions;
+				$attr['select'] = false;
 				return $attr;
 			} else {
 				$attr['value'] = self::NO_FILTER;
@@ -296,7 +301,11 @@ class InstitutionsTable extends AppTable
 					$request->data[$this->alias()]['academic_period_id'] = key($academicPeriodOptions);
 				}
 				return $attr;
-			} else if ((in_array($feature, ['Report.StaffAbsences'])) || (in_array($feature, ['Report.StudentAbsences']))) {
+			} else if (in_array($feature, ['Report.StaffAbsences', 'Report.StudentAbsences', 'Report.StaffLeave', 'Report.InstitutionCases'])
+				|| (in_array($feature, ['Report.Institutions'])
+					&& !empty($request->data[$this->alias()]['institution_filter'])
+					&& $request->data[$this->alias()]['institution_filter'] == self::NO_STUDENT)
+				) {
 				$academicPeriodOptions = [];
 				$AcademicPeriodTable = TableRegistry::get('AcademicPeriod.AcademicPeriods');
 				$periodOptions = $AcademicPeriodTable->getList();
@@ -327,10 +336,16 @@ class InstitutionsTable extends AppTable
 			->select(['area_code' => 'Areas.code']);
 		switch ($filter) {
 			case self::NO_STUDENT:
+                $StudentsTable = TableRegistry::get('Institution.Students');
+				$academicPeriodId = $requestData->academic_period_id;
+
 				$query
 					->leftJoin(
-						['Students' => 'institution_students'],
-						[$this->aliasField('id').' = Students.institution_id']
+						[$StudentsTable->alias() => $StudentsTable->table()],
+						[
+							$StudentsTable->aliasField('institution_id') . ' = '. $this->aliasField('id'),
+                            $StudentsTable->aliasField('academic_period_id') => $academicPeriodId
+						]
 					)
 					->select(['student_count' => $query->func()->count('Students.id')])
 					->group([$this->aliasField('id')])

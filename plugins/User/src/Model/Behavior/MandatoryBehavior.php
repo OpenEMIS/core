@@ -260,8 +260,12 @@ class MandatoryBehavior extends Behavior {
 		$contactOptions = TableRegistry::get('User.ContactTypes')
 			->find('list', ['keyField' => 'id', 'valueField' => 'full_contact_type_name'])
 			->find('withContactOptions')
+			->order([
+				'ContactOptions.order',
+				'ContactTypes.order'
+			])
 			->toArray();
-
+			
 		$attr['type'] = 'select';
 		$attr['fieldName'] = $this->_table->alias().'.contacts.0.contact_type_id';
 		$attr['options'] = $contactOptions;
