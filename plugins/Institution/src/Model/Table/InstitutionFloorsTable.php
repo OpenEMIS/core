@@ -703,10 +703,11 @@ class InstitutionFloorsTable extends ControllerActionTable
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'InstitutionRooms',
-            'institutionId' => $institutionId,
-            'index'
+            'institutionId' => $institutionId
         ];
         $url = $this->setQueryString($url, ['institution_floor_id' => $entity->id, 'institution_floor_name' => $entity->name]);
+        $newUrl = $this->url('index');
+        $url = array_merge($newUrl, $url);
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
 
