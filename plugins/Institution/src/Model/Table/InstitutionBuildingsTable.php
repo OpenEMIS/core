@@ -18,6 +18,7 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionBuildingsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const IN_USE = 1;
     const UPDATE_DETAILS = 1;    // In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
@@ -155,7 +156,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
         } elseif ($entity->building_status_id == $this->BuildingStatuses->getIdByCode('END_OF_USAGE')) {
             $floorEntities = $this->InstitutionFloors
                 ->find()
-                ->where([$this->InstitutionFloors->aliasField('institution_building_id') => $entity->id])
+                ->where([
+                    $this->InstitutionFloors->aliasField('institution_building_id') => $entity->id,
+                    $this->InstitutionFloors->aliasField('floor_status_id') => SELF::IN_USE
+                ])
                 ->toArray();
             foreach ($floorEntities as $floorEntity) {
                 $floorEntity->change_type = SELF::END_OF_USAGE;
@@ -317,7 +321,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictEdit');
             }
 
-            $url = $this->url('index');
+            $url = $this->url('index', 'QUERY');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         } else {
@@ -355,12 +359,41 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
 
-            $url = $this->url('index');
+            $url = $this->url('index', 'QUERY');
             $event->stopPropagation();
             return $this->controller->redirect($url);
         }
 
         $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+
+        // check if the same building is copy from / copy to other academic period, then not allow user to delete
+        $resultQuery = $this->find();
+        $results = $resultQuery
+            ->select([
+                'academic_period_name' => 'AcademicPeriods.name',
+                'count' => $resultQuery->func()->count($this->aliasField('id'))
+            ])
+            ->contain(['AcademicPeriods'])
+            ->where([
+                $this->aliasField('code') => $entity->code,
+                $this->aliasField('id <> ') => $entity->id
+            ])
+            ->group($this->aliasField('academic_period_id'))
+            ->order([$this->aliasField('start_date')])
+            ->all();
+
+        if (!$results->isEmpty()) {
+            $extra['excludedModels'][] = $this->InstitutionFloors->alias();
+
+            foreach ($results as $obj) {
+                $title = $this->alias() . ' - ' . $obj->academic_period_name;
+                $extra['associatedRecords'][] = [
+                    'model' => $title,
+                    'count' => $obj->count
+                ];
+            }
+        }
+        // end
     }
 
     public function addEditBeforeAction(Event $event, ArrayObject $extra)
@@ -848,15 +881,6 @@ class InstitutionBuildingsTable extends ControllerActionTable
 
             if ($count > 0) {
                 $isEditable = false;
-            }
-
-            $count = $this
-                ->find()
-                ->where([$this->aliasField('code') => $entity->code])
-                ->count();
-
-            if ($count > 1) {
-                $isDeletable = false;
             }
         } elseif ($entity->building_status_id == $endOfUsageId) {    // If already end of usage, not allow to edit or delete
             $isEditable = false;
