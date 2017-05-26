@@ -78,6 +78,8 @@ class StaffBehavioursTable extends ControllerActionTable
 		$this->field('action', ['visible' => false]);
 		$this->field('time_of_behaviour', ['visible' => false]);
 
+		$this->fields['staff_id']['sort'] = ['field' => 'Staff.first_name']; // POCOR-2547 adding sort
+
 		$this->setFieldOrder(['openemis_no', 'staff_id', 'date_of_behaviour', 'staff_behaviour_category_id', 'behaviour_classification_id']);
 	}
 
@@ -112,6 +114,19 @@ class StaffBehavioursTable extends ControllerActionTable
 		$this->controller->set(compact('periodOptions'));
 
 		// will need to check for search by name: AdvancedNameSearchBehavior
+
+		// POCOR-2547 Adding sortWhiteList to $extra
+        $sortList = ['Staff.first_name'];
+        if (array_key_exists('sortWhitelist', $extra['options'])) {
+            $sortList = array_merge($extra['options']['sortWhitelist'], $sortList);
+        }
+        $extra['options']['sortWhitelist'] = $sortList;
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($this->request->query['sort'])) {
+            $query->order([$this->Staff->aliasField('first_name'), $this->Staff->aliasField('last_name')]);
+        }
+        // end POCOR-2547
 	}
 
 	public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
