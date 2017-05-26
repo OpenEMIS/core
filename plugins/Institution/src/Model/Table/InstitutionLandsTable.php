@@ -252,7 +252,7 @@ class InstitutionLandsTable extends ControllerActionTable
         // Land Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE']
             ],
             'withAll' => true
         ]));
@@ -262,7 +262,7 @@ class InstitutionLandsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('LandStatuses', function ($q) {
                 return $q->where([
-                    'LandStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                    'LandStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
                 ]);
             });
         }
@@ -355,7 +355,7 @@ class InstitutionLandsTable extends ControllerActionTable
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->land_status_id == $inUseId) {
-                $session->write($sessionKey, $this->alias().'.in_use.restrictEdit');
+                $session->write($sessionKey, $this->alias().'.in_use.restrictDelete');
             } elseif ($entity->land_status_id == $endOfUsageId) {
                 $session->write($sessionKey, $this->alias().'.end_of_usage.restrictDelete');
             }
