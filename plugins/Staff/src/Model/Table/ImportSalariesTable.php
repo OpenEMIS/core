@@ -59,6 +59,16 @@ class ImportSalariesTable extends AppTable
         } else {
             //necessary data to be sent for saving.
             $tempRow['staff_id'] = $this->staffId;
+
+            $grossSalary = $tempRow['gross_salary'];
+            $tempGrossSalary = explode('.', $grossSalary);
+            if (array_key_exists(1, $tempGrossSalary)) { //if has decimal place
+                if (strlen($tempGrossSalary[1] > 2)) { //then cut into 2 decimal point
+                    $tempGrossSalary[1] = substr($tempGrossSalary[1], 0, 2);
+                    $tempRow['gross_salary'] = implode('.', $tempGrossSalary);
+                }
+            }
+
             $tempRow['net_salary'] = $tempRow['gross_salary'];
             return true;
         }
