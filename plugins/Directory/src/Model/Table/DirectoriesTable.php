@@ -36,6 +36,8 @@ class DirectoriesTable extends ControllerActionTable {
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
 		$this->hasMany('Identities', 		['className' => 'User.Identities',		'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->hasMany('Nationalities', 	['className' => 'User.UserNationalities',	'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('SpecialNeeds',      ['className' => 'User.SpecialNeeds', 'foreignKey' => 'security_user_id', 'dependent' => true]);
+        $this->hasMany('Contacts',          ['className' => 'User.Contacts', 'foreignKey' => 'security_user_id', 'dependent' => true]);
 		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
 		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
 
@@ -167,7 +169,19 @@ class DirectoriesTable extends ControllerActionTable {
 			$this->aliasField('super_admin') => 0
 		];
 		$conditions = array_merge($conditions, $notSuperAdminCondition);
-		$query->where($conditions);
+
+        // POCOR-2547 sort list of staff and student by name
+        $orders = [];
+
+        if (!isset($this->request->query['sort'])) {
+            $orders = [
+                $this->aliasField('first_name'),
+                $this->aliasField('last_name')
+            ];
+        }
+
+		$query->where($conditions)
+            ->order($orders);
 
         $options['auto_search'] = true;
 
@@ -322,7 +336,7 @@ class DirectoriesTable extends ControllerActionTable {
         }
     }
 
-	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	public function addAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
 		// need to find out order values because recordbehavior changes it
 		$allOrderValues = [];
@@ -587,7 +601,7 @@ class DirectoriesTable extends ControllerActionTable {
         ]);
     }
 
-	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra) 
+	public function editAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
         $isSet = $this->setSessionAfterAction($event, $entity);
 
@@ -626,7 +640,7 @@ class DirectoriesTable extends ControllerActionTable {
 				return $this->controller->redirect($urlParams);
 			}
 		}
-        
+
         $this->setupTabElements($entity);
 	}
 
