@@ -309,7 +309,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         // Room Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE' }
+                'code IN' => ['IN_USE', 'END_OF_USAGE']
             ],
             'withAll' => true
         ]));
