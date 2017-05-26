@@ -50,9 +50,6 @@ class InstitutionsController extends AppController
 
             'BankAccounts'      => ['className' => 'Institution.InstitutionBankAccounts'],
 
-            // Surveys
-            'Surveys'           => ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
-
             // Quality
             'Rubrics'           => ['className' => 'Institution.InstitutionRubrics', 'actions' => ['index', 'view', 'remove']],
             'RubricAnswers'     => ['className' => 'Institution.InstitutionRubricAnswers', 'actions' => ['view', 'edit']],
@@ -73,6 +70,11 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
+    public function Surveys()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSurveys']);
+    }
+
     public function Institutions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Institutions']);

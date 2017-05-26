@@ -173,7 +173,7 @@ class ImportBehavior extends Behavior
                 $back['action'] = $this->_table->alias();
                 $back[0] = 'add';
             };
-            $toolbarButtons['back']['url']['action'] = array_merge($toolbarButtons['back']['url'], $back);
+            $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
         } elseif ($this->institutionId && $toolbarButtons['back']['url']['plugin']=='Institution') {
             $back = [];
 
@@ -188,6 +188,7 @@ class ImportBehavior extends Behavior
                 $back['action'] = str_replace('Institution', '', $back['action']);
             }
             $toolbarButtons['back']['url'] = array_merge($toolbarButtons['back']['url'], $back);
+
         } else {
             $toolbarButtons['back']['url']['action'] = 'index';
         }

@@ -18,6 +18,7 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionRoomsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const IN_USE = 1;
     const UPDATE_DETAILS = 1;    // In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
@@ -125,6 +126,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 return false;
             })
+            ->notEmpty('room_type_id');
         ;
     }
 
@@ -309,7 +311,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         // Room Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE']
             ],
             'withAll' => true
         ]));
@@ -319,7 +321,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('RoomStatuses', function ($q) {
                 return $q->where([
-                    'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                    'RoomStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
                 ]);
             });
         }
@@ -388,7 +390,7 @@ class InstitutionRoomsTable extends ControllerActionTable
 
                 // Not allowed to change room type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->aliasField('change_in_room_type.restrictEdit'));
+                    $session->write($sessionKey, $this->alias().'.change_in_room_type.restrictEdit');
 
                     $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
@@ -916,14 +918,18 @@ class InstitutionRoomsTable extends ControllerActionTable
     private function addBreadcrumbElement()
     {
         $entity = $this->InstitutionFloors->get($this->getQueryString('institution_floor_id'), ['contain' => ['InstitutionBuildings.InstitutionLands']]);
-        $buildingUrl = $this->url('index');
+        $url = $this->url('index');
+        if (isset($url[1])) {
+            unset($url[1]);
+        }
+        $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_building->institution_land->id,
             'institution_land_name' => $entity->institution_building->institution_land->name
         ]);
 
-        $floorUrl = $this->url('index');
+        $floorUrl = $url;
         $floorUrl['action'] = 'InstitutionFloors';
         $floorUrl = $this->setQueryString($floorUrl, [
             'institution_building_id' => $entity->institution_building->id,

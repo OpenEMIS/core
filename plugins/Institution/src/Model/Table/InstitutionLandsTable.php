@@ -18,6 +18,7 @@ use DateTime;
 class InstitutionLandsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const IN_USE = 1;
     const UPDATE_DETAILS = 1;// In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
@@ -111,7 +112,8 @@ class InstitutionLandsTable extends ControllerActionTable
                 }
 
                 return false;
-            });
+            })
+            ->notEmpty('land_type_id');
     }
 
     public function validationSavingByAssociation(Validator $validator)
@@ -155,7 +157,10 @@ class InstitutionLandsTable extends ControllerActionTable
         } elseif ($entity->land_status_id == $this->LandStatuses->getIdByCode('END_OF_USAGE')) {
             $buildingEntities = $this->InstitutionBuildings
                 ->find()
-                ->where([$this->InstitutionBuildings->aliasField('institution_land_id') => $entity->id])
+                ->where([
+                    $this->InstitutionBuildings->aliasField('institution_land_id') => $entity->id,
+                    $this->InstitutionBuildings->aliasField('building_status_id') => SELF::IN_USE
+                ])
                 ->toArray();
             foreach ($buildingEntities as $buildingEntity) {
                 $buildingEntity->change_type = SELF::END_OF_USAGE;
@@ -172,9 +177,9 @@ class InstitutionLandsTable extends ControllerActionTable
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'InstitutionBuildings',
-            'institutionId' => $institutionId,
-            'index'
+            'institutionId' => $institutionId
         ];
+        $url = array_merge($url, $this->request->query);
         $url = $this->setQueryString($url, ['institution_land_id' => $entity->id, 'institution_land_name' => $entity->name]);
 
         return $event->subject()->HtmlField->link($entity->code, $url);
@@ -250,7 +255,7 @@ class InstitutionLandsTable extends ControllerActionTable
         // Land Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE']
             ],
             'withAll' => true
         ]));
@@ -260,7 +265,7 @@ class InstitutionLandsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('LandStatuses', function ($q) {
                 return $q->where([
-                    'LandStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                    'LandStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
                 ]);
             });
         }
@@ -330,7 +335,7 @@ class InstitutionLandsTable extends ControllerActionTable
 
                 // Not allowed to change land type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->aliasField('change_in_land_type.restrictEdit'));
+                    $session->write($sessionKey, $this->alias().'.change_in_land_type.restrictEdit');
 
                     $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
