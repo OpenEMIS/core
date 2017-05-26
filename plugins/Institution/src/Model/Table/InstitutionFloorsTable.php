@@ -18,6 +18,7 @@ use App\Model\Traits\OptionsTrait;
 class InstitutionFloorsTable extends ControllerActionTable
 {
     use OptionsTrait;
+    const IN_USE = 1;
     const UPDATE_DETAILS = 1;    // In Use
     const END_OF_USAGE = 2;
     const CHANGE_IN_TYPE = 3;
@@ -111,6 +112,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
                 return false;
             })
+            ->notEmpty('floor_type_id');
         ;
     }
 
@@ -154,7 +156,10 @@ class InstitutionFloorsTable extends ControllerActionTable
         } elseif ($entity->floor_status_id == $this->FloorStatuses->getIdByCode('END_OF_USAGE')) {
             $roomEntities = $this->InstitutionRooms
                 ->find()
-                ->where([$this->InstitutionRooms->aliasField('institution_floor_id') => $entity->id])
+                ->where([
+                    $this->InstitutionRooms->aliasField('institution_floor_id') => $entity->id,
+                    $this->InstitutionRooms->aliasField('room_status_id') => SELF::IN_USE
+                ])
                 ->toArray();
             foreach ($roomEntities as $roomEntity) {
                 $roomEntity->change_type = SELF::END_OF_USAGE;
@@ -245,7 +250,7 @@ class InstitutionFloorsTable extends ControllerActionTable
         // Floor Statuses
         list($statusOptions, $selectedStatus) = array_values($this->getStatusOptions([
             'conditions' => [
-                'code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                'code IN' => ['IN_USE', 'END_OF_USAGE']
             ],
             'withAll' => true
         ]));
@@ -255,7 +260,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             // default show In Use and End Of Usage
             $query->matching('FloorStatuses', function ($q) {
                 return $q->where([
-                    'FloorStatuses.code IN' => ['IN_USE', 'END_OF_USAGE', 'CHANGE_IN_TYPE']
+                    'FloorStatuses.code IN' => ['IN_USE', 'END_OF_USAGE']
                 ]);
             });
         }
@@ -324,7 +329,7 @@ class InstitutionFloorsTable extends ControllerActionTable
 
                 // Not allowed to change floor type in the same day
                 if ($diff->days == 0) {
-                    $session->write($sessionKey, $this->aliasField('change_in_floor_type.restrictEdit'));
+                    $session->write($sessionKey, $this->alias().'.change_in_floor_type.restrictEdit');
 
                     $url = $this->url('edit');
                     $url['edit_type'] = self::UPDATE_DETAILS;
@@ -732,9 +737,9 @@ class InstitutionFloorsTable extends ControllerActionTable
             'plugin' => $this->controller->plugin,
             'controller' => $this->controller->name,
             'action' => 'InstitutionRooms',
-            'institutionId' => $institutionId,
-            'index'
+            'institutionId' => $institutionId
         ];
+        $url = array_merge($url, $this->request->query);
         $url = $this->setQueryString($url, ['institution_floor_id' => $entity->id, 'institution_floor_name' => $entity->name]);
         return $event->subject()->HtmlField->link($entity->code, $url);
     }
@@ -779,7 +784,11 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         $crumbs = [];
         $entity = $this->InstitutionBuildings->get($this->getQueryString('institution_building_id'), ['contain' => ['InstitutionLands']]);
-        $buildingUrl = $this->url('index');
+        $url = $this->url('index');
+        if (isset($url[1])) {
+            unset($url[1]);
+        }
+        $buildingUrl = $url;
         $buildingUrl['action'] = 'InstitutionBuildings';
         $buildingUrl = $this->setQueryString($buildingUrl, [
             'institution_land_id' => $entity->institution_land->id,

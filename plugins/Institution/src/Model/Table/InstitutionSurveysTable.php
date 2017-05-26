@@ -11,11 +11,11 @@ use Cake\Network\Request;
 use Cake\Log\Log;
 use Cake\Datasource\ResultSetInterface;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use App\Model\Traits\OptionsTrait;
 use App\Model\Traits\MessagesTrait;
 
-class InstitutionSurveysTable extends AppTable
+class InstitutionSurveysTable extends ControllerActionTable
 {
     use OptionsTrait;
     use MessagesTrait;
@@ -132,17 +132,9 @@ class InstitutionSurveysTable extends AppTable
         ];
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $extra)
     {
-        // add this checking to avoid error when download from mobile
-        if (isset($this->ControllerAction)) {
-            $currentAction = $this->ControllerAction->action();
-            if ($currentAction == 'edit') {
-                $url = $this->ControllerAction->url($currentAction);
-                $event->stopPropagation();
-                return $this->controller->redirect($url);
-            }
-        }
+        return $this->controller->redirect($this->url('edit'));
     }
 
     public function getWorkflowFilterOptions(Event $event)
@@ -222,7 +214,7 @@ class InstitutionSurveysTable extends AppTable
         return $this->formatDateTime($entity->modified);
     }
 
-    public function indexBeforeAction(Event $event)
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
     {
         // Retrieve from here because will be reset in beforeAction of WorkflowBehavior
         $this->attachWorkflow = $this->controller->Workflow->attachWorkflow;
@@ -231,7 +223,7 @@ class InstitutionSurveysTable extends AppTable
 
         if ($this->attachWorkflow) {
             if ($this->hasWorkflow) {
-                $selectedFilter = $this->ControllerAction->getVar('selectedFilter');
+                $selectedFilter = $this->request->query('filter');
                 if ($selectedFilter != -1) {
                     $workflow = $this->getWorkflow($this->registryAlias(), null, $selectedFilter);
                     if (!empty($workflow)) {
@@ -247,33 +239,33 @@ class InstitutionSurveysTable extends AppTable
             }
         }
 
-        $this->ControllerAction->field('description');
+        $this->field('description');
         $fieldOrder = ['survey_form_id', 'description', 'academic_period_id'];
-        $selectedStatus = $this->ControllerAction->getVar('selectedStatus');
+        $selectedStatus = $this->request->query('status');
 
         if (is_null($selectedStatus) || $selectedStatus == -1) {
             $this->buildSurveyRecords();
-            $this->ControllerAction->field('last_modified');
+            $this->field('last_modified');
             $fieldOrder[] = 'last_modified';
         } else {
             if ($selectedStatus == $this->openStatusId) {   // Open
                 $this->buildSurveyRecords();
-                $this->ControllerAction->field('to_be_completed_by');
+                $this->field('to_be_completed_by');
                 $fieldOrder[] = 'to_be_completed_by';
             } else if ($selectedStatus == $this->closedStatusId) {  // Closed
-                $this->ControllerAction->field('completed_on');
+                $this->field('completed_on');
                 $fieldOrder[] = 'completed_on';
             } else {
-                $this->ControllerAction->field('last_modified');
-                $this->ControllerAction->field('to_be_completed_by');
+                $this->field('last_modified');
+                $this->field('to_be_completed_by');
                 $fieldOrder[] = 'last_modified';
                 $fieldOrder[] = 'to_be_completed_by';
             }
         }
-        $this->ControllerAction->setFieldOrder($fieldOrder);
+        $this->setFieldOrder($fieldOrder);
     }
 
-    public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options)
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         // Do not show expired records
         $query->where([
@@ -281,25 +273,25 @@ class InstitutionSurveysTable extends AppTable
         ]);
     }
 
-    public function viewBeforeAction(Event $event)
+    public function viewBeforeAction(Event $event, ArrayObject $extra)
     {
-        $this->ControllerAction->field('academic_period_id');
-        $this->ControllerAction->field('survey_form_id');
+        $this->field('academic_period_id');
+        $this->field('survey_form_id');
     }
 
-    public function addEditAfterAction(Event $event, Entity $entity)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->ControllerAction->field('status_id', [
+        $this->field('status_id', [
             'attr' => ['value' => $entity->status_id]
         ]);
-        $this->ControllerAction->field('academic_period_id', [
+        $this->field('academic_period_id', [
             'attr' => ['value' => $entity->academic_period_id]
         ]);
-        $this->ControllerAction->field('survey_form_id', [
+        $this->field('survey_form_id', [
             'attr' => ['value' => $entity->survey_form_id]
         ]);
         // this extra field is use by repeater type to know user click add on which repeater question
-        $this->ControllerAction->field('repeater_question_id');
+        $this->field('repeater_question_id');
     }
 
     public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons)
