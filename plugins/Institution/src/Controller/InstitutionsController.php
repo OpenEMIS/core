@@ -279,18 +279,16 @@ class InstitutionsController extends AppController
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
 
         if ($hasTemplate) {
-            $url['plugin'] = 'CustomExcel';
-            $url['controller'] = 'CustomExcels';
-            $url['action'] = 'export';
-            $url[0] = 'AssessmentResults';
-        } else {
-            $url['plugin'] = 'Institution';
-            $url['controller'] = 'Institutions';
-            $url['action'] = 'ClassStudents';
-            $url[0] = 'excel';
+            $customUrl = $this->ControllerAction->url('index');
+            $customUrl['plugin'] = 'CustomExcel';
+            $customUrl['controller'] = 'CustomExcels';
+            $customUrl['action'] = 'export';
+            $customUrl[0] = 'AssessmentResults';
+            $this->set('customExcel', Router::url($customUrl));
         }
 
         $this->set('excelUrl', Router::url($url));
+
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
     // End
@@ -1172,6 +1170,7 @@ class InstitutionsController extends AppController
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
         $positionTable = TableRegistry::get('Institution.InstitutionPositions');
+
         $userId = $this->Auth->user('id');
 
         $selectedFTE = empty($fte) ? 0 : $fte;
@@ -1227,8 +1226,9 @@ class InstitutionsController extends AppController
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
                 ->innerJoinWith('StaffPositionTitles.SecurityRoles')
+                ->innerJoinWith('StaffPositionGrades')
                 ->where($positionConditions)
-                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type', 'grade_name' => 'StaffPositionGrades.name'])
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
                 ->autoFields(true)
                 ->toArray();
@@ -1248,8 +1248,10 @@ class InstitutionsController extends AppController
         $options = [];
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
         foreach ($staffPositionsOptions as $position) {
+            $name = $position->name . ' - ' . $position->grade_name;
+
             $type = __($types[$position->type]);
-            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name, 'disabled' => in_array($position->id, $excludePositions)];
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
 
         echo json_encode($options);

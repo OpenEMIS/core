@@ -59,6 +59,14 @@ class EducationGradesTable extends ControllerActionTable
         $this->setDeleteStrategy('restrict');
     }
 
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.afterReorder'] = 'afterReorder';
+
+        return $events;
+    }
+
     public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
         if (!$entity->isNew()) {
             if ($entity->setVisible) {
@@ -70,6 +78,11 @@ class EducationGradesTable extends ControllerActionTable
                 // );
             }
         }
+    }
+
+    public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
+    {
+        $this->updateAdmissionAgeAfterDelete($entity);
     }
 
      /**
@@ -138,15 +151,18 @@ class EducationGradesTable extends ControllerActionTable
         }
     }
 
-    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
+    public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
+    {
         $this->association('Institutions')->name('InstitutionProgrammes');
     }
 
-    public function afterAction(Event $event, ArrayObject $extra) {
+    public function afterAction(Event $event, ArrayObject $extra)
+    {
         $this->setFieldOrder($this->_fieldOrder);
     }
 
-    public function indexBeforeAction(Event $event, ArrayObject $extra) {
+    public function indexBeforeAction(Event $event, ArrayObject $extra)
+    {
         //Add controls filter to index page
         $toolbarElements = [
             ['name' => 'Education.controls', 'data' => [], 'options' => []]
@@ -154,8 +170,9 @@ class EducationGradesTable extends ControllerActionTable
 
         $this->controller->set('toolbarElements', $toolbarElements);
 
+        $this->field('admission_age', ['visible' => false]);
         $this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
-        $this->_fieldOrder = ['visible', 'name', 'code', 'education_programme_id', 'subjects'];
+        $this->_fieldOrder = ['visible', 'name', 'admission_age', 'code', 'education_programme_id', 'subjects'];
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -166,10 +183,10 @@ class EducationGradesTable extends ControllerActionTable
         $query->where([$this->aliasField('education_programme_id') => $selectedProgramme]);
     }
 
-    public function viewBeforeAction(Event $event, ArrayObject $extra)
+    public function viewAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
+        $this->setupFields($event, $entity);
         $this->field('subjects', ['type' => 'custom_subject', 'valueClass' => 'table-full-width']);
-        $this->_fieldOrder[] = 'subjects';
     }
 
     public function viewBeforeQuery(Event $event, Query $query, ArrayObject $extra)
@@ -177,9 +194,17 @@ class EducationGradesTable extends ControllerActionTable
         $query->contain(['EducationSubjects']);
     }
 
-    public function addEditBeforeAction(Event $event, ArrayObject $extra)
+    public function addEditAfterAction(Event $event, Entity $entity, ArrayObject $extra)
     {
-        $this->field('education_programme_id');
+        $this->setupFields($event, $entity);
+    }
+
+    public function setupFields(Event $event, Entity $entity)
+    {
+        $this->field('name');
+        $this->field('code');
+        $this->field('admission_age', ['after' => 'name', 'entity' => $entity]);
+        $this->field('education_programme_id', ['entity' => $entity]);
     }
 
     public function onGetCustomSubjectElement(Event $event, $action, $entity, $attr, $options=[])
@@ -229,12 +254,54 @@ class EducationGradesTable extends ControllerActionTable
         return $event->subject()->renderElement('Education.subjects', ['attr' => $attr]);
     }
 
+    public function onUpdateFieldAdmissionAge(Event $event, array $attr, $action, Request $request)
+    {
+        list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
+
+        if ($action == 'add' && !empty($selectedProgramme)) {
+            if (array_key_exists($this->alias(), $request->data) && array_key_exists('education_programme_id', $request->data[$this->alias()])) {
+                $educationProgrammeId = $request['data'][$this->alias()]['education_programme_id'];
+            } else {
+                $educationProgrammeId = $selectedProgramme;
+            }
+
+            $value = 0;
+            if ($educationProgrammeId > 0) {
+                $educationCycleId = $this->EducationProgrammes->get($educationProgrammeId)->education_cycle_id;
+                $admissionAge = $this->EducationProgrammes->EducationCycles->get($educationCycleId)->admission_age;
+
+                $count = $this->find()
+                    ->where([$this->aliasField('education_programme_id') => $educationProgrammeId])
+                    ->count()
+                ;
+
+                $value = $admissionAge + $count;
+            }
+
+            $attr['value'] = $value; // saved value
+            $attr['attr']['value'] = $value; // display
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $attr['value'] = $entity->admission_age; // saved value
+        }
+
+        $attr['type'] = 'readonly';
+        return $attr;
+    }
+
     public function onUpdateFieldEducationProgrammeId(Event $event, array $attr, $action, Request $request)
     {
         list(, , $programmeOptions, $selectedProgramme) = array_values($this->_getSelectOptions());
+        $attr['onChangeReload'] = true;
         $attr['options'] = $programmeOptions;
         if ($action == 'add') {
             $attr['default'] = $selectedProgramme;
+        } else if ($action == 'edit') {
+            $entity = $attr['entity'];
+
+            $attr['type'] = 'readonly';
+            $attr['value'] = $entity->education_programme_id; // saved value
         }
 
         return $attr;
@@ -325,5 +392,42 @@ class EducationGradesTable extends ControllerActionTable
             }
         }
         return $admissionAge;
+    }
+
+    public function afterReorder(Event $event, $ids = [])
+    {
+        $gradeIds = array_column($ids, 'id');
+
+        $this->updateAdmissionAge($gradeIds);
+    }
+
+    private function updateAdmissionAgeAfterDelete(Entity $entity)
+    {
+        $educationProgrammeId = $entity->education_programme_id;
+        $gradeIds = $this->find('list', ['keyField' => 'id', 'valueField' => 'id'])
+            ->where([$this->aliasField('education_programme_id') => $educationProgrammeId])
+            ->order([$this->aliasField('order')])
+            ->toArray();
+
+        $this->updateAdmissionAge($gradeIds);
+    }
+
+    private function updateAdmissionAge($gradeIds = [])
+    {
+        $admissionAge = null;
+        $count = 0;
+        foreach ($gradeIds as $id) {
+            if (is_null($admissionAge)) {
+                $entity = $this->get($id, ['contain' => ['EducationProgrammes.EducationCycles']]);
+                $admissionAge = $entity->education_programme->education_cycle->admission_age;
+            }
+
+            $gradeAdmissionAge = $admissionAge + $count++;
+
+            $this->updateAll(
+                ['admission_age' => $gradeAdmissionAge],
+                ['id' => $id]
+            );
+        }
     }
 }
