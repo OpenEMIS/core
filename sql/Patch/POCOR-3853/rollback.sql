@@ -63,7 +63,12 @@ CHANGE COLUMN `institution_floor_id` `institution_infrastructure_id` INT(11) NOT
 CHANGE COLUMN `institution_id` `institution_id` INT(11) NOT NULL,
 CHANGE COLUMN `academic_period_id` `academic_period_id` INT(11) NOT NULL,
 CHANGE COLUMN `room_type_id` `room_type_id` INT(11) NOT NULL,
-CHANGE COLUMN `infrastructure_condition_id` `infrastructure_condition_id` INT(11) NOT NULL;
+CHANGE COLUMN `infrastructure_condition_id` `infrastructure_condition_id` INT(11) NOT NULL,
+CHANGE COLUMN `previous_institution_room_id` `previous_room_id` INT(11) NOT NULL COMMENT 'links to institution_rooms.id';
+
+UPDATE `institution_rooms`
+SET `previous_room_id` = 0
+WHERE `previous_room_id` = NULL;
 
 -- institution_infrastructures
 ALTER TABLE `z_3853_institution_infrastructures`
