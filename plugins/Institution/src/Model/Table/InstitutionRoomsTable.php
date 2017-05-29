@@ -405,10 +405,10 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        if (!$isDeletable) {
-            $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
-            $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
+        $inUseId = $this->RoomStatuses->getIdByCode('IN_USE');
+        $endOfUsageId = $this->RoomStatuses->getIdByCode('END_OF_USAGE');
 
+        if (!$isDeletable) {
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->room_status_id == $inUseId) {
@@ -434,6 +434,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             ->contain(['AcademicPeriods'])
             ->where([
                 $this->aliasField('code') => $entity->code,
+                $this->aliasField('room_status_id') => $inUseId,
                 $this->aliasField('id <> ') => $entity->id
             ])
             ->group($this->aliasField('academic_period_id'))
