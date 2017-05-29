@@ -728,15 +728,6 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldPreviousRoomId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $attr['value'] = 0;
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
     {
         // POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
@@ -865,6 +856,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('room_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
+        $this->field('previous_institution_room_id', ['type' => 'hidden']);
         $this->field('infrastructure_condition_id', ['type' => 'select']);
         $this->field('subjects', [
             'type' => 'chosenSelect',

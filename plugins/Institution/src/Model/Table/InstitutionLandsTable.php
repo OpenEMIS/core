@@ -677,15 +677,6 @@ class InstitutionLandsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldPreviousId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $attr['value'] = 0;
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldNewLandType(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
