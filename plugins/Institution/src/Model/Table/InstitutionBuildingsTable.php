@@ -401,7 +401,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
                 ->find()
                 ->where([
                     $this->InstitutionFloors->aliasField('institution_building_id') => $entity->id,
-                    $this->InstitutionFloors->aliasField('floor_status_id') => $inUseId
+                    $this->InstitutionBuildings->aliasField('floor_status_id IN ') => [$inUseId, $endOfUsageId]
                 ])
                 ->all();
 
