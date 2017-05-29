@@ -36,6 +36,7 @@ class InfrastructureShell extends Shell
 
     private function copyProcess($copyFrom, $copyTo)
     {
+        $this->out('Start infrastructure copy process');
         $containCount = 0;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $AcademicPeriodObj = $AcademicPeriods->get($copyTo);
@@ -253,9 +254,11 @@ class InfrastructureShell extends Shell
                         $connection->query("INSERT INTO `land_custom_field_values` (`id`, `text_value`, `number_value`, `decimal_value`, `textarea_value`, `date_value`, `time_value`, `file`, `infrastructure_custom_field_id`, `institution_land_id`, `created_user_id`, `created`) SELECT uuid(), `CustomFieldValues`.`text_value`, `CustomFieldValues`.`number_value`, `CustomFieldValues`.`decimal_value`, `CustomFieldValues`.`textarea_value`, `CustomFieldValues`.`date_value`, `CustomFieldValues`.`time_value`, `CustomFieldValues`.`file`, `CustomFieldValues`.`infrastructure_custom_field_id`, `CurrentLands`.`id`, `CustomFieldValues`.`created_user_id`, NOW() FROM `land_custom_field_values` AS `CustomFieldValues` INNER JOIN `institution_lands` AS `PreviousLands` ON `CustomFieldValues`.`institution_land_id` = `PreviousLands`.`id` AND `PreviousLands`.`academic_period_id` = $copyFrom AND `PreviousLands`.`land_status_id` = $inUseId INNER JOIN `institution_lands` AS `CurrentLands` ON `CurrentLands`.`previous_institution_land_id` = `PreviousLands`.`id` AND `CurrentLands`.`academic_period_id` = $copyTo AND `CurrentLands`.`land_status_id` = $inUseId");
                         break;
                 }
+                $this->out('End infrastructure copy process');
                 $this->out('Finish Processing Custom Field Records');
             } catch (Exception $e) {
-                pr($e->getMessage());
+                $this->out('Error in infrastructure copy process');
+                $this->out('Error Message' . $e->getMessage());
             }
         }
     }
