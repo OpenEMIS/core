@@ -404,7 +404,7 @@ class InstitutionLandsTable extends ControllerActionTable
                 ->find()
                 ->where([
                     $this->InstitutionBuildings->aliasField('institution_land_id') => $entity->id,
-                    $this->InstitutionBuildings->aliasField('building_status_id') => $inUseId
+                    $this->InstitutionBuildings->aliasField('building_status_id IN ') => [$inUseId, $endOfUsageId]
                 ])
                 ->all();
 
