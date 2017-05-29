@@ -248,7 +248,7 @@ CHANGE COLUMN `institution_id` `institution_id` INT(11) NOT NULL COMMENT 'links 
 CHANGE COLUMN `academic_period_id` `academic_period_id` INT(11) NOT NULL COMMENT 'links to academic_periods.id' ,
 CHANGE COLUMN `room_type_id` `room_type_id` INT(11) NOT NULL COMMENT 'links to infrastructure_type_id.id' ,
 CHANGE COLUMN `infrastructure_condition_id` `infrastructure_condition_id` INT(11) NOT NULL COMMENT 'links to infrastructure_conditions.id',
-CHANGE COLUMN `previous_institution_room_id` `previous_room_id` INT(11) NOT NULL COMMENT 'links to institution_rooms.id';
+CHANGE COLUMN `previous_room_id` `previous_institution_room_id` INT(11) NOT NULL COMMENT 'links to institution_rooms.id';
 
 UPDATE `institution_rooms`
 SET `previous_institution_room_id` = NULL
