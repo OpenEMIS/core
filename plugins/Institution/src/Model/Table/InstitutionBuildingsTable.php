@@ -347,10 +347,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        if (!$isDeletable) {
-            $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
-            $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
+        $inUseId = $this->BuildingStatuses->getIdByCode('IN_USE');
+        $endOfUsageId = $this->BuildingStatuses->getIdByCode('END_OF_USAGE');
 
+        if (!$isDeletable) {
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->building_status_id == $inUseId) {
@@ -364,7 +364,10 @@ class InstitutionBuildingsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
-        $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+        $extra['excludedModels'] = [
+            $this->CustomFieldValues->alias(),
+            $this->InstitutionFloors->alias()
+        ];
 
         // check if the same building is copy from / copy to other academic period, then not allow user to delete
         $resultQuery = $this->find();
@@ -376,6 +379,7 @@ class InstitutionBuildingsTable extends ControllerActionTable
             ->contain(['AcademicPeriods'])
             ->where([
                 $this->aliasField('code') => $entity->code,
+                $this->aliasField('building_status_id') => $inUseId,
                 $this->aliasField('id <> ') => $entity->id
             ])
             ->group($this->aliasField('academic_period_id'))
@@ -392,6 +396,19 @@ class InstitutionBuildingsTable extends ControllerActionTable
                     'count' => $obj->count
                 ];
             }
+        } else {
+            $floorQuery = $this->InstitutionFloors
+                ->find()
+                ->where([
+                    $this->InstitutionFloors->aliasField('institution_building_id') => $entity->id,
+                    $this->InstitutionFloors->aliasField('floor_status_id') => $inUseId
+                ])
+                ->all();
+
+            $extra['associatedRecords'][] = [
+                'model' => $this->InstitutionFloors->alias(),
+                'count' => $floorQuery->count()
+            ];
         }
         // end
     }
