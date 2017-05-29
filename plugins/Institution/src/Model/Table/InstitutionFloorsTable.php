@@ -344,10 +344,10 @@ class InstitutionFloorsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        if (!$isDeletable) {
-            $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
-            $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
+        $inUseId = $this->FloorStatuses->getIdByCode('IN_USE');
+        $endOfUsageId = $this->FloorStatuses->getIdByCode('END_OF_USAGE');
 
+        if (!$isDeletable) {
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->floor_status_id == $inUseId) {
@@ -361,7 +361,10 @@ class InstitutionFloorsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
-        $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+        $extra['excludedModels'] = [
+            $this->CustomFieldValues->alias(),
+            $this->InstitutionRooms->alias()
+        ];
 
         // check if the same floor is copy from / copy to other academic period, then not allow user to delete
         $resultQuery = $this->find();
@@ -373,6 +376,7 @@ class InstitutionFloorsTable extends ControllerActionTable
             ->contain(['AcademicPeriods'])
             ->where([
                 $this->aliasField('code') => $entity->code,
+                $this->aliasField('floor_status_id') => $inUseId,
                 $this->aliasField('id <> ') => $entity->id
             ])
             ->group($this->aliasField('academic_period_id'))
@@ -380,8 +384,6 @@ class InstitutionFloorsTable extends ControllerActionTable
             ->all();
 
         if (!$results->isEmpty()) {
-            $extra['excludedModels'][] = $this->InstitutionRooms->alias();
-
             foreach ($results as $obj) {
                 $title = $this->alias() . ' - ' . $obj->academic_period_name;
                 $extra['associatedRecords'][] = [
@@ -389,6 +391,19 @@ class InstitutionFloorsTable extends ControllerActionTable
                     'count' => $obj->count
                 ];
             }
+        } else {
+            $roomQuery = $this->InstitutionRooms
+                ->find()
+                ->where([
+                    $this->InstitutionRooms->aliasField('institution_floor_id') => $entity->id,
+                    $this->InstitutionRooms->aliasField('room_status_id') => $inUseId
+                ])
+                ->all();
+
+            $extra['associatedRecords'][] = [
+                'model' => $this->InstitutionRooms->alias(),
+                'count' => $roomQuery->count()
+            ];
         }
         // end
     }
