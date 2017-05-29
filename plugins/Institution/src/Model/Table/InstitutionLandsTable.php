@@ -351,10 +351,10 @@ class InstitutionLandsTable extends ControllerActionTable
     {
         list($isEditable, $isDeletable) = array_values($this->checkIfCanEditOrDelete($entity));
 
-        if (!$isDeletable) {
-            $inUseId = $this->LandStatuses->getIdByCode('IN_USE');
-            $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
+        $inUseId = $this->LandStatuses->getIdByCode('IN_USE');
+        $endOfUsageId = $this->LandStatuses->getIdByCode('END_OF_USAGE');
 
+        if (!$isDeletable) {
             $session = $this->request->session();
             $sessionKey = $this->registryAlias() . '.warning';
             if ($entity->land_status_id == $inUseId) {
@@ -369,7 +369,10 @@ class InstitutionLandsTable extends ControllerActionTable
             return $this->controller->redirect($url);
         }
 
-        $extra['excludedModels'] = [$this->CustomFieldValues->alias()];
+        $extra['excludedModels'] = [
+            $this->CustomFieldValues->alias(),
+            $this->InstitutionBuildings->alias()
+        ];
 
         // check if the same land is copy from / copy to other academic period, then not allow user to delete
         $resultQuery = $this->find();
@@ -381,6 +384,7 @@ class InstitutionLandsTable extends ControllerActionTable
             ->contain(['AcademicPeriods'])
             ->where([
                 $this->aliasField('code') => $entity->code,
+                $this->aliasField('land_status_id') => $inUseId,
                 $this->aliasField('id <> ') => $entity->id
             ])
             ->group($this->aliasField('academic_period_id'))
@@ -388,8 +392,6 @@ class InstitutionLandsTable extends ControllerActionTable
             ->all();
 
         if (!$results->isEmpty()) {
-            $extra['excludedModels'][] = $this->InstitutionBuildings->alias();
-
             foreach ($results as $obj) {
                 $title = $this->alias() . ' - ' . $obj->academic_period_name;
                 $extra['associatedRecords'][] = [
@@ -397,6 +399,19 @@ class InstitutionLandsTable extends ControllerActionTable
                     'count' => $obj->count
                 ];
             }
+        } else {
+            $buildingQuery = $this->InstitutionBuildings
+                ->find()
+                ->where([
+                    $this->InstitutionBuildings->aliasField('institution_land_id') => $entity->id,
+                    $this->InstitutionBuildings->aliasField('building_status_id') => $inUseId
+                ])
+                ->all();
+
+            $extra['associatedRecords'][] = [
+                'model' => $this->InstitutionBuildings->alias(),
+                'count' => $buildingQuery->count()
+            ];
         }
         // end
     }
