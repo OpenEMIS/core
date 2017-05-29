@@ -208,7 +208,7 @@ class InfrastructureShell extends Shell
                                         'validate' => 'savingByAssociation'
                                     ];
                                     foreach ($floor['institution_rooms'] as &$room) {
-                                        $room['previous_room_id'] = $room['id'];
+                                        $room['previous_institution_room_id'] = $room['id'];
                                         $room['start_date'] = $startDate;
                                         $room['end_date'] = $endDate;
                                         $room['start_year'] = $startYear;
@@ -240,7 +240,7 @@ class InfrastructureShell extends Shell
                 switch ($containCount) {
                     case 3:
                         // uuid maybe have some unexpected behavior on any database server with replication turn on
-                        $connection->query("INSERT INTO `room_custom_field_values` (`id`, `text_value`, `number_value`, `decimal_value`, `textarea_value`, `date_value`, `time_value`, `file`, `infrastructure_custom_field_id`, `institution_room_id`, `created_user_id`, `created`) SELECT uuid(), `CustomFieldValues`.`text_value`, `CustomFieldValues`.`number_value`, `CustomFieldValues`.`decimal_value`, `CustomFieldValues`.`textarea_value`, `CustomFieldValues`.`date_value`, `CustomFieldValues`.`time_value`, `CustomFieldValues`.`file`, `CustomFieldValues`.`infrastructure_custom_field_id`, `CurrentRooms`.`id`, `CustomFieldValues`.`created_user_id`, NOW() FROM `room_custom_field_values` AS `CustomFieldValues` INNER JOIN `institution_rooms` AS `PreviousRooms` ON `CustomFieldValues`.`institution_room_id` = `PreviousRooms`.`id` AND `PreviousRooms`.`academic_period_id` = $copyFrom AND `PreviousRooms`.`room_status_id` = $inUseId INNER JOIN `institution_rooms` AS `CurrentRooms` ON `CurrentRooms`.`previous_room_id` = `PreviousRooms`.`id` AND `CurrentRooms`.`academic_period_id` = $copyTo AND `CurrentRooms`.`room_status_id` = $inUseId");
+                        $connection->query("INSERT INTO `room_custom_field_values` (`id`, `text_value`, `number_value`, `decimal_value`, `textarea_value`, `date_value`, `time_value`, `file`, `infrastructure_custom_field_id`, `institution_room_id`, `created_user_id`, `created`) SELECT uuid(), `CustomFieldValues`.`text_value`, `CustomFieldValues`.`number_value`, `CustomFieldValues`.`decimal_value`, `CustomFieldValues`.`textarea_value`, `CustomFieldValues`.`date_value`, `CustomFieldValues`.`time_value`, `CustomFieldValues`.`file`, `CustomFieldValues`.`infrastructure_custom_field_id`, `CurrentRooms`.`id`, `CustomFieldValues`.`created_user_id`, NOW() FROM `room_custom_field_values` AS `CustomFieldValues` INNER JOIN `institution_rooms` AS `PreviousRooms` ON `CustomFieldValues`.`institution_room_id` = `PreviousRooms`.`id` AND `PreviousRooms`.`academic_period_id` = $copyFrom AND `PreviousRooms`.`room_status_id` = $inUseId INNER JOIN `institution_rooms` AS `CurrentRooms` ON `CurrentRooms`.`previous_institution_room_id` = `PreviousRooms`.`id` AND `CurrentRooms`.`academic_period_id` = $copyTo AND `CurrentRooms`.`room_status_id` = $inUseId");
                         // no break
                     case 2:
                         // uuid maybe have some unexpected behavior on any database server with replication turn on
