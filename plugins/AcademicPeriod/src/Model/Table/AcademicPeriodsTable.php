@@ -200,7 +200,7 @@ class AcademicPeriodsTable extends AppTable
     {
         $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Infrastructure', 'Shift'];
+        $shells = ['Infrastructure'];
         if ($canCopy) {
             // only trigger shell to copy data if is not empty
             if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
