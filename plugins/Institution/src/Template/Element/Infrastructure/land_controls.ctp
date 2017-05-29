@@ -5,7 +5,8 @@
 				$url = [
 					'plugin' => $this->request->params['plugin'],
 				    'controller' => $this->request->params['controller'],
-				    'action' => $this->request->params['action']
+				    'action' => $this->request->params['action'],
+				    'institutionId' => $this->request->param('institutionId')
 				];
 				if (!empty($this->request->pass)) {
 					$url = array_merge($url, $this->request->pass);
@@ -34,13 +35,14 @@
 						'options' => $periodOptions,
 						'url' => $baseUrl,
 						'data-named-key' => 'period_id',
+						'data-named-group' => 'type, status',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
 						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
 						$dataNamedGroup[] = 'period_id';
 					}
-					echo $this->Form->input('academic_period_id', $inputOptions);
+					echo $this->Form->input('period_id', $inputOptions);
 				}
 
 				if (!empty($typeOptions)) {
@@ -50,13 +52,14 @@
 						'options' => $typeOptions,
 						'url' => $baseUrl,
 						'data-named-key' => 'type',
+						'data-named-group' => 'period_id, status',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
 						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
 						$dataNamedGroup[] = 'type';
 					}
-					echo $this->Form->input('room_type', $inputOptions);
+					echo $this->Form->input('type', $inputOptions);
 				}
 
 				if (!empty($statusOptions)) {
@@ -66,12 +69,13 @@
 						'options' => $statusOptions,
 						'url' => $baseUrl,
 						'data-named-key' => 'status',
+						'data-named-group' => 'type, period_id',
 						'escape' => false
 					];
 					if (!empty($dataNamedGroup)) {
 						$inputOptions['data-named-group'] = implode(',', $dataNamedGroup);
 					}
-					echo $this->Form->input('room_status', $inputOptions);
+					echo $this->Form->input('status', $inputOptions);
 				}
 			?>
 		</div>
