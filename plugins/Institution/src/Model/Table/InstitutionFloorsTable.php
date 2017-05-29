@@ -612,15 +612,6 @@ class InstitutionFloorsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldPreviousId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $attr['value'] = 0;
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldNewFloorType(Event $event, array $attr, $action, Request $request)
     {
         if ($action == 'edit') {
