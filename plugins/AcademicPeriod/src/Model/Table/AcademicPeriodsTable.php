@@ -196,11 +196,11 @@ class AcademicPeriodsTable extends AppTable
         return $buttons;
     }
 
-    public function afterSave(Event $event, Entity $entity, ArrayObject $options)
+    public function addAfterSave(Event $event, Entity $entity, ArrayObject $requestData)
     {
         $canCopy = $this->checkIfCanCopy($entity);
 
-        $shells = ['Infrastructure'];
+        $shells = ['Infrastructure', 'Shift'];
         if ($canCopy) {
             // only trigger shell to copy data if is not empty
             if ($entity->has('copy_data_from') && !empty($entity->copy_data_from)) {
@@ -228,6 +228,11 @@ class AcademicPeriodsTable extends AppTable
         if (!empty($listeners)) {
             $this->dispatchEventToModels('Model.AcademicPeriods.afterSave', [$entity], $broadcaster, $listeners);
         }
+    }
+
+    public function editAfterSave(Event $event, Entity $entity, ArrayObject $requestData, ArrayObject $options)
+    {
+        $this->addAfterSave($event, $entity, $requestData);
     }
 
     public function beforeAction(Event $event)
@@ -850,7 +855,7 @@ class AcademicPeriodsTable extends AppTable
     public function triggerCopyShell($shellName, $copyFrom, $copyTo)
     {
         $cmd = ROOT . DS . 'bin' . DS . 'cake '.$shellName.' '.$copyFrom.' '.$copyTo;
-        $logs = ROOT . DS . 'logs' . DS . 'copy.log & echo $!';
+        $logs = ROOT . DS . 'logs' . DS . $shellName.'_copy.log & echo $!';
         $shellCmd = $cmd . ' >> ' . $logs;
         $pid = exec($shellCmd);
         Log::write('debug', $shellCmd);
