@@ -40,7 +40,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('RoomTypes', ['className' => 'Infrastructure.RoomTypes']);
         $this->belongsTo('InfrastructureConditions', ['className' => 'FieldOption.InfrastructureConditions']);
-        $this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_room_id']);
+        $this->belongsTo('PreviousRooms', ['className' => 'Institution.InstitutionRooms', 'foreignKey' => 'previous_institution_room_id']);
 
         $this->belongsToMany('Subjects', [
             'className' => 'Institution.InstitutionSubjects',
@@ -261,7 +261,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('end_year', ['visible' => false]);
         $this->field('academic_period_id', ['visible' => false]);
         $this->field('infrastructure_condition_id', ['visible' => false]);
-        $this->field('previous_room_id', ['visible' => false]);
+        $this->field('previous_institution_room_id', ['visible' => false]);
 
         $extra['elements']['toolbarElements'] = $this->addBreadcrumbElement();
         $extra['elements']['control'] = $this->addControlFilterElement();
@@ -728,15 +728,6 @@ class InstitutionRoomsTable extends ControllerActionTable
         return $attr;
     }
 
-    public function onUpdateFieldPreviousRoomId(Event $event, array $attr, $action, Request $request)
-    {
-        if ($action == 'add') {
-            $attr['value'] = 0;
-        }
-
-        return $attr;
-    }
-
     public function onUpdateFieldSubjects(Event $event, array $attr, $action, Request $request)
     {
         // POCOR-3849 Subjects field will only be shown if the room belongs to a room type of Classroom classification
@@ -852,7 +843,7 @@ class InstitutionRoomsTable extends ControllerActionTable
     private function setupFields(Entity $entity)
     {
         $this->setFieldOrder([
-            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_room_id', 'new_room_type', 'new_start_date'
+            'change_type', 'academic_period_id', 'institution_id', 'code', 'name', 'room_type_id', 'room_status_id', 'start_date', 'start_year', 'end_date', 'end_year', 'infrastructure_condition_id', 'previous_institution_room_id', 'new_room_type', 'new_start_date'
         ]);
 
         $this->field('change_type');
@@ -865,8 +856,8 @@ class InstitutionRoomsTable extends ControllerActionTable
         $this->field('room_type_id', ['type' => 'select', 'entity' => $entity]);
         $this->field('start_date', ['entity' => $entity]);
         $this->field('end_date', ['entity' => $entity]);
+        $this->field('previous_institution_room_id', ['type' => 'hidden']);
         $this->field('infrastructure_condition_id', ['type' => 'select']);
-        $this->field('previous_room_id', ['type' => 'hidden']);
         $this->field('subjects', [
             'type' => 'chosenSelect',
             'fieldNameKey' => 'subjects',
@@ -972,7 +963,7 @@ class InstitutionRoomsTable extends ControllerActionTable
             $count = $this
                 ->find()
                 ->where([
-                    $this->aliasField('previous_room_id') => $entity->id
+                    $this->aliasField('previous_institution_room_id') => $entity->id
                 ])
                 ->count();
 
@@ -1028,7 +1019,7 @@ class InstitutionRoomsTable extends ControllerActionTable
         }
         $newRequestData['start_date'] = $newStartDateObj;
         $newRequestData['room_type_id'] = $newRoomTypeId;
-        $newRequestData['previous_room_id'] = $oldEntity->id;
+        $newRequestData['previous_institution_room_id'] = $oldEntity->id;
         $newEntity = $this->newEntity($newRequestData, ['validate' => false]);
         $newEntity = $this->save($newEntity, ['checkExisting' => false]);
         // End
@@ -1121,8 +1112,8 @@ class InstitutionRoomsTable extends ControllerActionTable
     {
         // if is new and room status of previous room usage is change in room type then copy all general custom fields
         if ($entity->isNew()) {
-            if ($entity->has('previous_room_id') && $entity->previous_room_id != 0) {
-                $copyFrom = $entity->previous_room_id;
+            if ($entity->has('previous_institution_room_id') && !is_null($entity->previous_institution_room_id)) {
+                $copyFrom = $entity->previous_institution_room_id;
                 $copyTo = $entity->id;
 
                 $previousEntity = $this->get($copyFrom);
