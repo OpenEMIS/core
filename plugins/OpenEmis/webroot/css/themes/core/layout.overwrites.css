@@ -955,3 +955,15 @@ a,
 }
 
 /* End of temp fix for POCOR-3961 */
+
+/* Fix for normal table sorting issue in POCOR-2547 */
+
+.rtl .table-sortable th > a.asc:after {
+    content: "\f0dd";
+}
+
+.rtl .table-sortable th > a.desc:after {
+    content: "\f0de";
+}
+
+/* End of fix for normal table sorting */
