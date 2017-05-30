@@ -29,8 +29,7 @@ class UserGroupsTable extends ControllerActionTable
             'foreignKey' => 'security_group_id',
             'targetForeignKey' => 'security_user_id',
             'through' => 'Security.SecurityGroupUsers',
-            'dependent' => true,
-            'saveStrategy' => 'append'
+            'dependent' => true
         ]);
 
         $this->belongsToMany('Areas', [
@@ -717,20 +716,6 @@ class UserGroupsTable extends ControllerActionTable
         $arrayOptions = $options->getArrayCopy();
         $arrayOptions = array_merge_recursive($arrayOptions, $newOptions);
         $options->exchangeArray($arrayOptions);
-    }
-
-    public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra)
-    {
-        // manually remove users from entity object when users are deleted from the screen
-        $SecurityGroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-        $userIds = array_column($data[$this->alias()]['users'], 'id');
-        $originalUsers = $entity->extractOriginal(['users'])['users'];
-        foreach ($originalUsers as $key => $user) {
-            if (!in_array($user['id'], $userIds)) {
-                $SecurityGroupUsers->delete($user['_joinData']);
-                unset($entity->users[$key]);
-            }
-        }
     }
 
     public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra)
