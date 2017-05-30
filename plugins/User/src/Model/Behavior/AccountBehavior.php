@@ -2,25 +2,31 @@
 namespace User\Model\Behavior;
 
 use ArrayObject;
+
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\ORM\Query;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Request;
 use Cake\Utility\Inflector;
 use Cake\Validation\Validator;
 
 class AccountBehavior extends Behavior {
 	private $isInstitution = false;
 	private $userRole = null;
+	private $targetField = 'password';
+	private $passwordAllowEmpty = false;
 
 	public function initialize(array $config) {
 		$this->_table->table('security_users');
 		$this->_table->entityClass('User.User');
 		parent::initialize($config);
-		// is_institution
+
 		$this->userRole = (array_key_exists('userRole', $config))? $config['userRole']: null;
-		$this->isInstitution = (array_key_exists('isInstitution', $config))? $config['isInstitution']: null;
+		$this->targetField = (array_key_exists('targetField', $config))? $config['targetField']: $this->targetField;
+		$this->passwordAllowEmpty = (array_key_exists('passwordAllowEmpty', $config))? $config['passwordAllowEmpty']: $this->passwordAllowEmpty;
+		$this->isInstitution = (array_key_exists('isInstitution', $config))? $config['isInstitution']: $this->isInstitution;
 
 		$this->_table->belongsToMany('Roles', [
 			'className' => 'Security.SecurityRoles',
@@ -30,44 +36,18 @@ class AccountBehavior extends Behavior {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
-	}
 
-	public function getAccountValidation(Validator $validator) {
-		$this->_table->setValidationCode('username.ruleUnique', 'User.Accounts');
-		$this->_table->setValidationCode('username.ruleAlphanumeric', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleNoSpaces', 'User.Accounts');
-		$this->_table->setValidationCode('password.ruleMinLength', 'User.Accounts');
-		$this->_table->setValidationCode('retype_password.ruleCompare', 'User.Accounts');
-		return $validator
-			->requirePresence('gender_id', 'create')
-			->add('username', [
-				'ruleUnique' => [
-					'rule' => 'validateUnique',
-					'provider' => 'table',
-				],
-				'ruleAlphanumeric' => [
-				    'rule' => 'alphanumeric',
-				]
-			])
-			->add('password' , [
-				'ruleNoSpaces' => [
-					'rule' => 'checkNoSpaces'
-				],
-				'ruleMinLength' => [
-					'rule' => ['minLength', 6],
-					'on' => 'update'
-				]
-			])
-			->add('retype_password' , [
-				'ruleCompare' => [
-					'rule' => ['comparePasswords', 'password'],
-					'on' => 'update'
-				]
-			])
-			;
+		$checkOwnPassword = ($this->userRole == 'Preferences');
+		$this->_table->addBehavior('Security.Password', [
+			'field' => $this->targetField,
+			'checkOwnPassword' => $checkOwnPassword,
+			'passwordAllowEmpty' => $this->passwordAllowEmpty,
+			'createRetype' => true,
+		]);
 	}
 
 	private function setupTabElements($entity) {
+		if ($this->userRole == 'Preferences') return; // has its own setupTabElements
 		$id = !is_null($this->_table->request->query('id')) ? $this->_table->request->query('id') : 0;
 
 		$options = [
@@ -77,18 +57,15 @@ class AccountBehavior extends Behavior {
 			'userId' => $entity->id
 		];
 
-		$tabElements = $this->_table->controller->getUserTabElements($options);
-
 		if ($this->_table->action != 'add') {
 			if ($this->isInstitution) {
 				// url of tabElements is build in Institution->getUserTabElements()
 			} else {
-				foreach ($tabElements as $key => $value) {
-					end($tabElements[$key]['url']);
-					$tabElements[$key]['url'][key($tabElements[$key]['url'])] = $entity->id;
-				}
+				$options['id'] = $entity->id;
 			}
 		}
+
+		$tabElements = $this->_table->controller->getUserTabElements($options);
 
 		$this->_table->controller->set('tabElements', $tabElements);
 		$this->_table->controller->set('selectedAction', $this->_table->alias());
@@ -106,7 +83,7 @@ class AccountBehavior extends Behavior {
 	}
 
 	public function editAfterAction(Event $event, Entity $entity)  {
-		$this->_table->ControllerAction->field('retype_password', ['type' => 'password', 'attr' => ['value' => '']]);
+		$this->_table->ControllerAction->field('username');
 		$this->_table->ControllerAction->setFieldOrder(['username', 'password', 'retype_password']);
 
 		$this->afterActionCode($event, $entity);
@@ -114,7 +91,7 @@ class AccountBehavior extends Behavior {
 
 	// called manually cos need to use $entity
 	private function afterActionCode(Event $event, Entity $entity) {
-		$fieldsNeeded = ['username','password', 'roles', 'retype_password'];
+		$fieldsNeeded = ['username','password', 'roles', 'new_password', 'retype_password'];
 		foreach ($this->_table->fields as $key => $value) {
 			if (!in_array($key, $fieldsNeeded)) {
 				$this->_table->fields[$key]['visible'] = false;
@@ -126,9 +103,14 @@ class AccountBehavior extends Behavior {
 		$this->_table->ControllerAction->field('last_login', ['visible' => ['view' => true, 'edit' => false]]);
 		$this->_table->ControllerAction->field('password', ['type' => 'password', 'visible' => ['view' => false, 'edit' => true], 'attr' => ['value' => '', 'autocomplete' => 'off']]);
 
+		$orderFields = [];
+		foreach ($fieldsNeeded as $key => $value) {
+			if (array_key_exists($value, $this->_table->fields)) {
+				$orderFields[] = $value;
+			}
+		}
 
-
-		$this->_table->ControllerAction->setFieldOrder(['username', 'password']);
+		$this->_table->ControllerAction->setFieldOrder($orderFields);
 
 		if (strtolower($this->_table->action) != 'index') {
 			if (!$this->isInstitution) {
@@ -142,13 +124,12 @@ class AccountBehavior extends Behavior {
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		// $events['ControllerAction.Model.afterAction'] = 'afterAction';
-		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		$events['ControllerAction.Model.view.afterAction'] = 'viewAfterAction';
 		$events['ControllerAction.Model.view.beforeQuery'] = 'viewBeforeQuery';
 		$events['ControllerAction.Model.edit.afterAction'] = 'editAfterAction';
 		$events['ControllerAction.Model.edit.beforePatch'] = 'editBeforePatch';
 		$events['Model.custom.onUpdateToolbarButtons'] = 'onUpdateToolbarButtons';
+		$events['ControllerAction.Model.onUpdateFieldUsername'] = 'onUpdateFieldUsername';
 		return $events;
 	}
 
@@ -161,6 +142,8 @@ class AccountBehavior extends Behavior {
 			}
 		}
 	}
+
+	
 
 	public function viewBeforeQuery(Event $event, Query $query) {
 		$options['auto_contain'] = false;
@@ -176,26 +159,39 @@ class AccountBehavior extends Behavior {
 		}
 	}
 
+	public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+		$isAdmin = $this->_table->AccessControl->isAdmin();
+		$loginUserId = $this->_table->Auth->user('id');
+		$id = $request->params['pass'][1];
+
+		if ($action == 'edit' && (($isAdmin && $loginUserId == $id) || !$isAdmin)) {
+			$attr['type'] = 'readonly';
+		}
+
+		return $attr;
+	}
+
 	public function onGetRoleTableElement(Event $event, $action, $entity, $attr, $options=[]) {
 		$tableHeaders = [__('Groups'), __('Roles')];
 		$tableCells = [];
-		$alias = $this->_table->alias();
 		$key = 'roles';
-
-		$Group = TableRegistry::get('Security.SecurityGroups');
-
 		if ($action == 'view') {
-			$associated = $entity->extractOriginal([$key]);
-			if (!empty($associated[$key])) {
-				foreach ($associated[$key] as $i => $obj) {
-					$groupId = $obj['_joinData']->security_group_id;
-					$groupEntity = $Group->get($groupId);
-
-					$rowData = [];
-					$rowData[] = $groupEntity->name;
-					$rowData[] = $obj->name;
-					$tableCells[] = $rowData;
-				}
+			$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
+			$groupUserRecords = $GroupUsers->find()
+				->matching('SecurityGroups')
+				->matching('SecurityRoles')
+				->where([$GroupUsers->aliasField('security_user_id') => $entity->id])
+				->group([
+					$GroupUsers->aliasField('security_group_id'), 
+					$GroupUsers->aliasField('security_role_id')
+				])
+				->select(['group_name' => 'SecurityGroups.name', 'role_name' => 'SecurityRoles.name'])
+				->all();
+			foreach ($groupUserRecords as $obj) {
+				$rowData = [];
+				$rowData[] = $obj->group_name;
+				$rowData[] = $obj->role_name;
+				$tableCells[] = $rowData;
 			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
@@ -203,4 +199,7 @@ class AccountBehavior extends Behavior {
 
 		return $event->subject()->renderElement('User.Accounts/' . $key, ['attr' => $attr]);
 	}
+
+	
+	
 }

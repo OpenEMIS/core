@@ -8,14 +8,6 @@
  * file that was distributed with this source code.
  */
 
-/**
- * @author     Márcio Almada <marcio3w@gmail.com>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 4.3.0
- * @covers     PHPUnit_Framework_Constraint_ExceptionMessageRegExp
- */
 class ExceptionMessageRegExpTest extends PHPUnit_Framework_TestCase
 {
     /**
@@ -49,7 +41,6 @@ class ExceptionMessageRegExpTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * @coversNothing
      * @expectedException \Exception variadic
      * @expectedExceptionMessageRegExp /^A variadic \w+ message/
      */

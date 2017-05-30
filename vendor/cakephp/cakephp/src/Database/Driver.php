@@ -14,15 +14,12 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\Query;
-use Cake\Database\QueryCompiler;
-use Cake\Database\ValueBinder;
 use InvalidArgumentException;
+use PDO;
 
 /**
  * Represents a database diver containing all specificities for
  * a database engine including its SQL dialect
- *
  */
 abstract class Driver
 {
@@ -54,7 +51,7 @@ abstract class Driver
      * Constructor
      *
      * @param array $config The configuration for the driver.
-     * @throws InvalidArgumentException
+     * @throws \InvalidArgumentException
      */
     public function __construct($config = [])
     {
@@ -168,6 +165,14 @@ abstract class Driver
     abstract public function enableForeignKeySQL();
 
     /**
+     * Returns whether the driver supports adding or dropping constraints
+     * to already created tables.
+     *
+     * @return bool true if driver supports dynamic constraints
+     */
+    abstract public function supportsDynamicConstraints();
+
+    /**
      * Returns whether this driver supports save points for nested transactions
      *
      * @return bool true if save points are supported, false otherwise
@@ -247,22 +252,33 @@ abstract class Driver
             return 'TRUE';
         }
         if (is_float($value)) {
-            return str_replace(',', '.', strval($value));
+            return str_replace(',', '.', (string)$value);
         }
         if ((is_int($value) || $value === '0') || (
             is_numeric($value) && strpos($value, ',') === false &&
-            $value[0] != '0' && strpos($value, 'e') === false)
+            $value[0] !== '0' && strpos($value, 'e') === false)
         ) {
             return $value;
         }
-        return $this->_connection->quote($value, \PDO::PARAM_STR);
+
+        return $this->_connection->quote($value, PDO::PARAM_STR);
+    }
+
+    /**
+     * Returns the schema name that's being used
+     *
+     * @return string
+     */
+    public function schema()
+    {
+        return $this->_config['schema'];
     }
 
     /**
      * Returns last id generated for a table or sequence in database
      *
-     * @param string $table table name or sequence to get last insert value from
-     * @param string $column the name of the column representing the primary key
+     * @param string|null $table table name or sequence to get last insert value from
+     * @param string|null $column the name of the column representing the primary key
      * @return string|int
      */
     public function lastInsertId($table = null, $column = null)
@@ -287,7 +303,7 @@ abstract class Driver
      * If called with a boolean argument, it will toggle the auto quoting setting
      * to the passed value
      *
-     * @param bool $enable whether to enable auto quoting
+     * @param bool|null $enable whether to enable auto quoting
      * @return bool
      */
     public function autoQuoting($enable = null)
@@ -295,6 +311,7 @@ abstract class Driver
         if ($enable === null) {
             return $this->_autoQuoting;
         }
+
         return $this->_autoQuoting = (bool)$enable;
     }
 
@@ -312,6 +329,7 @@ abstract class Driver
         $processor = $this->newCompiler();
         $translator = $this->queryTranslator($query->type());
         $query = $translator($query);
+
         return [$query, $processor->compile($query, $generator)];
     }
 
@@ -322,7 +340,7 @@ abstract class Driver
      */
     public function newCompiler()
     {
-        return new QueryCompiler;
+        return new QueryCompiler();
     }
 
     /**

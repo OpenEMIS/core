@@ -15,7 +15,6 @@
 namespace Cake\View\Widget;
 
 use Cake\View\Form\ContextInterface;
-use Cake\View\Widget\BasicWidget;
 
 /**
  * Input widget class for generating a textarea control.
@@ -49,6 +48,7 @@ class TextareaWidget extends BasicWidget
             'rows' => 5,
             'templateVars' => []
         ];
+
         return $this->_templates->format('textarea', [
             'name' => $data['name'],
             'value' => $data['escape'] ? h($data['val']) : $data['val'],

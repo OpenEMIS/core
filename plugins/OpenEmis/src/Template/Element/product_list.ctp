@@ -1,56 +1,7 @@
 <?php
-$products = [
-	'Dashboard' => [
-		'icon' => 'kd-openemis kd-dashboard', 
-		'name' => 'dashboard', 
-		'url' => ['?' => ['theme' => 'dashboard']]
-	],
-	'Survey' => [
-		'icon' => 'kd-openemis kd-survey', 
-		'name' => 'survey', 
-		'url' => ['?' => ['theme' => 'survey']]
-	],
-	'Logistics' => [
-		'icon' => 'kd-openemis kd-logistics',
-		'name' => 'logistics',
-		'url' => ['?' => ['theme' => 'logistics']]
-	],
-	'Integrator' => [
-		'icon' => 'kd-openemis kd-integrator',
-		'name' => 'integrator',
-		'url' => ['?' => ['theme' => 'integrator']]
-	],
-	'Insight' => [
-		'icon' => 'kd-openemis kd-insight',
-		'name' => 'insight', 
-		'url' => ['?' => ['theme' => 'insight']]
-	],
-	'School' => [
-		'icon' => 'kd-openemis kd-school',
-		'name' => 'school',
-		'url' => ['?' => ['theme' => 'school']]
-	],
-	'Core' => [
-		'icon' => 'kd-openemis kd-core',
-		'name' => 'core',
-		'url' => ['?' => ['theme' => 'core']]
-	],
-	'Monitoring' => [
-		'icon' => 'kd-openemis kd-monitoring',
-		'name' => 'monitoring',
-		'url' => ['?' => ['theme' => 'monitoring']]
-	],
-	'Visualizer' => [
-		'icon' => 'kd-openemis kd-visualizer',
-		'name' => 'visualizer',
-		'url' => ['?' => ['theme' => 'visualizer']]
-	],
-	'Purple' => [
-		'icon' => 'kd-openemis kd-purple',
-		'name' => 'purple',
-		'url' => ['?' => ['theme' => 'purple']]
-	]
-];
+if (!isset($products)) {
+	$products = [];
+}
 ?>
 
 <div class="btn-group">
@@ -66,13 +17,24 @@ $products = [
 		<div class="product-wrapper">
 		<?php foreach ($products as $name => $item) : ?>
 			<div class="product-menu col-xs-4">
-				<?php 
-				$link = '<i class="' . $item['icon'] . '"></i>';
-				$link .= '<span>' . $name . '</span>';
+				<?php
+
+				$link = '';
+
+				if (isset($item['file_name']) && !empty($item['file_name'])) {
+					$fileName = $item['file_name'];
+					$link .= $this->Html->image('product_list_logo/'.$fileName, [
+							'style' => 'height:35px; width: 35px'
+						]);
+				} else {
+					$link .= '<i class="' . $item['icon'] . '"></i>';
+				}
+
+				$link .= '<span>' . $item['name'] . '</span>';
 				echo $this->Html->link($link, $item['url'], array('escape' => false));
 				?>
-			</div>		
+			</div>
 		<?php endforeach ?>
 		</div>
-	</div>	
+	</div>
 </div>

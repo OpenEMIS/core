@@ -16,11 +16,13 @@
  */
 namespace Cake\Console;
 
+use SimpleXmlElement;
+
 /**
  * An object to represent a single subcommand used in the command line.
  * Created when you call ConsoleOptionParser::addSubcommand()
  *
- * @see ConsoleOptionParser::addSubcommand()
+ * @see \Cake\Console\ConsoleOptionParser::addSubcommand()
  */
 class ConsoleInputSubcommand
 {
@@ -42,7 +44,7 @@ class ConsoleInputSubcommand
     /**
      * The ConsoleOptionParser for this subcommand.
      *
-     * @var ConsoleOptionParser
+     * @var \Cake\Console\ConsoleOptionParser
      */
     protected $_parser;
 
@@ -93,6 +95,7 @@ class ConsoleInputSubcommand
         if (strlen($name) < $width) {
             $name = str_pad($name, $width, ' ');
         }
+
         return $name . $this->_help;
     }
 
@@ -106,6 +109,7 @@ class ConsoleInputSubcommand
         if ($this->_parser instanceof ConsoleOptionParser) {
             return $this->_parser;
         }
+
         return false;
     }
 
@@ -115,11 +119,12 @@ class ConsoleInputSubcommand
      * @param \SimpleXmlElement $parent The parent element.
      * @return \SimpleXmlElement The parent with this subcommand appended.
      */
-    public function xml(\SimpleXmlElement $parent)
+    public function xml(SimpleXmlElement $parent)
     {
         $command = $parent->addChild('command');
         $command->addAttribute('name', $this->_name);
         $command->addAttribute('help', $this->_help);
+
         return $parent;
     }
 }

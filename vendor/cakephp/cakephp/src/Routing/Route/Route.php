@@ -23,7 +23,6 @@ use Cake\Routing\Router;
  *
  * Not normally created as a standalone. Use Router::connect() to create
  * Routes for your application.
- *
  */
 class Route
 {
@@ -102,21 +101,20 @@ class Route
     {
         $this->template = $template;
         $this->defaults = (array)$defaults;
-        $this->options = $options;
         if (isset($this->defaults['[method]'])) {
             $this->defaults['_method'] = $this->defaults['[method]'];
             unset($this->defaults['[method]']);
         }
-        if (isset($this->options['_ext'])) {
-            $this->_extensions = (array)$this->options['_ext'];
-        }
+        $this->options = $options + ['_ext' => []];
+        $this->setExtensions((array)$this->options['_ext']);
     }
 
     /**
      * Get/Set the supported extensions for this route.
      *
+     * @deprecated 3.3.9 Use getExtensions/setExtensions instead.
      * @param null|string|array $extensions The extensions to set. Use null to get.
-     * @return array|void The extensions or null.
+     * @return array|null The extensions or null.
      */
     public function extensions($extensions = null)
     {
@@ -124,6 +122,29 @@ class Route
             return $this->_extensions;
         }
         $this->_extensions = (array)$extensions;
+    }
+
+    /**
+     * Set the supported extensions for this route.
+     *
+     * @param array $extensions The extensions to set.
+     * @return $this
+     */
+    public function setExtensions(array $extensions)
+    {
+        $this->_extensions = array_map('strtolower', $extensions);
+
+        return $this;
+    }
+
+    /**
+     * Get the supported extensions for this route.
+     *
+     * @return array
+     */
+    public function getExtensions()
+    {
+        return $this->_extensions;
     }
 
     /**
@@ -146,10 +167,11 @@ class Route
      */
     public function compile()
     {
-        if (!empty($this->compiledRoute)) {
+        if ($this->_compiledRoute) {
             return $this->_compiledRoute;
         }
         $this->_writeRoute();
+
         return $this->_compiledRoute;
     }
 
@@ -166,13 +188,14 @@ class Route
         if (empty($this->template) || ($this->template === '/')) {
             $this->_compiledRoute = '#^/*$#';
             $this->keys = [];
+
             return;
         }
         $route = $this->template;
         $names = $routeParams = [];
         $parsed = preg_quote($this->template, '#');
 
-        preg_match_all('#:([A-Za-z0-9_-]+[A-Z0-9a-z])#', $route, $namedElements);
+        preg_match_all('/:([a-z0-9-_]+(?<![-_]))/i', $route, $namedElements);
         foreach ($namedElements[1] as $i => $name) {
             $search = '\\' . $namedElements[0][$i];
             if (isset($this->options[$name])) {
@@ -199,9 +222,13 @@ class Route
             $parsed = preg_replace('#/\\\\\*$#', '(?:/(?P<_args_>.*))?', $parsed);
             $this->_greedy = true;
         }
+        $mode = '';
+        if (!empty($this->options['multibytePattern'])) {
+            $mode = 'u';
+        }
         krsort($routeParams);
         $parsed = str_replace(array_keys($routeParams), array_values($routeParams), $parsed);
-        $this->_compiledRoute = '#^' . $parsed . '[/]*$#';
+        $this->_compiledRoute = '#^' . $parsed . '[/]*$#' . $mode;
         $this->keys = $names;
 
         // Remove defaults that are also keys. They can cause match failures
@@ -247,6 +274,7 @@ class Route
             }
             $name .= $value . $glue;
         }
+
         return $this->_name = strtolower($name);
     }
 
@@ -257,12 +285,11 @@ class Route
      * false will be returned. String URLs are parsed if they match a routes regular expression.
      *
      * @param string $url The URL to attempt to parse.
-     * @return array|false Boolean false on failure, otherwise an array of parameters.
+     * @param string $method The HTTP method of the request being parsed.
+     * @return array|false An array of request parameters, or false on failure.
      */
-    public function parse($url)
+    public function parse($url, $method = '')
     {
-        $request = Router::getRequest(true) ?: Request::createFromGlobals();
-
         if (empty($this->_compiledRoute)) {
             $this->compile();
         }
@@ -273,7 +300,11 @@ class Route
         }
 
         if (isset($this->defaults['_method'])) {
-            $method = $request->env('REQUEST_METHOD');
+            if (empty($method)) {
+                // Deprecated reading the global state is deprecated and will be removed in 4.x
+                $request = Router::getRequest(true) ?: Request::createFromGlobals();
+                $method = $request->env('REQUEST_METHOD');
+            }
             if (!in_array($method, (array)$this->defaults['_method'], true)) {
                 return false;
             }
@@ -322,6 +353,9 @@ class Route
                 }
             }
         }
+
+        $route['_matchedRoute'] = $this->template;
+
         return $route;
     }
 
@@ -334,21 +368,15 @@ class Route
      */
     protected function _parseExtension($url)
     {
-        if (empty($this->_extensions)) {
-            return [$url, null];
-        }
-        preg_match('/\.([0-9a-z]*)$/', $url, $match);
-        if (empty($match[1])) {
-            return [$url, null];
-        }
-        $ext = strtolower($match[1]);
-        $len = strlen($match[1]);
-        foreach ($this->_extensions as $name) {
-            if (strtolower($name) === $ext) {
-                $url = substr($url, 0, ($len + 1) * -1);
-                return [$url, $ext];
+        if (count($this->_extensions) && strpos($url, '.') !== false) {
+            foreach ($this->_extensions as $ext) {
+                $len = strlen($ext) + 1;
+                if (substr($url, -$len) === '.' . $ext) {
+                    return [substr($url, 0, $len * -1), $ext];
+                }
             }
         }
+
         return [$url, null];
     }
 
@@ -373,6 +401,7 @@ class Route
             }
             $pass[] = rawurldecode($param);
         }
+
         return $pass;
     }
 
@@ -392,6 +421,7 @@ class Route
                 $url[$persistKey] = $params[$persistKey];
             }
         }
+
         return $url;
     }
 
@@ -406,7 +436,7 @@ class Route
      * @param array $context An array of the current request context.
      *   Contains information such as the current host, scheme, port, base
      *   directory and other url params.
-     * @return mixed Either a string url for the parameters if they match or false.
+     * @return string|false Either a string URL for the parameters if they match or false.
      */
     public function match(array $url, array $context = [])
     {
@@ -441,7 +471,9 @@ class Route
         if (!isset($hostOptions['_base']) && isset($context['_base'])) {
             $hostOptions['_base'] = $context['_base'];
         }
-        unset($url['_host'], $url['_scheme'], $url['_port'], $url['_base']);
+
+        $query = !empty($url['?']) ? (array)$url['?'] : [];
+        unset($url['_host'], $url['_scheme'], $url['_port'], $url['_base'], $url['?']);
 
         // Move extension into the hostOptions so its not part of
         // reverse matches.
@@ -484,8 +516,6 @@ class Route
         }
 
         $pass = [];
-        $query = [];
-
         foreach ($url as $key => $value) {
             // keys that exist in the defaults and have different values is a match failure.
             $defaultExists = array_key_exists($key, $defaults);
@@ -499,7 +529,8 @@ class Route
             $numeric = is_numeric($key);
             if ($numeric && isset($defaults[$key]) && $defaults[$key] == $value) {
                 continue;
-            } elseif ($numeric) {
+            }
+            if ($numeric) {
                 $pass[] = $value;
                 unset($url[$key]);
                 continue;
@@ -526,6 +557,7 @@ class Route
             }
         }
         $url += $hostOptions;
+
         return $this->_writeUrl($url, $pass, $query);
     }
 
@@ -549,6 +581,7 @@ class Route
         if (!in_array(strtoupper($url['_method']), (array)$this->defaults['_method'])) {
             return false;
         }
+
         return true;
     }
 
@@ -615,8 +648,9 @@ class Route
             $out .= '.' . $params['_ext'];
         }
         if (!empty($query)) {
-            $out .= '?' . http_build_query($query);
+            $out .= rtrim('?' . http_build_query($query), '?');
         }
+
         return $out;
     }
 
@@ -634,8 +668,10 @@ class Route
         $star = strpos($this->template, '*');
         if ($star !== false) {
             $path = rtrim(substr($this->template, 0, $star), '/');
+
             return $path === '' ? '/' : $path;
         }
+
         return $this->template;
     }
 
@@ -646,7 +682,7 @@ class Route
      * router caching.
      *
      * @param array $fields Key/Value of object attributes
-     * @return CakeRoute A new instance of the route
+     * @return \Cake\Routing\Route\Route A new instance of the route
      */
     public static function __set_state($fields)
     {
@@ -655,6 +691,7 @@ class Route
         foreach ($fields as $field => $value) {
             $obj->$field = $value;
         }
+
         return $obj;
     }
 }

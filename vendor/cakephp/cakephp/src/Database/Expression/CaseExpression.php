@@ -15,6 +15,7 @@
 namespace Cake\Database\Expression;
 
 use Cake\Database\ExpressionInterface;
+use Cake\Database\Type\ExpressionTypeCasterTrait;
 use Cake\Database\ValueBinder;
 
 /**
@@ -24,6 +25,8 @@ use Cake\Database\ValueBinder;
  */
 class CaseExpression implements ExpressionInterface
 {
+
+    use ExpressionTypeCasterTrait;
 
     /**
      * A list of strings or other expression objects that represent the conditions of
@@ -44,16 +47,16 @@ class CaseExpression implements ExpressionInterface
     /**
      * The `ELSE` value for the case statement. If null then no `ELSE` will be included.
      *
-     * @var string|ExpressionInterface|array|null
+     * @var string|\Cake\Database\ExpressionInterface|array|null
      */
     protected $_elseValue = null;
 
     /**
      * Constructs the case expression
      *
-     * @param array|ExpressionInterface $conditions The conditions to test. Must be a ExpressionInterface
+     * @param array|\Cake\Database\ExpressionInterface $conditions The conditions to test. Must be a ExpressionInterface
      * instance, or an array of ExpressionInterface instances.
-     * @param array|ExpressionInterface $values associative array of values to be associated with the conditions
+     * @param array|\Cake\Database\ExpressionInterface $values associative array of values to be associated with the conditions
      * passed in $conditions. If there are more $values than $conditions, the last $value is used as the `ELSE` value
      * @param array $types associative array of types to be associated with the values
      * passed in $values
@@ -76,8 +79,8 @@ class CaseExpression implements ExpressionInterface
      * Conditions must be a one dimensional array or a QueryExpression.
      * The trueValues must be a similar structure, but may contain a string value.
      *
-     * @param array|ExpressionInterface $conditions Must be a ExpressionInterface instance, or an array of ExpressionInterface instances.
-     * @param array|ExpressionInterface $values associative array of values of each condition
+     * @param array|\Cake\Database\ExpressionInterface $conditions Must be a ExpressionInterface instance, or an array of ExpressionInterface instances.
+     * @param array|\Cake\Database\ExpressionInterface $values associative array of values of each condition
      * @param array $types associative array of types to be associated with the values
      *
      * @return $this
@@ -103,14 +106,17 @@ class CaseExpression implements ExpressionInterface
      * Iterates over the passed in conditions and ensures that there is a matching true value for each.
      * If no matching true value, then it is defaulted to '1'.
      *
-     * @param array|ExpressionInterface $conditions Must be a ExpressionInterface instance, or an array of ExpressionInterface instances.
-     * @param array|ExpressionInterface $values associative array of values of each condition
+     * @param array|\Cake\Database\ExpressionInterface $conditions Must be a ExpressionInterface instance, or an array of ExpressionInterface instances.
+     * @param array|\Cake\Database\ExpressionInterface $values associative array of values of each condition
      * @param array $types associative array of types to be associated with the values
      *
      * @return void
      */
     protected function _addExpressions($conditions, $values, $types)
     {
+        $rawValues = array_values($values);
+        $keyValues = array_keys($values);
+
         foreach ($conditions as $k => $c) {
             $numericKey = is_numeric($k);
 
@@ -121,20 +127,33 @@ class CaseExpression implements ExpressionInterface
             if (!$c instanceof ExpressionInterface) {
                 continue;
             }
-            array_push($this->_conditions, $c);
 
-            $value = !empty($values[$k]) ? $values[$k] : 1;
+            array_push($this->_conditions, $c);
+            $value = isset($rawValues[$k]) ? $rawValues[$k] : 1;
 
             if ($value === 'literal') {
-                $value = $k;
+                $value = $keyValues[$k];
                 array_push($this->_values, $value);
                 continue;
-            } elseif ($value instanceof ExpressionInterface) {
+            }
+
+            if ($value === 'identifier') {
+                $value = new IdentifierExpression($keyValues[$k]);
                 array_push($this->_values, $value);
                 continue;
             }
 
             $type = isset($types[$k]) ? $types[$k] : null;
+
+            if ($type !== null && !$value instanceof ExpressionInterface) {
+                $value = $this->_castToExpression($value, $type);
+            }
+
+            if ($value instanceof ExpressionInterface) {
+                array_push($this->_values, $value);
+                continue;
+            }
+
             array_push($this->_values, ['value' => $value, 'type' => $type]);
         }
     }
@@ -143,7 +162,7 @@ class CaseExpression implements ExpressionInterface
      * Sets the default value
      *
      * @param \Cake\Database\ExpressionInterface|string|array|null $value Value to set
-     * @param string $type Type of value
+     * @param string|null $type Type of value
      *
      * @return void
      */
@@ -152,7 +171,13 @@ class CaseExpression implements ExpressionInterface
         if (is_array($value)) {
             end($value);
             $value = key($value);
-        } elseif ($value !== null && !$value instanceof ExpressionInterface) {
+        }
+
+        if ($value !== null && !$value instanceof ExpressionInterface) {
+            $value = $this->_castToExpression($value, $type);
+        }
+
+        if (!$value instanceof ExpressionInterface) {
             $value = ['value' => $value, 'type' => $type];
         }
 
@@ -163,7 +188,7 @@ class CaseExpression implements ExpressionInterface
      * Compiles the relevant parts into sql
      *
      * @param array|string|\Cake\Database\ExpressionInterface $part The part to compile
-     * @param ValueBinder $generator Sql generator
+     * @param \Cake\Database\ValueBinder $generator Sql generator
      *
      * @return string
      */

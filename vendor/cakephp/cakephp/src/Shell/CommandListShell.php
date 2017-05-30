@@ -16,12 +16,13 @@ namespace Cake\Shell;
 
 use Cake\Console\ConsoleOutput;
 use Cake\Console\Shell;
+use Cake\Core\Configure;
 use Cake\Core\Plugin;
 use Cake\Utility\Inflector;
+use SimpleXmlElement;
 
 /**
  * Shows a list of commands available from the console.
- *
  */
 class CommandListShell extends Shell
 {
@@ -40,7 +41,7 @@ class CommandListShell extends Shell
      */
     public function startup()
     {
-        if (empty($this->params['xml'])) {
+        if (!$this->param('xml') && !$this->param('version')) {
             parent::startup();
         }
     }
@@ -52,22 +53,28 @@ class CommandListShell extends Shell
      */
     public function main()
     {
-        if (empty($this->params['xml'])) {
+        if (!$this->param('xml') && !$this->param('version')) {
             $this->out("<info>Current Paths:</info>", 2);
             $this->out("* app:  " . APP_DIR);
-            $this->out("* root: " . rtrim(ROOT, DS));
-            $this->out("* core: " . rtrim(CORE_PATH, DS));
+            $this->out("* root: " . rtrim(ROOT, DIRECTORY_SEPARATOR));
+            $this->out("* core: " . rtrim(CORE_PATH, DIRECTORY_SEPARATOR));
             $this->out("");
 
             $this->out("<info>Available Shells:</info>", 2);
         }
 
-        $shellList = $this->Command->getShellList();
-        if (empty($shellList)) {
+        if ($this->param('version')) {
+            $this->out(Configure::version());
+
             return;
         }
 
-        if (empty($this->params['xml'])) {
+        $shellList = $this->Command->getShellList();
+        if (!$shellList) {
+            return;
+        }
+
+        if (!$this->param('xml')) {
             $this->_asText($shellList);
         } else {
             $this->_asXml($shellList);
@@ -102,7 +109,7 @@ class CommandListShell extends Shell
     protected function _asXml($shellList)
     {
         $plugins = Plugin::loaded();
-        $shells = new \SimpleXmlElement('<shells></shells>');
+        $shells = new SimpleXmlElement('<shells></shells>');
         foreach ($shellList as $plugin => $commands) {
             foreach ($commands as $command) {
                 $callable = $command;
@@ -134,6 +141,9 @@ class CommandListShell extends Shell
             'Get the list of available shells for this CakePHP application.'
         )->addOption('xml', [
             'help' => 'Get the listing as XML.',
+            'boolean' => true
+        ])->addOption('version', [
+            'help' => 'Prints the currently installed version of CakePHP.',
             'boolean' => true
         ]);
 

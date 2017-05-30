@@ -22,7 +22,8 @@ class UndoGraduatedBehavior extends UndoBehavior {
 		return $this->getStudents($data);
 	}
 
-	public function processSaveGraduatedStudents(Event $event, Entity $entity, ArrayObject $data) {
+	public function processSaveGraduatedStudents(Event $event, Entity $entity, ArrayObject $data) 
+    {
 		$studentIds = [];
 
 		$institutionId = $entity->institution_id;
@@ -36,15 +37,24 @@ class UndoGraduatedBehavior extends UndoBehavior {
 				if ($studentId != 0) {
 					$studentIds[$studentId] = $studentId;
 
-					$this->deleteEnrolledStudents($studentId);
-					$where = [
-						'institution_id' => $institutionId,
-						'academic_period_id' => $selectedPeriod,
-						'education_grade_id' => $selectedGrade,
-						'student_status_id' => $selectedStatus,
-						'student_id' => $studentId
-					];
-					$this->updateStudentStatus('CURRENT', $where);
+					$prevInstitutionStudent = $this->deleteEnrolledStudents($studentId, $this->statuses['GRADUATED']);
+					$whereId = '';
+                    $whereConditions = '';
+
+                    if ($prevInstitutionStudent) {
+                        $whereId = [
+                            'id' => $prevInstitutionStudent->id
+                        ];
+                    } else {
+    					$whereConditions = [
+    						'institution_id' => $institutionId,
+    						'academic_period_id' => $selectedPeriod,
+    						'education_grade_id' => $selectedGrade,
+    						'student_status_id' => $selectedStatus,
+    						'student_id' => $studentId
+    					];
+                    }
+					$this->updateStudentStatus('GRADUATED', $whereId, $whereConditions);
 				}
 			}
 		}

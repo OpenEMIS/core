@@ -11,10 +11,12 @@
 
 namespace Symfony\Component\Config\Tests\Definition;
 
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\ArrayNode;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\ScalarNode;
 
-class ArrayNodeTest extends \PHPUnit_Framework_TestCase
+class ArrayNodeTest extends TestCase
 {
     /**
      * @expectedException \Symfony\Component\Config\Definition\Exception\InvalidTypeException
@@ -35,19 +37,35 @@ class ArrayNodeTest extends \PHPUnit_Framework_TestCase
         $node->normalize(array('foo' => 'bar'));
     }
 
-    /**
-     * Tests that no exception is thrown for an unrecognized child if the
-     * ignoreExtraKeys option is set to true.
-     *
-     * Related to testExceptionThrownOnUnrecognizedChild
-     */
-    public function testIgnoreExtraKeysNoException()
+    public function ignoreAndRemoveMatrixProvider()
     {
-        $node = new ArrayNode('roo');
-        $node->setIgnoreExtraKeys(true);
+        $unrecognizedOptionException = new InvalidConfigurationException('Unrecognized option "foo" under "root"');
 
-        $node->normalize(array('foo' => 'bar'));
-        $this->assertTrue(true, 'No exception was thrown when setIgnoreExtraKeys is true');
+        return array(
+            array(true, true, array(), 'no exception is thrown for an unrecognized child if the ignoreExtraKeys option is set to true'),
+            array(true, false, array('foo' => 'bar'), 'extra keys are not removed when ignoreExtraKeys second option is set to false'),
+            array(false, true, $unrecognizedOptionException),
+            array(false, false, $unrecognizedOptionException),
+        );
+    }
+
+    /**
+     * @dataProvider ignoreAndRemoveMatrixProvider
+     */
+    public function testIgnoreAndRemoveBehaviors($ignore, $remove, $expected, $message = '')
+    {
+        if ($expected instanceof \Exception) {
+            if (method_exists($this, 'expectException')) {
+                $this->expectException(get_class($expected));
+                $this->expectExceptionMessage($expected->getMessage());
+            } else {
+                $this->setExpectedException(get_class($expected), $expected->getMessage());
+            }
+        }
+        $node = new ArrayNode('root');
+        $node->setIgnoreExtraKeys($ignore, $remove);
+        $result = $node->normalize(array('foo' => 'bar'));
+        $this->assertSame($expected, $result, $message);
     }
 
     /**
@@ -73,6 +91,10 @@ class ArrayNodeTest extends \PHPUnit_Framework_TestCase
             array(
                 array('foo-bar_moo' => 'foo'),
                 array('foo-bar_moo' => 'foo'),
+            ),
+            array(
+                array('anything-with-dash-and-no-underscore' => 'first', 'no_dash' => 'second'),
+                array('anything_with_dash_and_no_underscore' => 'first', 'no_dash' => 'second'),
             ),
             array(
                 array('foo-bar' => null, 'foo_bar' => 'foo'),
@@ -156,5 +178,42 @@ class ArrayNodeTest extends \PHPUnit_Framework_TestCase
                 array('2' => 'two', '1' => 'one', '3' => 'three'),
             ),
         );
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage Child nodes must be named.
+     */
+    public function testAddChildEmptyName()
+    {
+        $node = new ArrayNode('root');
+
+        $childNode = new ArrayNode('');
+        $node->addChild($childNode);
+    }
+
+    /**
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage A child node named "foo" already exists.
+     */
+    public function testAddChildNameAlreadyExists()
+    {
+        $node = new ArrayNode('root');
+
+        $childNode = new ArrayNode('foo');
+        $node->addChild($childNode);
+
+        $childNodeWithSameName = new ArrayNode('foo');
+        $node->addChild($childNodeWithSameName);
+    }
+
+    /**
+     * @expectedException \RuntimeException
+     * @expectedExceptionMessage The node at path "foo" has no default value.
+     */
+    public function testGetDefaultValueWithoutDefaultValue()
+    {
+        $node = new ArrayNode('foo');
+        $node->getDefaultValue();
     }
 }

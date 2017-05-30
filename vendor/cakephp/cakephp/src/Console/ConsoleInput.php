@@ -16,7 +16,6 @@ namespace Cake\Console;
 
 /**
  * Object wrapper for interacting with stdin
- *
  */
 class ConsoleInput
 {
@@ -59,11 +58,13 @@ class ConsoleInput
     {
         if ($this->_canReadline) {
             $line = readline('');
-            if (!empty($line)) {
+            if (strlen($line) > 0) {
                 readline_add_history($line);
             }
+
             return $line;
         }
+
         return fgets($this->_input);
     }
 
@@ -77,6 +78,7 @@ class ConsoleInput
     {
         $readFds = [$this->_input];
         $readyFds = stream_select($readFds, $writeFds, $errorFds, $timeout);
+
         return ($readyFds > 0);
     }
 }

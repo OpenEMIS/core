@@ -1,10 +1,13 @@
+[![Total Downloads](https://img.shields.io/packagist/dt/cakephp/i18n.svg?style=flat-square)](https://packagist.org/packages/cakephp/i18n)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE.txt)
+
 # CakePHP Internationalization Library
 
 The I18n library provides a `I18n` service locator that can be used for setting
 the current locale, building translation bundles and translating messages.
 
 Additionally, it provides the `Time` and `Number` classes which can be used to
-ouput dates, currencies and any numbers in the right format for the specified locale.
+output dates, currencies and any numbers in the right format for the specified locale.
 
 ## Usage
 
@@ -19,6 +22,16 @@ use Cake\I18n\I18n;
 
 I18n::locale('en_US');
 ```
+
+### Setting path to folder containing po files.
+
+```php
+use Cake\Core\Configure;
+
+Configure::write('App.paths.locales', ['/path/with/trailing/slash/']);
+
+Please refer to the [CakePHP Manual](http://book.cakephp.org/3.0/en/core-libraries/internationalization-and-localization.html#language-files) for details
+about expected folder structure and file naming.
 
 ### Translating a Message
 

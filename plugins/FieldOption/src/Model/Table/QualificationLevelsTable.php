@@ -1,13 +1,19 @@
 <?php
 namespace FieldOption\Model\Table;
 
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 
-class QualificationLevelsTable extends AppTable {
-	public function initialize(array $config) {
-		$this->addBehavior('ControllerAction.FieldOption');
-		parent::initialize($config);
-		$this->hasMany('Qualifications', ['className' => 'Staff.Qualifications', 'foreignKey' => 'qualification_level_id']);
-	}
+class QualificationLevelsTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
+        $this->table('qualification_levels');
+        parent::initialize($config);
+        $this->hasMany('QualificationTitles', ['className' => 'FieldOption.QualificationTitles']);
+
+        $this->addBehavior('FieldOption.FieldOption');
+
+        $this->setDeleteStrategy('restrict');
+    }
 }

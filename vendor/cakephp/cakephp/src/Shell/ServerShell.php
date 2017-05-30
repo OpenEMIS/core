@@ -20,7 +20,6 @@ use Cake\Core\Configure;
 
 /**
  * built-in Server Shell
- *
  */
 class ServerShell extends Shell
 {
@@ -95,7 +94,7 @@ class ServerShell extends Shell
         }
 
         // For Windows
-        if (substr($this->_documentRoot, -1, 1) === DS) {
+        if (substr($this->_documentRoot, -1, 1) === DIRECTORY_SEPARATOR) {
             $this->_documentRoot = substr($this->_documentRoot, 0, strlen($this->_documentRoot) - 1);
         }
         if (preg_match("/^([a-z]:)[\\\]+(.+)$/i", $this->_documentRoot, $m)) {
@@ -153,7 +152,7 @@ class ServerShell extends Shell
 
         $parser->description([
             'PHP Built-in Server for CakePHP',
-            '<warning>[WARN] Don\'t use this at the production environment</warning>',
+            '<warning>[WARN] Don\'t use this in a production environment</warning>',
         ])->addOption('host', [
             'short' => 'H',
             'help' => 'ServerHost'

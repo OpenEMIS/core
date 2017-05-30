@@ -15,7 +15,6 @@
 namespace Cake\Database\Expression;
 
 use Cake\Database\ExpressionInterface;
-use Cake\Database\Expression\Comparison;
 use Cake\Database\ValueBinder;
 
 /**
@@ -30,8 +29,8 @@ class TupleComparison extends Comparison
     /**
      * Constructor
      *
-     * @param string $fields the fields to use to form a tuple
-     * @param array|ExpressionInterface $values the values to use to form a tuple
+     * @param string|array|\Cake\Database\ExpressionInterface $fields the fields to use to form a tuple
+     * @param array|\Cake\Database\ExpressionInterface $values the values to use to form a tuple
      * @param array $types the types names to use for casting each of the values, only
      * one type per position in the value array in needed
      * @param string $conjunction the operator used for comparing field and value
@@ -65,6 +64,7 @@ class TupleComparison extends Comparison
         $values = $this->_stringifyValues($generator);
 
         $field = implode(', ', $fields);
+
         return sprintf($template, $field, $this->_operator, $values);
     }
 
@@ -92,7 +92,7 @@ class TupleComparison extends Comparison
 
             $type = $this->_type;
             $multiType = is_array($type);
-            $isMulti = $this->isMulti($i, $type);
+            $isMulti = $this->isMulti();
             $type = $multiType ? $type : str_replace('[]', '', $type);
             $type = $type ?: null;
 
@@ -127,6 +127,7 @@ class TupleComparison extends Comparison
     {
         $placeholder = $generator->placeholder('tuple');
         $generator->bind($placeholder, $value, $type);
+
         return $placeholder;
     }
 
@@ -149,16 +150,17 @@ class TupleComparison extends Comparison
         if ($value instanceof ExpressionInterface) {
             $callable($value);
             $value->traverse($callable);
+
             return;
         }
 
-        foreach ($value as $i => $value) {
+        foreach ($value as $i => $val) {
             if ($this->isMulti()) {
-                foreach ($value as $v) {
+                foreach ($val as $v) {
                     $this->_traverseValue($v, $callable);
                 }
             } else {
-                $this->_traverseValue($value, $callable);
+                $this->_traverseValue($val, $callable);
             }
         }
     }

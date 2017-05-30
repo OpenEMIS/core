@@ -21,6 +21,14 @@ use Cake\TestSuite\Fixture\TestFixture;
  */
 class RequestsFixture extends TestFixture
 {
+    /**
+     * table property
+     *
+     * This is necessary to prevent userland inflections from causing issues.
+     *
+     * @var string
+     */
+    public $table = 'requests';
 
     /**
      * fields property
@@ -29,7 +37,7 @@ class RequestsFixture extends TestFixture
      */
     public $fields = [
         'id' => ['type' => 'uuid', 'null' => false],
-        'url' => ['type' => 'string', 'null' => false],
+        'url' => ['type' => 'text', 'null' => false],
         'content_type' => ['type' => 'string'],
         'status_code' => ['type' => 'integer'],
         'method' => ['type' => 'string'],
@@ -53,4 +61,17 @@ class RequestsFixture extends TestFixture
             'requested_at' => '2014-08-21 7:41:12'
         ]
     ];
+
+    /**
+     * Constructor
+     *
+     * @param string $connection The connection name to use.
+     */
+    public function __construct($connection = null)
+    {
+        if ($connection) {
+            $this->connection = $connection;
+        }
+        $this->init();
+    }
 }

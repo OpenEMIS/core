@@ -14,11 +14,11 @@
  */
 namespace Cake\Test\Fixture;
 
+use Cake\Database\Schema\Table;
 use Cake\TestSuite\Fixture\TestFixture;
 
 /**
- * Class SessionFixture
- *
+ * SessionFixture
  */
 class SessionsFixture extends TestFixture
 {
@@ -30,7 +30,7 @@ class SessionsFixture extends TestFixture
      */
     public $fields = [
         'id' => ['type' => 'string', 'length' => 128],
-        'data' => ['type' => 'binary', 'null' => true],
+        'data' => ['type' => 'binary', 'length' => Table::LENGTH_MEDIUM, 'null' => true],
         'expires' => ['type' => 'integer', 'length' => 11, 'null' => true],
         '_constraints' => ['primary' => ['type' => 'primary', 'columns' => ['id']]]
     ];

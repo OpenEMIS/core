@@ -49,6 +49,7 @@ trait SqlDialectTrait
         if (preg_match('/^[\w-]+\.[^ \*]*$/', $identifier)) {
 // string.string
             $items = explode('.', $identifier);
+
             return $this->_startQuote . implode($this->_endQuote . '.' . $this->_startQuote, $items) . $this->_endQuote;
         }
 
@@ -103,6 +104,7 @@ trait SqlDialectTrait
                     }
                 }
             });
+
             return $query;
         };
     }
@@ -122,8 +124,8 @@ trait SqlDialectTrait
     /**
      * Apply translation steps to select queries.
      *
-     * @param Query $query The query to translate
-     * @return Query The modified query
+     * @param \Cake\Database\Query $query The query to translate
+     * @return \Cake\Database\Query The modified query
      */
     protected function _selectQueryTranslator($query)
     {
@@ -134,8 +136,8 @@ trait SqlDialectTrait
      * Returns the passed query after rewriting the DISTINCT clause, so that drivers
      * that do not support the "ON" part can provide the actual way it should be done
      *
-     * @param Query $query The query to be transformed
-     * @return Query
+     * @param \Cake\Database\Query $query The query to be transformed
+     * @return \Cake\Database\Query
      */
     protected function _transformDistinct($query)
     {
@@ -143,6 +145,7 @@ trait SqlDialectTrait
             $query->group($query->clause('distinct'), true);
             $query->distinct(false);
         }
+
         return $query;
     }
 
@@ -155,8 +158,8 @@ trait SqlDialectTrait
      *
      * We are intentionally not supporting deletes with joins as they have even poorer support.
      *
-     * @param Query $query The query to translate
-     * @return Query The modified query
+     * @param \Cake\Database\Query $query The query to translate
+     * @return \Cake\Database\Query The modified query
      */
     protected function _deleteQueryTranslator($query)
     {
@@ -175,17 +178,58 @@ trait SqlDialectTrait
         if (!$hadAlias) {
             return $query;
         }
+
+        return $this->_removeAliasesFromConditions($query);
+    }
+
+    /**
+     * Apply translation steps to update queries.
+     *
+     * Chops out aliases on update query conditions as not all database dialects do support
+     * aliases in update queries.
+     *
+     * Just like for delete queries, joins are currently not supported for update queries.
+     *
+     * @param \Cake\Database\Query $query The query to translate
+     * @return \Cake\Database\Query The modified query
+     */
+    protected function _updateQueryTranslator($query)
+    {
+        return $this->_removeAliasesFromConditions($query);
+    }
+
+    /**
+     * Removes aliases from the `WHERE` clause of a query.
+     *
+     * @param \Cake\Database\Query $query The query to process.
+     * @return \Cake\Database\Query The modified query.
+     * @throws \RuntimeException In case the processed query contains any joins, as removing
+     *  aliases from the conditions can break references to the joined tables.
+     */
+    protected function _removeAliasesFromConditions($query)
+    {
+        if ($query->clause('join')) {
+            throw new \RuntimeException(
+                'Aliases are being removed from conditions for UPDATE/DELETE queries, ' .
+                'this can break references to joined tables.'
+            );
+        }
+
         $conditions = $query->clause('where');
         if ($conditions) {
             $conditions->traverse(function ($condition) {
                 if (!($condition instanceof Comparison)) {
                     return $condition;
                 }
+
                 $field = $condition->getField();
-                if (strpos($field, '.') !== false) {
-                    list(, $field) = explode('.', $field);
-                    $condition->setField($field);
+                if ($field instanceof ExpressionInterface || strpos($field, '.') === false) {
+                    return $condition;
                 }
+
+                list(, $field) = explode('.', $field);
+                $condition->setField($field);
+
                 return $condition;
             });
         }
@@ -194,21 +238,10 @@ trait SqlDialectTrait
     }
 
     /**
-     * Apply translation steps to update queries.
-     *
-     * @param Query $query The query to translate
-     * @return Query The modified query
-     */
-    protected function _updateQueryTranslator($query)
-    {
-        return $query;
-    }
-
-    /**
      * Apply translation steps to insert queries.
      *
-     * @param Query $query The query to translate
-     * @return Query The modified query
+     * @param \Cake\Database\Query $query The query to translate
+     * @return \Cake\Database\Query The modified query
      */
     protected function _insertQueryTranslator($query)
     {

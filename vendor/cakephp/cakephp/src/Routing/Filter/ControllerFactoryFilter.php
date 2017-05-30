@@ -14,8 +14,8 @@
  */
 namespace Cake\Routing\Filter;
 
-use Cake\Core\App;
 use Cake\Event\Event;
+use Cake\Http\ControllerFactory;
 use Cake\Routing\DispatcherFilter;
 
 /**
@@ -50,40 +50,16 @@ class ControllerFactoryFilter extends DispatcherFilter
     }
 
     /**
-     * Get controller to use, either plugin controller or application controller
+     * Gets controller to use, either plugin or application controller.
      *
      * @param \Cake\Network\Request $request Request object
      * @param \Cake\Network\Response $response Response for the controller.
-     * @return mixed name of controller if not loaded, or object if loaded
+     * @return \Cake\Controller\Controller
      */
     protected function _getController($request, $response)
     {
-        $pluginPath = $controller = null;
-        $namespace = 'Controller';
-        if (!empty($request->params['plugin'])) {
-            $pluginPath = $request->params['plugin'] . '.';
-        }
-        if (!empty($request->params['controller'])) {
-            $controller = $request->params['controller'];
-        }
-        if (!empty($request->params['prefix'])) {
-            $prefixes = array_map(
-                'Cake\Utility\Inflector::camelize',
-                explode('/', $request->params['prefix'])
-            );
-            $namespace .= '/' . implode('/', $prefixes);
-        }
-        $className = false;
-        if ($pluginPath . $controller) {
-            $className = App::classname($pluginPath . $controller, $namespace, 'Controller');
-        }
-        if (!$className) {
-            return false;
-        }
-        $reflection = new \ReflectionClass($className);
-        if ($reflection->isAbstract() || $reflection->isInterface()) {
-            return false;
-        }
-        return $reflection->newInstance($request, $response, $controller);
+        $factory = new ControllerFactory();
+
+        return $factory->create($request, $response);
     }
 }

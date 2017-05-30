@@ -11,28 +11,60 @@
 
 namespace Symfony\Component\Filesystem\Tests;
 
-class FilesystemTestCase extends \PHPUnit_Framework_TestCase
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
+
+class FilesystemTestCase extends TestCase
 {
     private $umask;
 
+    protected $longPathNamesWindows = array();
+
     /**
-     * @var string $workspace
+     * @var \Symfony\Component\Filesystem\Filesystem
+     */
+    protected $filesystem = null;
+
+    /**
+     * @var string
      */
     protected $workspace = null;
 
-    protected static $symlinkOnWindows = null;
+    /**
+     * @var null|bool Flag for hard links on Windows
+     */
+    private static $linkOnWindows = null;
+
+    /**
+     * @var null|bool Flag for symbolic links on Windows
+     */
+    private static $symlinkOnWindows = null;
 
     public static function setUpBeforeClass()
     {
         if ('\\' === DIRECTORY_SEPARATOR) {
-            static::$symlinkOnWindows = true;
+            self::$linkOnWindows = true;
+            $originFile = tempnam(sys_get_temp_dir(), 'li');
+            $targetFile = tempnam(sys_get_temp_dir(), 'li');
+            if (true !== @link($originFile, $targetFile)) {
+                $report = error_get_last();
+                if (is_array($report) && false !== strpos($report['message'], 'error code(1314)')) {
+                    self::$linkOnWindows = false;
+                }
+            } else {
+                @unlink($targetFile);
+            }
+
+            self::$symlinkOnWindows = true;
             $originDir = tempnam(sys_get_temp_dir(), 'sl');
             $targetDir = tempnam(sys_get_temp_dir(), 'sl');
             if (true !== @symlink($originDir, $targetDir)) {
                 $report = error_get_last();
                 if (is_array($report) && false !== strpos($report['message'], 'error code(1314)')) {
-                    static::$symlinkOnWindows = false;
+                    self::$symlinkOnWindows = false;
                 }
+            } else {
+                @unlink($targetDir);
             }
         }
     }
@@ -40,32 +72,23 @@ class FilesystemTestCase extends \PHPUnit_Framework_TestCase
     protected function setUp()
     {
         $this->umask = umask(0);
-        $this->workspace = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR).DIRECTORY_SEPARATOR.time().rand(0, 1000);
+        $this->filesystem = new Filesystem();
+        $this->workspace = sys_get_temp_dir().'/'.microtime(true).'.'.mt_rand();
         mkdir($this->workspace, 0777, true);
         $this->workspace = realpath($this->workspace);
     }
 
     protected function tearDown()
     {
-        $this->clean($this->workspace);
-        umask($this->umask);
-    }
-
-    /**
-     * @param string $file
-     */
-    protected function clean($file)
-    {
-        if (is_dir($file) && !is_link($file)) {
-            $dir = new \FilesystemIterator($file);
-            foreach ($dir as $childFile) {
-                $this->clean($childFile);
+        if (!empty($this->longPathNamesWindows)) {
+            foreach ($this->longPathNamesWindows as $path) {
+                exec('DEL '.$path);
             }
-
-            rmdir($file);
-        } else {
-            unlink($file);
+            $this->longPathNamesWindows = array();
         }
+
+        $this->filesystem->remove($this->workspace);
+        umask($this->umask);
     }
 
     /**
@@ -104,28 +127,40 @@ class FilesystemTestCase extends \PHPUnit_Framework_TestCase
         $this->markTestSkipped('Unable to retrieve file group name');
     }
 
-    protected function markAsSkippedIfSymlinkIsMissing()
+    protected function markAsSkippedIfLinkIsMissing()
     {
-        if (!function_exists('symlink')) {
-            $this->markTestSkipped('symlink is not supported');
+        if (!function_exists('link')) {
+            $this->markTestSkipped('link is not supported');
         }
 
-        if ('\\' === DIRECTORY_SEPARATOR && false === static::$symlinkOnWindows) {
-            $this->markTestSkipped('symlink requires "Create symbolic links" privilege on windows');
+        if ('\\' === DIRECTORY_SEPARATOR && false === self::$linkOnWindows) {
+            $this->markTestSkipped('link requires "Create hard links" privilege on windows');
+        }
+    }
+
+    protected function markAsSkippedIfSymlinkIsMissing($relative = false)
+    {
+        if ('\\' === DIRECTORY_SEPARATOR && false === self::$symlinkOnWindows) {
+            $this->markTestSkipped('symlink requires "Create symbolic links" privilege on Windows');
+        }
+
+        // https://bugs.php.net/bug.php?id=69473
+        if ($relative && '\\' === DIRECTORY_SEPARATOR && 1 === PHP_ZTS) {
+            $this->markTestSkipped('symlink does not support relative paths on thread safe Windows PHP versions');
         }
     }
 
     protected function markAsSkippedIfChmodIsMissing()
     {
         if ('\\' === DIRECTORY_SEPARATOR) {
-            $this->markTestSkipped('chmod is not supported on windows');
+            $this->markTestSkipped('chmod is not supported on Windows');
         }
     }
 
     protected function markAsSkippedIfPosixIsMissing()
     {
-        if ('\\' === DIRECTORY_SEPARATOR || !function_exists('posix_isatty')) {
-            $this->markTestSkipped('Posix is not supported');
+        if (!function_exists('posix_isatty')) {
+            $this->markTestSkipped('Function posix_isatty is required.');
         }
     }
 }

@@ -132,7 +132,7 @@ class RouteBuilder
      * Get or set default route class.
      *
      * @param string|null $routeClass Class name.
-     * @return string|void
+     * @return string|null
      */
     public function routeClass($routeClass = null)
     {
@@ -149,7 +149,7 @@ class RouteBuilder
      * extensions applied. However, setting extensions does not modify existing routes.
      *
      * @param null|string|array $extensions Either the extensions to use or null.
-     * @return array|void
+     * @return array|null
      */
     public function extensions($extensions = null)
     {
@@ -157,6 +157,18 @@ class RouteBuilder
             return $this->_extensions;
         }
         $this->_extensions = (array)$extensions;
+    }
+
+    /**
+     * Add additional extensions to what is already in current scope
+     *
+     * @param string|array $extensions One or more extensions to add
+     * @return void
+     */
+    public function addExtensions($extensions)
+    {
+        $extensions = array_merge($this->_extensions, (array)$extensions);
+        $this->_extensions = array_unique($extensions);
     }
 
     /**
@@ -170,6 +182,7 @@ class RouteBuilder
         if ($routeKey !== false) {
             return substr($this->_path, 0, $routeKey);
         }
+
         return $this->_path;
     }
 
@@ -181,6 +194,17 @@ class RouteBuilder
     public function params()
     {
         return $this->_params;
+    }
+
+    /**
+     * Checks if there is already a route with a given name.
+     *
+     * @param string $name Name.
+     * @return bool
+     */
+    public function nameExists($name)
+    {
+        return array_key_exists($name, $this->_collection->named());
     }
 
     /**
@@ -197,6 +221,7 @@ class RouteBuilder
         if ($value !== null) {
             $this->_namePrefix = $value;
         }
+
         return $this->_namePrefix;
     }
 
@@ -258,6 +283,14 @@ class RouteBuilder
      * By default the path segment will match the key name. You can use the 'path' key inside the resource
      * definition to customize the path name.
      *
+     * You can use the `inflect` option to change how path segments are generated:
+     *
+     * ```
+     * $routes->resources('PaymentTypes', ['inflect' => 'dasherize']);
+     * ```
+     *
+     * Will generate routes like `/payment-types` instead of `/payment_types`
+     *
      * ### Options:
      *
      * - 'id' - The regular expression fragment to use when matching IDs. By default, matches
@@ -267,6 +300,9 @@ class RouteBuilder
      * - 'actions' - Override the method names used for connecting actions.
      * - 'map' - Additional resource routes that should be connected. If you define 'only' and 'map',
      *   make sure that your mapped methods are also in the 'only' list.
+     * - 'prefix' - Define a routing prefix for the resource controller. If the current scope
+     *   defines a prefix, this prefix will be appended to it.
+     * - 'connectOptions' – Custom options for connecting the routes.
      *
      * @param string $name A controller name to connect resource routes for.
      * @param array|callable $options Options to use when generating REST routes, or a callback.
@@ -287,6 +323,7 @@ class RouteBuilder
             'only' => [],
             'actions' => [],
             'map' => [],
+            'prefix' => null,
         ];
 
         foreach ($options['map'] as $k => $mapped) {
@@ -299,12 +336,21 @@ class RouteBuilder
         }
 
         $connectOptions = $options['connectOptions'];
-        $urlName = Inflector::{$options['inflect']}($name);
+        $method = $options['inflect'];
+        $urlName = Inflector::$method($name);
         $resourceMap = array_merge(static::$_resourceMap, $options['map']);
 
         $only = (array)$options['only'];
         if (empty($only)) {
             $only = array_keys($resourceMap);
+        }
+
+        $prefix = '';
+        if ($options['prefix']) {
+            $prefix = $options['prefix'];
+        }
+        if (isset($this->_params['prefix']) && $prefix) {
+            $prefix = $this->_params['prefix'] . '/' . $prefix;
         }
 
         foreach ($resourceMap as $method => $params) {
@@ -323,6 +369,9 @@ class RouteBuilder
                 'action' => $action,
                 '_method' => $params['method'],
             ];
+            if ($prefix) {
+                $params['prefix'] = $prefix;
+            }
             $routeOptions = $connectOptions + [
                 'id' => $options['id'],
                 'pass' => ['id'],
@@ -332,7 +381,7 @@ class RouteBuilder
         }
 
         if (is_callable($callback)) {
-            $idName = Inflector::singularize($urlName) . '_id';
+            $idName = Inflector::singularize(str_replace('-', '_', $urlName)) . '_id';
             $path = '/' . $urlName . '/:' . $idName;
             $this->scope($path, [], $callback);
         }
@@ -388,6 +437,8 @@ class RouteBuilder
      *   included when generating new URLs. You can override persistent parameters
      *   by redefining them in a URL or remove them by setting the parameter to `false`.
      *   Ex. `'persist' => ['lang']`
+     * - `multibytePattern` Set to true to enable multibyte pattern support in route
+     *   parameter patterns.
      * - `_name` is used to define a specific name for routes. This can be used to optimize
      *   reverse routing lookups. If undefined a name will be generated for each
      *   connected route.
@@ -416,8 +467,8 @@ class RouteBuilder
      */
     public function connect($route, array $defaults = [], array $options = [])
     {
-        if (empty($options['action'])) {
-            $defaults += ['action' => 'index'];
+        if (!isset($options['action']) && !isset($defaults['action'])) {
+            $defaults['action'] = 'index';
         }
 
         if (empty($options['_ext'])) {
@@ -460,7 +511,7 @@ class RouteBuilder
             $route = $route === '/' ? $route : rtrim($route, '/');
 
             foreach ($this->_params as $param => $val) {
-                if (isset($defaults[$param]) && $defaults[$param] !== $val) {
+                if (isset($defaults[$param]) && $param !== 'prefix' && $defaults[$param] !== $val) {
                     $msg = 'You cannot define routes that conflict with the scope. ' .
                         'Scope had %s = %s, while route had %s = %s';
                     throw new BadMethodCallException(sprintf(
@@ -503,7 +554,7 @@ class RouteBuilder
      * redirect destination allows you to use other routes to define where an URL string should be redirected to.
      *
      * ```
-     * $routes-redirect('/posts/*', 'http://google.com', ['status' => 302]);
+     * $routes->redirect('/posts/*', 'http://google.com', ['status' => 302]);
      * ```
      *
      * Redirects /posts/* to http://google.com with a HTTP status of 302

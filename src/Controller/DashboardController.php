@@ -1,6 +1,7 @@
 <?php
 namespace App\Controller;
 
+use ArrayObject;
 use Cake\ORM\TableRegistry;
 use Cake\Event\Event;
 use Cake\ORM\Table;
@@ -16,16 +17,21 @@ class DashboardController extends AppController {
 		$this->ControllerAction->models = [
 			'TransferApprovals' 	=> ['className' => 'Institution.TransferApprovals', 'actions' => ['edit']],
 			'StudentAdmission' 	=> ['className' => 'Institution.StudentAdmission', 'actions' => ['edit']],
-			'StudentDropout' 	=> ['className' => 'Institution.StudentDropout', 'actions' => ['edit']],
+			'StudentWithdraw' 	=> ['className' => 'Institution.StudentWithdraw', 'actions' => ['edit']],
 		];
-		
-		$this->loadComponent('Workbench', [
-			'models' => [
-				'Institution.TransferApprovals',
-				'Institution.StudentAdmission',
-				'Institution.StudentDropout'
-			]
-		]);
+		$this->attachAngularModules();
+    }
+
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['Controller.SecurityAuthorize.isActionIgnored'] = 'isActionIgnored';
+        return $events;
+    }
+
+    public function isActionIgnored(Event $event, $action)
+    {
+        return true;
     }
 
     public function beforeFilter(Event $event) {
@@ -35,16 +41,27 @@ class DashboardController extends AppController {
 		$this->set('contentHeader', $header);
     }
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
     	$header = $model->getHeader($model->alias);
     	$this->set('contentHeader', $header);
     }
 
 	public function index() {
-		$workbenchData = $this->Workbench->getList();
-		$noticeData = TableRegistry::get('Notices')->find('all')->order(['Notices.created desc'])->toArray();
+		$this->set('ngController', 'DashboardCtrl as DashboardController');
+		$this->set('noBreadcrumb', true);
+	}
 
-		$this->set('workbenchData', $workbenchData);
-		$this->set('noticeData', $noticeData);
+	private function attachAngularModules() {
+		$action = $this->request->action;
+
+		switch ($action) {
+			case 'index':
+				$this->Angular->addModules([
+					'alert.svc',
+					'dashboard.ctrl',
+					'dashboard.svc'
+				]);
+				break;
+		}
 	}
 }

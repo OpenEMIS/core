@@ -15,7 +15,6 @@
 namespace Cake\View\Widget;
 
 use Cake\View\Form\ContextInterface;
-use Cake\View\Widget\WidgetInterface;
 
 /**
  * Basic input class.
@@ -90,6 +89,7 @@ class BasicWidget implements WidgetInterface
         if (!isset($data['name']) || $data['name'] === '') {
             return [];
         }
+
         return [$data['name']];
     }
 }

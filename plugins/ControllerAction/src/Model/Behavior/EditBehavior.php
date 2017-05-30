@@ -6,12 +6,12 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
+use Cake\Log\Log;
+
+use ControllerAction\Model\Traits\EventTrait;
 
 class EditBehavior extends Behavior {
-	public function initialize(array $config) {
-
-	}
+	use EventTrait;
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
@@ -23,28 +23,39 @@ class EditBehavior extends Behavior {
 		$model = $this->_table;
 		$request = $model->request;
 		$extra['config']['form'] = true;
+		$extra['patchEntity'] = true;
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 		if ($event->result instanceof Table) {
 			$model = $event->result;
 		}
-		
+
 		$event = $model->dispatchEvent('ControllerAction.Model.edit.beforeAction', [$extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 		if ($event->result instanceof Table) {
 			$model = $event->result;
 		}
 
-		$primaryKey = $model->primaryKey();
-		$idKey = $model->aliasField($primaryKey);
+		$ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
+		$sessionKey = $model->registryAlias() . '.primaryKey';
 
-		$id = $model->paramsPass(0);
+		if (empty($ids)) {
+			if ($model->Session->check($sessionKey)) {
+				$ids = $model->Session->read($sessionKey);
+			} else if (!empty($model->ControllerAction->getQueryString())) {
+				// Query string logic not implemented yet, will require to check if the query string contains the primary key
+				$primaryKey = $model->primaryKey();
+				$ids = $model->ControllerAction->getQueryString($primaryKey);
+			}
+		}
 
-		$entity = null;
+		$idKeys = $model->getIdKeys($model, $ids);
 
-		if ($model->exists([$idKey => $id])) {
-			$query = $model->find()->where([$idKey => $id]);
+		$entity = false;
+
+		if ($model->exists($idKeys)) {
+			$query = $model->find()->where($idKeys);
 
 			$event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
 			$event = $model->dispatchEvent('ControllerAction.Model.viewEdit.beforeQuery', [$query, $extra], $this);
@@ -59,7 +70,7 @@ class EditBehavior extends Behavior {
 		$event = $model->dispatchEvent('ControllerAction.Model.edit.afterQuery', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
 
-		if (!empty($entity)) {
+		if ($entity) {
 			if ($request->is(['get'])) {
 				$event = $model->dispatchEvent('ControllerAction.Model.edit.onInitialize', [$entity, $extra], $this);
 				if ($event->isStopped()) { return $event->result; }
@@ -73,13 +84,17 @@ class EditBehavior extends Behavior {
 				if ($submit == 'save') {
 					$event = $model->dispatchEvent('ControllerAction.Model.addEdit.beforePatch', $params, $this);
 					if ($event->isStopped()) { return $event->result; }
-					
+
 					$event = $model->dispatchEvent('ControllerAction.Model.edit.beforePatch', $params, $this);
 					if ($event->isStopped()) { return $event->result; }
-					
+
 					$patchOptionsArray = $patchOptions->getArrayCopy();
 					$request->data = $requestData->getArrayCopy();
-					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+					if ($extra['patchEntity']) {
+						$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
+						$event = $model->dispatchEvent('ControllerAction.Model.edit.afterPatch', $params, $this);
+						if ($event->isStopped()) { return $event->result; }
+					}
 
 					$process = function ($model, $entity) {
 						return $model->save($entity);
@@ -91,17 +106,18 @@ class EditBehavior extends Behavior {
 						$process = $event->result;
 					}
 
-					if ($process($model, $entity)) {
-						// event: onSaveSuccess
-						// $this->Alert->success('general.edit.success');
-						$event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);
-						if ($event->isStopped()) { return $event->result; }
+					$result = $process($model, $entity);
+
+					if (!$result) {
+						Log::write('debug', $entity->errors());
+					}
+
+					$event = $model->dispatchEvent('ControllerAction.Model.edit.afterSave', $params, $this);
+					if ($event->isStopped()) { return $event->result; }
+
+					if ($result) {
 						$mainEvent->stopPropagation();
 						return $model->controller->redirect($model->url('view'));
-					} else {
-						// event: onSaveFailed
-						// $this->log($entity->errors(), 'debug');
-						// $this->Alert->error('general.edit.failed');
 					}
 				} else {
 					$patchOptions['validate'] = false;
@@ -110,37 +126,33 @@ class EditBehavior extends Behavior {
 					// Event: addEditOnReload
 					$eventKey = 'ControllerAction.Model.addEdit.' . $methodKey;
 					$method = 'addEdit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
 
 					// Event: editOnReload
 					$eventKey = 'ControllerAction.Model.edit.' . $methodKey;
 					$method = 'edit' . ucfirst($methodKey);
-					$event = $this->dispatchEvent($this->model, $eventKey, $method, $params);
+					$event = $this->dispatchEvent($model, $eventKey, $method, $params);
 					if ($event->isStopped()) { return $event->result; }
-					
+
 					$patchOptionsArray = $patchOptions->getArrayCopy();
 					$request->data = $requestData->getArrayCopy();
 					$entity = $model->patchEntity($entity, $request->data, $patchOptionsArray);
 				}
 			}
-
 			$model->controller->set('data', $entity);
-		} else {
-			$mainEvent->stopPropagation();
-			return $model->controller->redirect($model->url('index', 'QUERY'));
 		}
 
 		$event = $model->dispatchEvent('ControllerAction.Model.addEdit.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
-		
+
 		$event = $model->dispatchEvent('ControllerAction.Model.edit.afterAction', [$entity, $extra], $this);
 		if ($event->isStopped()) { return $event->result; }
-		
+
+		if (!$entity) {
+			$mainEvent->stopPropagation();
+			return $model->controller->redirect($model->url('index', 'QUERY'));
+		}
 		return $entity;
-		//  else {
-		// 	$this->Alert->warning('general.notExists');
-		// 	return $this->controller->redirect($this->url('index'));
-		// }
 	}
 }

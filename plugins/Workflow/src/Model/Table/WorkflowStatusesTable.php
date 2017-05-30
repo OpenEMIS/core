@@ -26,8 +26,25 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
+	public function indexBeforeAction(Event $event) {
+		//Add controls filter to index page
+		$toolbarElements = [
+            ['name' => 'Workflow.WorkflowModels/controls', 'data' => [], 'options' => []]
+        ];
+		$this->controller->set('toolbarElements', $toolbarElements);
+		// End
+	}
+
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
+		$modelOptions = $this->WorkflowModels->find('list')->toArray();
+		$modelOptions = ['-1' => __('All Models')] + $modelOptions;
+		$selectedModel = $this->queryString('model', $modelOptions);
+		$this->controller->set(compact('modelOptions', 'selectedModel'));
+		
 		$query->contain($this->_contain);
+		if ($selectedModel != -1) {
+			$query->where([$this->aliasField('workflow_model_id') => $selectedModel]);
+		}
 	}
 
 	public function viewEditBeforeQuery(Event $event, Query $query) {
@@ -65,22 +82,24 @@ class WorkflowStatusesTable extends AppTable {
 			case 'view':
 				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name')];
 				$tableCells = [];
-				$workflowStatusId = $this->request->pass[1];
+				$workflowStatusId = $this->paramsDecode($this->request->pass[1])['id'];
 				$workflowSteps = $this->getWorkflowSteps($workflowStatusId);
-				$workflowStepOptions = $this->WorkflowSteps
-					->find()
-					->matching('Workflows')
-					->select([
-						'name' => $this->WorkflowSteps->aliasField('name'),
-						'group' => 'Workflows.name'
-					])
-					->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
-					->toArray();
-				foreach ($workflowStepOptions as $step) {
-					$rowData = [];
-					$rowData[] = $step['name'];
-					$rowData[] = $step['group'];
-					$tableCells[] = $rowData;
+				if (!empty($workflowSteps)) {
+					$workflowStepOptions = $this->WorkflowSteps
+						->find()
+						->matching('Workflows')
+						->select([
+							'name' => $this->WorkflowSteps->aliasField('name'),
+							'group' => 'Workflows.name'
+						])
+						->where([$this->WorkflowSteps->aliasField('id').' IN ' => array_keys($workflowSteps)])
+						->toArray();
+					foreach ($workflowStepOptions as $step) {
+						$rowData = [];
+						$rowData[] = $step['name'];
+						$rowData[] = $step['group'];
+						$tableCells[] = $rowData;
+					}
 				}
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;
@@ -89,15 +108,21 @@ class WorkflowStatusesTable extends AppTable {
 			case 'edit':
 				$tableHeaders = [__('Workflow Step Name'), __('Workflow Name'),''];
 				$form = $event->subject()->Form;
+				$form->unlockField('WorkflowStatuses.workflow_steps');
+				$form->unlockField('WorkflowStatuses.temporary');
 				$tableCells = [];
 				$arraySteps = [];
+
+				$selectedModel = $entity->workflow_model_id;
 				$workflowStepOptions = $this->WorkflowSteps
 					->find('list', [
 						'groupField' => 'group',
 						'keyField' => 'id',
 						'valueField' => 'name'
 					])
-					->matching('Workflows')
+					->matching('Workflows', function($q) use ($selectedModel) {
+						return $q->where(['Workflows.workflow_model_id' => $selectedModel]);
+					})
 					->select([
 						'id' => $this->WorkflowSteps->aliasField('id'), 
 						'name' => $this->WorkflowSteps->aliasField('name'),
@@ -107,7 +132,7 @@ class WorkflowStatusesTable extends AppTable {
 				
 				if ($this->request->is(['get'])) {
 					if(isset($this->request->pass[1])){
-						$modelId = $this->request->pass[1];
+						$modelId = $this->paramsDecode($this->request->pass[1])['id'];
 						$steps = $this->getSteps($modelId);
 						foreach($steps as $step) {
 							$stepInfo = $step['_matchingData']['WorkflowSteps'];
@@ -192,8 +217,16 @@ class WorkflowStatusesTable extends AppTable {
 					}
 					unset($workflowStepOptions[$stepId]);
 				}
-				$workflowStepOptions[-1] = "-- ".__('Add Workflow Step') ." --";
-				ksort($workflowStepOptions);
+				// recursive count and substract the first level
+				$stepsCount = count($workflowStepOptions, COUNT_RECURSIVE) - count($workflowStepOptions);
+				if ($stepsCount == 0) {
+					$workflowStepOptions = [
+						-1 => $this->Alert->getMessage($this->aliasField('noSteps'))
+					];
+				} else {
+					$workflowStepOptions[-1] = "-- ".__('Add Workflow Step') ." --";
+					ksort($workflowStepOptions);
+				}
 				$attr['options'] = $workflowStepOptions;
 				$attr['tableHeaders'] = $tableHeaders;
 				$attr['tableCells'] = $tableCells;
@@ -236,7 +269,8 @@ class WorkflowStatusesTable extends AppTable {
 		]);
 	}
 
-	public function addBeforeAction(Event $event) {
+	// public function addBeforeAction(Event $event) {
+	public function addAfterAction(Event $event, Entity $entity) {
 		$this->ControllerAction->field('workflow_model_id', ['type' => 'select']);
 		$this->ControllerAction->field('is_editable', ['value' => 1]);
 		$this->ControllerAction->field('is_removable', ['value' => 1]);
@@ -246,11 +280,13 @@ class WorkflowStatusesTable extends AppTable {
 	}
 
 	public function onUpdateFieldWorkflowModelId(Event $event, array $attr, $action, $request) {
-		if ($action == 'edit') {
+		if ($action == 'add') {
+			$attr['onChangeReload'] = 'changeModel';
+		} else if ($action == 'edit') {
 			$workflowModelId = $this->request->data[$this->alias()]['workflow_model_id'];
 			$attr['attr']['value'] = $this->WorkflowModels->get($workflowModelId)->name;
-			return $attr;
 		}
+		return $attr;
 	}
 
 	public function onUpdateFieldCode(Event $event, array $attr, $action, $request) {
@@ -273,6 +309,25 @@ class WorkflowStatusesTable extends AppTable {
 				$attr['value'] = $name;
 				$attr['type'] = 'readonly';
 				return $attr;
+			}
+		}
+	}
+
+	public function addEditOnChangeModel(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+		$request = $this->request;
+		unset($request->query['model']);
+
+		if ($request->is(['post', 'put'])) {
+			if (array_key_exists($this->alias(), $request->data)) {
+				if (array_key_exists('workflow_model_id', $request->data[$this->alias()])) {
+					$request->query['model'] = $request->data[$this->alias()]['workflow_model_id'];
+				}
+			}
+			// when add clear previously selected steps when change model
+			if (array_key_exists($this->alias(), $data)) {
+				if (array_key_exists('temporary', $data[$this->alias()])) {
+					$data[$this->alias()]['temporary'] = [];
+				}
 			}
 		}
 	}

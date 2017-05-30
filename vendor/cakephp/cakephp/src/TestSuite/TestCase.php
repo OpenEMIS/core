@@ -20,14 +20,16 @@ use Cake\Event\EventManager;
 use Cake\ORM\Exception\MissingTableClassException;
 use Cake\ORM\TableRegistry;
 use Cake\Routing\Router;
+use Cake\TestSuite\Constraint\EventFired;
+use Cake\TestSuite\Constraint\EventFiredWith;
 use Cake\Utility\Inflector;
 use Exception;
+use PHPUnit_Framework_TestCase;
 
 /**
  * Cake TestCase class
- *
  */
-abstract class TestCase extends \PHPUnit_Framework_TestCase
+abstract class TestCase extends PHPUnit_Framework_TestCase
 {
 
     /**
@@ -41,7 +43,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      * By default, all fixtures attached to this class will be truncated and reloaded after each test.
      * Set this to false to handle manually
      *
-     * @var array
+     * @var bool
      */
     public $autoFixtures = true;
 
@@ -81,6 +83,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         if ($shouldSkip) {
             $this->markTestSkipped($message);
         }
+
         return $shouldSkip;
     }
 
@@ -101,7 +104,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         if (class_exists('Cake\Routing\Router', false)) {
             Router::reload();
         }
- 
+
         EventManager::instance(new EventManager());
     }
 
@@ -117,12 +120,13 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             Configure::clear();
             Configure::write($this->_configure);
         }
+        TableRegistry::clear();
     }
 
     /**
      * Chooses which fixtures to load for a given test
      *
-     * Each parameter is a model name that corresponds to a fixture, i.e. 'Post', 'Author', etc.
+     * Each parameter is a model name that corresponds to a fixture, i.e. 'Posts', 'Authors', etc.
      *
      * @return void
      * @see \Cake\TestSuite\TestCase::$autoFixtures
@@ -137,6 +141,42 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         foreach ($args as $class) {
             $this->fixtureManager->loadSingle($class, null, $this->dropTables);
         }
+    }
+
+    /**
+     * Asserts that a global event was fired. You must track events in your event manager for this assertion to work
+     *
+     * @param string $name Event name
+     * @param EventManager|null $eventManager Event manager to check, defaults to global event manager
+     * @param string $message Assertion failure message
+     * @return void
+     */
+    public function assertEventFired($name, $eventManager = null, $message = '')
+    {
+        if (!$eventManager) {
+            $eventManager = EventManager::instance();
+        }
+        $this->assertThat($name, new EventFired($eventManager), $message);
+    }
+
+    /**
+     * Asserts an event was fired with data
+     *
+     * If a third argument is passed, that value is used to compare with the value in $dataKey
+     *
+     * @param string $name Event name
+     * @param string $dataKey Data key
+     * @param string $dataValue Data value
+     * @param EventManager|null $eventManager Event manager to check, defaults to global event manager
+     * @param string $message Assertion failure message
+     * @return void
+     */
+    public function assertEventFiredWith($name, $dataKey, $dataValue, $eventManager = null, $message = '')
+    {
+        if (!$eventManager) {
+            $eventManager = EventManager::instance();
+        }
+        $this->assertThat($name, new EventFiredWith($eventManager, $dataKey, $dataValue), $message);
     }
 
     /**
@@ -361,7 +401,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
                     }
                     $regex[] = [
                         sprintf('%sClose %s tag', $prefix[0], substr($tags, strlen($match[0]))),
-                        sprintf('%s<[\s]*\/[\s]*%s[\s]*>[\n\r]*', $prefix[1], substr($tags, strlen($match[0]))),
+                        sprintf('%s\s*<[\s]*\/[\s]*%s[\s]*>[\n\r]*', $prefix[1], substr($tags, strlen($match[0]))),
                         $i,
                     ];
                     continue;
@@ -370,7 +410,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
                     $tags = $matches[1];
                     $type = 'Regex matches';
                 } else {
-                    $tags = preg_quote($tags, '/');
+                    $tags = '\s*' . preg_quote($tags, '/');
                     $type = 'Text equals';
                 }
                 $regex[] = [
@@ -397,27 +437,27 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
                         $attrs[] = $matches[1];
                         $explanations[] = sprintf('Regex "%s" matches', $matches[1]);
                         continue;
-                    } else {
-                        $quotes = '["\']';
-                        if (is_numeric($attr)) {
-                            $attr = $val;
-                            $val = '.+?';
-                            $explanations[] = sprintf('Attribute "%s" present', $attr);
-                        } elseif (!empty($val) && preg_match('/^preg\:\/(.+)\/$/i', $val, $matches)) {
-                            $val = str_replace(
-                                ['.*', '.+'],
-                                ['.*?', '.+?'],
-                                $matches[1]
-                            );
-                            $quotes = $val !== $matches[1] ? '["\']' : '["\']?';
-
-                            $explanations[] = sprintf('Attribute "%s" matches "%s"', $attr, $val);
-                        } else {
-                            $explanations[] = sprintf('Attribute "%s" == "%s"', $attr, $val);
-                            $val = preg_quote($val, '/');
-                        }
-                        $attrs[] = '[\s]+' . preg_quote($attr, '/') . '=' . $quotes . $val . $quotes;
                     }
+
+                    $quotes = '["\']';
+                    if (is_numeric($attr)) {
+                        $attr = $val;
+                        $val = '.+?';
+                        $explanations[] = sprintf('Attribute "%s" present', $attr);
+                    } elseif (!empty($val) && preg_match('/^preg\:\/(.+)\/$/i', $val, $matches)) {
+                        $val = str_replace(
+                            ['.*', '.+'],
+                            ['.*?', '.+?'],
+                            $matches[1]
+                        );
+                        $quotes = $val !== $matches[1] ? '["\']' : '["\']?';
+
+                        $explanations[] = sprintf('Attribute "%s" matches "%s"', $attr, $val);
+                    } else {
+                        $explanations[] = sprintf('Attribute "%s" == "%s"', $attr, $val);
+                        $val = preg_quote($val, '/');
+                    }
+                    $attrs[] = '[\s]+' . preg_quote($attr, '/') . '=' . $quotes . $val . $quotes;
                     $i++;
                 }
                 if ($attrs) {
@@ -436,7 +476,11 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         foreach ($regex as $i => $assertion) {
             $matches = false;
             if (isset($assertion['attrs'])) {
-                $string = $this->_assertAttributes($assertion, $string);
+                $string = $this->_assertAttributes($assertion, $string, $fullDebug, $regex);
+                if ($fullDebug === true && $string === false) {
+                    debug($string, true);
+                    debug($regex, true);
+                }
                 continue;
             }
 
@@ -450,16 +494,18 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
                 }
             }
             if (!$matches) {
-                $this->assertRegExp($expression, $string, sprintf('Item #%d / regex #%d failed: %s', $itemNum, $i, $description));
-                if ($fullDebug) {
-                    debug($string, true);
-                    debug($regex, true);
+                if ($fullDebug === true) {
+                    debug($string);
+                    debug($regex);
                 }
+                $this->assertRegExp($expression, $string, sprintf('Item #%d / regex #%d failed: %s', $itemNum, $i, $description));
+
                 return false;
             }
         }
 
         $this->assertTrue(true, '%s');
+
         return true;
     }
 
@@ -468,13 +514,14 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      *
      * @param array $assertions Assertions to run.
      * @param string $string The HTML string to check.
+     * @param bool $fullDebug Whether or not more verbose output should be used.
+     * @param array|string $regex Full regexp from `assertHtml`
      * @return string
      */
-    protected function _assertAttributes($assertions, $string)
+    protected function _assertAttributes($assertions, $string, $fullDebug = false, $regex = '')
     {
         $asserts = $assertions['attrs'];
         $explains = $assertions['explains'];
-        $len = count($asserts);
         do {
             $matches = false;
             foreach ($asserts as $j => $assert) {
@@ -487,10 +534,15 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
                 }
             }
             if ($matches === false) {
+                if ($fullDebug === true) {
+                    debug($string);
+                    debug($regex);
+                }
                 $this->assertTrue(false, 'Attribute did not match. Was expecting ' . $explains[$j]);
             }
             $len = count($asserts);
         } while ($len > 0);
+
         return $string;
     }
 
@@ -498,11 +550,11 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      * Normalize a path for comparison.
      *
      * @param string $path Path separated by "/" slash.
-     * @return string Normalized path separated by DS.
+     * @return string Normalized path separated by DIRECTORY_SEPARATOR.
      */
     protected function _normalizePath($path)
     {
-        return str_replace('/', DS, $path);
+        return str_replace('/', DIRECTORY_SEPARATOR, $path);
     }
 
 // @codingStandardsIgnoreStart
@@ -549,8 +601,8 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      */
     protected static function assertPathEquals($expected, $result, $message = '')
     {
-        $expected = str_replace(DS, '/', $expected);
-        $result = str_replace(DS, '/', $result);
+        $expected = str_replace(DIRECTORY_SEPARATOR, '/', $expected);
+        $result = str_replace(DIRECTORY_SEPARATOR, '/', $result);
         static::assertEquals($expected, $result, $message);
     }
 
@@ -566,6 +618,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         if (!$condition) {
             $this->markTestSkipped($message);
         }
+
         return $condition;
     }
 
@@ -578,7 +631,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
      * @param mixed $methods The list of methods to mock
      * @param array $options The config data for the mock's constructor.
      * @throws \Cake\ORM\Exception\MissingTableClassException
-     * @return Model
+     * @return \Cake\ORM\Table|\PHPUnit_Framework_MockObject_MockObject
      */
     public function getMockForModel($alias, array $methods = [], array $options = [])
     {
@@ -598,7 +651,10 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
         $options += ['alias' => $baseClass, 'connection' => $connection];
         $options += TableRegistry::config($alias);
 
-        $mock = $this->getMock($options['className'], $methods, [$options]);
+        $mock = $this->getMockBuilder($options['className'])
+            ->setMethods($methods)
+            ->setConstructorArgs([$options])
+            ->getMock();
 
         if (empty($options['entityClass']) && $mock->entityClass() === '\Cake\ORM\Entity') {
             $parts = explode('\\', $options['className']);
@@ -609,7 +665,13 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             }
         }
 
+        if (stripos($mock->table(), 'mock') === 0) {
+            $mock->table(Inflector::tableize($baseClass));
+        }
+
         TableRegistry::set($baseClass, $mock);
+        TableRegistry::set($alias, $mock);
+
         return $mock;
     }
 }

@@ -78,11 +78,17 @@ class CacheSession implements SessionHandlerInterface
      * Method used to read from a cache session.
      *
      * @param string $id The key of the value to read
-     * @return mixed The value of the key or false if it does not exist
+     * @return string The value of the key or empty if it does not exist
      */
     public function read($id)
     {
-        return Cache::read($id, $this->_options['config']);
+        $value = Cache::read($id, $this->_options['config']);
+
+        if (empty($value)) {
+            return '';
+        }
+
+        return $value;
     }
 
     /**
@@ -94,29 +100,36 @@ class CacheSession implements SessionHandlerInterface
      */
     public function write($id, $data)
     {
-        return Cache::write($id, $data, $this->_options['config']);
+        if (!$id) {
+            return false;
+        }
+
+        return (bool)Cache::write($id, $data, $this->_options['config']);
     }
 
     /**
      * Method called on the destruction of a cache session.
      *
      * @param int $id ID that uniquely identifies session in cache
-     * @return bool True for successful delete, false otherwise.
+     * @return bool Always true.
      */
     public function destroy($id)
     {
-        return Cache::delete($id, $this->_options['config']);
+        Cache::delete($id, $this->_options['config']);
+
+        return true;
     }
 
     /**
      * Helper function called on gc for cache sessions.
      *
      * @param string $maxlifetime Sessions that have not updated for the last maxlifetime seconds will be removed.
-     * @return bool True (irrespective of whether or not the garbage is being successfully collected)
+     * @return bool Always true.
      */
     public function gc($maxlifetime)
     {
         Cache::gc($this->_options['config'], time() - $maxlifetime);
+
         return true;
     }
 }

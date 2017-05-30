@@ -1,25 +1,16 @@
 <?php
 namespace Education\Controller;
 
+use ArrayObject;
 use App\Controller\AppController;
 use Cake\Event\Event;
+use Cake\ORM\Table;
 
 class EducationsController extends AppController
 {
-	public function initialize() {
+	public function initialize()
+	{
 		parent::initialize();
-
-		$this->ControllerAction->models = [
-			'Systems' => ['className' => 'Education.EducationSystems', 'options' => ['deleteStrategy' => 'transfer']],
-			'Levels' => ['className' => 'Education.EducationLevels', 'options' => ['deleteStrategy' => 'transfer']],
-			'Cycles' => ['className' => 'Education.EducationCycles', 'options' => ['deleteStrategy' => 'transfer']],
-			'Programmes' => ['className' => 'Education.EducationProgrammes', 'options' => ['deleteStrategy' => 'transfer']],
-			'Grades' => ['className' => 'Education.EducationGrades', 'options' => ['deleteStrategy' => 'transfer']],
-			'Subjects' => ['className' => 'Education.EducationSubjects'],
-			'Certifications' => ['className' => 'Education.EducationCertifications'],
-			'FieldOfStudies' => ['className' => 'Education.EducationFieldOfStudies'],
-			'ProgrammeOrientations' => ['className' => 'Education.EducationProgrammeOrientations']
-		];
 		$this->loadComponent('Paginator');
     }
 
@@ -53,6 +44,10 @@ class EducationsController extends AppController
 				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'Grades'],
 				'text' => __('Grades')
 			],
+            'GradeSubjects' => [
+                'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => 'GradeSubjects'],
+                'text' => __('Grade Subjects')
+            ],
 			$setupTab => [
 				'url' => ['plugin' => 'Education', 'controller' => 'Educations', 'action' => $setupTab],
 				'text' => __('Setup')
@@ -63,7 +58,7 @@ class EducationsController extends AppController
         $this->set('selectedAction', $selectedAction);
 	}
 
-	public function onInitialize($event, $model) {
+	public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Education');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
@@ -72,4 +67,15 @@ class EducationsController extends AppController
 
 		$this->set('contentHeader', $header);
     }
+
+    public function Subjects() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSubjects']); }
+    public function Certifications() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCertifications']); }
+    public function FieldOfStudies() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationFieldOfStudies']); }
+    public function ProgrammeOrientations() { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammeOrientations']); }
+    public function Systems() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationSystems']); }
+    public function Levels() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationLevels']); }
+    public function Cycles() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationCycles']); }
+    public function Programmes()		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationProgrammes']); }
+    public function Grades() 			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGrades']); }
+    public function GradeSubjects()     { $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Education.EducationGradesSubjects']); }
 }

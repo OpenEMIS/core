@@ -16,6 +16,7 @@ namespace Cake\ORM\Association;
 
 use Cake\Database\Expression\IdentifierExpression;
 use Cake\Database\Expression\TupleComparison;
+use Cake\Database\ValueBinder;
 use InvalidArgumentException;
 
 /**
@@ -34,6 +35,7 @@ trait SelectableAssociationTrait
     public function requiresKeys(array $options = [])
     {
         $strategy = isset($options['strategy']) ? $options['strategy'] : $this->strategy();
+
         return $strategy === $this::STRATEGY_SELECT;
     }
 
@@ -43,17 +45,9 @@ trait SelectableAssociationTrait
     public function eagerLoader(array $options)
     {
         $options += $this->_defaultOptions();
-        $queryBuilder = false;
-        if (!empty($options['queryBuilder'])) {
-            $queryBuilder = $options['queryBuilder'];
-            unset($options['queryBuilder']);
-        }
-
         $fetchQuery = $this->_buildQuery($options);
-        if ($queryBuilder) {
-            $fetchQuery = $queryBuilder($fetchQuery);
-        }
         $resultMap = $this->_buildResultMap($fetchQuery, $options);
+
         return $this->_resultInjector($fetchQuery, $resultMap, $options);
     }
 
@@ -91,8 +85,13 @@ trait SelectableAssociationTrait
 
         $finder = isset($options['finder']) ? $options['finder'] : $this->finder();
         list($finder, $opts) = $this->_extractFinder($finder);
+        if (!isset($options['fields'])) {
+            $options['fields'] = [];
+        }
+
         $fetchQuery = $this
             ->find($finder, $opts)
+            ->select($options['fields'])
             ->where($options['conditions'])
             ->eagerLoaded(true)
             ->hydrate($options['query']->hydrate());
@@ -104,16 +103,6 @@ trait SelectableAssociationTrait
             $fetchQuery = $this->_addFilteringCondition($fetchQuery, $key, $filter);
         }
 
-        if (!empty($options['fields'])) {
-            $fields = $fetchQuery->aliasFields($options['fields'], $alias);
-            if (!in_array($key, $fields)) {
-                throw new InvalidArgumentException(
-                    sprintf('You are required to select the "%s" field', $key)
-                );
-            }
-            $fetchQuery->select($fields);
-        }
-
         if (!empty($options['sort'])) {
             $fetchQuery->order($options['sort']);
         }
@@ -123,10 +112,55 @@ trait SelectableAssociationTrait
         }
 
         if (!empty($options['queryBuilder'])) {
-            $options['queryBuilder']($fetchQuery);
+            $fetchQuery = $options['queryBuilder']($fetchQuery);
         }
 
+        $this->_assertFieldsPresent($fetchQuery, (array)$key);
+
         return $fetchQuery;
+    }
+
+    /**
+     * Checks that the fetching query either has auto fields on or
+     * has the foreignKey fields selected.
+     * If the required fields are missing, throws an exception.
+     *
+     * @param \Cake\ORM\Query $fetchQuery The association fetching query
+     * @param array $key The foreign key fields to check
+     * @return void
+     * @throws InvalidArgumentException
+     */
+    protected function _assertFieldsPresent($fetchQuery, $key)
+    {
+        $select = $fetchQuery->aliasFields($fetchQuery->clause('select'));
+        if (empty($select)) {
+            return;
+        }
+        $missingKey = function ($fieldList, $key) {
+            foreach ($key as $keyField) {
+                if (!in_array($keyField, $fieldList, true)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        $missingFields = $missingKey($select, $key);
+        if ($missingFields) {
+            $driver = $fetchQuery->connection()->driver();
+            $quoted = array_map([$driver, 'quoteIdentifier'], $key);
+            $missingFields = $missingKey($select, $quoted);
+        }
+
+        if ($missingFields) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    'You are required to select the "%s" field(s)',
+                    implode(', ', (array)$key)
+                )
+            );
+        }
     }
 
     /**
@@ -145,7 +179,11 @@ trait SelectableAssociationTrait
         $aliasedTable = $this->source()->alias();
 
         foreach ($subquery->clause('select') as $aliasedField => $field) {
-            $filter[] = new IdentifierExpression($field);
+            if (is_int($aliasedField)) {
+                $filter[] = new IdentifierExpression($field);
+            } else {
+                $filter[$aliasedField] = $field;
+            }
         }
         $subquery->select($filter, true);
 
@@ -156,6 +194,7 @@ trait SelectableAssociationTrait
         }
 
         $conditions = isset($conditions) ? $conditions : $query->newExpr([$key => $filter]);
+
         return $query->innerJoin(
             [$aliasedTable => $subquery],
             $conditions
@@ -178,6 +217,7 @@ trait SelectableAssociationTrait
         }
 
         $conditions = isset($conditions) ? $conditions : [$key . ' IN' => $filter];
+
         return $query->andWhere($conditions);
     }
 
@@ -200,6 +240,7 @@ trait SelectableAssociationTrait
                 $types[] = $defaults[$k];
             }
         }
+
         return new TupleComparison($keys, $filter, $types, $operator);
     }
 
@@ -227,6 +268,7 @@ trait SelectableAssociationTrait
         $filterQuery->mapReduce(null, null, true);
         $filterQuery->formatResults(null, true);
         $filterQuery->contain([], true);
+        $filterQuery->valueBinder(new ValueBinder());
 
         if (!$filterQuery->clause('limit')) {
             $filterQuery->limit(null);
@@ -234,15 +276,42 @@ trait SelectableAssociationTrait
             $filterQuery->offset(null);
         }
 
-        $keys = (array)$this->bindingKey();
+        $fields = $this->_subqueryFields($query);
+        $filterQuery->select($fields['select'], true)->group($fields['group']);
 
+        return $filterQuery;
+    }
+
+    /**
+     * Calculate the fields that need to participate in a subquery.
+     *
+     * Normally this includes the binding key columns. If there is a an ORDER BY,
+     * those columns are also included as the fields may be calculated or constant values,
+     * that need to be present to ensure the correct association data is loaded.
+     *
+     * @param \Cake\ORM\Query $query The query to get fields from.
+     * @return array The list of fields for the subquery.
+     */
+    protected function _subqueryFields($query)
+    {
+        $keys = (array)$this->bindingKey();
         if ($this->type() === $this::MANY_TO_ONE) {
             $keys = (array)$this->foreignKey();
         }
-
         $fields = $query->aliasFields($keys, $this->source()->alias());
-        $filterQuery->select($fields, true)->group(array_values($fields));
-        return $filterQuery;
+        $group = $fields = array_values($fields);
+
+        $order = $query->clause('order');
+        if ($order) {
+            $columns = $query->clause('select');
+            $order->iterateParts(function ($direction, $field) use (&$fields, $columns) {
+                if (isset($columns[$field])) {
+                    $fields[$field] = $columns[$field];
+                }
+            });
+        }
+
+        return ['select' => $fields, 'group' => $group];
     }
 
     /**
@@ -275,7 +344,8 @@ trait SelectableAssociationTrait
 
         $sourceKeys = [];
         foreach ((array)$keys as $key) {
-            $sourceKeys[] = key($fetchQuery->aliasField($key, $sAlias));
+            $f = $fetchQuery->aliasField($key, $sAlias);
+            $sourceKeys[] = key($f);
         }
 
         $nestKey = $options['nestKey'];
@@ -284,10 +354,12 @@ trait SelectableAssociationTrait
         }
 
         $sourceKey = $sourceKeys[0];
+
         return function ($row) use ($resultMap, $sourceKey, $nestKey) {
-            if (isset($resultMap[$row[$sourceKey]])) {
+            if (isset($row[$sourceKey], $resultMap[$row[$sourceKey]])) {
                 $row[$nestKey] = $resultMap[$row[$sourceKey]];
             }
+
             return $row;
         };
     }
@@ -314,6 +386,7 @@ trait SelectableAssociationTrait
             if (isset($resultMap[$key])) {
                 $row[$nestKey] = $resultMap[$key];
             }
+
             return $row;
         };
     }

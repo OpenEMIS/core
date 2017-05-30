@@ -6,81 +6,78 @@ use Cake\ORM\Table;
 use Cake\ORM\Entity;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
-use Cake\Utility\Inflector;
 
-class ViewBehavior extends Behavior {
-	public function initialize(array $config) {
+class ViewBehavior extends Behavior
+{
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.view'] = 'view';
+        return $events;
+    }
 
-	}
+    public function view(Event $mainEvent, ArrayObject $extra)
+    {
+        $model = $this->_table;
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.view'] = 'view';
-		return $events;
-	}
+        $event = $model->dispatchEvent('ControllerAction.Model.view.beforeAction', [$extra], $this);
+        if ($event->isStopped()) {
+            $mainEvent->stopPropagation();
+            return $event->result;
+        }
+        if ($event->result instanceof Table) {
+            $model = $event->result;
+        }
 
-	public function view(Event $mainEvent, ArrayObject $extra) {
-		$model = $this->_table;
 
-		$event = $model->dispatchEvent('ControllerAction.Model.view.beforeAction', [$extra], $this);
-		if ($event->isStopped()) { return $event->result; }
-		if ($event->result instanceof Table) {
-			$model = $event->result;
-		}
+        $sessionKey = $model->registryAlias() . '.primaryKey';
+        $contain = [];
 
-		$primaryKey = $model->primaryKey();
-		$idKey = $model->aliasField($primaryKey);
-		$sessionKey = $model->registryAlias() . '.' . $primaryKey;
-		$contain = [];
+        foreach ($model->associations() as $assoc) {
+            if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
+                $contain[] = $assoc->name();
+            }
+        }
 
-		foreach ($model->associations() as $assoc) {
-			if ($assoc->type() == 'manyToOne') { // only contain belongsTo associations
-				$contain[] = $assoc->name();
-			}
-		}
+        $ids = empty($model->paramsPass(0)) ? [] : $model->paramsDecode($model->paramsPass(0));
 
-		$id = $model->paramsPass(0);
+        if (empty($ids)) {
+            if ($model->Session->check($sessionKey)) {
+                $ids = $model->Session->read($sessionKey);
+            } elseif (!empty($model->ControllerAction->getQueryString())) {
+                // Query string logic not implemented yet, will require to check if the query string contains the primary key
+                $primaryKey = $model->primaryKey();
+                $ids = $model->ControllerAction->getQueryString($primaryKey);
+            }
+        }
 
-		if (empty($id)) {
-			if ($model->Session->check($sessionKey)) {
-				$id = $model->Session->read($sessionKey);
-			}
-		}
+        $idKeys = $model->getIdKeys($model, $ids);
 
-		$entity = null;
-		
-		if ($model->exists([$idKey => $id])) {
-			$query = $model->find()->where([$idKey => $id])->contain($contain);
+        $entity = false;
 
-			$event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
-			$event = $model->dispatchEvent('ControllerAction.Model.viewEdit.beforeQuery', [$query, $extra], $this);
-			$event = $model->dispatchEvent('ControllerAction.Model.view.beforeQuery', [$query, $extra], $this);
+        // need to change this part
+        if ($model->exists([$idKeys])) {
+            $query = $model->find()->where($idKeys)->contain($contain);
 
-			$entity = $query->first();
+            $event = $model->dispatchEvent('ControllerAction.Controller.beforeQuery', [$model, $query, $extra], $this);
+            $event = $model->dispatchEvent('ControllerAction.Model.viewEdit.beforeQuery', [$query, $extra], $this);
+            $event = $model->dispatchEvent('ControllerAction.Model.view.beforeQuery', [$query, $extra], $this);
 
-			// if (empty($entity)) {
-			// 	$this->Alert->warning('general.notExists');
-			// 	return $this->controller->redirect($this->url('index'));
-			// }	
-		}
+            $entity = $query->first();
+        }
 
-		$event = $model->dispatchEvent('ControllerAction.Model.viewEdit.afterQuery', [$entity, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
-
-		$event = $model->dispatchEvent('ControllerAction.Model.view.afterQuery', [$entity, $extra], $this);
-		if ($event->isStopped()) { return $event->result; }
-
-		if (!empty($entity)) {
-			$model->Session->write($sessionKey, $id);
-			// $modal = $this->getModalOptions('remove');
-			$model->controller->set('data', $entity);
-			// $this->controller->set('modal', $modal);
-		} else {
-			$mainEvent->stopPropagation();
-			return $model->controller->redirect($model->url('index'));
-		}
-		$event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
-		return $entity;
-		// $this->config['form'] = false;
-	}
+        $event = $model->dispatchEvent('ControllerAction.Model.view.afterAction', [$entity, $extra], $this);
+        if ($event->isStopped()) {
+            $mainEvent->stopPropagation();
+            return $event->result;
+        }
+        if (!empty($entity)) {
+            $model->Session->write($sessionKey, $ids);
+            $model->controller->set('data', $entity);
+        } else {
+            $mainEvent->stopPropagation();
+            return $model->controller->redirect($model->url('index', 'QUERY'));
+        }
+        return $entity;
+    }
 }

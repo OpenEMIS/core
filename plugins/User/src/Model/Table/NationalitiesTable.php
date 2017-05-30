@@ -19,7 +19,8 @@ class NationalitiesTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		return $validator;
+		$validator = parent::validationDefault($validator);
+		return $validator->add('country_id', 'notBlank', ['rule' => 'notBlank']);
 	}
 
 	public function validationNonMandatory(Validator $validator) {

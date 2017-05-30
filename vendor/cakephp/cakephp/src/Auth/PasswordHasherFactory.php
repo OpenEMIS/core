@@ -19,7 +19,6 @@ use RuntimeException;
 
 /**
  * Builds password hashing objects
- *
  */
 class PasswordHasherFactory
 {
@@ -45,7 +44,7 @@ class PasswordHasherFactory
         }
 
         $className = App::className($class, 'Auth', 'PasswordHasher');
-        if (!$className) {
+        if ($className === false) {
             throw new RuntimeException(sprintf('Password hasher class "%s" was not found.', $class));
         }
 

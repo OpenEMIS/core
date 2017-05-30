@@ -14,11 +14,11 @@
  */
 namespace Cake\Test\Fixture;
 
+use Cake\Database\Schema\Table;
 use Cake\TestSuite\Fixture\TestFixture;
 
 /**
- * Class TagFixture
- *
+ * TagFixture
  */
 class TagsFixture extends TestFixture
 {
@@ -31,6 +31,8 @@ class TagsFixture extends TestFixture
     public $fields = [
         'id' => ['type' => 'integer', 'null' => false],
         'name' => ['type' => 'string', 'null' => false],
+        'description' => ['type' => 'text', 'length' => Table::LENGTH_MEDIUM],
+        'created' => ['type' => 'datetime', 'null' => true, 'default' => null],
         '_constraints' => ['primary' => ['type' => 'primary', 'columns' => ['id']]]
     ];
 
@@ -40,8 +42,8 @@ class TagsFixture extends TestFixture
      * @var array
      */
     public $records = [
-        ['name' => 'tag1'],
-        ['name' => 'tag2'],
-        ['name' => 'tag3']
+        ['name' => 'tag1', 'description' => 'A big description', 'created' => '2016-01-01 00:00'],
+        ['name' => 'tag2', 'description' => 'Another big description', 'created' => '2016-01-01 00:00'],
+        ['name' => 'tag3', 'description' => 'Yet another one', 'created' => '2016-01-01 00:00']
     ];
 }

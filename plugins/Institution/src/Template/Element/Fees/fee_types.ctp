@@ -38,13 +38,36 @@
 					?>
 					<tr>
 						<td><?= $record['type'] ?></td>
-						<td>
-							<input type="text" class="inputs_totalFee" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][amount]', $i) ?>" value="<?= $record['amount'] ?>" onblur="jsTable.computeTotalForMoney('totalFee'); jsForm.compute(this); return fees.checkDecimal(this, 2); " 
-							onkeypress="return utility.floatCheck(event); " onclick="fees.selectAll(this)" computeType="totalFee"/>
-							<input type="hidden" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][fee_type_id]', $i) ?>" value="<?= $record['fee_type_id'] ?>" />
-							<input type="hidden" name="<?php echo sprintf('InstitutionFees[institution_fee_types][%d][id]', $i) ?>" value="<?= $record['id'] ?>" />
+						<td class="<?= (!empty($record['error']))?"error":"";?>">
+							<?php
+								$amountClass = (!empty($record['error'])) ? "inputs_totalFee form-error": "inputs_totalFee";
+								echo $this->Form->input(sprintf('InstitutionFees.institution_fee_types.%d.amount', $i), [
+										'type' => 'text',
+										'label' => false,
+										'value' => $record['amount'],
+										'class' => $amountClass,
+										'onblur' => "jsTable.computeTotalForMoney('totalFee'); jsForm.compute(this); return fees.checkDecimal(this, 2); ",
+										'onkeypress' => "return utility.floatCheck(event); ",
+										'onclick' => "fees.selectAll(this)",
+										'computeType' => "totalFee"
+									]);
+								echo $this->Form->input(sprintf('InstitutionFees.institution_fee_types.%d.fee_type_id', $i), [
+										'type' => 'hidden',
+										'value' => $record['fee_type_id']
+									]);
+								echo $this->Form->input(sprintf('InstitutionFees.institution_fee_types.%d.id', $i), [
+										'type' => 'hidden',
+										'value' => $record['id']
+									]);
+							?>
 						</td>
-						<td></td>
+						<td>
+							<?php if (!empty($record['error'])):?>
+							<span class="<?= (!empty($record['error']))?"error-message":"";?>">
+								<?= implode('<br/>', $record['error']);?>
+							</span>
+							<?php endif;?>
+						</td>
 					</tr>
 					<?php endforeach ?>
 				</tbody>

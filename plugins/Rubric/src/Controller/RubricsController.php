@@ -50,11 +50,19 @@ class RubricsController extends AppController
 			]
 		];
 
+		// pass query string for selected template across tabs
+		if (!is_null($this->request->query('template'))) {
+			$template = $this->request->query('template');
+			foreach ($tabElements as $key => $obj) {
+				$tabElements[$key]['url']['template'] = $template;
+			}
+		}
+
         $this->set('tabElements', $tabElements);
         $this->set('selectedAction', $this->request->action);
 	}
 
-    public function onInitialize(Event $event, Table $model) {
+    public function onInitialize(Event $event, Table $model, ArrayObject $extra) {
 		$header = __('Rubric');
 
 		$header .= ' - ' . $model->getHeader($model->alias);
@@ -92,7 +100,6 @@ class RubricsController extends AppController
 		        	$model->aliasField('rubric_template_id') => $selectedTemplate
 		        ];
 			}
-			$query->order([$model->aliasField('order')]);
 
 			$this->set(compact('templateOptions', 'selectedTemplate'));
     	}

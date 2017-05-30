@@ -12,18 +12,20 @@
  */
 namespace DebugKit\Panel;
 
-use Cake\Controller\Controller;
-use Cake\Database\Query;
+use Cake\Collection\Collection;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\Event;
 use Cake\Form\Form;
+use Cake\ORM\Query;
 use Cake\ORM\ResultSet;
 use Cake\Utility\Hash;
 use Closure;
 use DebugKit\DebugPanel;
 use Exception;
+use InvalidArgumentException;
 use PDO;
-use SimpleXmlElement;
+use RuntimeException;
+use SimpleXMLElement;
 
 /**
  * Provides debug information on the View variables.
@@ -71,16 +73,24 @@ class VariablesPanel extends DebugPanel
         $errors = [];
 
         $walker = function (&$item) use (&$walker) {
-            if ($item instanceof Query || $item instanceof ResultSet) {
+            if ($item instanceof Collection ||
+                $item instanceof Query ||
+                $item instanceof ResultSet
+            ) {
                 try {
                     $item = $item->toArray();
                 } catch (\Cake\Database\Exception $e) {
                     //Likely issue is unbuffered query; fall back to __debugInfo
                     $item = array_map($walker, $item->__debugInfo());
+                } catch (RuntimeException $e) {
+                    // Likely a non-select query.
+                    $item = array_map($walker, $item->__debugInfo());
+                } catch (InvalidArgumentException $e) {
+                    $item = array_map($walker, $item->__debugInfo());
                 }
             } elseif ($item instanceof Closure ||
                 $item instanceof PDO ||
-                $item instanceof SimpleXmlElement
+                $item instanceof SimpleXMLElement
             ) {
                 $item = 'Unserializable object - ' . get_class($item);
             } elseif ($item instanceof Exception) {
@@ -95,6 +105,7 @@ class VariablesPanel extends DebugPanel
                 // Convert objects into using __debugInfo.
                 $item = array_map($walker, $item->__debugInfo());
             }
+
             return $item;
         };
         // Copy so viewVars is not mutated.
@@ -122,13 +133,14 @@ class VariablesPanel extends DebugPanel
     /**
      * Get summary data for the variables panel.
      *
-     * @return int
+     * @return string
      */
     public function summary()
     {
         if (!isset($this->_data['content'])) {
-            return 0;
+            return '0';
         }
-        return count($this->_data['content']);
+
+        return (string)count($this->_data['content']);
     }
 }

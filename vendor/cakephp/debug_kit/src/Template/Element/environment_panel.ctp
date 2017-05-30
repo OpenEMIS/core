@@ -14,7 +14,15 @@
  * @link          http://cakephp.org CakePHP(tm) Project
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
-use Cake\Utility\Inflector;
+use Cake\Error\Debugger;
+
+/**
+ * @type \DebugKit\View\AjaxView $this
+ * @type array $app
+ * @type array $cake
+ * @type array $php
+ * @type array $hidef
+ */
 ?>
 
 <h2><?= __d('debug_kit', 'Application Constants') ?></h2>
@@ -31,7 +39,7 @@ use Cake\Utility\Inflector;
         <?php foreach ($app as $key => $val): ?>
         <tr>
             <td><?= h($key) ?></td>
-            <td><?= h($val) ?></td>
+            <td><?= h(Debugger::exportVar($val)) ?></td>
         </tr>
         <?php endforeach; ?>
     </tbody>
@@ -56,7 +64,7 @@ use Cake\Utility\Inflector;
         <?php foreach ($cake as $key => $val): ?>
         <tr>
             <td><?= h($key) ?></td>
-            <td><?= h($val) ?></td>
+            <td><?= h(Debugger::exportVar($val)) ?></td>
         </tr>
         <?php endforeach; ?>
     </tbody>
@@ -81,7 +89,7 @@ use Cake\Utility\Inflector;
         <?php foreach ($php as $key => $val): ?>
         <tr>
             <td><?= h($key) ?></td>
-            <td><?= h($val) ?></td>
+            <td><?= $this->Credentials->filter($val) ?></td>
         </tr>
         <?php endforeach; ?>
     </tbody>
@@ -107,7 +115,7 @@ use Cake\Utility\Inflector;
             <?php foreach ($hidef as $key => $val): ?>
             <tr>
                 <td><?= h($key) ?></td>
-                <td><?= h($val) ?></td>
+                <td><?= h(Debugger::exportVar($val)) ?></td>
             </tr>
             <?php endforeach; ?>
         </tbody>

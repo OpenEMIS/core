@@ -2,6 +2,7 @@
 
 namespace Test\Phinx\Db\Adapter;
 
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\NullOutput;
 use Phinx\Db\Adapter\SQLiteAdapter;
 
@@ -21,7 +22,7 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
         $options = array(
             'name' => TESTS_PHINX_DB_ADAPTER_SQLITE_DATABASE
         );
-        $this->adapter = new SQLiteAdapter($options, new NullOutput());
+        $this->adapter = new SQLiteAdapter($options, new ArrayInput([]), new NullOutput());
 
         // ensure the database is empty for each test
         $this->adapter->dropDatabase($options['name']);
@@ -41,6 +42,15 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($this->adapter->getConnection() instanceof \PDO);
     }
 
+    public function testBeginTransaction()
+    {
+        $this->adapter->getConnection()
+            ->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $this->adapter->beginTransaction();
+
+        $this->assertTrue(true, 'Transaction query succeeded');
+    }
+
     public function testCreatingTheSchemaTableOnConnect()
     {
         $this->adapter->connect();
@@ -50,6 +60,13 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
         $this->adapter->disconnect();
         $this->adapter->connect();
         $this->assertTrue($this->adapter->hasTable($this->adapter->getSchemaTableName()));
+    }
+
+    public function testSchemaTableIsCreatedWithPrimaryKey()
+    {
+        $this->adapter->connect();
+        $table = new \Phinx\Db\Table($this->adapter->getSchemaTableName(), array(), $this->adapter);
+        $this->assertTrue($this->adapter->hasIndex($this->adapter->getSchemaTableName(), array('version')));
     }
 
     public function testQuoteTableName()
@@ -153,11 +170,26 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
               ->save();
         $this->assertTrue($this->adapter->hasIndex('table1', array('email')));
         $this->assertFalse($this->adapter->hasIndex('table1', array('email', 'user_email')));
+        $this->assertTrue($this->adapter->hasIndexByName('table1', 'myemailindex'));
     }
 
     public function testCreateTableWithMultiplePKsAndUniqueIndexes()
     {
         $this->markTestIncomplete();
+    }
+
+    public function testCreateTableWithForeignKey()
+    {
+        $refTable = new \Phinx\Db\Table('ref_table', array(), $this->adapter);
+        $refTable->addColumn('field1', 'string')->save();
+
+        $table = new \Phinx\Db\Table('table', array(), $this->adapter);
+        $table->addColumn('ref_table_id', 'integer');
+        $table->addForeignKey('ref_table_id', 'ref_table', 'id');
+        $table->save();
+
+        $this->assertTrue($this->adapter->hasTable($table->getName()));
+        $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
     }
 
     public function testRenameTable()
@@ -175,7 +207,7 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
     {
         $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
         $table->save();
-
+        $this->assertFalse($table->hasColumn('email'));
         $table->addColumn('email', 'string')
               ->save();
         $this->assertTrue($table->hasColumn('email'));
@@ -211,10 +243,10 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
     {
         $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
         $table->save();
-        $table->addColumn('default_zero', 'integer', array('default' => null))
+        $table->addColumn('default_empty', 'string', array('default' => ''))
               ->save();
         $rows = $this->adapter->fetchAll(sprintf('pragma table_info(%s)', 'table1'));
-        $this->assertNull($rows[1]['dflt_value']);
+        $this->assertEquals("''", $rows[1]['dflt_value']);
     }
 
     public function testRenameColumn()
@@ -279,6 +311,30 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("'test1'", $rows[1]['dflt_value']);
     }
 
+    /**
+     * @group bug922
+     */
+    public function testChangeColumnWithForeignKey()
+    {
+        $refTable = new \Phinx\Db\Table('ref_table', array(), $this->adapter);
+        $refTable->addColumn('field1', 'string')->save();
+
+        $table = new \Phinx\Db\Table('table', array(), $this->adapter);
+        $table->addColumn('ref_table_id', 'integer')->save();
+
+        $fk = new \Phinx\Db\Table\ForeignKey();
+        $fk->setReferencedTable($refTable)
+           ->setColumns(array('ref_table_id'))
+           ->setReferencedColumns(array('id'));
+
+        $this->adapter->addForeignKey($table, $fk);
+
+        $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
+
+        $table->changeColumn('ref_table_id', 'float');
+
+        $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
+    }
 
     public function testChangeColumnDefaultToZero()
     {
@@ -332,7 +388,8 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
               ->addColumn('column11', 'binary')
               ->addColumn('column12', 'boolean')
               ->addColumn('column13', 'string', array('limit' => 10))
-              ->addColumn('column15', 'integer', array('limit' => 10));
+              ->addColumn('column15', 'integer', array('limit' => 10))
+              ->addColumn('column16', 'enum', array('values' => array('a', 'b', 'c')));
         $pendingColumns = $table->getPendingColumns();
         $table->save();
         $columns = $this->adapter->getColumns('t');
@@ -434,8 +491,10 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
     }
 
-    public function testDropForeignKey()
+    public function testAddForeignKeyWithPdoExceptionErrorMode()
     {
+        $this->adapter->getConnection()
+            ->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
         $refTable = new \Phinx\Db\Table('ref_table', array(), $this->adapter);
         $refTable->addColumn('field1', 'string')->save();
 
@@ -444,20 +503,49 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
 
         $fk = new \Phinx\Db\Table\ForeignKey();
         $fk->setReferencedTable($refTable)
+            ->setColumns(array('ref_table_id'))
+            ->setReferencedColumns(array('id'));
+
+        $this->adapter->addForeignKey($table, $fk);
+
+        $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
+    }
+
+    public function testDropForeignKey()
+    {
+        $refTable = new \Phinx\Db\Table('ref_table', array(), $this->adapter);
+        $refTable->addColumn('field1', 'string')->save();
+
+        $table = new \Phinx\Db\Table('table', array(), $this->adapter);
+        $table->addColumn('ref_table_id', 'integer')->addColumn('ref_table_field', 'string')->save();
+
+        $fk = new \Phinx\Db\Table\ForeignKey();
+        $fk->setReferencedTable($refTable)
            ->setColumns(array('ref_table_id'))
            ->setReferencedColumns(array('id'));
 
+        $secondFk = new \Phinx\Db\Table\ForeignKey();
+        $secondFk->setReferencedTable($refTable)
+           ->setColumns(array('ref_table_field'))
+           ->setReferencedColumns(array('field1'))
+           ->setOptions(array(
+               'update' => 'CASCADE',
+               'delete' => 'CASCADE'
+           ));
+
         $this->adapter->addForeignKey($table, $fk);
         $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
 
         $this->adapter->dropForeignKey($table->getName(), array('ref_table_id'));
         $this->assertFalse($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
 
+        $this->adapter->addForeignKey($table, $secondFk);
         $this->adapter->addForeignKey($table, $fk);
         $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
+        $this->assertTrue($this->adapter->hasForeignKey($table->getName(), array('ref_table_field')));
 
-        $this->adapter->dropForeignKey($table->getName(), array('ref_table_id'));
-        $this->assertFalse($this->adapter->hasForeignKey($table->getName(), array('ref_table_id')));
+        $this->adapter->dropForeignKey($table->getName(), array('ref_table_field'));
+        $this->assertTrue($this->adapter->hasTable($table->getName()));
     }
 
     public function testHasDatabase()
@@ -525,4 +613,93 @@ class SQLiteAdapterTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($table2->hasIndex('email'));
     }
 
+    public function testInsertData()
+    {
+        $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
+        $table->addColumn('column1', 'string')
+              ->addColumn('column2', 'integer')
+              ->insert(array(
+                  array(
+                      'column1' => 'value1',
+                      'column2' => 1,
+                  ),
+                  array(
+                      'column1' => 'value2',
+                      'column2' => 2,
+                  )
+              ))
+              ->insert(
+                  array(
+                      'column1' => 'value3',
+                      'column2' => 3,
+                  )
+              )
+              ->save();
+
+        $rows = $this->adapter->fetchAll('SELECT * FROM table1');
+
+        $this->assertEquals('value1', $rows[0]['column1']);
+        $this->assertEquals('value2', $rows[1]['column1']);
+        $this->assertEquals('value3', $rows[2]['column1']);
+        $this->assertEquals(1, $rows[0]['column2']);
+        $this->assertEquals(2, $rows[1]['column2']);
+        $this->assertEquals(3, $rows[2]['column2']);
+    }
+
+    public function testInserDataEnum()
+    {
+        $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
+        $table->addColumn('column1', 'enum', array('values' => ['a', 'b', 'c']))
+              ->addColumn('column2', 'enum', array('values' => ['a', 'b', 'c'], 'null' => true))
+              ->addColumn('column3', 'enum', array('values' => ['a', 'b', 'c'], 'default' => 'c'))
+              ->insert(array(
+                  'column1' => 'a',
+              ))
+              ->save();
+
+        $rows = $this->adapter->fetchAll('SELECT * FROM table1');
+
+        $this->assertEquals('a', $rows[0]['column1']);
+        $this->assertEquals(null, $rows[0]['column2']);
+        $this->assertEquals('c', $rows[0]['column3']);
+    }
+
+    public function testNullWithoutDefaultValue()
+    {
+        $this->markTestSkipped('Skipping for now. See Github Issue #265.');
+
+        // construct table with default/null combinations
+        $table = new \Phinx\Db\Table('table1', array(), $this->adapter);
+        $table->addColumn("aa", "string", array("null" => true)) // no default value
+              ->addColumn("bb", "string", array("null" => false)) // no default value
+              ->addColumn("cc", "string", array("null" => true, "default" => "some1"))
+              ->addColumn("dd", "string", array("null" => false, "default" => "some2"))
+              ->save();
+
+        // load table info
+        $columns = $this->adapter->getColumns("table1");
+
+        $this->assertEquals(count($columns), 5);
+
+        $aa = $columns[1];
+        $bb = $columns[2];
+        $cc = $columns[3];
+        $dd = $columns[4];
+
+        $this->assertEquals("aa", $aa->getName());
+        $this->assertEquals(true, $aa->isNull());
+        $this->assertEquals(null, $aa->getDefault());
+
+        $this->assertEquals("bb", $bb->getName());
+        $this->assertEquals(false, $bb->isNull());
+        $this->assertEquals(null, $bb->getDefault());
+
+        $this->assertEquals("cc", $cc->getName());
+        $this->assertEquals(true, $cc->isNull());
+        $this->assertEquals("some1", $cc->getDefault());
+
+        $this->assertEquals("dd", $dd->getName());
+        $this->assertEquals(false, $dd->isNull());
+        $this->assertEquals("some2", $dd->getDefault());
+    }
 }

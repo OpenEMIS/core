@@ -10,30 +10,9 @@
 
 /**
  * A Decorator that runs a test repeatedly.
- *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 2.0.0
  */
 class PHPUnit_Extensions_RepeatedTest extends PHPUnit_Extensions_TestDecorator
 {
-    /**
-     * @var mixed
-     */
-    protected $filter = false;
-
-    /**
-     * @var array
-     */
-    protected $groups = array();
-
-    /**
-     * @var array
-     */
-    protected $excludeGroups = array();
-
     /**
      * @var bool
      */
@@ -45,16 +24,17 @@ class PHPUnit_Extensions_RepeatedTest extends PHPUnit_Extensions_TestDecorator
     protected $timesRepeat = 1;
 
     /**
-     * @param  PHPUnit_Framework_Test      $test
-     * @param  int                         $timesRepeat
-     * @param  bool                        $processIsolation
+     * @param PHPUnit_Framework_Test $test
+     * @param int                    $timesRepeat
+     * @param bool                   $processIsolation
+     *
      * @throws PHPUnit_Framework_Exception
      */
     public function __construct(PHPUnit_Framework_Test $test, $timesRepeat = 1, $processIsolation = false)
     {
         parent::__construct($test);
 
-        if (is_integer($timesRepeat) &&
+        if (is_int($timesRepeat) &&
             $timesRepeat >= 0) {
             $this->timesRepeat = $timesRepeat;
         } else {
@@ -82,8 +62,10 @@ class PHPUnit_Extensions_RepeatedTest extends PHPUnit_Extensions_TestDecorator
      * Runs the decorated test and collects the
      * result in a TestResult.
      *
-     * @param  PHPUnit_Framework_TestResult $result
+     * @param PHPUnit_Framework_TestResult $result
+     *
      * @return PHPUnit_Framework_TestResult
+     *
      * @throws PHPUnit_Framework_Exception
      */
     public function run(PHPUnit_Framework_TestResult $result = null)

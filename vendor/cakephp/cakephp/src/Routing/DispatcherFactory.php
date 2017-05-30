@@ -15,7 +15,6 @@
 namespace Cake\Routing;
 
 use Cake\Core\App;
-use Cake\Routing\Dispatcher;
 use Cake\Routing\Exception\MissingDispatcherFilterException;
 
 /**
@@ -51,6 +50,7 @@ class DispatcherFactory
             $filter = static::_createFilter($filter, $options);
         }
         static::$_stack[] = $filter;
+
         return $filter;
     }
 
@@ -69,6 +69,7 @@ class DispatcherFactory
             $msg = sprintf('Cannot locate dispatcher filter named "%s".', $name);
             throw new MissingDispatcherFilterException($msg);
         }
+
         return new $className($options);
     }
 
@@ -83,6 +84,7 @@ class DispatcherFactory
         foreach (static::$_stack as $middleware) {
             $dispatcher->addFilter($middleware);
         }
+
         return $dispatcher;
     }
 

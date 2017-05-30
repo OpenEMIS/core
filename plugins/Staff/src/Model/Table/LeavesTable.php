@@ -2,81 +2,68 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+
+use Cake\ORM\Query;
+use Cake\ORM\ResultSet;
 use Cake\ORM\Entity;
-use Cake\Validation\Validator;
-use Cake\Network\Request;
 use Cake\Event\Event;
 
-class LeavesTable extends AppTable {
-	public function initialize(array $config) {
-		$this->table('staff_leaves');
-		parent::initialize($config);
+use App\Model\Table\ControllerActionTable;
 
-		$this->belongsTo('StaffLeaveTypes', ['className' => 'FieldOption.StaffLeaveTypes']);
-		$this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
-		$this->addBehavior('ControllerAction.FileUpload', [
-			// 'name' => 'file_name',
-			// 'content' => 'file_content',
-			'size' => '10MB',
-			'contentEditable' => true,
-			'allowable_file_types' => 'all'
-		]);
-	}
+class LeavesTable extends ControllerActionTable
+{
+    public function initialize(array $config)
+    {
+        $this->table('institution_staff_leave');
+        parent::initialize($config);
 
-	public function validationDefault(Validator $validator) {
-		$validator = parent::validationDefault($validator);
-		
-		return $validator
-			->add('date_to', 'ruleCompareDateReverse', [
-				'rule' => ['compareDateReverse', 'date_from', true]
-			])
-			->allowEmpty('file_content')
-		;
-	}
+        $this->belongsTo('Statuses', ['className' => 'Workflow.WorkflowSteps', 'foreignKey' => 'status_id']);
+        $this->belongsTo('Users', ['className' => 'Security.Users', 'foreignKey' => 'staff_id']);
+        $this->belongsTo('StaffLeaveTypes', ['className' => 'Staff.StaffLeaveTypes']);
+        $this->belongsTo('Institutions', ['className' => 'Institution.Institutions']);
+        $this->belongsTo('Assignees', ['className' => 'User.Users']);
 
-    public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-		$dateFrom = date_create($entity->date_from);
-		$dateTo = date_create($entity->date_to);
-		$diff = date_diff($dateFrom, $dateTo, true);
-		$numberOfDays = $diff->format("%a");
-		$entity->number_of_days = ++$numberOfDays;
-	}
+        $this->addBehavior('ControllerAction.FileUpload', [
+            // 'name' => 'file_name',
+            // 'content' => 'file_content',
+            'size' => '10MB',
+            'contentEditable' => true,
+            'allowable_file_types' => 'all',
+            'useDefaultName' => true
+        ]);
 
-	public function beforeAction(Event $event) {
-		$this->ControllerAction->field('staff_leave_type_id', [
-			'type' => 'select'
-		]);
-		$this->ControllerAction->field('number_of_days', [
-			'visible' => ['index' => true, 'view' => true, 'edit' => false, 'add' => false]
-		]);
-		$this->ControllerAction->field('file_name', [
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-		]);
-		$this->ControllerAction->field('file_content', [
-			'visible' => ['index' => false, 'view' => true, 'edit' => true, 'add' => true]
-		]);
-		$this->ControllerAction->setFieldOrder(['staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
-	}
+        $this->toggle('add', false);
+        $this->toggle('edit', false);
+        $this->toggle('remove', false);
+    }
 
-	public function onUpdateFieldFileName(Event $event, array $attr, $action, Request $request) {
-		if ($action == 'view') {
-			$attr['type'] = 'hidden';
-		} else if ($action == 'add' || $action == 'edit') {
-			$attr['type'] = 'hidden';
-		}
+    public function onGetInstitutionId(Event $event, Entity $entity)
+    {
+        return $entity->institution->code_name;
+    }
 
-		return $attr;
-	}
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $this->field('file_name', ['visible' => false]);
+        $this->field('file_content', [
+            'visible' => ['index' => false, 'view' => true]
+        ]);
+        $this->field('assignee_id', ['visible' => false]);
+        $this->field('status_id', ['visible' => false]);
 
-	private function setupTabElements() {
-		$options['type'] = 'staff';
-		$tabElements = $this->controller->getCareerTabElements($options);
-		$this->controller->set('tabElements', $tabElements);
-		$this->controller->set('selectedAction', $this->alias());
-	}
+        $this->setFieldOrder(['institution_id', 'staff_leave_type_id', 'date_from', 'date_to', 'number_of_days', 'comments', 'file_name', 'file_content']);
+    }
 
-	public function indexAfterAction(Event $event, $data) {
-		$this->setupTabElements();
-	}
+    public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+    {
+        $extra['auto_contain_fields'] = ['Institutions' => ['code']];
+    }
+
+    public function indexAfterAction(Event $event, Query $query, ResultSet $data, ArrayObject $extra)
+    {
+        $options = ['type' => 'staff'];
+        $tabElements = $this->controller->getCareerTabElements($options);
+        $this->controller->set('tabElements', $tabElements);
+        $this->controller->set('selectedAction', $this->alias());
+    }
 }

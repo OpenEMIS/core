@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell
+ * This file is part of Psy Shell.
  *
- * (c) 2012-2014 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -53,33 +53,19 @@ class Compiler
             ->ignoreVCS(true)
             ->name('*.php')
             ->exclude('Tests')
-            ->in(__DIR__ . '/../../vendor/dnoegel/php-xdg-base-dir/src')
-            ->in(__DIR__ . '/../../vendor/jakub-onderka/php-console-color')
-            ->in(__DIR__ . '/../../vendor/jakub-onderka/php-console-highlighter')
-            ->in(__DIR__ . '/../../vendor/nikic/php-parser/lib')
-            ->in(__DIR__ . '/../../vendor/symfony/console')
-            ->in(__DIR__ . '/../../vendor/symfony/var-dumper')
-            ->in(__DIR__ . '/../../vendor/symfony/yaml');
+            ->exclude('tests')
+            ->exclude('Test')
+            ->exclude('test')
+            ->in(__DIR__ . '/../../build-vendor');
 
         foreach ($finder as $file) {
             $this->addFile($phar, $file);
         }
 
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/autoload.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/composer/include_paths.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/composer/autoload_files.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/composer/autoload_psr4.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/composer/autoload_real.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/composer/autoload_namespaces.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/composer/autoload_classmap.php'));
-        $this->addFile($phar, new \SplFileInfo(__DIR__ . '/../../vendor/composer/ClassLoader.php'));
-
         // Stubs
         $phar->setStub($this->getStub());
 
         $phar->stopBuffering();
-
-        // $this->addFile($phar, new \SplFileInfo(__DIR__.'/../../LICENSE'), false);
 
         unset($phar);
     }
@@ -87,9 +73,9 @@ class Compiler
     /**
      * Add a file to the psysh Phar.
      *
-     * @param Phar        $phar
-     * @param SplFileInfo $file
-     * @param bool        $strip (default: true)
+     * @param \Phar        $phar
+     * @param \SplFileInfo $file
+     * @param bool         $strip (default: true)
      */
     private function addFile($phar, $file, $strip = true)
     {
@@ -140,6 +126,20 @@ class Compiler
         return $output;
     }
 
+    private static function getStubLicense()
+    {
+        $license = file_get_contents(__DIR__ . '/../../LICENSE');
+        $license = str_replace('The MIT License (MIT)', '', $license);
+        $license = str_replace("\n", "\n * ", trim($license));
+
+        return $license;
+    }
+
+    const STUB_AUTOLOAD = <<<'EOS'
+    Phar::mapPhar('psysh.phar');
+    require 'phar://psysh.phar/build-vendor/autoload.php';
+EOS;
+
     /**
      * Get a Phar stub for psysh.
      *
@@ -149,13 +149,13 @@ class Compiler
      */
     private function getStub()
     {
-        $autoload = <<<'EOS'
-    Phar::mapPhar('psysh.phar');
-    require 'phar://psysh.phar/vendor/autoload.php';
-EOS;
-
         $content = file_get_contents(__DIR__ . '/../../bin/psysh');
-        $content = preg_replace('{/\* <<<.*?>>> \*/}sm', $autoload, $content);
+        if (version_compare(PHP_VERSION, '5.4', '<')) {
+            $content = str_replace('#!/usr/bin/env php', '#!/usr/bin/env php -d detect_unicode=Off', $content);
+        }
+        $content = preg_replace('{/\* <<<.*?>>> \*/}sm', self::STUB_AUTOLOAD, $content);
+        $content = preg_replace('/\\(c\\) .*?with this source code./sm', self::getStubLicense(), $content);
+
         $content .= '__HALT_COMPILER();';
 
         return $content;
