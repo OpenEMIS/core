@@ -13,3 +13,5 @@ WHERE `assessment_id` IN (
     group by assessment_id, academic_term
     HAVING count(*) > 1) as tmp)
     AND `academic_term` IS NULL;
+
+UPDATE `security_functions` SET `_edit`='AssessmentPeriods.edit|AssessmentPeriods.editAcademicTerm' WHERE `id`=5058;

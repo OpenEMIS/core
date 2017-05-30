@@ -122,11 +122,11 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function implementedEvents()
     {
         $events = parent::implementedEvents();
-        $events['ControllerAction.Model.editAssessmentTerm'] = 'editAssessmentTerm';
+        $events['ControllerAction.Model.editAcademicTerm'] = 'editAcademicTerm';
         return $events;
     }
 
-    public function onGetAssessmentPeriodsElement(Event $event, $action, $entity, $attr, $options=[])
+    public function onGetAssessmentPeriodsElement(Event $event, $action, $entity, $attr, $options = [])
     {
         $tableHeaders = [__('Name') , __('Start Date'), __('End Date'), 'Academic Term'];
         $assessmentPeriods = $entity->assessment_periods;
@@ -148,11 +148,23 @@ class AssessmentPeriodsTable extends ControllerActionTable
         return $event->subject()->renderElement('Assessment.Assessments/assessment_terms', ['attr' => $attr, 'entity' => $entity]);
     }
 
-    public function editAssessmentTerm(Event $mainEvent, ArrayObject $extra)
+    public function editAcademicTerm(Event $mainEvent, ArrayObject $extra)
     {
         $model = $this->Assessments;
         $request = $mainEvent->subject()->request;
-        $extra['elements']['edit'] = ['name' => 'OpenEmis.ControllerAction/edit'];
+        $extra['elements']['editAcademicTerm'] = ['name' => 'OpenEmis.ControllerAction/edit'];
+        $extra['toolbarButtons']['back'] = [
+                'url' => $this->url('index', 'QUERY'),
+                'type' => 'button',
+                'label' => '<i class="fa kd-back"></i>',
+                'attr' => [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'title' => __('Back')
+                ]
+            ];
         $extra['config']['form'] = true;
         $extra['patchEntity'] = true;
 
@@ -225,6 +237,9 @@ class AssessmentPeriodsTable extends ControllerActionTable
         if (!$entity) {
             $mainEvent->stopPropagation();
             return $this->controller->redirect($this->url('index', 'QUERY'));
+        } elseif (empty($entity->assessment_periods)) {
+            $mainEvent->stopPropagation();
+            return $this->controller->redirect($this->url('index', 'QUERY'));
         }
         return $entity;
     }
@@ -259,13 +274,33 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->setFieldOrder([
             'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
         ]);
+
+
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('assessment_id') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
-        // $extra['toolbarButtons']['editAcademicTerm'];
-        // pr($extra['toolbarButtons']);
+        if ($extra['selectedTemplate'] != 'empty') {
+           $extra['toolbarButtons']['editAcademicTerm'] = [
+                'url' => [
+                    'plugin' => 'Assessment',
+                    'controller' => 'Assessments',
+                    'action' => 'AssessmentPeriods',
+                    '0' => 'editAcademicTerm',
+                    'template' => $extra['selectedTemplate']
+                ],
+                'type' => 'button',
+                'label' => '<i class="kd-edit"></i>',
+                'attr' => [
+                    'class' => 'btn btn-xs btn-default',
+                    'data-toggle' => 'tooltip',
+                    'data-placement' => 'bottom',
+                    'escape' => false,
+                    'title' => __('Edit Academic Term')
+                ]
+            ];
+        }
     }
 
     public function viewEditBeforeQuery(Event $event, Query $query, ArrayObject $extra)
