@@ -84,6 +84,12 @@ class StaffTable extends ControllerActionTable
                 'xAxis' => ['title' => ['text' => __('Position Title')]],
                 'yAxis' => ['title' => ['text' => __('Total')]]
             ],
+            'number_of_staff_by_year' => [
+                '_function' => 'getNumberOfStaffByYear',
+                'chart' => ['type' => 'column', 'borderWidth' => 1],
+                'xAxis' => ['title' => ['text' => __('Years')]],
+                'yAxis' => ['title' => ['text' => __('Total')]]
+            ],
             'institution_staff_gender' => [
                 '_function' => 'getNumberOfStaffsByGender'
             ],
@@ -1172,10 +1178,15 @@ class StaffTable extends ControllerActionTable
     // Function used by the Dashboard (For Institution Dashboard and Home Page)
     public function getNumberOfStaffByPosition($params = [])
     {
-        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         $_conditions = [];
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
         foreach ($conditions as $key => $value) {
             $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $associatedConditions = isset($params['associatedConditions']) ? $params['associatedConditions'] : [];
+        foreach ($associatedConditions as $key => $value) {
+            $_conditions[$key] = $value;
         }
 
         $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
@@ -1193,6 +1204,7 @@ class StaffTable extends ControllerActionTable
         $staffByPositions = $query
                 ->find('AcademicPeriod', ['academic_period_id'=> $currentYearId])
                 ->contain(['Users.Genders','Positions.StaffPositionTitles'])
+                ->matching('Institutions')
                 ->select([
                     'Positions.id',
                     'StaffPositionTitles.id',
@@ -1251,6 +1263,85 @@ class StaffTable extends ControllerActionTable
         $params['options']['xAxis']['categories'] = array_values($positionTypes);
         $params['dataSet'] = $dataSet;
 
+        return $params;
+    }
+
+    // For Dashboard (Institution Dashboard and Home Page)
+    public function getNumberOfStaffByYear($params=[])
+    {
+        $_conditions = [];
+        $conditions = isset($params['conditions']) ? $params['conditions'] : [];
+        foreach ($conditions as $key => $value) {
+            $_conditions[$this->alias().'.'.$key] = $value;
+        }
+
+        $associatedConditions = isset($params['associatedConditions']) ? $params['associatedConditions'] : [];
+        foreach ($associatedConditions as $key => $value) {
+            $_conditions[$key] = $value;
+        }
+
+        $AcademicPeriod = TableRegistry::get('AcademicPeriod.AcademicPeriods');
+        $currentPeriodId = $AcademicPeriod->getCurrent();
+
+        $genderOptions = $this->Users->Genders->getList();
+        $dataSet = new ArrayObject();
+        foreach ($genderOptions as $key => $value) {
+            $dataSet[$value] = ['name' => __($value), 'data' => []];
+        }
+        $dataSet['Total'] = ['name' => __('Total'), 'data' => []];
+
+        // only show one year before and after the current academic period (if configured)
+        $academicPeriodList = [];
+        $found = false;
+        foreach ($AcademicPeriod->getYearList() as $periodId => $periodName) {
+            if ($found) {
+                $academicPeriodList[$periodId] = $periodName;
+                break;
+            }
+            if ($periodId == $currentPeriodId) {
+                $academicPeriodList[$periodId] = $periodName;
+                $found = true;
+            } else {
+                $academicPeriodList = [$periodId => $periodName];
+            }
+        }
+        $academicPeriodList = array_reverse($academicPeriodList, true);
+
+        foreach ($academicPeriodList as $periodId => $periodName) {
+            foreach ($dataSet as $dkey => $dvalue) {
+                if (!array_key_exists($periodName, $dataSet[$dkey]['data'])) {
+                    $dataSet[$dkey]['data'][$periodName] = 0;
+                }
+            }
+
+            foreach ($genderOptions as $genderId => $genderName) {
+                $queryCondition = array_merge(['Genders.id' => $genderId], $_conditions);
+
+                $staffByYear = $this->find()
+                    ->find('AcademicPeriod', ['academic_period_id'=> $periodId])
+                    ->find('list',[
+                        'keyField' => 'gender_name',
+                        'valueField' => 'total'
+                    ])
+                    ->matching('Users.Genders')
+                    ->matching('Institutions')
+                    ->select([
+                        'gender_name' => 'Genders.name',
+                        'total' => $this->find()->func()->count('DISTINCT '.$this->aliasField('id'))
+                    ])
+                    ->where($queryCondition)
+                    ->group(['gender_name'])
+                    ->hydrate(false)
+                    ->toArray();
+
+                if (!empty($staffByYear)) {
+                    $dataSet[$genderName]['data'][$periodName] = $staffByYear[$genderName];
+                    $dataSet['Total']['data'][$periodName] += $staffByYear[$genderName];
+                }
+            }
+        }
+
+        $params['dataSet'] = $dataSet->getArrayCopy();
         return $params;
     }
 
