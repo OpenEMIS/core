@@ -2200,7 +2200,16 @@ class ValidationBehavior extends Behavior
     public static function checkAcademicTerm($field, array $globalData)
     {
         $model = $globalData['providers']['table'];
-        $record = $model->find()->select([$model->aliasField('academic_term')])->where([$model->aliasField('assessment_id') => $globalData['data']['assessment_id']])->hydrate(false)->toArray();
+        $record = $model
+            ->find()
+            ->select([
+                $model->aliasField('academic_term')
+            ])
+            ->where([
+                $model->aliasField('assessment_id') => $globalData['data']['assessment_id']
+            ])
+            ->hydrate(false)
+            ->toArray();
         $record = array_column($record, 'academic_term');
         $arrLength = count($record);
         $nullCounter = 0;

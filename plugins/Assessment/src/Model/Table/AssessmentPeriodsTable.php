@@ -84,6 +84,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ->add('date_enabled', 'ruleCompareDate', [
             'rule' => ['compareDate', 'date_disabled', true]
         ])
+        ->allowEmpty('academic_term')
         ->add('academic_term', 'ruleCheckAcademicTerm', [
             'rule' => ['checkAcademicTerm']
         ]);
@@ -114,6 +115,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     public function validationUpdateAcademicTerm(Validator $validation)
     {
         return $validation
+            ->allowEmpty('academic_term')
             ->add('academic_term', 'ruleCheckAcademicTerm', [
                 'rule' => ['checkAcademicTerm']
             ]);
@@ -124,6 +126,15 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $events = parent::implementedEvents();
         $events['ControllerAction.Model.editAcademicTerm'] = 'editAcademicTerm';
         return $events;
+    }
+
+    public function beforeMarshal(Event $event, ArrayObject $data, ArrayObject $options)
+    {
+        if ($data->offsetExists('academic_term')) {
+            if ($data['academic_term'] == '') {
+                $data['academic_term'] = null;
+            }
+        }
     }
 
     public function onGetAssessmentPeriodsElement(Event $event, $action, $entity, $attr, $options = [])
@@ -276,21 +287,20 @@ class AssessmentPeriodsTable extends ControllerActionTable
         $this->setFieldOrder([
             'code', 'name', 'academic_term', 'start_date', 'end_date', 'date_enabled', 'date_disabled'
         ]);
-
-
     }
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
         $query->where([$this->aliasField('assessment_id') => $extra['selectedTemplate']]); //show assessment period based on the selected assessment.
         if ($extra['selectedTemplate'] != 'empty') {
-           $extra['toolbarButtons']['editAcademicTerm'] = [
+            $extra['toolbarButtons']['editAcademicTerm'] = [
                 'url' => [
                     'plugin' => 'Assessment',
                     'controller' => 'Assessments',
                     'action' => 'AssessmentPeriods',
                     '0' => 'editAcademicTerm',
-                    'template' => $extra['selectedTemplate']
+                    'template' => $extra['selectedTemplate'],
+                    'period' => $extra['selectedPeriod']
                 ],
                 'type' => 'button',
                 'label' => '<i class="kd-edit"></i>',
