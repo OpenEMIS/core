@@ -27,7 +27,7 @@ class AssessmentsTable extends ControllerActionTable {
 
         $this->belongsTo('AcademicPeriods', ['className' => 'AcademicPeriod.AcademicPeriods']);
         $this->belongsTo('EducationGrades', ['className' => 'Education.EducationGrades']);
-
+        $this->hasMany('AssessmentPeriods', ['className' => 'Assessment.AssessmentPeriods', 'dependent' => true, 'cascadeCallbacks' => true]);
         $this->hasMany('AssessmentItems', ['className' => 'Assessment.AssessmentItems', 'dependent' => true, 'cascadeCallbacks' => true]);
 
         $this->belongsToMany('GradingTypes', [
@@ -35,16 +35,6 @@ class AssessmentsTable extends ControllerActionTable {
             'joinTable' => 'assessment_items_grading_types',
             'foreignKey' => 'assessment_id',
             'targetForeignKey' => 'assessment_grading_type_id',
-            'through' => 'Assessment.AssessmentItemsGradingTypes',
-            'dependent' => true,
-            'cascadeCallbacks' => true
-        ]);
-
-        $this->belongsToMany('AssessmentPeriods', [
-            'className' => 'Assessment.AssessmentPeriods',
-            'joinTable' => 'assessment_items_grading_types',
-            'foreignKey' => 'assessment_id',
-            'targetForeignKey' => 'assessment_period_id',
             'through' => 'Assessment.AssessmentItemsGradingTypes',
             'dependent' => true,
             'cascadeCallbacks' => true
@@ -98,6 +88,16 @@ class AssessmentsTable extends ControllerActionTable {
             ])
             ->allowEmpty('excel_template');
     }
+
+    public function validationUpdateAcademicTerm(Validator $validation)
+    {
+        return $validation
+            ->add('assessment_periods', 'ruleNotEmptyAcademicTerm', [
+                'rule'  => ['notEmptyAcademicTerm']
+            ]);
+    }
+
+
 
     public function beforeAction(Event $event, ArrayObject $extra)
     {
