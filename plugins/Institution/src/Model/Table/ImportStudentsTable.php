@@ -341,8 +341,28 @@ class ImportStudentsTable extends AppTable {
                     if (!empty($periodClasses)) {
                         foreach($periodClasses as $id=>$name) {
                             if ($id == $tempRow['class']) {
+
                                 if ($periodCode == $period->code) {
                                     $selectedClassIdFound = true;
+
+                                    //check class grade against selected grade
+                                    $InstitutionClasses = TableRegistry::get('Institution.InstitutionClasses');
+                                    $classGrade = $InstitutionClasses->getClassGradeOptions($id);
+
+                                    if (!in_array($tempRow['education_grade_id'], $classGrade)) { //if selected grade cant be found on class grade
+                                        $rowInvalidCodeCols['education_grade_id'] = __('Selected education grade does not match with grades offered by the class');
+                                        return false;
+                                    } else {
+                                        //checking class capacity if student imported straight to the class.
+                                        $InstitutionClassStudents = TableRegistry::get('Institution.InstitutionClassStudents');
+                                        $countStudent = $InstitutionClassStudents->getStudentCountByClass($id);
+
+                                        if ($countStudent + 1 > 100) {
+                                            $rowInvalidCodeCols['class'] = __('Selected class has hit limit of 100 students');
+                                            return false;
+                                        }
+                                    }
+
                                 } else {
                                     $selectedClassIdFound = false;
                                 }

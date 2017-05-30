@@ -1,4 +1,4 @@
-<?php 
+<?php
 namespace Infrastructure\Model\Behavior;
 
 use ArrayObject;
@@ -8,54 +8,58 @@ use Cake\ORM\TableRegistry;
 use Cake\ORM\Behavior;
 use Cake\Event\Event;
 
-class PagesBehavior extends Behavior {
-	protected $_defaultConfig = [
-		'module' => null
-	];
+class PagesBehavior extends Behavior
+{
+    private $modules = ['Land', 'Building', 'Floor', 'Room'];
 
-	public function initialize(array $config) {
-		parent::initialize($config);
-	}
+    protected $_defaultConfig = [
+        'module' => null
+    ];
 
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 1];
-		return $events;
-	}
+    public function initialize(array $config)
+    {
+        parent::initialize($config);
+    }
 
-	public function beforeAction(Event $event) {
-		$model = $this->_table;
+    public function implementedEvents()
+    {
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.beforeAction'] = ['callable' => 'beforeAction', 'priority' => 10];
+        return $events;
+    }
 
-		$action = $model->action;
-		$url = $model->ControllerAction->url($action);
+    public function beforeAction(Event $event, ArrayObject $extra)
+    {
+        $model = $this->_table;
 
-		$selectedModule = $model->request->query('module');
-		if (!is_null($selectedModule)) {
-			$customModule = $model->CustomModules
-				->find()
-				->where([$model->CustomModules->aliasField('id') => $selectedModule])
-				->first();
+        if ($model->action == 'index') {
+            $selectedModule = !is_null($model->request->query('module')) ? $model->request->query('module') : '-1';
+            $CustomModules = TableRegistry::get('CustomField.CustomModules');
+            $moduleDetails = $CustomModules->find('list', [
+                    'keyField' => 'id',
+                    'valueField' => 'code'
+                ])
+                ->toArray();
+            $ControllerActionComponent = $event->subject();
+            $request = $ControllerActionComponent->request;
+            $redirectAction = isset($moduleDetails[$selectedModule]) ? ucfirst(strtolower($moduleDetails[$selectedModule])).'Pages' : null;
+            if ($redirectAction && ucfirst(strtolower($moduleDetails[$selectedModule])) != $this->config('module')) {
+                // call from general, if room selected, redirect to room types
+                $code = $moduleDetails[$selectedModule];
+                $url = $model->url('index');
+                $url['action'] = $redirectAction;
+                $url['module'] = $selectedModule;
 
-			$module = $this->config('module');
-			if ($module == 'infrastructure') {
-				// call from infrastructure, if room selected, redirect to room
-				if ($customModule->model == 'Institution.InstitutionRooms') {
-					$url['action'] = 'RoomPages';
-					pr('redirect to room');
+                $event->stopPropagation();
+                return $model->controller->redirect($url);
+            }
+        } else {
+            unset($extra['elements']['controls']);
+        }
+    }
 
-					$event->stopPropagation();
-					return $model->controller->redirect($url);
-				}
-			} else if ($module == 'room') {
-				// call from room, if room is not selected, redirect to infrastructure
-				if ($customModule->model == 'Institution.InstitutionInfrastructures') {
-					$url['action'] = 'Pages';
-					pr('redirect to infrastructure');
-
-					$event->stopPropagation();
-					return $model->controller->redirect($url);
-				}
-			}
-		}
-	}
+    public function getModules()
+    {
+        return $this->modules;
+    }
 }

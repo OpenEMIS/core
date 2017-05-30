@@ -2,14 +2,14 @@
 namespace Staff\Model\Table;
 
 use ArrayObject;
-use App\Model\Table\AppTable;
+use App\Model\Table\ControllerActionTable;
 use Cake\Validation\Validator;
 use Cake\Event\Event;
 use Cake\ORM\TableRegistry;
 use Cake\ORM\Query;
 use Cake\ORM\Entity;
 
-class SalariesTable extends AppTable {
+class SalariesTable extends ControllerActionTable {
 	public function initialize(array $config) {
 		$this->table('staff_salaries');
 		parent::initialize($config);
@@ -17,15 +17,102 @@ class SalariesTable extends AppTable {
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->hasMany('SalaryAdditions', ['className' => 'Staff.SalaryAdditions', 'dependent' => true, 'cascadeCallbacks' => true]);
 		$this->hasMany('SalaryDeductions', ['className' => 'Staff.SalaryDeductions', 'dependent' => true, 'cascadeCallbacks' => true]);
+
+		$this->addBehavior('Import.ImportLink', ['import_model' => 'ImportSalaries']);
+
+        $this->addBehavior('Excel', [
+            'pages' => ['index']
+        ]);
 	}
 
-	public function beforeAction() {
-		$this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
+    public function implementedEvents() {
+        $events = parent::implementedEvents();
+        return $events;
+    }
+
+    public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query)
+    {
+        if (!empty($this->staffId)) {
+            $query->contain(['Users'])
+                ->where([$this->aliasField('staff_id') => $this->staffId])
+                ->select(['openemis_no' => 'Users.openemis_no']);
+        }
+    }
+
+    public function onExcelUpdateFields(Event $event, ArrayObject $settings, ArrayObject $fields)
+    {
+        $newFields[] = [
+            'key' => 'Salaries.staff_id',
+            'field' => 'staff_id',
+            'type' => 'integer',
+            'label' => '',
+        ];
+
+        $newFields[] = [
+            'key' => 'Users.openemis_no',
+            'field' => 'openemis_no',
+            'type' => 'string',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Salaries.salary_date',
+            'field' => 'salary_date',
+            'type' => 'date',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Salaries.comment',
+            'field' => 'comment',
+            'type' => 'text',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Salaries.gross_salary',
+            'field' => 'gross_salary',
+            'type' => 'decimal',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Salaries.additions',
+            'field' => 'additions',
+            'type' => 'decimal',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Salaries.deductions',
+            'field' => 'deductions',
+            'type' => 'decimal',
+            'label' => ''
+        ];
+
+        $newFields[] = [
+            'key' => 'Salaries.net_salary',
+            'field' => 'net_salary',
+            'type' => 'decimal',
+            'label' => ''
+        ];
+
+        $fields->exchangeArray($newFields);
+    }
+
+	public function beforeAction(Event $event, ArrayObject $extra) 
+    {
+        $session = $this->Session;
+        if ($session->check('Staff.Staff.id')) {
+            $this->staffId = $session->read('Staff.Staff.id');
+        }
+
+        $this->fields['gross_salary']['attr'] = array('data-compute-variable' => 'true', 'data-compute-operand' => 'plus', 'maxlength' => 9);
 		$this->fields['net_salary']['attr'] = array('data-compute-target' => 'true', 'readonly' => true);
 	}
 
-	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) {
-
+	public function beforeSave(Event $event, Entity $entity, ArrayObject $options) 
+    {
 		$totalAddition = 0;
 		$totalDeduction = 0;
 
@@ -71,10 +158,10 @@ class SalariesTable extends AppTable {
 
 		$data = ['additions' => $totalAddition, 'deductions' => $totalDeduction];
 
-		$entity = $this->patchEntity($entity, $data);
-	}
+        $entity = $this->patchEntity($entity, $data);
+    }
 
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
+	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options, ArrayObject $extra) {
 		if (array_key_exists($this->alias(), $data)) {
 			if (!array_key_exists('salary_additions', $data[$this->alias()])) {
 				$data[$this->alias()]['salary_additions'] = [];
@@ -86,23 +173,28 @@ class SalariesTable extends AppTable {
 	}
 
 
-	public function indexBeforeAction(Event $event) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['gross_salary']['type'] = 'float';
 		$this->fields['net_salary']['type'] = 'float';
 		$this->fields['additions']['type'] = 'float';
 		$this->fields['deductions']['type'] = 'float';
 		$this->fields['comment']['visible'] = false;
-		$this->ControllerAction->setFieldOrder(['salary_date', 'gross_salary', 'additions', 'deductions', 'net_salary']);
+		$this->setFieldOrder(['salary_date', 'gross_salary', 'additions', 'deductions', 'net_salary']);
 	}
 
-	public function editBeforeQuery(Event $event, Query $query) {
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
+	{
+		$query->order($this->aliasField('salary_date DESC'));
+	}
+
+	public function editBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
 		$query->contain([
 			'SalaryAdditions',
 			'SalaryDeductions'
 		]);
 	}
 
-	public function addEditBeforeAction(Event $event) {
+	public function addEditBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['additions']['visible'] = false;
 		$this->fields['deductions']['visible'] = false;
 
@@ -120,7 +212,7 @@ class SalariesTable extends AppTable {
 		$SalaryAdditionType = TableRegistry::get('Staff.SalaryAdditionTypes')->getList();
 		$SalaryDeductionType = TableRegistry::get('Staff.SalaryDeductionTypes')->getList();
 
-		$this->ControllerAction->addField('addition_set', [
+		$this->field('addition_set', [
 			'type' => 'element',
 			'element' => 'Staff.salary_info',
 			'visible' => true,
@@ -128,7 +220,7 @@ class SalariesTable extends AppTable {
 			'operation' => 'add',
 			'fieldOptions' => $SalaryAdditionType->toArray()
 		]);
-		$this->ControllerAction->addField('deduction_set', [
+		$this->field('deduction_set', [
 			'type' => 'element',
 			'element' => 'Staff.salary_info',
 			'visible' => true,
@@ -137,7 +229,7 @@ class SalariesTable extends AppTable {
 			'fieldOptions' => $SalaryDeductionType->toArray()
 		]);
 
-		$this->ControllerAction->setFieldOrder(['salary_date', 'gross_salary', 'net_salary', 'addition_set', 'deduction_set', 'comment']);
+		$this->setFieldOrder(['salary_date', 'gross_salary', 'net_salary', 'addition_set', 'deduction_set', 'comment']);
 	}
 
 	public function addEditOnAddRow(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
@@ -169,7 +261,7 @@ class SalariesTable extends AppTable {
 		;
 	}
 
-	public function viewBeforeAction(Event $event) {
+	public function viewBeforeAction(Event $event, ArrayObject $extra) {
 		$this->fields['gross_salary']['type'] = 'float';
 		$this->fields['net_salary']['type'] = 'float';
 		$this->fields['additions']['type'] = 'float';
