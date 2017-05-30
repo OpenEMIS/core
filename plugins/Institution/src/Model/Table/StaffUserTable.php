@@ -55,7 +55,6 @@ class StaffUserTable extends ControllerActionTable
                 '_function' => 'getNumberOfStaffByGender'
             ]
         ]);
-        $this->addBehavior('Import.ImportLink');
         $this->addBehavior('Configuration.Pull');
         $this->addBehavior('TrackActivity', ['target' => 'User.UserActivities', 'key' => 'security_user_id', 'session' => 'Staff.Staff.id']);
         $this->addBehavior('Restful.RestfulAccessControl', [

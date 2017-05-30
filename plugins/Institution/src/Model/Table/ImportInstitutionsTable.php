@@ -9,8 +9,10 @@ use Cake\ORM\Entity;
 use Cake\ORM\TableRegistry;
 use PHPExcel_Worksheet;
 
-class ImportInstitutionsTable extends AppTable {
-    public function initialize(array $config) {
+class ImportInstitutionsTable extends AppTable
+{
+    public function initialize(array $config)
+    {
         $this->table('import_mapping');
         parent::initialize($config);
 
@@ -20,7 +22,8 @@ class ImportInstitutionsTable extends AppTable {
         $this->Institutions = TableRegistry::get('Institution.Institutions');
     }
 
-    public function implementedEvents() {
+    public function implementedEvents()
+    {
         $events = parent::implementedEvents();
         $newEvent = [
             'Model.import.onImportCheckUnique' => 'onImportCheckUnique',
@@ -29,12 +32,20 @@ class ImportInstitutionsTable extends AppTable {
             'Model.import.onImportPopulateAreaAdministrativesData' => 'onImportPopulateAreaAdministrativesData',
             'Model.import.onImportPopulateNetworkConnectivitiesData' => 'onImportPopulateNetworkConnectivitiesData',
             'Model.import.onImportModelSpecificValidation' => 'onImportModelSpecificValidation',
+            'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons'
         ];
         $events = array_merge($events, $newEvent);
         return $events;
     }
 
-    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols) {
+    public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel)
+    {
+        $toolbarButtons['back']['url'][0] = $toolbarButtons['back']['url']['action'];
+        $toolbarButtons['back']['url']['action'] = 'Institutions';
+    }
+
+    public function onImportCheckUnique(Event $event, PHPExcel_Worksheet $sheet, $row, $columns, ArrayObject $tempRow, ArrayObject $importedUniqueCodes, ArrayObject $rowInvalidCodeCols)
+    {
         $columns = new Collection($columns);
         $filtered = $columns->filter(function ($value, $key, $iterator) {
             return $value == 'code';
@@ -55,11 +66,13 @@ class ImportInstitutionsTable extends AppTable {
         }
     }
 
-    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity) {
+    public function onImportUpdateUniqueKeys(Event $event, ArrayObject $importedUniqueCodes, Entity $entity)
+    {
         $importedUniqueCodes[] = $entity->code;
     }
 
-    public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateAreasData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         $order = [$lookupModel.'.area_level_id', $lookupModel.'.order'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -73,7 +86,7 @@ class ImportInstitutionsTable extends AppTable {
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
         if (!empty($modelData)) {
-            foreach($modelData->toArray() as $row) {
+            foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
                     $row->$lookupColumn
@@ -82,7 +95,8 @@ class ImportInstitutionsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateAreaAdministrativesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         $order = [$lookupModel.'.area_administrative_level_id', $lookupModel.'.order'];
 
         $lookedUpTable = TableRegistry::get($lookupPlugin . '.' . $lookupModel);
@@ -96,7 +110,7 @@ class ImportInstitutionsTable extends AppTable {
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
         if (!empty($modelData)) {
-            foreach($modelData->toArray() as $row) {
+            foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
                     $row->$lookupColumn
@@ -105,7 +119,8 @@ class ImportInstitutionsTable extends AppTable {
         }
     }
 
-    public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder) {
+    public function onImportPopulateNetworkConnectivitiesData(Event $event, $lookupPlugin, $lookupModel, $lookupColumn, $translatedCol, ArrayObject $data, $columnOrder)
+    {
         // die('onImportPopulateNetworkConnectivitiesData');
         $order = [$lookupModel.'.order'];
 
@@ -121,7 +136,7 @@ class ImportInstitutionsTable extends AppTable {
         $data[$columnOrder]['lookupColumn'] = 2;
         $data[$columnOrder]['data'][] = [$translatedReadableCol, $translatedCol];
         if (!empty($modelData)) {
-            foreach($modelData->toArray() as $row) {
+            foreach ($modelData->toArray() as $row) {
                 $data[$columnOrder]['data'][] = [
                     $row->name,
                     $row->$lookupColumn
@@ -130,7 +145,8 @@ class ImportInstitutionsTable extends AppTable {
         }
     }
 
-    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols) {
+    public function onImportModelSpecificValidation(Event $event, $references, ArrayObject $tempRow, ArrayObject $originalRow, ArrayObject $rowInvalidCodeCols)
+    {
         return true;
     }
 

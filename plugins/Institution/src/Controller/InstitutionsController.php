@@ -4,6 +4,7 @@ namespace Institution\Controller;
 use ArrayObject;
 
 use Cake\Event\Event;
+use Cake\ORM\Entity;
 use Cake\ORM\Query;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -13,6 +14,7 @@ use Cake\I18n\Date;
 use ControllerAction\Model\Traits\UtilityTrait;
 use App\Model\Traits\OptionsTrait;
 use Institution\Controller\AppController;
+use Exception;
 
 class InstitutionsController extends AppController
 {
@@ -23,15 +25,12 @@ class InstitutionsController extends AppController
     public function initialize()
     {
         parent::initialize();
-
-        $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
+        // $this->ControllerAction->model('Institution.Institutions', [], ['deleteStrategy' => 'restrict']);
         $this->ControllerAction->models = [
             'Attachments'       => ['className' => 'Institution.InstitutionAttachments'],
             'History'           => ['className' => 'Institution.InstitutionActivities', 'actions' => ['search', 'index']],
 
             'Infrastructures'   => ['className' => 'Institution.InstitutionInfrastructures', 'options' => ['deleteStrategy' => 'restrict']],
-            'Rooms'             => ['className' => 'Institution.InstitutionRooms', 'options' => ['deleteStrategy' => 'restrict']],
-
             'Staff'             => ['className' => 'Institution.Staff'],
             'StaffAccount'      => ['className' => 'Institution.StaffAccount', 'actions' => ['view', 'edit']],
 
@@ -50,9 +49,6 @@ class InstitutionsController extends AppController
             'ClassStudents'     => ['className' => 'Institution.InstitutionClassStudents', 'actions' => ['excel']],
 
             'BankAccounts'      => ['className' => 'Institution.InstitutionBankAccounts'],
-
-            // Surveys
-            'Surveys'           => ['className' => 'Institution.InstitutionSurveys', 'actions' => ['index', 'view', 'edit', 'remove']],
 
             // Quality
             'Rubrics'           => ['className' => 'Institution.InstitutionRubrics', 'actions' => ['index', 'view', 'remove']],
@@ -74,6 +70,16 @@ class InstitutionsController extends AppController
     }
 
     // CAv4
+    public function Surveys()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionSurveys']);
+    }
+
+    public function Institutions()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.Institutions']);
+    }
+
     public function Positions()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionPositions']);
@@ -85,6 +91,22 @@ class InstitutionsController extends AppController
     public function Fees()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFees']);
+    }
+    public function InstitutionLands()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionLands']);
+    }
+    public function InstitutionBuildings()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionBuildings']);
+    }
+    public function InstitutionFloors()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionFloors']);
+    }
+    public function InstitutionRooms()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.InstitutionRooms']);
     }
     public function StudentFees()
     {
@@ -202,6 +224,10 @@ class InstitutionsController extends AppController
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Institution.StudentCompetencyResults']);
     }
+    public function StudentSurveys()
+    {
+        $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentSurveys']);
+    }
     public function StudentTextbooks()
     {
         $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.Textbooks']);
@@ -251,7 +277,7 @@ class InstitutionsController extends AppController
 
         if (!$this->AccessControl->isAdmin()) {
             $userId = $this->Auth->user('id');
-            $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+            $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
         }
 
         $this->set('_roles', $roles);
@@ -267,18 +293,16 @@ class InstitutionsController extends AppController
         $hasTemplate = $Assessments->checkIfHasTemplate($assessmentId);
 
         if ($hasTemplate) {
-            $url['plugin'] = 'CustomExcel';
-            $url['controller'] = 'CustomExcels';
-            $url['action'] = 'export';
-            $url[0] = 'AssessmentResults';
-        } else {
-            $url['plugin'] = 'Institution';
-            $url['controller'] = 'Institutions';
-            $url['action'] = 'ClassStudents';
-            $url[0] = 'excel';
+            $customUrl = $this->ControllerAction->url('index');
+            $customUrl['plugin'] = 'CustomExcel';
+            $customUrl['controller'] = 'CustomExcels';
+            $customUrl['action'] = 'export';
+            $customUrl[0] = 'AssessmentResults';
+            $this->set('customExcel', Router::url($customUrl));
         }
 
         $this->set('excelUrl', Router::url($url));
+
         $this->set('ngController', 'InstitutionsResultsCtrl');
     }
 
@@ -304,7 +328,7 @@ class InstitutionsController extends AppController
             $this->Navigation->addCrumb($crumbTitle, $indexUrl);
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'StudentCompetencies', $action], $roles)) {
@@ -345,7 +369,7 @@ class InstitutionsController extends AppController
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'AllClasses', $action], $roles)) {
@@ -410,7 +434,7 @@ class InstitutionsController extends AppController
             $institutionId = !empty($this->request->param('institutionId')) ? $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'] : $session->read('Institution.Institutions.id');
             if (!$this->AccessControl->isAdmin() && $institutionId) {
                 $userId = $this->Auth->user('id');
-                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
                 $AccessControl = $this->AccessControl;
                 $action = 'edit';
                 if (!$AccessControl->check(['Institutions', 'AllSubjects', $action], $roles)) {
@@ -462,7 +486,7 @@ class InstitutionsController extends AppController
             if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
                 $userId = $this->Auth->user('id');
                 $institutionId = $session->read('Institution.Institutions.id');
-                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('ngController', 'InstitutionsStudentsCtrl as InstitutionStudentController');
             $this->set('_createNewStudent', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
@@ -488,7 +512,7 @@ class InstitutionsController extends AppController
             if (!$this->AccessControl->isAdmin() && $session->check('Institution.Institutions.id')) {
                 $userId = $this->Auth->user('id');
                 $institutionId = $session->read('Institution.Institutions.id');
-                $roles = $this->Institutions->getInstitutionRoles($userId, $institutionId);
+                $roles = TableRegistry::get('Institution.Institutions')->getInstitutionRoles($userId, $institutionId);
             }
             $this->set('ngController', 'InstitutionsStaffCtrl as InstitutionStaffController');
             $this->set('_createNewStaff', $this->AccessControl->check(['Institutions', 'getUniqueOpenemisId'], $roles));
@@ -562,8 +586,8 @@ class InstitutionsController extends AppController
     public function beforeFilter(Event $event)
     {
         parent::beforeFilter($event);
-        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
         $session = $this->request->session();
+        $this->Navigation->addCrumb('Institutions', ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
         $action = $this->request->params['action'];
         $header = __('Institutions');
 
@@ -586,16 +610,24 @@ class InstitutionsController extends AppController
             }
             $session->write('Institution.Institutions.id', $query['institution_id']);
         }
-
-        if ($action == 'index') {
-            $session->delete('Institution.Institutions');
+        if ($action == 'Institutions' && isset($this->request->pass[0]) && $this->request->pass[0] == 'index') {
+            if ($session->check('Institution.Institutions.search.key')) {
+                $search = $session->read('Institution.Institutions.search.key');
+                $session->delete('Institution.Institutions');
+                $session->write('Institution.Institutions.search.key', $search);
+            } else {
+                $session->delete('Institution.Institutions');
+            }
         } elseif ($action == 'StudentUser') {
             $session->write('Student.Students.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         } elseif ($action == 'StaffUser') {
             $session->write('Staff.Staff.id', $this->ControllerAction->paramsDecode($this->request->pass[1])['id']);
         }
 
-        if ($session->check('Institution.Institutions.id') || in_array($action, ['view', 'edit', 'dashboard'])) {
+        if (($session->check('Institution.Institutions.id')
+            || $this->request->param('institutionId'))
+            || $action == 'dashboard'
+            || ($action == 'Institutions' && isset($this->request->pass[0]) && in_array($this->request->pass[0], ['view', 'edit']))) {
             $id = 0;
             if (isset($this->request->pass[0]) && (in_array($action, ['view', 'edit', 'dashboard']))) {
                 $id = $this->request->pass[0];
@@ -605,11 +637,16 @@ class InstitutionsController extends AppController
                     return false;
                 }
                 $session->write('Institution.Institutions.id', $id);
+            } elseif ($this->request->param('institutionId')) {
+                $id = $this->ControllerAction->paramsDecode($this->request->param('institutionId'))['id'];
+
+                // Remove writing to session once model has been converted to institution plugin
+                $session->write('Institution.Institutions.id', $id);
             } elseif ($session->check('Institution.Institutions.id')) {
                 $id = $session->read('Institution.Institutions.id');
             }
             if (!empty($id)) {
-                $this->activeObj = $this->Institutions->get($id);
+                $this->activeObj = TableRegistry::get('Institution.Institutions')->get($id);
                 $name = $this->activeObj->name;
                 $session->write('Institution.Institutions.name', $name);
                 if ($action == 'view') {
@@ -619,9 +656,9 @@ class InstitutionsController extends AppController
                 } else {
                     $header = $name .' - '.__(Inflector::humanize(Inflector::underscore($action)));
                 }
-                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', $this->ControllerAction->paramsEncode(['id' => $id])]);
+                $this->Navigation->addCrumb($name, ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'dashboard', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $id]), $this->ControllerAction->paramsEncode(['id' => $id])]);
             } else {
-                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
             }
         }
         $this->set('contentHeader', $header);
@@ -721,7 +758,12 @@ class InstitutionsController extends AppController
     {
         if (!is_null($this->activeObj)) {
             $session = $this->request->session();
-            $institutionId = $session->read('Institution.Institutions.id');
+            try {
+                $institutionId = $this->ControllerAction->paramsDecode($this->request->params('institutionId'));
+            } catch (Exception $e) {
+                $institutionId = $session->read('Institution.Institutions.id');
+            }
+
             $action = false;
             $params = $this->request->params;
             // do not hyperlink breadcrumb for Infrastructures and Rooms
@@ -734,7 +776,7 @@ class InstitutionsController extends AppController
             $crumbTitle = Inflector::humanize(Inflector::underscore($alias));
             $crumbOptions = [];
             if ($action) {
-                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias];
+                $crumbOptions = ['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => $model->alias, 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])];
             }
 
             $studentModels = [
@@ -748,7 +790,7 @@ class InstitutionsController extends AppController
                     $studentId = $session->read('Student.Students.id');
 
                     // Breadcrumb
-                    $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students']);
+                    $this->Navigation->addCrumb('Students', ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'Students', 'institutionId' => $this->ControllerAction->paramsEncode(['id' => $institutionId])]);
                     $this->Navigation->addCrumb($studentName, ['plugin' => $this->plugin, 'controller' => 'Institutions', 'action' => 'StudentUser', 'view', $this->ControllerAction->paramsEncode(['id' => $studentId])]);
                     $this->Navigation->addCrumb($studentModels[$alias]);
 
@@ -789,7 +831,7 @@ class InstitutionsController extends AppController
                     $model->fields['institution_id']['value'] = $institutionId;
                 }
 
-                if (count($this->request->pass) > 1) {
+                if (count($this->request->pass) > 1 && isset($this->request->pass[1])) {
                     $modelIds = $this->request->pass[1]; // id of the sub model
                     $primaryKey = $model->primaryKey();
                     $modelIds = $this->ControllerAction->paramsDecode($modelIds);
@@ -845,10 +887,10 @@ class InstitutionsController extends AppController
                 $this->Navigation->addCrumb($model->getHeader($model->alias()));
                 $header = __('Institutions') . ' - ' . $model->getHeader($model->alias());
                 $this->set('contentHeader', $header);
-            } else {
+            } elseif ($this->request->param('action') != 'Institutions') {
                 $this->Alert->warning('general.notExists');
                 $event->stopPropagation();
-                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'index']);
+                return $this->redirect(['plugin' => 'Institution', 'controller' => 'Institutions', 'action' => 'Institutions', 'index']);
             }
         }
     }
@@ -864,7 +906,13 @@ class InstitutionsController extends AppController
                     // should redirect
                 } else {
                     if ($model->alias() != 'Programmes') {
-                        $query->where([$model->aliasField('institution_id') => $session->read('Institution.Institutions.id')]);
+                        $institutionId = $this->request->param('institutionId');
+                        try {
+                            $institutionId = $this->ControllerAction->paramsDecode($institutionId)['id'];
+                        } catch (Exception $e) {
+                            $institutionId = $session->read('Institution.Institutions.id');
+                        }
+                        $query->where([$model->aliasField('institution_id') => $institutionId]);
                     }
                 }
             }
@@ -876,18 +924,18 @@ class InstitutionsController extends AppController
         $this->beforePaginate($event, $model, $query, $extra);
     }
 
-    public function excel($id=0)
+    public function excel($id = 0)
     {
-        $this->Institutions->excel($id);
+        TableRegistry::get('Institution.Institutions')->excel($id);
         $this->autoRender = false;
     }
 
     public function dashboard($id)
     {
         $id = $this->ControllerAction->paramsDecode($id)['id'];
-        $this->ControllerAction->model->action = $this->request->action;
+        // $this->ControllerAction->model->action = $this->request->action;
 
-        $Institutions = $this->Institutions;
+        $Institutions = TableRegistry::get('Institution.Institutions');
         $classification = $Institutions->get($id)->classification;
         $AcademicPeriods = TableRegistry::get('AcademicPeriod.AcademicPeriods');
         $currentPeriod = $AcademicPeriods->getCurrent();
@@ -928,7 +976,6 @@ class InstitutionsController extends AppController
             );
             $highChartDatas[] = $InstitutionStaff->getHighChart('number_of_staff_by_type', $params);
         } elseif ($classification == $Institutions::NON_ACADEMIC) {
-
             //Staffs By Position Title for current year, only shows assigned staff
             $params = array(
                 'conditions' => array('institution_id' => $id, 'staff_status_id' => $assignedStatus)
@@ -1156,6 +1203,7 @@ class InstitutionsController extends AppController
         $this->autoRender= false;
         $StaffTable = TableRegistry::get('Institution.Staff');
         $positionTable = TableRegistry::get('Institution.InstitutionPositions');
+
         $userId = $this->Auth->user('id');
 
         $selectedFTE = empty($fte) ? 0 : $fte;
@@ -1211,8 +1259,9 @@ class InstitutionsController extends AppController
             $staffPositionsOptions = $StaffTable->Positions
                 ->find()
                 ->innerJoinWith('StaffPositionTitles.SecurityRoles')
+                ->innerJoinWith('StaffPositionGrades')
                 ->where($positionConditions)
-                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type'])
+                ->select(['security_role_id' => 'SecurityRoles.id', 'type' => 'StaffPositionTitles.type', 'grade_name' => 'StaffPositionGrades.name'])
                 ->order(['StaffPositionTitles.type' => 'DESC', 'StaffPositionTitles.order'])
                 ->autoFields(true)
                 ->toArray();
@@ -1232,8 +1281,10 @@ class InstitutionsController extends AppController
         $options = [];
         $excludePositions = array_column($excludePositions->toArray(), 'position_id');
         foreach ($staffPositionsOptions as $position) {
+            $name = $position->name . ' - ' . $position->grade_name;
+
             $type = __($types[$position->type]);
-            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $position->name, 'disabled' => in_array($position->id, $excludePositions)];
+            $options[] = ['value' => $position->id, 'group' => $type, 'name' => $name, 'disabled' => in_array($position->id, $excludePositions)];
         }
 
         echo json_encode($options);

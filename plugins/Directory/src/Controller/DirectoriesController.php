@@ -24,7 +24,6 @@ class DirectoriesController extends AppController {
 			'StudentExtracurriculars' => ['className' => 'Student.Extracurriculars'],
 
 			// Staff
-			'StaffSalaries'			=> ['className' => 'Staff.Salaries'],
 			'StaffPositions'		=> ['className' => 'Staff.Positions', 'actions' => ['index', 'view']],
 			'StaffSections'			=> ['className' => 'Staff.StaffSections', 'actions' => ['index', 'view']],
 			'StaffClasses'			=> ['className' => 'Staff.StaffClasses', 'actions' => ['index', 'view']],
@@ -34,6 +33,7 @@ class DirectoriesController extends AppController {
 			'TrainingResults'		=> ['className' => 'Staff.TrainingResults', 'actions' => ['index', 'view']],
 
 			'ImportUsers' 			=> ['className' => 'Directory.ImportUsers', 'actions' => ['add']],
+			'ImportSalaries' 		=> ['className' => 'Staff.ImportSalaries', 'actions' => ['add']]
 		];
 
 		$this->loadComponent('Training.Training');
@@ -76,6 +76,7 @@ class DirectoriesController extends AppController {
 	public function StudentReportCards() 	{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Student.StudentReportCards']); }
 	public function Attachments()			{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'User.Attachments']); }
     public function Courses() 				{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffTrainings']); }
+    public function StaffSalaries() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.Salaries']); }
     public function StaffBehaviours() 		{ $this->ControllerAction->process(['alias' => __FUNCTION__, 'className' => 'Staff.StaffBehaviours']); }
 
 	// health

@@ -13,6 +13,7 @@ use Cake\Utility\Inflector;
 use Cake\Utility\Text;
 use Cake\Validation\Validator;
 use Cake\Collection\Collection;
+use Cake\I18n\Date;
 
 use Cake\Routing\Router;
 
@@ -337,15 +338,7 @@ class InstitutionClassesTable extends ControllerActionTable
         $extra['selectedAcademicPeriodId'] = $selectedAcademicPeriodId;
         $gradeOptions = $this->Institutions->InstitutionGrades->getGradeOptionsForIndex($institutionId, $selectedAcademicPeriodId);
         if (!empty($gradeOptions)) {
-            /**
-             * Added on PHPOE-1762 for PHPOE-1766
-             * "All Grades" option is inserted here instead of inside InstitutionGrades->getInstitutionGradeOptions()
-             * so as to avoid unadherence of User's Requirements.
-             */
-            $gradeOptions[-1] = 'All Grades';
-            // sort options by key
-            ksort($gradeOptions);
-            /**/
+            $gradeOptions = [-1 => __('All Grades')] + $gradeOptions;
         }
 
         $selectedEducationGradeId = $this->queryString('education_grade_id', $gradeOptions);
@@ -395,13 +388,16 @@ class InstitutionClassesTable extends ControllerActionTable
 
     public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra)
     {
+        $sortable = !is_null($this->request->query('sort')) ? true : false;
+
         $query
-        ->find('byGrades', ['education_grade_id' => $extra['selectedEducationGradeId']])
-        ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+            ->find('byGrades', [
+                'education_grade_id' => $extra['selectedEducationGradeId'],
+                'sort' => $sortable
+            ])
+            ->where([$this->aliasField('academic_period_id') => $extra['selectedAcademicPeriodId']])
+            ->order([$this->aliasField('name') => 'ASC'])
         ;
-        $extra['options']['order'] = [
-            $this->aliasField('name') => 'asc'
-        ];
     }
 
     public function findTranslateItem(Query $query, array $options)
@@ -420,8 +416,29 @@ class InstitutionClassesTable extends ControllerActionTable
             });
     }
 
+    public function findClassDetails(Query $query, array $options)
+    {
+        // POCOR-2547 sort list of staff and student by name
+        // move the contain from institution.class.student.ctrl.js since its using finder method
+        return $query
+            ->find('translateItem')
+            ->contain([
+                'ClassStudents' => [
+                    'sort' => ['Users.first_name', 'Users.last_name']
+                ],
+                'ClassStudents.Users.Genders',
+                'ClassStudents.StudentStatuses',
+                'ClassStudents.EducationGrades',
+                'AcademicPeriods',
+                'InstitutionSubjects'
+            ]);
+    }
+
     public function findByGrades(Query $query, array $options)
     {
+        $sortable = array_key_exists('sort', $options) ? $options['sort'] : false;
+
+        $EducationGrades = TableRegistry::get('Education.EducationGrades');
         $gradeId = $options['education_grade_id'];
         $join = [
             'table' => 'institution_class_grades',
@@ -434,7 +451,24 @@ class InstitutionClassesTable extends ControllerActionTable
         if ($gradeId > 0) {
             $join['conditions']['InstitutionClassGrades.education_grade_id'] = $gradeId;
         }
-        return $query->join([$join])->group(['InstitutionClassGrades.institution_class_id']);
+
+        $query = $query
+            ->join([$join])
+            ->group(['InstitutionClassGrades.institution_class_id'])
+            ;
+
+        // if no sorting, order by grade then class name
+        if (!$sortable) {
+            $query = $query
+                ->innerJoin(
+                    [$EducationGrades->alias() => $EducationGrades->table()],
+                    [$EducationGrades->aliasField('id = ') . 'InstitutionClassGrades.education_grade_id']
+                )
+                ->order(['EducationGrades.order' => 'ASC'])
+            ;
+        }
+
+        return $query;
     }
 
 
@@ -481,7 +515,8 @@ class InstitutionClassesTable extends ControllerActionTable
             'ClassStudents' => [
                 'Users.Genders',
                 'EducationGrades',
-                'StudentStatuses'
+                'StudentStatuses',
+                'sort' => ['Users.first_name', 'Users.last_name'] // POCOR-2547 sort list of staff and student by name
             ],
         ]);
     }
@@ -685,19 +720,18 @@ class InstitutionClassesTable extends ControllerActionTable
 ** essential functions
 **
 ******************************************************************************************************************/
-    public function getClassGradeOptions($entity)
+    public function getClassGradeOptions($institutionClassId)
     {
         $Grade = $this->ClassGrades;
         $gradeOptions = $Grade->find()
                             ->contain('EducationGrades')
                             ->where([
-                                $Grade->aliasField('institution_class_id') => $entity->id,
-                                $Grade->aliasField('status') => 1
+                                $Grade->aliasField('institution_class_id') => $institutionClassId
                             ])
                             ->toArray();
         $options = [];
         foreach ($gradeOptions as $value) {
-            $options[$value->education_grade->id] = $value->education_grade->name;
+            $options[] = $value->education_grade->id;
         }
         return $options;
     }
@@ -823,6 +857,7 @@ class InstitutionClassesTable extends ControllerActionTable
             $academicPeriodObj = $this->AcademicPeriods->get($academicPeriodId);
             $startDate = $this->AcademicPeriods->getDate($academicPeriodObj->start_date);
             $endDate = $this->AcademicPeriods->getDate($academicPeriodObj->end_date);
+            $todayDate = new Date();
 
             $Staff = $this->Institutions->Staff;
             $query = $Staff->find('all')
@@ -832,6 +867,13 @@ class InstitutionClassesTable extends ControllerActionTable
                             })
                             ->find('byInstitution', ['Institutions.id'=>$institutionId])
                             ->find('AcademicPeriod', ['academic_period_id'=>$academicPeriodId])
+                            ->where([
+                                $Staff->aliasField('start_date <= ') => $todayDate,
+                                'OR' => [
+                                    [$Staff->aliasField('end_date >= ') => $todayDate],
+                                    [$Staff->aliasField('end_date IS NULL')]
+                                ]
+                            ])
                             ;
 
             foreach ($query->toArray() as $value) {
