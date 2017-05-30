@@ -91,7 +91,7 @@ function StudentResultsController($scope, $location, $filter, $q, UtilsSvc, Aler
                 headerHeight: 38,
                 rowHeight: 38,
                 minColWidth: 200,
-                enableColResize: false,
+                enableColResize: true,
                 enableSorting: true,
                 unSortIcon: true,
                 enableFilter: true,

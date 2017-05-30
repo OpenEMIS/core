@@ -1,5 +1,5 @@
-angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.access.svc'])
-.service('InstitutionsResultsSvc', function($http, $q, $filter, KdOrmSvc, KdSessionSvc, KdAccessSvc) {
+angular.module('institutions.results.svc', ['kd.data.svc', 'kd.session.svc', 'kd.access.svc'])
+.service('InstitutionsResultsSvc', function($http, $q, $filter, KdDataSvc, KdSessionSvc, KdAccessSvc) {
     const resultTypes = {MARKS: 'MARKS', GRADES: 'GRADES', DURATION: 'DURATION'};
 
     var models = {
@@ -15,16 +15,16 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
 
     return {
         init: function(baseUrl) {
-            KdOrmSvc.base(baseUrl);
-            KdOrmSvc.controllerAction('Results');
+            KdDataSvc.base(baseUrl);
+            KdDataSvc.controllerAction('Results');
             KdSessionSvc.base(baseUrl);
             angular.forEach(models, function(model, key) {
-                window[key] = KdOrmSvc.init(model);
+                window[key] = KdDataSvc.init(model);
             });
         },
 
         translate: function(data) {
-            KdOrmSvc.init({translation: 'translate'});
+            KdDataSvc.init({translation: 'translate'});
             var success = function(response, deferred) {
                 var translated = response.data.translated;
                 deferred.resolve(translated);
@@ -166,7 +166,26 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             return deferred.promise;
         },
 
-        getPeriods: function(assessmentId)
+        getAssessmentTerms: function(assessmentId)
+        {
+            var success = function(response, deferred) {
+                var terms = response.data.data;
+
+                if (angular.isObject(terms) && terms.length > 0) {
+                    deferred.resolve(terms);
+                } else {
+                    deferred.resolve([]);
+                }
+            };
+
+            return AssessmentPeriodsTable
+                .select()
+                .where({assessment_id: assessmentId})
+                .find('uniqueAssessmentTerms')
+                .ajax({success: success, defer: true});
+        },
+
+        getPeriods: function(assessmentId, academicTerm = undefined)
         {
             var success = function(response, deferred) {
                 var periods = response.data.data;
@@ -178,10 +197,18 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
                 }
             };
 
-            return AssessmentPeriodsTable
-            .select()
-            .where({assessment_id: assessmentId})
-            .ajax({success: success, defer: true});
+            var result = AssessmentPeriodsTable
+                .select()
+                .where({assessment_id: assessmentId});
+            if (typeof academicTerm !== "undefined") {
+                return result
+                    .find('academicTerm', {academic_term: academicTerm})
+                    .ajax({success: success, defer: true});
+            } else {
+                return result
+                    .ajax({success: success, defer: true});
+            }
+
         },
 
         getGradingTypes: function(assessmentId, subjectId)
@@ -219,27 +246,33 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
             };
             var columnDefs = [];
 
+            var direction = 'left';
+
             columnDefs.push({
                 headerName: "OpenEMIS ID",
                 field: "openemis_id",
-                filterParams: filterParams
+                filterParams: filterParams,
+                pinned: direction
             });
             columnDefs.push({
                 headerName: "Name",
                 field: "name",
                 sort: 'asc',
-                filterParams: filterParams
+                filterParams: filterParams,
+                pinned: direction
             });
             columnDefs.push({
                 headerName: "student id",
                 field: "student_id",
                 hide: true,
-                filterParams: filterParams
+                filterParams: filterParams,
+                pinned: direction
             });
             columnDefs.push({
                 headerName: "Status",
                 field: "student_status_name",
-                filterParams: filterParams
+                filterParams: filterParams,
+                pinned: direction
             });
 
             var ResultsSvc = this;
@@ -809,20 +842,22 @@ angular.module('institutions.results.svc', ['kd.orm.svc', 'kd.session.svc', 'kd.
         },
 
         calculateTotal: function(data) {
-            var totalMark = '';
-            for (var key in data) {
-                if (/period_/.test(key)) {
-                    var index = key.replace(/period_(\d+)/, '$1');
-                    // add checking to skip adding to Total Mark if is GRADES type
-                    if (!isNaN(parseFloat(data[key])) && !isNaN(parseFloat(data['weight_'+index]))) {
-                        totalMark = isNaN(parseFloat(totalMark)) ? 0 : totalMark;
-                        totalMark += data[key] * (data['weight_'+index]);
+            var returnValue = 0;
+            var valueEnabled = false;
+            angular.forEach(data, function(value, key) {
+                if (key.indexOf('period_') >= 0) {
+                    var periodId = parseInt(key.replace('period_', ''));
+                    if (!isNaN(parseFloat(value))) {
+                        var weightVar = 'weight_' + periodId;
+                        if (typeof data[weightVar] == 'number') {
+                            returnValue = returnValue + (value * data[weightVar]);
+                            valueEnabled = true;
+                        }
                     }
                 }
-            }
-
-            if (!isNaN(parseFloat(totalMark))) {
-                return $filter('number')(totalMark, 2);
+            });
+            if (!isNaN(parseFloat(returnValue)) && valueEnabled) {
+                return $filter('number')(returnValue, 2);
             } else {
                 return '';
             }
