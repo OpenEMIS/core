@@ -67,15 +67,20 @@ class TrackDeleteBehavior extends Behavior
                     }
                 }
             }
-            // catering for 'binary' field type end
-            $newEntity = $DeletedRecords->newEntity([
-                'reference_table' => $source,
-                'reference_key' => $referenceKey,
-                'data' => json_encode($entityData),
-                'created_user_id' => $userId,
-                'created' => Time::now()
-            ]);
-            $DeletedRecords->save($newEntity, ['checkExisting' => false, 'atomic' => false]);
+
+            // Change to manual insertion to due to 404 error in cakephp orm save propagation
+            $query = $DeletedRecords->query();
+            $query
+                ->insert(['reference_table', 'reference_key', 'data', 'created_user_id', 'created'])
+                ->values([
+                    'reference_table' => $source,
+                    'reference_key' => $referenceKey,
+                    'data' => json_encode($entityData),
+                    'created_user_id' => $userId,
+                    'created' => Time::now()
+                ]);
+            $statement = $query->execute();
+            $statement->closeCursor();
         } catch (Exception $e) {
             Log::write('error', __METHOD__ . ': ' . $e->getMessage());
         }
