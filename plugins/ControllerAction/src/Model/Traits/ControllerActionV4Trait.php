@@ -4,6 +4,8 @@ namespace ControllerAction\Model\Traits;
 use ArrayObject;
 
 use Cake\ORM\Entity;
+use Cake\ORM\Query;
+use Cake\Event\Event;
 use Cake\Controller\Exception\MissingActionException;
 
 //use ControllerAction\Model\Traits\ControllerActionV4Trait;
@@ -27,7 +29,7 @@ trait ControllerActionV4Trait {
 
 	private function _render($model) {
 		list($plugin, $alias) = pluginSplit($model->registryAlias());
-		
+
 		if (empty($plugin)) {
 			$path = APP . 'Template' . DS . $this->controller->name . DS;
 		} else {
@@ -67,6 +69,34 @@ trait ControllerActionV4Trait {
 						$model->fields[$key]['attr']['empty'] = $this->Alert->getMessage('general.select.noOptions');
 					}
 				}
+
+				// for automatic adding of '-- Select --' if there are no '' value fields in dropdown
+				$addSelect = true;
+				if ($attr['type'] == 'chosenSelect') {
+                    $addSelect = false;
+                }
+
+				if (array_key_exists('select', $attr)) {
+					if ($attr['select'] === false) {
+						$addSelect = false;
+					} else {
+						$addSelect = true;
+					}
+				}
+				if ($addSelect) {
+					if (is_array($attr['options'])) {
+						// need to check if options has any ''
+						if (!array_key_exists('', $attr['options'])) {
+							if ($attr['type'] != 'chosenSelect') {
+                                if (in_array($model->action, ['edit', 'add'])) {
+                                    $model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+                                }
+							} else {
+								$model->fields[$key]['options'] = ['' => __('-- Select --')] + $attr['options'];
+							}
+						}
+					}
+				}
 			}
 
 			// make field sortable by default if it is a string data-type
@@ -80,9 +110,9 @@ trait ControllerActionV4Trait {
 			} else if ($attr['type'] == 'select' && !array_key_exists('options', $attr)) {
 				if ($model->isForeignKey($key)) {
 					$associatedObject = $model->getAssociatedModel($key);
-					
-					$query = $associatedObject->find('list');
-					
+
+					$query = $associatedObject->find();
+
 					// need to include associated object
 					$event = new Event('ControllerAction.Model.onPopulateSelectOptions', $this, [$query]);
 					$event = $associatedObject->eventManager()->dispatch($event);
@@ -91,8 +121,31 @@ trait ControllerActionV4Trait {
 						$query = $event->result;
 					}
 
-					if (is_object($query)) {
-						$model->fields[$key]['options'] = $query->toArray();
+					if ($query instanceof Query) {
+						$queryData = $query->toArray();
+						$hasDefaultField = false;
+						$defaultValue = false;
+						$optionsArray = [];
+						foreach ($queryData as $okey => $ovalue) {
+							$optionsArray[$ovalue->id] = $ovalue->name;
+							if ($ovalue->has('default')) {
+								$hasDefaultField = true;
+								if ($ovalue->default) {
+									$defaultValue = $ovalue->id;
+								}
+							}
+						}
+
+						if (!empty($defaultValue) && !(is_bool($attr['default']) && !$attr['default'])) {
+							$model->fields[$key]['default'] = $defaultValue;
+						}
+						if ($attr['type'] != 'chosenSelect') {
+                            if (in_array($model->action, ['edit', 'add'])) {
+							    $optionsArray = ['' => __('-- Select --')] + $optionsArray;
+                            }
+						}
+
+						$model->fields[$key]['options'] = $optionsArray;
 					} else {
 						$model->fields[$key]['options'] = $query;
 					}

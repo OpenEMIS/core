@@ -14,8 +14,6 @@
  */
 namespace Cake\Core;
 
-use Cake\Core\App;
-use Cake\Core\Plugin;
 use Cake\Utility\Inflector;
 
 /**
@@ -57,6 +55,7 @@ trait ConventionsTrait
     protected function _modelKey($name)
     {
         list(, $name) = pluginSplit($name);
+
         return Inflector::underscore(Inflector::singularize($name)) . '_id';
     }
 
@@ -69,6 +68,7 @@ trait ConventionsTrait
     protected function _modelNameFromKey($key)
     {
         $key = str_replace('_id', '', $key);
+
         return Inflector::camelize(Inflector::pluralize($key));
     }
 
@@ -138,7 +138,8 @@ trait ConventionsTrait
         if (Plugin::loaded($pluginName)) {
             return Plugin::path($pluginName);
         }
-        return current(App::path('Plugin')) . $pluginName . DS;
+
+        return current(App::path('Plugin')) . $pluginName . DIRECTORY_SEPARATOR;
     }
 
     /**

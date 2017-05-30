@@ -15,7 +15,6 @@
 namespace Cake\Database\Expression;
 
 use Cake\Database\ExpressionInterface;
-use Cake\Database\Expression\IdentifierExpression;
 use Cake\Database\ValueBinder;
 
 /**
@@ -29,8 +28,8 @@ class OrderByExpression extends QueryExpression
     /**
      * Constructor
      *
-     * @param array $conditions The sort columns
-     * @param array $types The types for each column.
+     * @param string|array|\Cake\Database\ExpressionInterface $conditions The sort columns
+     * @param array|\Cake\Database\TypeMap $types The types for each column.
      * @param string $conjunction The glue used to join conditions together.
      */
     public function __construct($conditions = [], $types = [], $conjunction = '')
@@ -49,10 +48,11 @@ class OrderByExpression extends QueryExpression
         $order = [];
         foreach ($this->_conditions as $k => $direction) {
             if ($direction instanceof ExpressionInterface) {
-                $direction = sprintf('(%s)', $direction->sql($generator));
+                $direction = $direction->sql($generator);
             }
             $order[] = is_numeric($k) ? $direction : sprintf('%s %s', $k, $direction);
         }
+
         return sprintf('ORDER BY %s', implode(', ', $order));
     }
 

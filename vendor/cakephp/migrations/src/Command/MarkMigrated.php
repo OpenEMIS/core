@@ -11,18 +11,37 @@
  */
 namespace Migrations\Command;
 
+use InvalidArgumentException;
 use Migrations\ConfigurationTrait;
 use Phinx\Console\Command\AbstractCommand;
-use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Input\InputOption;
 
 class MarkMigrated extends AbstractCommand
 {
 
     use ConfigurationTrait;
+
+    /**
+     * The console output instance
+     *
+     * @var \Symfony\Component\Console\Output\OutputInterface
+     */
+    protected $output;
+
+    /**
+     * @param \Symfony\Component\Console\Output\OutputInterface $output
+     * @return mixed
+     */
+    public function output(OutputInterface $output = null)
+    {
+        if ($output !== null) {
+            $this->output = $output;
+        }
+        return $this->output;
+    }
 
     /**
      * {@inheritdoc}
@@ -31,82 +50,163 @@ class MarkMigrated extends AbstractCommand
     {
         $this->setName('mark_migrated')
             ->setDescription('Mark a migration as migrated')
-            ->addArgument('version', InputArgument::REQUIRED, 'What is the version of the migration?')
+            ->addArgument(
+                'version',
+                InputArgument::OPTIONAL,
+                'DEPRECATED: use `bin/cake migrations mark_migrated --target=VERSION --only` instead'
+            )
             ->setHelp(sprintf(
-                '%sMark a migration migrated based on its version number%s',
+                '%sMark migrations as migrated%s',
                 PHP_EOL,
                 PHP_EOL
-            ));
-        $this->addOption('plugin', 'p', InputArgument::OPTIONAL, 'The plugin the file should be created for')
-            ->addOption('connection', 'c', InputArgument::OPTIONAL, 'The datasource connection to use')
-            ->addOption('source', 's', InputArgument::OPTIONAL, 'The folder where migrations are in');
+            ))
+            ->addOption('plugin', 'p', InputOption::VALUE_REQUIRED, 'The plugin the file should be created for')
+            ->addOption('connection', 'c', InputOption::VALUE_REQUIRED, 'The datasource connection to use')
+            ->addOption('source', 's', InputOption::VALUE_REQUIRED, 'The folder where migrations are in')
+            ->addOption(
+                'target',
+                't',
+                InputOption::VALUE_REQUIRED,
+                'It will mark migrations from beginning to the given version'
+            )
+            ->addOption(
+                'exclude',
+                'x',
+                InputOption::VALUE_NONE,
+                'If present it will mark migrations from beginning until the given version, excluding it'
+            )
+            ->addOption(
+                'only',
+                'o',
+                InputOption::VALUE_NONE,
+                'If present it will only mark the given migration version'
+            );
     }
 
     /**
-     * Mark a migration migrated
+     * Mark migrations as migrated
      *
-     * @param Symfony\Component\Console\Input\Inputnterface $input the input object
-     * @param Symfony\Component\Console\Input\OutputInterface $output the output object
+     * `bin/cake migrations mark_migrated` mark every migrations as migrated
+     * `bin/cake migrations mark_migrated all` DEPRECATED: the same effect as above
+     * `bin/cake migrations mark_migrated --target=VERSION` mark migrations as migrated up to the VERSION param
+     * `bin/cake migrations mark_migrated --target=20150417223600 --exclude` mark migrations as migrated up to
+     *  and except the VERSION param
+     * `bin/cake migrations mark_migrated --target=20150417223600 --only` mark only the VERSION migration as migrated
+     * `bin/cake migrations mark_migrated 20150417223600` DEPRECATED: the same effect as above
+     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
+     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
      * @return void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $this->setInput($input);
         $this->bootstrap($input, $output);
-        $adapter = $this->getManager()->getEnvironment('default')->getAdapter();
+        $this->output($output);
 
         $path = $this->getConfig()->getMigrationPath();
-        $version = $input->getArgument('version');
 
-        $versions = array_flip($adapter->getVersions());
-        if (isset($versions[$version])) {
+        if ($this->invalidOnlyOrExclude()) {
             $output->writeln(
-                sprintf(
-                    '<info>The migration with version number `%s` has already been marked as migrated.</info>',
-                    $version
-                )
+                "<error>You should use `--exclude` OR `--only` (not both) along with a `--target` !</error>"
             );
             return;
         }
 
-        $migrationFile = glob($path . DS . $version . '*');
-        if (!empty($migrationFile)) {
-            $migrationFile = $migrationFile[0];
-            $className = $this->getMigrationClassName($migrationFile);
-            require_once $migrationFile;
-            $Migration = new $className($version);
-
-            $time = date('Y-m-d H:i:s', time());
-
-            try {
-                $adapter->migrated($Migration, 'up', $time, $time);
-                $output->writeln('<info>Migration successfully marked migrated !</info>');
-            } catch (Exception $e) {
-                $output->writeln(sprintf('<error>An error occurred : %s</error>', $e->getMessage()));
-            }
-        } else {
-            $output->writeln(
-                sprintf('<error>A migration file matching version number `%s` could not be found</error>', $version)
-            );
+        if ($this->isUsingDeprecatedAll()) {
+            $this->outputDeprecatedAllMessage();
         }
+
+        if ($this->isUsingDeprecatedVersion()) {
+            $this->outputDeprecatedVersionMessage();
+        }
+
+        try {
+            $versions = $this->getManager()->getVersionsToMark($input);
+        } catch (InvalidArgumentException $e) {
+            $output->writeln(sprintf("<error>%s</error>", $e->getMessage()));
+            return;
+        }
+
+        $this->getManager()->markVersionsAsMigrated($path, $versions, $output);
     }
 
     /**
-     * Resolves a migration class name based on $path
+     * Checks if the version is using the deprecated `all`
      *
-     * @param string $path Path to the migration file of which we want the class name
-     * @return string Migration class name
+     * @return bool Returns true if it is using the deprecated `all` otherwise false
      */
-    protected function getMigrationClassName($path)
+    protected function isUsingDeprecatedAll()
     {
-        $class = preg_replace('/^[0-9]+_/', '', basename($path));
-        $class = str_replace('_', ' ', $class);
-        $class = ucwords($class);
-        $class = str_replace(' ', '', $class);
-        if (strpos($class, '.') !== false) {
-            $class = substr($class, 0, strpos($class, '.'));
-        }
+        $version = $this->input->getArgument('version');
+        return $version === 'all' || $version === '*';
+    }
 
-        return $class;
+    /**
+     * Checks if the input has the `--exclude` option
+     *
+     * @return bool Returns true if `--exclude` option gets passed in otherwise false
+     */
+    protected function hasExclude()
+    {
+        return $this->input->getOption('exclude');
+    }
+
+    /**
+     * Checks if the input has the `--only` option
+     *
+     * @return bool Returns true if `--only` option gets passed in otherwise false
+     */
+    protected function hasOnly()
+    {
+        return $this->input->getOption('only');
+    }
+
+    /**
+     * Checks for the usage of deprecated VERSION as argument when not `all`
+     *
+     * @return bool True if it is using VERSION argument otherwise false
+     */
+    protected function isUsingDeprecatedVersion()
+    {
+        $version = $this->input->getArgument('version');
+        return $version && $version !== 'all' && $version !== '*';
+    }
+
+    /**
+     * Checks for an invalid use of `--exclude` or `--only`
+     *
+     * @return bool Returns true when it is an invalid use of `--exclude` or `--only` otherwise false
+     */
+    protected function invalidOnlyOrExclude()
+    {
+        return ($this->hasExclude() && $this->hasOnly()) ||
+            ($this->hasExclude() || $this->hasOnly()) &&
+            $this->input->getOption('target') === null;
+    }
+
+    /**
+     * Outputs the deprecated message for the `all` or `*` usage
+     *
+     * @return void Just outputs the message
+     */
+    protected function outputDeprecatedAllMessage()
+    {
+        $msg = "DEPRECATED: `all` or `*` as version is deprecated. Use `bin/cake migrations mark_migrated` instead";
+        $output = $this->output();
+        $output->writeln(sprintf("<comment>%s</comment>", $msg));
+    }
+
+    /**
+     * Outputs the deprecated message for the usage of VERSION as argument
+     *
+     * @return void Just outputs the message
+     */
+    protected function outputDeprecatedVersionMessage()
+    {
+        $msg = 'DEPRECATED: VERSION as argument is deprecated. Use: ' .
+            '`bin/cake migrations mark_migrated --target=VERSION --only`';
+        $output = $this->output();
+        $output->writeln(sprintf("<comment>%s</comment>", $msg));
     }
 }

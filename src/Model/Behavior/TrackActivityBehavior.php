@@ -1,6 +1,7 @@
 <?php
 namespace App\Model\Behavior;
 
+use ArrayObject;
 use Cake\Log\Log;
 use Cake\I18n\Time;
 use Cake\Event\Event;
@@ -74,7 +75,7 @@ class TrackActivityBehavior extends Behavior {
 		    			/**
 		    			 * Added extra conditions; if oldData is 'World' and newData is an empty string, skip it as location 'World' is the same as an empty string on user views.
 		    			 */
-		    			if ($oldValue != 'World' && $newValue != '' && $oldValue != $newValue) {
+		    			if ($oldValue != 'World' && $oldValue != $newValue) {
 
 			    			/**
 			    			 * PHPOE-2081 - changed getAssociatedBelongsToModel function to getAssociatedTable function and duplicate it in App\Model\Table\AppTable
@@ -144,4 +145,24 @@ class TrackActivityBehavior extends Behavior {
 		return true;
 	}
 
+	public function afterDelete(Event $event, Entity $entity, ArrayObject $options) {
+		if (!empty($entity->id) && $this->_table->trackActivity) { 
+			$alias = $this->_table->alias();
+			$id = $entity->id;
+			$activity['model'] = $alias;
+			$activity['model_reference'] = $id;
+			$activity['field'] = '';
+			$activity['field_type'] = '';
+			$activity['old_value'] = '';
+			$activity['new_value'] = '';
+			$activity[$this->config('key')] = $id;
+			$activity['operation'] = 'delete';
+
+			$ActivityModel = TableRegistry::get($this->config('target'));
+			$newEntity = $ActivityModel->newEntity($activity);
+			if (!$ActivityModel->save($newEntity)) {
+				Log::write('debug', $newEntity->errors());
+			}
+		}
+	}
 }

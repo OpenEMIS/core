@@ -13,19 +13,22 @@
  */
 namespace Cake\TestSuite\Fixture;
 
-use Cake\Core\Exception\Exception;
+use Cake\Core\Exception\Exception as CakeException;
 use Cake\Database\Schema\Table;
 use Cake\Datasource\ConnectionInterface;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\FixtureInterface;
+use Cake\Datasource\TableSchemaInterface;
 use Cake\Log\Log;
+use Cake\ORM\TableRegistry;
 use Cake\Utility\Inflector;
+use Exception;
 
 /**
  * Cake TestFixture is responsible for building and destroying tables to be used
  * during testing.
  */
-class TestFixture implements FixtureInterface
+class TestFixture implements FixtureInterface, TableSchemaInterface
 {
 
     /**
@@ -56,11 +59,11 @@ class TestFixture implements FixtureInterface
     /**
      * Configuration for importing fixture schema
      *
-     * Accepts a `connection` and `table` key, to define
+     * Accepts a `connection` and `model` or `table` key, to define
      * which table and which connection contain the schema to be
      * imported.
      *
-     * @var array
+     * @var array|null
      */
     public $import = null;
 
@@ -79,6 +82,13 @@ class TestFixture implements FixtureInterface
     protected $_schema;
 
     /**
+     * Fixture constraints to be created.
+     *
+     * @var array
+     */
+    protected $_constraints = [];
+
+    /**
      * Instantiate the fixture.
      *
      * @throws \Cake\Core\Exception\Exception on invalid datasource usage.
@@ -91,9 +101,9 @@ class TestFixture implements FixtureInterface
                 $message = sprintf(
                     'Invalid datasource name "%s" for "%s" fixture. Fixture datasource names must begin with "test".',
                     $connection,
-                    $this->name
+                    $this->table
                 );
-                throw new Exception($message);
+                throw new CakeException($message);
             }
         }
         $this->init();
@@ -124,13 +134,7 @@ class TestFixture implements FixtureInterface
     public function init()
     {
         if ($this->table === null) {
-            list(, $class) = namespaceSplit(get_class($this));
-            preg_match('/^(.*)Fixture$/', $class, $matches);
-            $table = $class;
-            if (isset($matches[1])) {
-                $table = $matches[1];
-            }
-            $this->table = Inflector::tableize($table);
+            $this->table = $this->_tableFromClass();
         }
 
         if (empty($this->import) && !empty($this->fields)) {
@@ -140,6 +144,28 @@ class TestFixture implements FixtureInterface
         if (!empty($this->import)) {
             $this->_schemaFromImport();
         }
+
+        if (empty($this->import) && empty($this->fields)) {
+            $this->_schemaFromReflection();
+        }
+    }
+
+    /**
+     * Returns the table name using the fixture class
+     *
+     * @return string
+     */
+    protected function _tableFromClass()
+    {
+        list(, $class) = namespaceSplit(get_class($this));
+        preg_match('/^(.*)Fixture$/', $class, $matches);
+        $table = $class;
+
+        if (isset($matches[1])) {
+            $table = $matches[1];
+        }
+
+        return Inflector::tableize($table);
     }
 
     /**
@@ -149,6 +175,7 @@ class TestFixture implements FixtureInterface
      */
     protected function _schemaFromFields()
     {
+        $connection = ConnectionManager::get($this->connection());
         $this->_schema = new Table($this->table);
         foreach ($this->fields as $field => $data) {
             if ($field === '_constraints' || $field === '_indexes' || $field === '_options') {
@@ -158,7 +185,11 @@ class TestFixture implements FixtureInterface
         }
         if (!empty($this->fields['_constraints'])) {
             foreach ($this->fields['_constraints'] as $name => $data) {
-                $this->_schema->addConstraint($name, $data);
+                if (!$connection->supportsDynamicConstraints() || $data['type'] !== Table::CONSTRAINT_FOREIGN) {
+                    $this->_schema->addConstraint($name, $data);
+                } else {
+                    $this->_constraints[$name] = $data;
+                }
             }
         }
         if (!empty($this->fields['_indexes'])) {
@@ -182,16 +213,20 @@ class TestFixture implements FixtureInterface
         if (!is_array($this->import)) {
             return;
         }
-        $import = array_merge(
-            ['connection' => 'default', 'table' => null],
-            $this->import
-        );
+        $import = $this->import + ['connection' => 'default', 'table' => null, 'model' => null];
+
+        if (!empty($import['model'])) {
+            if (!empty($import['table'])) {
+                throw new CakeException('You cannot define both table and model.');
+            }
+            $import['table'] = TableRegistry::get($import['model'])->table();
+        }
 
         if (empty($import['table'])) {
-            throw new Exception('Cannot import from undefined table.');
-        } else {
-            $this->table = $import['table'];
+            throw new CakeException('Cannot import from undefined table.');
         }
+
+        $this->table = $import['table'];
 
         $db = ConnectionManager::get($import['connection'], false);
         $schemaCollection = $db->schemaCollection();
@@ -200,17 +235,44 @@ class TestFixture implements FixtureInterface
     }
 
     /**
+     * Build fixture schema directly from the datasource
+     *
+     * @return void
+     * @throws \Cake\Core\Exception\Exception when trying to reflect a table that does not exist
+     */
+    protected function _schemaFromReflection()
+    {
+        $db = ConnectionManager::get($this->connection());
+        $schemaCollection = $db->schemaCollection();
+        $tables = $schemaCollection->listTables();
+
+        if (!in_array($this->table, $tables)) {
+            throw new CakeException(
+                sprintf(
+                    'Cannot describe schema for table `%s` for fixture `%s` : the table does not exist.',
+                    $this->table,
+                    get_class($this)
+                )
+            );
+        }
+
+        $this->_schema = $schemaCollection->describe($this->table);
+    }
+
+    /**
      * Get/Set the Cake\Database\Schema\Table instance used by this fixture.
      *
-     * @param \Cake\Database\Schema\Table $schema The table to set.
-     * @return void|\Cake\Database\Schema\Table
+     * @param \Cake\Database\Schema\Table|null $schema The table to set.
+     * @return \Cake\Database\Schema\Table|null
      */
     public function schema(Table $schema = null)
     {
         if ($schema) {
             $this->_schema = $schema;
-            return;
+
+            return null;
         }
+
         return $this->_schema;
     }
 
@@ -223,13 +285,18 @@ class TestFixture implements FixtureInterface
             return false;
         }
 
+        if (empty($this->import) && empty($this->fields)) {
+            return true;
+        }
+
         try {
             $queries = $this->_schema->createSql($db);
             foreach ($queries as $query) {
-                $db->execute($query)->closeCursor();
+                $stmt = $db->prepare($query);
+                $stmt->execute();
+                $stmt->closeCursor();
             }
-            $this->created[] = $db->configName();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $msg = sprintf(
                 'Fixture creation for "%s" failed "%s"',
                 $this->table,
@@ -237,8 +304,10 @@ class TestFixture implements FixtureInterface
             );
             Log::error($msg);
             trigger_error($msg, E_USER_WARNING);
+
             return false;
         }
+
         return true;
     }
 
@@ -250,14 +319,20 @@ class TestFixture implements FixtureInterface
         if (empty($this->_schema)) {
             return false;
         }
+
+        if (empty($this->import) && empty($this->fields)) {
+            return true;
+        }
+
         try {
             $sql = $this->_schema->dropSql($db);
             foreach ($sql as $stmt) {
                 $db->execute($stmt)->closeCursor();
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return false;
         }
+
         return true;
     }
 
@@ -277,7 +352,60 @@ class TestFixture implements FixtureInterface
             }
             $statement = $query->execute();
             $statement->closeCursor();
+
             return $statement;
+        }
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function createConstraints(ConnectionInterface $db)
+    {
+        if (empty($this->_constraints)) {
+            return true;
+        }
+
+        foreach ($this->_constraints as $name => $data) {
+            $this->_schema->addConstraint($name, $data);
+        }
+
+        $sql = $this->_schema->addConstraintSql($db);
+
+        if (empty($sql)) {
+            return true;
+        }
+
+        foreach ($sql as $stmt) {
+            $db->execute($stmt)->closeCursor();
+        }
+
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function dropConstraints(ConnectionInterface $db)
+    {
+        if (empty($this->_constraints)) {
+            return true;
+        }
+
+        $sql = $this->_schema->dropConstraintSql($db);
+
+        if (empty($sql)) {
+            return true;
+        }
+
+        foreach ($sql as $stmt) {
+            $db->execute($stmt)->closeCursor();
+        }
+
+        foreach ($this->_constraints as $name => $data) {
+            $this->_schema->dropConstraint($name);
         }
 
         return true;
@@ -303,6 +431,7 @@ class TestFixture implements FixtureInterface
         foreach ($this->records as $record) {
             $values[] = array_merge($default, $record);
         }
+
         return [$fields, $values, $types];
     }
 
@@ -315,6 +444,7 @@ class TestFixture implements FixtureInterface
         foreach ($sql as $stmt) {
             $db->execute($stmt)->closeCursor();
         }
+
         return true;
     }
 }

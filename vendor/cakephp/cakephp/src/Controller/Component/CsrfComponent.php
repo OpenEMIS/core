@@ -21,7 +21,6 @@ use Cake\Network\Exception\InvalidCsrfTokenException;
 use Cake\Network\Request;
 use Cake\Network\Response;
 use Cake\Utility\Security;
-use Cake\Utility\Text;
 
 /**
  * Provides CSRF protection & validation.
@@ -46,6 +45,7 @@ class CsrfComponent extends Component
      *  - cookieName = The name of the cookie to send.
      *  - expiry = How long the CSRF token should last. Defaults to browser session.
      *  - secure = Whether or not the cookie will be set with the Secure flag. Defaults to false.
+     *  - httpOnly = Whether or not the cookie will be set with the HttpOnly flag. Defaults to false.
      *  - field = The form field to check. Changing this will also require configuring
      *    FormHelper.
      *
@@ -55,6 +55,7 @@ class CsrfComponent extends Component
         'cookieName' => 'csrfToken',
         'expiry' => 0,
         'secure' => false,
+        'httpOnly' => false,
         'field' => '_csrfToken',
     ];
 
@@ -80,6 +81,7 @@ class CsrfComponent extends Component
         $response = $controller->response;
         $cookieName = $this->_config['cookieName'];
 
+        /* @var \Cake\Network\Request $request */
         $cookieData = $request->cookie($cookieName);
         if ($cookieData) {
             $request->params['_csrfToken'] = $cookieData;
@@ -92,8 +94,9 @@ class CsrfComponent extends Component
         if ($request->is('get') && $cookieData === null) {
             $this->_setCookie($request, $response);
         }
-        if ($request->is(['patch', 'put', 'post', 'delete'])) {
+        if ($request->is(['put', 'post', 'delete', 'patch']) || !empty($request->data)) {
             $this->_validateToken($request);
+            unset($request->data[$this->_config['field']]);
         }
     }
 
@@ -122,7 +125,7 @@ class CsrfComponent extends Component
     protected function _setCookie(Request $request, Response $response)
     {
         $expiry = new Time($this->_config['expiry']);
-        $value = Security::hash(Text::uuid(), 'sha1', true);
+        $value = hash('sha512', Security::randomBytes(16), false);
 
         $request->params['_csrfToken'] = $value;
         $response->cookie([
@@ -131,6 +134,7 @@ class CsrfComponent extends Component
             'expire' => $expiry->format('U'),
             'path' => $request->webroot,
             'secure' => $this->_config['secure'],
+            'httpOnly' => $this->_config['httpOnly'],
         ]);
     }
 
@@ -147,7 +151,7 @@ class CsrfComponent extends Component
         $post = $request->data($this->_config['field']);
         $header = $request->header('X-CSRF-Token');
 
-        if (empty($cookie)) {
+        if (!$cookie) {
             throw new InvalidCsrfTokenException(__d('cake', 'Missing CSRF token cookie'));
         }
 

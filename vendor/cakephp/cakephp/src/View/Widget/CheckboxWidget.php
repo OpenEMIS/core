@@ -15,7 +15,6 @@
 namespace Cake\View\Widget;
 
 use Cake\View\Form\ContextInterface;
-use Cake\View\Widget\BasicWidget;
 
 /**
  * Input widget for creating checkbox widgets.
@@ -78,9 +77,7 @@ class CheckboxWidget extends BasicWidget
         if (array_key_exists('checked', $data)) {
             return (bool)$data['checked'];
         }
-        if ((string)$data['val'] === (string)$data['value']) {
-            return true;
-        }
-        return false;
+
+        return (string)$data['val'] === (string)$data['value'];
     }
 }

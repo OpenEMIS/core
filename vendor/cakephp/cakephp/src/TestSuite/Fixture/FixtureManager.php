@@ -16,20 +16,21 @@ namespace Cake\TestSuite\Fixture;
 
 use Cake\Core\Configure;
 use Cake\Core\Exception\Exception;
-use Cake\Database\Connection;
+use Cake\Database\Schema\Table;
 use Cake\Datasource\ConnectionManager;
-use Cake\TestSuite\Fixture\TestFixture;
+use Cake\Datasource\TableSchemaInterface;
 use Cake\Utility\Inflector;
+use PDOException;
+use UnexpectedValueException;
 
 /**
  * A factory class to manage the life cycle of test fixtures
- *
  */
 class FixtureManager
 {
 
     /**
-     * Was this class already initialized?
+     * Was this instance already initialized?
      *
      * @var bool
      */
@@ -38,14 +39,14 @@ class FixtureManager
     /**
      * Holds the fixture classes that where instantiated
      *
-     * @var array
+     * @var \Cake\Datasource\FixtureInterface[]
      */
     protected $_loaded = [];
 
     /**
      * Holds the fixture classes that where instantiated indexed by class name
      *
-     * @var array
+     * @var \Cake\Datasource\FixtureInterface[]
      */
     protected $_fixtureMap = [];
 
@@ -55,6 +56,32 @@ class FixtureManager
      * @var array
      */
     protected $_insertionMap = [];
+
+    /**
+     * List of TestCase class name that have been processed
+     *
+     * @var array
+     */
+    protected $_processed = [];
+
+    /**
+     * Is the test runner being run with `--debug` enabled.
+     * When true, fixture SQL will also be logged.
+     *
+     * @var bool
+     */
+    protected $_debug = false;
+
+    /**
+     * Modify the debug mode.
+     *
+     * @param bool $debug Whether or not fixture debug mode is enabled.
+     * @return void
+     */
+    public function setDebug($debug)
+    {
+        $this->_debug = $debug;
+    }
 
     /**
      * Inspects the test to look for unloaded fixtures and loads them
@@ -111,8 +138,8 @@ class FixtureManager
                 $map['test_' . $connection] = $connection;
             }
         }
-        foreach ($map as $alias => $connection) {
-            ConnectionManager::alias($alias, $connection);
+        foreach ($map as $testConnection => $normal) {
+            ConnectionManager::alias($testConnection, $normal);
         }
     }
 
@@ -147,32 +174,38 @@ class FixtureManager
                 continue;
             }
 
-            list($type, $pathName) = explode('.', $fixture, 2);
-            $path = explode('/', $pathName);
-            $name = array_pop($path);
-            $additionalPath = implode('\\', $path);
+            if (strpos($fixture, '.')) {
+                list($type, $pathName) = explode('.', $fixture, 2);
+                $path = explode('/', $pathName);
+                $name = array_pop($path);
+                $additionalPath = implode('\\', $path);
 
-            if ($type === 'core') {
-                $baseNamespace = 'Cake';
-            } elseif ($type === 'app') {
-                $baseNamespace = Configure::read('App.namespace');
-            } elseif ($type === 'plugin') {
-                list($plugin, $name) = explode('.', $pathName);
-                $path = implode('\\', explode('/', $plugin));
-                $baseNamespace = Inflector::camelize(str_replace('\\', '\ ', $path));
-                $additionalPath = null;
+                if ($type === 'core') {
+                    $baseNamespace = 'Cake';
+                } elseif ($type === 'app') {
+                    $baseNamespace = Configure::read('App.namespace');
+                } elseif ($type === 'plugin') {
+                    list($plugin, $name) = explode('.', $pathName);
+                    $path = implode('\\', explode('/', $plugin));
+                    $baseNamespace = Inflector::camelize(str_replace('\\', '\ ', $path));
+                    $additionalPath = null;
+                } else {
+                    $baseNamespace = '';
+                    $name = $fixture;
+                }
+
+                $name = Inflector::camelize($name);
+                $nameSegments = [
+                    $baseNamespace,
+                    'Test\Fixture',
+                    $additionalPath,
+                    $name . 'Fixture'
+                ];
+                $className = implode('\\', array_filter($nameSegments));
             } else {
-                $baseNamespace = '';
-                $name = $fixture;
+                $className = $fixture;
+                $name = preg_replace('/Fixture\z/', '', substr(strrchr($fixture, '\\'), 1));
             }
-            $name = Inflector::camelize($name);
-            $nameSegments = [
-                $baseNamespace,
-                'Test\Fixture',
-                $additionalPath,
-                $name . 'Fixture'
-            ];
-            $className = implode('\\', array_filter($nameSegments));
 
             if (class_exists($className)) {
                 $this->_loaded[$fixture] = new $className();
@@ -184,7 +217,7 @@ class FixtureManager
                     $fixture,
                     get_class($test)
                 );
-                throw new \UnexpectedValueException($msg);
+                throw new UnexpectedValueException($msg);
             }
         }
     }
@@ -192,8 +225,8 @@ class FixtureManager
     /**
      * Runs the drop and create commands on the fixtures if necessary.
      *
-     * @param \Cake\TestSuite\Fixture\TestFixture $fixture the fixture object to create
-     * @param Connection $db the datasource instance to use
+     * @param \Cake\Datasource\FixtureInterface $fixture the fixture object to create
+     * @param \Cake\Database\Connection $db The Connection object instance to use
      * @param array $sources The existing tables in the datasource.
      * @param bool $drop whether drop the fixture if it is already created or not
      * @return void
@@ -201,22 +234,26 @@ class FixtureManager
     protected function _setupTable($fixture, $db, array $sources, $drop = true)
     {
         $configName = $db->configName();
-        if ($this->isFixtureSetup($configName, $fixture)) {
+        $isFixtureSetup = $this->isFixtureSetup($configName, $fixture);
+        if ($isFixtureSetup) {
             return;
         }
 
         $table = $fixture->sourceName();
         $exists = in_array($table, $sources);
 
-        if ($drop && $exists) {
+        if (($drop && $exists) ||
+            ($exists && !$isFixtureSetup && $fixture instanceof TableSchemaInterface && $fixture->schema() instanceof Table)
+        ) {
             $fixture->drop($db);
             $fixture->create($db);
         } elseif (!$exists) {
             $fixture->create($db);
         } else {
-            $this->_insertionMap[$configName][] = $fixture;
             $fixture->truncate($db);
         }
+
+        $this->_insertionMap[$configName][] = $fixture;
     }
 
     /**
@@ -244,6 +281,23 @@ class FixtureManager
                 if (!isset($this->_insertionMap[$configName])) {
                     $this->_insertionMap[$configName] = [];
                 }
+
+                foreach ($fixtures as $name => $fixture) {
+                    if (in_array($fixture->table, $tables)) {
+                        try {
+                            $fixture->dropConstraints($db);
+                        } catch (PDOException $e) {
+                            $msg = sprintf(
+                                'Unable to drop constraints for fixture "%s" in "%s" test case: ' . "\n" . '%s',
+                                get_class($fixture),
+                                get_class($test),
+                                $e->getMessage()
+                            );
+                            throw new Exception($msg);
+                        }
+                    }
+                }
+
                 foreach ($fixtures as $fixture) {
                     if (!in_array($fixture, $this->_insertionMap[$configName])) {
                         $this->_setupTable($fixture, $db, $tables, $test->dropTables);
@@ -251,18 +305,46 @@ class FixtureManager
                         $fixture->truncate($db);
                     }
                 }
+
+                foreach ($fixtures as $name => $fixture) {
+                    try {
+                        $fixture->createConstraints($db);
+                    } catch (PDOException $e) {
+                        $msg = sprintf(
+                            'Unable to create constraints for fixture "%s" in "%s" test case: ' . "\n" . '%s',
+                            get_class($fixture),
+                            get_class($test),
+                            $e->getMessage()
+                        );
+                        throw new Exception($msg);
+                    }
+                }
             };
             $this->_runOperation($fixtures, $createTables);
 
             // Use a separate transaction because of postgres.
-            $insert = function ($db, $fixtures) {
+            $insert = function ($db, $fixtures) use ($test) {
                 foreach ($fixtures as $fixture) {
-                    $fixture->insert($db);
+                    try {
+                        $fixture->insert($db);
+                    } catch (PDOException $e) {
+                        $msg = sprintf(
+                            'Unable to insert fixture "%s" in "%s" test case: ' . "\n" . '%s',
+                            get_class($fixture),
+                            get_class($test),
+                            $e->getMessage()
+                        );
+                        throw new Exception($msg);
+                    }
                 }
             };
             $this->_runOperation($fixtures, $insert);
-        } catch (\PDOException $e) {
-            $msg = sprintf('Unable to insert fixtures for "%s" test case. %s', get_class($test), $e->getMessage());
+        } catch (PDOException $e) {
+            $msg = sprintf(
+                'Unable to insert fixtures for "%s" test case. %s',
+                get_class($test),
+                $e->getMessage()
+            );
             throw new Exception($msg);
         }
     }
@@ -280,7 +362,7 @@ class FixtureManager
         foreach ($dbs as $connection => $fixtures) {
             $db = ConnectionManager::get($connection, false);
             $logQueries = $db->logQueries();
-            if ($logQueries) {
+            if ($logQueries && !$this->_debug) {
                 $db->logQueries(false);
             }
             $db->transactional(function ($db) use ($fixtures, $operation) {
@@ -309,6 +391,7 @@ class FixtureManager
                 $dbs[$fixture->connection()][$f] = $fixture;
             }
         }
+
         return $dbs;
     }
 
@@ -325,6 +408,13 @@ class FixtureManager
         }
         $truncate = function ($db, $fixtures) {
             $configName = $db->configName();
+
+            foreach ($fixtures as $name => $fixture) {
+                if ($this->isFixtureSetup($configName, $fixture)) {
+                    $fixture->dropConstraints($db);
+                }
+            }
+
             foreach ($fixtures as $fixture) {
                 if ($this->isFixtureSetup($configName, $fixture)) {
                     $fixture->truncate($db);
@@ -338,30 +428,34 @@ class FixtureManager
      * Creates a single fixture table and loads data into it.
      *
      * @param string $name of the fixture
-     * @param \Cake\Database\Connection $db Connection instance or leave null to get a Connection from the fixture
+     * @param \Cake\Datasource\ConnectionInterface|null $db Connection instance or leave null to get a Connection from the fixture
      * @param bool $dropTables Whether or not tables should be dropped and re-created.
      * @return void
      * @throws \UnexpectedValueException if $name is not a previously loaded class
      */
     public function loadSingle($name, $db = null, $dropTables = true)
     {
-        if (isset($this->_fixtureMap[$name])) {
-            $fixture = $this->_fixtureMap[$name];
-            if (!$db) {
-                $db = ConnectionManager::get($fixture->connection());
-            }
-
-            if (!$this->isFixtureSetup($db->configName(), $fixture)) {
-                $sources = $db->schemaCollection()->listTables();
-                $this->_setupTable($fixture, $db, $sources, $dropTables);
-            }
-            if (!$dropTables) {
-                $fixture->truncate($db);
-            }
-            $fixture->insert($db);
-        } else {
-            throw new \UnexpectedValueException(sprintf('Referenced fixture class %s not found', $name));
+        if (!isset($this->_fixtureMap[$name])) {
+            throw new UnexpectedValueException(sprintf('Referenced fixture class %s not found', $name));
         }
+
+        $fixture = $this->_fixtureMap[$name];
+        if (!$db) {
+            $db = ConnectionManager::get($fixture->connection());
+        }
+
+        if (!$this->isFixtureSetup($db->configName(), $fixture)) {
+            $sources = $db->schemaCollection()->listTables();
+            $this->_setupTable($fixture, $db, $sources, $dropTables);
+        }
+
+        if (!$dropTables) {
+            $fixture->dropConstraints($db);
+            $fixture->truncate($db);
+        }
+
+        $fixture->createConstraints($db);
+        $fixture->insert($db);
     }
 
     /**

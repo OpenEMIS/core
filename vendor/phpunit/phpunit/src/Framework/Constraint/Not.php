@@ -10,13 +10,6 @@
 
 /**
  * Logical NOT.
- *
- * @author     Sebastian Bergmann <sebastian@phpunit.de>
- * @author     Bernhard Schussek <bschussek@2bepublished.at>
- * @copyright  Sebastian Bergmann <sebastian@phpunit.de>
- * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
- * @link       http://www.phpunit.de/
- * @since      Class available since Release 3.0.0
  */
 class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
 {
@@ -40,13 +33,14 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
     }
 
     /**
-     * @param  string $string
+     * @param string $string
+     *
      * @return string
      */
     public static function negate($string)
     {
         return str_replace(
-            array(
+            [
             'contains ',
             'exists',
             'has ',
@@ -57,8 +51,8 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
             'ends with ',
             'reference ',
             'not not '
-            ),
-            array(
+            ],
+            [
             'does not contain ',
             'does not exist',
             'does not have ',
@@ -69,7 +63,7 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
             'ends not with ',
             'don\'t reference ',
             'not '
-            ),
+            ],
             $string
         );
     }
@@ -84,10 +78,12 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
      * a boolean value instead: true in case of success, false in case of a
      * failure.
      *
-     * @param  mixed                                        $other        Value or object to evaluate.
-     * @param  string                                       $description  Additional information about the test
-     * @param  bool                                         $returnResult Whether to return a result or throw an exception
+     * @param mixed  $other        Value or object to evaluate.
+     * @param string $description  Additional information about the test
+     * @param bool   $returnResult Whether to return a result or throw an exception
+     *
      * @return mixed
+     *
      * @throws PHPUnit_Framework_ExpectationFailedException
      */
     public function evaluate($other, $description = '', $returnResult = false)
@@ -109,7 +105,8 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
      * The beginning of failure messages is "Failed asserting that" in most
      * cases. This method should return the second part of that sentence.
      *
-     * @param  mixed  $other Evaluated value or object.
+     * @param mixed $other Evaluated value or object.
+     *
      * @return string
      */
     protected function failureDescription($other)
@@ -117,16 +114,13 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
         switch (get_class($this->constraint)) {
             case 'PHPUnit_Framework_Constraint_And':
             case 'PHPUnit_Framework_Constraint_Not':
-            case 'PHPUnit_Framework_Constraint_Or': {
+            case 'PHPUnit_Framework_Constraint_Or':
                 return 'not( ' . $this->constraint->failureDescription($other) . ' )';
-                }
-            break;
 
-            default: {
+            default:
                 return self::negate(
                     $this->constraint->failureDescription($other)
                 );
-                }
         }
     }
 
@@ -140,16 +134,13 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
         switch (get_class($this->constraint)) {
             case 'PHPUnit_Framework_Constraint_And':
             case 'PHPUnit_Framework_Constraint_Not':
-            case 'PHPUnit_Framework_Constraint_Or': {
+            case 'PHPUnit_Framework_Constraint_Or':
                 return 'not( ' . $this->constraint->toString() . ' )';
-                }
-            break;
 
-            default: {
+            default:
                 return self::negate(
                     $this->constraint->toString()
                 );
-                }
         }
     }
 
@@ -157,7 +148,6 @@ class PHPUnit_Framework_Constraint_Not extends PHPUnit_Framework_Constraint
      * Counts the number of constraint elements.
      *
      * @return int
-     * @since  Method available since Release 3.4.0
      */
     public function count()
     {

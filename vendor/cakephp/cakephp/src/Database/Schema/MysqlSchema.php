@@ -15,7 +15,6 @@
 namespace Cake\Database\Schema;
 
 use Cake\Database\Exception;
-use Cake\Database\Schema\Table;
 
 /**
  * Schema generation/reflection features for MySQL
@@ -117,9 +116,15 @@ class MysqlSchema extends BaseSchema
             return ['type' => 'string', 'length' => $length];
         }
         if (strpos($col, 'text') !== false) {
+            $lengthName = substr($col, 0, -4);
+            $length = isset(Table::$columnLengths[$lengthName]) ? Table::$columnLengths[$lengthName] : null;
+
             return ['type' => 'text', 'length' => $length];
         }
         if (strpos($col, 'blob') !== false || $col === 'binary') {
+            $lengthName = substr($col, 0, -4);
+            $length = isset(Table::$columnLengths[$lengthName]) ? Table::$columnLengths[$lengthName] : null;
+
             return ['type' => 'binary', 'length' => $length];
         }
         if (strpos($col, 'float') !== false || strpos($col, 'double') !== false) {
@@ -138,6 +143,11 @@ class MysqlSchema extends BaseSchema
                 'unsigned' => $unsigned
             ];
         }
+
+        if (strpos($col, 'json') !== false) {
+            return ['type' => 'json', 'length' => null];
+        }
+
         return ['type' => 'text', 'length' => null];
     }
 
@@ -273,6 +283,7 @@ class MysqlSchema extends BaseSchema
         if (isset($options['collate'])) {
             $content .= sprintf(' COLLATE=%s', $options['collate']);
         }
+
         return [$content];
     }
 
@@ -283,22 +294,25 @@ class MysqlSchema extends BaseSchema
     {
         $data = $table->column($name);
         $out = $this->_driver->quoteIdentifier($name);
+        $nativeJson = $this->_driver->supportsNativeJson();
+
         $typeMap = [
             'integer' => ' INTEGER',
             'biginteger' => ' BIGINT',
             'boolean' => ' BOOLEAN',
-            'binary' => ' LONGBLOB',
             'float' => ' FLOAT',
             'decimal' => ' DECIMAL',
-            'text' => ' TEXT',
             'date' => ' DATE',
             'time' => ' TIME',
             'datetime' => ' DATETIME',
             'timestamp' => ' TIMESTAMP',
             'uuid' => ' CHAR(36)',
+            'json' => $nativeJson ? ' JSON' : ' LONGTEXT'
         ];
         $specialMap = [
             'string' => true,
+            'text' => true,
+            'binary' => true,
         ];
         if (isset($typeMap[$data['type']])) {
             $out .= $typeMap[$data['type']];
@@ -310,6 +324,32 @@ class MysqlSchema extends BaseSchema
                     if (!isset($data['length'])) {
                         $data['length'] = 255;
                     }
+                    break;
+                case 'text':
+                    $isKnownLength = in_array($data['length'], Table::$columnLengths);
+                    if (empty($data['length']) || !$isKnownLength) {
+                        $out .= ' TEXT';
+                        break;
+                    }
+
+                    if ($isKnownLength) {
+                        $length = array_search($data['length'], Table::$columnLengths);
+                        $out .= ' ' . strtoupper($length) . 'TEXT';
+                    }
+
+                    break;
+                case 'binary':
+                    $isKnownLength = in_array($data['length'], Table::$columnLengths);
+                    if (empty($data['length']) || !$isKnownLength) {
+                        $out .= ' BLOB';
+                        break;
+                    }
+
+                    if ($isKnownLength) {
+                        $length = array_search($data['length'], Table::$columnLengths);
+                        $out .= ' ' . strtoupper($length) . 'BLOB';
+                    }
+
                     break;
             }
         }
@@ -332,6 +372,11 @@ class MysqlSchema extends BaseSchema
             $out .= ' UNSIGNED';
         }
 
+        $hasCollate = ['text', 'string'];
+        if (in_array($data['type'], $hasCollate, true) && isset($data['collate']) && $data['collate'] !== '') {
+            $out .= ' COLLATE ' . $data['collate'];
+        }
+
         if (isset($data['null']) && $data['null'] === false) {
             $out .= ' NOT NULL';
         }
@@ -344,22 +389,25 @@ class MysqlSchema extends BaseSchema
         ) {
             $out .= ' AUTO_INCREMENT';
         }
-        if (isset($data['null']) && $data['null'] === true) {
-            $out .= $data['type'] === 'timestamp' ? ' NULL' : ' DEFAULT NULL';
+        if (isset($data['null']) && $data['null'] === true && $data['type'] === 'timestamp') {
+            $out .= ' NULL';
             unset($data['default']);
         }
-        if (isset($data['default']) && $data['type'] !== 'timestamp') {
-            $out .= ' DEFAULT ' . $this->_driver->schemaValue($data['default']);
-        }
         if (isset($data['default']) &&
-            $data['type'] === 'timestamp' &&
+            in_array($data['type'], ['timestamp', 'datetime']) &&
             strtolower($data['default']) === 'current_timestamp'
         ) {
             $out .= ' DEFAULT CURRENT_TIMESTAMP';
+            unset($data['default']);
+        }
+        if (isset($data['default'])) {
+            $out .= ' DEFAULT ' . $this->_driver->schemaValue($data['default']);
+            unset($data['default']);
         }
         if (isset($data['comment']) && $data['comment'] !== '') {
             $out .= ' COMMENT ' . $this->_driver->schemaValue($data['comment']);
         }
+
         return $out;
     }
 
@@ -374,8 +422,11 @@ class MysqlSchema extends BaseSchema
                 [$this->_driver, 'quoteIdentifier'],
                 $data['columns']
             );
+
             return sprintf('PRIMARY KEY (%s)', implode(', ', $columns));
         }
+
+        $out = '';
         if ($data['type'] === Table::CONSTRAINT_UNIQUE) {
             $out = 'UNIQUE KEY ';
         }
@@ -383,7 +434,47 @@ class MysqlSchema extends BaseSchema
             $out = 'CONSTRAINT ';
         }
         $out .= $this->_driver->quoteIdentifier($name);
+
         return $this->_keySql($out, $data);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function addConstraintSql(Table $table)
+    {
+        $sqlPattern = 'ALTER TABLE %s ADD %s;';
+        $sql = [];
+
+        foreach ($table->constraints() as $name) {
+            $constraint = $table->constraint($name);
+            if ($constraint['type'] === Table::CONSTRAINT_FOREIGN) {
+                $tableName = $this->_driver->quoteIdentifier($table->name());
+                $sql[] = sprintf($sqlPattern, $tableName, $this->constraintSql($table, $name));
+            }
+        }
+
+        return $sql;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function dropConstraintSql(Table $table)
+    {
+        $sqlPattern = 'ALTER TABLE %s DROP FOREIGN KEY %s;';
+        $sql = [];
+
+        foreach ($table->constraints() as $name) {
+            $constraint = $table->constraint($name);
+            if ($constraint['type'] === Table::CONSTRAINT_FOREIGN) {
+                $tableName = $this->_driver->quoteIdentifier($table->name());
+                $constraintName = $this->_driver->quoteIdentifier($name);
+                $sql[] = sprintf($sqlPattern, $tableName, $constraintName);
+            }
+        }
+
+        return $sql;
     }
 
     /**
@@ -399,6 +490,7 @@ class MysqlSchema extends BaseSchema
             $out = 'FULLTEXT KEY ';
         }
         $out .= $this->_driver->quoteIdentifier($name);
+
         return $this->_keySql($out, $data);
     }
 
@@ -430,6 +522,7 @@ class MysqlSchema extends BaseSchema
                 $this->_foreignOnClause($data['delete'])
             );
         }
+
         return $prefix . ' (' . implode(', ', $columns) . ')';
     }
 }

@@ -14,7 +14,6 @@
  */
 namespace Cake\Routing\Route;
 
-use Cake\Routing\Route\Route;
 use Cake\Utility\Inflector;
 
 /**
@@ -36,32 +35,42 @@ class DashedRoute extends Route
     protected $_inflectedDefaults = false;
 
     /**
+     * Camelizes the previously dashed plugin route taking into account plugin vendors
+     *
+     * @param string $plugin Plugin name
+     * @return string
+     */
+    protected function _camelizePlugin($plugin)
+    {
+        $plugin = str_replace('-', '_', $plugin);
+        if (strpos($plugin, '/') === false) {
+            return Inflector::camelize($plugin);
+        }
+        list($vendor, $plugin) = explode('/', $plugin, 2);
+
+        return Inflector::camelize($vendor) . '/' . Inflector::camelize($plugin);
+    }
+
+    /**
      * Parses a string URL into an array. If it matches, it will convert the
      * controller and plugin keys to their CamelCased form and action key to
      * camelBacked form.
      *
      * @param string $url The URL to parse
-     * @return bool|array False on failure, or an array of request parameters
+     * @param string $method The HTTP method.
+     * @return array|false An array of request parameters, or false on failure.
      */
-    public function parse($url)
+    public function parse($url, $method = '')
     {
-        $params = parent::parse($url);
+        $params = parent::parse($url, $method);
         if (!$params) {
             return false;
         }
         if (!empty($params['controller'])) {
-            $params['controller'] = Inflector::camelize(str_replace(
-                '-',
-                '_',
-                $params['controller']
-            ));
+            $params['controller'] = Inflector::camelize($params['controller'], '-');
         }
         if (!empty($params['plugin'])) {
-            $params['plugin'] = Inflector::camelize(str_replace(
-                '-',
-                '_',
-                $params['plugin']
-            ));
+            $params['plugin'] = $this->_camelizePlugin($params['plugin']);
         }
         if (!empty($params['action'])) {
             $params['action'] = Inflector::variable(str_replace(
@@ -70,6 +79,7 @@ class DashedRoute extends Route
                 $params['action']
             ));
         }
+
         return $params;
     }
 
@@ -90,6 +100,7 @@ class DashedRoute extends Route
             $this->_inflectedDefaults = true;
             $this->defaults = $this->_dasherize($this->defaults);
         }
+
         return parent::match($url, $context);
     }
 
@@ -106,6 +117,7 @@ class DashedRoute extends Route
                 $url[$element] = Inflector::dasherize($url[$element]);
             }
         }
+
         return $url;
     }
 }

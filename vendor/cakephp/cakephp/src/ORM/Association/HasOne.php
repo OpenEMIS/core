@@ -16,8 +16,6 @@ namespace Cake\ORM\Association;
 
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\Association;
-use Cake\ORM\Association\DependentDeleteTrait;
-use Cake\ORM\Association\SelectableAssociationTrait;
 use Cake\ORM\Table;
 use Cake\Utility\Inflector;
 
@@ -53,29 +51,23 @@ class HasOne extends Association
             if ($this->_foreignKey === null) {
                 $this->_foreignKey = $this->_modelKey($this->source()->alias());
             }
+
             return $this->_foreignKey;
         }
+
         return parent::foreignKey($key);
     }
 
     /**
-     * Sets the property name that should be filled with data from the target table
-     * in the source table record.
-     * If no arguments are passed, currently configured type is returned.
+     * Returns default property name based on association name.
      *
-     * @param string|null $name The name of the property. Pass null to read the current value.
      * @return string
      */
-    public function property($name = null)
+    protected function _propertyName()
     {
-        if ($name !== null) {
-            return parent::property($name);
-        }
-        if ($name === null && !$this->_propertyName) {
-            list(, $name) = pluginSplit($this->_name);
-            $this->_propertyName = Inflector::underscore(Inflector::singularize($name));
-        }
-        return $this->_propertyName;
+        list(, $name) = pluginSplit($this->_name);
+
+        return Inflector::underscore(Inflector::singularize($name));
     }
 
     /**
@@ -112,7 +104,7 @@ class HasOne extends Association
      * the target table
      * @return bool|\Cake\Datasource\EntityInterface false if $entity could not be saved, otherwise it returns
      * the saved entity
-     * @see Table::save()
+     * @see \Cake\ORM\Table::save()
      */
     public function saveAssociated(EntityInterface $entity, array $options = [])
     {
@@ -129,6 +121,7 @@ class HasOne extends Association
 
         if (!$this->target()->save($targetEntity, $options)) {
             $targetEntity->unsetProperty(array_keys($properties));
+
             return false;
         }
 
@@ -169,6 +162,7 @@ class HasOne extends Association
             }
             $resultMap[implode(';', $values)] = $result;
         }
+
         return $resultMap;
     }
 }

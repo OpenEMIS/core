@@ -31,8 +31,7 @@ class SurveyBehavior extends Behavior {
 		$customModule = $this->CustomModules
 			->find('all')
 			->select([
-				$this->CustomModules->aliasField('id'),
-				$this->CustomModules->aliasField('filter')
+				$this->CustomModules->aliasField('id')
 			])
 			->where([
 				$this->CustomModules->aliasField('model') => $module

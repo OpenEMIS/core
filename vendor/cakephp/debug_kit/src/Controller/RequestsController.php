@@ -19,11 +19,11 @@ use Cake\Network\Exception\NotFoundException;
 
 /**
  * Provides access to panel data.
+ *
+ * @property \DebugKit\Model\Table\RequestsTable $Requests
  */
 class RequestsController extends Controller
 {
-
-    public $layout = 'DebugKit.toolbar';
 
     /**
      * Before filter handler.
@@ -38,6 +38,21 @@ class RequestsController extends Controller
         if (!Configure::read('debug')) {
             throw new NotFoundException();
         }
+
+        $this->response->header(['Content-Security-Policy' => '']);
+    }
+
+    /**
+     * Before render handler.
+     *
+     * @param \Cake\Event\Event $event The event.
+     * @return void
+     */
+    public function beforeRender(Event $event)
+    {
+        $this->viewBuilder()
+            ->layout('DebugKit.toolbar')
+            ->className('DebugKit.Ajax');
     }
 
     /**

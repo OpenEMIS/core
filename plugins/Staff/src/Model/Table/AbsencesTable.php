@@ -10,10 +10,11 @@ class AbsencesTable extends AppTable {
 	public function initialize(array $config) {
 		$this->table('institution_staff_absences');
 		parent::initialize($config);
-		
+
 		$this->belongsTo('Users', ['className' => 'User.Users', 'foreignKey' => 'staff_id']);
 		$this->belongsTo('Institutions', ['className' => 'Institution.Institutions', 'foreignKey' => 'institution_id']);
-		$this->belongsTo('StaffAbsenceReasons', ['className' => 'FieldOption.StaffAbsenceReasons']);
+		$this->belongsTo('StaffAbsenceReasons', ['className' => 'Institution.StaffAbsenceReasons']);
+		$this->belongsTo('AbsenceTypes', ['className' => 'Institution.AbsenceTypes', 'foreignKey' =>'absence_type_id']);
 	}
 
 	public function beforeAction($event) {
@@ -43,14 +44,15 @@ class AbsencesTable extends AppTable {
 
 	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
 		parent::onUpdateActionButtons($event, $entity, $buttons);
-		
+
 		if (array_key_exists('view', $buttons)) {
 			$institutionId = $entity->institution->id;
 			$url = [
-				'plugin' => 'Institution', 
-				'controller' => 'Institutions', 
+				'plugin' => 'Institution',
+				'controller' => 'Institutions',
 				'action' => 'StaffAbsences',
-				'view', $entity->id,
+				'view',
+				$this->paramsEncode(['id' => $entity->id]),
 				'institution_id' => $institutionId,
 			];
 			$buttons['view']['url'] = $url;

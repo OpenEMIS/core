@@ -8,25 +8,25 @@ use Cake\Event\Event;
 
 class SearchBehavior extends Behavior {
 	protected $_defaultConfig = [
-		'orderField' => 'order',
-		'pageOptions' => [10, 20, 30, 40, 50]
+		'orderField' => 'order'
 	];
 
 	public function implementedEvents() {
 		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 5];
+		$events['ControllerAction.Model.index.beforeAction'] = ['callable' => 'indexBeforeAction', 'priority' => 5];
+		$events['ControllerAction.Model.index.beforeQuery'] = ['callable' => 'indexBeforeQuery', 'priority' => 11];
+		$events['ControllerAction.Model.getSearchableFields'] = ['callable' => 'getSearchableFields', 'priority' => 5];
 		return $events;
 	}
 
-	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+	public function indexBeforeAction(Event $event, ArrayObject $extra) {
 		$model = $this->_table;
 		$alias = $model->registryAlias();
 		$controller = $model->controller;
 		$request = $model->request;
 		$session = $request->session();
-		$pageOptions = $this->config('pageOptions');
+		$pageOptions = $extra['config']['pageOptions'];
 
-		$limit = $session->check($alias.'.search.limit') ? $session->read($alias.'.search.limit') : key($pageOptions);
 		$search = $session->check($alias.'.search.key') ? $session->read($alias.'.search.key') : '';
 
 		if ($request->is(['post', 'put'])) {
@@ -34,46 +34,36 @@ class SearchBehavior extends Behavior {
 				if (array_key_exists('searchField', $request->data['Search'])) {
 					$search = trim($request->data['Search']['searchField']);
 				}
-
-				if (array_key_exists('limit', $request->data['Search'])) {
-					$limit = $request->data['Search']['limit'];
-					$session->write($alias.'.search.limit', $limit);
-				}
 			}
 		}
 
 		$session->write($alias.'.search.key', $search);
 		$request->data['Search']['searchField'] = $search;
-		$request->data['Search']['limit'] = $limit;
 
 		$extra['config']['search'] = $search;
-		$extra['config']['pageOptions'] = $pageOptions;
+	}
 
-		if ($extra['pagination']) {
-			$extra['options']['limit'] = $pageOptions[$limit];
-		}
-
-		if ($extra['auto_contain']) {
-			$contain = $model->getContains();
-			if (!empty($contain)) {
-				$query->contain($contain);
-			}
-		}
+	public function indexBeforeQuery(Event $event, Query $query, ArrayObject $extra) {
+		$model = $this->_table;
+		$search = $extra['config']['search'];
 
 		$schema = $model->schema();
 		$columns = $schema->columns();
+		$excludeFields = ['id', 'password'];
 		if ($extra['auto_search']) {
 			$OR = [];
 			if (!empty($search)) {
-				$schema = $model->schema();
-				$columns = $schema->columns();
 				foreach ($columns as $col) {
 					$attr = $schema->column($col);
-					if ($col == 'password') continue;
+					if (in_array($col, $excludeFields)) continue;
 					if (in_array($attr['type'], ['string', 'text'])) {
 						$OR[$model->aliasField($col).' LIKE'] = '%' . $search . '%';
 					}
 				}
+			}
+
+			if (array_key_exists('OR', $extra)) {
+				$OR = array_merge($OR, $extra['OR']);
 			}
 
 			if (!empty($OR)) {
@@ -83,7 +73,28 @@ class SearchBehavior extends Behavior {
 
 		if ($extra['auto_order']) {
 			if (in_array($this->config('orderField'), $columns)) {
-				$query->order([$model->aliasField($this->config('orderField')) => 'asc']);
+				$extra['options']['sort'] = 'order';
+                $extra['options']['direction'] = 'asc';
+			}
+		}
+	}
+
+	//called by ControllerActionHelper
+	public function getSearchableFields(Event $event, ArrayObject $searchableFields) {
+		$model = $this->_table;
+		$schema = $model->schema();
+		$columns = $schema->columns();
+		$ControllerActionHelper = $event->subject();
+		$fields = $model->fields;
+
+		foreach ($columns as $col) {
+			$attr = $schema->column($col);
+			if ($col == 'password') continue;
+			if (in_array($attr['type'], ['string', 'text'])) {
+				$visible = $ControllerActionHelper->isFieldVisible($fields[$col], 'index');
+				if ($visible) {
+					$searchableFields[] = $col;
+				}
 			}
 		}
 	}

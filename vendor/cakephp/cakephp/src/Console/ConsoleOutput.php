@@ -40,7 +40,6 @@ namespace Cake\Console;
  * This would create orange 'Overwrite:' text, while the rest of the text would remain the normal color.
  * See ConsoleOutput::styles() to learn more about defining your own styles. Nested styles are not supported
  * at this time.
- *
  */
 class ConsoleOutput
 {
@@ -163,7 +162,7 @@ class ConsoleOutput
     {
         $this->_output = fopen($stream, 'w');
 
-        if ((DS === '\\' && !(bool)env('ANSICON') && env('ConEmuANSI') !== 'ON') ||
+        if ((DIRECTORY_SEPARATOR === '\\' && !(bool)env('ANSICON') && env('ConEmuANSI') !== 'ON') ||
             (function_exists('posix_isatty') && !posix_isatty($this->_output))
         ) {
             $this->_outputAs = self::PLAIN;
@@ -171,18 +170,19 @@ class ConsoleOutput
     }
 
     /**
-     * Outputs a single or multiple messages to stdout. If no parameters
+     * Outputs a single or multiple messages to stdout or stderr. If no parameters
      * are passed, outputs just a newline.
      *
      * @param string|array $message A string or an array of strings to output
      * @param int $newlines Number of newlines to append
-     * @return int Returns the number of bytes returned from writing to stdout.
+     * @return int|bool The number of bytes returned from writing to output.
      */
     public function write($message, $newlines = 1)
     {
         if (is_array($message)) {
             $message = implode(static::LF, $message);
         }
+
         return $this->_write($this->styleText($message . str_repeat(static::LF, $newlines)));
     }
 
@@ -199,8 +199,10 @@ class ConsoleOutput
         }
         if ($this->_outputAs == static::PLAIN) {
             $tags = implode('|', array_keys(static::$_styles));
+
             return preg_replace('#</?(?:' . $tags . ')>#', '', $text);
         }
+
         return preg_replace_callback(
             '/<(?P<tag>[a-z0-9-_]+)>(?P<text>.*?)<\/(\1)>/ims',
             [$this, '_replaceTags'],
@@ -234,6 +236,7 @@ class ConsoleOutput
                 $styleInfo[] = static::$_options[$option];
             }
         }
+
         return "\033[" . implode($styleInfo, ';') . 'm' . $matches['text'] . "\033[0m";
     }
 
@@ -241,7 +244,7 @@ class ConsoleOutput
      * Writes a message to the output stream.
      *
      * @param string $message Message to write.
-     * @return bool success
+     * @return int|bool The number of bytes returned from writing to output.
      */
     protected function _write($message)
     {
@@ -291,9 +294,11 @@ class ConsoleOutput
         }
         if ($definition === false) {
             unset(static::$_styles[$style]);
+
             return true;
         }
         static::$_styles[$style] = $definition;
+
         return true;
     }
 
@@ -301,7 +306,7 @@ class ConsoleOutput
      * Get/Set the output type to use. The output type how formatting tags are treated.
      *
      * @param int|null $type The output type to use. Should be one of the class constants.
-     * @return int|void  Either null or the value if getting.
+     * @return int|null  Either null or the value if getting.
      */
     public function outputAs($type = null)
     {

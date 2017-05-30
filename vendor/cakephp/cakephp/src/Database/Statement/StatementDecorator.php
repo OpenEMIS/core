@@ -16,6 +16,8 @@ namespace Cake\Database\Statement;
 
 use Cake\Database\StatementInterface;
 use Cake\Database\TypeConverterTrait;
+use Countable;
+use IteratorAggregate;
 
 /**
  * Represents a database statement. Statements contains queries that can be
@@ -26,7 +28,7 @@ use Cake\Database\TypeConverterTrait;
  * This class is but a decorator of an actual statement implementation, such as
  * PDOStatement.
  */
-class StatementDecorator implements StatementInterface, \Countable, \IteratorAggregate
+class StatementDecorator implements StatementInterface, Countable, IteratorAggregate
 {
 
     use TypeConverterTrait;
@@ -166,6 +168,7 @@ class StatementDecorator implements StatementInterface, \Countable, \IteratorAgg
     public function execute($params = null)
     {
         $this->_hasExecuted = true;
+
         return $this->_statement->execute($params);
     }
 
@@ -183,7 +186,7 @@ class StatementDecorator implements StatementInterface, \Countable, \IteratorAgg
      * ```
      *
      * @param string $type 'num' for positional columns, assoc for named columns
-     * @return mixed Result array containing columns and values or false if no results
+     * @return array|false Result array containing columns and values or false if no results
      * are left
      */
     public function fetch($type = 'num')
@@ -203,7 +206,7 @@ class StatementDecorator implements StatementInterface, \Countable, \IteratorAgg
      * ```
      *
      * @param string $type num for fetching columns as positional keys or assoc for column names as keys
-     * @return array list of all results from database for this statement
+     * @return array List of all results from database for this statement
      */
     public function fetchAll($type = 'num')
     {
@@ -248,6 +251,7 @@ class StatementDecorator implements StatementInterface, \Countable, \IteratorAgg
         if (!$this->_hasExecuted) {
             $this->execute();
         }
+
         return $this->_statement;
     }
 
@@ -275,14 +279,14 @@ class StatementDecorator implements StatementInterface, \Countable, \IteratorAgg
             return;
         }
 
-        $annonymousParams = is_int(key($params)) ? true : false;
+        $anonymousParams = is_int(key($params)) ? true : false;
         $offset = 1;
         foreach ($params as $index => $value) {
             $type = null;
             if (isset($types[$index])) {
                 $type = $types[$index];
             }
-            if ($annonymousParams) {
+            if ($anonymousParams) {
                 $index += $offset;
             }
             $this->bindValue($index, $value, $type);
@@ -305,6 +309,7 @@ class StatementDecorator implements StatementInterface, \Countable, \IteratorAgg
         if (isset($row[$column])) {
             return $row[$column];
         }
+
         return $this->_driver->lastInsertId($table, $column);
     }
 

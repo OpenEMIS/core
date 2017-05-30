@@ -16,9 +16,11 @@ class PotentialStaffDuplicatesTable extends AppTable  {
 		$this->belongsTo('Genders', ['className' => 'User.Genders']);
 		$this->belongsTo('AddressAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'address_area_id']);
 		$this->belongsTo('BirthplaceAreas', ['className' => 'Area.AreaAdministratives', 'foreignKey' => 'birthplace_area_id']);
-		
+		$this->belongsTo('MainNationalities', ['className' => 'FieldOption.Nationalities', 'foreignKey' => 'nationality_id']);
+		$this->belongsTo('MainIdentityTypes', ['className' => 'FieldOption.IdentityTypes', 'foreignKey' => 'identity_type_id']);
+
 		$this->addBehavior('Excel', [
-			'excludes' => ['is_student', 'is_staff', 'is_guardian', 'photo_name', 'super_admin', 'status'],
+			'excludes' => ['is_student', 'is_staff', 'is_guardian', 'external_reference', 'super_admin', 'status', 'last_login', 'photo_name', 'photo_content', 'preferred_language'],
 			'pages' => false
 		]);
 		$this->addBehavior('Report.ReportList');
@@ -37,52 +39,13 @@ class PotentialStaffDuplicatesTable extends AppTable  {
 
 	public function onExcelBeforeQuery(Event $event, ArrayObject $settings, Query $query) {
 		$query
-			->join([
-				'su' => [
-					'table' => 
-						"(SELECT first_name, last_name, gender_id, date_of_birth 
-						FROM security_users 
-						where is_staff = 1 
-						group by first_name, last_name, gender_id, date_of_birth 
-						having count(*) > 1)",
-					'type' => 'INNER',
-					'conditions' => [
-						'su.first_name = '.$this->aliasField('first_name'),
-						'su.last_name = '.$this->aliasField('last_name'),
-						'su.gender_id = '.$this->aliasField('gender_id'),
-						'su.date_of_birth = '.$this->aliasField('date_of_birth')
-					],
-        		],
+			->where([$this->aliasField('is_staff') => 1])
+			->group([
+				$this->aliasField('first_name'),
+				$this->aliasField('last_name'),
+				$this->aliasField('gender_id'),
+				$this->aliasField('date_of_birth')
 			])
-			->leftJoin(
-				['Staff' => 'institution_staff'],
-				[$this->aliasField('id').' = Staff.staff_id']
-			)
-			->leftJoin(
-				['Institutions' => 'institutions'],
-				['Staff.institution_id = Institutions.id']
-			)
-			->group([$this->aliasField('id')])
-			->select(['name' => 'Institutions.name', 'code' => 'Institutions.code'])
-			;
-
-	}
-
-	public function onExcelUpdateFields(Event $event, ArrayObject $settings, $fields) {
-		$newArray = [];
-		$newArray[] = [
-			'key' => 'Institutions.name',
-			'field' => 'name',
-			'type' => 'string',
-			'label' => ''
-		];
-		$newArray[] = [
-			'key' => 'Institutions.code',
-			'field' => 'code',
-			'type' => 'string',
-			'label' => ''
-		];
-		$newFields = array_merge($newArray, $fields->getArrayCopy());
-		$fields->exchangeArray($newFields);
+			->having(['COUNT(*) > ' => 1]);
 	}
 }

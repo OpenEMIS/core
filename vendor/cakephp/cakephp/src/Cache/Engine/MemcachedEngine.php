@@ -27,7 +27,6 @@ use Memcached;
  * support of binary protocol, and igbinary serialization
  * (if memcached extension compiled with --enable-igbinary)
  * Compressed keys can also be incremented/decremented
- *
  */
 class MemcachedEngine extends CacheEngine
 {
@@ -96,7 +95,7 @@ class MemcachedEngine extends CacheEngine
      *
      * @param array $config array of setting for the engine
      * @return bool True if the engine has been successfully initialized, false if not
-     * @throws InvalidArgumentException When you try use authentication without
+     * @throws \InvalidArgumentException When you try use authentication without
      *   Memcached compiled with SASL support
      */
     public function init(array $config = [])
@@ -189,7 +188,7 @@ class MemcachedEngine extends CacheEngine
      * Settings the memcached instance
      *
      * @return void
-     * @throws InvalidArgumentException When the Memcached extension is not built
+     * @throws \InvalidArgumentException When the Memcached extension is not built
      *   with the desired serializer engine.
      */
     protected function _setOptions()
@@ -241,8 +240,9 @@ class MemcachedEngine extends CacheEngine
      */
     protected function _parseServerString($server)
     {
-        if (strpos($server, 'unix://') === 0) {
-            return [$server, 0];
+        $socketTransport = 'unix://';
+        if (strpos($server, $socketTransport) === 0) {
+            return [substr($server, strlen($socketTransport)), 0];
         }
         if (substr($server, 0, 1) === '[') {
             $position = strpos($server, ']:');
@@ -258,6 +258,7 @@ class MemcachedEngine extends CacheEngine
             $host = substr($server, 0, $position);
             $port = substr($server, $position + 1);
         }
+
         return [$host, (int)$port];
     }
 
@@ -304,6 +305,7 @@ class MemcachedEngine extends CacheEngine
         foreach (array_keys($data) as $key) {
             $return[$key] = $success;
         }
+
         return $return;
     }
 
@@ -341,6 +343,7 @@ class MemcachedEngine extends CacheEngine
             $return[$key] = array_key_exists($this->_key($key), $values) ?
                 $values[$this->_key($key)] : false;
         }
+
         return $return;
     }
 
@@ -406,6 +409,7 @@ class MemcachedEngine extends CacheEngine
         foreach ($keys as $key) {
             $return[$key] = $success;
         }
+
         return $return;
     }
 
@@ -422,6 +426,9 @@ class MemcachedEngine extends CacheEngine
         }
 
         $keys = $this->_Memcached->getAllKeys();
+        if ($keys === false) {
+            return false;
+        }
 
         foreach ($keys as $key) {
             if (strpos($key, $this->_config['prefix']) === 0) {
@@ -430,6 +437,25 @@ class MemcachedEngine extends CacheEngine
         }
 
         return true;
+    }
+
+    /**
+     * Add a key to the cache if it does not already exist.
+     *
+     * @param string $key Identifier for the data.
+     * @param mixed $value Data to be cached.
+     * @return bool True if the data was successfully cached, false on failure.
+     */
+    public function add($key, $value)
+    {
+        $duration = $this->_config['duration'];
+        if ($duration > 30 * DAY) {
+            $duration = 0;
+        }
+
+        $key = $this->_key($key);
+
+        return $this->_Memcached->add($key, $value, $duration);
     }
 
     /**

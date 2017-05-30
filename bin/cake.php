@@ -16,7 +16,7 @@
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
-$minVersion = '5.4.16';
+$minVersion = '5.6.0';
 if (file_exists('composer.json')) {
     $composer = json_decode(file_get_contents('composer.json'));
     if (isset($composer->require->php)) {
@@ -28,6 +28,7 @@ if (version_compare(phpversion(), $minVersion, '<')) {
     exit(-1);
 }
 
+require dirname(__DIR__) . '/vendor/autoload.php';
 include dirname(__DIR__) . '/config/bootstrap.php';
 
 exit(Cake\Console\ShellDispatcher::run($argv));

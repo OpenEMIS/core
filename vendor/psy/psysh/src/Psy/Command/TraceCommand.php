@@ -1,9 +1,9 @@
 <?php
 
 /*
- * This file is part of Psy Shell
+ * This file is part of Psy Shell.
  *
- * (c) 2012-2014 Justin Hileman
+ * (c) 2012-2017 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -35,7 +35,7 @@ class TraceCommand extends Command
             ))
             ->setDescription('Show the current call stack.')
             ->setHelp(
-                <<<HELP
+                <<<'HELP'
 Show the current call stack.
 
 Optionally, include PsySH in the call stack by passing the <info>--include-psy</info> option.
@@ -62,11 +62,11 @@ HELP
      * Optionally limit the number of rows to include with $count, and exclude
      * Psy from the trace.
      *
-     * @param \Exception $e          The exception with a backtrace.
+     * @param \Exception $e          The exception with a backtrace
      * @param int        $count      (default: PHP_INT_MAX)
      * @param bool       $includePsy (default: true)
      *
-     * @return array Formatted stacktrace lines.
+     * @return array Formatted stacktrace lines
      */
     protected function getBacktrace(\Exception $e, $count = null, $includePsy = true)
     {

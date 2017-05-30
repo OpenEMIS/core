@@ -63,8 +63,8 @@ class InstitutionBehavior extends Behavior {
 
 		$query->where([
 			'OR' => [
-				['EXISTS ('.$institutionsSecurityArea->sql().' WHERE '.$institutionTableClone1->aliasField('id').'='.$this->_table->aliasField('id').')'],
-				['EXISTS ('.$institutionSecurity->sql().' WHERE '.$institutionTableClone2->aliasField('id').'='.$this->_table->aliasField('id').')']
+				['EXISTS ('.$institutionsSecurityArea->where([$institutionTableClone1->aliasField('id').'='.$this->_table->aliasField('id')]).')'],
+				['EXISTS ('.$institutionSecurity->where([$institutionTableClone2->aliasField('id').'='.$this->_table->aliasField('id')]).')']
 			]
 		]);
 

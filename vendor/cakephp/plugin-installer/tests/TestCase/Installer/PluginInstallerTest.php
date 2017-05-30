@@ -3,12 +3,11 @@ namespace Cake\Test\TestCase\Composer\Installer;
 
 use Cake\Test\Composer\Installer\PluginInstaller;
 use Composer\Composer;
-use Composer\Config;
 use Composer\Package\Package;
-use Composer\Package\RootPackage;
 use Composer\Repository\RepositoryManager;
+use PHPUnit\Framework\TestCase;
 
-class PluginInstallerTest extends \PHPUnit_Framework_TestCase
+class PluginInstallerTest extends TestCase
 {
 
     public $package;
@@ -42,13 +41,13 @@ class PluginInstallerTest extends \PHPUnit_Framework_TestCase
         }
 
         $composer = new Composer();
-        $config = $this->getMock('Composer\Config');
+        $config = $this->getMockBuilder('Composer\Config')->getMock();
         $config->expects($this->any())
             ->method('get')
             ->will($this->returnValue($this->path . '/vendor'));
         $composer->setConfig($config);
 
-        $this->io = $this->getMock('Composer\IO\IOInterface');
+        $this->io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
         $rm = new RepositoryManager(
             $this->io,
             $config
@@ -265,7 +264,7 @@ class PluginInstallerTest extends \PHPUnit_Framework_TestCase
         foreach ($plugins as &$plugin) {
             $plugin .= '/';
         }
-        unset ($plugin);
+        unset($plugin);
 
         $result = require $path;
         $expected = [
@@ -307,7 +306,7 @@ class PluginInstallerTest extends \PHPUnit_Framework_TestCase
         $this->assertContains('<?php', $contents);
         $this->assertContains("'plugins' =>", $contents);
         $this->assertContains("'DebugKit' => '/vendor/cakephp/DebugKit/'", $contents);
-        $this->assertContains("'Bake' => '/some/path'", $contents);
+        $this->assertContains("'Bake' => '/some/path/'", $contents);
     }
 
     /**
@@ -327,7 +326,7 @@ class PluginInstallerTest extends \PHPUnit_Framework_TestCase
         $this->assertContains('<?php', $contents);
         $this->assertContains('$baseDir = dirname(dirname(__FILE__));', $contents);
         $this->assertContains("'DebugKit' => \$baseDir . '/vendor/cakephp/debugkit/'", $contents);
-        $this->assertContains("'Bake' => '/some/path'", $contents);
+        $this->assertContains("'Bake' => '/some/path/'", $contents);
     }
 
     /**
@@ -348,7 +347,7 @@ class PluginInstallerTest extends \PHPUnit_Framework_TestCase
         $contents = file_get_contents($this->path . '/vendor/cakephp-plugins.php');
         $this->assertContains('<?php', $contents);
         $this->assertContains("'DebugKit' => '/vendor/cakephp/debugkit/'", $contents);
-        $this->assertContains("'Bake' => '/some/path'", $contents);
+        $this->assertContains("'Bake' => '/some/path/'", $contents);
         $this->assertContains("'ADmad/JwtAuth' => '/vendor/admad/cakephp-jwt-auth/'", $contents);
     }
 

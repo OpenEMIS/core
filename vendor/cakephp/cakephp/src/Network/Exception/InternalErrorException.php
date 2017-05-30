@@ -10,12 +10,10 @@
  * @since         3.0.0
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
-
 namespace Cake\Network\Exception;
 
 /**
  * Represents an HTTP 500 error.
- *
  */
 class InternalErrorException extends HttpException
 {
@@ -23,7 +21,7 @@ class InternalErrorException extends HttpException
     /**
      * Constructor
      *
-     * @param string $message If no message is given 'Internal Server Error' will be the message
+     * @param string|null $message If no message is given 'Internal Server Error' will be the message
      * @param int $code Status code, defaults to 500
      */
     public function __construct($message = null, $code = 500)

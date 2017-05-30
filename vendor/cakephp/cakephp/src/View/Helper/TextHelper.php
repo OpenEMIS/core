@@ -117,23 +117,35 @@ class TextHelper extends Helper
         $this->_placeholders = [];
         $options += ['escape' => true];
 
+        $pattern = '/(?:(?<!href="|src="|">)
+            (?>
+                (
+                    (?<left>[\[<(]) # left paren,brace
+                    (?>
+                        # Lax match URL
+                        (?<url>(?:https?|ftp|nntp):\/\/[\p{L}0-9.\-_:]+(?:[\/?][\p{L}0-9.\-_:\/?=&>\[\]()#@]+)?)
+                        (?<right>[\])>]) # right paren,brace
+                    )
+                )
+                |
+                (?<url_bare>(?P>url)) # A bare URL. Use subroutine
+            )
+            )/ixu';
 
-        $pattern = '#(?<!href="|src="|">)((?:https?|ftp|nntp)://[\p{L}0-9.\-_:]+' .
-            '(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+' .
-            '(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))#i';
         $text = preg_replace_callback(
             $pattern,
             [&$this, '_insertPlaceHolder'],
             $text
         );
         $text = preg_replace_callback(
-            '#(?<!href="|">)(?<!\b[[:punct:]])(?<!http://|https://|ftp://|nntp://)www\.[^\n\%\ <]+[^<\n\%\,\.\ <](?<!\))#i',
+            '#(?<!href="|">)(?<!\b[[:punct:]])(?<!http://|https://|ftp://|nntp://)www\.[^\s\n\%\ <]+[^\s<\n\%\,\.\ <](?<!\))#i',
             [&$this, '_insertPlaceHolder'],
             $text
         );
         if ($options['escape']) {
             $text = h($text);
         }
+
         return $this->_linkUrls($text, $options);
     }
 
@@ -146,8 +158,21 @@ class TextHelper extends Helper
      */
     protected function _insertPlaceHolder($matches)
     {
-        $key = md5($matches[0]);
-        $this->_placeholders[$key] = $matches[0];
+        $match = $matches[0];
+        $envelope = ['', ''];
+        if (isset($matches['url'])) {
+            $match = $matches['url'];
+            $envelope = [$matches['left'], $matches['right']];
+        }
+        if (isset($matches['url_bare'])) {
+            $match = $matches['url_bare'];
+        }
+        $key = md5($match);
+        $this->_placeholders[$key] = [
+            'content' => $match,
+            'envelope' => $envelope
+        ];
+
         return $key;
     }
 
@@ -161,13 +186,15 @@ class TextHelper extends Helper
     protected function _linkUrls($text, $htmlOptions)
     {
         $replace = [];
-        foreach ($this->_placeholders as $hash => $url) {
-            $link = $url;
-            if (!preg_match('#^[a-z]+\://#', $url)) {
+        foreach ($this->_placeholders as $hash => $content) {
+            $link = $url = $content['content'];
+            $envelope = $content['envelope'];
+            if (!preg_match('#^[a-z]+\://#i', $url)) {
                 $url = 'http://' . $url;
             }
-            $replace[$hash] = $this->Html->link($link, $url, $htmlOptions);
+            $replace[$hash] = $envelope[0] . $this->Html->link($link, $url, $htmlOptions) . $envelope[1];
         }
+
         return strtr($text, $replace);
     }
 
@@ -177,14 +204,17 @@ class TextHelper extends Helper
      * @param string $text The text to operate on
      * @param array $options An array of options to use for the HTML.
      * @return string
-     * @see TextHelper::autoLinkEmails()
+     * @see \Cake\View\Helper\TextHelper::autoLinkEmails()
      */
     protected function _linkEmails($text, $options)
     {
         $replace = [];
-        foreach ($this->_placeholders as $hash => $url) {
-            $replace[$hash] = $this->Html->link($url, 'mailto:' . $url, $options);
+        foreach ($this->_placeholders as $hash => $content) {
+            $url = $content['content'];
+            $envelope = $content['envelope'];
+            $replace[$hash] = $envelope[0] . $this->Html->link($url, 'mailto:' . $url, $options) . $envelope[1];
         }
+
         return strtr($text, $replace);
     }
 
@@ -214,6 +244,7 @@ class TextHelper extends Helper
         if ($options['escape']) {
             $text = h($text);
         }
+
         return $this->_linkEmails($text, $options);
     }
 
@@ -232,6 +263,7 @@ class TextHelper extends Helper
     public function autoLink($text, array $options = [])
     {
         $text = $this->autoLinkUrls($text, $options);
+
         return $this->autoLinkEmails($text, ['escape' => false] + $options);
     }
 
@@ -272,6 +304,7 @@ class TextHelper extends Helper
             }
             $text = preg_replace('|<p>\s*</p>|', '', $text);
         }
+
         return $text;
     }
 
@@ -356,7 +389,7 @@ class TextHelper extends Helper
      * Creates a comma separated list where the last two items are joined with 'and', forming natural language.
      *
      * @param array $list The list to be joined.
-     * @param string $and The word used to join the last and second last items together with. Defaults to 'and'.
+     * @param string|null $and The word used to join the last and second last items together with. Defaults to 'and'.
      * @param string $separator The separator used to join all the other items together. Defaults to ', '.
      * @return string The glued together string.
      * @see \Cake\Utility\Text::toList()

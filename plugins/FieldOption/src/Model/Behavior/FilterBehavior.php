@@ -30,34 +30,35 @@ class FilterBehavior extends DisplayBehavior {
 	}
 
 	public function initialize(array $config) {
-		parent::initialize($config);		
+		parent::initialize($config);
 		$this->fieldOptionName = $config['fieldOptionName'];
 		$this->parentFieldOptionList = $config['parentFieldOptionList'];
 
 		$parentFieldOptionInfo = $this->parentFieldOptionList[$this->fieldOptionName];
-		$this->parentFieldOptionInfo = $parentFieldOptionInfo;	
+		$this->parentFieldOptionInfo = $parentFieldOptionInfo;
 
 		if(!empty($parentFieldOptionInfo['parentModel']) && !empty($parentFieldOptionInfo['foreignKey'])) {
 			$parentFieldOptionTable = TableRegistry::get($parentFieldOptionInfo['parentModel']);
 			$parentFieldOptions = $parentFieldOptionTable->find('list')->where([$parentFieldOptionTable->aliasField('visible') => 1])->toArray();
 			$this->parentFieldOptions = $parentFieldOptions;
 		}
-	}	
+	}
 
-	public function indexBeforeAction(Event $event, Query $query, ArrayObject $settings) {
-		parent::indexBeforeAction($event, $query, $settings);		
+	public function indexBeforeAction(Event $event, ArrayObject $settings) {
+		parent::indexBeforeAction($event, $settings);
+        $query = $settings['query'];
 
 		$this->_table->controller->set('parentFieldOptions', $this->parentFieldOptions);
 		$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
 
 		$this->_table->controller->set('selectedParentFieldOption', $selectedParentFieldOption);
 		$this->_table->controller->set('foreignKey', $this->parentFieldOptionInfo['foreignKey']);
-		
+
 		$parentFieldOptionValue = $this->parentFieldOptions[$selectedParentFieldOption];
 		$foreignKey =  $this->parentFieldOptionInfo['foreignKey'];
 
 		$this->_table->ControllerAction->field('parent_field_option_id', [
-			'type' => 'readonly', 
+			'type' => 'readonly',
 			'options' => $this->parentFieldOptions,
 			'visible' => ['index' => false, 'view' => false, 'edit' => false]
 		]);
@@ -67,17 +68,17 @@ class FilterBehavior extends DisplayBehavior {
 
 		$selectedParentFieldOption = $this->_table->ControllerAction->getVar('selectedParentFieldOption');
 		$foreignKey = $this->_table->ControllerAction->getVar('foreignKey');
-		if (!empty($selectedParentFieldOption) && !empty($foreignKey)) {	
+		if (!empty($selectedParentFieldOption) && !empty($foreignKey)) {
 			$query->where([$foreignKey => $selectedParentFieldOption]);
-		}	
+		}
 
 		$this->displayParentFields($table);
 		return $query;
-	}	
+	}
 
 	public function viewBeforeAction(Event $event) {
 		parent::viewBeforeAction($event);
-		
+
 		$this->_table->fields['field_option_id']['value'] = $this->_table->fields['field_option_id']['attr']['value'];
 		$table = TableRegistry::get($this->fieldOptionName);
 		$this->displayParentFields($table);
@@ -95,7 +96,7 @@ class FilterBehavior extends DisplayBehavior {
 	public function displayParentFields($table) {
 		$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);
 		$selectedParentFieldOptionValue = $this->parentFieldOptions[$selectedParentFieldOption];
-	
+
 		if (!empty($this->parentFieldOptionInfo['foreignKey'])) {
 			$model = $this->_table->ControllerAction->getModel($this->parentFieldOptionInfo['parentModel']);
 
@@ -108,27 +109,27 @@ class FilterBehavior extends DisplayBehavior {
 			 */
 
 			$this->_table->ControllerAction->field($this->parentFieldOptionInfo['foreignKey'], [
-														'type' => 'readonly', 
-														'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true], 
-														'model' => $table->alias(), 
+														'type' => 'readonly',
+														'visible' => ['index' => false, 'add' => true, 'edit' => true, 'view' => true],
+														'model' => $table->alias(),
 														'value' => $selectedParentFieldOption,
-														'className' => $this->fieldOptionName, 
+														'className' => $this->fieldOptionName,
 														'attr' => ['value' => $selectedParentFieldOptionValue],
 														'order' => array_search('parent_field_option_id', $this->defaultFieldOrder),
 													]);
 		}
-		
+
 	}
 
 	public function deleteBeforeAction(Event $event, ArrayObject $settings) {
 		$settings['deleteStrategy'] = 'transfer';
 		$settings['model'] = $this->fieldOptionName;
 	}
-	
-	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $options) {
+
+	public function deleteOnInitialize(Event $event, Entity $entity, Query $query, ArrayObject $extra) {
 		$table = TableRegistry::get($this->fieldOptionName);
 		$foreignKey = $this->parentFieldOptionList[$this->fieldOptionName]['foreignKey'];
-		
+
 		if(!empty($foreignKey)) {
 
 			$selectedParentFieldOption = $this->_table->queryString('parent_field_option_id', $this->parentFieldOptions);

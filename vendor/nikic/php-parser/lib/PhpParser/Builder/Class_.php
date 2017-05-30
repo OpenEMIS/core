@@ -12,7 +12,7 @@ class Class_ extends Declaration
 
     protected $extends = null;
     protected $implements = array();
-    protected $type = 0;
+    protected $flags = 0;
 
     protected $uses = array();
     protected $constants = array();
@@ -44,8 +44,7 @@ class Class_ extends Declaration
     /**
      * Implements one or more interfaces.
      *
-     * @param Name|string $interface Name of interface to implement
-     * @param Name|string $...       More interfaces to implement
+     * @param Name|string ...$interfaces Names of interfaces to implement
      *
      * @return $this The builder instance (for fluid interface)
      */
@@ -113,7 +112,7 @@ class Class_ extends Declaration
      */
     public function getNode() {
         return new Stmt\Class_($this->name, array(
-            'type' => $this->type,
+            'flags' => $this->flags,
             'extends' => $this->extends,
             'implements' => $this->implements,
             'stmts' => array_merge($this->uses, $this->constants, $this->properties, $this->methods),

@@ -18,9 +18,10 @@ use const foo\BAR as BAZ;
 -----
 array(
     0: Stmt_Use(
-        type: 1
+        type: TYPE_NORMAL (1)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: A
@@ -32,9 +33,10 @@ array(
         )
     )
     1: Stmt_Use(
-        type: 1
+        type: TYPE_NORMAL (1)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: C
@@ -46,9 +48,10 @@ array(
         )
     )
     2: Stmt_Use(
-        type: 1
+        type: TYPE_NORMAL (1)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: F
@@ -58,6 +61,7 @@ array(
                 alias: H
             )
             1: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: J
@@ -68,9 +72,10 @@ array(
         )
     )
     3: Stmt_Use(
-        type: 1
+        type: TYPE_NORMAL (1)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: A
@@ -79,11 +84,15 @@ array(
                 alias: A
             )
         )
+        comments: array(
+            0: // evil alias notation - Do Not Use!
+        )
     )
     4: Stmt_Use(
-        type: 1
+        type: TYPE_NORMAL (1)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: A
@@ -94,9 +103,10 @@ array(
         )
     )
     5: Stmt_Use(
-        type: 2
+        type: TYPE_FUNCTION (2)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: foo
@@ -106,11 +116,15 @@ array(
                 alias: bar
             )
         )
+        comments: array(
+            0: // function and constant aliases
+        )
     )
     6: Stmt_Use(
-        type: 2
+        type: TYPE_FUNCTION (2)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: foo
@@ -122,9 +136,10 @@ array(
         )
     )
     7: Stmt_Use(
-        type: 3
+        type: TYPE_CONSTANT (3)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: foo
@@ -136,9 +151,10 @@ array(
         )
     )
     8: Stmt_Use(
-        type: 3
+        type: TYPE_CONSTANT (3)
         uses: array(
             0: Stmt_UseUse(
+                type: TYPE_UNKNOWN (0)
                 name: Name(
                     parts: array(
                         0: foo

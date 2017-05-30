@@ -9,7 +9,7 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    'debug' => false,
+    'debug' => filter_var(env('DEBUG', false), FILTER_VALIDATE_BOOLEAN),
 
     /**
      * Configure basic information about the application.
@@ -37,7 +37,8 @@ return [
      */
     'App' => [
         'namespace' => 'App',
-        'encoding' => 'UTF-8',
+        'encoding' => env('APP_ENCODING', 'UTF-8'),
+        'defaultLocale' => env('APP_DEFAULT_LOCALE', 'en_US'),
         'base' => false,
         'dir' => 'src',
         'webroot' => 'webroot',
@@ -62,7 +63,7 @@ return [
      *   You should treat it as extremely sensitive data.
      */
     'Security' => [
-        'salt' => '3b07b2f17a71b29db58115fbea9e2a03385eb4d224c07b5fba3b0f67cddc082f',
+        'salt' => env('SECURITY_SALT', '3b07b2f17a71b29db58115fbea9e2a03385eb4d224c07b5fba3b0f67cddc082f'),
     ],
 
     /**
@@ -83,21 +84,14 @@ return [
     'Cache' => [
         'default' => [
             'className' => 'File',
-            'path' => CACHE
-        ],
-
-        'labels' => [
-            'className' => 'File',
             'path' => CACHE,
-            'probability' => 0,
-            'duration' => '+1 month',
-            'groups' => ['labels']
+            'url' => env('CACHE_DEFAULT_URL', null),
         ],
 
         /**
-         * Configure the cache used for general framework caching. Path information,
-         * object listings, and translation cache files are stored with this
-         * configuration.
+         * Configure the cache used for general framework caching.
+         * Translation cache files are stored with this configuration.
+         * Duration will be set to '+1 year' in bootstrap.php when debug = false
          */
         '_cake_core_' => [
             'className' => 'File',
@@ -105,12 +99,14 @@ return [
             'path' => CACHE . 'persistent/',
             'serialize' => true,
             'duration' => '+2 minutes',
+            'url' => env('CACHE_CAKECORE_URL', null),
         ],
 
         /**
          * Configure the cache for model and datasource caches. This cache
          * configuration is used to store schema descriptions, and table listings
          * in connections.
+         * Duration will be set to '+1 year' in bootstrap.php when debug = false
          */
         '_cake_model_' => [
             'className' => 'File',
@@ -118,6 +114,7 @@ return [
             'path' => CACHE . 'models/',
             'serialize' => true,
             'duration' => '+2 minutes',
+            'url' => env('CACHE_CAKEMODEL_URL', null),
         ],
     ],
 
@@ -146,11 +143,13 @@ return [
      *   extend one of the listed exceptions will also be skipped for logging.
      *   E.g.:
      *   `'skipLog' => ['Cake\Network\Exception\NotFoundException', 'Cake\Network\Exception\UnauthorizedException']`
+     * - `extraFatalErrorMemory` - int - The number of megabytes to increase
+     *   the memory limit by when a fatal error is encountered. This allows
+     *   breathing room to complete logging or error handling.
      */
     'Error' => [
         'errorLevel' => E_ALL & ~E_DEPRECATED,
-        'exceptionRenderer' => 'App\Error\AppExceptionRenderer',
-        //'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
+        'exceptionRenderer' => 'Cake\Error\ExceptionRenderer',
         'skipLog' => [],
         'log' => true,
         'trace' => true,
@@ -159,15 +158,11 @@ return [
     /**
      * Email configuration.
      *
-     * You can configure email transports and email delivery profiles here.
-     *
      * By defining transports separately from delivery profiles you can easily
      * re-use transport configuration across multiple profiles.
      *
      * You can specify multiple configurations for production, development and
      * testing.
-     *
-     * ### Configuring transports
      *
      * Each transport needs a `className`. Valid options are as follows:
      *
@@ -176,16 +171,8 @@ return [
      *  Debug  - Do not send the email, just return the result
      *
      * You can add custom transports (or override existing transports) by adding the
-     * appropriate file to src/Network/Email.  Transports should be named
+     * appropriate file to src/Mailer/Transport.  Transports should be named
      * 'YourTransport.php', where 'Your' is the name of the transport.
-     *
-     * ### Configuring delivery profiles
-     *
-     * Delivery profiles allow you to predefine various properties about email
-     * messages from your application and give the settings a name. This saves
-     * duplication across your application and makes maintenance and development
-     * easier. Each profile accepts a number of keys. See `Cake\Network\Email\Email`
-     * for more information.
      */
     'EmailTransport' => [
         'default' => [
@@ -198,9 +185,19 @@ return [
             'password' => 'secret',
             'client' => null,
             'tls' => null,
+            'url' => env('EMAIL_TRANSPORT_DEFAULT_URL', null),
         ],
     ],
 
+    /**
+     * Email delivery profiles
+     *
+     * Delivery profiles allow you to predefine various properties about email
+     * messages from your application and give the settings a name. This saves
+     * duplication across your application and makes maintenance and development
+     * easier. Each profile accepts a number of keys. See `Cake\Mailer\Email`
+     * for more information.
+     */
     'Email' => [
         'default' => [
             'transport' => 'default',
@@ -227,15 +224,17 @@ return [
              * MySQL on MAMP uses port 8889, MAMP users will want to uncomment
              * the following line and set the port accordingly
              */
-            //'port' => 'nonstandard_port_number',
-            'username' => 'root',
-            'password' => 'password',
-            'database' => 'corev3',
+            //'port' => 'non_standard_port_number',
+            'username' => 'my_app',
+            'password' => 'secret',
+            'database' => 'my_app',
             'encoding' => 'utf8',
             'timezone' => 'UTC',
+            'flags' => [],
             'cacheMetadata' => true,
+            'log' => false,
 
-            /*
+            /**
              * Set identifier quoting to true if you are using reserved words or
              * special characters in your table or column names. Enabling this
              * setting will result in queries built using the Query Builder having
@@ -253,6 +252,8 @@ return [
              * which is the recommended value in production environments
              */
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
+
+            'url' => env('DATABASE_URL', null),
         ],
 
         /**
@@ -263,15 +264,17 @@ return [
             'driver' => 'Cake\Database\Driver\Mysql',
             'persistent' => false,
             'host' => 'localhost',
-            //'port' => 'nonstandard_port_number',
-            'username' => 'root',
-            'password' => 'password',
-            'database' => 'corev3_test',
+            //'port' => 'non_standard_port_number',
+            'username' => 'my_app',
+            'password' => 'secret',
+            'database' => 'test_myapp',
             'encoding' => 'utf8',
             'timezone' => 'UTC',
             'cacheMetadata' => true,
             'quoteIdentifiers' => false,
+            'log' => false,
             //'init' => ['SET GLOBAL innodb_stats_on_metadata = 0'],
+            'url' => env('DATABASE_TEST_URL', null),
         ],
     ],
 
@@ -284,17 +287,18 @@ return [
             'path' => LOGS,
             'file' => 'debug',
             'levels' => ['notice', 'info', 'debug'],
+            'url' => env('LOG_DEBUG_URL', null),
         ],
         'error' => [
             'className' => 'Cake\Log\Engine\FileLog',
             'path' => LOGS,
             'file' => 'error',
             'levels' => ['warning', 'error', 'critical', 'alert', 'emergency'],
+            'url' => env('LOG_ERROR_URL', null),
         ],
     ],
 
     /**
-     *
      * Session configuration.
      *
      * Contains an array of settings to use for session configuration. The
@@ -308,6 +312,9 @@ return [
      *   `session.cookie_path` php.ini config. Defaults to base path of app.
      * - `timeout` - The time in minutes the session should be valid for.
      *    Pass 0 to disable checking timeout.
+     *    Please note that php.ini's session.gc_maxlifetime must be equal to or greater
+     *    than the largest Session['timeout'] in all served websites for it to have the
+     *    desired effect.
      * - `defaults` - The default configuration set to use as a basis for your session.
      *    There are four built-in options: php, cake, cache, database.
      * - `handler` - Can be used to enable a custom session handler. Expects an
@@ -331,5 +338,11 @@ return [
      */
     'Session' => [
         'defaults' => 'php',
+    ],
+
+    'domain' => '',
+
+    'Application' => [
+        'key' => ''
     ],
 ];

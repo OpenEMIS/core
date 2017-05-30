@@ -41,7 +41,6 @@ use Serializable;
  *  });
  *  $iterator->toList(); // Returns [4, 6]
  * ```
- *
  */
 class ZipIterator extends MultipleIterator implements CollectionInterface, Serializable
 {
@@ -67,7 +66,7 @@ class ZipIterator extends MultipleIterator implements CollectionInterface, Seria
      * iterators by their corresponding index.
      *
      * @param array $sets The list of array or iterators to be zipped.
-     * @param callable $callable The function to use for zipping the elements of each iterator.
+     * @param callable|null $callable The function to use for zipping the elements of each iterator.
      */
     public function __construct(array $sets, $callable = null)
     {

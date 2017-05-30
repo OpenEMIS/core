@@ -18,8 +18,16 @@ class StaffAccountTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
-		$validator = $this->getAccountValidation($validator);
+		$validator = parent::validationDefault($validator);
 		return $validator;
 	}
 
+    public function onUpdateFieldUsername(Event $event, array $attr, $action, Request $request) {
+        $editStaffUsername = $this->AccessControl->check(['Institutions', 'StaffAccountUsername', 'edit']);
+
+        if ($editStaffUsername) {
+            $attr['type'] = 'string';
+            return $attr;
+        }
+    }
 }

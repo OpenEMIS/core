@@ -1,24 +1,48 @@
 <?php
 namespace Workflow\Model\Table;
 
-use ArrayObject;
+use Cake\ORM\TableRegistry;
 use Cake\ORM\Entity;
-use Cake\Event\Event;
+use Cake\I18n\Time;
 use App\Model\Table\AppTable;
 
 class WorkflowTransitionsTable extends AppTable {
 	public function initialize(array $config) {
 		parent::initialize($config);
-		$this->belongsTo('WorkflowRecords', ['className' => 'Workflow.WorkflowRecords']);
+		$this->belongsTo('WorkflowModels', ['className' => 'Workflow.WorkflowModels']);
 	}
 
-	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
-		// Update workflow_step_id in workflow_records.
-		$this->WorkflowRecords->updateAll(
-			['workflow_step_id' => $entity->workflow_step_id],
-			['id' => $entity->workflow_record_id]
-		);
+	public function trackChanges(Entity $workflowModelEntity, Entity $affectedEntity, $assigneeId=0) {
+		$unassigned = '<'.__('Unassigned').'>';
 
-		return true;
+		if ($affectedEntity->has('assignee')) {
+			$origAssigneeName = $affectedEntity->assignee->name;
+		} else {
+			$origAssigneeName = $unassigned;
+		}
+
+		if ($assigneeId != 0) {
+			$Users = TableRegistry::get('User.Users');
+			$newAssigneeName = $Users->get($assigneeId)->name;
+		} else {
+			$newAssigneeName = $unassigned;
+		}
+
+		if ($origAssigneeName != $newAssigneeName) {
+			$stepName = $affectedEntity->_matchingData['Statuses']->name;
+			$data = [
+				'comment' => __('From').' '.$origAssigneeName.' '.__('to').' '.$newAssigneeName,
+				'prev_workflow_step_name' => $stepName,
+				'workflow_step_name' => $stepName,
+				'workflow_action_name' => __('Administration - Change Assignee'),
+				'workflow_model_id' => $workflowModelEntity->id,
+				'model_reference' => $affectedEntity->id,
+				'created_user_id' => 1,
+				'created' => new Time('NOW')
+			];
+
+			$entity = $this->newEntity($data);
+			$this->save($entity);
+		}
 	}
 }

@@ -84,15 +84,22 @@ class XmlReferenceDumper
 
             // render prototyped nodes
             if ($node instanceof PrototypedArrayNode) {
-                array_unshift($rootComments, 'prototype');
+                $prototype = $node->getPrototype();
+
+                $info = 'prototype';
+                if (null !== $prototype->getInfo()) {
+                    $info .= ': '.$prototype->getInfo();
+                }
+                array_unshift($rootComments, $info);
 
                 if ($key = $node->getKeyAttribute()) {
                     $rootAttributes[$key] = str_replace('-', ' ', $rootName).' '.$key;
                 }
 
-                $prototype = $node->getPrototype();
-
-                if ($prototype instanceof ArrayNode) {
+                if ($prototype instanceof PrototypedArrayNode) {
+                    $prototype->setName($key);
+                    $children = array($key => $prototype);
+                } elseif ($prototype instanceof ArrayNode) {
                     $children = $prototype->getChildren();
                 } else {
                     if ($prototype->hasDefaultValue()) {
@@ -247,7 +254,7 @@ class XmlReferenceDumper
     }
 
     /**
-     * Outputs a single config reference line
+     * Outputs a single config reference line.
      *
      * @param string $text
      * @param int    $indent
@@ -257,7 +264,7 @@ class XmlReferenceDumper
         $indent = strlen($text) + $indent;
         $format = '%'.$indent.'s';
 
-        $this->reference .= sprintf($format, $text)."\n";
+        $this->reference .= sprintf($format, $text).PHP_EOL;
     }
 
     /**

@@ -14,8 +14,6 @@
  */
 namespace Cake\Database;
 
-use Cake\Database\TypeMap;
-
 /*
  * Represents a class that holds a TypeMap object
  */
@@ -31,25 +29,26 @@ trait TypeMapTrait
      * Creates a new TypeMap if $typeMap is an array, otherwise returns the existing type map
      * or exchanges it for the given one.
      *
-     * @param array|TypeMap $typeMap Creates a TypeMap if array, otherwise sets the given TypeMap
-     * @return $this|TypeMap
+     * @param array|\Cake\Database\TypeMap|null $typeMap Creates a TypeMap if array, otherwise sets the given TypeMap
+     * @return $this|\Cake\Database\TypeMap
      */
     public function typeMap($typeMap = null)
     {
-        if (!$this->_typeMap) {
+        if ($this->_typeMap === null) {
             $this->_typeMap = new TypeMap();
         }
         if ($typeMap === null) {
             return $this->_typeMap;
         }
         $this->_typeMap = is_array($typeMap) ? new TypeMap($typeMap) : $typeMap;
+
         return $this;
     }
 
     /**
      * Allows setting default types when chaining query
      *
-     * @param array $types The array of types to set.
+     * @param array|null $types The array of types to set.
      * @return $this|array
      */
     public function defaultTypes(array $types = null)
@@ -58,6 +57,7 @@ trait TypeMapTrait
             return $this->typeMap()->defaults();
         }
         $this->typeMap()->defaults($types);
+
         return $this;
     }
 }

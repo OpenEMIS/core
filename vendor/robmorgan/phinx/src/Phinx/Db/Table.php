@@ -70,6 +70,11 @@ class Table
     protected $foreignKeys = array();
 
     /**
+     * @var array
+     */
+    protected $data = array();
+
+    /**
      * Class Constuctor.
      *
      * @param string $name Table Name
@@ -253,7 +258,7 @@ class Table
     }
 
     /**
-     * Gets an array of foreign keys waiting to be commited.
+     * Sets an array of foreign keys waiting to be commited.
      *
      * @param ForeignKey[] $foreignKeys foreign keys
      * @return Table
@@ -275,6 +280,28 @@ class Table
     }
 
     /**
+     * Sets an array of data to be inserted.
+     *
+     * @param array $data Data
+     * @return Table
+     */
+    public function setData($data)
+    {
+        $this->data = $data;
+        return $this;
+    }
+
+    /**
+     * Gets the data waiting to be inserted.
+     *
+     * @return array
+     */
+    public function getData()
+    {
+        return $this->data;
+    }
+
+    /**
      * Resets all of the pending table changes.
      *
      * @return void
@@ -284,6 +311,7 @@ class Table
         $this->setPendingColumns(array());
         $this->setIndexes(array());
         $this->setForeignKeys(array());
+        $this->setData(array());
     }
 
     /**
@@ -376,7 +404,7 @@ class Table
         }
 
         // if the name was omitted use the existing column name
-        if (null === $newColumn->getName() || strlen($newColumn->getName()) == 0) {
+        if (null === $newColumn->getName() || strlen($newColumn->getName()) === 0) {
             $newColumn->setName($columnName);
         }
 
@@ -527,16 +555,49 @@ class Table
     /**
      * Add timestamp columns created_at and updated_at to the table.
      *
+     * @param string $createdAtColumnName
+     * @param string $updatedAtColumnName
+     *
      * @return Table
      */
-    public function addTimestamps()
+    public function addTimestamps($createdAtColumnName = 'created_at', $updatedAtColumnName = 'updated_at')
     {
-        $this->addColumn('created_at', 'timestamp')
-             ->addColumn('updated_at', 'timestamp', array(
-                 'null'    => true,
-                 'default' => null
+        $createdAtColumnName = is_null($createdAtColumnName) ? 'created_at' : $createdAtColumnName;
+        $updatedAtColumnName = is_null($updatedAtColumnName) ? 'updated_at' : $updatedAtColumnName;
+        $this->addColumn($createdAtColumnName, 'timestamp', array(
+                'default' => 'CURRENT_TIMESTAMP',
+                'update' => ''
+            ))
+             ->addColumn($updatedAtColumnName, 'timestamp', array(
+                'null'    => true,
+                'default' => null
              ));
 
+        return $this;
+    }
+
+    /**
+     * Insert data into the table.
+     *
+     * @param $data array of data in the form:
+     *              array(
+     *                  array("col1" => "value1", "col2" => "anotherValue1"),
+     *                  array("col2" => "value2", "col2" => "anotherValue2"),
+     *              )
+     *              or array("col1" => "value1", "col2" => "anotherValue1")
+     *
+     * @return Table
+     */
+    public function insert($data)
+    {
+        // handle array of array situations
+        if (isset($data[0]) && is_array($data[0])) {
+            foreach ($data as $row) {
+                $this->data[] = $row;
+            }
+            return $this;
+        }
+        $this->data[] = $data;
         return $this;
     }
 
@@ -548,6 +609,7 @@ class Table
     public function create()
     {
         $this->getAdapter()->createTable($this);
+        $this->saveData();
         $this->reset(); // reset pending changes
     }
 
@@ -576,7 +638,20 @@ class Table
             $this->getAdapter()->addForeignKey($this, $foreignKey);
         }
 
+        $this->saveData();
         $this->reset(); // reset pending changes
+    }
+
+    /**
+     * Commit the pending data waiting for insertion.
+     *
+     * @return void
+     */
+    public function saveData()
+    {
+        foreach ($this->getData() as $row) {
+            $this->getAdapter()->insert($this, $row);
+        }
     }
 
     /**

@@ -35,7 +35,7 @@ class LabelsTable extends AppTable {
 	public function storeLabelsInCache() {
 		// Will clear all keys.
 		// Cache::clear(false);
-		
+
 		$cacheFolder = new Folder(CACHE.'labels');
 		$files = $cacheFolder->find();
 
@@ -53,8 +53,8 @@ class LabelsTable extends AppTable {
 			foreach($allLabels as $eachLabel) {
 				$keyCreation = $eachLabel->module.'.'.$eachLabel->field;
 				$keyValue = self::concatenateLabel($eachLabel);
-				$keyArray[$keyCreation] = $keyValue;	
-			}	
+				$keyArray[$keyCreation] = $keyValue;
+			}
 
 			//Write multiple to cache
 			$result = Cache::writeMany($keyArray, $this->defaultConfig);
@@ -64,13 +64,13 @@ class LabelsTable extends AppTable {
 	public function editBeforeAction(Event $event) {
 		$this->ControllerAction->field('module_name', ['type' => 'readonly']);
 		$this->ControllerAction->field('field_name', ['type' => 'readonly']);
-	}	
+	}
 
 	public function afterSave(Event $event, Entity $entity, ArrayObject $options) {
 		$keyFetch = $entity->module.'.'.$entity->field;
 		$keyValue = self::concatenateLabel($entity);
 		Cache::write($keyFetch, $keyValue, $this->defaultConfig);
-	}	
+	}
 
 	public function beforeAction(Event $event){
 		$this->ControllerAction->field('module', ['visible' => false]);
@@ -97,7 +97,7 @@ class LabelsTable extends AppTable {
 
 		if($entity->name == "")
 			$entity->name = null;
-	}	
+	}
 
 	public function indexBeforePaginate(Event $event, Request $request, Query $query, ArrayObject $options) {
 		$query->where(['visible' => 1]);
@@ -108,6 +108,8 @@ class LabelsTable extends AppTable {
 	}
 
 	public function validationDefault(Validator $validator) {
+		$validator = parent::validationDefault($validator);
+
 		$validator
 			->add('code', [
 					'ruleUnique' => [

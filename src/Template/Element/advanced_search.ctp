@@ -1,66 +1,90 @@
 <?php
 use Cake\Utility\Inflector;
 ?>
-<div id="advanced-search" class="advanced-search-wrapper alert search-box <?= !$advancedSearch ? 'hidden' : '' ?>">
 
-	<button id="search-toggle" class="btn btn-xs close" type="button" alt="Collapse">×</button>
-	<h4><?= __('Advanced Search')?></h4>
+<div class="adv-search" ng-show="showAdvSearch" ng-init="showAdvSearch=<?= $showOnLoad?>">
+	<button class="btn btn-xs close" type="button" alt="Collapse" ng-click="removeAdvSearch()">×</button>
+	<div class="adv-search-label">
+		<i class="fa fa-search-plus"></i>
+		<label><?= __('Advanced Search')?></label>
+	</div>
 
-	<?php
-		foreach ($filters as $key=>$filter) :
-	?>
+    <?php
+        /*
+            list advanced search fields based on the order.
+            order is declared on the model file $advancedSearchFieldOrder.
+        */
+        foreach ($order as $key=>$field) {
+            if (array_key_exists($field, $filters)) {
+    ?>
+                <div class="select">
+                    <label><?= $filters[$field]['label'] ?>:</label>
+                    <div class="input-select-wrapper">
+                        <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $field ?>]">
+                            <option value=""><?= __('-- Select --'); ?></option>
+                            <?php foreach ($filters[$field]['options'] as $optKey=>$optVal): ?>
+                                <?php $selected = ($optKey==$filters[$field]['selected']) ? 'selected' : ''; ?>
+                                <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+    <?php
+            } else if (array_key_exists($field, $searchables) || array_key_exists($field, $includedFields)) {
 
-		<div class="input select">
-		  <label class="form-label"><?= $filter['label'] ?>:</label>
-		  <div class="input-select-wrapper">	 
-			  <select name="AdvanceSearch[<?= $model ?>][belongsTo][<?= $key ?>]">
-				<option value="">&nbsp;</option>
-				<?php foreach ($filter['options'] as $optKey=>$optVal): ?>
-					<?php $selected = ($optKey==$filter['selected']) ? 'selected' : ''; ?>
-					<option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
-				<?php endforeach; ?>
-			  </select>
-		   </div>	  
-		</div>
+                //to be used both by $searchable and $includedFields
+                if (array_key_exists($field, $searchables)) {
+                    $varName = $searchables;
+                    $indexName = 'hasMany';
+                } else if (array_key_exists($field, $includedFields)) {
+                    $varName = $includedFields;
+                    $indexName = 'tableField';
+                }
 
-	<?php endforeach ?>
+                if (array_key_exists('type', $varName[$field])) {
+                    if ($varName[$field]['type'] == 'select') {
+    ?>
+                        <div class="select">
+                            <label><?= $varName[$field]['label'] ?>:</label>
+                            <div class="input-select-wrapper">
+                                <select name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]">
+                                    <option value=""><?= __('-- Select --'); ?></option>
+                                    <?php foreach ($varName[$field]['options'] as $optKey=>$optVal): ?>
+                                        <?php $selected = ($optKey==$varName[$field]['selected']) ? 'selected' : ''; ?>
+                                    <option value="<?= $optKey ?>" <?= $selected ?>><?= $optVal ?></option>
+                                 <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </div>
+    <?php
+                    }
+                } else {
+    ?>
+                    <div class="text" style="margin-bottom:10px;">
+                        <label for="advancesearch-directories-identity-number"><?= $varName[$field]['label'] ?>:</label>
 
-	<?php
-		foreach ($searchables as $key=>$searchable) :
-	?>
+                        <input type="text" name="AdvanceSearch[<?= $model ?>][<?= $indexName ?>][<?= $field ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($field) ?>" value="<?= $varName[$field]['value'] ?>" />
+                    </div>
+    <?php
+                }
+            }
+        }
+    ?>
 
-		<div class="input text" style="margin-bottom:10px;">
-			<label for="advancesearch-directories-identity-number" class="form-label"><?= $searchable['label'] ?>:</label>
+	<div class="search-action-btn">
+		<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
+		<button class="btn btn-default btn-xs" href="" ng-click="submitSearch()"><?= __('Search') ?></button>
+		<button id="reset" class="btn btn-outline btn-xs" name="reset" value="Reset"><?= __('Reset') ?></button>
+		<?php
+			$this->Form->unlockField('reset');
+			$this->Form->unlockField('AdvanceSearch');
+		?>
+	</div>
 
-			<input type="text" name="AdvanceSearch[<?= $model ?>][hasMany][<?= $key ?>]" class="form-control focus" id="advancesearch-<?= strtolower($model) ?>-<?= Inflector::dasherize($key) ?>" value="<?= $searchable['value'] ?>" />
-		</div>
-
-	<?php endforeach ?>
-
-	<hr>
-	<input type="hidden" name="AdvanceSearch[<?= $model ?>][isSearch]" value="" id="isSearch" />
-	<button class="btn btn-default btn-xs" href=""><?= __('Search') ?></button>
-	<button id="reset" class="btn btn-default btn-xs" value="Reset" href=""><?= __('Reset') ?></button>
 </div>
 
-<script type="text/javascript">   
-	var box = $('#advanced-search');
-	var isSearch = $('#isSearch');
-	$('button#search-toggle').on('click', function () {
-		box.toggleClass('hidden');
-		if (! isSearch.val()) {
-			isSearch.val('true');
-		}else {
-			isSearch.val('');
-		}
-	});
-
-
-	//reset form 
-	$("#reset").click(function(){
-		box.find('input:text, select').val('');
-		$(".icheckbox_minimal-grey").removeClass("checked");
-		isSearch.val('true');
-	});
-
-</script>
+<?php if($advancedSearch):?>
+<h4 ng-class="disableElement">
+	<?= __('Search Results') ?>
+</h4>
+<?php endif;?>

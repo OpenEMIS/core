@@ -32,10 +32,11 @@ use Phinx\Db\Table;
 use Phinx\Db\Table\Column;
 use Phinx\Db\Table\Index;
 use Phinx\Db\Table\ForeignKey;
-use Phinx\Migration\MigrationInterface;
 
 class PostgresAdapter extends PdoAdapter implements AdapterInterface
 {
+    const INT_SMALL = 65535;
+
     /**
      * Columns with comments
      *
@@ -69,8 +70,8 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
                 $db = new \PDO($dsn, $options['user'], $options['pass'], array(\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION));
             } catch (\PDOException $exception) {
                 throw new \InvalidArgumentException(sprintf(
-                    'There was a problem connecting to the database: '
-                    . $exception->getMessage()
+                    'There was a problem connecting to the database: %s',
+                    $exception->getMessage()
                 ));
             }
 
@@ -150,12 +151,18 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
      */
     public function hasTable($tableName)
     {
-        $tables = array();
-        $rows = $this->fetchAll(sprintf('SELECT table_name FROM information_schema.tables WHERE table_schema = \'%s\';', $this->getSchemaName()));
-        foreach ($rows as $row) {
-            $tables[] = strtolower($row[0]);
-        }
-        return in_array(strtolower($tableName), $tables);
+        $result = $this->getConnection()->query(
+            sprintf(
+                'SELECT *
+                FROM information_schema.tables
+                WHERE table_schema = %s
+                AND lower(table_name) = lower(%s)',
+                $this->getConnection()->quote($this->getSchemaName()),
+                $this->getConnection()->quote($tableName)
+            )
+        );
+
+        return $result->rowCount() === 1;
     }
 
     /**
@@ -255,6 +262,17 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         // execute the sql
         $this->writeCommand('createTable', array($table->getName()));
         $this->execute($sql);
+
+        // process table comments
+        if (isset($options['comment'])) {
+            $sql = sprintf(
+                'COMMENT ON TABLE %s IS %s',
+                $this->quoteTableName($table->getName()),
+                $this->getConnection()->quote($options['comment'])
+            );
+            $this->execute($sql);
+        }
+
         $this->endCommandTimer();
     }
 
@@ -304,9 +322,11 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
             $column = new Column();
             $column->setName($columnInfo['column_name'])
                    ->setType($this->getPhinxType($columnInfo['data_type']))
-                   ->setNull($columnInfo['is_nullable'] == 'YES')
+                   ->setNull($columnInfo['is_nullable'] === 'YES')
                    ->setDefault($columnInfo['column_default'])
-                   ->setIdentity($columnInfo['is_identity'] == 'YES');
+                   ->setIdentity($columnInfo['is_identity'] === 'YES')
+                   ->setPrecision($columnInfo['numeric_precision'])
+                   ->setScale($columnInfo['numeric_scale']);
 
             if (preg_match('/\bwith time zone$/', $columnInfo['data_type'])) {
                 $column->setTimezone(true);
@@ -531,6 +551,20 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         return false;
     }
 
+     /**
+      * {@inheritdoc}
+      */
+     public function hasIndexByName($tableName, $indexName)
+     {
+         $indexes = $this->getIndexes($tableName);
+         foreach ($indexes as $name => $index) {
+             if ($name === $indexName) {
+                 return true;
+             }
+         }
+         return false;
+     }
+
     /**
      * {@inheritdoc}
      */
@@ -708,14 +742,23 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
     {
         switch ($type) {
             case static::PHINX_TYPE_INTEGER:
+                if ($limit && $limit == static::INT_SMALL) {
+                    return array(
+                        'name' => 'smallint',
+                        'limit' => static::INT_SMALL
+                    );
+                }
+                return array('name' => $type);
             case static::PHINX_TYPE_TEXT:
-            case static::PHINX_TYPE_DECIMAL:
             case static::PHINX_TYPE_TIME:
             case static::PHINX_TYPE_DATE:
             case static::PHINX_TYPE_BOOLEAN:
             case static::PHINX_TYPE_JSON:
+            case static::PHINX_TYPE_JSONB:
             case static::PHINX_TYPE_UUID:
                 return array('name' => $type);
+            case static::PHINX_TYPE_DECIMAL:
+                return array('name' => $type, 'precision' => 18, 'scale' => 0);
             case static::PHINX_TYPE_STRING:
                 return array('name' => 'character varying', 'limit' => 255);
             case static::PHINX_TYPE_CHAR:
@@ -727,6 +770,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
             case static::PHINX_TYPE_DATETIME:
             case static::PHINX_TYPE_TIMESTAMP:
                 return array('name' => 'timestamp');
+            case static::PHINX_TYPE_BLOB:
             case static::PHINX_TYPE_BINARY:
                 return array('name' => 'bytea');
             // Geospatial database types
@@ -770,8 +814,16 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
             case 'char':
                 return static::PHINX_TYPE_CHAR;
             case 'text':
-            case 'json':
                 return static::PHINX_TYPE_TEXT;
+            case 'json':
+                return static::PHINX_TYPE_JSON;
+            case 'jsonb':
+                return static::PHINX_TYPE_JSONB;
+            case 'smallint':
+                return array(
+                    'name' => 'smallint',
+                    'limit' => static::INT_SMALL
+                );
             case 'int':
             case 'int4':
             case 'integer':
@@ -856,7 +908,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         if (is_string($default) && 'CURRENT_TIMESTAMP' !== $default) {
             $default = $this->getConnection()->quote($default);
         } elseif (is_bool($default)) {
-            $default = $default ? 'TRUE' : 'FALSE';
+            $default = $this->castToBool($default);
         }
         return isset($default) ? 'DEFAULT ' . $default : '';
     }
@@ -871,13 +923,21 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
     {
         $buffer = array();
         if ($column->isIdentity()) {
-            $buffer[] = 'SERIAL';
+            $buffer[] = $column->getType() == 'biginteger' ? 'BIGSERIAL' : 'SERIAL';
         } else {
-            $sqlType = $this->getSqlType($column->getType());
+            $sqlType = $this->getSqlType($column->getType(), $column->getLimit());
             $buffer[] = strtoupper($sqlType['name']);
             // integers cant have limits in postgres
-            if ('integer' !== $sqlType['name'] && ($column->getLimit() || isset($sqlType['limit']))) {
-                $buffer[] = sprintf('(%s)', $column->getLimit() ? $column->getLimit() : $sqlType['limit']);
+            if (static::PHINX_TYPE_DECIMAL === $sqlType['name'] && ($column->getPrecision() || $column->getScale())) {
+                $buffer[] = sprintf(
+                    '(%s, %s)',
+                    $column->getPrecision() ? $column->getPrecision() : $sqlType['precision'],
+                    $column->getScale() ? $column->getScale() : $sqlType['scale']
+                );
+            } elseif (!in_array($sqlType['name'], array('integer', 'smallint'))) {
+                if ($column->getLimit() || isset($sqlType['limit'])) {
+                    $buffer[] = sprintf('(%s)', $column->getLimit() ? $column->getLimit() : $sqlType['limit']);
+                }
             }
 
             $timeTypes = array(
@@ -895,7 +955,6 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
             $buffer[] = $this->getDefaultValueDefinition($column->getDefault());
         }
 
-        // TODO - add precision & scale for decimals
         return implode(' ', $buffer);
     }
 
@@ -941,7 +1000,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         }
         $def = sprintf(
             "CREATE %s INDEX %s ON %s (%s);",
-            ($index->getType() == Index::UNIQUE ? 'UNIQUE' : ''),
+            ($index->getType() === Index::UNIQUE ? 'UNIQUE' : ''),
             $indexName,
             $this->quoteTableName($tableName),
             implode(',', $index->getColumns())
@@ -958,10 +1017,9 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
      */
     protected function getForeignKeySqlDefinition(ForeignKey $foreignKey, $tableName)
     {
-        $def = ' CONSTRAINT "';
-        $def .= $tableName . '_' . implode('_', $foreignKey->getColumns());
-        $def .= '" FOREIGN KEY ("' . implode('", "', $foreignKey->getColumns()) . '")';
-        $def .= " REFERENCES {$foreignKey->getReferencedTable()->getName()} (\"" . implode('", "', $foreignKey->getReferencedColumns()) . '")';
+        $constraintName = $foreignKey->getConstraint() ?: $tableName . '_' . implode('_', $foreignKey->getColumns());
+        $def = ' CONSTRAINT "' . $constraintName . '" FOREIGN KEY ("' . implode('", "', $foreignKey->getColumns()) . '")';
+        $def .= " REFERENCES {$this->quoteTableName($foreignKey->getReferencedTable()->getName())} (\"" . implode('", "', $foreignKey->getReferencedColumns()) . '")';
         if ($foreignKey->getOnDelete()) {
             $def .= " ON DELETE {$foreignKey->getOnDelete()}";
         }
@@ -986,35 +1044,6 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
         return parent::createSchemaTable();
     }
 
-     /**
-      * {@inheritdoc}
-      */
-    public function migrated(MigrationInterface $migration, $direction, $startTime, $endTime)
-    {
-        if (strcasecmp($direction, MigrationInterface::UP) === 0) {
-            // up
-            $sql = sprintf(
-                "INSERT INTO %s (version, start_time, end_time) VALUES ('%s', '%s', '%s');",
-                $this->getSchemaTableName(),
-                $migration->getVersion(),
-                $startTime,
-                $endTime
-            );
-
-            $this->query($sql);
-        } else {
-            // down
-            $sql = sprintf(
-                "DELETE FROM %s WHERE version = '%s'",
-                $this->getSchemaTableName(),
-                $migration->getVersion()
-            );
-
-            $this->query($sql);
-        }
-        return $this;
-    }
-
     /**
      * Creates the specified schema.
      *
@@ -1033,7 +1062,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
     /**
      * Checks to see if a schema exists.
      *
-     * @param string $schemaName  Schema Name
+     * @param string $schemaName Schema Name
      * @return boolean
      */
     public function hasSchema($schemaName)
@@ -1051,7 +1080,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
     /**
      * Drops the specified schema table.
      *
-     * @param string $tableName Table Name
+     * @param string $schemaName Schema name
      * @return void
      */
     public function dropSchema($schemaName)
@@ -1101,7 +1130,7 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
      */
     public function getColumnTypes()
     {
-        return array_merge(parent::getColumnTypes(), array('json'));
+        return array_merge(parent::getColumnTypes(), array('json', 'jsonb'));
     }
 
     /**
@@ -1138,5 +1167,17 @@ class PostgresAdapter extends PdoAdapter implements AdapterInterface
     {
         $options = $this->getOptions();
         return empty($options['schema']) ? 'public' : $options['schema'];
+    }
+
+    /**
+     * Cast a value to a boolean appropriate for the adapter.
+     *
+     * @param mixed $value The value to be cast
+     *
+     * @return mixed
+     */
+    public function castToBool($value)
+    {
+        return (bool) $value ? 'TRUE' : 'FALSE';
     }
 }

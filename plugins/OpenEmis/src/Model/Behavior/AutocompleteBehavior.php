@@ -22,8 +22,8 @@ class AutocompleteBehavior extends Behavior {
 
 			$subject->includes['autocomplete'] = [
 				'include' => true, 
-				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
-				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
+				'css' => ['OpenEmis.../plugins/autocomplete/css/autocomplete'],
+				'js' => ['OpenEmis.../plugins/autocomplete/js/autocomplete']
 			];
 
 			$fieldName = $attr['model'] . '.' . $attr['field'];
@@ -55,6 +55,7 @@ class AutocompleteBehavior extends Behavior {
 
 			$value .= $Form->input($fieldName, $options);
 			$value .= $Form->hidden($target['name'], ['autocomplete-value' => $target['key']]);
+			$Form->unlockField($target['name']);
 		}
 		return $value;
 	}

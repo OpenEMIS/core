@@ -44,14 +44,15 @@ trait DependentDeleteTrait
         $conditions = array_combine($foreignKey, $entity->extract($bindingKey));
 
         if ($this->_cascadeCallbacks) {
-            $query = $this->find('all')->where($conditions);
-            foreach ($query as $related) {
+            foreach ($this->find()->where($conditions)->toList() as $related) {
                 $table->delete($related, $options);
             }
+
             return true;
         }
 
         $conditions = array_merge($conditions, $this->conditions());
+
         return $table->deleteAll($conditions);
     }
 }

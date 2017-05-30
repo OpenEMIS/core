@@ -14,8 +14,6 @@
  */
 namespace Cake\ORM\Association;
 
-use Cake\ORM\Association\SelectableAssociationTrait;
-
 /**
  * Represents a type of association that that needs to be recovered by performing
  * an extra query.
@@ -59,8 +57,10 @@ trait ExternalAssociationTrait
             if ($this->_foreignKey === null) {
                 $this->_foreignKey = $this->_modelKey($this->source()->table());
             }
+
             return $this->_foreignKey;
         }
+
         return parent::foreignKey($key);
     }
 
@@ -76,6 +76,7 @@ trait ExternalAssociationTrait
         if ($sort !== null) {
             $this->_sort = $sort;
         }
+
         return $this->_sort;
     }
 
@@ -88,6 +89,7 @@ trait ExternalAssociationTrait
         if (isset($row[$sourceAlias])) {
             $row[$sourceAlias][$this->property()] = $joined ? null : [];
         }
+
         return $row;
     }
 
@@ -118,6 +120,7 @@ trait ExternalAssociationTrait
             }
             $resultMap[implode(';', $values)][] = $result;
         }
+
         return $resultMap;
     }
 

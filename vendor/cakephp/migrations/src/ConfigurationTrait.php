@@ -11,9 +11,8 @@
  */
 namespace Migrations;
 
-use Cake\Core\Plugin;
 use Cake\Datasource\ConnectionManager;
-use Cake\Utility\Inflector;
+use Migrations\Util\UtilTrait;
 use Phinx\Config\Config;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -28,17 +27,26 @@ use Symfony\Component\Console\Output\OutputInterface;
 trait ConfigurationTrait
 {
 
+    use UtilTrait;
+
     /**
      * The configuration object that phinx uses for connecting to the database
      *
-     * @var Phinx\Config\Config
+     * @var \Phinx\Config\Config
      */
     protected $configuration;
 
     /**
+     * Connection name to be used for this request
+     *
+     * @var string
+     */
+    protected $connection;
+
+    /**
      * The console input instance
      *
-     * @var Symfony\Component\Console\Input\Input
+     * @var \Symfony\Component\Console\Input\Input
      */
     protected $input;
 
@@ -46,56 +54,72 @@ trait ConfigurationTrait
      * Overrides the original method from phinx in order to return a tailored
      * Config object containing the connection details for the database.
      *
-     * @return Phinx\Config\Config
+     * @param bool $forceRefresh
+     * @return \Phinx\Config\Config
      */
-    public function getConfig()
+    public function getConfig($forceRefresh = false)
     {
-        if ($this->configuration) {
+        if ($this->configuration && $forceRefresh === false) {
             return $this->configuration;
         }
 
-        $folder = 'Migrations';
-        if ($this->input->getOption('source')) {
-            $folder = $this->input->getOption('source');
+        $migrationsPath = $this->getOperationsPath($this->input);
+        $seedsPath = $this->getOperationsPath($this->input, 'Seeds');
+        $plugin = $this->getPlugin($this->input);
+
+        if (!is_dir($migrationsPath)) {
+            mkdir($migrationsPath, 0777, true);
         }
 
-        $dir = ROOT . DS . 'config' . DS . $folder;
-        $plugin = null;
-
-        if ($this->input->getOption('plugin')) {
-            $plugin = $this->input->getOption('plugin');
-            $dir = Plugin::path($plugin) . 'config' . DS . $folder;
+        if (!is_dir($seedsPath)) {
+            mkdir($seedsPath, 0777, true);
         }
 
-        if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
-        }
-
-        $plugin = $plugin ? Inflector::underscore($plugin) . '_' : '';
-        $plugin = str_replace(array('\\', '/', '.'), '_', $plugin);
+        $phinxTable = $this->getPhinxTable($plugin);
 
         $connection = $this->getConnectionName($this->input);
 
-        $config = ConnectionManager::config($connection);
-        return $this->configuration = new Config([
+        $connectionConfig = ConnectionManager::config($connection);
+        $adapterName = $this->getAdapterName($connectionConfig['driver']);
+        $config = [
             'paths' => [
-                'migrations' => $dir
+                'migrations' => $migrationsPath,
+                'seeds' => $seedsPath,
             ],
             'environments' => [
-                'default_migration_table' => $plugin . 'phinxlog',
+                'default_migration_table' => $phinxTable,
                 'default_database' => 'default',
                 'default' => [
-                    'adapter' => $this->getAdapterName($config['driver']),
-                    'host' => isset($config['host']) ? $config['host'] : null,
-                    'user' => isset($config['username']) ? $config['username'] : null,
-                    'pass' => isset($config['password']) ? $config['password'] : null,
-                    'port' => isset($config['port']) ? $config['port'] : null,
-                    'name' => $config['database'],
-                    'charset' => isset($config['encoding']) ? $config['encoding'] : null,
-                    'unix_socket' => isset($config['unix_socket']) ? $config['unix_socket'] : null,
+                    'adapter' => $adapterName,
+                    'host' => isset($connectionConfig['host']) ? $connectionConfig['host'] : null,
+                    'user' => isset($connectionConfig['username']) ? $connectionConfig['username'] : null,
+                    'pass' => isset($connectionConfig['password']) ? $connectionConfig['password'] : null,
+                    'port' => isset($connectionConfig['port']) ? $connectionConfig['port'] : null,
+                    'name' => $connectionConfig['database'],
+                    'charset' => isset($connectionConfig['encoding']) ? $connectionConfig['encoding'] : null,
+                    'unix_socket' => isset($connectionConfig['unix_socket']) ? $connectionConfig['unix_socket'] : null,
                 ]
             ]
-        ]);
+        ];
+
+        if ($adapterName === 'pgsql') {
+            if (!empty($connectionConfig['schema'])) {
+                $config['environments']['default']['schema'] = $connectionConfig['schema'];
+            }
+        }
+
+        if ($adapterName === 'mysql') {
+            if (!empty($connectionConfig['ssl_key']) && !empty($connectionConfig['ssl_cert'])) {
+                $config['environments']['default']['mysql_attr_ssl_key'] = $connectionConfig['ssl_key'];
+                $config['environments']['default']['mysql_attr_ssl_cert'] = $connectionConfig['ssl_cert'];
+            }
+
+            if (!empty($connectionConfig['ssl_ca'])) {
+                $config['environments']['default']['mysql_attr_ssl_ca'] = $connectionConfig['ssl_ca'];
+            }
+        }
+
+        return $this->configuration = new Config($config);
     }
 
     /**
@@ -103,7 +127,7 @@ trait ConfigurationTrait
      * that was configured for the configuration.
      *
      * @param string $driver The driver name as configured for the CakePHP app.
-     * @return Phinx\Config\Config
+     * @return \Phinx\Config\Config
      * @throws \InvalidArgumentexception when it was not possible to infer the information
      * out of the provided database configuration
      */
@@ -131,23 +155,36 @@ trait ConfigurationTrait
      * Overrides the action execute method in order to vanish the idea of environments
      * from phinx. CakePHP does not believe in the idea of having in-app environments
      *
-     * @param Symfony\Component\Console\Input\InputInterface $input the input object
-     * @param Symfony\Component\Console\Input\OutputInterface $output the output object
+     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
+     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
      * @return void
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        $this->beforeExecute($input, $output);
+        parent::execute($input, $output);
+    }
+
+    /**
+     * Overrides the action execute method in order to vanish the idea of environments
+     * from phinx. CakePHP does not believe in the idea of having in-app environments
+     *
+     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
+     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
+     * @return void
+     */
+    protected function beforeExecute(InputInterface $input, OutputInterface $output)
+    {
         $this->setInput($input);
         $this->addOption('--environment', '-e', InputArgument::OPTIONAL);
         $input->setOption('environment', 'default');
-        parent::execute($input, $output);
     }
 
     /**
      * Sets the input object that should be used for the command class. This object
      * is used to inspect the extra options that are needed for CakePHP apps.
      *
-     * @param Symfony\Component\Console\Input\InputInterface $input the input object
+     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
      * @return void
      */
     public function setInput(InputInterface $input)
@@ -160,17 +197,23 @@ trait ConfigurationTrait
      * the CakePHP connection. This is needed in case the user decides to use tables
      * from the ORM and executes queries.
      *
-     * @param Symfony\Component\Console\Input\InputInterface $input the input object
-     * @param Symfony\Component\Console\Input\OutputInterface $output the output object
+     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
+     * @param \Symfony\Component\Console\Output\OutputInterface $output the output object
      * @return void
      */
     public function bootstrap(InputInterface $input, OutputInterface $output)
     {
         parent::bootstrap($input, $output);
         $name = $this->getConnectionName($input);
+        $this->connection = $name;
         ConnectionManager::alias($name, 'default');
         $connection = ConnectionManager::get($name);
 
+        $manager = $this->getManager();
+
+        if (!$manager instanceof CakeManager) {
+            $this->setManager(new CakeManager($this->getConfig(), $input, $output));
+        }
         $env = $this->getManager()->getEnvironment('default');
         $adapter = $env->getAdapter();
         if (!$adapter instanceof CakeAdapter) {
@@ -181,14 +224,14 @@ trait ConfigurationTrait
     /**
      * Returns the connection name that should be used for the migrations.
      *
-     * @param Symfony\Component\Console\Input\InputInterface $input the input object
+     * @param \Symfony\Component\Console\Input\InputInterface $input the input object
      * @return string
      */
     protected function getConnectionName(InputInterface $input)
     {
         $connection = 'default';
         if ($input->getOption('connection')) {
-            $connection = $this->input->getOption('connection');
+            $connection = $input->getOption('connection');
         }
         return $connection;
     }

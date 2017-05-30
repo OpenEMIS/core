@@ -25,14 +25,14 @@ class EnumNodeDefinition extends ScalarNodeDefinition
     /**
      * @param array $values
      *
-     * @return EnumNodeDefinition|$this
+     * @return $this
      */
     public function values(array $values)
     {
         $values = array_unique($values);
 
-        if (count($values) <= 1) {
-            throw new \InvalidArgumentException('->values() must be called with at least two distinct values.');
+        if (empty($values)) {
+            throw new \InvalidArgumentException('->values() must be called with at least one value.');
         }
 
         $this->values = $values;

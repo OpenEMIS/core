@@ -17,6 +17,7 @@ namespace Cake\View\Helper;
 use Cake\I18n\Time;
 use Cake\View\Helper;
 use Cake\View\StringTemplateTrait;
+use Exception;
 
 /**
  * Time Helper class for easy use of time data.
@@ -30,6 +31,32 @@ class TimeHelper extends Helper
 {
 
     use StringTemplateTrait;
+
+    /**
+     * Config options
+     *
+     * @var array
+     */
+    protected $_defaultConfig = [
+        'outputTimezone' => null
+    ];
+
+    /**
+     * Get a timezone.
+     *
+     * Will use the provided timezone, or default output timezone if defined.
+     *
+     * @param null|string|\DateTimeZone $timezone The override timezone if applicable.
+     * @return null|string|\DateTimeZone The chosen timezone or null.
+     */
+    protected function _getTimezone($timezone)
+    {
+        if ($timezone) {
+            return $timezone;
+        }
+
+        return $this->config('outputTimezone');
+    }
 
     /**
      * Returns a UNIX timestamp, given either a UNIX timestamp or a valid strtotime() date string.
@@ -53,6 +80,8 @@ class TimeHelper extends Helper
      */
     public function nice($dateString = null, $timezone = null, $locale = null)
     {
+        $timezone = $this->_getTimezone($timezone);
+
         return (new Time($dateString))->nice($timezone, $locale);
     }
 
@@ -158,7 +187,7 @@ class TimeHelper extends Helper
      *
      * @param int|string|\DateTime $dateString UNIX timestamp, strtotime() valid string or DateTime object
      * @param bool $range if true returns a range in Y-m-d format
-     * @return mixed 1, 2, 3, or 4 quarter of year or array if $range true
+     * @return int|array 1, 2, 3, or 4 quarter of year or array if $range true
      * @see \Cake\I18n\Time::toQuarter()
      */
     public function toQuarter($dateString, $range = false)
@@ -189,7 +218,8 @@ class TimeHelper extends Helper
      */
     public function toAtom($dateString, $timezone = null)
     {
-        $timezone = $timezone ?: date_default_timezone_get();
+        $timezone = $this->_getTimezone($timezone) ?: date_default_timezone_get();
+
         return (new Time($dateString))->timezone($timezone)->toAtomString();
     }
 
@@ -202,7 +232,8 @@ class TimeHelper extends Helper
      */
     public function toRss($dateString, $timezone = null)
     {
-        $timezone = $timezone ?: date_default_timezone_get();
+        $timezone = $this->_getTimezone($timezone) ?: date_default_timezone_get();
+
         return (new Time($dateString))->timezone($timezone)->toRssString();
     }
 
@@ -225,6 +256,15 @@ class TimeHelper extends Helper
     public function timeAgoInWords($dateTime, array $options = [])
     {
         $element = null;
+        $options += [
+            'element' => null,
+            'timezone' => null
+        ];
+        $options['timezone'] = $this->_getTimezone($options['timezone']);
+        if ($options['timezone']) {
+            $dateTime = $dateTime->timezone($options['timezone']);
+            unset($options['timezone']);
+        }
 
         if (!empty($options['element'])) {
             $element = [
@@ -251,6 +291,7 @@ class TimeHelper extends Helper
                 $element['tag']
             );
         }
+
         return $relativeDate;
     }
 
@@ -323,7 +364,7 @@ class TimeHelper extends Helper
      * @param bool|string $invalid Default value to display on invalid dates
      * @param string|\DateTimeZone|null $timezone User's timezone string or DateTimeZone object
      * @return string Formatted and translated date string
-     * @throws \InvalidArgumentException When the date cannot be parsed
+     * @throws \Exception When the date cannot be parsed
      * @see \Cake\I18n\Time::i18nFormat()
      */
     public function i18nFormat($date, $format = null, $invalid = false, $timezone = null)
@@ -331,14 +372,17 @@ class TimeHelper extends Helper
         if (!isset($date)) {
             return $invalid;
         }
+        $timezone = $this->_getTimezone($timezone);
 
         try {
-            $time = new Time($date, $timezone);
+            $time = new Time($date);
+
             return $time->i18nFormat($format, $timezone);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             if ($invalid === false) {
                 throw $e;
             }
+
             return $invalid;
         }
     }

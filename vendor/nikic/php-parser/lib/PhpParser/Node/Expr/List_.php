@@ -6,21 +6,21 @@ use PhpParser\Node\Expr;
 
 class List_ extends Expr
 {
-    /** @var Expr[] List of variables to assign to */
-    public $vars;
+    /** @var ArrayItem[] List of items to assign to */
+    public $items;
 
     /**
      * Constructs a list() destructuring node.
      *
-     * @param Expr[] $vars       List of variables to assign to
-     * @param array  $attributes Additional attributes
+     * @param ArrayItem[] $items      List of items to assign to
+     * @param array       $attributes Additional attributes
      */
-    public function __construct(array $vars, array $attributes = array()) {
-        parent::__construct(null, $attributes);
-        $this->vars = $vars;
+    public function __construct(array $items, array $attributes = array()) {
+        parent::__construct($attributes);
+        $this->items = $items;
     }
 
     public function getSubNodeNames() {
-        return array('vars');
+        return array('items');
     }
 }

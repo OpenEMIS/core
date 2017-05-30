@@ -54,16 +54,39 @@ class ClassCodeGenerator
 
     private function generateMethod(Node\MethodNode $method)
     {
-        $php = sprintf("%s %s function %s%s(%s) {\n",
+        $php = sprintf("%s %s function %s%s(%s)%s {\n",
             $method->getVisibility(),
             $method->isStatic() ? 'static' : '',
             $method->returnsReference() ? '&':'',
             $method->getName(),
-            implode(', ', $this->generateArguments($method->getArguments()))
+            implode(', ', $this->generateArguments($method->getArguments())),
+            $this->getReturnType($method)
         );
         $php .= $method->getCode()."\n";
 
         return $php.'}';
+    }
+
+    /**
+     * @return string
+     */
+    private function getReturnType(Node\MethodNode $method)
+    {
+        if (version_compare(PHP_VERSION, '7.1', '>=')) {
+            if ($method->hasReturnType()) {
+                return $method->hasNullableReturnType()
+                    ? sprintf(': ?%s', $method->getReturnType())
+                    : sprintf(': %s', $method->getReturnType());
+            }
+        }
+
+        if (version_compare(PHP_VERSION, '7.0', '>=')) {
+            return $method->hasReturnType() && $method->getReturnType() !== 'void'
+                ? sprintf(': %s', $method->getReturnType())
+                : '';
+        }
+
+        return '';
     }
 
     private function generateArguments(array $arguments)
@@ -71,17 +94,48 @@ class ClassCodeGenerator
         return array_map(function (Node\ArgumentNode $argument) {
             $php = '';
 
+            if (version_compare(PHP_VERSION, '7.1', '>=')) {
+                $php .= $argument->isNullable() ? '?' : '';
+            }
+
             if ($hint = $argument->getTypeHint()) {
-                if ('array' === $hint || 'callable' === $hint) {
-                    $php .= $hint;
-                } else {
-                    $php .= '\\'.$hint;
+                switch ($hint) {
+                    case 'array':
+                    case 'callable':
+                        $php .= $hint;
+                        break;
+
+                    case 'iterable':
+                        if (version_compare(PHP_VERSION, '7.1', '>=')) {
+                            $php .= $hint;
+                            break;
+                        }
+
+                        $php .= '\\'.$hint;
+                        break;
+
+                    case 'string':
+                    case 'int':
+                    case 'float':
+                    case 'bool':
+                        if (version_compare(PHP_VERSION, '7.0', '>=')) {
+                            $php .= $hint;
+                            break;
+                        }
+                        // Fall-through to default case for PHP 5.x
+
+                    default:
+                        $php .= '\\'.$hint;
                 }
             }
 
-            $php .= ' '.($argument->isPassedByReference() ? '&' : '').'$'.$argument->getName();
+            $php .= ' '.($argument->isPassedByReference() ? '&' : '');
 
-            if ($argument->isOptional()) {
+            $php .= $argument->isVariadic() ? '...' : '';
+
+            $php .= '$'.$argument->getName();
+
+            if ($argument->isOptional() && !$argument->isVariadic()) {
                 $php .= ' = '.var_export($argument->getDefault(), true);
             }
 

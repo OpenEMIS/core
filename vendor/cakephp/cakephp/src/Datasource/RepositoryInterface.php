@@ -14,8 +14,6 @@
  */
 namespace Cake\Datasource;
 
-use Cake\Datasource\EntityInterface;
-
 /**
  * Describes the methods that any class representing a data storage should
  * comply with.
@@ -72,7 +70,7 @@ interface RepositoryInterface
      * @throws \Cake\Datasource\Exception\RecordNotFoundException if the record with such id
      * could not be found
      * @return \Cake\Datasource\EntityInterface
-     * @see RepositoryInterface::find()
+     * @see \Cake\Datasource\RepositoryInterface::find()
      */
     public function get($primaryKey, $options = []);
 
@@ -90,7 +88,7 @@ interface RepositoryInterface
      * This method will *not* trigger beforeSave/afterSave events. If you need those
      * first load a collection of records and update them.
      *
-     * @param array $fields A hash of field => new value.
+     * @param string|array|callable|\Cake\Database\Expression\QueryExpression $fields A hash of field => new value.
      * @param mixed $conditions Conditions to be used, accepts anything Query::where()
      * can take.
      * @return int Count Returns the affected rows.
@@ -98,8 +96,6 @@ interface RepositoryInterface
     public function updateAll($fields, $conditions);
 
     /**
-     * Delete all matching records.
-     *
      * Deletes all records matching the provided conditions.
      *
      * This method will *not* trigger beforeDelete/afterDelete events. If you
@@ -111,8 +107,8 @@ interface RepositoryInterface
      *
      * @param mixed $conditions Conditions to be used, accepts anything Query::where()
      * can take.
-     * @return int Count Returns the affected rows.
-     * @see RepositoryInterface::delete()
+     * @return int Returns the number of affected rows.
+     * @see \Cake\Datasource\RepositoryInterface::delete()
      */
     public function deleteAll($conditions);
 

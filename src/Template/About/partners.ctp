@@ -2,7 +2,7 @@
 $this->extend('OpenEmis./Layout/Panel');
 $this->start('panelBody');
 ?>
-<tab heading="Partners">
+
 	<!-- Partners -->
 	<div class="about-wrapper">
 		<!-- Partners -->
@@ -18,5 +18,5 @@ $this->start('panelBody');
 			</div>
 		</div>	
 	</div>
-</tab>
+
 <?php $this->end() ?>

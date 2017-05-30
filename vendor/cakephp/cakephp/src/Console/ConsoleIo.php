@@ -14,9 +14,6 @@
  */
 namespace Cake\Console;
 
-use Cake\Console\ConsoleInput;
-use Cake\Console\ConsoleOutput;
-use Cake\Console\HelperRegistry;
 use Cake\Log\Engine\ConsoleLog;
 use Cake\Log\Log;
 
@@ -122,6 +119,7 @@ class ConsoleIo
         if ($level !== null) {
             $this->_level = $level;
         }
+
         return $this->_level;
     }
 
@@ -130,7 +128,7 @@ class ConsoleIo
      *
      * @param string|array $message A string or an array of strings to output
      * @param int $newlines Number of newlines to append
-     * @return int|bool Returns the number of bytes returned from writing to stdout.
+     * @return int|bool The number of bytes returned from writing to stdout.
      */
     public function verbose($message, $newlines = 1)
     {
@@ -142,7 +140,7 @@ class ConsoleIo
      *
      * @param string|array $message A string or an array of strings to output
      * @param int $newlines Number of newlines to append
-     * @return int|bool Returns the number of bytes returned from writing to stdout.
+     * @return int|bool The number of bytes returned from writing to stdout.
      */
     public function quiet($message, $newlines = 1)
     {
@@ -163,14 +161,16 @@ class ConsoleIo
      * @param string|array $message A string or an array of strings to output
      * @param int $newlines Number of newlines to append
      * @param int $level The message's output level, see above.
-     * @return int|bool Returns the number of bytes returned from writing to stdout.
+     * @return int|bool The number of bytes returned from writing to stdout.
      */
-    public function out($message = null, $newlines = 1, $level = ConsoleIo::NORMAL)
+    public function out($message = '', $newlines = 1, $level = ConsoleIo::NORMAL)
     {
         if ($level <= $this->_level) {
             $this->_lastWritten = $this->_out->write($message, $newlines);
+
             return $this->_lastWritten;
         }
+
         return true;
     }
 
@@ -184,7 +184,7 @@ class ConsoleIo
      *
      * @param array|string $message The message to output.
      * @param int $newlines Number of newlines to append.
-     * @param int $size The number of bytes to overwrite. Defaults to the
+     * @param int|null $size The number of bytes to overwrite. Defaults to the
      *    length of the last message output.
      * @return void
      */
@@ -213,11 +213,11 @@ class ConsoleIo
      *
      * @param string|array $message A string or an array of strings to output
      * @param int $newlines Number of newlines to append
-     * @return void
+     * @return int|bool The number of bytes returned from writing to stderr.
      */
-    public function err($message = null, $newlines = 1)
+    public function err($message = '', $newlines = 1)
     {
-        $this->_err->write($message, $newlines);
+        return $this->_err->write($message, $newlines);
     }
 
     /**
@@ -272,7 +272,7 @@ class ConsoleIo
     /**
      * Add a new output style or get defined styles.
      *
-     * @param string $style The style to get or create.
+     * @param string|null $style The style to get or create.
      * @param array|bool|null $definition The array definition of the style to change or create a style
      *   or false to remove a style.
      * @return mixed If you are getting styles, the style or null will be returned. If you are creating/modifying
@@ -314,6 +314,7 @@ class ConsoleIo
         while ($in === '' || !in_array($in, $options)) {
             $in = $this->_getInput($prompt, $printOptions, $default);
         }
+
         return $in;
     }
 
@@ -343,6 +344,7 @@ class ConsoleIo
         if ($default !== null && ($result === '' || $result === null)) {
             return $default;
         }
+
         return $result;
     }
 
@@ -353,21 +355,30 @@ class ConsoleIo
      * If you don't wish all log output in stdout or stderr
      * through Cake's Log class, call this function with `$enable=false`.
      *
-     * @param bool $enable Whether you want loggers on or off.
+     * @param int|bool $enable Use a boolean to enable/toggle all logging. Use
+     *   one of the verbosity constants (self::VERBOSE, self::QUIET, self::NORMAL)
+     *   to control logging levels. VERBOSE enables debug logs, NORMAL does not include debug logs,
+     *   QUIET disables notice, info and debug logs.
      * @return void
      */
     public function setLoggers($enable)
     {
         Log::drop('stdout');
         Log::drop('stderr');
-        if (!$enable) {
+        if ($enable === false) {
             return;
         }
-        $stdout = new ConsoleLog([
-            'types' => ['notice', 'info', 'debug'],
-            'stream' => $this->_out
-        ]);
-        Log::config('stdout', ['engine' => $stdout]);
+        $outLevels = ['notice', 'info'];
+        if ($enable === static::VERBOSE || $enable === true) {
+            $outLevels[] = 'debug';
+        }
+        if ($enable !== static::QUIET) {
+            $stdout = new ConsoleLog([
+                'types' => $outLevels,
+                'stream' => $this->_out
+            ]);
+            Log::config('stdout', ['engine' => $stdout]);
+        }
         $stderr = new ConsoleLog([
             'types' => ['emergency', 'alert', 'critical', 'error', 'warning'],
             'stream' => $this->_err,
@@ -388,6 +399,7 @@ class ConsoleIo
     public function helper($name, array $settings = [])
     {
         $name = ucfirst($name);
+
         return $this->_helpers->load($name, $settings);
     }
 }

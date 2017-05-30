@@ -30,81 +30,61 @@ class SystemGroupsTable extends AppTable {
 			'through' => 'Security.SecurityGroupUsers',
 			'dependent' => true
 		]);
+
+		$this->belongsToMany('Areas', [
+			'className' => 'Area.Areas',
+			'joinTable' => 'security_group_areas',
+			'foreignKey' => 'security_group_id',
+			'targetForeignKey' => 'area_id',
+			'through' => 'Security.SecurityGroupAreas',
+			'dependent' => true
+		]);
 	}
 
-	public function onUpdateIncludes(Event $event, ArrayObject $includes, $action) {
-		if ($action == 'edit') {
-			$includes['autocomplete'] = [
-				'include' => true, 
-				'css' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/css/autocomplete'],
-				'js' => ['OpenEmis.jquery-ui.min', 'OpenEmis.../plugins/autocomplete/js/autocomplete']
-			];
-		}
-	}
-
-	public function implementedEvents() {
-		$events = parent::implementedEvents();
-		$newEvent = [
-			'Model.custom.onUpdateToolbarButtons' => 'onUpdateToolbarButtons',
-		];
-		$events = array_merge($events, $newEvent);
-		return $events;
-	}
-
-	public function viewAfterAction(Event $event, Entity $entity) {
-		$this->request->data[$this->alias()]['security_group_id'] = $entity->id;
-	}
-
-	public function onUpdateToolbarButtons(Event $event, ArrayObject $buttons, ArrayObject $toolbarButtons, array $attr, $action, $isFromModel) {
-		if ($action == 'view') {
-			if (!$this->AccessControl->isAdmin()) {
-				$userId = $this->Auth->user('id');
-				$securityGroupId = $this->request->data[$this->alias()]['security_group_id'];
-				$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-				if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
-					if (array_key_exists('edit', $toolbarButtons)) {
-						unset($toolbarButtons['edit']);
+	public function institutionAfterSave(Event $event, Entity $entity)
+	{
+		if ($entity->isNew()) {
+			$obj = $this->newEntity(['name' => $entity->code . ' - ' . $entity->name]);
+			$securityGroup = $this->save($obj);
+			if ($securityGroup) {
+				$SecurityInstitutions = TableRegistry::get('Security.SecurityGroupInstitutions');
+				// add the relationship of security group and institutions
+				$securityInstitution = $SecurityInstitutions->newEntity([
+					'security_group_id' => $securityGroup->id,
+					'institution_id' => $entity->id
+				]);
+				$SecurityInstitutions->save($securityInstitution);
+				$entity->security_group_id = $securityGroup->id;
+				$InstitutionsTable = $event->subject();
+				if (!$InstitutionsTable->save($entity)) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		} else {
+			$securityGroupId = $entity->security_group_id;
+			if (!empty($securityGroupId)) {
+				$obj = $this->get($securityGroupId);
+				if (is_object($obj)) {
+					$data = ['name' => $entity->code . ' - ' . $entity->name];
+					$obj = $this->patchEntity($obj, $data);
+					$securityGroup = $this->save($obj);
+					if (!$securityGroup) {
+						return false;
 					}
 				}
 			}
 		}
 	}
 
-	public function editAfterAction(Event $event, Entity $entity) {
-		if (!$this->AccessControl->isAdmin()) {
-			$userId = $this->Auth->user('id');
-			$securityGroupId = $entity->id;
-			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
-				$urlParams = $this->ControllerAction->url('index');
-				$event->stopPropagation();
-				return $this->controller->redirect($urlParams);
-			}
-		}
-	}
-
-	public function onUpdateActionButtons(Event $event, Entity $entity, array $buttons) {
-		$buttons = parent::onUpdateActionButtons($event, $entity, $buttons);
-		$userId = $this->Auth->user('id');
-		$securityGroupId = $entity->id;
-		// -1 = system roles, we are not allowing users to modify system roles
-		// removing all buttons from the menu
-		if (!$this->AccessControl->isAdmin()) {
-			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
-			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_edit')) {
-				if (array_key_exists('edit', $buttons)) {
-					unset($buttons['edit']);
-				}
-			}
-
-			if (!$SecurityGroupUsersTable->checkEditGroup($userId, $securityGroupId, '_delete')) {
-				if (array_key_exists('remove', $buttons)) {
-					unset($buttons['remove']);
-				}
-			}
-		}
-		
-		return $buttons;
+	public function implementedEvents() {
+		$events = parent::implementedEvents();
+		$newEvent = [
+			'Model.Institutions.afterSave' => 'institutionAfterSave'
+		];
+		$events = array_merge($events, $newEvent);
+		return $events;
 	}
 
 	public function beforeAction(Event $event) {
@@ -119,13 +99,13 @@ class SystemGroupsTable extends AppTable {
 				'text' => $this->getMessage($this->aliasField('tabTitle'))
 			]
 		];
-		
+
 		$this->controller->set('tabElements', $tabElements);
 		$this->controller->set('selectedAction', $this->alias());
 
 		$roleOptions = $this->Roles->find('list')->toArray();
 		$this->ControllerAction->field('users', [
-			'type' => 'user_table', 
+			'type' => 'user_table',
 			'valueClass' => 'table-full-width',
 			'roleOptions' => $roleOptions,
 			'visible' => ['index' => false, 'view' => true, 'edit' => true]
@@ -150,24 +130,33 @@ class SystemGroupsTable extends AppTable {
 
 		// filter groups by users permission
 		if ($this->Auth->user('super_admin') != 1) {
+
 			$userId = $this->Auth->user('id');
-			$query->innerJoin(
-				['GroupUsers' => 'security_group_users'],
-				[
-					'GroupUsers.security_group_id = ' . $this->aliasField('id'),
-					'GroupUsers.security_user_id = ' . $userId
-				]
-			);
-			$query->group([$this->aliasField('id')]);
+
+			$SecurityGroupUsersTable = TableRegistry::get('Security.SecurityGroupUsers');
+			$SecurityGroupUsers = $SecurityGroupUsersTable
+				->find('list')
+				->where([
+					$SecurityGroupUsersTable->aliasField('security_group_id') .' = ' .$this->aliasField('id'),
+					$SecurityGroupUsersTable->aliasField('security_user_id') => $userId
+				]);
+
+			$query
+				->where([
+					'OR'=>[
+						'EXISTS ('.$SecurityGroupUsers->sql().')',
+						'Institutions.created_user_id' => $userId
+					]
+				]);
 		}
 	}
 
-	public function viewEditBeforeQuery(Event $event, Query $query) {
+	public function viewBeforeQuery(Event $event, Query $query) {
 		$query->contain(['Users']);
 	}
 
-	public function editBeforeAction(Event $event) {
-		$this->ControllerAction->field('name', ['type' => 'readonly']);
+	public function viewAfterAction(Event $event, Entity $entity) {
+		$this->request->data[$this->alias()]['security_group_id'] = $entity->id;
 	}
 
 	public function onGetUserTableElement(Event $event, $action, $entity, $attr, $options=[]) {
@@ -184,7 +173,13 @@ class SystemGroupsTable extends AppTable {
 			if (!empty($associated[$key])) {
 				foreach ($associated[$key] as $i => $obj) {
 					$rowData = [];
-					$rowData[] = $obj->openemis_no;
+					$rowData[] = $event->subject()->Html->link($obj->openemis_no , [
+						'plugin' => 'Directory',
+						'controller' => 'Directories',
+						'action' => 'Directories',
+						'view',
+						$this->paramsEncode(['id' => $obj->id])
+					]);
 					$rowData[] = $obj->name;
 					$roleId = $obj->_joinData->security_role_id;
 
@@ -197,78 +192,11 @@ class SystemGroupsTable extends AppTable {
 					$tableCells[] = $rowData;
 				}
 			}
-		} else if ($action == 'edit') {
-			$tableHeaders[] = ''; // for delete column
-			$Form = $event->subject()->Form;
-
-			$user = $this->Auth->user();
-			$userId = $user['id'];
-			if ($user['super_admin'] == 1) { // super admin will show all roles
-				$userId = null;
-			}
-			$roleOptions = $this->Roles->getPrivilegedRoleOptionsByGroup($entity->id, $userId);
-			if ($this->request->is(['get'])) {
-				if (!array_key_exists($alias, $this->request->data)) {
-					$this->request->data[$alias] = [$key => []];
-				} else {
-					$this->request->data[$alias][$key] = [];
-				}
-
-				$associated = $entity->extractOriginal([$key]);
-				if (!empty($associated[$key])) {
-					foreach ($associated[$key] as $i => $obj) {
-						$this->request->data[$alias][$key][] = [
-							'id' => $obj->id,
-							'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
-						];
-					}
-				}
-			}
-			// refer to addEditOnAddUser for http post
-			if ($this->request->data("$alias.$key")) {
-				$associated = $this->request->data("$alias.$key");
-
-				foreach ($associated as $i => $obj) {
-					$joinData = $obj['_joinData'];
-					$rowData = [];
-					$name = $joinData['name'];
-					$name .= $Form->hidden("$alias.$key.$i.id", ['value' => $joinData['security_user_id']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.openemis_no", ['value' => $joinData['openemis_no']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.name", ['value' => $joinData['name']]);
-					$name .= $Form->hidden("$alias.$key.$i._joinData.security_user_id", ['value' => $joinData['security_user_id']]);
-					$rowData[] = $joinData['openemis_no'];
-					$rowData[] = $name;
-					$rowData[] = $Form->input("$alias.$key.$i._joinData.security_role_id", ['label' => false, 'options' => $roleOptions]);
-					$rowData[] = $this->getDeleteButton();
-					$tableCells[] = $rowData;
-				}
-			}
 		}
 		$attr['tableHeaders'] = $tableHeaders;
     	$attr['tableCells'] = $tableCells;
 
 		return $event->subject()->renderElement('Security.Groups/' . $key, ['attr' => $attr]);
-	}
-
-	public function addEditOnAddUser(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		$alias = $this->alias();
-
-		if ($data->offsetExists('user_id')) {
-			$id = $data['user_id'];
-			try {
-				$obj = $this->Users->get($id);
-
-				if (!array_key_exists('users', $data[$alias])) {
-					$data[$alias]['users'] = [];
-				}
-				$data[$alias]['users'][] = [
-					'id' => $obj->id,
-					'_joinData' => ['openemis_no' => $obj->openemis_no, 'security_user_id' => $obj->id, 'name' => $obj->name]
-				];
-			} catch (RecordNotFoundException $ex) {
-				$this->log(__METHOD__ . ': Record not found for id: ' . $id, 'debug');
-			}
-		}
 	}
 
 	public function findInInstitutions(Query $query, array $options) {
@@ -283,77 +211,5 @@ class SystemGroupsTable extends AppTable {
 		$count = $GroupUsers->findAllBySecurityGroupId($id)->count();
 
 		return $count;
-	}
-
-	public function addEditBeforePatch(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// in case user has been added with the same role twice, we need to filter it
-		$this->filterDuplicateUserRoles($data);
-
-		// by default association will be saved automatically, we are turning it off so it will save successfully
-		$options['associated'] = false;
-	}
-
-	// same logic also in UserGroups, may consider moving it into a behavior
-	public function editAfterSave(Event $event, Entity $entity, ArrayObject $data, ArrayObject $options) {
-		// users can't save properly using associated method
-		// until we find a better solution, saving of users for groups will be done in afterSave as of now
-		$id = $entity->id;
-		$GroupUsers = TableRegistry::get('Security.SecurityGroupUsers');
-		$GroupUsers->deleteAll(['security_group_id' => $id]);
-
-		if ($entity->has('users')) {
-			$users = $entity->users;
-			if (!empty($users)) {
-				foreach ($users as $user) {
-					$query = $GroupUsers->find()->where([
-						$GroupUsers->aliasField('security_user_id') => $user['_joinData']['security_user_id'],
-						$GroupUsers->aliasField('security_role_id') => $user['_joinData']['security_role_id'],
-						$GroupUsers->aliasField('security_group_id') => $id
-					]);
-
-					if ($query->count() == 0) {
-						$newEntity = $GroupUsers->newEntity([
-							'security_user_id' => $user['_joinData']['security_user_id'],
-							'security_role_id' => $user['_joinData']['security_role_id'],
-							'security_group_id' => $id
-						]);
-
-						$GroupUsers->save($newEntity);
-					}
-				}
-			}
-		}
-	}
-
-	// also exists in UserGroups
-	private function filterDuplicateUserRoles(ArrayObject $data) {
-		if (array_key_exists('users', $data[$this->alias()])) {
-			$roles = [];
-
-			$users = $data[$this->alias()]['users'];
-			foreach ($users as $i => $user) {
-				$joinData = $user['_joinData'];
-				$userRole = $joinData['security_user_id'] . ' - ' . $joinData['security_role_id'];
-				if (in_array($userRole, $roles)) {
-					unset($data[$this->alias()]['users'][$i]);
-				} else {
-					$roles[] = $userRole;
-				}
-			}
-		} else {
-			$data[$this->alias()]['users'] = [];
-		}
-	}
-
-	public function ajaxUserAutocomplete() {
-		$this->controller->autoRender = false;
-		$this->ControllerAction->autoRender = false;
-
-		if ($this->request->is(['ajax'])) {
-			$term = $this->request->query['term'];
-			$data = $this->Users->autocomplete($term);
-			echo json_encode($data);
-			die;
-		}
 	}
 }
