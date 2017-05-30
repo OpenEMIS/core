@@ -455,6 +455,12 @@ class StaffTable extends ControllerActionTable
         $this->advancedSelectOptions($statusOptions, $selectedStatus);
         $request->query['staff_status_id'] = $selectedStatus;
         $query->where([$this->aliasField('staff_status_id') => $selectedStatus]);
+
+        // POCOR-2547 sort list of staff and student by name
+        if (!isset($request->query['sort'])) {
+            $query->order([$this->Users->aliasField('first_name'), $this->Users->aliasField('last_name')]);
+        }
+
         $this->controller->set(compact('periodOptions', 'positionOptions', 'statusOptions'));
     }
 
@@ -1389,6 +1395,7 @@ class StaffTable extends ControllerActionTable
     {
         $institutionId = $options['institution_id'];
         $academicPeriodId = $options['academic_period_id'];
+        $todayDate = Time::now();
 
         return $query
                 ->find('withBelongsTo')
@@ -1397,6 +1404,13 @@ class StaffTable extends ControllerActionTable
                 })
                 ->find('byInstitution', ['Institutions.id' => $institutionId])
                 ->find('AcademicPeriod', ['academic_period_id' => $academicPeriodId])
+                ->where([
+                    $this->aliasField('start_date <= ') => $todayDate,
+                    'OR' => [
+                        [$this->aliasField('end_date >= ') => $todayDate],
+                        [$this->aliasField('end_date IS NULL')]
+                    ]
+                ])
                 ->formatResults(function ($results) {
                     $returnArr = [];
                     foreach ($results as $result) {

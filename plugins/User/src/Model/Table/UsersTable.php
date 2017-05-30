@@ -276,6 +276,7 @@ class UsersTable extends AppTable
             ])
             ->autoFields(true)
             ->group([$this->aliasField('id')])
+            ->order([$this->aliasField('first_name', 'last_name')]) // POCOR-2547 sort list of staff and student by name
             ->formatResults(function ($results) use ($institutionClassId, $institutionId) {
                 $arrReturn = [];
                 foreach ($results as $result) {
