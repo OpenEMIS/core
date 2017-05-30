@@ -2,9 +2,10 @@
 	$alias = $ControllerAction['table']->alias();
 
 	$url = [
-		'plugin' => $this->request->params['plugin'],
-	    'controller' => $this->request->params['controller'],
-	    'action' => $this->request->params['action']
+		'plugin' => $this->request->param('plugin'),
+	    'controller' => $this->request->param('controller'),
+	    'action' => $this->request->param('action'),
+	    'institutionId' => $this->request->param('institutionId')
 	];
 	if (!empty($this->request->pass)) {
 		$url = array_merge($url, $this->request->pass);
