@@ -62,13 +62,17 @@ $roles = '[' . implode(",", $_roles) . ']';
         <a class="close" aria-hidden="true" href="#" data-dismiss="alert">×</a>{{message}}
     </div>
 
-    <div class="toolbar-responsive panel-toolbar">
+    <div class="toolbar-responsive panel-toolbar" ng-show="academicTermOptions.length > 0">
         <div class="toolbar-wrapper">
             <div class="input select">
-                <div class="input-select-wrapper" ng-init="selectedAcademicTermId=<?= $this->request->query('term_id') ?>">
-                    <select ng-options="option.id as option.name for option in academicTermOptions"
-                            ng-model="selectedAcademicTermId"
-                            >
+                <div class="input-select-wrapper">
+                    <select
+                        class="form-control"
+                        ng-options="option.id as option.name for option in academicTermOptions"
+                        ng-model="selectedAcademicTerm"
+                        ng-change="changeAcademicTerm();"
+                        >
+                            <option value=""><?= '-- '. __('Select Academic Term').' --' ?></option>
                     </select>
                 </div>
             </div>

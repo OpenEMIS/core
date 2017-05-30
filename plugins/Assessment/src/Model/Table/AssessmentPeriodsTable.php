@@ -89,6 +89,28 @@ class AssessmentPeriodsTable extends ControllerActionTable
         ]);
     }
 
+    public function findUniqueAssessmentTerms(Query $query, array $options)
+    {
+        return $query
+            ->distinct('academic_term')
+            ->formatResults(function ($results) {
+                $results = $results->toArray();
+                $returnArr = [];
+                foreach ($results as $result) {
+                    $returnArr[] = ['id' => $result['academic_term'], 'name' => $result['academic_term']];
+                }
+                return $returnArr;
+            });
+    }
+
+    public function findAcademicTerm(Query $query, array $options)
+    {
+        if (isset($options['academic_term'])) {
+            $query = $query->where([$this->aliasField('academic_term') => $options['academic_term']]);
+        }
+        return $query;
+    }
+
     public function validationUpdateAcademicTerm(Validator $validation)
     {
         return $validation
