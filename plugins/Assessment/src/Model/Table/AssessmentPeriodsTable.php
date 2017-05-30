@@ -152,6 +152,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
     {
         $model = $this->Assessments;
         $request = $mainEvent->subject()->request;
+        $extra['config']['form'] = true;
         $extra['elements']['editAcademicTerm'] = ['name' => 'OpenEmis.ControllerAction/edit'];
         $extra['toolbarButtons']['back'] = [
                 'url' => $this->url('index', 'QUERY'),
@@ -241,6 +242,7 @@ class AssessmentPeriodsTable extends ControllerActionTable
             $mainEvent->stopPropagation();
             return $this->controller->redirect($this->url('index', 'QUERY'));
         }
+        $this->controller->set('data', $entity);
         return $entity;
     }
 
