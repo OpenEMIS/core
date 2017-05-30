@@ -9,15 +9,16 @@ use Cake\Event\Event;
 use Cake\Log\Log;
 use Cake\Core\Configure;
 use Cake\Network\Exception\NotFoundException;
+use Cake\Network\Response;
 
 class ImageBehavior extends Behavior
 {
-	public function implementedEvents()
+    public function implementedEvents()
     {
-		$events = parent::implementedEvents();
-		$events['ControllerAction.Model.image'] = 'image';
-		return $events;
-	}
+        $events = parent::implementedEvents();
+        $events['ControllerAction.Model.image'] = 'image';
+        return $events;
+    }
 
     public function image(Event $mainEvent, ArrayObject $extra)
     {
@@ -53,14 +54,13 @@ class ImageBehavior extends Behavior
 
         if (is_resource($phpResourceFile)) {
             if ($base64Format) {
-                echo base64_encode(stream_get_contents($phpResourceFile));
+                $model->controller->response->body(base64_encode(stream_get_contents($phpResourceFile)));
             } else {
                 $model->controller->response->type('jpg');
                 $model->controller->response->body(stream_get_contents($phpResourceFile));
             }
         }
-
-        // required so it doesnt go to MissingActionException in ControllerActionV4Trait
         return true;
+        // required so it doesnt go to MissingActionException in ControllerActionV4Trait
     }
 }

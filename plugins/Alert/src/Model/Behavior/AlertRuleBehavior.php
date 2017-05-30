@@ -66,7 +66,8 @@ class AlertRuleBehavior extends Behavior
                     if (in_array($fieldType, ['select', 'chosenSelect'])) {
                         $options = [];
                         if (array_key_exists('options', $attr) && !empty($attr['options'])) {
-                            $options = $model->getSelectOptions($model->aliasField($attr['options']));
+                            $options = $model->getSelectOptions($model->alias().".".$attr['options']);
+
                         } else if (array_key_exists('lookupModel', $attr) && !empty($attr['lookupModel'])) {
                             $modelTable = TableRegistry::get($attr['lookupModel']);
                             $options = $modelTable->getList()->toArray();
@@ -77,7 +78,7 @@ class AlertRuleBehavior extends Behavior
 
                 if (array_key_exists('tooltip', $attr)) {
                     $sprintf = $attr['tooltip']['sprintf'];
-                    $message = $model->getMessage($model->aliasField($entity->feature.'.'.$field), ['sprintf' => $sprintf]);
+                    $message = $model->getMessage($model->alias().".".$entity->feature.'.'.$field, ['sprintf' => $sprintf]);
 
                     $label = $attr['tooltip']['label'];
                     $attr['attr']['label']['escape'] = false;

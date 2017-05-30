@@ -277,41 +277,43 @@ class InstitutionSubjectStudentsTable extends AppTable
 
     public function afterDelete(Event $event, Entity $entity, ArrayObject $options)
     {
+        // Disabled this logic because results should never be deleted when removing students from subjects
+
         //PHPOE-2338 - implement afterDelete to delete records in AssessmentItemResultsTable
         // find related classes and grades
-        $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
-        $institutionClassData = $InstitutionSubjects->find()
-            ->contain('Classes.ClassGrades')
-            ->where([$InstitutionSubjects->aliasField($InstitutionSubjects->primaryKey()) => $entity->institution_subject_id])
-            ->first()
-            ;
-        $gradeArray = [];
-        if (!empty($institutionClassData->institution_classes)) {
-            foreach ($institutionClassData->institution_classes as $skey => $svalue) {
-                if (!empty($svalue->institution_class_grades)) {
-                    foreach ($svalue->institution_class_grades as $gkey => $gvalue) {
-                        $gradeArray[] = $gvalue->education_grade_id;
-                    }
-                }
-            }
-        }
-        $gradeArray = array_unique($gradeArray);
+        // $InstitutionSubjects = TableRegistry::get('Institution.InstitutionSubjects');
+        // $institutionClassData = $InstitutionSubjects->find()
+        //     ->contain('Classes.ClassGrades')
+        //     ->where([$InstitutionSubjects->aliasField($InstitutionSubjects->primaryKey()) => $entity->institution_subject_id])
+        //     ->first()
+        //     ;
+        // $gradeArray = [];
+        // if (!empty($institutionClassData->institution_classes)) {
+        //     foreach ($institutionClassData->institution_classes as $skey => $svalue) {
+        //         if (!empty($svalue->institution_class_grades)) {
+        //             foreach ($svalue->institution_class_grades as $gkey => $gvalue) {
+        //                 $gradeArray[] = $gvalue->education_grade_id;
+        //             }
+        //         }
+        //     }
+        // }
+        // $gradeArray = array_unique($gradeArray);
 
-        $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
+        // $AssessmentItemResults = TableRegistry::get('Assessment.AssessmentItemResults');
         // conditions: 'assessment_item_results' removing from student_id, institution_id, academic_period_id, assessment_item_id->education_subject_id;
-        $deleteAssessmentItemResults = $AssessmentItemResults->find()
-            ->where([
-                $AssessmentItemResults->aliasField('student_id') => $entity->student_id,
-                $AssessmentItemResults->aliasField('institution_id') => $institutionClassData->institution_id,
-                $AssessmentItemResults->aliasField('academic_period_id') => $institutionClassData->academic_period_id,
-                $AssessmentItemResults->aliasField('education_subject_id') => $institutionClassData->education_subject_id,
-                $AssessmentItemResults->aliasField('education_grade_id') => $entity->education_grade_id
-            ])
-            ;
+        // $deleteAssessmentItemResults = $AssessmentItemResults->find()
+        //     ->where([
+        //         $AssessmentItemResults->aliasField('student_id') => $entity->student_id,
+        //         $AssessmentItemResults->aliasField('institution_id') => $institutionClassData->institution_id,
+        //         $AssessmentItemResults->aliasField('academic_period_id') => $institutionClassData->academic_period_id,
+        //         $AssessmentItemResults->aliasField('education_subject_id') => $institutionClassData->education_subject_id,
+        //         $AssessmentItemResults->aliasField('education_grade_id') => $entity->education_grade_id
+        //     ])
+        //     ;
 
-        foreach ($deleteAssessmentItemResults as $key => $value) {
-            $AssessmentItemResults->delete($value);
-        }
+        // foreach ($deleteAssessmentItemResults as $key => $value) {
+            // $AssessmentItemResults->delete($value);
+        // }
     }
 
     public function getEnrolledStudentBySubject($period, $class, $subject)
