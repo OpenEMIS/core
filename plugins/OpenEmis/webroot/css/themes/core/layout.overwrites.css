@@ -947,3 +947,11 @@ a,
     border: none !important;
 }
 /* End of fix for POCOR-3880 */
+
+/* Temp overwrite of last child of ag grid pinned POCOR-3961 */
+
+.ag-fresh .ag-pinned-left-cols-container .ag-cell.ag-cell-last-left-pinned {
+    border-right: 1px dotted #DDD !important;
+}
+
+/* End of temp fix for POCOR-3961 */
