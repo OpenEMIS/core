@@ -1,5 +1,5 @@
 angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.locale.svc', 'institutions.results.svc'])
-.controller('InstitutionsResultsCtrl', function($scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsResultsSvc) {
+.controller('InstitutionsResultsCtrl', function($q, $scope, $filter, UtilsSvc, AlertSvc, AggridLocaleSvc, InstitutionsResultsSvc) {
     $scope.action = 'view';
     $scope.message = null;
     $scope.gradingTypes = null;
@@ -8,6 +8,8 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
     $scope.gridOptions = null;
     $scope.roles = [];
     $scope.enrolledStatus = null;
+    $scope.academicTermOptions = [];
+    $scope.selectedAcademicTerm = null;
 
     angular.element(document).ready(function () {
         // init
@@ -17,26 +19,35 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
         // getAssessment
         InstitutionsResultsSvc.getAssessment($scope.assessment_id)
         .then(function(response) {
+            var promises = [];
             var assessment = response.data;
 
             $scope.assessment = assessment;
             $scope.academic_period_id = assessment.academic_period_id;
             $scope.education_grade_id = assessment.education_grade_id;
 
-            return InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
+            promises[0] = InstitutionsResultsSvc.getSubjects($scope.roles, $scope.assessment_id, $scope.class_id);
+            promises[1] = InstitutionsResultsSvc.getAssessmentTerms($scope.assessment_id);
+            return $q.all(promises);
         }, function(error) {
             // No Assessment
             console.log(error);
             AlertSvc.warning($scope, error);
         })
         // getSubjects
-        .then(function(subjects) {
-            $scope.subjects = subjects;
-            if (angular.isObject(subjects) && subjects.length > 0) {
-                var subject = subjects[0];
+        .then(function(promises) {
+            $scope.academicTermOptions = promises[1];
+            if ($scope.academicTermOptions.length > 0) {
+                $scope.selectedAcademicTerm = $scope.academicTermOptions[0]['name'];
+            }
+
+            $scope.subjects = promises[0];
+            if (angular.isObject($scope.subjects) && $scope.subjects.length > 0) {
+                var subject = $scope.subjects[0];
 
                 $scope.initGrid(subject);
             }
+
             return InstitutionsResultsSvc.getStudentStatusId("CURRENT");
         }, function(error) {
             // No Assessment Items
@@ -219,21 +230,28 @@ angular.module('institutions.results.ctrl', ['utils.svc', 'alert.svc', 'aggrid.l
         }
     };
 
-    $scope.onChangeSubject = function(subject) {
+    $scope.changeAcademicTerm = function() {
+        $scope.onChangeSubject();
+    };
+
+    $scope.onChangeSubject = function(subject = undefined) {
         AlertSvc.reset($scope);
-        $scope.subject = subject;
-        $scope.education_subject_id = subject.id;
+        if (typeof subject !== "undefined") {
+            $scope.subject = subject;
+        }
+
+        $scope.education_subject_id = $scope.subject.id;
 
         if ($scope.gridOptions != null) {
             // update value in context
-            $scope.gridOptions.context.education_subject_id = subject.id;
+            $scope.gridOptions.context.education_subject_id = $scope.subject.id;
             // Always reset
             $scope.gridOptions.api.setRowData([]);
         }
 
         UtilsSvc.isAppendSpinner(true, 'institution-result-table');
         // getPeriods
-        InstitutionsResultsSvc.getPeriods($scope.assessment_id)
+        InstitutionsResultsSvc.getPeriods($scope.assessment_id, $scope.selectedAcademicTerm)
         .then(function(periods) {
             if (periods) {
                 $scope.periods = periods;
