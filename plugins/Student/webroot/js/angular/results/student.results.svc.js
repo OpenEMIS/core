@@ -200,6 +200,8 @@ function StudentResultsSvc($q, $filter, KdOrmSvc, KdSessionSvc) {
                 cellStyle: function(params) {
                     var subjectId = params.data['subject_id'];
 
+                    var resultType = '';
+
                     var passMark = 0;
                     if (angular.isDefined(properties.subjects[subjectId]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]) && angular.isDefined(properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'])) {
                         gradingType = properties.subjects[subjectId][assessmentPeriod.id]['assessment_grading_type'];
