@@ -65,8 +65,8 @@ trait OptionsTrait {
 			'RoomTypes' => [
 				'classifications' => [0 => __('Non-Classroom'), 1 => __('Classroom')]
 			],
-			'InstitutionRooms' => [
-				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Room Type')]
+			'InstitutionInfrastructure' => [
+				'change_types' => [1 => __('Update Details'), 2 => __('End of Usage'), 3 => __('Change in Type')]
 			],
 			'Shifts' => [
 				'types' => [
